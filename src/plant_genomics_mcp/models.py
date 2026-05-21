@@ -128,6 +128,46 @@ class PhytozomeLocus(BaseModel):
     description: str
 
 
+class LiteratureHit(BaseModel):
+    """One Europe PMC ``/search`` result row, projected to a fixed field set.
+
+    Europe PMC's ``resultType=core`` rows carry ~50 fields; we surface the
+    subset useful for LLM clients (identifiers, citation, OA status, abstract).
+    ``extra="allow"`` keeps any new upstream field from raising on validation.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    id: str | None = Field(default=None, description="Europe PMC record ID")
+    source: str | None = Field(default=None, description="MED, PMC, PPR, AGR, ...")
+    pmid: str | None = Field(default=None)
+    pmcid: str | None = Field(default=None)
+    doi: str | None = Field(default=None)
+    title: str | None = Field(default=None)
+    authorString: str | None = Field(default=None, description="Comma-separated author list")
+    journalTitle: str | None = Field(default=None)
+    pubYear: str | None = Field(default=None, description="String — wire format is untyped")
+    firstPublicationDate: str | None = Field(default=None, description="ISO date")
+    citedByCount: int | None = Field(default=None)
+    isOpenAccess: str | None = Field(default=None, description='"Y" or "N"')
+    hasPDF: str | None = Field(default=None, description='"Y" or "N"')
+    abstractText: str | None = Field(default=None)
+    web_url: str | None = Field(default=None, description="europepmc.org article URL")
+
+
+class LocusLiterature(BaseModel):
+    """Europe PMC ``/search`` wrapper for a locus query."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str
+    species: str
+    query: str = Field(description="Final query string sent to Europe PMC")
+    hitCount: int = Field(description="Total hits available upstream (may exceed returned)")
+    returned: int = Field(description="Number of hits actually in hits[]")
+    hits: list[LiteratureHit]
+
+
 class SubscriptionGatedRedirect(BaseModel):
     """Shared shape for the TAIR and PlantCyc informational stubs.
 
