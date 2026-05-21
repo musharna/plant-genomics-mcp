@@ -54,10 +54,20 @@ for registry indexers.
 
 ## Transports
 
-| Transport | Status  | How to launch                                            |
-| --------- | ------- | -------------------------------------------------------- |
-| stdio     | default | `plant-genomics-mcp` (after install) or via Docker below |
-| SSE       | n/a     | Out of scope — stdio is the canonical MCP transport      |
+| Transport       | Status  | How to launch                                                       |
+| --------------- | ------- | ------------------------------------------------------------------- |
+| stdio           | default | `plant-genomics-mcp` (after install) or via Docker below            |
+| streamable-HTTP | added   | `plant-genomics-mcp-http` — POST JSON-RPC at `http://host:port/mcp` |
+
+The HTTP transport is stateless and emits JSON responses by default —
+the right shape for registry indexers and remote hosting. Env knobs:
+
+| Variable                            | Default     | Effect                                                  |
+| ----------------------------------- | ----------- | ------------------------------------------------------- |
+| `PLANT_GENOMICS_MCP_HTTP_HOST`      | `127.0.0.1` | Bind address                                            |
+| `PLANT_GENOMICS_MCP_HTTP_PORT`      | `8765`      | TCP port                                                |
+| `PLANT_GENOMICS_MCP_HTTP_STATELESS` | `1`         | `0` keeps per-client session state (SSE-style)          |
+| `PLANT_GENOMICS_MCP_HTTP_JSON`      | `1`         | `0` switches the response shape to streaming SSE events |
 
 ## Install
 
