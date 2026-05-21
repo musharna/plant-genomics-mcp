@@ -12,10 +12,12 @@ Quirks worth knowing:
   * Zero-row filter matches return only the header line (or empty body).
     Treated as a 404-equivalent here.
   * The ``organism_id`` filter is a Phytozome proteome integer ID, NOT a
-    species slug. Arabidopsis thaliana TAIR10 = 167 (controller-verified
-    live 2026-05-21). The other entries in ``KNOWN_ORGANISMS`` below come
-    from the BioMart registry's containedDatasets and have NOT been
-    empirically verified by this module — treat as hints.
+    species slug. All 10 entries in ``KNOWN_ORGANISMS`` below were
+    controller-verified live against the BioMart endpoint on 2026-05-21
+    by resolving a canonical first-gene per genome. Two entries were
+    corrected from prior registry-hints (sorghum_bicolor 313 → 454,
+    phaseolus_vulgaris 218 → 442) — the originals 404'd against the
+    BioMart filter list and have been removed.
 
 We reuse ``ensembl_plants.PlantGenomicsError`` as the shared error type so
 the server dispatch can handle one exception class for all backends.
@@ -44,20 +46,22 @@ MAX_RETRIES = 3
 # Per-module response cache. See plant_genomics_mcp.cache for env knobs.
 _CACHE = cache.TTLCache()
 
-# Controller-verified: 167 = Arabidopsis thaliana TAIR10.
-# The rest are pulled from the BioMart registry containedDatasets and are
-# UNVERIFIED — fix forward if a downstream call disagrees.
+# All entries controller-verified live 2026-05-21 against BioMart
+# (canonical first-gene probe per genome). Probe loci recorded in commit
+# message; if a downstream call 404s, re-probe with the BioMart filter
+# registry (`?type=filters&dataset=phytozome`) to confirm the ID is still
+# valid before changing.
 KNOWN_ORGANISMS: dict[str, int] = {
-    "arabidopsis_thaliana": 167,  # verified
-    "glycine_max": 275,  # hint
-    "sorghum_bicolor": 313,  # hint
-    "brachypodium_distachyon": 314,  # hint
-    "manihot_esculenta": 305,  # hint
-    "eucalyptus_grandis": 297,  # hint
-    "populus_trichocarpa": 210,  # hint
-    "phaseolus_vulgaris": 218,  # hint
-    "chlamydomonas_reinhardtii": 281,  # hint
-    "daucus_carota": 388,  # hint
+    "arabidopsis_thaliana": 167,  # Athaliana_TAIR10 (AT1G01010)
+    "glycine_max": 275,  # Gmax_Wm82.a2.v1 (Glyma.01G000100)
+    "sorghum_bicolor": 454,  # Sbicolor_v3.1.1 (Sobic.001G000200)
+    "brachypodium_distachyon": 314,  # Bdistachyon_v3.1 (Bradi1g00200)
+    "manihot_esculenta": 305,  # Mesculenta_v6.1 (Manes.01G000100)
+    "eucalyptus_grandis": 297,  # Egrandis_v2.0 (Eucgr.A00010)
+    "populus_trichocarpa": 210,  # Ptrichocarpa_v3.0 (Potri.001G000100)
+    "phaseolus_vulgaris": 442,  # Pvulgaris_v2.1 (Phvul.002G000200)
+    "chlamydomonas_reinhardtii": 281,  # Creinhardtii_v5.6 (Cre01.g000017)
+    "daucus_carota": 388,  # Dcarota_v2.0 (DCAR_001000)
 }
 
 # Identifier whitelist guards the string-formatted XML against injection.
