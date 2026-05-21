@@ -1,12 +1,17 @@
 """MCP server entry point — exposes plant genomics tools over stdio.
 
-This dispatch ships four tools (``ensembl_plants_lookup_locus``,
-``phytozome_lookup_locus``, ``tair_locus_info``, ``plantcyc_locus_info``).
-``tair_locus_info`` and ``plantcyc_locus_info`` are pure-data
-informational stubs — both TAIR and PlantCyc gate their free per-locus
-REST APIs behind paid subscriptions (Phoenix Bioinformatics for TAIR;
-SRI/Phoenix for the BioCyc PLANT orgid; both probed 2026-05-21). Those
-tools return structured redirects to the two free Ensembl/Phytozome
+This dispatch ships five tools:
+
+  - ``ensembl_plants_lookup_locus``  — Ensembl Plants REST (live)
+  - ``phytozome_lookup_locus``       — Phytozome BioMart (live)
+  - ``resolve_locus_to_uniprot``     — UniProt KB search (live)
+  - ``tair_locus_info``              — informational stub (subscription-gated)
+  - ``plantcyc_locus_info``          — informational stub (subscription-gated)
+
+The TAIR and PlantCyc stubs are pure-data — both backends gate their free
+per-locus REST APIs behind paid subscriptions (Phoenix Bioinformatics for
+TAIR; SRI/Phoenix for the BioCyc PLANT orgid; probed 2026-05-21). Those
+tools return structured redirects to the free Ensembl / Phytozome / UniProt
 backends, which cover the same Arabidopsis annotation.
 """
 
@@ -20,12 +25,13 @@ from mcp import types
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 
-from plant_genomics_mcp import ensembl_plants, phytozome, plantcyc, tair
+from plant_genomics_mcp import ensembl_plants, phytozome, plantcyc, tair, uniprot
 from plant_genomics_mcp.models import (
     EnsemblPlantsLocus,
     PhytozomeLocus,
     PlantCycLocusInfo,
     TairLocusInfo,
+    UniProtLocus,
 )
 
 server: Server = Server("plant-genomics-mcp")
@@ -33,7 +39,7 @@ server: Server = Server("plant-genomics-mcp")
 
 # ---- EDAM ontology tags -----------------------------------------------------
 # Attached via _meta on each Tool so registry indexers (Smithery, Glama,
-# bio.tools) can categorize. All four tools share operation_2422 (Data
+# bio.tools) can categorize. All five tools share operation_2422 (Data
 # retrieval) and the topic pair (Plant biology, Gene structure).
 _EDAM = {
     "edam": {
@@ -101,6 +107,37 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
         },
         outputSchema=PhytozomeLocus.model_json_schema(),
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="resolve_locus_to_uniprot",
+        description=(
+            "Resolve a plant locus to its canonical UniProtKB record. Prefers "
+            "reviewed (Swiss-Prot) entries; falls back to unreviewed (TrEMBL) "
+            "when no curated record exists (common for non-Arabidopsis plants). "
+            "organism_id is the NCBI taxonomy ID (default 3702 = Arabidopsis "
+            "thaliana; 39947 = Oryza sativa japonica; 4577 = Zea mays). "
+            "Returns primaryAccession, uniProtkbId, entryType, recommendedName, "
+            "geneNames, organism, taxonId, sequenceLength, web_url. This is "
+            "the protein-side entry point — pair with InterPro / AlphaFold / "
+            "Reactome / structural-bio tools."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "e.g. AT1G01010 (Arabidopsis), Os01g0100100 (rice)",
+                },
+                "organism_id": {
+                    "type": "integer",
+                    "description": "NCBI taxonomy ID (default 3702 = Arabidopsis thaliana)",
+                    "default": 3702,
+                },
+            },
+            "required": ["locus"],
+        },
+        outputSchema=UniProtLocus.model_json_schema(),
         _meta=_EDAM,
     ),
     types.Tool(
@@ -175,6 +212,12 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     client,
                     args["locus"],
                     organism_id=args.get("organism_id", 167),
+                )
+            case "resolve_locus_to_uniprot":
+                return await uniprot.lookup_locus(
+                    client,
+                    args["locus"],
+                    organism_id=args.get("organism_id", uniprot.DEFAULT_TAXON_ID),
                 )
             case "tair_locus_info":
                 # Pure-data sync call — no client, no await. Returns a
