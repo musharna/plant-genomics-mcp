@@ -223,6 +223,49 @@ class LocusGoAnnotations(BaseModel):
     )
 
 
+class BlastHit(BaseModel):
+    """One row from the BLAST text-report "significant alignments" table.
+
+    The Text-format report gives us description + bit score + e-value +
+    accession per hit; richer per-alignment data lives in the trailing
+    ALIGNMENTS section and is preserved in ``raw_report_excerpt``.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    accession: str = Field(description="NCBI accession, e.g. NP_001185207.1")
+    description: str = Field(description="Subject description from the BLAST report")
+    bit_score: float | str = Field(
+        description="Bit score — float when parseable, raw string otherwise"
+    )
+    evalue: float | str = Field(
+        description="E-value — float when parseable, raw string otherwise (e.g. '0.0')"
+    )
+
+
+class BlastResult(BaseModel):
+    """NCBI BLAST URLAPI search result wrapper.
+
+    Async-submit + poll + fetch is hidden behind a single tool call. The
+    server emits ``notifications/progress`` during polling. ``rid`` is
+    returned so the client can re-poll independently if needed.
+    ``raw_report_excerpt`` is capped at 50 KB to keep the wire payload
+    bounded; ``raw_report_truncated`` flags whether more remains upstream.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    rid: str = Field(description="NCBI BLAST request ID — re-usable via fetch_result()")
+    program: str = Field(description="blastn | blastp | blastx | tblastn | tblastx")
+    database: str = Field(description="NCBI BLAST database, e.g. swissprot, core_nt")
+    status: str = Field(description='Always "READY" when this object is returned')
+    hitCount: int = Field(description="Number of rows parsed from the alignment summary")
+    hits: list[BlastHit] = Field(description="Top alignments, sorted by BLAST default order")
+    raw_report_excerpt: str = Field(description="First 50 KB of the FORMAT_TYPE=Text report")
+    raw_report_truncated: bool = Field(description="True if the upstream report exceeded the cap")
+    elapsed_seconds: float = Field(description="Wall-clock from submit to READY")
+
+
 class BatchEnvelope(BaseModel):
     """Shared response shape for every ``batch_*`` tool.
 
