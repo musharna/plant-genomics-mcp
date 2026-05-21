@@ -1,13 +1,30 @@
 [project]
 name = "plant-genomics-mcp"
-version = "0.1.0"
-description = "Plant genomics MCP — Ensembl Plants + (Phytozome + TAIR + PlantCyc roadmapped) for Claude Code"
+version = "0.4.0"
+description = "Plant genomics MCP — Ensembl Plants + Phytozome + TAIR/PlantCyc redirects for Claude Code"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Jaret Arnold", email = "mjarnold1998@gmail.com" }]
 requires-python = ">=3.11"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
 dependencies = [
     "mcp>=1.0",
     "httpx>=0.27",
     "pydantic>=2.6",
 ]
+
+[project.urls]
+Homepage = "https://github.com/mjarnold/plant-genomics-mcp"
+Changelog = "https://github.com/mjarnold/plant-genomics-mcp/blob/main/CHANGELOG.md"
+Issues = "https://github.com/mjarnold/plant-genomics-mcp/issues"
 
 [project.optional-dependencies]
 dev = [
