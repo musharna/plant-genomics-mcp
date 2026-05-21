@@ -84,6 +84,73 @@ async def test_lookup_locus_raises_on_404(httpx_mock: HTTPXMock) -> None:
             await ensembl_plants.lookup_locus(client, "NOTREAL")
 
 
+# ---------- xrefs unit tests ----------
+
+
+@pytest.mark.asyncio
+async def test_lookup_xrefs_wraps_array_and_rolls_up_by_db(httpx_mock: HTTPXMock) -> None:
+    """Ensembl returns a top-level array; we wrap with metadata + by_db rollup."""
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/xrefs/id/AT1G01010?species=arabidopsis_thaliana",
+        json=[
+            {
+                "dbname": "Uniprot_gn",
+                "primary_id": "Q0WV96",
+                "display_id": "Q0WV96",
+                "info_type": "DEPENDENT",
+            },
+            {
+                "dbname": "EntrezGene",
+                "primary_id": "839580",
+                "display_id": "NAC001",
+                "info_type": "DEPENDENT",
+            },
+            {
+                "dbname": "TAIR_LOCUS",
+                "primary_id": "AT1G01010",
+                "display_id": "AT1G01010",
+                "info_type": "DIRECT",
+            },
+        ],
+    )
+    async with httpx.AsyncClient() as client:
+        result = await ensembl_plants.lookup_xrefs(client, "AT1G01010")
+    assert result["locus"] == "AT1G01010"
+    assert result["species"] == "arabidopsis_thaliana"
+    assert result["count"] == 3
+    assert len(result["xrefs"]) == 3
+    assert result["by_db"]["Uniprot_gn"] == ["Q0WV96"]
+    assert result["by_db"]["EntrezGene"] == ["839580"]
+    assert result["by_db"]["TAIR_LOCUS"] == ["AT1G01010"]
+
+
+@pytest.mark.asyncio
+async def test_lookup_xrefs_groups_duplicate_dbname_into_list(httpx_mock: HTTPXMock) -> None:
+    """Two xrefs with the same dbname both land in by_db[dbname]."""
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/xrefs/id/AT1G01010?species=arabidopsis_thaliana",
+        json=[
+            {"dbname": "GO", "primary_id": "GO:0003700"},
+            {"dbname": "GO", "primary_id": "GO:0006355"},
+        ],
+    )
+    async with httpx.AsyncClient() as client:
+        result = await ensembl_plants.lookup_xrefs(client, "AT1G01010")
+    assert result["by_db"]["GO"] == ["GO:0003700", "GO:0006355"]
+
+
+@pytest.mark.asyncio
+async def test_lookup_xrefs_raises_on_non_list_payload(httpx_mock: HTTPXMock) -> None:
+    """Ensembl /xrefs/id is documented as returning an array; raise loud if not."""
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/xrefs/id/AT1G01010?species=arabidopsis_thaliana",
+        json={"error": "unexpected object shape"},
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(ensembl_plants.PlantGenomicsError, match="non-list payload"):
+            await ensembl_plants.lookup_xrefs(client, "AT1G01010")
+
+
 # ---------- live integration (real-execution check) ----------
 
 
@@ -96,3 +163,17 @@ async def test_live_lookup_at1g01010() -> None:
     assert result["id"] == "AT1G01010"
     # NAC001 is the canonical display name; description should mention NAC.
     assert "NAC" in (result.get("display_name", "") + result.get("description", ""))
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_lookup_xrefs_at1g01010_includes_uniprot() -> None:
+    """Real call to /xrefs/id — verifies wire format + that UniProt link exists."""
+    async with httpx.AsyncClient() as client:
+        result = await ensembl_plants.lookup_xrefs(client, "AT1G01010")
+    assert result["locus"] == "AT1G01010"
+    assert result["count"] > 0
+    # Q0WV96 is AT1G01010's canonical UniProt accession; cross-validates against
+    # the direct UniProt query in tests/test_uniprot.py.
+    uniprot_ids = result["by_db"].get("Uniprot_gn", [])
+    assert "Q0WV96" in uniprot_ids, f"expected Q0WV96 in Uniprot_gn, got {result['by_db']}"
