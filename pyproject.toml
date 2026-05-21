@@ -1,7 +1,7 @@
 [project]
-name = "genomics-mcp"
+name = "plant-genomics-mcp"
 version = "0.1.0"
-description = "Taxon-agnostic genomics MCP — wraps Ensembl REST + KEGG REST for Claude Code"
+description = "Plant genomics MCP — Ensembl Plants + (Phytozome + TAIR + PlantCyc roadmapped) for Claude Code"
 requires-python = ">=3.11"
 dependencies = [
     "mcp>=1.0",
@@ -18,14 +18,14 @@ dev = [
 ]
 
 [project.scripts]
-genomics-mcp = "genomics_mcp.server:main"
+plant-genomics-mcp = "plant_genomics_mcp.server:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/genomics_mcp"]
+packages = ["src/plant_genomics_mcp"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
