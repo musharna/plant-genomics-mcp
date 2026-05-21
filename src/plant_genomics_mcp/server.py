@@ -1,11 +1,12 @@
 """MCP server entry point — exposes plant genomics tools over stdio.
 
-This dispatch ships six tools:
+This dispatch ships seven tools:
 
   - ``ensembl_plants_lookup_locus``  — Ensembl Plants REST (live)
   - ``get_gene_xrefs``               — Ensembl Plants xrefs (live)
   - ``phytozome_lookup_locus``       — Phytozome BioMart (live)
   - ``resolve_locus_to_uniprot``     — UniProt KB search (live)
+  - ``locus_literature``             — Europe PMC search (live)
   - ``tair_locus_info``              — informational stub (subscription-gated)
   - ``plantcyc_locus_info``          — informational stub (subscription-gated)
 
@@ -26,10 +27,18 @@ from mcp import types
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 
-from plant_genomics_mcp import ensembl_plants, phytozome, plantcyc, tair, uniprot
+from plant_genomics_mcp import (
+    ensembl_plants,
+    europe_pmc,
+    phytozome,
+    plantcyc,
+    tair,
+    uniprot,
+)
 from plant_genomics_mcp.models import (
     EnsemblPlantsLocus,
     GeneXrefs,
+    LocusLiterature,
     PhytozomeLocus,
     PlantCycLocusInfo,
     TairLocusInfo,
@@ -47,6 +56,14 @@ _EDAM = {
     "edam": {
         "operation": ["operation_2422"],  # Data retrieval
         "topic": ["topic_0780", "topic_0114"],  # Plant biology, Gene structure
+    },
+}
+
+# Literature tool overrides the topic to Bibliography (topic_3068).
+_EDAM_LITERATURE = {
+    "edam": {
+        "operation": ["operation_2422"],
+        "topic": ["topic_0780", "topic_3068"],  # Plant biology, Literature and language
     },
 }
 
@@ -171,6 +188,43 @@ TOOLS: list[types.Tool] = [
         _meta=_EDAM,
     ),
     types.Tool(
+        name="locus_literature",
+        description=(
+            "Search Europe PMC for literature mentioning a plant locus. "
+            "Free, no API key. Returns up to `size` results (default 10, "
+            "capped at 25) with title, authors, journal, year, DOI, PMID, "
+            "open-access status, citation count, and abstract. For "
+            "non-Arabidopsis species the species common name is appended "
+            "to the query to disambiguate locus IDs (rice, maize, ...). "
+            "Pair with resolve_locus_to_uniprot or ensembl_plants_lookup_locus "
+            "to ground the locus before fanning out to the literature."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "e.g. AT1G01010 (Arabidopsis), Os01g0100100 (rice)",
+                },
+                "species": {
+                    "type": "string",
+                    "description": "Ensembl species slug, used to qualify the query",
+                    "default": "arabidopsis_thaliana",
+                },
+                "size": {
+                    "type": "integer",
+                    "description": "Max results (1–25, default 10)",
+                    "default": europe_pmc.DEFAULT_PAGE_SIZE,
+                    "minimum": 1,
+                    "maximum": europe_pmc.MAX_PAGE_SIZE,
+                },
+            },
+            "required": ["locus"],
+        },
+        outputSchema=LocusLiterature.model_json_schema(),
+        _meta=_EDAM_LITERATURE,
+    ),
+    types.Tool(
         name="tair_locus_info",
         description=(
             "Returns subscription-access info and alternatives for a TAIR "
@@ -254,6 +308,13 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     client,
                     args["locus"],
                     organism_id=args.get("organism_id", uniprot.DEFAULT_TAXON_ID),
+                )
+            case "locus_literature":
+                return await europe_pmc.lookup_locus(
+                    client,
+                    args["locus"],
+                    species=args.get("species", "arabidopsis_thaliana"),
+                    size=args.get("size", europe_pmc.DEFAULT_PAGE_SIZE),
                 )
             case "tair_locus_info":
                 # Pure-data sync call — no client, no await. Returns a

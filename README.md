@@ -1,7 +1,8 @@
 # plant-genomics-mcp
 
-> **6 tools** for plant-genomics locus lookup via the Model Context Protocol.
-> Free, public sources: Ensembl Plants + Phytozome BioMart + UniProtKB. TAIR
+> **7 tools** for plant-genomics locus lookup via the Model Context Protocol.
+> Free, public sources: Ensembl Plants + Phytozome BioMart + UniProtKB +
+> Europe PMC. TAIR
 >
 > - PlantCyc are informational stubs that redirect to the free alternatives
 >   (both services are paid-subscription-gated, probed 2026-05-21).
@@ -19,8 +20,9 @@
 | 2   | Cross-references (live) | `get_gene_xrefs`              | Fetches cross-DB references (UniProt, NCBI Gene, TAIR, GO, …) from Ensembl. |
 | 3   | Gene metadata (live)    | `phytozome_lookup_locus`      | Fetches gene record from Phytozome BioMart (any Phytozome proteome).        |
 | 4   | Protein (live)          | `resolve_locus_to_uniprot`    | Resolves a locus to its UniProtKB record (Swiss-Prot preferred, TrEMBL OK). |
-| 5   | Subscription redirect   | `tair_locus_info`             | Returns subscription notice + redirect to live backends. No upstream call.  |
-| 6   | Subscription redirect   | `plantcyc_locus_info`         | Returns subscription notice + redirect to live backends. No upstream call.  |
+| 5   | Literature (live)       | `locus_literature`            | Searches Europe PMC for papers mentioning the locus (free, no API key).     |
+| 6   | Subscription redirect   | `tair_locus_info`             | Returns subscription notice + redirect to live backends. No upstream call.  |
+| 7   | Subscription redirect   | `plantcyc_locus_info`         | Returns subscription notice + redirect to live backends. No upstream call.  |
 
 Live tools take a TAIR-style locus (e.g. `AT1G01010`) plus optional
 `species=` / `organism_id=` and return a structured record. UniProt
@@ -30,7 +32,7 @@ species/organism conventions documented below. Subscription tools take
 a locus and return a structured redirect record — they do not call the
 gated upstream.
 
-All six tools publish JSON `outputSchema` for client-side validation
+All seven tools publish JSON `outputSchema` for client-side validation
 and EDAM ontology tags (`operation_2422` Data retrieval; topic
 `topic_0780` Plant biology + `topic_0114` Gene structure) on `_meta`
 for registry indexers.
@@ -199,7 +201,53 @@ structure (AlphaFold, RCSB), domains (InterPro, PROSITE), pathways
 (Reactome, the subscriber path into PlantCyc), variants (ClinVar via
 the human-orthology bridge).
 
-### 5. `tair_locus_info` / 6. `plantcyc_locus_info`
+### 5. `locus_literature`
+
+Search Europe PMC for literature mentioning a plant locus. Free,
+no API key. Returns up to `size` records (default 10, capped at 25)
+with title, authors, journal, year, DOI/PMID/PMCID, open-access status,
+citation count, and abstract. For non-Arabidopsis species the species
+common name is appended to the query (`rice`, `maize`, `tomato`, …)
+to disambiguate locus IDs that might otherwise collide with unrelated
+literature.
+
+```jsonc
+{ "locus": "AT1G01010", "size": 3 }
+
+// result (hits[] truncated)
+{
+  "locus": "AT1G01010",
+  "species": "arabidopsis_thaliana",
+  "query": "AT1G01010",
+  "hitCount": 40,
+  "returned": 3,
+  "hits": [
+    {
+      "id": "41152268",
+      "source": "MED",
+      "pmid": "41152268",
+      "pmcid": "PMC12569054",
+      "doi": "10.1038/s41526-025-00525-5",
+      "title": "GLARE: discovering hidden patterns in spaceflight transcriptome ...",
+      "authorString": "Seo D, Strickland HF, Zhou M, ...",
+      "journalTitle": "npj Microgravity",
+      "pubYear": "2025",
+      "citedByCount": 0,
+      "isOpenAccess": "Y",
+      "hasPDF": "Y",
+      "web_url": "https://europepmc.org/article/PMC/PMC12569054",
+    },
+    // ...
+  ],
+}
+```
+
+This is the **literature entry point** — pair it with the protein-side
+chain (`resolve_locus_to_uniprot` → AlphaFold) or the cross-DB pivot
+(`get_gene_xrefs` → NCBI Gene) to ground a locus first, then fan out
+to the most-cited or most-recent papers.
+
+### 6. `tair_locus_info` / 7. `plantcyc_locus_info`
 
 Pure-data redirects — these tools do **not** call upstream. Both TAIR
 and PlantCyc gate their free per-locus REST behind paid subscriptions
