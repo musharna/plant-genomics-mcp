@@ -26,7 +26,7 @@ latency without showing anything new).
 2. `get_gene_xrefs` → 5 cross-references (UniProt + Araport + others).
 3. `resolve_locus_to_uniprot` → canonical Swiss-Prot entry **Q0WV96** (NAC1_ARATH).
 4. `locus_literature` → 10 Europe PMC hits citing the locus.
-5. `locus_go_annotations` → QuickGO annotations for Q0WV96 (0 in the captured run — TrEMBL/Swiss-Prot canonical-entry mismatch worth flagging).
+5. `locus_go_annotations` → 9 QuickGO annotations for Q0WV96 (TAIR-assigned), `by_aspect` rollup = 3 MF + 1 BP + 2 CC terms.
 
 **`find_homologs`** — BLAST + per-hit enrichment:
 
