@@ -439,6 +439,21 @@ Env knobs (read once at import):
 | `PLANT_GENOMICS_MCP_CACHE_SIZE`     | `256`   | Max entries per backend before LRU eviction kicks in. |
 | `PLANT_GENOMICS_MCP_CACHE_DISABLED` | unset   | Any non-empty value makes every cache a no-op.        |
 
+### Progress notifications
+
+For long-running calls (retry storms, the multi-second Phytozome BioMart
+POST), the server emits MCP `notifications/progress` messages over the
+active session. Clients opt in by passing a `progressToken` in the
+request `_meta`; without one, every notification is dropped.
+
+What gets reported:
+
+- **Retry sleeps** in every backend retry loop (`Ensembl Plants /lookup/id/...: HTTP 429, retrying in 1.0s (attempt 2/3)`).
+- **BioMart query bookends** — `Phytozome BioMart: submitting query` before the POST and `Phytozome BioMart: query complete` after a 200.
+
+`progress` is a monotonically increasing step counter (not a percentage);
+`total` is omitted because retry budgets aren't a useful denominator.
+
 ## License
 
 MIT — see [`LICENSE`](LICENSE). Underlying services (Ensembl Plants,

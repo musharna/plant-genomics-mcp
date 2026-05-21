@@ -29,7 +29,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import cache
+from plant_genomics_mcp import cache, progress
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
@@ -96,6 +96,12 @@ _FIELDS = (
 async def _post(client: httpx.AsyncClient, xml_payload: str) -> str:
     """POST the BioMart query, returning raw response text.
 
+    BioMart is the slowest backend in this server — the XML query is
+    parsed server-side and can take multiple seconds even for simple
+    single-locus lookups. We emit a progress notification before and
+    after the POST so clients that opted in see "BioMart still working"
+    instead of a silent stall.
+
     Retries on 429 / 5xx with exponential backoff, honoring ``Retry-After``.
     BioMart application-level errors (``Query ERROR:``) are returned as 200
     and surfaced upstream — they are NOT retried here.
@@ -107,6 +113,9 @@ async def _post(client: httpx.AsyncClient, xml_payload: str) -> str:
     delay = 1.0
     last_status: int | None = None
     for attempt in range(MAX_RETRIES):
+        await progress.notify(
+            f"Phytozome BioMart: submitting query (attempt {attempt + 1}/{MAX_RETRIES})"
+        )
         resp = await client.post(
             BASE_URL,
             data={"query": xml_payload},
@@ -116,9 +125,14 @@ async def _post(client: httpx.AsyncClient, xml_payload: str) -> str:
         if resp.status_code == 200:
             text = resp.text
             _CACHE.set(key, text)
+            await progress.notify("Phytozome BioMart: query complete")
             return text
         if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_RETRIES - 1:
             retry_after = float(resp.headers.get("Retry-After", delay))
+            await progress.notify(
+                f"Phytozome BioMart: HTTP {resp.status_code}, retrying in "
+                f"{retry_after:.1f}s (attempt {attempt + 2}/{MAX_RETRIES})"
+            )
             await asyncio.sleep(retry_after)
             delay *= 2
             continue
