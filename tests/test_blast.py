@@ -60,15 +60,15 @@ RESULT_REPORT = """BLASTP 2.15.0+
 Query= test sequence
 Length=120
 
-                                                                      Score        E
-Sequences producing significant alignments:                          (Bits)     Value
+                                                                  Score     E
+Sequences producing significant alignments:                       (Bits)  Value  Ident
 
-NAC domain-containing protein 1 [Arabidopsis thaliana]                250        2e-80    NP_001185207.1
-NAC domain-containing protein 2 [Arabidopsis thaliana]                200        3e-60    NP_001185208.1
-hypothetical protein OsI_01234 [Oryza sativa Indica]                  150        5e-40    EAY78901.1
+Q9FLJ2.1 RecName: Full=NAC domain-containing protein 100; Shor...  204     8e-65  66%
+Q9FKA0.1 RecName: Full=NAC domain-containing protein 92; Short...  199     1e-63  66%
+Q9FLR3.1 RecName: Full=NAC domain-containing protein 79; Short...  200     2e-63  64%
 
 ALIGNMENTS
->NAC domain-containing protein 1 [Arabidopsis thaliana]
+>Q9FLJ2.1 RecName: Full=NAC domain-containing protein 100; Short=ANAC100;
 ... full alignment text follows ...
 """
 
@@ -112,10 +112,11 @@ def test_parse_hit_table_extracts_accession_evalue_bitscore_and_description() ->
     hits = blast._parse_hit_table(RESULT_REPORT)
     assert len(hits) == 3
     first = hits[0]
-    assert first["accession"] == "NP_001185207.1"
-    assert first["bit_score"] == 250.0
-    assert first["evalue"] == 2e-80
-    assert "NAC domain-containing protein 1" in first["description"]
+    assert first["accession"] == "Q9FLJ2.1"
+    assert first["bit_score"] == 204.0
+    assert first["evalue"] == 8e-65
+    assert first["identity"] == "66%"
+    assert "NAC domain-containing protein 100" in first["description"]
 
 
 def test_parse_hit_table_handles_missing_block() -> None:
@@ -178,7 +179,8 @@ async def test_blast_sequence_submits_polls_once_then_fetches(
     assert result["program"] == "blastp"
     assert result["database"] == "swissprot"
     assert result["hitCount"] == 3
-    assert result["hits"][0]["accession"] == "NP_001185207.1"
+    assert result["hits"][0]["accession"] == "Q9FLJ2.1"
+    assert result["hits"][0]["identity"] == "66%"
     assert result["raw_report_truncated"] is False
     assert "BLASTP 2.15.0+" in result["raw_report_excerpt"]
 

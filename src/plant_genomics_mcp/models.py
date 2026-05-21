@@ -226,20 +226,28 @@ class LocusGoAnnotations(BaseModel):
 class BlastHit(BaseModel):
     """One row from the BLAST text-report "significant alignments" table.
 
-    The Text-format report gives us description + bit score + e-value +
-    accession per hit; richer per-alignment data lives in the trailing
-    ALIGNMENTS section and is preserved in ``raw_report_excerpt``.
+    The Text-format report gives us accession + description + bit score +
+    e-value + identity per hit; richer per-alignment data lives in the
+    trailing ALIGNMENTS section and is preserved in ``raw_report_excerpt``.
     """
 
     model_config = ConfigDict(extra="forbid")
 
-    accession: str = Field(description="NCBI accession, e.g. NP_001185207.1")
+    accession: str = Field(description="NCBI accession, e.g. Q9FLJ2.1 / NP_001185207.1")
     description: str = Field(description="Subject description from the BLAST report")
     bit_score: float | str = Field(
         description="Bit score — float when parseable, raw string otherwise"
     )
     evalue: float | str = Field(
         description="E-value — float when parseable, raw string otherwise (e.g. '0.0')"
+    )
+    identity: str | None = Field(
+        default=None,
+        description=(
+            'Percent identity from the summary table (e.g. "66%"). Kept as '
+            "string because NCBI ships the literal % suffix; None on legacy "
+            "reports that omit the Ident column."
+        ),
     )
 
 

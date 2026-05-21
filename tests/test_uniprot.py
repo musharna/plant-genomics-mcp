@@ -152,6 +152,74 @@ async def test_lookup_locus_retries_on_429_then_succeeds(httpx_mock: HTTPXMock) 
     assert result["primaryAccession"] == "Q0WV96"
 
 
+# ---------- accession-shaped input dispatch ----------
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        ("Q9LIV2", True),  # 6-char legacy
+        ("P12345", True),
+        ("Q9FLJ2.1", True),  # with version suffix (BLAST shape)
+        ("A0A1B2C3D4", True),  # 10-char extended
+        ("AT1G01010", False),  # TAIR locus
+        ("Os01g0100100", False),  # rice locus
+        ("NP_001185207.1", False),  # NCBI RefSeq
+        ("", False),
+        ("GARBAGE", False),
+    ],
+)
+def test_looks_like_uniprot_accession_regex(value: str, expected: bool) -> None:
+    assert uniprot._looks_like_uniprot_accession(value) is expected
+
+
+@pytest.mark.asyncio
+async def test_lookup_locus_with_accession_input_uses_direct_fetch(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """UniProt-shaped input routes to /uniprotkb/{accession}.json — no search."""
+    httpx_mock.add_response(
+        url="https://rest.uniprot.org/uniprotkb/Q9FLJ2.json",
+        json={
+            "primaryAccession": "Q9FLJ2",
+            "uniProtkbId": "NC100_ARATH",
+            "entryType": "UniProtKB reviewed (Swiss-Prot)",
+            "proteinDescription": {
+                "recommendedName": {"fullName": {"value": "NAC domain-containing protein 100"}}
+            },
+            "genes": [{"geneName": {"value": "NAC100"}}],
+            "organism": {"scientificName": "Arabidopsis thaliana", "taxonId": 3702},
+            "sequence": {"length": 336},
+        },
+    )
+    async with httpx.AsyncClient() as client:
+        # Pass the BLAST-style versioned accession; strip happens internally.
+        result = await uniprot.lookup_locus(client, "Q9FLJ2.1")
+    assert result["primaryAccession"] == "Q9FLJ2"
+    assert result["uniProtkbId"] == "NC100_ARATH"
+    assert result["reviewed"] is True
+    # locus_query preserves the original (versioned) input for client traceability.
+    assert result["locus_query"] == "Q9FLJ2.1"
+    # No /uniprotkb/search request should have been issued.
+    for req in httpx_mock.get_requests():
+        assert "/uniprotkb/search" not in str(req.url)
+
+
+@pytest.mark.asyncio
+async def test_lookup_locus_with_accession_404_raises_not_found(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """Q9XXX9 is accession-shaped (last char must be a digit) but synthetic."""
+    httpx_mock.add_response(
+        url="https://rest.uniprot.org/uniprotkb/Q9XXX9.json",
+        status_code=404,
+        text="not found",
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="no entry for accession='Q9XXX9'"):
+            await uniprot.lookup_locus(client, "Q9XXX9")
+
+
 # ---------- live integration (real-execution check) ----------
 
 

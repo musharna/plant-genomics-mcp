@@ -22,6 +22,7 @@ Public users get the same rate-limit budget as everyone else; we retry on
 from __future__ import annotations
 
 import asyncio
+import re
 from typing import Any
 
 import httpx
@@ -37,6 +38,28 @@ from plant_genomics_mcp.errors import (
 BASE_URL = "https://rest.uniprot.org"
 DEFAULT_TIMEOUT = 30.0
 MAX_RETRIES = 3
+
+# UniProtKB accession syntax — https://www.uniprot.org/help/accession_numbers
+# Either the 6-char legacy form (e.g. P12345, Q9LIV2) or the 10-char form
+# (e.g. A0A1B2C3D4). We allow an optional trailing `.N` version suffix
+# because BLAST text reports emit `Q9FLJ2.1` rather than the bare accession.
+_UNIPROT_ACCESSION_RE = re.compile(
+    r"^(?:[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9](?:[A-Z][A-Z0-9]{2}[0-9]){1,2})$"
+)
+
+
+def _looks_like_uniprot_accession(value: str) -> bool:
+    """True if ``value`` matches the UniProtKB accession syntax.
+
+    Strips an optional ``.N`` version suffix (BLAST text reports emit
+    e.g. ``Q9FLJ2.1``) before matching. Used to dispatch ``lookup_locus``
+    between gene-name search and direct-by-accession fetch.
+    """
+    if not value:
+        return False
+    base = value.split(".", 1)[0]
+    return bool(_UNIPROT_ACCESSION_RE.match(base))
+
 
 # Per-module response cache. See plant_genomics_mcp.cache for env knobs.
 _CACHE = cache.TTLCache()
@@ -162,23 +185,88 @@ def _normalize(hit: dict[str, Any], locus_query: str) -> dict[str, Any]:
     }
 
 
+async def _fetch_by_accession(
+    client: httpx.AsyncClient,
+    accession: str,
+) -> dict[str, Any]:
+    """Fetch a UniProtKB entry directly by accession.
+
+    Strips any trailing ``.N`` version suffix (UniProt's per-accession
+    endpoint expects the bare accession, but BLAST text reports emit
+    ``Q9FLJ2.1`` etc.). Retries on 429/5xx mirror the search path.
+    Raises ``NotFoundError`` on 404, ``RateLimitError`` on persistent 429.
+    """
+    bare = accession.split(".", 1)[0]
+    url = f"{BASE_URL}/uniprotkb/{bare}.json"
+    key = cache.make_key("GET", BASE_URL, f"/uniprotkb/{bare}.json", {})
+    cached = _CACHE.get(key)
+    if cached is not None:
+        return dict(cached)
+    headers = {"Accept": "application/json"}
+    delay = 1.0
+    last_status: int | None = None
+    for attempt in range(MAX_RETRIES):
+        resp = await client.get(url, headers=headers, timeout=DEFAULT_TIMEOUT)
+        last_status = resp.status_code
+        if resp.status_code == 200:
+            data = resp.json()
+            _CACHE.set(key, data)
+            return data
+        if resp.status_code == 404:
+            raise NotFoundError(f"UniProt has no entry for accession={bare!r}")
+        if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_RETRIES - 1:
+            retry_after = float(resp.headers.get("Retry-After", delay))
+            await progress.notify(
+                f"UniProt /uniprotkb/{bare}.json: HTTP {resp.status_code}, retrying in "
+                f"{retry_after:.1f}s (attempt {attempt + 2}/{MAX_RETRIES})"
+            )
+            await asyncio.sleep(retry_after)
+            delay *= 2
+            continue
+        if resp.status_code == 429:
+            raise RateLimitError(
+                f"UniProt accession fetch rate-limited (HTTP 429): {resp.text[:200]}"
+            )
+        if resp.status_code in (500, 502, 503, 504):
+            raise UpstreamUnavailableError(
+                f"UniProt accession fetch → HTTP {resp.status_code}: {resp.text[:200]}"
+            )
+        raise PlantGenomicsError(
+            f"UniProt accession fetch → HTTP {resp.status_code}: {resp.text[:200]}"
+        )
+    if last_status == 429:
+        raise RateLimitError(f"UniProt accession fetch exhausted {MAX_RETRIES} retries (429)")
+    raise UpstreamUnavailableError(
+        f"UniProt accession fetch exhausted {MAX_RETRIES} retries (last HTTP {last_status})"
+    )
+
+
 async def lookup_locus(
     client: httpx.AsyncClient,
     locus: str,
     organism_id: int = DEFAULT_TAXON_ID,
 ) -> dict[str, Any]:
-    """Resolve a locus to its canonical UniProtKB entry.
+    """Resolve a locus OR UniProt accession to its UniProtKB entry.
 
-    ``locus`` is the gene identifier (TAIR ``AT1G01010``, rice
-    ``Os01g0100100``, ...). ``organism_id`` is the NCBI taxonomy ID;
-    defaults to 3702 (Arabidopsis thaliana). See ``KNOWN_TAXA`` for hints.
+    Two input shapes are accepted:
 
-    Prefers reviewed (Swiss-Prot) hits; falls back to unreviewed (TrEMBL)
-    if no reviewed hit exists. Returns the normalized shape from
-    ``_normalize`` — the top hit only.
+    * **Gene/locus name** (TAIR ``AT1G01010``, rice ``Os01g0100100``, …) —
+      searches ``/uniprotkb/search`` with ``gene:{locus} AND organism_id``.
+      Prefers reviewed (Swiss-Prot) hits, falls back to unreviewed (TrEMBL).
+    * **UniProt accession** (``Q9LIV2``, ``A0A1B2C3D4``, optionally with a
+      trailing ``.N`` version suffix from a BLAST text report) — bypasses
+      search and fetches ``/uniprotkb/{accession}.json`` directly. The
+      ``organism_id`` argument is ignored on this path because the
+      accession is already organism-scoped.
 
-    Raises ``NotFoundError`` if both searches return zero hits.
+    ``organism_id`` is the NCBI taxonomy ID; defaults to 3702 (Arabidopsis
+    thaliana). See ``KNOWN_TAXA`` for hints.
+
+    Raises ``NotFoundError`` if the search/fetch returns zero hits.
     """
+    if _looks_like_uniprot_accession(locus):
+        record = await _fetch_by_accession(client, locus)
+        return _normalize(record, locus_query=locus)
     base = f"gene:{locus} AND organism_id:{organism_id}"
     # Pass 1: reviewed only (Swiss-Prot).
     results = await _search(client, f"{base} AND reviewed:true", size=1)
