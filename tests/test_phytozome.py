@@ -126,3 +126,46 @@ async def test_live_lookup_at1g01010_phytozome() -> None:
         result = await phytozome.lookup_locus(client, "AT1G01010")
     assert result["gene_name"] == "AT1G01010"
     assert "NAC" in result["description"]
+
+
+# Snapshot of canonical first-gene probes used to verify each KNOWN_ORGANISMS
+# entry on 2026-05-21 (P2.19). Drives the live-only regression below.
+_KNOWN_ORGANISM_PROBES: dict[str, str] = {
+    "arabidopsis_thaliana": "AT1G01010",
+    "glycine_max": "Glyma.01G000100",
+    "sorghum_bicolor": "Sobic.001G000200",
+    "brachypodium_distachyon": "Bradi1g00200",
+    "manihot_esculenta": "Manes.01G000100",
+    "eucalyptus_grandis": "Eucgr.A00010",
+    "populus_trichocarpa": "Potri.001G000100",
+    "phaseolus_vulgaris": "Phvul.002G000200",
+    "chlamydomonas_reinhardtii": "Cre01.g000017",
+    "daucus_carota": "DCAR_001000",
+}
+
+
+def test_known_organisms_probe_table_matches_dict_keys() -> None:
+    """Cheap consistency check between the catalog and its probe table.
+
+    Runs without network: guards against silently dropping a species
+    from KNOWN_ORGANISMS without dropping its probe (or vice versa).
+    """
+    assert set(_KNOWN_ORGANISM_PROBES) == set(phytozome.KNOWN_ORGANISMS)
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_known_organisms_all_resolve() -> None:
+    """Every KNOWN_ORGANISMS entry must resolve its canonical probe gene.
+
+    Real-execution check guards against ID drift in BioMart (Phytozome
+    occasionally renumbers proteome IDs across releases). If this test
+    starts failing, re-probe via /tmp/verify_all_organisms.py.
+    """
+    async with httpx.AsyncClient() as client:
+        for species, oid in phytozome.KNOWN_ORGANISMS.items():
+            probe = _KNOWN_ORGANISM_PROBES[species]
+            row = await phytozome.lookup_locus(client, probe, organism_id=oid)
+            assert row["gene_name"] == probe, (
+                f"{species} (id={oid}) probe {probe} returned {row['gene_name']!r}"
+            )
