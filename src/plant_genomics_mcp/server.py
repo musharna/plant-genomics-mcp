@@ -40,6 +40,7 @@ import httpx
 from mcp import types
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
+from pydantic import AnyUrl
 
 from plant_genomics_mcp import (
     batch,
@@ -50,6 +51,7 @@ from plant_genomics_mcp import (
     plantcyc,
     progress,
     quickgo,
+    resources,
     tair,
     uniprot,
 )
@@ -632,6 +634,21 @@ TOOLS: list[types.Tool] = [
 @server.list_tools()
 async def _list_tools() -> list[types.Tool]:
     return TOOLS
+
+
+# ---- resources --------------------------------------------------------------
+# Read-only metadata surface (cache stats, supported organisms, backend status).
+# See plant_genomics_mcp.resources for the URI catalog and payload builders.
+
+
+@server.list_resources()
+async def _list_resources() -> list[types.Resource]:
+    return resources.RESOURCES
+
+
+@server.read_resource()
+async def _read_resource(uri: AnyUrl):  # type: ignore[no-untyped-def]
+    return await resources.read_resource(uri)
 
 
 # ---- dispatch ---------------------------------------------------------------

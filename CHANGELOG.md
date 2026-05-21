@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **MCP resources primitive** (P2.17): `resources/list` + `resources/read` exposing three read-only JSON resources — `pgmcp://cache/stats` (per-backend `TTLCache` hits/misses/size), `pgmcp://organisms/phytozome` (slug → Phytozome `organism_id` map), and `pgmcp://backends/status` (per-backend `kind`/`subscription_gated`/`probed_at` rollup). Lets operators verify caching is doing work and clients enumerate supported organisms / backends without parsing docstrings. SDK auto-advertises the `resources` capability once the handlers are registered.
 - **`blast_sequence` tool** (P2.16): NCBI BLAST URLAPI client — async Put/Get polling against `https://blast.ncbi.nlm.nih.gov/Blast.cgi`. Supports blastn / blastp / blastx / tblastn / tblastx; honors NCBI etiquette (per-RID 60s poll floor, `tool=` + `email=` identity params, `PLANT_GENOMICS_MCP_NCBI_EMAIL` env override). Emits `notifications/progress` on each poll. Returns parsed top hits + raw text report excerpt (capped at 50 KB). Long searches that exceed `max_wait` raise `[NotFoundError]` with the RID preserved so the client can re-poll.
 
 ## v0.5.0 — 2026-05-21
