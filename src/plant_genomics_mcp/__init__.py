@@ -7,4 +7,4 @@ Four MCP tools for plant gene-record lookup:
   - ``plantcyc_locus_info``         — informational redirect (subscription-gated)
 """
 
-__version__ = "0.5.0"
+__version__ = "0.6.0"
