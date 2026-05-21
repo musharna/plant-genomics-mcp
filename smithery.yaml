@@ -1,0 +1,18 @@
+# Smithery configuration — https://smithery.ai/docs/build/project-config/smithery.yaml
+#
+# stdio mode, launched against the GHCR-published image. No config required —
+# all four live backends (Ensembl Plants, Phytozome BioMart, UniProt REST,
+# Europe PMC, QuickGO) are public; TAIR / PlantCyc tools return informational
+# stubs and do not call the subscription-gated upstreams.
+
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    required: []
+    properties: {}
+  commandFunction: |-
+    (config) => ({
+      command: 'docker',
+      args: ['run', '--rm', '-i', 'ghcr.io/mjarnold/plant-genomics-mcp:latest']
+    })
