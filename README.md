@@ -369,11 +369,29 @@ route to the live backends transparently:
   "tair_web_url": "https://www.arabidopsis.org/locus/AT1G01010",
   "status": "subscription_required",
   "probed_at": "2026-05-21",
-  "rationale": "TAIR per-locus REST endpoints return 403; Phoenix Bioinformatics requires paid subscription.",
+  "auth_configured": false,
+  "rationale": "TAIR per-locus REST endpoints return 403; Phoenix Bioinformatics requires paid subscription. Set PLANT_GENOMICS_MCP_TAIR_TOKEN once a subscriber-implemented live wiring lands.",
   "alternatives": ["ensembl_plants_lookup_locus", "phytozome_lookup_locus"],
   "alternatives_note": "Both alternatives return the same canonical Arabidopsis annotation; ensembl_plants_lookup_locus also covers other plant species (oryza_sativa, zea_mays, ...).",
 }
 ```
+
+**Subscription-token slots (P2.20).** Both tools read an optional env
+var: `PLANT_GENOMICS_MCP_TAIR_TOKEN` and
+`PLANT_GENOMICS_MCP_PLANTCYC_TOKEN`. When either is set (non-empty),
+the corresponding tool's response flips:
+
+- `status` → `"configured_live_not_implemented"`
+- `auth_configured` → `true`
+- A new `note_for_subscribers` field appears, pointing at the
+  `_call_live_if_configured` hook in the module where a credentialed
+  user can drop in the real `httpx` call.
+
+The live HTTP wiring against Phoenix/SRI is **intentionally deferred**:
+their auth schemes are undocumented in the public surface, and
+shipping an unverifiable client would mislead the first subscriber.
+A subscriber-with-credentials PR that includes a real-execution test
+against their account is the path forward.
 
 ### 9. Batch variants
 
