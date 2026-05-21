@@ -18,7 +18,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import cache
+from plant_genomics_mcp import cache, progress
 from plant_genomics_mcp.errors import (
     PlantGenomicsError,
     RateLimitError,
@@ -83,6 +83,10 @@ async def _get(
             return result
         if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_RETRIES - 1:
             retry_after = float(resp.headers.get("Retry-After", delay))
+            await progress.notify(
+                f"Europe PMC {path}: HTTP {resp.status_code}, retrying in "
+                f"{retry_after:.1f}s (attempt {attempt + 2}/{MAX_RETRIES})"
+            )
             await asyncio.sleep(retry_after)
             delay *= 2
             continue

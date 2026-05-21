@@ -45,6 +45,7 @@ from plant_genomics_mcp import (
     europe_pmc,
     phytozome,
     plantcyc,
+    progress,
     quickgo,
     tair,
     uniprot,
@@ -62,6 +63,35 @@ from plant_genomics_mcp.models import (
 )
 
 server: Server = Server("plant-genomics-mcp")
+
+
+def _build_reporter() -> progress.Reporter | None:
+    """Construct a progress reporter from the current MCP request context.
+
+    Returns ``None`` if (a) we're called outside a request, (b) the client
+    did not pass a ``progressToken``, or (c) the session isn't reachable.
+    The HTTP helpers fall back to no-op behavior when no reporter is
+    installed, so this never has to raise.
+    """
+    try:
+        ctx = server.request_context
+    except LookupError:
+        return None
+    meta = getattr(ctx, "meta", None)
+    token = getattr(meta, "progressToken", None) if meta is not None else None
+    if token is None:
+        return None
+    session = ctx.session
+
+    async def _send(p: float, t: float | None, m: str | None) -> None:
+        await session.send_progress_notification(
+            progress_token=token,
+            progress=p,
+            total=t,
+            message=m,
+        )
+
+    return progress.Reporter(_send)
 
 
 # ---- EDAM ontology tags -----------------------------------------------------
@@ -646,8 +676,19 @@ async def _call_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
     ``except Exception`` handler, which calls ``_make_error_result(str(exc))``.
     Our PlantGenomicsError.__str__ prepends ``[ClassName]`` so the wire
     payload preserves the failure type.
+
+    If the client passed a ``progressToken`` in the request meta, install a
+    Reporter on the contextvar so the HTTP helpers (retry loops + BioMart
+    POST) emit ``notifications/progress`` messages over the active session.
     """
-    return await _dispatch(name, arguments)
+    reporter = _build_reporter()
+    if reporter is None:
+        return await _dispatch(name, arguments)
+    token = progress.set_reporter(reporter)
+    try:
+        return await _dispatch(name, arguments)
+    finally:
+        progress.reset_reporter(token)
 
 
 # ---- entrypoint -------------------------------------------------------------

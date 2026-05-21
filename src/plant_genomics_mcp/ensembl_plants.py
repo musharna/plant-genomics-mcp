@@ -17,7 +17,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import cache
+from plant_genomics_mcp import cache, progress
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
@@ -46,7 +46,9 @@ async def _get(
     """GET an Ensembl REST endpoint with retry on 429/5xx.
 
     Mirrors the genomics-mcp sibling's retry shape: bounded retries with
-    exponential backoff, honors ``Retry-After`` if present.
+    exponential backoff, honors ``Retry-After`` if present. Each retry
+    sleep emits an MCP progress notification so clients that opted in see
+    "still working" updates instead of a silent stall.
     """
     key = cache.make_key("GET", BASE_URL, path, params)
     cached = _CACHE.get(key)
@@ -69,6 +71,10 @@ async def _get(
             return result
         if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_RETRIES - 1:
             retry_after = float(resp.headers.get("Retry-After", delay))
+            await progress.notify(
+                f"Ensembl Plants {path}: HTTP {resp.status_code}, retrying in "
+                f"{retry_after:.1f}s (attempt {attempt + 2}/{MAX_RETRIES})"
+            )
             await asyncio.sleep(retry_after)
             delay *= 2
             continue
