@@ -29,7 +29,12 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp.ensembl_plants import PlantGenomicsError
+from plant_genomics_mcp.errors import (
+    NotFoundError,
+    PlantGenomicsError,
+    RateLimitError,
+    UpstreamUnavailableError,
+)
 
 BASE_URL = "https://phytozome-next.jgi.doe.gov/biomart/martservice"
 DEFAULT_TIMEOUT = 30.0
@@ -92,12 +97,14 @@ async def _post(client: httpx.AsyncClient, xml_payload: str) -> str:
     and surfaced upstream — they are NOT retried here.
     """
     delay = 1.0
+    last_status: int | None = None
     for attempt in range(MAX_RETRIES):
         resp = await client.post(
             BASE_URL,
             data={"query": xml_payload},
             timeout=DEFAULT_TIMEOUT,
         )
+        last_status = resp.status_code
         if resp.status_code == 200:
             return resp.text
         if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_RETRIES - 1:
@@ -105,8 +112,18 @@ async def _post(client: httpx.AsyncClient, xml_payload: str) -> str:
             await asyncio.sleep(retry_after)
             delay *= 2
             continue
+        if resp.status_code == 429:
+            raise RateLimitError(f"Phytozome BioMart rate-limited (HTTP 429): {resp.text[:200]}")
+        if resp.status_code in (500, 502, 503, 504):
+            raise UpstreamUnavailableError(
+                f"Phytozome BioMart → HTTP {resp.status_code}: {resp.text[:200]}"
+            )
         raise PlantGenomicsError(f"Phytozome BioMart → HTTP {resp.status_code}: {resp.text[:200]}")
-    raise PlantGenomicsError(f"Phytozome BioMart exhausted {MAX_RETRIES} retries")
+    if last_status == 429:
+        raise RateLimitError(f"Phytozome BioMart exhausted {MAX_RETRIES} retries (429)")
+    raise UpstreamUnavailableError(
+        f"Phytozome BioMart exhausted {MAX_RETRIES} retries (last HTTP {last_status})"
+    )
 
 
 async def lookup_locus(
@@ -131,9 +148,7 @@ async def lookup_locus(
         # Pre-flight reject before any HTTP — prevents XML injection via the
         # string-formatted template AND fails loud on accidental whitespace
         # / shell quoting damage.
-        raise PlantGenomicsError(
-            f"Phytozome: invalid locus {locus!r} (must match {_LOCUS_RE.pattern})"
-        )
+        raise NotFoundError(f"Phytozome: invalid locus {locus!r} (must match {_LOCUS_RE.pattern})")
 
     xml_payload = _QUERY_TEMPLATE.format(organism_id=organism_id, locus=locus)
     body = await _post(client, xml_payload)
@@ -149,9 +164,7 @@ async def lookup_locus(
     if len(lines) < 2:
         # Header present (no rows) OR empty body → nothing matched the
         # gene_name_filter for that organism_id.
-        raise PlantGenomicsError(
-            f"Phytozome: locus {locus} not found for organism_id {organism_id}"
-        )
+        raise NotFoundError(f"Phytozome: locus {locus} not found for organism_id {organism_id}")
 
     # First non-empty line is the header (we don't use it — column order is
     # pinned by our Attribute order). Second line is the first data row.

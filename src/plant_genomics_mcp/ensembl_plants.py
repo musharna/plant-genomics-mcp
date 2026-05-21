@@ -17,13 +17,21 @@ from typing import Any
 
 import httpx
 
+from plant_genomics_mcp.errors import (
+    NotFoundError,
+    PlantGenomicsError,
+    RateLimitError,
+    UpstreamUnavailableError,
+)
+
 BASE_URL = "https://rest.ensembl.org"
 DEFAULT_TIMEOUT = 30.0
 MAX_RETRIES = 3
 
-
-class PlantGenomicsError(RuntimeError):
-    """Raised when an Ensembl Plants call fails (HTTP error, retry exhaustion)."""
+# Re-export so existing imports (`from plant_genomics_mcp.ensembl_plants import
+# PlantGenomicsError`) keep working. New code should import from
+# ``plant_genomics_mcp.errors`` directly.
+__all__ = ["PlantGenomicsError", "RateLimitError", "NotFoundError", "UpstreamUnavailableError"]
 
 
 async def _get(
@@ -38,6 +46,7 @@ async def _get(
     """
     headers = {"Accept": "application/json"}
     delay = 1.0
+    last_status: int | None = None
     for attempt in range(MAX_RETRIES):
         resp = await client.get(
             f"{BASE_URL}{path}",
@@ -45,6 +54,7 @@ async def _get(
             headers=headers,
             timeout=DEFAULT_TIMEOUT,
         )
+        last_status = resp.status_code
         if resp.status_code == 200:
             return resp.json()
         if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_RETRIES - 1:
@@ -52,10 +62,26 @@ async def _get(
             await asyncio.sleep(retry_after)
             delay *= 2
             continue
+        # Non-retryable / final attempt — pick the most informative subclass.
+        if resp.status_code == 404:
+            raise NotFoundError(f"Ensembl Plants {path} → HTTP 404: {resp.text[:200]}")
+        if resp.status_code == 429:
+            raise RateLimitError(
+                f"Ensembl Plants {path} rate-limited (HTTP 429): {resp.text[:200]}"
+            )
+        if resp.status_code in (500, 502, 503, 504):
+            raise UpstreamUnavailableError(
+                f"Ensembl Plants {path} → HTTP {resp.status_code}: {resp.text[:200]}"
+            )
         raise PlantGenomicsError(
             f"Ensembl Plants {path} → HTTP {resp.status_code}: {resp.text[:200]}"
         )
-    raise PlantGenomicsError(f"Ensembl Plants {path} exhausted {MAX_RETRIES} retries")
+    # Loop exhausted retries on a retryable status.
+    if last_status == 429:
+        raise RateLimitError(f"Ensembl Plants {path} exhausted {MAX_RETRIES} retries (429)")
+    raise UpstreamUnavailableError(
+        f"Ensembl Plants {path} exhausted {MAX_RETRIES} retries (last HTTP {last_status})"
+    )
 
 
 async def lookup_locus(

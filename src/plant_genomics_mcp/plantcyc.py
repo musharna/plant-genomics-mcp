@@ -26,7 +26,8 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from plant_genomics_mcp.ensembl_plants import PlantGenomicsError
+from plant_genomics_mcp.errors import NotFoundError
+
 
 # Identifier whitelist — same shape as tair/phytozome guards. Even though
 # we only string-format the locus into a URL (not XML), reject obviously-
@@ -53,9 +54,7 @@ def lookup_locus(locus: str) -> dict[str, Any]:
     wrap MetaCyc pathway lookups directly.
     """
     if not _LOCUS_RE.match(locus):
-        raise PlantGenomicsError(
-            f"PlantCyc: invalid locus {locus!r} (must match {_LOCUS_RE.pattern})"
-        )
+        raise NotFoundError(f"PlantCyc: invalid locus {locus!r} (must match {_LOCUS_RE.pattern})")
 
     return {
         "locus": locus,

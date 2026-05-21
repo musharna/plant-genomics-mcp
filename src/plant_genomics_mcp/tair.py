@@ -27,7 +27,8 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from plant_genomics_mcp.ensembl_plants import PlantGenomicsError
+from plant_genomics_mcp.errors import NotFoundError
+
 
 # Identifier whitelist — same shape as phytozome's guard. Even though we
 # string-format the locus only into a URL (not XML), reject obviously-bogus
@@ -49,7 +50,7 @@ def lookup_locus(locus: str) -> dict[str, Any]:
     this MCP: ``ensembl_plants_lookup_locus`` and ``phytozome_lookup_locus``.
     """
     if not _LOCUS_RE.match(locus):
-        raise PlantGenomicsError(f"TAIR: invalid locus {locus!r} (must match {_LOCUS_RE.pattern})")
+        raise NotFoundError(f"TAIR: invalid locus {locus!r} (must match {_LOCUS_RE.pattern})")
 
     return {
         "locus": locus,
