@@ -1,7 +1,10 @@
-"""Plant genomics MCP — Ensembl Plants wrapper for Claude Code.
+"""Plant genomics MCP server.
 
-Sibling of the taxon-agnostic ``genomics-mcp``. Phytozome / TAIR / PlantCyc
-backends are roadmapped as separate follow-up tasks (#55-#57).
+Four MCP tools for plant gene-record lookup:
+  - ``ensembl_plants_lookup_locus`` — Ensembl Plants REST (live)
+  - ``phytozome_lookup_locus``      — Phytozome BioMart (live)
+  - ``tair_locus_info``             — informational redirect (subscription-gated)
+  - ``plantcyc_locus_info``         — informational redirect (subscription-gated)
 """
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
