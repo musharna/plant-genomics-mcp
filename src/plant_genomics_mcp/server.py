@@ -1,12 +1,13 @@
 """MCP server entry point — exposes plant genomics tools over stdio.
 
-This dispatch ships seven tools:
+This dispatch ships eight tools:
 
   - ``ensembl_plants_lookup_locus``  — Ensembl Plants REST (live)
   - ``get_gene_xrefs``               — Ensembl Plants xrefs (live)
   - ``phytozome_lookup_locus``       — Phytozome BioMart (live)
   - ``resolve_locus_to_uniprot``     — UniProt KB search (live)
   - ``locus_literature``             — Europe PMC search (live)
+  - ``locus_go_annotations``         — QuickGO GO annotations (live, locus→UniProt→QuickGO)
   - ``tair_locus_info``              — informational stub (subscription-gated)
   - ``plantcyc_locus_info``          — informational stub (subscription-gated)
 
@@ -32,12 +33,14 @@ from plant_genomics_mcp import (
     europe_pmc,
     phytozome,
     plantcyc,
+    quickgo,
     tair,
     uniprot,
 )
 from plant_genomics_mcp.models import (
     EnsemblPlantsLocus,
     GeneXrefs,
+    LocusGoAnnotations,
     LocusLiterature,
     PhytozomeLocus,
     PlantCycLocusInfo,
@@ -50,8 +53,8 @@ server: Server = Server("plant-genomics-mcp")
 
 # ---- EDAM ontology tags -----------------------------------------------------
 # Attached via _meta on each Tool so registry indexers (Smithery, Glama,
-# bio.tools) can categorize. All tools share operation_2422 (Data
-# retrieval) and the topic pair (Plant biology, Gene structure).
+# bio.tools) can categorize. Default operation is 2422 (Data retrieval)
+# with the topic pair (Plant biology, Gene structure).
 _EDAM = {
     "edam": {
         "operation": ["operation_2422"],  # Data retrieval
@@ -64,6 +67,15 @@ _EDAM_LITERATURE = {
     "edam": {
         "operation": ["operation_2422"],
         "topic": ["topic_0780", "topic_3068"],  # Plant biology, Literature and language
+    },
+}
+
+# GO annotations tool — operation_0306 (Text mining) + topic_0085 (Functional, regulatory
+# and non-coding RNA).
+_EDAM_GO = {
+    "edam": {
+        "operation": ["operation_2422"],  # Data retrieval
+        "topic": ["topic_0780", "topic_0085"],  # Plant biology, Functional genomics
     },
 }
 
@@ -225,6 +237,43 @@ TOOLS: list[types.Tool] = [
         _meta=_EDAM_LITERATURE,
     ),
     types.Tool(
+        name="locus_go_annotations",
+        description=(
+            "Fetch Gene Ontology annotations for a plant locus from QuickGO "
+            "(EBI). Free, no API key. The locus is first resolved to a "
+            "UniProt accession via the same logic as resolve_locus_to_uniprot, "
+            "then QuickGO is queried by geneProductId. Returns annotations[] "
+            "with goId/goName/goAspect/qualifier/evidence + a by_aspect rollup "
+            "({molecular_function: [{goId, goName}, ...], biological_process: "
+            "[...], cellular_component: [...]}) deduped on goId so the "
+            "high-level term set is one read away."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "e.g. AT1G01010 (Arabidopsis), Os01g0100100 (rice)",
+                },
+                "organism_id": {
+                    "type": "integer",
+                    "description": "NCBI taxonomy ID (default 3702 = Arabidopsis thaliana)",
+                    "default": 3702,
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Max annotations from QuickGO (1–100, default 50)",
+                    "default": quickgo.DEFAULT_LIMIT,
+                    "minimum": 1,
+                    "maximum": quickgo.MAX_LIMIT,
+                },
+            },
+            "required": ["locus"],
+        },
+        outputSchema=LocusGoAnnotations.model_json_schema(),
+        _meta=_EDAM_GO,
+    ),
+    types.Tool(
         name="tair_locus_info",
         description=(
             "Returns subscription-access info and alternatives for a TAIR "
@@ -282,6 +331,31 @@ async def _list_tools() -> list[types.Tool]:
 # ---- dispatch ---------------------------------------------------------------
 
 
+async def _resolve_then_go_annotations(
+    client: httpx.AsyncClient,
+    locus: str,
+    organism_id: int,
+    limit: int,
+) -> dict[str, Any]:
+    """Locus → UniProt accession → QuickGO annotations.
+
+    Propagates NotFoundError from either step — a locus with no UniProt
+    entry can't be queried in QuickGO, so the caller gets a typed error
+    rather than an empty result that hides the resolution failure.
+    """
+    up = await uniprot.lookup_locus(client, locus, organism_id=organism_id)
+    accession = up["primaryAccession"]
+    go = await quickgo.lookup_by_uniprot(client, accession, limit=limit)
+    return {
+        "locus": locus,
+        "uniprot_accession": accession,
+        "numberOfHits": go["numberOfHits"],
+        "returned": go["returned"],
+        "annotations": go["annotations"],
+        "by_aspect": go["by_aspect"],
+    }
+
+
 async def _dispatch(name: str, args: dict[str, Any]) -> Any:
     async with httpx.AsyncClient() as client:
         match name:
@@ -315,6 +389,13 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     args["locus"],
                     species=args.get("species", "arabidopsis_thaliana"),
                     size=args.get("size", europe_pmc.DEFAULT_PAGE_SIZE),
+                )
+            case "locus_go_annotations":
+                return await _resolve_then_go_annotations(
+                    client,
+                    args["locus"],
+                    organism_id=args.get("organism_id", uniprot.DEFAULT_TAXON_ID),
+                    limit=args.get("limit", quickgo.DEFAULT_LIMIT),
                 )
             case "tair_locus_info":
                 # Pure-data sync call — no client, no await. Returns a

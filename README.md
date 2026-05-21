@@ -1,8 +1,8 @@
 # plant-genomics-mcp
 
-> **7 tools** for plant-genomics locus lookup via the Model Context Protocol.
+> **8 tools** for plant-genomics locus lookup via the Model Context Protocol.
 > Free, public sources: Ensembl Plants + Phytozome BioMart + UniProtKB +
-> Europe PMC. TAIR
+> Europe PMC + QuickGO. TAIR
 >
 > - PlantCyc are informational stubs that redirect to the free alternatives
 >   (both services are paid-subscription-gated, probed 2026-05-21).
@@ -21,8 +21,9 @@
 | 3   | Gene metadata (live)    | `phytozome_lookup_locus`      | Fetches gene record from Phytozome BioMart (any Phytozome proteome).        |
 | 4   | Protein (live)          | `resolve_locus_to_uniprot`    | Resolves a locus to its UniProtKB record (Swiss-Prot preferred, TrEMBL OK). |
 | 5   | Literature (live)       | `locus_literature`            | Searches Europe PMC for papers mentioning the locus (free, no API key).     |
-| 6   | Subscription redirect   | `tair_locus_info`             | Returns subscription notice + redirect to live backends. No upstream call.  |
-| 7   | Subscription redirect   | `plantcyc_locus_info`         | Returns subscription notice + redirect to live backends. No upstream call.  |
+| 6   | GO annotations (live)   | `locus_go_annotations`        | Fetches QuickGO GO annotations (locus → UniProt → QuickGO).                 |
+| 7   | Subscription redirect   | `tair_locus_info`             | Returns subscription notice + redirect to live backends. No upstream call.  |
+| 8   | Subscription redirect   | `plantcyc_locus_info`         | Returns subscription notice + redirect to live backends. No upstream call.  |
 
 Live tools take a TAIR-style locus (e.g. `AT1G01010`) plus optional
 `species=` / `organism_id=` and return a structured record. UniProt
@@ -32,7 +33,7 @@ species/organism conventions documented below. Subscription tools take
 a locus and return a structured redirect record — they do not call the
 gated upstream.
 
-All seven tools publish JSON `outputSchema` for client-side validation
+All eight tools publish JSON `outputSchema` for client-side validation
 and EDAM ontology tags (`operation_2422` Data retrieval; topic
 `topic_0780` Plant biology + `topic_0114` Gene structure) on `_meta`
 for registry indexers.
@@ -247,7 +248,59 @@ chain (`resolve_locus_to_uniprot` → AlphaFold) or the cross-DB pivot
 (`get_gene_xrefs` → NCBI Gene) to ground a locus first, then fan out
 to the most-cited or most-recent papers.
 
-### 6. `tair_locus_info` / 7. `plantcyc_locus_info`
+### 6. `locus_go_annotations`
+
+Fetch Gene Ontology annotations for a plant locus from QuickGO (EBI).
+Free, no API key. The locus is first resolved to a UniProt accession
+(same logic as `resolve_locus_to_uniprot`), then QuickGO is queried
+by `geneProductId`. Returns raw `annotations[]` plus a `by_aspect`
+rollup (`{molecular_function: [{goId, goName}, ...], biological_process:
+[...], cellular_component: [...]}`) deduped on `goId` so the high-level
+term set is one read away.
+
+```jsonc
+{ "locus": "AT1G01010", "limit": 5 }
+
+// result
+{
+  "locus": "AT1G01010",
+  "uniprot_accession": "Q0WV96",
+  "numberOfHits": 9,
+  "returned": 5,
+  "annotations": [
+    {
+      "geneProductId": "UniProtKB:Q0WV96",
+      "symbol": "NAC001",
+      "qualifier": "enables",
+      "goId": "GO:0000976",
+      "goName": "transcription cis-regulatory region binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IPI",
+      "reference": "PMID:30356219",
+      "assignedBy": "TAIR",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      // ...
+    },
+    // ...
+  ],
+  "by_aspect": {
+    "molecular_function": [
+      { "goId": "GO:0000976", "goName": "transcription cis-regulatory region binding" },
+    ],
+    "biological_process": [
+      { "goId": "GO:0006355", "goName": "regulation of DNA-templated transcription" },
+    ],
+    "cellular_component": [{ "goId": "GO:0005634", "goName": "nucleus" }],
+  },
+}
+```
+
+`[NotFoundError]` propagates from either step — a locus with no UniProt
+entry can't be queried in QuickGO, so the caller gets a typed error
+rather than an empty result that hides the resolution failure.
+
+### 7. `tair_locus_info` / 8. `plantcyc_locus_info`
 
 Pure-data redirects — these tools do **not** call upstream. Both TAIR
 and PlantCyc gate their free per-locus REST behind paid subscriptions

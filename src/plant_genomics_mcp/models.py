@@ -12,6 +12,8 @@ To extend: add a new model + register it in ``server.TOOLS`` via
 
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -166,6 +168,59 @@ class LocusLiterature(BaseModel):
     hitCount: int = Field(description="Total hits available upstream (may exceed returned)")
     returned: int = Field(description="Number of hits actually in hits[]")
     hits: list[LiteratureHit]
+
+
+class GoAnnotation(BaseModel):
+    """One QuickGO ``/annotation/search`` row, projected to a fixed field set.
+
+    ``extra="allow"`` keeps any new QuickGO field from raising on validation
+    (the upstream record has ~18 fields; we drop verbose ones).
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    geneProductId: str | None = Field(default=None, description="e.g. UniProtKB:Q0WV96")
+    symbol: str | None = Field(default=None, description="Gene symbol, e.g. NAC001")
+    qualifier: str | None = Field(default=None, description="enables, involved_in, located_in, ...")
+    goId: str | None = Field(default=None, description="GO term ID, e.g. GO:0000976")
+    goName: str | None = Field(default=None, description="Human-readable GO term name")
+    goAspect: str | None = Field(
+        default=None,
+        description="molecular_function | biological_process | cellular_component",
+    )
+    goEvidence: str | None = Field(default=None, description="3-letter code, e.g. IPI, IDA")
+    evidenceCode: str | None = Field(default=None, description="ECO ontology ID")
+    reference: str | None = Field(default=None, description="e.g. PMID:30356219")
+    assignedBy: str | None = Field(default=None, description="Source DB, e.g. TAIR, UniProt")
+    taxonId: int | None = Field(default=None, description="NCBI taxonomy ID")
+    taxonName: str | None = Field(default=None, description="Scientific name")
+    date: str | None = Field(default=None, description="YYYYMMDD string")
+    withFrom: list[dict[str, Any]] | None = Field(
+        default=None,
+        description="Connected cross-refs from QuickGO",
+    )
+
+
+class LocusGoAnnotations(BaseModel):
+    """QuickGO annotation search wrapper for a plant locus.
+
+    The locus is first resolved to a UniProt accession via the same logic
+    as ``resolve_locus_to_uniprot``, then handed to QuickGO. ``by_aspect``
+    groups annotations by GO aspect with goId-level dedup so a chain
+    consumer can see the high-level term set without the per-evidence
+    repetition.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str
+    uniprot_accession: str = Field(description="UniProt accession used to query QuickGO")
+    numberOfHits: int = Field(description="Total annotations available upstream")
+    returned: int = Field(description="Number of annotations in annotations[]")
+    annotations: list[GoAnnotation]
+    by_aspect: dict[str, list[dict[str, str]]] = Field(
+        description="aspect → [{goId, goName}, ...], deduped on goId",
+    )
 
 
 class SubscriptionGatedRedirect(BaseModel):
