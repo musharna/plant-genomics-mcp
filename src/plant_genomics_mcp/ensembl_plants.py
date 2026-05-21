@@ -17,6 +17,7 @@ from typing import Any
 
 import httpx
 
+from plant_genomics_mcp import cache
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
@@ -27,6 +28,9 @@ from plant_genomics_mcp.errors import (
 BASE_URL = "https://rest.ensembl.org"
 DEFAULT_TIMEOUT = 30.0
 MAX_RETRIES = 3
+
+# Per-module response cache. See plant_genomics_mcp.cache for env knobs.
+_CACHE = cache.TTLCache()
 
 # Re-export so existing imports (`from plant_genomics_mcp.ensembl_plants import
 # PlantGenomicsError`) keep working. New code should import from
@@ -44,6 +48,10 @@ async def _get(
     Mirrors the genomics-mcp sibling's retry shape: bounded retries with
     exponential backoff, honors ``Retry-After`` if present.
     """
+    key = cache.make_key("GET", BASE_URL, path, params)
+    cached = _CACHE.get(key)
+    if cached is not None:
+        return cached
     headers = {"Accept": "application/json"}
     delay = 1.0
     last_status: int | None = None
@@ -56,7 +64,9 @@ async def _get(
         )
         last_status = resp.status_code
         if resp.status_code == 200:
-            return resp.json()
+            result = resp.json()
+            _CACHE.set(key, result)
+            return result
         if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_RETRIES - 1:
             retry_after = float(resp.headers.get("Retry-After", delay))
             await asyncio.sleep(retry_after)

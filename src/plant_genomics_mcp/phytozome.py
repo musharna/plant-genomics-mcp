@@ -29,6 +29,7 @@ from typing import Any
 
 import httpx
 
+from plant_genomics_mcp import cache
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
@@ -39,6 +40,9 @@ from plant_genomics_mcp.errors import (
 BASE_URL = "https://phytozome-next.jgi.doe.gov/biomart/martservice"
 DEFAULT_TIMEOUT = 30.0
 MAX_RETRIES = 3
+
+# Per-module response cache. See plant_genomics_mcp.cache for env knobs.
+_CACHE = cache.TTLCache()
 
 # Controller-verified: 167 = Arabidopsis thaliana TAIR10.
 # The rest are pulled from the BioMart registry containedDatasets and are
@@ -96,6 +100,10 @@ async def _post(client: httpx.AsyncClient, xml_payload: str) -> str:
     BioMart application-level errors (``Query ERROR:``) are returned as 200
     and surfaced upstream — they are NOT retried here.
     """
+    key = cache.make_key("POST", BASE_URL, "", body=xml_payload)
+    cached = _CACHE.get(key)
+    if cached is not None:
+        return cached
     delay = 1.0
     last_status: int | None = None
     for attempt in range(MAX_RETRIES):
@@ -106,7 +114,9 @@ async def _post(client: httpx.AsyncClient, xml_payload: str) -> str:
         )
         last_status = resp.status_code
         if resp.status_code == 200:
-            return resp.text
+            text = resp.text
+            _CACHE.set(key, text)
+            return text
         if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_RETRIES - 1:
             retry_after = float(resp.headers.get("Retry-After", delay))
             await asyncio.sleep(retry_after)

@@ -18,6 +18,7 @@ from typing import Any
 
 import httpx
 
+from plant_genomics_mcp import cache
 from plant_genomics_mcp.errors import (
     PlantGenomicsError,
     RateLimitError,
@@ -29,6 +30,9 @@ DEFAULT_TIMEOUT = 30.0
 MAX_RETRIES = 3
 DEFAULT_PAGE_SIZE = 10
 MAX_PAGE_SIZE = 25  # cap to keep the wire payload bounded
+
+# Per-module response cache. See plant_genomics_mcp.cache for env knobs.
+_CACHE = cache.TTLCache()
 
 
 # Subset of Europe PMC result fields we surface. The upstream record carries
@@ -58,6 +62,10 @@ async def _get(
     params: dict[str, Any] | None = None,
 ) -> Any:
     """GET an Europe PMC endpoint with retry on 429/5xx."""
+    key = cache.make_key("GET", BASE_URL, path, params)
+    cached = _CACHE.get(key)
+    if cached is not None:
+        return cached
     headers = {"Accept": "application/json"}
     delay = 1.0
     last_status: int | None = None
@@ -70,7 +78,9 @@ async def _get(
         )
         last_status = resp.status_code
         if resp.status_code == 200:
-            return resp.json()
+            result = resp.json()
+            _CACHE.set(key, result)
+            return result
         if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_RETRIES - 1:
             retry_after = float(resp.headers.get("Retry-After", delay))
             await asyncio.sleep(retry_after)

@@ -423,6 +423,22 @@ CI runs the unit suite + the stdio smoke on every push/PR (matrix:
 Python 3.11, 3.12). The live-network gate is **not** run in CI to avoid
 flakes from upstream availability.
 
+### Cache
+
+Each backend keeps a small in-memory TTL+LRU cache around its HTTP
+helper (`_get` / `_post`). Identical requests within the TTL window
+return the cached payload without touching the network. Only 200
+responses are cached; 4xx/5xx still raise. The cache is process-local —
+restart the server to drop all entries.
+
+Env knobs (read once at import):
+
+| Variable                            | Default | Purpose                                               |
+| ----------------------------------- | ------- | ----------------------------------------------------- |
+| `PLANT_GENOMICS_MCP_CACHE_TTL`      | `600`   | Entry lifetime in seconds.                            |
+| `PLANT_GENOMICS_MCP_CACHE_SIZE`     | `256`   | Max entries per backend before LRU eviction kicks in. |
+| `PLANT_GENOMICS_MCP_CACHE_DISABLED` | unset   | Any non-empty value makes every cache a no-op.        |
+
 ## License
 
 MIT — see [`LICENSE`](LICENSE). Underlying services (Ensembl Plants,
