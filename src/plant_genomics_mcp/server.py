@@ -13,7 +13,6 @@ backends, which cover the same Arabidopsis annotation.
 from __future__ import annotations
 
 import asyncio
-import json
 from typing import Any
 
 import httpx
@@ -22,8 +21,26 @@ from mcp.server import Server
 from mcp.server.stdio import stdio_server
 
 from plant_genomics_mcp import ensembl_plants, phytozome, plantcyc, tair
+from plant_genomics_mcp.models import (
+    EnsemblPlantsLocus,
+    PhytozomeLocus,
+    PlantCycLocusInfo,
+    TairLocusInfo,
+)
 
 server: Server = Server("plant-genomics-mcp")
+
+
+# ---- EDAM ontology tags -----------------------------------------------------
+# Attached via _meta on each Tool so registry indexers (Smithery, Glama,
+# bio.tools) can categorize. All four tools share operation_2422 (Data
+# retrieval) and the topic pair (Plant biology, Gene structure).
+_EDAM = {
+    "edam": {
+        "operation": ["operation_2422"],  # Data retrieval
+        "topic": ["topic_0780", "topic_0114"],  # Plant biology, Gene structure
+    },
+}
 
 
 # ---- tool catalog -----------------------------------------------------------
@@ -52,6 +69,8 @@ TOOLS: list[types.Tool] = [
             },
             "required": ["locus"],
         },
+        outputSchema=EnsemblPlantsLocus.model_json_schema(),
+        _meta=_EDAM,
     ),
     types.Tool(
         name="phytozome_lookup_locus",
@@ -81,6 +100,8 @@ TOOLS: list[types.Tool] = [
             },
             "required": ["locus"],
         },
+        outputSchema=PhytozomeLocus.model_json_schema(),
+        _meta=_EDAM,
     ),
     types.Tool(
         name="tair_locus_info",
@@ -102,6 +123,8 @@ TOOLS: list[types.Tool] = [
             },
             "required": ["locus"],
         },
+        outputSchema=TairLocusInfo.model_json_schema(),
+        _meta=_EDAM,
     ),
     types.Tool(
         name="plantcyc_locus_info",
@@ -124,6 +147,8 @@ TOOLS: list[types.Tool] = [
             },
             "required": ["locus"],
         },
+        outputSchema=PlantCycLocusInfo.model_json_schema(),
+        _meta=_EDAM,
     ),
 ]
 
@@ -164,14 +189,19 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
 
 
 @server.call_tool()
-async def _call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextContent]:
-    try:
-        result = await _dispatch(name, arguments)
-    except ensembl_plants.PlantGenomicsError as exc:
-        # phytozome reuses ensembl_plants.PlantGenomicsError, so one except catches both.
-        return [types.TextContent(type="text", text=f"error: {exc}")]
-    text = result if isinstance(result, str) else json.dumps(result, indent=2)
-    return [types.TextContent(type="text", text=text)]
+async def _call_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+    """Return the dispatcher's dict directly.
+
+    The SDK builds structuredContent (= this dict) AND a content[] of
+    TextContent(JSON) for backwards compat. With outputSchema set on each
+    tool, the SDK validates structuredContent against the model's schema.
+
+    PlantGenomicsError (and subclasses) propagate to the SDK's outer
+    ``except Exception`` handler, which calls ``_make_error_result(str(exc))``.
+    Our PlantGenomicsError.__str__ prepends ``[ClassName]`` so the wire
+    payload preserves the failure type.
+    """
+    return await _dispatch(name, arguments)
 
 
 # ---- entrypoint -------------------------------------------------------------
