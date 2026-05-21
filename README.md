@@ -1,6 +1,7 @@
 # plant-genomics-mcp
 
-> **8 tools** for plant-genomics locus lookup via the Model Context Protocol.
+> **14 tools** for plant-genomics locus lookup via the Model Context Protocol —
+> 8 single-locus + 6 parallel-batch variants.
 > Free, public sources: Ensembl Plants + Phytozome BioMart + UniProtKB +
 > Europe PMC + QuickGO. TAIR
 >
@@ -24,6 +25,7 @@
 | 6   | GO annotations (live)   | `locus_go_annotations`        | Fetches QuickGO GO annotations (locus → UniProt → QuickGO).                 |
 | 7   | Subscription redirect   | `tair_locus_info`             | Returns subscription notice + redirect to live backends. No upstream call.  |
 | 8   | Subscription redirect   | `plantcyc_locus_info`         | Returns subscription notice + redirect to live backends. No upstream call.  |
+| 9   | Batch (live)            | `batch_*` (six variants)      | Parallel per-locus fanout for tools 1–6. Up to 50 loci per call.            |
 
 Live tools take a TAIR-style locus (e.g. `AT1G01010`) plus optional
 `species=` / `organism_id=` and return a structured record. UniProt
@@ -33,7 +35,19 @@ species/organism conventions documented below. Subscription tools take
 a locus and return a structured redirect record — they do not call the
 gated upstream.
 
-All eight tools publish JSON `outputSchema` for client-side validation
+Batch variants (`batch_ensembl_plants_lookup_locus`,
+`batch_get_gene_xrefs`, `batch_phytozome_lookup_locus`,
+`batch_resolve_locus_to_uniprot`, `batch_locus_literature`,
+`batch_locus_go_annotations`) take a `loci: string[]` (1–50 items) plus
+the same optional `species=` / `organism_id=` arguments. They return
+`{tool, count, results, errors}` where `results[locus]` is the same
+shape as the single-locus tool and `errors[locus]` is a
+`[ClassName] message` string for `PlantGenomicsError` failures
+(`[NotFoundError]`, `[RateLimitError]`, …). Ensembl's batch uses
+the native `POST /lookup/id` endpoint (one HTTP round-trip);
+everything else fans out via `asyncio.gather`.
+
+All fourteen tools publish JSON `outputSchema` for client-side validation
 and EDAM ontology tags (`operation_2422` Data retrieval; topic
 `topic_0780` Plant biology + `topic_0114` Gene structure) on `_meta`
 for registry indexers.
@@ -320,6 +334,33 @@ route to the live backends transparently:
   "alternatives_note": "Both alternatives return the same canonical Arabidopsis annotation; ensembl_plants_lookup_locus also covers other plant species (oryza_sativa, zea_mays, ...).",
 }
 ```
+
+### 9. Batch variants
+
+Each of tools 1–6 has a `batch_*` variant that takes `loci: string[]`
+(1–50) and the same optional arguments, returning a unified envelope:
+
+```jsonc
+// batch_ensembl_plants_lookup_locus { "loci": ["AT1G01010", "AT1G01020", "AT9G99999"] }
+{
+  "tool": "ensembl_plants_lookup_locus",
+  "count": 3,
+  "results": {
+    "AT1G01010": { "id": "AT1G01010", "display_name": "NAC001", "biotype": "protein_coding", ... },
+    "AT1G01020": { "id": "AT1G01020", "display_name": "ARV1", ... }
+  },
+  "errors": {
+    "AT9G99999": "[NotFoundError] Ensembl Plants /lookup/id: no record for AT9G99999"
+  }
+}
+```
+
+`batch_ensembl_plants_lookup_locus` uses Ensembl's native
+`POST /lookup/id` endpoint — one HTTP round-trip handles all loci.
+The other five batch tools fan out single-locus calls via
+`asyncio.gather`, so the wall-clock time is `~max(per_locus_latency) +
+gather overhead` rather than `N × per_locus_latency`. The wire shape is
+the same for both implementations.
 
 ## Error model
 

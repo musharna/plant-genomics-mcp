@@ -223,6 +223,29 @@ class LocusGoAnnotations(BaseModel):
     )
 
 
+class BatchEnvelope(BaseModel):
+    """Shared response shape for every ``batch_*`` tool.
+
+    All batch tools fan out per-locus calls and produce the same envelope:
+    successes land in ``results`` keyed on the input locus; PlantGenomicsError
+    failures land in ``errors`` with the ``[ClassName] message`` prefix the
+    single-locus tools already use. ``count`` is the input cardinality
+    (``len(loci)``), not ``len(results) + len(errors)`` — those two add up
+    to ``count`` by construction.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    tool: str = Field(description="The batch tool name, e.g. batch_resolve_locus_to_uniprot")
+    count: int = Field(description="Number of loci in the input list")
+    results: dict[str, dict[str, Any]] = Field(
+        description="locus → per-locus result dict (same shape as the single-locus tool)",
+    )
+    errors: dict[str, str] = Field(
+        description="locus → '[ClassName] message' for PlantGenomicsError failures",
+    )
+
+
 class SubscriptionGatedRedirect(BaseModel):
     """Shared shape for the TAIR and PlantCyc informational stubs.
 

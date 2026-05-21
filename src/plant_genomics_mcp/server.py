@@ -1,21 +1,32 @@
 """MCP server entry point — exposes plant genomics tools over stdio.
 
-This dispatch ships eight tools:
+This dispatch ships fourteen tools — eight single-locus plus six batch
+variants that fan out per-locus calls in parallel:
 
-  - ``ensembl_plants_lookup_locus``  — Ensembl Plants REST (live)
-  - ``get_gene_xrefs``               — Ensembl Plants xrefs (live)
-  - ``phytozome_lookup_locus``       — Phytozome BioMart (live)
-  - ``resolve_locus_to_uniprot``     — UniProt KB search (live)
-  - ``locus_literature``             — Europe PMC search (live)
-  - ``locus_go_annotations``         — QuickGO GO annotations (live, locus→UniProt→QuickGO)
-  - ``tair_locus_info``              — informational stub (subscription-gated)
-  - ``plantcyc_locus_info``          — informational stub (subscription-gated)
+  - ``ensembl_plants_lookup_locus``       — Ensembl Plants REST (live)
+  - ``get_gene_xrefs``                    — Ensembl Plants xrefs (live)
+  - ``phytozome_lookup_locus``            — Phytozome BioMart (live)
+  - ``resolve_locus_to_uniprot``          — UniProt KB search (live)
+  - ``locus_literature``                  — Europe PMC search (live)
+  - ``locus_go_annotations``              — QuickGO GO annotations (live, locus→UniProt→QuickGO)
+  - ``tair_locus_info``                   — informational stub (subscription-gated)
+  - ``plantcyc_locus_info``               — informational stub (subscription-gated)
+  - ``batch_ensembl_plants_lookup_locus`` — Ensembl Plants POST /lookup/id (one round-trip)
+  - ``batch_get_gene_xrefs``              — gather over get_gene_xrefs
+  - ``batch_phytozome_lookup_locus``      — gather over phytozome_lookup_locus
+  - ``batch_resolve_locus_to_uniprot``    — gather over resolve_locus_to_uniprot
+  - ``batch_locus_literature``            — gather over locus_literature
+  - ``batch_locus_go_annotations``        — gather over locus_go_annotations
 
 The TAIR and PlantCyc stubs are pure-data — both backends gate their free
 per-locus REST APIs behind paid subscriptions (Phoenix Bioinformatics for
 TAIR; SRI/Phoenix for the BioCyc PLANT orgid; probed 2026-05-21). Those
 tools return structured redirects to the free Ensembl / Phytozome / UniProt
 backends, which cover the same Arabidopsis annotation.
+
+Batch tools share an envelope shape ``{tool, count, results, errors}`` so a
+chain consumer can route by typed prefix the same way it does for the
+single-locus tools. Capped at ``batch.MAX_BATCH = 50`` loci per call.
 """
 
 from __future__ import annotations
@@ -29,6 +40,7 @@ from mcp.server import Server
 from mcp.server.stdio import stdio_server
 
 from plant_genomics_mcp import (
+    batch,
     ensembl_plants,
     europe_pmc,
     phytozome,
@@ -38,6 +50,7 @@ from plant_genomics_mcp import (
     uniprot,
 )
 from plant_genomics_mcp.models import (
+    BatchEnvelope,
     EnsemblPlantsLocus,
     GeneXrefs,
     LocusGoAnnotations,
@@ -78,6 +91,22 @@ _EDAM_GO = {
         "topic": ["topic_0780", "topic_0085"],  # Plant biology, Functional genomics
     },
 }
+
+
+# ---- shared schema fragments ------------------------------------------------
+
+_LOCI_SCHEMA = {
+    "type": "array",
+    "items": {"type": "string"},
+    "minItems": 1,
+    "maxItems": batch.MAX_BATCH,
+    "description": (
+        f"List of locus identifiers (1–{batch.MAX_BATCH}). "
+        "Successes land in results[locus]; PlantGenomicsError failures in errors[locus]."
+    ),
+}
+
+_BATCH_OUTPUT = BatchEnvelope.model_json_schema()
 
 
 # ---- tool catalog -----------------------------------------------------------
@@ -320,6 +349,164 @@ TOOLS: list[types.Tool] = [
         outputSchema=PlantCycLocusInfo.model_json_schema(),
         _meta=_EDAM,
     ),
+    types.Tool(
+        name="batch_ensembl_plants_lookup_locus",
+        description=(
+            "Batch variant of ensembl_plants_lookup_locus. Uses Ensembl's "
+            "native POST /lookup/id endpoint — one HTTP round-trip for "
+            f"up to {batch.MAX_BATCH} loci, materially cheaper than N "
+            "parallel GETs. Misses (loci with no record) land in errors[] "
+            "with the [NotFoundError] prefix; successes in results[] with "
+            "the same shape as the single-locus tool."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "loci": _LOCI_SCHEMA,
+                "species": {
+                    "type": "string",
+                    "description": "Ensembl species slug, e.g. arabidopsis_thaliana",
+                    "default": "arabidopsis_thaliana",
+                },
+            },
+            "required": ["loci"],
+        },
+        outputSchema=_BATCH_OUTPUT,
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="batch_get_gene_xrefs",
+        description=(
+            "Batch variant of get_gene_xrefs. Fans out per-locus xref "
+            f"lookups over Ensembl Plants in parallel (up to {batch.MAX_BATCH} "
+            "loci). Each results[locus] is the full single-locus shape "
+            "(count + xrefs[] + by_db rollup)."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "loci": _LOCI_SCHEMA,
+                "species": {
+                    "type": "string",
+                    "description": "Ensembl species slug, e.g. arabidopsis_thaliana",
+                    "default": "arabidopsis_thaliana",
+                },
+            },
+            "required": ["loci"],
+        },
+        outputSchema=_BATCH_OUTPUT,
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="batch_phytozome_lookup_locus",
+        description=(
+            "Batch variant of phytozome_lookup_locus. Fans out per-locus "
+            f"BioMart queries in parallel (up to {batch.MAX_BATCH} loci). "
+            "Each results[locus] is the full single-locus row "
+            "(organism_name, gene_name, chromosome, start/end/strand, description)."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "loci": _LOCI_SCHEMA,
+                "organism_id": {
+                    "type": "integer",
+                    "description": (
+                        "Phytozome proteome integer ID (default 167 = Arabidopsis thaliana TAIR10)"
+                    ),
+                    "default": 167,
+                },
+            },
+            "required": ["loci"],
+        },
+        outputSchema=_BATCH_OUTPUT,
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="batch_resolve_locus_to_uniprot",
+        description=(
+            "Batch variant of resolve_locus_to_uniprot. Fans out per-locus "
+            "UniProtKB searches in parallel (up to "
+            f"{batch.MAX_BATCH} loci). Each results[locus] is the full "
+            "single-locus record (primaryAccession + uniProtkbId + entryType "
+            "+ geneNames + organism + sequenceLength + web_url + …)."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "loci": _LOCI_SCHEMA,
+                "organism_id": {
+                    "type": "integer",
+                    "description": "NCBI taxonomy ID (default 3702 = Arabidopsis thaliana)",
+                    "default": 3702,
+                },
+            },
+            "required": ["loci"],
+        },
+        outputSchema=_BATCH_OUTPUT,
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="batch_locus_literature",
+        description=(
+            "Batch variant of locus_literature. Fans out per-locus Europe PMC "
+            f"searches in parallel (up to {batch.MAX_BATCH} loci). Each "
+            "results[locus] is the full single-locus payload (query + "
+            "hitCount + returned + hits[])."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "loci": _LOCI_SCHEMA,
+                "species": {
+                    "type": "string",
+                    "description": "Ensembl species slug, used to qualify the query",
+                    "default": "arabidopsis_thaliana",
+                },
+                "size": {
+                    "type": "integer",
+                    "description": "Max results per locus (1–25, default 10)",
+                    "default": europe_pmc.DEFAULT_PAGE_SIZE,
+                    "minimum": 1,
+                    "maximum": europe_pmc.MAX_PAGE_SIZE,
+                },
+            },
+            "required": ["loci"],
+        },
+        outputSchema=_BATCH_OUTPUT,
+        _meta=_EDAM_LITERATURE,
+    ),
+    types.Tool(
+        name="batch_locus_go_annotations",
+        description=(
+            "Batch variant of locus_go_annotations. Two-stage fanout — each "
+            "locus is resolved to UniProt and then queried in QuickGO. Per-locus "
+            "NotFoundError from either stage lands in errors[] with the typed "
+            "prefix preserved. Capped at "
+            f"{batch.MAX_BATCH} loci."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "loci": _LOCI_SCHEMA,
+                "organism_id": {
+                    "type": "integer",
+                    "description": "NCBI taxonomy ID (default 3702 = Arabidopsis thaliana)",
+                    "default": 3702,
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Max annotations per locus from QuickGO (1–100, default 50)",
+                    "default": quickgo.DEFAULT_LIMIT,
+                    "minimum": 1,
+                    "maximum": quickgo.MAX_LIMIT,
+                },
+            },
+            "required": ["loci"],
+        },
+        outputSchema=_BATCH_OUTPUT,
+        _meta=_EDAM_GO,
+    ),
 ]
 
 
@@ -405,6 +592,44 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                 # Pure-data sync call — no client, no await. Returns a
                 # structured redirect; see plant_genomics_mcp.plantcyc docstring.
                 return plantcyc.lookup_locus(args["locus"])
+            case "batch_ensembl_plants_lookup_locus":
+                return await batch.batch_ensembl_plants_lookup_locus(
+                    client,
+                    args["loci"],
+                    species=args.get("species", "arabidopsis_thaliana"),
+                )
+            case "batch_get_gene_xrefs":
+                return await batch.batch_get_gene_xrefs(
+                    client,
+                    args["loci"],
+                    species=args.get("species", "arabidopsis_thaliana"),
+                )
+            case "batch_phytozome_lookup_locus":
+                return await batch.batch_phytozome_lookup_locus(
+                    client,
+                    args["loci"],
+                    organism_id=args.get("organism_id", 167),
+                )
+            case "batch_resolve_locus_to_uniprot":
+                return await batch.batch_resolve_locus_to_uniprot(
+                    client,
+                    args["loci"],
+                    organism_id=args.get("organism_id", uniprot.DEFAULT_TAXON_ID),
+                )
+            case "batch_locus_literature":
+                return await batch.batch_locus_literature(
+                    client,
+                    args["loci"],
+                    species=args.get("species", "arabidopsis_thaliana"),
+                    size=args.get("size", europe_pmc.DEFAULT_PAGE_SIZE),
+                )
+            case "batch_locus_go_annotations":
+                return await batch.batch_locus_go_annotations(
+                    client,
+                    args["loci"],
+                    organism_id=args.get("organism_id", uniprot.DEFAULT_TAXON_ID),
+                    limit=args.get("limit", quickgo.DEFAULT_LIMIT),
+                )
             case _:
                 raise ValueError(f"unknown tool: {name}")
 
