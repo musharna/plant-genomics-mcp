@@ -81,9 +81,10 @@ _PROGRAM_DEFAULTS = {
 _RE_RID = re.compile(r"\bRID\s*=\s*([A-Z0-9]+)")
 _RE_RTOE = re.compile(r"\bRTOE\s*=\s*(\d+)")
 _RE_STATUS = re.compile(r"\bStatus\s*=\s*([A-Z]+)")
-# Hit-table row: " <description...>  <bit-score>  <evalue>  <accession>"
-# The standard text report aligns columns; we parse the trailing accession
-# (final whitespace-delimited token) and the e-value (preceding numeric).
+# Hit-table row: "<accession> <description...>  <bit-score>  <evalue>  <ident%>"
+# Confirmed against live NCBI BLAST output 2026-05-21 (header columns
+# "(Bits)  Value  Ident"). The accession is the FIRST whitespace-delimited
+# token; the trailing three columns are bit score, e-value, identity%.
 # The summary block starts with "Sequences producing significant alignments:"
 # and ends at the first blank line / "ALIGNMENTS" marker.
 
@@ -134,9 +135,15 @@ def _parse_hit_table(text: str) -> list[dict[str, Any]]:
 
     The block sits between a header line ending in 'significant alignments:'
     and either a blank line followed by 'ALIGNMENTS' or two consecutive
-    blank lines. Each row is whitespace-delimited; we surface the accession
-    (last token), e-value (second-to-last numeric), bit score (third-to-last),
-    and a description trimmed from the left.
+    blank lines. Each row is whitespace-delimited; the layout (verified
+    against live NCBI BLAST output 2026-05-21) is:
+
+        <accession> <description...>  <bit_score>  <evalue>  <identity%>
+
+    We surface accession (first token), identity (last token, kept as
+    string because it ships with a literal "%"), e-value (second-to-last),
+    bit score (third-to-last), and a description re-joined from the
+    interior tokens.
 
     Returns an empty list if the marker isn't found — that happens for
     "no hits found" responses where the body skips straight to the
@@ -162,14 +169,16 @@ def _parse_hit_table(text: str) -> list[dict[str, Any]]:
         if set(line.strip()) <= {"-", " "}:
             continue
         parts = line.split()
-        if len(parts) < 4:
+        # Need accession + description + 3 trailing numeric columns.
+        if len(parts) < 5:
             continue
-        accession = parts[-1]
+        accession = parts[0]
+        identity = parts[-1]
         evalue = parts[-2]
         bit_score = parts[-3]
-        # Description = everything left of the trailing 3 numeric columns.
-        # Re-join by single space to collapse the column padding.
-        desc_tokens = parts[:-3]
+        # Description = everything between accession and the 3 trailing
+        # columns. Re-join by single space to collapse the column padding.
+        desc_tokens = parts[1:-3]
         description = " ".join(desc_tokens).strip()
         # Defensive cast — accept the e-value as string if not parseable
         # (NCBI sometimes emits "0.0" / "1e-180" / "5e-04").
@@ -187,6 +196,7 @@ def _parse_hit_table(text: str) -> list[dict[str, Any]]:
                 "description": description,
                 "bit_score": bit_score_num,
                 "evalue": evalue_num,
+                "identity": identity,
             }
         )
     return hits

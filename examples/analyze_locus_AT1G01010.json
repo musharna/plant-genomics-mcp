@@ -1,0 +1,654 @@
+{
+  "chain": "analyze_locus",
+  "query": {
+    "locus": "AT1G01010",
+    "species": "arabidopsis_thaliana"
+  },
+  "captured_at": "2026-05-21T07:34:36Z",
+  "steps": [
+    {
+      "step": 1,
+      "tool": "ensembl_plants_lookup_locus",
+      "input": {
+        "locus": "AT1G01010",
+        "species": "arabidopsis_thaliana"
+      },
+      "elapsed_s": 0.97,
+      "output": {
+        "db_type": "core",
+        "display_name": "NAC001",
+        "description": "NAC domain containing protein 1 [Source:NCBI gene (formerly Entrezgene);Acc:839580]",
+        "biotype": "protein_coding",
+        "object_type": "Gene",
+        "assembly_name": "TAIR10",
+        "end": 5899,
+        "start": 3631,
+        "strand": 1,
+        "seq_region_name": "1",
+        "id": "AT1G01010",
+        "source": "araport11",
+        "logic_name": "araport11",
+        "species": "arabidopsis_thaliana",
+        "canonical_transcript": "AT1G01010.1."
+      }
+    },
+    {
+      "step": 2,
+      "tool": "get_gene_xrefs",
+      "input": {
+        "locus": "AT1G01010",
+        "species": "arabidopsis_thaliana"
+      },
+      "elapsed_s": 0.18,
+      "output": {
+        "locus": "AT1G01010",
+        "species": "arabidopsis_thaliana",
+        "count": 8,
+        "xrefs": [
+          {
+            "db_display_name": "NASC Gene ID",
+            "info_text": "",
+            "display_id": "AT1G01010-TAIR-G",
+            "info_type": "DIRECT",
+            "description": "NAC domain containing protein 1",
+            "dbname": "NASC_GENE_ID",
+            "synonyms": [],
+            "primary_id": "AT1G01010",
+            "version": "0"
+          },
+          {
+            "version": "0",
+            "primary_id": "AT1G01010",
+            "synonyms": [],
+            "dbname": "TAIR_LOCUS",
+            "info_type": "DIRECT",
+            "description": "NAC domain containing protein 1",
+            "display_id": "AT1G01010",
+            "info_text": "",
+            "db_display_name": "TAIR"
+          },
+          {
+            "info_type": "DIRECT",
+            "description": "",
+            "display_id": "ANAC001",
+            "info_text": "",
+            "db_display_name": "TAIR Gene Name",
+            "version": "0",
+            "primary_id": "ANAC001",
+            "synonyms": [],
+            "dbname": "TAIR_SYMBOL"
+          },
+          {
+            "version": "0",
+            "primary_id": "Q0WV96",
+            "synonyms": [],
+            "dbname": "Uniprot_gn",
+            "info_type": "DEPENDENT",
+            "description": null,
+            "display_id": "NAC001",
+            "info_text": "",
+            "db_display_name": "UniProtKB Gene Name"
+          },
+          {
+            "info_type": "DEPENDENT",
+            "description": "NAC domain containing protein 1",
+            "display_id": "NAC001",
+            "info_text": "",
+            "db_display_name": "WikiGene",
+            "version": "0",
+            "primary_id": "839580",
+            "synonyms": [],
+            "dbname": "WikiGene"
+          },
+          {
+            "info_text": "",
+            "db_display_name": "KNETMINER_ARA",
+            "info_type": "DEPENDENT",
+            "description": null,
+            "display_id": "AT1G01010",
+            "synonyms": [],
+            "dbname": "KNETMINER_ARA",
+            "version": "0",
+            "primary_id": "AT1G01010"
+          },
+          {
+            "info_type": "DEPENDENT",
+            "description": "NAC domain containing protein 1",
+            "display_id": "NAC001",
+            "info_text": "",
+            "db_display_name": "NCBI gene (formerly Entrezgene)",
+            "version": "0",
+            "primary_id": "839580",
+            "synonyms": [
+              "ANAC001",
+              "NAC domain containing protein 1",
+              "T25K16.1",
+              "T25K16_1"
+            ],
+            "dbname": "EntrezGene"
+          },
+          {
+            "db_display_name": "Expression Atlas",
+            "info_text": "",
+            "display_id": "AT1G01010",
+            "description": null,
+            "info_type": "DIRECT",
+            "dbname": "ArrayExpress",
+            "synonyms": [],
+            "primary_id": "AT1G01010",
+            "version": "0"
+          }
+        ],
+        "by_db": {
+          "NASC_GENE_ID": [
+            "AT1G01010"
+          ],
+          "TAIR_LOCUS": [
+            "AT1G01010"
+          ],
+          "TAIR_SYMBOL": [
+            "ANAC001"
+          ],
+          "Uniprot_gn": [
+            "Q0WV96"
+          ],
+          "WikiGene": [
+            "839580"
+          ],
+          "KNETMINER_ARA": [
+            "AT1G01010"
+          ],
+          "EntrezGene": [
+            "839580"
+          ],
+          "ArrayExpress": [
+            "AT1G01010"
+          ]
+        }
+      }
+    },
+    {
+      "step": 3,
+      "tool": "resolve_locus_to_uniprot",
+      "input": {
+        "locus": "AT1G01010"
+      },
+      "elapsed_s": 0.57,
+      "output": {
+        "locus_query": "AT1G01010",
+        "primaryAccession": "Q0WV96",
+        "uniProtkbId": "NAC1_ARATH",
+        "entryType": "UniProtKB reviewed (Swiss-Prot)",
+        "reviewed": true,
+        "recommendedName": "NAC domain-containing protein 1",
+        "geneNames": [
+          "NAC001"
+        ],
+        "organism": "Arabidopsis thaliana",
+        "taxonId": 3702,
+        "sequenceLength": 429,
+        "web_url": "https://www.uniprot.org/uniprotkb/Q0WV96"
+      }
+    },
+    {
+      "step": 4,
+      "tool": "locus_literature",
+      "input": {
+        "locus": "AT1G01010",
+        "species": "arabidopsis_thaliana",
+        "size": 10
+      },
+      "elapsed_s": 1.0,
+      "output": {
+        "locus": "AT1G01010",
+        "species": "arabidopsis_thaliana",
+        "query": "AT1G01010",
+        "hitCount": 40,
+        "returned": 10,
+        "hits": [
+          {
+            "id": "41152268",
+            "source": "MED",
+            "pmid": "41152268",
+            "pmcid": "PMC12569054",
+            "doi": "10.1038/s41526-025-00525-5",
+            "title": "GLARE: discovering hidden patterns in spaceflight transcriptome using representation learning.",
+            "authorString": "Seo D, Strickland HF, Zhou M, Barker R, Ferl RJ, Paul AL, Gilroy S.",
+            "journalTitle": null,
+            "pubYear": "2025",
+            "firstPublicationDate": "2025-10-28",
+            "citedByCount": 0,
+            "isOpenAccess": "Y",
+            "hasPDF": "Y",
+            "abstractText": "Spaceflight studies present novel insights into biological processes through exposure to stressors outside the evolutionary path of terrestrial organisms. Despite limited access to space environments, numerous transcriptomic datasets from spaceflight experiments are now available through NASA's GeneLab data repository, which allows public access, encouraging further analysis. While various computational pipelines and methods have been used to process these transcriptomic datasets, learning-model-driven analyses have yet to be applied to a broad array of such spaceflight-related datasets. In this study, we present an open-source pipeline, GLARE: GeneLAb Representation learning pipelinE, which consists of training different representation learning approaches from manifold learning to self-supervised learning that enhance the performance of downstream analytical tasks. We illustrate the utility of GLARE by applying it to gene-level transcriptional values from the results of the CARA spaceflight experiment, an Arabidopsis root tip transcriptome dataset that spanned light, dark, and microgravity treatments. We show that GLARE not only substantiated the findings of the original study concerning cell wall remodeling but also revealed additional patterns of gene expression affected by the treatments, including evidence of hypoxic response. This work suggests there is great potential to supplement the insights drawn from initial studies on spaceflight omics-level data through further machine-learning-enabled analyses.",
+            "web_url": "https://europepmc.org/article/PMC/PMC12569054"
+          },
+          {
+            "id": "40869111",
+            "source": "MED",
+            "pmid": "40869111",
+            "pmcid": "PMC12386182",
+            "doi": "10.3390/ijms26167790",
+            "title": "Identification of Key Differentially Expressed Genes in &lt;i&gt;Arabidopsis thaliana&lt;/i&gt; Under Short- and Long-Term High Light Stress.",
+            "authorString": "Bobrovskikh AV, Zubairova US, Doroshkov AV.",
+            "journalTitle": null,
+            "pubYear": "2025",
+            "firstPublicationDate": "2025-08-12",
+            "citedByCount": 3,
+            "isOpenAccess": "Y",
+            "hasPDF": "Y",
+            "abstractText": "Nowadays, with the accumulation of large amounts of stress-response transcriptomic data in plants, it is possible to clarify the key genes and transcription factors (TFs) involved in these processes. Here, we present the comprehensive transcriptomic meta-analysis of the high light (HL) response in photosynthetic tissues of <i>Arabidopsis thaliana</i> (L.) Heynh., offering new insights into adaptation mechanisms of plants to excessive light and involved gene regulatory networks. We analyzed 21 experiments covering 58 HL conditions in total, yielding 218,000 instances of differentially expressed genes (DEGs) corresponding to 19,000 unique genes. Based on these data, we developed the publicly accessible AraLightDEGs resource, which offers multiple search filters for experimental conditions and gene characteristics, and we conducted a detailed meta-analysis using our R pipeline, AraLightMeta. Our meta-analysis highlighted distinct transcriptional programs between short- and long-term HL responses in leaves, revealing novel regulatory interactions and refining the understanding of key DEGs. In particular, long-term HL adaptation involves key TFs such as <i>CRF3</i> and <i>PTF1</i> regulating antioxidant and jasmonate signaling; <i>ATWHY2</i>, <i>WHY3</i>, and <i>emb2746</i> coordinating chloroplast and mitochondrial gene expression; <i>AT2G28450</i> governing ribosome biogenesis; and <i>AT4G12750</i> controlling methyltransferase activity. We integrated these findings into a conceptual scheme illustrating transcriptional regulation and signaling processes in leaf cells responding to long-term HL stress.",
+            "web_url": "https://europepmc.org/article/PMC/PMC12386182"
+          },
+          {
+            "id": "39813136",
+            "source": "MED",
+            "pmid": "39813136",
+            "pmcid": "PMC11912837",
+            "doi": "10.1093/genetics/iyaf006",
+            "title": "Guidelines for gene and genome assembly nomenclature.",
+            "authorString": "Cannon EKS, Molik DC, Wright AJ, Zhang H, Honaas L, Chougule K, Dyer S.",
+            "journalTitle": null,
+            "pubYear": "2025",
+            "firstPublicationDate": "2025-03-01",
+            "citedByCount": 6,
+            "isOpenAccess": "Y",
+            "hasPDF": "Y",
+            "abstractText": "The rapid increase in the number of reference-quality genome assemblies presents significant new opportunities for genomic research. However, the absence of standardized naming conventions for genome assemblies and annotations across datasets creates substantial challenges. Inconsistent naming hinders the identification of correct assemblies, complicates the integration of bioinformatics pipelines, and makes it difficult to link assemblies across multiple resources. To address this, we developed a specification for standardizing the naming of reference genome assemblies, to improve consistency across datasets and facilitate interoperability. This specification was created with FAIR (Findable, Accessible, Interoperable, and Reusable) practices in mind, ensuring that reference assemblies are easier to locate, access, and reuse across research communities. Additionally, it has been designed to comply with primary genomic data repositories, including members of the International Nucleotide Sequence Database Collaboration consortium, ensuring compatibility with widely used databases. While initially tailored to the agricultural genomics community, the specification is adaptable for use across different taxa. Widespread adoption of this standardized nomenclature would streamline assembly management, better enable cross-species analyses, and improve the reproducibility of research. It would also enhance natural language processing applications that depend on consistent reference assembly names in genomic literature, promoting greater integration and automated analysis of genomic data. This is a good time to consider more consistent genomic data nomenclature as many research communities and data resources are now finding themselves juggling multiple datasets from multiple data providers.",
+            "web_url": "https://europepmc.org/article/PMC/PMC11912837"
+          },
+          {
+            "id": "31810264",
+            "source": "MED",
+            "pmid": "31810264",
+            "pmcid": "PMC6947651",
+            "doi": "10.3390/genes10120996",
+            "title": "A High-Performance Computing Implementation of Iterative Random Forest for the Creation of Predictive Expression Networks.",
+            "authorString": "Cliff A, Romero J, Kainer D, Walker A, Furches A, Jacobson D.",
+            "journalTitle": null,
+            "pubYear": "2019",
+            "firstPublicationDate": "2019-12-02",
+            "citedByCount": 28,
+            "isOpenAccess": "Y",
+            "hasPDF": "Y",
+            "abstractText": "As time progresses and technology improves, biological data sets are continuously increasing in size. New methods and new implementations of existing methods are needed to keep pace with this increase. In this paper, we present a high-performance computing (HPC)-capable implementation of Iterative Random Forest (iRF). This new implementation enables the explainable-AI eQTL analysis of SNP sets with over a million SNPs. Using this implementation, we also present a new method, iRF Leave One Out Prediction (iRF-LOOP), for the creation of Predictive Expression Networks on the order of 40,000 genes or more. We compare the new implementation of iRF with the previous R version and analyze its time to completion on two of the world's fastest supercomputers, Summit and Titan. We also show iRF-LOOP's ability to capture biologically significant results when creating Predictive Expression Networks. This new implementation of iRF will enable the analysis of biological data sets at scales that were previously not possible.",
+            "web_url": "https://europepmc.org/article/PMC/PMC6947651"
+          },
+          {
+            "id": "35720540",
+            "source": "MED",
+            "pmid": "35720540",
+            "pmcid": "PMC9198585",
+            "doi": "10.3389/fpls.2022.890038",
+            "title": "Evolution of an Apomixis-Specific Allele Class in Supernumerary Chromatin of Apomictic <i>Boechera</i>.",
+            "authorString": "Mau M, Mand\u00e1kov\u00e1 TM, Ma X, Ebersbach J, Zou L, Lysak MA, Sharbel TF.",
+            "journalTitle": null,
+            "pubYear": "2022",
+            "firstPublicationDate": "2022-06-01",
+            "citedByCount": 5,
+            "isOpenAccess": "Y",
+            "hasPDF": "Y",
+            "abstractText": "Asexual reproduction through seeds in plants (i.e., apomixis) is a heritable trait, and apomixis- linked loci have been identified in multiple species. However, direct identification of genomic elements is typically hindered as apomixis-linked loci and are commonly found in recombination-suppressed and repetitive regions. Heterochromatinized elements, such as B chromosomes and other supernumerary chromosomal DNA fragments have long been known to be associated with asexuality in both plants and animals and are prime candidate regions for the evolution of multiple apomixis factors controlling the individual elements of apomixis. Here, we examined molecular evolution, gene regulation, and chromosomal location of a male apomeiosis factor (<i>UPG2</i>), a long noncoding RNA gene, in sexual and apomictic <i>Boechera</i> with and without male apomeiosis (i.e., balanced and unbalanced apomicts). We revealed the origin of the gene in the apomixis genome on an apomixis-specific, supernumerary heterochromatic <i>Boechera</i> chromosome (<i>Boe1</i>). The <i>UPG2</i> is active in the tapetum at male meiosis. We found allele classes specific to apomictic and sexual <i>Boechera</i> accessions and a third class that shares the features of both and points to a convergent transition state. Sex alleles are found only in some of the sexual accessions and have higher nucleotide divergence and lower transcriptional activity compared to apo alleles. These data demonstrate selective pressure to maintain the function of <i>UPG2</i> for unreduced pollen formation in apomicts as the occasional transmission of the allele from unbalanced apomicts into sexual organisms that lead to pseudogenization and functional decay of copies in sexual organisms.",
+            "web_url": "https://europepmc.org/article/PMC/PMC9198585"
+          },
+          {
+            "id": "38475995",
+            "source": "MED",
+            "pmid": "38475995",
+            "pmcid": "PMC11287156",
+            "doi": "10.1016/j.xplc.2024.100878",
+            "title": "Genomes of Meniocus linifolius and Tetracme quadricornis reveal the ancestral karyotype and genomic features of core Brassicaceae.",
+            "authorString": "Liu J, Zhou SZ, Liu YL, Zhao BY, Yu D, Zhong MC, Jiang XD, Cui WH, Zhao JX, Qiu J, Liu LM, Guo ZH, Li HT, Tan DY, Hu JY, Li DZ.",
+            "journalTitle": null,
+            "pubYear": "2024",
+            "firstPublicationDate": "2024-03-11",
+            "citedByCount": 8,
+            "isOpenAccess": "Y",
+            "hasPDF": "Y",
+            "abstractText": "Brassicaceae represents an important plant family from both a scientific and economic perspective. However, genomic features related to the early diversification of this family have not been fully characterized, especially upon the uplift of the Tibetan Plateau, which was followed by increasing aridity in the Asian interior, intensifying monsoons in Eastern Asia, and significantly fluctuating daily temperatures. Here, we reveal the genomic architecture that accompanied early Brassicaceae diversification by analyzing two high-quality chromosome-level genomes for Meniocus linifolius (Arabodae; clade D) and Tetracme quadricornis (Hesperodae; clade E), together with genomes representing all major Brassicaceae clades and the basal Aethionemeae. We reconstructed an ancestral core Brassicaceae karyotype (CBK) containing 9 pseudochromosomes with 65 conserved syntenic genomic blocks and identified 9702 conserved genes in Brassicaceae. We detected pervasive conflicting phylogenomic signals accompanied by widespread ancient hybridization events, which correlate well with the early divergence of core Brassicaceae. We identified a successive Brassicaceae-specific expansion of the class I TREHALOSE-6-PHOSPHATE SYNTHASE 1 (TPS1) gene family, which encodes enzymes with essential regulatory roles in flowering time and embryo development. The TPS1s were mainly randomly amplified, followed by expression divergence. Our results provide fresh insights into historical genomic features coupled with Brassicaceae evolution and offer a potential model for broad-scale studies of adaptive radiation under an ever-changing environment.",
+            "web_url": "https://europepmc.org/article/PMC/PMC11287156"
+          },
+          {
+            "id": "25757780",
+            "source": "MED",
+            "pmid": "25757780",
+            "pmcid": "PMC5215775",
+            "doi": "10.1007/978-1-4939-2444-8_16",
+            "title": "A user's guide to the Arabidopsis T-DNA insertion mutant collections.",
+            "authorString": "O'Malley RC, Barragan CC, Ecker JR.",
+            "journalTitle": null,
+            "pubYear": "2015",
+            "firstPublicationDate": "2015-01-01",
+            "citedByCount": 94,
+            "isOpenAccess": "N",
+            "hasPDF": "Y",
+            "abstractText": "The T-DNA sequence-indexed mutant collections contain insertional mutants for most Arabidopsis thaliana genes and have played an important role in plant biology research for almost two decades. By providing a large source of mutant alleles for in vivo characterization of gene function, this resource has been leveraged thousands of times to study a wide range of problems in plant biology. Our primary goal in this chapter is to provide a general guide to strategies for the effective use of the data and materials in these collections. To do this, we provide a general introduction to the T-DNA insertional sequence-indexed mutant collections with a focus on how best to use the available data sources for good line selection. As isolation of a homozygous line is a common next step once a potential disruption line has been identified, the second half of the chapter provides a step-by-step guide for the design and implementation of a T-DNA genotyping pipeline. Finally, we describe interpretation of genotyping results and include a troubleshooting section for common types of segregation distortions that we have observed. In this chapter we introduce both basic concepts and specific applications to both new and more experienced users of the collections for the design and implementation of small- to large-scale genotyping pipelines.",
+            "web_url": "https://europepmc.org/article/PMC/PMC5215775"
+          },
+          {
+            "id": "38142228",
+            "source": "MED",
+            "pmid": "38142228",
+            "pmcid": "PMC10980347",
+            "doi": "10.1093/plcell/koad317",
+            "title": "Root branching under high salinity requires auxin-independent modulation of LATERAL ORGAN BOUNDARY DOMAIN 16 function.",
+            "authorString": "Zhang Y, Li Y, de Zeeuw T, Duijts K, Kawa D, Lamers J, Munzert KS, Li H, Zou Y, Meyer AJ, Yan J, Verstappen F, Wang Y, Gijsberts T, Wang J, Gigli-Bisceglia N, Engelsdorf T, van Dijk ADJ, Testerink C.",
+            "journalTitle": null,
+            "pubYear": "2024",
+            "firstPublicationDate": "2024-03-01",
+            "citedByCount": 28,
+            "isOpenAccess": "Y",
+            "hasPDF": "Y",
+            "abstractText": "Salinity stress constrains lateral root (LR) growth and severely affects plant growth. Auxin signaling regulates LR formation, but the molecular mechanism by which salinity affects root auxin signaling and whether salt induces other pathways that regulate LR development remains unknown. In Arabidopsis thaliana, the auxin-regulated transcription factor LATERAL ORGAN BOUNDARY DOMAIN 16 (LBD16) is an essential player in LR development under control conditions. Here, we show that under high-salt conditions, an alternative pathway regulates LBD16 expression. Salt represses auxin signaling but, in parallel, activates ZINC FINGER OF ARABIDOPSIS THALIANA 6 (ZAT6), a transcriptional activator of LBD16. ZAT6 activates LBD16 expression, thus contributing to downstream cell wall remodeling and promoting LR development under high-salt conditions. Our study thus shows that the integration of auxin-dependent repressive and salt-activated auxin-independent pathways converging on LBD16 modulates root branching under high-salt conditions.",
+            "web_url": "https://europepmc.org/article/PMC/PMC10980347"
+          },
+          {
+            "id": "37601315",
+            "source": "MED",
+            "pmid": "37601315",
+            "pmcid": "PMC10439822",
+            "doi": "10.1002/aps3.11536",
+            "title": "GOgetter: A pipeline for summarizing and visualizing GO slim annotations for plant genetic data.",
+            "authorString": "Sessa EB, Masalia RR, Arrigo N, Barker MS, Pelosi JA.",
+            "journalTitle": null,
+            "pubYear": "2023",
+            "firstPublicationDate": "2023-07-01",
+            "citedByCount": 5,
+            "isOpenAccess": "Y",
+            "hasPDF": "Y",
+            "abstractText": "<h4>Premise</h4>The functional annotation of genes is a crucial component of genomic analyses. A common way to summarize functional annotations is with hierarchical gene ontologies, such as the Gene Ontology (GO) Resource. GO includes information about the cellular location, molecular function(s), and products/processes that genes produce or are involved in. For a set of genes, summarizing GO annotations using pre-defined, higher-order terms (GO slims) is often desirable in order to characterize the overall function of the data set, and it is impractical to do this manually.<h4>Methods and results</h4>The GOgetter pipeline consists of bash and Python scripts. From an input FASTA file of nucleotide gene sequences, it outputs text and image files that list (1) the best hit for each input gene in a set of reference gene models, (2) all GO terms and annotations associated with those hits, and (3) a summary and visualization of GO slim categories for the data set. These output files can be queried further and analyzed statistically, depending on the downstream need(s).<h4>Conclusions</h4>GO annotations are a widely used \"universal language\" for describing gene functions and products. GOgetter is a fast and easy-to-implement pipeline for obtaining, summarizing, and visualizing GO slim categories associated with a set of genes.",
+            "web_url": "https://europepmc.org/article/PMC/PMC10439822"
+          },
+          {
+            "id": "26078806",
+            "source": "MED",
+            "pmid": "26078806",
+            "pmcid": "PMC4442293",
+            "doi": "10.1155/2015/397502",
+            "title": "Physiological Implications of Hydrogen Sulfide in Plants: Pleasant Exploration behind Its Unpleasant Odour.",
+            "authorString": "Jin Z, Pei Y.",
+            "journalTitle": null,
+            "pubYear": "2015",
+            "firstPublicationDate": "2015-05-11",
+            "citedByCount": 55,
+            "isOpenAccess": "Y",
+            "hasPDF": "Y",
+            "abstractText": "Recently, overwhelming evidence has proven that hydrogen sulfide (H2S), which was identified as a gasotransmitter in animals, plays important roles in diverse physiological processes in plants as well. With the discovery and systematic classification of the enzymes producing H2S in vivo, a better understanding of the mechanisms by which H2S influences plant responses to various stimuli was reached. There are many functions of H2S, including the modulation of defense responses and plant growth and development, as well as the regulation of senescence and maturation. Additionally, mounting evidence indicates that H2S signaling interacts with plant hormones, hydrogen peroxide, nitric oxide, carbon monoxide, and other molecules in signaling pathways.",
+            "web_url": "https://europepmc.org/article/PMC/PMC4442293"
+          }
+        ]
+      }
+    },
+    {
+      "step": 5,
+      "tool": "locus_go_annotations",
+      "input": {
+        "locus": "AT1G01010",
+        "uniprot_accession": "Q0WV96"
+      },
+      "elapsed_s": 0.15,
+      "output": {
+        "uniprot_accession": "Q0WV96",
+        "numberOfHits": 9,
+        "returned": 9,
+        "annotations": [
+          {
+            "geneProductId": "UniProtKB:Q0WV96",
+            "symbol": "NAC001",
+            "qualifier": "enables",
+            "goId": "GO:0000976",
+            "goName": "transcription cis-regulatory region binding",
+            "goAspect": "molecular_function",
+            "goEvidence": "IPI",
+            "evidenceCode": "ECO:0000353",
+            "reference": "PMID:30356219",
+            "assignedBy": "TAIR",
+            "taxonId": 3702,
+            "taxonName": "Arabidopsis thaliana",
+            "date": "20201218",
+            "withFrom": [
+              {
+                "connectedXrefs": [
+                  {
+                    "db": "AGI_LocusCode",
+                    "id": "AT2G38290"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "geneProductId": "UniProtKB:Q0WV96",
+            "symbol": "NAC001",
+            "qualifier": "enables",
+            "goId": "GO:0003677",
+            "goName": "DNA binding",
+            "goAspect": "molecular_function",
+            "goEvidence": "IEA",
+            "evidenceCode": "ECO:0000256",
+            "reference": "GO_REF:0000002",
+            "assignedBy": "InterPro",
+            "taxonId": 3702,
+            "taxonName": "Arabidopsis thaliana",
+            "date": "20260428",
+            "withFrom": [
+              {
+                "connectedXrefs": [
+                  {
+                    "db": "InterPro",
+                    "id": "IPR003441"
+                  }
+                ]
+              },
+              {
+                "connectedXrefs": [
+                  {
+                    "db": "InterPro",
+                    "id": "IPR036093"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "geneProductId": "UniProtKB:Q0WV96",
+            "symbol": "NAC001",
+            "qualifier": "enables",
+            "goId": "GO:0003700",
+            "goName": "DNA-binding transcription factor activity",
+            "goAspect": "molecular_function",
+            "goEvidence": "ISS",
+            "evidenceCode": "ECO:0000250",
+            "reference": "PMID:11118137",
+            "assignedBy": "TAIR",
+            "taxonId": 3702,
+            "taxonName": "Arabidopsis thaliana",
+            "date": "20030606",
+            "withFrom": null
+          },
+          {
+            "geneProductId": "UniProtKB:Q0WV96",
+            "symbol": "NAC001",
+            "qualifier": "involved_in",
+            "goId": "GO:0006355",
+            "goName": "regulation of DNA-templated transcription",
+            "goAspect": "biological_process",
+            "goEvidence": "IEA",
+            "evidenceCode": "ECO:0000256",
+            "reference": "GO_REF:0000002",
+            "assignedBy": "InterPro",
+            "taxonId": 3702,
+            "taxonName": "Arabidopsis thaliana",
+            "date": "20260428",
+            "withFrom": [
+              {
+                "connectedXrefs": [
+                  {
+                    "db": "InterPro",
+                    "id": "IPR003441"
+                  }
+                ]
+              },
+              {
+                "connectedXrefs": [
+                  {
+                    "db": "InterPro",
+                    "id": "IPR036093"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "geneProductId": "UniProtKB:Q0WV96",
+            "symbol": "NAC001",
+            "qualifier": "located_in",
+            "goId": "GO:0005634",
+            "goName": "nucleus",
+            "goAspect": "cellular_component",
+            "goEvidence": "ISS",
+            "evidenceCode": "ECO:0000250",
+            "reference": "GO_REF:0000024",
+            "assignedBy": "UniProt",
+            "taxonId": 3702,
+            "taxonName": "Arabidopsis thaliana",
+            "date": "20170113",
+            "withFrom": [
+              {
+                "connectedXrefs": [
+                  {
+                    "db": "UniProtKB",
+                    "id": "Q949N0"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "geneProductId": "UniProtKB:Q0WV96",
+            "symbol": "NAC001",
+            "qualifier": "located_in",
+            "goId": "GO:0005634",
+            "goName": "nucleus",
+            "goAspect": "cellular_component",
+            "goEvidence": "IEA",
+            "evidenceCode": "ECO:0007322",
+            "reference": "GO_REF:0000044",
+            "assignedBy": "UniProt",
+            "taxonId": 3702,
+            "taxonName": "Arabidopsis thaliana",
+            "date": "20260428",
+            "withFrom": [
+              {
+                "connectedXrefs": [
+                  {
+                    "db": "UniProtKB-SubCell",
+                    "id": "SL-0191"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "geneProductId": "UniProtKB:Q0WV96",
+            "symbol": "NAC001",
+            "qualifier": "located_in",
+            "goId": "GO:0005634",
+            "goName": "nucleus",
+            "goAspect": "cellular_component",
+            "goEvidence": "ISM",
+            "evidenceCode": "ECO:0000255",
+            "reference": "GO_REF:0000122",
+            "assignedBy": "TAIR",
+            "taxonId": 3702,
+            "taxonName": "Arabidopsis thaliana",
+            "date": "20180831",
+            "withFrom": null
+          },
+          {
+            "geneProductId": "UniProtKB:Q0WV96",
+            "symbol": "NAC001",
+            "qualifier": "located_in",
+            "goId": "GO:0016020",
+            "goName": "membrane",
+            "goAspect": "cellular_component",
+            "goEvidence": "ISS",
+            "evidenceCode": "ECO:0000250",
+            "reference": "GO_REF:0000024",
+            "assignedBy": "UniProt",
+            "taxonId": 3702,
+            "taxonName": "Arabidopsis thaliana",
+            "date": "20170113",
+            "withFrom": [
+              {
+                "connectedXrefs": [
+                  {
+                    "db": "UniProtKB",
+                    "id": "Q949N0"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "geneProductId": "UniProtKB:Q0WV96",
+            "symbol": "NAC001",
+            "qualifier": "located_in",
+            "goId": "GO:0016020",
+            "goName": "membrane",
+            "goAspect": "cellular_component",
+            "goEvidence": "IEA",
+            "evidenceCode": "ECO:0007322",
+            "reference": "GO_REF:0000044",
+            "assignedBy": "UniProt",
+            "taxonId": 3702,
+            "taxonName": "Arabidopsis thaliana",
+            "date": "20260428",
+            "withFrom": [
+              {
+                "connectedXrefs": [
+                  {
+                    "db": "UniProtKB-SubCell",
+                    "id": "SL-0162"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "by_aspect": {
+          "molecular_function": [
+            {
+              "goId": "GO:0000976",
+              "goName": "transcription cis-regulatory region binding"
+            },
+            {
+              "goId": "GO:0003677",
+              "goName": "DNA binding"
+            },
+            {
+              "goId": "GO:0003700",
+              "goName": "DNA-binding transcription factor activity"
+            }
+          ],
+          "biological_process": [
+            {
+              "goId": "GO:0006355",
+              "goName": "regulation of DNA-templated transcription"
+            }
+          ],
+          "cellular_component": [
+            {
+              "goId": "GO:0005634",
+              "goName": "nucleus"
+            },
+            {
+              "goId": "GO:0016020",
+              "goName": "membrane"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

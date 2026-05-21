@@ -82,6 +82,10 @@ Clients populate their slash-command menu from `prompts/list`, so the
 workflow is one user selection deep instead of requiring the user to
 remember the tool ordering.
 
+Real-execution proof transcripts of both chains (against the live
+upstream APIs) live in [`examples/`](examples/) — one JSON + Markdown
+pair per prompt.
+
 ## Transports
 
 | Transport       | Status  | How to launch                                                       |

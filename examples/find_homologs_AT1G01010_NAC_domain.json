@@ -1,0 +1,181 @@
+{
+  "chain": "find_homologs",
+  "query": {
+    "label": "AT1G01010_NAC_domain",
+    "program": "blastp",
+    "sequence_length": 162
+  },
+  "captured_at": "2026-05-21T07:34:39Z",
+  "steps": [
+    {
+      "step": 1,
+      "tool": "blast_sequence",
+      "input": {
+        "program": "blastp",
+        "hitlist_size": 10,
+        "sequence_length": 162
+      },
+      "elapsed_s": 64.05,
+      "output": {
+        "rid": "0XDCGMUY016",
+        "program": "blastp",
+        "database": "swissprot",
+        "status": "READY",
+        "hitCount": 10,
+        "hits": [
+          {
+            "accession": "Q9FLJ2.1",
+            "description": "RecName: Full=NAC domain-containing protein 100; Shor...",
+            "bit_score": 204.0,
+            "evalue": 8e-65,
+            "identity": "66%"
+          },
+          {
+            "accession": "Q9FKA0.1",
+            "description": "RecName: Full=NAC domain-containing protein 92; Short...",
+            "bit_score": 199.0,
+            "evalue": 1e-63,
+            "identity": "66%"
+          },
+          {
+            "accession": "Q9FLR3.1",
+            "description": "RecName: Full=NAC domain-containing protein 79; Short...",
+            "bit_score": 200.0,
+            "evalue": 2e-63,
+            "identity": "64%"
+          },
+          {
+            "accession": "Q9LJW3.1",
+            "description": "RecName: Full=NAC domain-containing protein 59; Short...",
+            "bit_score": 199.0,
+            "evalue": 3e-63,
+            "identity": "76%"
+          },
+          {
+            "accession": "Q9FK44.1",
+            "description": "RecName: Full=NAC domain-containing protein 87; Short...",
+            "bit_score": 192.0,
+            "evalue": 3e-60,
+            "identity": "61%"
+          },
+          {
+            "accession": "O04017.1",
+            "description": "RecName: Full=Protein CUP-SHAPED COTYLEDON 2; AltName...",
+            "bit_score": 192.0,
+            "evalue": 8e-60,
+            "identity": "69%"
+          },
+          {
+            "accession": "Q7XUV6.2",
+            "description": "RecName: Full=NAC domain-containing protein 4; Short=...",
+            "bit_score": 190.0,
+            "evalue": 2e-59,
+            "identity": "59%"
+          },
+          {
+            "accession": "Q9SQQ6.1",
+            "description": "RecName: Full=NAC domain-containing protein 46; Short...",
+            "bit_score": 187.0,
+            "evalue": 2e-58,
+            "identity": "61%"
+          },
+          {
+            "accession": "K4BNG7.1",
+            "description": "RecName: Full=NAC domain-containing protein 2; Short=...",
+            "bit_score": 179.0,
+            "evalue": 1e-55,
+            "identity": "57%"
+          },
+          {
+            "accession": "Q9S851.1",
+            "description": "RecName: Full=Protein CUP-SHAPED COTYLEDON 3; AltName...",
+            "bit_score": 180.0,
+            "evalue": 1e-55,
+            "identity": "67%"
+          }
+        ],
+        "raw_report_excerpt": "<p><!--\nQBlastInfoBegin\n\tStatus=READY\nQBlastInfoEnd\n--><p>\n<PRE>\n\nBLASTP 2.17.0+\nReference: Stephen F. Altschul, Thomas L. Madden, Alejandro\nA. Schaffer, Jinghui Zhang, Zheng Zhang, Webb Miller, and\nDavid J. Lipman (1997), \"Gapped BLAST and PSI-BLAST: a new\ngeneration of protein database search programs\", Nucleic\nAcids Res. 25:3389-3402.\n\n\nReference for compositional score matrix adjustment: Stephen\nF. Altschul, John C. Wootton, E. Michael Gertz, Richa\nAgarwala, Aleksandr Morgulis, Alejandro A. Schaffer, and\nYi-Kuo Yu (2005) \"Protein database searches using\ncompositionally adjusted substitution matrices\", FEBS J.\n272:5101-5109.\n\n\nRID: 0XDCGMUY016\n\n\nDatabase: Non-redundant UniProtKB/SwissProt sequences\n           486,626 sequences; 185,539,472 total letters\nQuery= \nLength=162\n\n\n                                                                   Score     E     Max\nSequences producing significant alignments:                       (Bits)  Value  Ident\n\nQ9FLJ2.1 RecName: Full=NAC domain-containing protein 100; Shor...  204     8e-65  66%       \nQ9FKA0.1 RecName: Full=NAC domain-containing protein 92; Short...  199     1e-63  66%       \nQ9FLR3.1 RecName: Full=NAC domain-containing protein 79; Short...  200     2e-63  64%       \nQ9LJW3.1 RecName: Full=NAC domain-containing protein 59; Short...  199     3e-63  76%       \nQ9FK44.1 RecName: Full=NAC domain-containing protein 87; Short...  192     3e-60  61%       \nO04017.1 RecName: Full=Protein CUP-SHAPED COTYLEDON 2; AltName...  192     8e-60  69%       \nQ7XUV6.2 RecName: Full=NAC domain-containing protein 4; Short=...  190     2e-59  59%       \nQ9SQQ6.1 RecName: Full=NAC domain-containing protein 46; Short...  187     2e-58  61%       \nK4BNG7.1 RecName: Full=NAC domain-containing protein 2; Short=...  179     1e-55  57%       \nQ9S851.1 RecName: Full=Protein CUP-SHAPED COTYLEDON 3; AltName...  180     1e-55  67%       \n\nALIGNMENTS\n>Q9FLJ2.1 RecName: Full=NAC domain-containing protein 100; Short=ANAC100; \nShort=AtNAC5 [Arabidopsis thaliana]\nLength=336\n\n Score = 204 bits (518),  Expect = 8e-65, Method: Compositional matrix adjust.\n Identities = 103/155 (66%), Positives = 118/155 (76%), Gaps = 6/155 (4%)\n\nQuery  1    MEDQVGFGFRPNDEELVGHYLRNKI-ESQTSRSAI-EVDLNKCEPWDLPGKAKMGEKEWY  58\n            M+   GF F P DEEL+ HYL  K+ ++  S  AI EVDLNK EPW+LP  AKMGEKEWY\nSbjct  14   MDLPPGFRFHPTDEELITHYLHKKVLDTSFSAKAIGEVDLNKSEPWELPWMAKMGEKEWY  73\n\nQuery  59   FFCQRDRKYPTGTRTNRATVAGFWKATGRDKAIYSGKSLVGMKKTLVFYKGRAPHGQKTD  118\n            FFC RDRKYPTG RTNRAT AG+WKATG+DK IY GKSLVGMKKTLVFY+GRAP GQKT+\nSbjct  74   FFCVRDRKYPTGLRTNRATEAGYWKATGKDKEIYRGKSLVGMKKTLVFYRGRAPKGQKTN  133\n\nQuery  119  WIMHEYRLEGN-HAHSRPNALENGAWSVAGCRVHK  152\n            W+MHEYRLEG   AH+ P   +N  W +  CRV +\nSbjct  134  WVMHEYRLEGKFSAHNLPKTAKN-EWVI--CRVFQ  165\n\n\n>Q9FKA0.1 RecName: Full=NAC domain-containing protein 92; Short=ANAC092; \nShort=AtNAC2; Short=AtNAC6; AltName: Full=Protein ORESARA \n1 [Arabidopsis thaliana]\nLength=285\n\n Score = 199 bits (507),  Expect = 1e-63, Method: Compositional matrix adjust.\n Identities = 99/149 (66%), Positives = 112/149 (75%), Gaps = 4/149 (3%)\n\nQuery  6    GFGFRPNDEELVGHYLRNKI-ESQTSRSAI-EVDLNKCEPWDLPGKAKMGEKEWYFFCQR  63\n            GF F P DEEL+ HYL+ K+  +  S +AI EVDLNK EPWDLP KAKMGEKEWYFFC R\nSbjct  23   GFRFHPTDEELITHYLKPKVFNTFFSATAIGEVDLNKIEPWDLPWKAKMGEKEWYFFCVR  82\n\nQuery  64   DRKYPTGTRTNRATVAGFWKATGRDKAIYSGKSLVGMKKTLVFYKGRAPHGQKTDWIMHE  123\n            DRKYPTG RTNRAT AG+WKATG+DK I+ GKSLVGMKKTLVFYKGRAP G KT+W+MHE\nSbjct  83   DRKYPTGLRTNRATEAGYWKATGKDKEIFKGKSLVGMKKTLVFYKGRAPKGVKTNWVMHE  142\n\nQuery  124  YRLEGNHAHSRPNALENGAWSVAGCRVHK  152\n            YRLEG +            W +  CRV +\nSbjct  143  YRLEGKYCIENLPQTAKNEWVI--CRVFQ  169\n\n\n>Q9FLR3.1 RecName: Full=NAC domain-containing protein 79; Short=ANAC79; \nShort=ANAC80; Short=AtNAC79; Short=AtNAC80 [Arabidopsis thaliana]\nLength=329\n\n Score = 200 bits (509),  Expect = 2e-63, Method: Compositional matrix adjust.\n Identities = 98/153 (64%), Positives = 117/153 (76%), Gaps = 6/153 (4%)\n\nQuery  1    MEDQVGFGFRPNDEELVGHYLRNKIESQ--TSRSAIEVDLNKCEPWDLPGKAKMGEKEWY  58\n            M+   GF F P DEEL+ HYL  K+     ++++  EVDLNK EPW+LP KAK+GEKEWY\nSbjct  15   MDLPPGFRFHPTDEELITHYLHKKVLDLGFSAKAIGEVDLNKAEPWELPYKAKIGEKEWY  74\n\nQuery  59   FFCQRDRKYPTGTRTNRATVAGFWKATGRDKAIYSGKSLVGMKKTLVFYKGRAPHGQKTD  118\n            FFC RDRKYPTG RTNRAT AG+WKATG+DK I+ GKSLVGMKKTLVFY+GRAP GQKT+\nSbjct  75   FFCVRDRKYPTGLRTNRATQAGYWKATGKDKEIFRGKSLVGMKKTLVFYRGRAPKGQKTN  134\n\nQuery  119  WIMHEYRLEGN-HAHSRPNALENGAWSVAGCRV  150\n            W+MHEYRL+G   AH+ P   +N  W +  CRV\nSbjct  135  WVMHEYRLDGKLSAHNLPKTAKN-EWVI--CRV  164\n\n\n>Q9LJW3.1 RecName: Full=NAC domain-containing protein 59; Short=ANAC059; \nShort=AtNAC3; AltName: Full=Protein ORE1 SISTER1 [Arabidopsis \nthaliana]\nLength=318\n\n Score = 199 bits (506),  Expect = 3e-63, Method: Compositional matrix adjust.\n Identities = 97/128 (76%), Positives = 105/128 (82%), Gaps = 2/128 (2%)\n\nQuery  6    GFGFRPNDEELVGHYLRNKI-ESQTSRSAI-EVDLNKCEPWDLPGKAKMGEKEWYFFCQR  63\n            GF F P DEEL+ HYLR K+  S  S  AI EVDLNK EPWDLP KAK+GEKEWYFFC R\nSbjct  27   GFRFHPTDEELITHYLRPKVVNSFFSAIAIGEVDLNKVEPWDLPWKAKLGEKEWYFFCVR  86\n\nQuery  64   DRKYPTGTRTNRATVAGFWKATGRDKAIYSGKSLVGMKKTLVFYKGRAPHGQKTDWIMHE  123\n            DRKYPTG RTNRAT AG+WKATG+DK I+ GKSLVGMKKTLVFYKGRAP G KT+W+MHE\nSbjct  87   DRKYPTGLRTNRATKAGYWKATGKDKEIFKGKSLVGMKKTLVFYKGRAPKGVKTNWVMHE  146\n\nQuery  124  YRLEGNHA  131\n            YRLEG  A\nSbjct  147  YRLEGKFA  154\n\n\n>Q9FK44.1 RecName: Full=NAC domain-containing protein 87; Short=ANAC087 \n[Arabidopsis thaliana]\nLength=335\n\n Score = 192 bits (488),  Expect = 3e-60, Method: Compositional matrix adjust.\n Identities = 93/153 (61%), Positives = 113/153 (74%), Gaps = 5/153 (3%)\n\nQuery  6    GFGFRPNDEELVGHYLRNKIESQ--TSRSAIEVDLNKCEPWDLPGKAKMGEKEWYFFCQR  63\n            GF F P DEE++  YL+ K+ +   T+ +  E DLNKCEPWDLP +AKMGEKE+YFFCQR\nSbjct  24   GFRFHPTDEEIITCYLKEKVLNSRFTAVAMGEADLNKCEPWDLPKRAKMGEKEFYFFCQR  83\n\nQuery  64   DRKYPTGTRTNRATVAGFWKATGRDKAIYSGK-SLVGMKKTLVFYKGRAPHGQKTDWIMH  122\n            DRKYPTG RTNRAT +G+WKATG+DK I+ GK  LVGMKKTLVFY+GRAP G+KT+W+MH\nSbjct  84   DRKYPTGMRTNRATESGYWKATGKDKEIFKGKGCLVGMKKTLVFYRGRAPKGEKTNWVMH  143\n\nQuery  123  EYRLEGNHAHSRPNALENGAWSVAGCRVHKMQN  155\n            EYRLEG +++          W V  CRV    N\nSbjct  144  EYRLEGKYSYYNLPKSARDEWVV--CRVFHKNN  174\n\n\n>O04017.1 RecName: Full=Protein CUP-SHAPED COTYLEDON 2; AltName: Full=NAC \ndomain-containing protein 98; Short=ANAC098; AltName: Full=NAC \ndomain-containing protein CUC2 [Arabidopsis thaliana]\nLength=375\n\n Score = 192 bits (488),  Expect = 8e-60, Method: Compositional matrix adjust.\n Identities = 90/131 (69%), Positives = 106/131 (81%), Gaps = 4/131 (3%)\n\nQuery  6    GFGFRPNDEELVGHYLRNKIESQ--TSRSAIEVDLNKCEPWDLPGKAKMGEKEWYFFCQR  63\n            GF F P DEEL+ HYL  K+     +SR+  EVDLNKCEPW LPG+AKMGEKEWYFF  R\nSbjct  20   GFRFHPTDEELITHYLLRKVLDGCFSSRAIAEVDLNKCEPWQLPGRAKMGEKEWYFFSLR  79\n\nQuery  64   DRKYPTGTRTNRATVAGFWKATGRDKAIYSGKS--LVGMKKTLVFYKGRAPHGQKTDWIM  121\n            DRKYPTG RTNRAT AG+WKATG+D+ I+S K+  LVGMKKTLVFYKGRAP G+K++W+M\nSbjct  80   DRKYPTGLRTNRATEAGYWKATGKDREIFSSKTCALVGMKKTLVFYKGRAPKGEKSNWVM  139\n\nQuery  122  HEYRLEGNHAH  132\n            HEYRLEG  ++\nSbjct  140  HEYRLEGKFSY  150\n\n\n>Q7XUV6.2 RecName: Full=NAC domain-containing protein 4; Short=ONAC004; \nAltName: Full=OsNAC2; AltName: Full=Protein TILLERING 1; Short=OsTIL1 \n[Oryza sativa Japonica Group]\nLength=343\n\n Score = 190 bits (483),  Expect = 2e-59, Method: Compositional matrix adjust.\n Identities = 95/161 (59%), Positives = 113/161 (70%), Gaps = 12/161 (7%)\n\nQuery  1    MEDQVGFGFRPNDEELVGHYLRNKIESQ--TSRSAIEVDLNKCEPWDLPGKAKMGEKEWY  58\n            M+   GF F P DEEL+ HYL  K+      + +  E DLNKCEPWDLP  AKMGEKEWY\nSbjct  10   MDLPPGFRFHPTDEELITHYLAKKVADARFAALAVAEADLNKCEPWDLPSLAKMGEKEWY  69\n\nQuery  59   FFCQRDRKYPTGTRTNRATVAGFWKATGRDKAIYSGKSLVGMKKTLVFYKGRAPHGQKTD  118\n            FFC +DRKYPTG RTNRAT +G+WKATG+DK I+  K+LVGMKKTLVFY GRAP G+K+ \nSbjct  70   FFCLKDRKYPTGLRTNRATESGYWKATGKDKDIFRRKALVGMKKTLVFYTGRAPKGEKSG  129\n\nQuery  119  WIMHEYRLEGN-HA------HSRPNALENGAWSVAGCRVHK  152\n            W+MHEYRL G  HA      H +P + +N  W +  CRV K\nSbjct  130  WVMHEYRLHGKLHAAALGFLHGKPASSKN-EWVL--CRVFK  167\n\n\n>Q9SQQ6.1 RecName: Full=NAC domain-containing protein 46; Short=ANAC046 \n[Arabidopsis thaliana]\nLength=338\n\n Score = 187 bits (476),  Expect = 2e-58, Method: Compositional matrix adjust.\n Identities = 91/148 (61%), Positives = 111/148 (75%), Gaps = 5/148 (3%)\n\nQuery  6    GFGFRPNDEELVGHYLRNKIESQ--TSRSAIEVDLNKCEPWDLPGKAKMGEKEWYFFCQR  63\n            GF F P DEE++ HYL+ K+ +   T+ +  + DLNK EPWDLP  AKMGEKE+YFFCQR\nSbjct  23   GFRFHPTDEEIITHYLKEKVFNIRFTAAAIGQADLNKNEPWDLPKIAKMGEKEFYFFCQR  82\n\nQuery  64   DRKYPTGTRTNRATVAGFWKATGRDKAIYSGKS-LVGMKKTLVFYKGRAPHGQKTDWIMH  122\n            DRKYPTG RTNRATV+G+WKATG+DK I+ GK  LVGMKKTLVFY GRAP G+KT+W+MH\nSbjct  83   DRKYPTGMRTNRATVSGYWKATGKDKEIFRGKGCLVGMKKTLVFYTGRAPKGEKTNWVMH  142\n\nQuery  123  EYRLEGNHAHSRPNALENGAWSVAGCRV  150\n            EYRL+G +++          W V  CRV\nSbjct  143  EYRLDGKYSYHNLPKTARDEWVV--CRV  168\n\n\n>K4BNG7.1 RecName: Full=NAC domain-containing protein 2; Short=SlNAP2 [Solanum \nlycopersicum]\nLength=275\n\n Score = 179 bits (453),  Expect = 1e-55, Method: Compositional matrix adjust.\n Identities = 88/154 (57%), Positives = 108/154 (70%), Gaps = 6/154 (4%)\n\nQuery  6    GFGFRPNDEELVGHYLRNKIESQTSRSAI--EVDLNKCEPWDLPGKAKMGEKEWYFFCQR  63\n            GF F P DEEL+ +YLRN+  S+   S+I  EVD+ K +PW+LP K + GEKEWYFF  R\nSbjct  13   GFRFHPTDEELIMYYLRNQATSKPCPSSIIPEVDVYKFDPWELPEKTEFGEKEWYFFTPR  72\n\nQuery  64   DRKYPTGTRTNRATVAGFWKATGRDKAIYSGKSLVGMKKTLVFYKGRAPHGQKTDWIMHE  123\n            DRKYP G R NRA V+G+WKATG DK IYSG   VG+KK LVFYKG+ P G KTDWIMHE\nSbjct  73   DRKYPNGVRPNRAAVSGYWKATGTDKGIYSGTKYVGIKKALVFYKGKPPKGIKTDWIMHE  132\n\nQuery  124  YRL-EGNHAHSRPN-ALENGAWSVAGCRVHKMQN  155\n            YRL E     +RPN ++    W +  CR++K +N\nSbjct  133  YRLSESRTQPTRPNGSMRLDDWVL--CRIYKKKN  164\n\n\n>Q9S851.1 RecName: Full=Protein CUP-SHAPED COTYLEDON 3; AltName: Full=NAC \ndomain-containing protein 31; Short=ANAC031; AltName: Full=NAC \ndomain-containing protein CUC3 [Arabidopsis thaliana]\nLength=334\n\n Score = 180 bits (457),  Expect = 1e-55, Method: Compositional matrix adjust.\n Identities = 88/132 (67%), Positives = 101/132 (77%), Gaps = 6/132 (5%)\n\nQuery  6    GFGFRPNDEELVGHYLRNKIESQTSRSAI---EVDLNKCEPWDLPGKAKMGEKEWYFFCQ  62\n            GF F P DEEL+  YL +KI      S I   EVDLN+CEPW+LP  AKMGE+EWYF+  \nSbjct  25   GFRFHPTDEELITFYLASKI-FHGGLSGIHISEVDLNRCEPWELPEMAKMGEREWYFYSL  83\n\nQuery  63   RDRKYPTGTRTNRATVAGFWKATGRDKAIYS--GKSLVGMKKTLVFYKGRAPHGQKTDWI  120\n            RDRKYPTG RTNRAT AG+WKATG+DK ++S  G  LVGMKKTLVFYKGRAP G KT W+\nSbjct  84   RDRKYPTGLRTNRATTAGYWKATGKDKEVFSGGGGQLVGMKKTLVFYKGRAPRGLKTKWV  143\n\nQuery  121  MHEYRLEGNHAH  132\n            MHEYRLE +H+H\nSbjct  144  MHEYRLENDHSH  155\n\n\n  Database: Non-redundant UniProtKB/SwissProt sequences\n    Posted date:  May 20, 2026  6:10 AM\n  Number of letters in database: 185,539,472\n  Number of sequences in database:  486,626\n\nLambda      K        H\n   0.318    0.133    0.432 \nGapped\nLambda      K        H\n   0.267   0.0410    0.140 \nMatrix: BLOSUM62\nGap Penalties: Existence: 11, Extension: 1\nNumber of Sequences: 486626\nNumber of Hits to DB: 147029\nNumber of extensions: 136\nNumber of successful extensions: 33\nNumber of sequences better than 100: 11\nNumber of HSP's better than 100 without gapping: 0\nNumber of HSP's gapped: 23\nNumber of HSP's successfully gapped: 11\nLength of query: 162\nLength of database: 185539472\nLength adjustment: 108\nEffective length of query: 54\nEffective length of database: 132983864\nEffective search space: 7181128656\nEffective search space used: 7181128656\nT: 20\nA: 40\nX1: 16 (7.3 bits)\nX2: 38 (14.6 bits)\nX3: 64 (24.7 bits)\nS1: 41 (20.4 bits)\nS2: 56 (26.2 bits)\nka-blk-alpha gapped: 1.9\nka-blk-alpha ungapped: 0.7916\nka-blk-alpha_v gapped: 42.6028\nka-blk-alpha_v ungapped: 4.96466\nka-blk-sigma gapped: 43.6362\n\n\n",
+        "raw_report_truncated": false,
+        "elapsed_seconds": 62.0
+      }
+    },
+    {
+      "step": 2,
+      "tool": "resolve_locus_to_uniprot (per-hit)",
+      "input": {
+        "strategy": "extract UniProt-like accessions from top 3 hits and resolve"
+      },
+      "resolved": [
+        {
+          "hit_rank": 1,
+          "blast_accession": "Q9FLJ2.1",
+          "description": "RecName: Full=NAC domain-containing protein 100; Shor...",
+          "evalue": 8e-65,
+          "bit_score": 204.0,
+          "uniprot_resolved": {
+            "locus_query": "Q9FLJ2.1",
+            "primaryAccession": "Q9FLJ2",
+            "uniProtkbId": "NC100_ARATH",
+            "entryType": "UniProtKB reviewed (Swiss-Prot)",
+            "reviewed": true,
+            "recommendedName": "NAC domain-containing protein 100",
+            "geneNames": [
+              "NAC100"
+            ],
+            "organism": "Arabidopsis thaliana",
+            "taxonId": 3702,
+            "sequenceLength": 336,
+            "web_url": "https://www.uniprot.org/uniprotkb/Q9FLJ2"
+          },
+          "resolve_elapsed_s": 0.48
+        },
+        {
+          "hit_rank": 2,
+          "blast_accession": "Q9FKA0.1",
+          "description": "RecName: Full=NAC domain-containing protein 92; Short...",
+          "evalue": 1e-63,
+          "bit_score": 199.0,
+          "uniprot_resolved": {
+            "locus_query": "Q9FKA0.1",
+            "primaryAccession": "Q9FKA0",
+            "uniProtkbId": "NAC92_ARATH",
+            "entryType": "UniProtKB reviewed (Swiss-Prot)",
+            "reviewed": true,
+            "recommendedName": "NAC domain-containing protein 92",
+            "geneNames": [
+              "NAC92"
+            ],
+            "organism": "Arabidopsis thaliana",
+            "taxonId": 3702,
+            "sequenceLength": 285,
+            "web_url": "https://www.uniprot.org/uniprotkb/Q9FKA0"
+          },
+          "resolve_elapsed_s": 0.15
+        },
+        {
+          "hit_rank": 3,
+          "blast_accession": "Q9FLR3.1",
+          "description": "RecName: Full=NAC domain-containing protein 79; Short...",
+          "evalue": 2e-63,
+          "bit_score": 200.0,
+          "uniprot_resolved": {
+            "locus_query": "Q9FLR3.1",
+            "primaryAccession": "Q9FLR3",
+            "uniProtkbId": "NAC79_ARATH",
+            "entryType": "UniProtKB reviewed (Swiss-Prot)",
+            "reviewed": true,
+            "recommendedName": "NAC domain-containing protein 79",
+            "geneNames": [
+              "NAC079"
+            ],
+            "organism": "Arabidopsis thaliana",
+            "taxonId": 3702,
+            "sequenceLength": 329,
+            "web_url": "https://www.uniprot.org/uniprotkb/Q9FLR3"
+          },
+          "resolve_elapsed_s": 0.14
+        }
+      ]
+    }
+  ]
+}
