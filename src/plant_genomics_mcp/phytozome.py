@@ -1,0 +1,163 @@
+"""Phytozome BioMart client — async httpx wrapper around phytozome-next.jgi.doe.gov.
+
+Phytozome exposes its gene catalog via a BioMart endpoint at
+``/biomart/martservice``. The protocol is form-encoded POST whose body
+carries a BioMart XML query, and the response is TSV (tab-separated values,
+header row present when ``header="1"``). No auth required; public.
+
+Quirks worth knowing:
+  * BioMart returns HTTP 200 for **both** success and query errors. Errors are
+    response bodies beginning with ``Query ERROR:``. We detect that and raise
+    ``PlantGenomicsError``.
+  * Zero-row filter matches return only the header line (or empty body).
+    Treated as a 404-equivalent here.
+  * The ``organism_id`` filter is a Phytozome proteome integer ID, NOT a
+    species slug. Arabidopsis thaliana TAIR10 = 167 (controller-verified
+    live 2026-05-21). The other entries in ``KNOWN_ORGANISMS`` below come
+    from the BioMart registry's containedDatasets and have NOT been
+    empirically verified by this module — treat as hints.
+
+We reuse ``ensembl_plants.PlantGenomicsError`` as the shared error type so
+the server dispatch can handle one exception class for all backends.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import re
+from typing import Any
+
+import httpx
+
+from plant_genomics_mcp.ensembl_plants import PlantGenomicsError
+
+BASE_URL = "https://phytozome-next.jgi.doe.gov/biomart/martservice"
+DEFAULT_TIMEOUT = 30.0
+MAX_RETRIES = 3
+
+# Controller-verified: 167 = Arabidopsis thaliana TAIR10.
+# The rest are pulled from the BioMart registry containedDatasets and are
+# UNVERIFIED — fix forward if a downstream call disagrees.
+KNOWN_ORGANISMS: dict[str, int] = {
+    "arabidopsis_thaliana": 167,  # verified
+    "glycine_max": 275,  # hint
+    "sorghum_bicolor": 313,  # hint
+    "brachypodium_distachyon": 314,  # hint
+    "manihot_esculenta": 305,  # hint
+    "eucalyptus_grandis": 297,  # hint
+    "populus_trichocarpa": 210,  # hint
+    "phaseolus_vulgaris": 218,  # hint
+    "chlamydomonas_reinhardtii": 281,  # hint
+    "daucus_carota": 388,  # hint
+}
+
+# Identifier whitelist guards the string-formatted XML against injection.
+# Phytozome locus identifiers are alphanumeric plus dot / underscore / hyphen
+# (e.g. AT1G01010, Glyma.01G000100, Sobic.001G000100).
+_LOCUS_RE = re.compile(r"^[A-Za-z0-9._-]+$")
+
+_QUERY_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Query>
+<Query virtualSchemaName="zome_mart" header="1" uniqueRows="0" count="" datasetConfigVersion="0.7">
+  <Dataset name="phytozome" interface="default">
+    <Filter name="organism_id" value="{organism_id}"/>
+    <Filter name="gene_name_filter" value="{locus}"/>
+    <Attribute name="organism_name"/>
+    <Attribute name="gene_name1"/>
+    <Attribute name="chr_name1"/>
+    <Attribute name="gene_chrom_start"/>
+    <Attribute name="gene_chrom_end"/>
+    <Attribute name="gene_chrom_strand"/>
+    <Attribute name="gene_description"/>
+  </Dataset>
+</Query>"""
+
+# Output field order MUST match the <Attribute> order in the template.
+_FIELDS = (
+    "organism_name",
+    "gene_name",
+    "chromosome",
+    "gene_start",
+    "gene_end",
+    "strand",
+    "description",
+)
+
+
+async def _post(client: httpx.AsyncClient, xml_payload: str) -> str:
+    """POST the BioMart query, returning raw response text.
+
+    Retries on 429 / 5xx with exponential backoff, honoring ``Retry-After``.
+    BioMart application-level errors (``Query ERROR:``) are returned as 200
+    and surfaced upstream — they are NOT retried here.
+    """
+    delay = 1.0
+    for attempt in range(MAX_RETRIES):
+        resp = await client.post(
+            BASE_URL,
+            data={"query": xml_payload},
+            timeout=DEFAULT_TIMEOUT,
+        )
+        if resp.status_code == 200:
+            return resp.text
+        if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_RETRIES - 1:
+            retry_after = float(resp.headers.get("Retry-After", delay))
+            await asyncio.sleep(retry_after)
+            delay *= 2
+            continue
+        raise PlantGenomicsError(f"Phytozome BioMart → HTTP {resp.status_code}: {resp.text[:200]}")
+    raise PlantGenomicsError(f"Phytozome BioMart exhausted {MAX_RETRIES} retries")
+
+
+async def lookup_locus(
+    client: httpx.AsyncClient,
+    locus: str,
+    organism_id: int = 167,
+) -> dict[str, Any]:
+    """Fetch Phytozome BioMart gene record for a locus.
+
+    ``locus`` is the Phytozome / source-genome gene name (e.g. ``AT1G01010``
+    for Arabidopsis thaliana TAIR10, ``Glyma.01G000100`` for soybean).
+    ``organism_id`` is the Phytozome proteome integer ID; defaults to 167
+    (Arabidopsis thaliana TAIR10).
+
+    Returns a dict with string-valued keys: organism_name, gene_name,
+    chromosome, gene_start, gene_end, strand, description. Numeric fields
+    (gene_start, gene_end, strand) are returned as strings — BioMart's TSV
+    is untyped and we preserve the wire representation rather than guess
+    casts.
+    """
+    if not _LOCUS_RE.match(locus):
+        # Pre-flight reject before any HTTP — prevents XML injection via the
+        # string-formatted template AND fails loud on accidental whitespace
+        # / shell quoting damage.
+        raise PlantGenomicsError(
+            f"Phytozome: invalid locus {locus!r} (must match {_LOCUS_RE.pattern})"
+        )
+
+    xml_payload = _QUERY_TEMPLATE.format(organism_id=organism_id, locus=locus)
+    body = await _post(client, xml_payload)
+
+    # BioMart returns 200 with a "Query ERROR:" body on filter / dataset
+    # mis-configuration. Detect that before TSV parsing.
+    if body.startswith("Query ERROR"):
+        raise PlantGenomicsError(f"Phytozome: {body.strip()[:300]}")
+
+    # Split on \n, drop trailing blanks. With header="1" we always get the
+    # header line first (when the response is non-empty).
+    lines = [ln for ln in body.splitlines() if ln.strip()]
+    if len(lines) < 2:
+        # Header present (no rows) OR empty body → nothing matched the
+        # gene_name_filter for that organism_id.
+        raise PlantGenomicsError(
+            f"Phytozome: locus {locus} not found for organism_id {organism_id}"
+        )
+
+    # First non-empty line is the header (we don't use it — column order is
+    # pinned by our Attribute order). Second line is the first data row.
+    values = lines[1].split("\t")
+    if len(values) != len(_FIELDS):
+        raise PlantGenomicsError(
+            f"Phytozome: unexpected column count {len(values)} (expected {len(_FIELDS)}): {lines[1]!r}"
+        )
+    return dict(zip(_FIELDS, values))
