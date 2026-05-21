@@ -1,0 +1,106 @@
+"""Tests for the server-defined MCP prompts surface (P2.18)."""
+
+from __future__ import annotations
+
+import pytest
+
+from plant_genomics_mcp import prompts
+from plant_genomics_mcp.errors import NotFoundError
+
+
+def test_prompt_catalog_has_two_entries() -> None:
+    names = {p.name for p in prompts.PROMPTS}
+    assert names == {prompts.ANALYZE_LOCUS, prompts.FIND_HOMOLOGS}
+
+
+def test_each_prompt_has_description_and_arguments() -> None:
+    for p in prompts.PROMPTS:
+        assert p.description
+        assert p.arguments
+        for arg in p.arguments:
+            assert arg.name
+            assert arg.description
+
+
+def test_analyze_locus_marks_locus_required_and_species_optional() -> None:
+    p = next(p for p in prompts.PROMPTS if p.name == prompts.ANALYZE_LOCUS)
+    by_name = {a.name: a for a in p.arguments or []}
+    assert by_name["locus"].required is True
+    # required is None or False is acceptable for optional args
+    assert not by_name["species"].required
+
+
+def test_find_homologs_marks_sequence_required_and_program_optional() -> None:
+    p = next(p for p in prompts.PROMPTS if p.name == prompts.FIND_HOMOLOGS)
+    by_name = {a.name: a for a in p.arguments or []}
+    assert by_name["sequence"].required is True
+    assert not by_name["program"].required
+
+
+@pytest.mark.asyncio
+async def test_get_analyze_locus_renders_chain_with_all_five_tools() -> None:
+    result = await prompts.get_prompt(prompts.ANALYZE_LOCUS, {"locus": "AT1G01010"})
+    assert result.description
+    assert "AT1G01010" in result.description
+    assert len(result.messages) == 1
+    msg = result.messages[0]
+    assert msg.role == "user"
+    text = msg.content.text
+    assert "AT1G01010" in text
+    assert "arabidopsis_thaliana" in text  # default species applied
+    for tool in (
+        "ensembl_plants_lookup_locus",
+        "get_gene_xrefs",
+        "resolve_locus_to_uniprot",
+        "locus_literature",
+        "locus_go_annotations",
+    ):
+        assert tool in text
+
+
+@pytest.mark.asyncio
+async def test_get_analyze_locus_honors_species_arg() -> None:
+    result = await prompts.get_prompt(
+        prompts.ANALYZE_LOCUS,
+        {"locus": "Os01g0100100", "species": "oryza_sativa"},
+    )
+    text = result.messages[0].content.text
+    assert "Os01g0100100" in text
+    assert "oryza_sativa" in text
+    assert "arabidopsis_thaliana" not in text
+
+
+@pytest.mark.asyncio
+async def test_get_analyze_locus_missing_locus_raises_typed() -> None:
+    with pytest.raises(NotFoundError, match="missing required argument 'locus'"):
+        await prompts.get_prompt(prompts.ANALYZE_LOCUS, {})
+
+
+@pytest.mark.asyncio
+async def test_get_find_homologs_renders_with_blastp_default() -> None:
+    seq = "MEDQVGFGFRPNDEELVGHYLRNKIESQTSRSAIEVDLNK"
+    result = await prompts.get_prompt(prompts.FIND_HOMOLOGS, {"sequence": seq})
+    assert "blastp" in result.description
+    text = result.messages[0].content.text
+    assert seq in text
+    assert "blast_sequence" in text
+    assert "resolve_locus_to_uniprot" in text
+
+
+@pytest.mark.asyncio
+async def test_get_find_homologs_unknown_program_raises_typed() -> None:
+    with pytest.raises(NotFoundError, match="program 'blastz' must be one of"):
+        await prompts.get_prompt(prompts.FIND_HOMOLOGS, {"sequence": "MNSAKQ", "program": "blastz"})
+
+
+@pytest.mark.asyncio
+async def test_get_unknown_prompt_raises_typed() -> None:
+    with pytest.raises(NotFoundError, match="unknown prompt"):
+        await prompts.get_prompt("nonexistent", {})
+
+
+@pytest.mark.asyncio
+async def test_get_prompt_accepts_none_arguments() -> None:
+    """MCP spec allows arguments to be omitted — should still raise for required args."""
+    with pytest.raises(NotFoundError, match="missing required argument"):
+        await prompts.get_prompt(prompts.ANALYZE_LOCUS, None)

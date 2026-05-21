@@ -50,6 +50,7 @@ from plant_genomics_mcp import (
     phytozome,
     plantcyc,
     progress,
+    prompts,
     quickgo,
     resources,
     tair,
@@ -649,6 +650,21 @@ async def _list_resources() -> list[types.Resource]:
 @server.read_resource()
 async def _read_resource(uri: AnyUrl):  # type: ignore[no-untyped-def]
     return await resources.read_resource(uri)
+
+
+# ---- prompts ----------------------------------------------------------------
+# Parameterized natural-language workflows (analyze_locus, find_homologs).
+# See plant_genomics_mcp.prompts for the catalog and renderers.
+
+
+@server.list_prompts()
+async def _list_prompts() -> list[types.Prompt]:
+    return prompts.PROMPTS
+
+
+@server.get_prompt()
+async def _get_prompt(name: str, arguments: dict[str, str] | None) -> types.GetPromptResult:
+    return await prompts.get_prompt(name, arguments)
 
 
 # ---- dispatch ---------------------------------------------------------------
