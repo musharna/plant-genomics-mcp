@@ -1,8 +1,11 @@
 """MCP server entry point — exposes plant genomics tools over stdio.
 
-This dispatch ships two tools (``ensembl_plants_lookup_locus``,
-``phytozome_lookup_locus``). TAIR and PlantCyc backends are roadmapped as
-separate follow-up tasks.
+This dispatch ships three tools (``ensembl_plants_lookup_locus``,
+``phytozome_lookup_locus``, ``tair_locus_info``). PlantCyc is roadmapped
+as a separate follow-up task. ``tair_locus_info`` is a pure-data
+informational stub — TAIR's free per-locus REST API was retired (Phoenix
+Bioinformatics subscription gate, probed 2026-05-21); the tool returns a
+structured redirect to the other two backends.
 """
 
 from __future__ import annotations
@@ -16,7 +19,7 @@ from mcp import types
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 
-from plant_genomics_mcp import ensembl_plants, phytozome
+from plant_genomics_mcp import ensembl_plants, phytozome, tair
 
 server: Server = Server("plant-genomics-mcp")
 
@@ -77,6 +80,27 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
         },
     ),
+    types.Tool(
+        name="tair_locus_info",
+        description=(
+            "Returns subscription-access info and alternatives for a TAIR "
+            "locus. Does NOT fetch annotation data — TAIR's free per-locus "
+            "REST API was retired (Phoenix Bioinformatics subscription "
+            "gate, probed 2026-05-21); use ensembl_plants_lookup_locus or "
+            "phytozome_lookup_locus for the same Arabidopsis annotation. "
+            "Returns a structured redirect with rationale and probed_at date."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "TAIR-canonical locus, e.g. AT1G01010",
+                },
+            },
+            "required": ["locus"],
+        },
+    ),
 ]
 
 
@@ -103,6 +127,10 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     args["locus"],
                     organism_id=args.get("organism_id", 167),
                 )
+            case "tair_locus_info":
+                # Pure-data sync call — no client, no await. Returns a
+                # structured redirect; see plant_genomics_mcp.tair docstring.
+                return tair.lookup_locus(args["locus"])
             case _:
                 raise ValueError(f"unknown tool: {name}")
 
