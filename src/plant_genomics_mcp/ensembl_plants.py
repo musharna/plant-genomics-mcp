@@ -98,3 +98,39 @@ async def lookup_locus(
     """
     params: dict[str, Any] = {"species": species, "expand": 0}
     return await _get(client, f"/lookup/id/{locus}", params=params)
+
+
+async def lookup_xrefs(
+    client: httpx.AsyncClient,
+    locus: str,
+    species: str = "arabidopsis_thaliana",
+) -> dict[str, Any]:
+    """Fetch cross-references (UniProt, NCBI Gene, TAIR, etc.) for a locus.
+
+    Ensembl ``/xrefs/id/{locus}`` returns a list of records mapping the
+    locus to other databases. We wrap the raw array in an object so the
+    MCP outputSchema can validate it (top-level must be type=object) and
+    add a ``by_db`` rollup keyed on Ensembl's ``dbname`` for quick lookup
+    without walking the full list.
+    """
+    params: dict[str, Any] = {"species": species}
+    raw = await _get(client, f"/xrefs/id/{locus}", params=params)
+    if not isinstance(raw, list):
+        raise PlantGenomicsError(
+            f"Ensembl /xrefs/id/{locus} returned non-list payload: {type(raw).__name__}"
+        )
+    by_db: dict[str, list[str]] = {}
+    for entry in raw:
+        if not isinstance(entry, dict):
+            continue
+        dbname = entry.get("dbname")
+        primary_id = entry.get("primary_id")
+        if dbname and primary_id:
+            by_db.setdefault(dbname, []).append(primary_id)
+    return {
+        "locus": locus,
+        "species": species,
+        "count": len(raw),
+        "xrefs": raw,
+        "by_db": by_db,
+    }

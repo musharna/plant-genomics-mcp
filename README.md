@@ -1,6 +1,6 @@
 # plant-genomics-mcp
 
-> **5 tools** for plant-genomics locus lookup via the Model Context Protocol.
+> **6 tools** for plant-genomics locus lookup via the Model Context Protocol.
 > Free, public sources: Ensembl Plants + Phytozome BioMart + UniProtKB. TAIR
 >
 > - PlantCyc are informational stubs that redirect to the free alternatives
@@ -13,13 +13,14 @@
 
 ## Tools at a glance
 
-| #   | Category              | Tool                          | What it does                                                                |
-| --- | --------------------- | ----------------------------- | --------------------------------------------------------------------------- |
-| 1   | Gene metadata (live)  | `ensembl_plants_lookup_locus` | Fetches gene record from Ensembl Plants REST (any plant species).           |
-| 2   | Gene metadata (live)  | `phytozome_lookup_locus`      | Fetches gene record from Phytozome BioMart (any Phytozome proteome).        |
-| 3   | Protein (live)        | `resolve_locus_to_uniprot`    | Resolves a locus to its UniProtKB record (Swiss-Prot preferred, TrEMBL OK). |
-| 4   | Subscription redirect | `tair_locus_info`             | Returns subscription notice + redirect to live backends. No upstream call.  |
-| 5   | Subscription redirect | `plantcyc_locus_info`         | Returns subscription notice + redirect to live backends. No upstream call.  |
+| #   | Category                | Tool                          | What it does                                                                |
+| --- | ----------------------- | ----------------------------- | --------------------------------------------------------------------------- |
+| 1   | Gene metadata (live)    | `ensembl_plants_lookup_locus` | Fetches gene record from Ensembl Plants REST (any plant species).           |
+| 2   | Cross-references (live) | `get_gene_xrefs`              | Fetches cross-DB references (UniProt, NCBI Gene, TAIR, GO, …) from Ensembl. |
+| 3   | Gene metadata (live)    | `phytozome_lookup_locus`      | Fetches gene record from Phytozome BioMart (any Phytozome proteome).        |
+| 4   | Protein (live)          | `resolve_locus_to_uniprot`    | Resolves a locus to its UniProtKB record (Swiss-Prot preferred, TrEMBL OK). |
+| 5   | Subscription redirect   | `tair_locus_info`             | Returns subscription notice + redirect to live backends. No upstream call.  |
+| 6   | Subscription redirect   | `plantcyc_locus_info`         | Returns subscription notice + redirect to live backends. No upstream call.  |
 
 Live tools take a TAIR-style locus (e.g. `AT1G01010`) plus optional
 `species=` / `organism_id=` and return a structured record. UniProt
@@ -29,7 +30,7 @@ species/organism conventions documented below. Subscription tools take
 a locus and return a structured redirect record — they do not call the
 gated upstream.
 
-All five tools publish JSON `outputSchema` for client-side validation
+All six tools publish JSON `outputSchema` for client-side validation
 and EDAM ontology tags (`operation_2422` Data retrieval; topic
 `topic_0780` Plant biology + `topic_0114` Gene structure) on `_meta`
 for registry indexers.
@@ -100,7 +101,49 @@ Cross-species:
 { "locus": "Os01g0100100", "species": "oryza_sativa" }
 ```
 
-### 2. `phytozome_lookup_locus`
+### 2. `get_gene_xrefs`
+
+Fetch cross-database references from Ensembl Plants. Same host /
+species conventions as `ensembl_plants_lookup_locus`. The response
+wraps Ensembl's top-level array (so it validates against the MCP
+`outputSchema`'s required `type=object` root) and adds a `by_db`
+rollup keyed on Ensembl's `dbname` — so a chain consumer can lift
+out a single foreign accession without walking the list.
+
+```jsonc
+{ "locus": "AT1G01010" }
+
+// result (xrefs[] truncated)
+{
+  "locus": "AT1G01010",
+  "species": "arabidopsis_thaliana",
+  "count": 8,
+  "xrefs": [
+    { "dbname": "Uniprot_gn", "primary_id": "Q0WV96", "info_type": "DEPENDENT" },
+    { "dbname": "EntrezGene", "primary_id": "839580", "display_id": "NAC001" },
+    { "dbname": "TAIR_LOCUS", "primary_id": "AT1G01010", "info_type": "DIRECT" },
+  ],
+  "by_db": {
+    "Uniprot_gn": ["Q0WV96"],
+    "EntrezGene": ["839580"],
+    "TAIR_LOCUS": ["AT1G01010"],
+  },
+}
+```
+
+Typical chain pattern — pull the UniProt accession out of `by_db`
+without parsing `xrefs[]`:
+
+```python
+xrefs = await call("get_gene_xrefs", {"locus": "AT1G01010"})
+uniprot_id = xrefs["by_db"].get("Uniprot_gn", [None])[0]  # "Q0WV96"
+```
+
+This is the **cross-database pivot** — pair with `resolve_locus_to_uniprot`
+for the canonical UniProt entry, or hand `by_db["EntrezGene"]` to an
+NCBI sibling MCP.
+
+### 3. `phytozome_lookup_locus`
 
 Fetch a gene record from Phytozome BioMart. Default organism is
 Arabidopsis thaliana TAIR10 (`organism_id=167`, controller-verified
@@ -124,7 +167,7 @@ is empirically verified.
 }
 ```
 
-### 3. `resolve_locus_to_uniprot`
+### 4. `resolve_locus_to_uniprot`
 
 Resolve a plant locus to its canonical UniProtKB record. Prefers
 reviewed (Swiss-Prot) entries; falls back to unreviewed (TrEMBL) when
@@ -156,7 +199,7 @@ structure (AlphaFold, RCSB), domains (InterPro, PROSITE), pathways
 (Reactome, the subscriber path into PlantCyc), variants (ClinVar via
 the human-orthology bridge).
 
-### 4. `tair_locus_info` / 5. `plantcyc_locus_info`
+### 5. `tair_locus_info` / 6. `plantcyc_locus_info`
 
 Pure-data redirects — these tools do **not** call upstream. Both TAIR
 and PlantCyc gate their free per-locus REST behind paid subscriptions

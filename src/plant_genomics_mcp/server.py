@@ -1,8 +1,9 @@
 """MCP server entry point — exposes plant genomics tools over stdio.
 
-This dispatch ships five tools:
+This dispatch ships six tools:
 
   - ``ensembl_plants_lookup_locus``  — Ensembl Plants REST (live)
+  - ``get_gene_xrefs``               — Ensembl Plants xrefs (live)
   - ``phytozome_lookup_locus``       — Phytozome BioMart (live)
   - ``resolve_locus_to_uniprot``     — UniProt KB search (live)
   - ``tair_locus_info``              — informational stub (subscription-gated)
@@ -28,6 +29,7 @@ from mcp.server.stdio import stdio_server
 from plant_genomics_mcp import ensembl_plants, phytozome, plantcyc, tair, uniprot
 from plant_genomics_mcp.models import (
     EnsemblPlantsLocus,
+    GeneXrefs,
     PhytozomeLocus,
     PlantCycLocusInfo,
     TairLocusInfo,
@@ -39,7 +41,7 @@ server: Server = Server("plant-genomics-mcp")
 
 # ---- EDAM ontology tags -----------------------------------------------------
 # Attached via _meta on each Tool so registry indexers (Smithery, Glama,
-# bio.tools) can categorize. All five tools share operation_2422 (Data
+# bio.tools) can categorize. All tools share operation_2422 (Data
 # retrieval) and the topic pair (Plant biology, Gene structure).
 _EDAM = {
     "edam": {
@@ -76,6 +78,34 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
         },
         outputSchema=EnsemblPlantsLocus.model_json_schema(),
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="get_gene_xrefs",
+        description=(
+            "Fetch cross-database references (UniProt, NCBI Gene, TAIR, "
+            "ArrayExpress, …) for a plant locus from Ensembl Plants. "
+            "Defaults to arabidopsis_thaliana; pass species= for other "
+            "Ensembl Plants species. Returns count + raw xref list + a "
+            "by_db rollup keyed on Ensembl's dbname (e.g. 'Uniprot_gn', "
+            "'EntrezGene') for fast lookup of a single foreign identifier."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "e.g. AT1G01010 (Arabidopsis), Os01g0100100 (rice)",
+                },
+                "species": {
+                    "type": "string",
+                    "description": "Ensembl species slug, e.g. arabidopsis_thaliana",
+                    "default": "arabidopsis_thaliana",
+                },
+            },
+            "required": ["locus"],
+        },
+        outputSchema=GeneXrefs.model_json_schema(),
         _meta=_EDAM,
     ),
     types.Tool(
@@ -203,6 +233,12 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
         match name:
             case "ensembl_plants_lookup_locus":
                 return await ensembl_plants.lookup_locus(
+                    client,
+                    args["locus"],
+                    species=args.get("species", "arabidopsis_thaliana"),
+                )
+            case "get_gene_xrefs":
+                return await ensembl_plants.lookup_xrefs(
                     client,
                     args["locus"],
                     species=args.get("species", "arabidopsis_thaliana"),

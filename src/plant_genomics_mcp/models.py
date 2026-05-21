@@ -46,6 +46,46 @@ class EnsemblPlantsLocus(BaseModel):
     canonical_transcript: str | None = Field(default=None)
 
 
+class GeneXrefEntry(BaseModel):
+    """One row from Ensembl ``/xrefs/id`` — a single external-DB link.
+
+    ``extra="allow"`` keeps any new Ensembl field (e.g. ``ensembl_object_type``
+    on newer assemblies) from raising on output validation.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    dbname: str | None = Field(default=None, description="e.g. Uniprot_gn, EntrezGene")
+    db_display_name: str | None = Field(default=None, description="Human-readable DB name")
+    primary_id: str | None = Field(default=None, description="The identifier in the foreign DB")
+    display_id: str | None = Field(default=None)
+    description: str | None = Field(default=None)
+    info_type: str | None = Field(default=None, description="DIRECT, DEPENDENT, etc.")
+    info_text: str | None = Field(default=None)
+    version: str | None = Field(default=None)
+    synonyms: list[str] | None = Field(default=None)
+
+
+class GeneXrefs(BaseModel):
+    """Ensembl ``/xrefs/id/{locus}`` wrapper.
+
+    The MCP outputSchema must be ``type=object`` at the root, but Ensembl
+    returns a top-level array. We wrap with metadata + the raw array + a
+    ``by_db`` rollup so chain consumers don't need to walk the list to
+    find a specific cross-reference (e.g. UniProt accession).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str
+    species: str
+    count: int = Field(description="Number of xref records returned")
+    xrefs: list[GeneXrefEntry] = Field(description="Raw Ensembl xref records")
+    by_db: dict[str, list[str]] = Field(
+        description="dbname → primary_ids[]; e.g. {'Uniprot_gn': ['Q0WV96']}",
+    )
+
+
 class UniProtLocus(BaseModel):
     """Normalized UniProtKB record for a single locus.
 
