@@ -68,6 +68,20 @@ Useful for an operator to confirm caching is doing work without
 shelling into the process, and for clients that want to enumerate
 supported organisms / backends programmatically.
 
+## Prompts
+
+The server exposes two parameterized prompts (`prompts/list` +
+`prompts/get`) for one-click multi-tool workflows:
+
+| Name            | Required args | Optional args                              | What it chains                                                                      |
+| --------------- | ------------- | ------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `analyze_locus` | `locus`       | `species` (default `arabidopsis_thaliana`) | Ensembl annotation → xrefs → UniProt → Europe PMC literature → QuickGO annotations  |
+| `find_homologs` | `sequence`    | `program` (default `blastp`)               | `blast_sequence` → per-hit `resolve_locus_to_uniprot` for UniProt-shaped accessions |
+
+Clients populate their slash-command menu from `prompts/list`, so the
+workflow is one user selection deep instead of requiring the user to
+remember the tool ordering.
+
 ## Transports
 
 | Transport       | Status  | How to launch                                                       |
