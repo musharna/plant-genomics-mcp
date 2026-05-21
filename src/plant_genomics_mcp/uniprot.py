@@ -26,6 +26,7 @@ from typing import Any
 
 import httpx
 
+from plant_genomics_mcp import cache
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
@@ -36,6 +37,9 @@ from plant_genomics_mcp.errors import (
 BASE_URL = "https://rest.uniprot.org"
 DEFAULT_TIMEOUT = 30.0
 MAX_RETRIES = 3
+
+# Per-module response cache. See plant_genomics_mcp.cache for env knobs.
+_CACHE = cache.TTLCache()
 
 # NCBI taxonomy ID for the default species. Mirrors ensembl_plants'
 # ``arabidopsis_thaliana`` default — both refer to TAIR's reference genome.
@@ -71,6 +75,10 @@ async def _search(
     distinguishing "no hits" from "bad request" is the caller's job.
     """
     params = {"query": query, "format": "json", "size": str(size)}
+    key = cache.make_key("GET", BASE_URL, "/uniprotkb/search", params)
+    cached = _CACHE.get(key)
+    if cached is not None:
+        return list(cached)
     headers = {"Accept": "application/json"}
     delay = 1.0
     last_status: int | None = None
@@ -84,7 +92,9 @@ async def _search(
         last_status = resp.status_code
         if resp.status_code == 200:
             data = resp.json()
-            return list(data.get("results", []))
+            results = list(data.get("results", []))
+            _CACHE.set(key, results)
+            return results
         if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_RETRIES - 1:
             retry_after = float(resp.headers.get("Retry-After", delay))
             await asyncio.sleep(retry_after)
