@@ -53,6 +53,21 @@ and EDAM ontology tags (`operation_2422` Data retrieval; topic
 `topic_0780` Plant biology + `topic_0114` Gene structure) on `_meta`
 for registry indexers.
 
+## Resources
+
+The server also advertises three read-only MCP resources (JSON,
+`resources/list` + `resources/read`):
+
+| URI                           | What                                                                                                           |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `pgmcp://cache/stats`         | Per-backend `TTLCache` rollup — `{hits, misses, size}` for each of the five live backends                      |
+| `pgmcp://organisms/phytozome` | Slug → Phytozome `organism_id` map (only `arabidopsis_thaliana=167` is controller-verified; rest are hints)    |
+| `pgmcp://backends/status`     | Per-backend liveness rollup — `name`, `base_url`, `kind` (`live` or `stub`), `subscription_gated`, `probed_at` |
+
+Useful for an operator to confirm caching is doing work without
+shelling into the process, and for clients that want to enumerate
+supported organisms / backends programmatically.
+
 ## Transports
 
 | Transport       | Status  | How to launch                                                       |
