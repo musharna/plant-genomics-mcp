@@ -1,7 +1,8 @@
 """MCP server entry point — exposes plant genomics tools over stdio.
 
-This dispatch ships fourteen tools — eight single-locus plus six batch
-variants that fan out per-locus calls in parallel:
+This dispatch ships fifteen tools — eight single-locus, one BLAST
+sequence-similarity search, plus six batch variants that fan out
+per-locus calls in parallel:
 
   - ``ensembl_plants_lookup_locus``       — Ensembl Plants REST (live)
   - ``get_gene_xrefs``                    — Ensembl Plants xrefs (live)
@@ -9,6 +10,7 @@ variants that fan out per-locus calls in parallel:
   - ``resolve_locus_to_uniprot``          — UniProt KB search (live)
   - ``locus_literature``                  — Europe PMC search (live)
   - ``locus_go_annotations``              — QuickGO GO annotations (live, locus→UniProt→QuickGO)
+  - ``blast_sequence``                    — NCBI BLAST URLAPI (live, async Put/Get polling)
   - ``tair_locus_info``                   — informational stub (subscription-gated)
   - ``plantcyc_locus_info``               — informational stub (subscription-gated)
   - ``batch_ensembl_plants_lookup_locus`` — Ensembl Plants POST /lookup/id (one round-trip)
@@ -41,6 +43,7 @@ from mcp.server.stdio import stdio_server
 
 from plant_genomics_mcp import (
     batch,
+    blast,
     ensembl_plants,
     europe_pmc,
     phytozome,
@@ -52,6 +55,7 @@ from plant_genomics_mcp import (
 )
 from plant_genomics_mcp.models import (
     BatchEnvelope,
+    BlastResult,
     EnsemblPlantsLocus,
     GeneXrefs,
     LocusGoAnnotations,
@@ -119,6 +123,14 @@ _EDAM_GO = {
     "edam": {
         "operation": ["operation_2422"],  # Data retrieval
         "topic": ["topic_0780", "topic_0085"],  # Plant biology, Functional genomics
+    },
+}
+
+# BLAST tool — operation_0292 (Sequence alignment) + topic_0182 (Sequence analysis).
+_EDAM_BLAST = {
+    "edam": {
+        "operation": ["operation_0292"],  # Sequence alignment
+        "topic": ["topic_0182", "topic_0080"],  # Sequence analysis, Sequence sites
     },
 }
 
@@ -507,6 +519,83 @@ TOOLS: list[types.Tool] = [
         _meta=_EDAM_LITERATURE,
     ),
     types.Tool(
+        name="blast_sequence",
+        description=(
+            "Run a BLAST sequence-similarity search against NCBI BLAST URLAPI. "
+            "Async Put/Get under the hood — submits the query, polls the RID "
+            "(honoring NCBI's per-RID 60s floor), and returns the parsed top "
+            "hits + raw text report excerpt. Programs: blastn / blastp / "
+            "blastx / tblastn / tblastx. Database defaults to swissprot for "
+            "protein programs, core_nt for nucleotide. Emits "
+            "notifications/progress on each poll. Long searches (>10 min) "
+            "raise [NotFoundError] with the RID preserved so the client can "
+            "re-poll. Set PLANT_GENOMICS_MCP_NCBI_EMAIL to identify the "
+            "request per NCBI etiquette."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "sequence": {
+                    "type": "string",
+                    "description": "Raw or FASTA-formatted query sequence.",
+                },
+                "program": {
+                    "type": "string",
+                    "enum": ["blastn", "blastp", "blastx", "tblastn", "tblastx"],
+                    "description": "BLAST program — default blastp.",
+                    "default": "blastp",
+                },
+                "database": {
+                    "type": "string",
+                    "description": (
+                        "NCBI BLAST database slug (e.g. swissprot, core_nt, "
+                        "refseq_protein). Defaults to swissprot for protein "
+                        "programs and core_nt for nucleotide programs."
+                    ),
+                },
+                "hitlist_size": {
+                    "type": "integer",
+                    "description": "Max hits to return (default 10).",
+                    "default": 10,
+                    "minimum": 1,
+                    "maximum": 100,
+                },
+                "expect": {
+                    "type": "number",
+                    "description": "E-value threshold (default 10).",
+                    "default": 10.0,
+                    "exclusiveMinimum": 0,
+                },
+                "megablast": {
+                    "type": "boolean",
+                    "description": "Enable megablast (blastn only). Default false.",
+                    "default": False,
+                },
+                "poll_interval": {
+                    "type": "number",
+                    "description": (
+                        "Seconds between polls. Clamped up to NCBI's per-RID 60s floor."
+                    ),
+                    "default": blast.DEFAULT_POLL_INTERVAL,
+                    "minimum": blast.MIN_POLL_INTERVAL,
+                },
+                "max_wait": {
+                    "type": "number",
+                    "description": (
+                        "Max seconds to wait for the search to finish before "
+                        "raising NotFoundError with the RID preserved "
+                        "(default 600)."
+                    ),
+                    "default": blast.DEFAULT_MAX_WAIT,
+                    "exclusiveMinimum": 0,
+                },
+            },
+            "required": ["sequence"],
+        },
+        outputSchema=BlastResult.model_json_schema(),
+        _meta=_EDAM_BLAST,
+    ),
+    types.Tool(
         name="batch_locus_go_annotations",
         description=(
             "Batch variant of locus_go_annotations. Two-stage fanout — each "
@@ -652,6 +741,18 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     args["loci"],
                     species=args.get("species", "arabidopsis_thaliana"),
                     size=args.get("size", europe_pmc.DEFAULT_PAGE_SIZE),
+                )
+            case "blast_sequence":
+                return await blast.blast_sequence(
+                    client,
+                    args["sequence"],
+                    program=args.get("program", "blastp"),
+                    database=args.get("database"),
+                    hitlist_size=args.get("hitlist_size", 10),
+                    expect=args.get("expect", 10.0),
+                    megablast=args.get("megablast", False),
+                    poll_interval=args.get("poll_interval", blast.DEFAULT_POLL_INTERVAL),
+                    max_wait=args.get("max_wait", blast.DEFAULT_MAX_WAIT),
                 )
             case "batch_locus_go_annotations":
                 return await batch.batch_locus_go_annotations(

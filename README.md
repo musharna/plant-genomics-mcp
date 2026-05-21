@@ -25,7 +25,8 @@
 | 6   | GO annotations (live)   | `locus_go_annotations`        | Fetches QuickGO GO annotations (locus → UniProt → QuickGO).                 |
 | 7   | Subscription redirect   | `tair_locus_info`             | Returns subscription notice + redirect to live backends. No upstream call.  |
 | 8   | Subscription redirect   | `plantcyc_locus_info`         | Returns subscription notice + redirect to live backends. No upstream call.  |
-| 9   | Batch (live)            | `batch_*` (six variants)      | Parallel per-locus fanout for tools 1–6. Up to 50 loci per call.            |
+| 9   | Sequence search (live)  | `blast_sequence`              | NCBI BLAST URLAPI — async Put/Get polling with progress notifications.      |
+| 10  | Batch (live)            | `batch_*` (six variants)      | Parallel per-locus fanout for tools 1–6. Up to 50 loci per call.            |
 
 Live tools take a TAIR-style locus (e.g. `AT1G01010`) plus optional
 `species=` / `organism_id=` and return a structured record. UniProt
@@ -47,7 +48,7 @@ shape as the single-locus tool and `errors[locus]` is a
 the native `POST /lookup/id` endpoint (one HTTP round-trip);
 everything else fans out via `asyncio.gather`.
 
-All fourteen tools publish JSON `outputSchema` for client-side validation
+All fifteen tools publish JSON `outputSchema` for client-side validation
 and EDAM ontology tags (`operation_2422` Data retrieval; topic
 `topic_0780` Plant biology + `topic_0114` Gene structure) on `_meta`
 for registry indexers.
