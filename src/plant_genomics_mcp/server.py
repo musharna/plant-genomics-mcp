@@ -11,9 +11,9 @@ from mcp import types
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 
-from genomics_mcp import ensembl, kegg
+from plant_genomics_mcp import ensembl, kegg
 
-server: Server = Server("genomics-mcp")
+server: Server = Server("plant-genomics-mcp")
 
 
 # ---- tool catalog -----------------------------------------------------------
