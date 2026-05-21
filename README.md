@@ -1,9 +1,10 @@
 # plant-genomics-mcp
 
-> **4 tools** for plant-genomics locus lookup via the Model Context Protocol.
-> Free, public sources: Ensembl Plants + Phytozome BioMart. TAIR + PlantCyc
-> are informational stubs that redirect to the free alternatives (both
-> services are paid-subscription-gated, probed 2026-05-21).
+> **5 tools** for plant-genomics locus lookup via the Model Context Protocol.
+> Free, public sources: Ensembl Plants + Phytozome BioMart + UniProtKB. TAIR
+>
+> - PlantCyc are informational stubs that redirect to the free alternatives
+>   (both services are paid-subscription-gated, probed 2026-05-21).
 
 [![CI](https://github.com/mjarnold/plant-genomics-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/mjarnold/plant-genomics-mcp/actions/workflows/test.yml)
 [![Docker](https://github.com/mjarnold/plant-genomics-mcp/actions/workflows/docker.yml/badge.svg)](https://github.com/mjarnold/plant-genomics-mcp/actions/workflows/docker.yml)
@@ -12,19 +13,23 @@
 
 ## Tools at a glance
 
-| #   | Category              | Tool                          | What it does                                                           |
-| --- | --------------------- | ----------------------------- | ---------------------------------------------------------------------- |
-| 1   | Gene metadata (live)  | `ensembl_plants_lookup_locus` | Fetches gene record from Ensembl Plants REST (any plant species).      |
-| 2   | Gene metadata (live)  | `phytozome_lookup_locus`      | Fetches gene record from Phytozome BioMart (any Phytozome proteome).   |
-| 3   | Subscription redirect | `tair_locus_info`             | Returns subscription notice + redirect to (1) / (2). No upstream call. |
-| 4   | Subscription redirect | `plantcyc_locus_info`         | Returns subscription notice + redirect to (1) / (2). No upstream call. |
+| #   | Category              | Tool                          | What it does                                                                |
+| --- | --------------------- | ----------------------------- | --------------------------------------------------------------------------- |
+| 1   | Gene metadata (live)  | `ensembl_plants_lookup_locus` | Fetches gene record from Ensembl Plants REST (any plant species).           |
+| 2   | Gene metadata (live)  | `phytozome_lookup_locus`      | Fetches gene record from Phytozome BioMart (any Phytozome proteome).        |
+| 3   | Protein (live)        | `resolve_locus_to_uniprot`    | Resolves a locus to its UniProtKB record (Swiss-Prot preferred, TrEMBL OK). |
+| 4   | Subscription redirect | `tair_locus_info`             | Returns subscription notice + redirect to live backends. No upstream call.  |
+| 5   | Subscription redirect | `plantcyc_locus_info`         | Returns subscription notice + redirect to live backends. No upstream call.  |
 
 Live tools take a TAIR-style locus (e.g. `AT1G01010`) plus optional
-`species=` / `organism_id=` and return a structured gene record.
-Subscription tools take a locus and return a structured redirect
-record — they do not call the gated upstream.
+`species=` / `organism_id=` and return a structured record. UniProt
+expects an NCBI taxonomy ID for `organism_id` (default `3702` =
+_Arabidopsis thaliana_); the gene-metadata tools each have their own
+species/organism conventions documented below. Subscription tools take
+a locus and return a structured redirect record — they do not call the
+gated upstream.
 
-All four tools publish JSON `outputSchema` for client-side validation
+All five tools publish JSON `outputSchema` for client-side validation
 and EDAM ontology tags (`operation_2422` Data retrieval; topic
 `topic_0780` Plant biology + `topic_0114` Gene structure) on `_meta`
 for registry indexers.
@@ -119,7 +124,39 @@ is empirically verified.
 }
 ```
 
-### 3. `tair_locus_info` / 4. `plantcyc_locus_info`
+### 3. `resolve_locus_to_uniprot`
+
+Resolve a plant locus to its canonical UniProtKB record. Prefers
+reviewed (Swiss-Prot) entries; falls back to unreviewed (TrEMBL) when
+no curated record exists — the common case for non-Arabidopsis plants.
+`organism_id` is the NCBI taxonomy ID (`3702` = Arabidopsis, `39947` =
+Oryza sativa japonica, `4577` = Zea mays, …; defaults to `3702`).
+
+```jsonc
+{ "locus": "AT1G01010" }
+
+// result
+{
+  "locus_query": "AT1G01010",
+  "primaryAccession": "Q0WV96",
+  "uniProtkbId": "NAC1_ARATH",
+  "entryType": "UniProtKB reviewed (Swiss-Prot)",
+  "reviewed": true,
+  "recommendedName": "NAC domain-containing protein 1",
+  "geneNames": ["NAC001"],
+  "organism": "Arabidopsis thaliana",
+  "taxonId": 3702,
+  "sequenceLength": 429,
+  "web_url": "https://www.uniprot.org/uniprotkb/Q0WV96"
+}
+```
+
+This is the **protein-side entry point** for any downstream workflow:
+structure (AlphaFold, RCSB), domains (InterPro, PROSITE), pathways
+(Reactome, the subscriber path into PlantCyc), variants (ClinVar via
+the human-orthology bridge).
+
+### 4. `tair_locus_info` / 5. `plantcyc_locus_info`
 
 Pure-data redirects — these tools do **not** call upstream. Both TAIR
 and PlantCyc gate their free per-locus REST behind paid subscriptions
@@ -142,7 +179,7 @@ route to the live backends transparently:
 
 ## Error model
 
-All four tools raise `PlantGenomicsError` subclasses; the MCP SDK
+All live tools raise `PlantGenomicsError` subclasses; the MCP SDK
 stringifies them into the wire `content` with a `[ClassName]` prefix
 so clients can route on failure kind without parsing the message:
 
@@ -170,6 +207,17 @@ chain in a future release):
    → save the `display_name`.
 2. `ensembl_plants_lookup_locus { locus: <ortholog_id>, species: "oryza_sativa" }`
    → compare biotype + description.
+
+**Locus → protein → structure** (gene to AlphaFold model in two MCP
+hops, expecting an external AlphaFold / RCSB tool downstream):
+
+1. `resolve_locus_to_uniprot { locus: "AT1G01010" }`
+   → save `primaryAccession` (e.g. `Q0WV96`).
+2. Hand the accession to AlphaFold (`https://alphafold.ebi.ac.uk/api/prediction/{accession}`)
+   or RCSB (`https://search.rcsb.org/`) via a sibling MCP.
+3. On `[NotFoundError]`, the locus has no UniProt entry — usually a
+   non-coding or recently-annotated gene; fall back to
+   `ensembl_plants_lookup_locus` for the `biotype` to confirm.
 
 ## Development
 

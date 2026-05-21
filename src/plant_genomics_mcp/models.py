@@ -46,6 +46,30 @@ class EnsemblPlantsLocus(BaseModel):
     canonical_transcript: str | None = Field(default=None)
 
 
+class UniProtLocus(BaseModel):
+    """Normalized UniProtKB record for a single locus.
+
+    Mirrors the dict shape returned by ``uniprot.lookup_locus`` /
+    ``uniprot._normalize``. We model only the fields we surface — the
+    full upstream record is not echoed, since clients can re-fetch
+    ``https://rest.uniprot.org/uniprotkb/{accession}.json`` if needed.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus_query: str = Field(description="The locus identifier the user asked about")
+    primaryAccession: str = Field(description="UniProt accession, e.g. Q0WV96")
+    uniProtkbId: str = Field(description="UniProtKB ID, e.g. NAC1_ARATH")
+    entryType: str = Field(description="e.g. 'UniProtKB reviewed (Swiss-Prot)' or '... (TrEMBL)'")
+    reviewed: bool = Field(description="True if Swiss-Prot (curated)")
+    recommendedName: str | None = Field(default=None, description="Recommended protein name")
+    geneNames: list[str] = Field(default_factory=list, description="Gene symbols, e.g. ['NAC001']")
+    organism: str | None = Field(default=None, description="Scientific name")
+    taxonId: int | None = Field(default=None, description="NCBI taxonomy ID")
+    sequenceLength: int | None = Field(default=None, description="Protein length in residues")
+    web_url: str | None = Field(default=None, description="Browser URL for the UniProt entry")
+
+
 class PhytozomeLocus(BaseModel):
     """Phytozome BioMart gene row.
 
