@@ -44,7 +44,7 @@ public client  →  *.ts.net  →  gt76 host  →  127.0.0.1:8765  →  Docker c
 
 Mirror the existing stdio `Dockerfile` (two-stage builder + slim runtime), but flip the `ENTRYPOINT` to `plant-genomics-mcp-http` and `EXPOSE 8765`. Image published as `ghcr.io/mjarnold/plant-genomics-mcp-http` — a distinct image name from the stdio `ghcr.io/mjarnold/plant-genomics-mcp` so tags don't collide.
 
-GitHub Actions: extend the existing `.github/workflows/docker-publish.yml` to build + push both images from the same trigger. Two `docker/build-push-action` steps, one per Dockerfile, sharing the buildx cache.
+GitHub Actions: extend the existing `.github/workflows/docker.yml` to build + push both images from the same trigger. Two `docker/build-push-action` steps (each with its own `metadata-action` to compute per-image tags), one per Dockerfile, sharing the buildx cache.
 
 Image carries no env-var defaults — runtime config comes from the compose `environment:` block.
 
