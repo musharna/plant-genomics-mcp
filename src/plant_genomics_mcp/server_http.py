@@ -33,9 +33,12 @@ from collections.abc import AsyncIterator
 import uvicorn
 from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
 from starlette.applications import Starlette
-from starlette.routing import Mount
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+from starlette.routing import Mount, Route
 from starlette.types import Receive, Scope, Send
 
+from plant_genomics_mcp import __version__
 from plant_genomics_mcp.server import server
 
 
@@ -65,6 +68,9 @@ def build_app() -> Starlette:
         stateless=stateless,
     )
 
+    async def healthz(_request: Request) -> JSONResponse:
+        return JSONResponse({"status": "ok", "version": __version__})
+
     async def handle_mcp(scope: Scope, receive: Receive, send: Send) -> None:
         await session_manager.handle_request(scope, receive, send)
 
@@ -74,7 +80,10 @@ def build_app() -> Starlette:
             yield
 
     return Starlette(
-        routes=[Mount("/mcp", app=handle_mcp)],
+        routes=[
+            Route("/healthz", healthz),
+            Mount("/mcp", app=handle_mcp),
+        ],
         lifespan=lifespan,
     )
 
