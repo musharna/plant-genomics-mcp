@@ -411,7 +411,7 @@ async def find_homologs_synth(
 
 # UniProt accession syntax — same regex shape uniprot._looks_like_uniprot_accession uses.
 # Subject IDs come in many forms; we look for the accession token where possible.
-import re as _re
+import re as _re  # noqa: E402 — intentionally late: scoped helper, not used above
 
 _UNIPROT_ACCESSION_TOKEN = _re.compile(
     r"\b(?:[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9](?:[A-Z][A-Z0-9]{2}[0-9]){1,2})(?:\.[0-9]+)?\b"
