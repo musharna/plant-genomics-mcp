@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## v0.7.1 — 2026-05-22
+
+Patch release rolling up four follow-up items from the v0.7.0 code-quality review. No functional surface changes — same 23 tools, 3 prompts, 9 live backends.
+
+- **README lede fix**: the v0.7.0 quote block accidentally broke into two paragraphs, orphaning the word `TAIR` on its own line and turning `- PlantCyc are informational stubs…` into a bullet list item. Restored to a single sentence: `TAIR + PlantCyc are informational stubs that redirect to the free alternatives (both services are paid-subscription-gated, probed 2026-05-21).`
+- **`biological_context` prompt — `DEFAULT_TOP_N` typed as `int`**: was `"10"` (string), now `10`. The renderer's `int()` cast still works in both cases, but the constant now matches the post-parse type. The argument parser is also now stricter: `args.get("top_n")` of empty string `""` falls through to the default the same way `None` does, instead of crashing in `int("")`.
+- **`examples/_run_chain.py` step 4 hardened**: if step 3 (UniProt resolution) returns no accession, we now skip STRING with an explicit `SkippedError` row in the transcript rather than re-passing the locus to `string_db.lookup_partners` (which would only re-trigger the same UniProt resolution path internally and re-incur the identical failure). The transcript stays informative; we don't double-count an upstream error.
+- **`tests/test_prompts.py` cleanup**: removed a redundant local `NotFoundError` import (already imported at the top of the module) and switched three string-literal `"biological_context"` call sites to the `prompts.BIOLOGICAL_CONTEXT` constant. Added two new tests covering the int `DEFAULT_TOP_N` default-substitution path and the typed-error path for non-integer `top_n`.
+
 ## v0.7.0 — 2026-05-21
 
 P3 closeout — bio-breadth release. Adds four new biological-context backends (Gramene homology, KEGG pathways, STRING interactions, ATTED-II coexpression) with batch variants, a `biological_context` MCP prompt that chains them, and a third real-execution proof transcript. Server surface grows 15 → 23 tools, 2 → 3 prompts. Arabidopsis-only this release; fallback backends (OMA, Reactome, IntAct, EBI Expression Atlas) and multi-organism resolver layer defer to v0.8.

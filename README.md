@@ -4,10 +4,8 @@
 > 13 single-locus + 10 parallel-batch variants.
 > Free, public sources: Ensembl Plants + Phytozome BioMart + UniProtKB +
 > Europe PMC + QuickGO + NCBI BLAST + Gramene + KEGG + STRING-DB + ATTED-II.
-> TAIR
->
-> - PlantCyc are informational stubs that redirect to the free alternatives
->   (both services are paid-subscription-gated, probed 2026-05-21).
+> TAIR + PlantCyc are informational stubs that redirect to the free
+> alternatives (both services are paid-subscription-gated, probed 2026-05-21).
 
 [![CI](https://github.com/mjarnold/plant-genomics-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/mjarnold/plant-genomics-mcp/actions/workflows/test.yml)
 [![Docker](https://github.com/mjarnold/plant-genomics-mcp/actions/workflows/docker.yml/badge.svg)](https://github.com/mjarnold/plant-genomics-mcp/actions/workflows/docker.yml)

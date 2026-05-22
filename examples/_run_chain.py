@@ -328,28 +328,36 @@ async def run_biological_context() -> dict[str, Any]:
             print(f"  step 3 resolve_locus_to_uniprot → ERROR {step3_row['error']}")
         captured["steps"].append(step3_row)
 
-        # Step 4 — STRING interactions (uses accession from step 3 if present;
-        # otherwise falls back to the locus, since string_db.lookup_partners
-        # accepts either form).
+        # Step 4 — STRING interactions. Skip if step 3 didn't yield an
+        # accession: string_db.lookup_partners would just re-call
+        # uniprot.lookup_locus internally and re-incur the same failure,
+        # so the redundant call earns nothing but a duplicate error row.
         t0 = time.monotonic()
-        string_query = uniprot_acc or locus
-        step4_input = {"locus_or_accession": string_query, "limit": 10}
+        step4_input = {"locus_or_accession": uniprot_acc, "limit": 10}
         step4_row: dict[str, Any] = {
             "step": 4,
             "tool": "string_interactions",
             "input": step4_input,
         }
-        try:
-            step4 = await string_db.lookup_partners(client, string_query, limit=10)
-            step4_row["elapsed_s"] = round(time.monotonic() - t0, 2)
-            step4_row["output"] = step4
-            n_part = len(step4.get("partners", []))
-            print(f"  step 4 string_interactions → {n_part} partners (query={string_query!r})")
-        except Exception as e:  # noqa: BLE001
-            step4_row["elapsed_s"] = round(time.monotonic() - t0, 2)
+        if uniprot_acc is None:
+            step4_row["elapsed_s"] = 0.0
             step4_row["output"] = None
-            step4_row["error"] = f"{type(e).__name__}: {e}"
-            print(f"  step 4 string_interactions → ERROR {step4_row['error']}")
+            step4_row["error"] = (
+                "SkippedError: step 3 (UniProt resolution) failed; no accession to query STRING with"
+            )
+            print(f"  step 4 string_interactions → SKIPPED ({step4_row['error']})")
+        else:
+            try:
+                step4 = await string_db.lookup_partners(client, uniprot_acc, limit=10)
+                step4_row["elapsed_s"] = round(time.monotonic() - t0, 2)
+                step4_row["output"] = step4
+                n_part = len(step4.get("partners", []))
+                print(f"  step 4 string_interactions → {n_part} partners (query={uniprot_acc!r})")
+            except Exception as e:  # noqa: BLE001
+                step4_row["elapsed_s"] = round(time.monotonic() - t0, 2)
+                step4_row["output"] = None
+                step4_row["error"] = f"{type(e).__name__}: {e}"
+                print(f"  step 4 string_interactions → ERROR {step4_row['error']}")
         captured["steps"].append(step4_row)
 
         # Step 5 — ATTED-II coexpression
