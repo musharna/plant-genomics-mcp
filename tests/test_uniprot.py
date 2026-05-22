@@ -223,6 +223,48 @@ async def test_lookup_locus_with_accession_404_raises_not_found(
 # ---------- live integration (real-execution check) ----------
 
 
+@pytest.mark.asyncio
+async def test_fetch_sequence_happy_path(httpx_mock):
+    fasta = (
+        ">sp|Q0WV96|Y1010_ARATH Probable inactive receptor kinase OS=Arabidopsis thaliana\n"
+        "MEDQVGFGFRPNDEELVGHYLRNKIEGNTSRDVEVAISEVNICSY\n"
+        "PFQPRADRAA\n"
+    )
+    httpx_mock.add_response(
+        url="https://rest.uniprot.org/uniprotkb/Q0WV96.fasta",
+        text=fasta,
+    )
+    async with httpx.AsyncClient() as client:
+        seq = await uniprot.fetch_sequence(client, "Q0WV96")
+    assert seq == "MEDQVGFGFRPNDEELVGHYLRNKIEGNTSRDVEVAISEVNICSYPFQPRADRAA"
+
+
+@pytest.mark.asyncio
+async def test_fetch_sequence_404_raises_not_found(httpx_mock):
+    httpx_mock.add_response(
+        url="https://rest.uniprot.org/uniprotkb/NOSUCH.fasta",
+        status_code=404,
+        text="",
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(uniprot.NotFoundError):
+            await uniprot.fetch_sequence(client, "NOSUCH")
+
+
+@pytest.mark.asyncio
+async def test_fetch_sequence_caches_result(httpx_mock):
+    uniprot._CACHE.clear()
+    fasta = ">sp|Q0WV96|X\nMEDQ\n"
+    httpx_mock.add_response(
+        url="https://rest.uniprot.org/uniprotkb/Q0WV96.fasta",
+        text=fasta,
+    )
+    async with httpx.AsyncClient() as client:
+        a = await uniprot.fetch_sequence(client, "Q0WV96")
+        b = await uniprot.fetch_sequence(client, "Q0WV96")
+    assert a == b == "MEDQ"
+
+
 @live_only
 @pytest.mark.asyncio
 async def test_live_lookup_at1g01010() -> None:
