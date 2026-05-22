@@ -8,17 +8,33 @@ from __future__ import annotations
 
 
 import pytest
+from pydantic import ValidationError
 
 from plant_genomics_mcp.models import StepRow, SynthesisEnvelope
 
 
 def test_step_row_status_values_constrained_to_three():
     # ok / error / skipped — anything else must fail validation
-    StepRow(step=1, tool="x", status="ok", elapsed_s=0.1)
+    StepRow(step=1, tool="x", status="ok", elapsed_s=0.1, result={})
     StepRow(step=1, tool="x", status="error", elapsed_s=0.1, error="[E] x")
     StepRow(step=1, tool="x", status="skipped", elapsed_s=0.0, error="phase 1 failed")
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         StepRow(step=1, tool="x", status="bogus", elapsed_s=0.0)
+
+
+def test_step_row_validator_rejects_ok_without_result():
+    with pytest.raises(ValidationError):
+        StepRow(step=1, tool="x", status="ok", elapsed_s=0.1)
+
+
+def test_step_row_validator_rejects_error_without_message():
+    with pytest.raises(ValidationError):
+        StepRow(step=1, tool="x", status="error", elapsed_s=0.1)
+
+
+def test_step_row_validator_rejects_skipped_without_reason():
+    with pytest.raises(ValidationError):
+        StepRow(step=1, tool="x", status="skipped", elapsed_s=0.0)
 
 
 def test_synthesis_envelope_round_trips_through_model_json_schema():

@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class EnsemblPlantsLocus(BaseModel):
@@ -493,6 +493,19 @@ class StepRow(BaseModel):
         default=None,
         description='"[ExceptionClass] message" when status="error"; skip reason when "skipped"',
     )
+
+    @model_validator(mode="after")
+    def _check_status_coherence(self) -> "StepRow":
+        if self.status == "ok":
+            if self.result is None or self.error is not None:
+                raise ValueError("status='ok' requires result is not None and error is None")
+        elif self.status == "error":
+            if self.error is None or self.result is not None:
+                raise ValueError("status='error' requires error is not None and result is None")
+        elif self.status == "skipped":
+            if self.error is None or self.result is not None:
+                raise ValueError("status='skipped' requires error is not None and result is None")
+        return self
 
 
 class SynthesisEnvelope(BaseModel):
