@@ -12,7 +12,7 @@ To extend: add a new model + register it in ``server.TOOLS`` via
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -468,3 +468,49 @@ class AttedCoexpression(BaseModel):
         description="ATTED-II DB identifier, e.g. Ath-u.c4-0 (release version included)",
     )
     neighbors: list[CoexNeighbor]
+
+
+class StepRow(BaseModel):
+    """One backend call inside a synthesis envelope.
+
+    ``status="ok"`` populates ``result``; ``status="error"`` populates ``error``
+    with the existing ``[ExceptionClass] message`` wire format from
+    ``errors.PlantGenomicsError.__str__``. ``status="skipped"`` populates
+    ``error`` with a human-readable skip reason (e.g. phase 1 failed).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    step: int = Field(description="1-indexed position in the orchestrator's execution order")
+    tool: str = Field(description="Backend tool name, e.g. ensembl_plants_lookup_locus")
+    status: Literal["ok", "error", "skipped"]
+    elapsed_s: float = Field(description="Wall time for this step alone")
+    result: dict | list | None = Field(
+        default=None,
+        description='Backend payload when status="ok"; None otherwise',
+    )
+    error: str | None = Field(
+        default=None,
+        description='"[ExceptionClass] message" when status="error"; skip reason when "skipped"',
+    )
+
+
+class SynthesisEnvelope(BaseModel):
+    """Composed result of a synthesis orchestrator.
+
+    ``result`` is ``None`` when the root (phase 1) step errored — the
+    failure is recorded in ``steps[0]`` and phase-2 steps carry
+    ``status="skipped"``.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    tool: str = Field(description="Synthesis tool name, e.g. analyze_locus_synth")
+    input: dict = Field(description="Echoed input arguments")
+    started_at: str = Field(description="ISO 8601 UTC timestamp")
+    elapsed_s: float = Field(description="Total orchestrator wall time")
+    steps: list[StepRow] = Field(description="Per-backend execution rows")
+    result: dict | None = Field(
+        default=None,
+        description="Composed cross-source result; None if root step failed",
+    )
