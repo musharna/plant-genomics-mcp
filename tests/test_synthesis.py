@@ -318,17 +318,37 @@ async def test_find_homologs_synth_all_backends_succeed_returns_full_envelope(
         poll_interval=60.0,
         max_wait=600.0,
     ):
+        # Real blast._parse_hit_table emits hits keyed on accession + description
+        # + bit_score + evalue + identity; the wrapper emits hitCount (camelCase),
+        # status="READY", raw_report_truncated, elapsed_seconds. We mirror that
+        # shape verbatim so the synthesis composer is exercised against the wire
+        # contract, not a fictional shape. BlastResult is validated below to
+        # catch future drift at test-collection time.
         return {
             "rid": "FAKE",
             "program": program,
             "database": database or "swissprot",
-            "hit_count": 2,
+            "status": "READY",
+            "hitCount": 2,
             "hits": [
-                {"rank": 1, "subject_id": "sp|Q0WV96.1|Y_ARATH", "pident": 100.0, "evalue": 0.0},
-                {"rank": 2, "subject_id": "sp|Q9LIV2.1|X_ARATH", "pident": 88.0, "evalue": 1e-90},
+                {
+                    "accession": "Q0WV96.1",
+                    "description": "Probable transcription factor",
+                    "bit_score": 250.0,
+                    "evalue": 0.0,
+                    "identity": "100%",
+                },
+                {
+                    "accession": "Q9LIV2.1",
+                    "description": "Another transcription factor",
+                    "bit_score": 180.0,
+                    "evalue": 1e-90,
+                    "identity": "88%",
+                },
             ],
-            "report_truncated": False,
             "raw_report_excerpt": "...",
+            "raw_report_truncated": False,
+            "elapsed_seconds": 12.3,
         }
 
     monkeypatch.setattr("plant_genomics_mcp.synthesis.blast.blast_sequence", fake_blast)
@@ -378,16 +398,27 @@ async def test_find_homologs_synth_all_backends_succeed_returns_full_envelope(
 @pytest.mark.asyncio
 async def test_find_homologs_synth_non_uniprot_subjects_flagged(monkeypatch):
     async def fake_blast(client, sequence, **kw):
+        # Real BLAST hit shape: NCBI accessions like NP_001185207.1 (RefSeq
+        # protein) and locus identifiers like AT1G01010.1 don't match the
+        # UniProt accession regex and should be flagged.
         return {
             "rid": "FAKE",
             "program": "blastp",
             "database": "core_nt",
-            "hit_count": 1,
+            "status": "READY",
+            "hitCount": 1,
             "hits": [
-                {"rank": 1, "subject_id": "AT1G01010.1", "pident": 99.0, "evalue": 0.0},
+                {
+                    "accession": "AT1G01010.1",
+                    "description": "Locus-style identifier (no UniProt mapping)",
+                    "bit_score": 200.0,
+                    "evalue": 0.0,
+                    "identity": "99%",
+                },
             ],
-            "report_truncated": False,
             "raw_report_excerpt": "",
+            "raw_report_truncated": False,
+            "elapsed_seconds": 8.0,
         }
 
     monkeypatch.setattr("plant_genomics_mcp.synthesis.blast.blast_sequence", fake_blast)
@@ -426,3 +457,43 @@ def test_extract_uniprot_accession_handles_all_blast_subject_forms():
     assert _extract_uniprot_accession("Q0WV96") == "Q0WV96"
     assert _extract_uniprot_accession("AT1G01010.1") is None
     assert _extract_uniprot_accession("") is None
+
+
+def test_find_homologs_synth_test_fixtures_match_real_blast_result_shape():
+    """Real-execution check: validate the fake_blast fixtures against the
+    BlastResult pydantic model (extra="forbid") so future shape drift in
+    blast.blast_sequence breaks the test at collection time rather than
+    silently slipping through with stub-only assertions.
+    """
+    from plant_genomics_mcp.models import BlastResult
+
+    # Mirror the all-backends-succeed fixture verbatim — extra="forbid" on
+    # BlastResult and BlastHit catches any added/removed/renamed key.
+    BlastResult.model_validate(
+        {
+            "rid": "FAKE",
+            "program": "blastp",
+            "database": "swissprot",
+            "status": "READY",
+            "hitCount": 2,
+            "hits": [
+                {
+                    "accession": "Q0WV96.1",
+                    "description": "Probable transcription factor",
+                    "bit_score": 250.0,
+                    "evalue": 0.0,
+                    "identity": "100%",
+                },
+                {
+                    "accession": "Q9LIV2.1",
+                    "description": "Another transcription factor",
+                    "bit_score": 180.0,
+                    "evalue": 1e-90,
+                    "identity": "88%",
+                },
+            ],
+            "raw_report_excerpt": "...",
+            "raw_report_truncated": False,
+            "elapsed_seconds": 12.3,
+        }
+    )
