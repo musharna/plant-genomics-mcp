@@ -1,7 +1,7 @@
 # plant-genomics-mcp
 
-> **23 tools** for plant-genomics locus lookup via the Model Context Protocol —
-> 13 single-locus + 10 parallel-batch variants.
+> **27 tools** for plant-genomics locus lookup via the Model Context Protocol —
+> 13 single-locus + 10 parallel-batch + 4 cross-source synthesis variants.
 > Free, public sources: Ensembl Plants + Phytozome BioMart + UniProtKB +
 > Europe PMC + QuickGO + NCBI BLAST + Gramene + KEGG + STRING-DB + ATTED-II.
 > TAIR + PlantCyc are informational stubs that redirect to the free
@@ -14,22 +14,23 @@
 
 ## Tools at a glance
 
-| #   | Category                | Tool                          | What it does                                                                  |
-| --- | ----------------------- | ----------------------------- | ----------------------------------------------------------------------------- |
-| 1   | Gene metadata (live)    | `ensembl_plants_lookup_locus` | Fetches gene record from Ensembl Plants REST (any plant species).             |
-| 2   | Cross-references (live) | `get_gene_xrefs`              | Fetches cross-DB references (UniProt, NCBI Gene, TAIR, GO, …) from Ensembl.   |
-| 3   | Gene metadata (live)    | `phytozome_lookup_locus`      | Fetches gene record from Phytozome BioMart (any Phytozome proteome).          |
-| 4   | Protein (live)          | `resolve_locus_to_uniprot`    | Resolves a locus to its UniProtKB record (Swiss-Prot preferred, TrEMBL OK).   |
-| 5   | Literature (live)       | `locus_literature`            | Searches Europe PMC for papers mentioning the locus (free, no API key).       |
-| 6   | GO annotations (live)   | `locus_go_annotations`        | Fetches QuickGO GO annotations (locus → UniProt → QuickGO).                   |
-| 7   | Sequence search (live)  | `blast_sequence`              | NCBI BLAST URLAPI — async Put/Get polling with progress notifications.        |
-| 8   | Homology (live)         | `gramene_homologs`            | Fetches Gramene v69 homology entries (ortholog / paralog) with gene_tree_id.  |
-| 9   | Pathways (live)         | `kegg_pathways`               | Fetches KEGG `ath:` pathway memberships for an Arabidopsis locus.             |
-| 10  | Interactions (live)     | `string_interactions`         | Fetches STRING-DB first-neighbor interaction partners with per-channel score. |
-| 11  | Coexpression (live)     | `atted_coexpression`          | Fetches ATTED-II Ath-u.c4-0 top-N coexpression neighbors with z-scores.       |
-| 12  | Subscription redirect   | `tair_locus_info`             | Returns subscription notice + redirect to live backends. No upstream call.    |
-| 13  | Subscription redirect   | `plantcyc_locus_info`         | Returns subscription notice + redirect to live backends. No upstream call.    |
-| 14  | Batch (live)            | `batch_*` (ten variants)      | Parallel per-locus fanout for tools 1–6, 8–11. Up to 50 loci per call.        |
+| #   | Category                | Tool                                    | What it does                                                                         |
+| --- | ----------------------- | --------------------------------------- | ------------------------------------------------------------------------------------ |
+| 1   | Gene metadata (live)    | `ensembl_plants_lookup_locus`           | Fetches gene record from Ensembl Plants REST (any plant species).                    |
+| 2   | Cross-references (live) | `get_gene_xrefs`                        | Fetches cross-DB references (UniProt, NCBI Gene, TAIR, GO, …) from Ensembl.          |
+| 3   | Gene metadata (live)    | `phytozome_lookup_locus`                | Fetches gene record from Phytozome BioMart (any Phytozome proteome).                 |
+| 4   | Protein (live)          | `resolve_locus_to_uniprot`              | Resolves a locus to its UniProtKB record (Swiss-Prot preferred, TrEMBL OK).          |
+| 5   | Literature (live)       | `locus_literature`                      | Searches Europe PMC for papers mentioning the locus (free, no API key).              |
+| 6   | GO annotations (live)   | `locus_go_annotations`                  | Fetches QuickGO GO annotations (locus → UniProt → QuickGO).                          |
+| 7   | Sequence search (live)  | `blast_sequence`                        | NCBI BLAST URLAPI — async Put/Get polling with progress notifications.               |
+| 8   | Homology (live)         | `gramene_homologs`                      | Fetches Gramene v69 homology entries (ortholog / paralog) with gene_tree_id.         |
+| 9   | Pathways (live)         | `kegg_pathways`                         | Fetches KEGG `ath:` pathway memberships for an Arabidopsis locus.                    |
+| 10  | Interactions (live)     | `string_interactions`                   | Fetches STRING-DB first-neighbor interaction partners with per-channel score.        |
+| 11  | Coexpression (live)     | `atted_coexpression`                    | Fetches ATTED-II Ath-u.c4-0 top-N coexpression neighbors with z-scores.              |
+| 12  | Subscription redirect   | `tair_locus_info`                       | Returns subscription notice + redirect to live backends. No upstream call.           |
+| 13  | Subscription redirect   | `plantcyc_locus_info`                   | Returns subscription notice + redirect to live backends. No upstream call.           |
+| 14  | Batch (live)            | `batch_*` (ten variants)                | Parallel per-locus fanout for tools 1–6, 8–11. Up to 50 loci per call.               |
+| 15  | Synthesis (live)        | `*_synth` / `consensus_homologs` (four) | Compose 2–5 backends in parallel, return a `SynthesisEnvelope` with per-step status. |
 
 Live tools take a TAIR-style locus (e.g. `AT1G01010`) plus optional
 `species=` / `organism_id=` and return a structured record. UniProt
@@ -53,7 +54,7 @@ shape as the single-locus tool and `errors[locus]` is a
 the native `POST /lookup/id` endpoint (one HTTP round-trip);
 everything else fans out via `asyncio.gather`.
 
-All twenty-three tools publish JSON `outputSchema` for client-side validation
+All twenty-seven tools publish JSON `outputSchema` for client-side validation
 and EDAM ontology tags (`operation_2422` Data retrieval; topic
 `topic_0780` Plant biology + `topic_0114` Gene structure) on `_meta`
 for registry indexers.
@@ -90,7 +91,9 @@ remember the tool ordering.
 
 Real-execution proof transcripts of all three chains (against the live
 upstream APIs) live in [`examples/`](examples/) — one JSON + Markdown
-pair per prompt.
+pair per prompt. v0.8 adds a 4-tool synthesis walkthrough at
+[`examples/v0.8_synthesis_walkthrough.md`](examples/v0.8_synthesis_walkthrough.md),
+captured by [`examples/_run_synthesis_chain.py`](examples/_run_synthesis_chain.py).
 
 ## Transports
 

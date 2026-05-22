@@ -1,6 +1,17 @@
 # Changelog
 
-## Unreleased
+## v0.8.0 — 2026-05-22
+
+P3.5 closeout — synthesis layer. Adds 4 MCP tools that compose the v0.7 live backends in parallel and reconcile cross-source results, with per-step `SynthesisEnvelope` accounting. No new backend integrations this release; v0.9 adds multi-organism resolution and v0.10 brings sequence + structure backends. Server surface grows 23 → 27 tools.
+
+- **`analyze_locus_synth`** (Task 2): one-call equivalent of the `analyze_locus` prompt — fans out Ensembl + xrefs + UniProt + Europe PMC + QuickGO in parallel, reconciles into `{canonical_gene_name, best_uniprot_accession, conflict_flags}`. ~2 s wall against AT1G01010 in the live capture (`examples/v0.8_synthesis_walkthrough.md`).
+- **`find_homologs_synth`** (Task 3): one-call equivalent of the `find_homologs` prompt — runs `blast_sequence`, then fans out per-hit `resolve_locus_to_uniprot` for every UniProt-shaped accession and attaches the full record under `ranked_hits[*].uniprot_record`. Eliminates the N+1 client-side round trip.
+- **`biological_context_synth`** (Task 4): one-call equivalent of the `biological_context` prompt — UniProt resolution then parallel Gramene + KEGG + STRING + ATTED with a cross-source `consensus_partners` ranker. Partial-failure tolerant — KEGG `NotFoundError` doesn't bring down the other three sources.
+- **`consensus_homologs`** (Task 5): pure cross-source synthesis. Fetches the locus's UniProt sequence, runs BLAST + Gramene in parallel, joins by accession, scores as `n_sources × mean_identity`. Surfaces multi-source orthologs that either source alone would miss.
+- **`SynthesisEnvelope` + `StepRow` Pydantic models** with `outputSchema` exposure. Per-step `status` (`ok` / `error` / `skipped`) + `elapsed_s` + structured result. Strict typing (`extra="forbid"`).
+- **`uniprot.fetch_sequence(client, accession)` helper** for FASTA retrieval (used by `consensus_homologs`).
+- **`examples/v0.8_synthesis_walkthrough.md`** real-execution capture against AT1G01010 + reproducible runner at **`examples/_run_synthesis_chain.py`**.
+- **EDAM ontology tags** on the 4 synthesis tools: operations `0224` (Query and retrieval) + `2424` (Comparison) + `2422` (Data retrieval); topics `0780` (Plant biology) + `0085` (Functional genomics).
 
 ## v0.7.1 — 2026-05-22
 
