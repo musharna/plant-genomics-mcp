@@ -66,9 +66,9 @@ def test_synthesis_envelope_round_trip_dict():
     assert round_tripped == env
 
 
-import re
+import re  # noqa: E402 — intentionally late: only used by tests below this point
 
-import httpx
+import httpx  # noqa: E402 — same as above
 
 
 @pytest.mark.asyncio
@@ -1108,7 +1108,7 @@ def test_consensus_homologs_fixtures_match_real_response_shapes():
 # UniProt / Ensembl / Gramene / KEGG / STRING / ATTED-II / NCBI BLAST and
 # are SKIPPED by default. Run locally with PLANT_GENOMICS_MCP_LIVE=1.
 # ---------------------------------------------------------------------------
-import os  # for PLANT_GENOMICS_MCP_LIVE gate
+import os  # noqa: E402 — for PLANT_GENOMICS_MCP_LIVE gate (live-test section)
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="requires PLANT_GENOMICS_MCP_LIVE=1")
