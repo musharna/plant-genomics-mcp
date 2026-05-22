@@ -300,39 +300,19 @@ class BatchEnvelope(BaseModel):
 class SubscriptionGatedRedirect(BaseModel):
     """Shared shape for the TAIR and PlantCyc informational stubs.
 
-    Neither tool calls upstream by default — both return a structured
-    redirect to free alternatives. The shape is intentionally identical
-    so a single client-side handler can render either tool's response.
-
-    When the corresponding ``*_TOKEN`` env var is set (P2.20 config
-    slot), ``status`` flips from ``subscription_required`` to
-    ``configured_live_not_implemented``, ``auth_configured`` becomes
-    True, and ``note_for_subscribers`` is populated with a pointer to
-    the deferred live-wiring entry point.
+    Neither tool calls upstream — both return a structured redirect to
+    free alternatives. The shape is intentionally identical so a single
+    client-side handler can render either tool's response.
     """
 
     model_config = ConfigDict(extra="forbid")
 
     locus: str
     status: str = Field(
-        description=(
-            'Either "subscription_required" (no token) or '
-            '"configured_live_not_implemented" (token present, live HTTP '
-            "wiring deferred to a subscriber PR)."
-        ),
+        description='Always "subscription_required" — upstream REST is paid-only.',
     )
     probed_at: str = Field(description="ISO date of the last live access probe (YYYY-MM-DD)")
-    auth_configured: bool = Field(
-        description="True when the subscription-token env var is set; False otherwise.",
-    )
-    rationale: str = Field(description="Why this backend is gated or deferred")
-    note_for_subscribers: str | None = Field(
-        default=None,
-        description=(
-            "Subscriber-PR pointer to the deferred live-wiring entry "
-            "point. Only populated when auth_configured is True."
-        ),
-    )
+    rationale: str = Field(description="Why this backend is gated")
     alternatives: list[str] = Field(description="Tool names users should call instead")
     alternatives_note: str = Field(description="What the alternatives do and do NOT cover")
 

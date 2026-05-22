@@ -12,6 +12,7 @@ P3.5 closeout — synthesis layer. Adds 4 MCP tools that compose the v0.7 live b
 - **`uniprot.fetch_sequence(client, accession)` helper** for FASTA retrieval (used by `consensus_homologs`).
 - **`examples/v0.8_synthesis_walkthrough.md`** real-execution capture against AT1G01010 + reproducible runner at **`examples/_run_synthesis_chain.py`**.
 - **EDAM ontology tags** on the 4 synthesis tools: operations `0224` (Query and retrieval) + `2424` (Comparison) + `2422` (Data retrieval); topics `0780` (Plant biology) + `0085` (Functional genomics).
+- **TAIR / PlantCyc reframed as informational-only redirects** (P2.20 walked back): removed the dead `_call_live_if_configured` hook, the `PLANT_GENOMICS_MCP_{TAIR,PLANTCYC}_TOKEN` env-var slots, the `auth_configured` + `note_for_subscribers` response fields, and the unused `SubscriptionGatedError` class. The two tools now have a single redirect path; `status` is always `"subscription_required"`. Live wiring against Phoenix Bioinformatics / SRI BioCyc remains out of scope for this MCP — the published per-locus REST surfaces are paid-only and don't document an auth scheme, so shipping a token slot without an upstream contract was YAGNI. `SubscriptionGatedRedirect` schema tightened to 7 fields under `extra="forbid"`; 6 test cases dropped from `tests/test_tair.py` + `tests/test_plantcyc.py`.
 
 ## v0.7.1 — 2026-05-22
 
