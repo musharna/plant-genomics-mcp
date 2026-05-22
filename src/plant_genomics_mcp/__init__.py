@@ -11,4 +11,4 @@ backends in parallel — see ``synthesis.py``. See ``server.py`` for the
 full tool catalog.
 """
 
-__version__ = "0.8.0"
+__version__ = "0.8.1"
