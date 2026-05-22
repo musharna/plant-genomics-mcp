@@ -384,3 +384,27 @@ class GrameneHomologs(BaseModel):
     release: str = Field(description="Gramene release identifier, e.g. v69")
     total: int = Field(description="Number of homologs after filtering")
     homologs: list[GrameneHomolog]
+
+
+class KeggPathway(BaseModel):
+    """One KEGG pathway entry."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(description="KEGG pathway ID, e.g. ath04075")
+    name: str = Field(description="Pathway name from KEGG NAME line")
+    pathway_class: str = Field(description="Hierarchical category from KEGG CLASS line")
+
+
+class KeggPathways(BaseModel):
+    """KEGG pathway-membership response wrapper."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str
+    kegg_gene_id: str = Field(description='e.g. "ath:at1g01010"')
+    pathways: list[KeggPathway]
+    errors: list[str] = Field(
+        default_factory=list,
+        description="Per-pathway step-2 failures (kept inline so the call doesn't abort)",
+    )

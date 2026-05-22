@@ -6,6 +6,8 @@ KEGG returns plain text (TSV-like), not JSON. Each test mocks both calls
 
 from __future__ import annotations
 
+import os
+
 import httpx
 import pytest
 from pytest_httpx import HTTPXMock
@@ -90,3 +92,16 @@ async def test_lookup_pathways_404_treated_as_empty(httpx_mock: HTTPXMock):
     async with httpx.AsyncClient() as client:
         with pytest.raises(NotFoundError):
             await kegg.lookup_pathways(client, "ATNOPE")
+
+
+@pytest.mark.skipif(
+    not os.environ.get("PLANT_GENOMICS_MCP_LIVE"),
+    reason="set PLANT_GENOMICS_MCP_LIVE=1 to hit rest.kegg.jp",
+)
+@pytest.mark.asyncio
+async def test_live_kegg_at1g01010_has_pathways():
+    async with httpx.AsyncClient() as client:
+        result = await kegg.lookup_pathways(client, "AT1G01010")
+    assert result["locus"] == "AT1G01010"
+    assert result["kegg_gene_id"] == "ath:at1g01010"
+    assert len(result["pathways"]) > 0, "AT1G01010 should be in at least one KEGG pathway"

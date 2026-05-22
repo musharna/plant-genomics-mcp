@@ -48,6 +48,7 @@ from plant_genomics_mcp import (
     ensembl_plants,
     europe_pmc,
     gramene,
+    kegg,
     phytozome,
     plantcyc,
     progress,
@@ -63,6 +64,7 @@ from plant_genomics_mcp.models import (
     EnsemblPlantsLocus,
     GeneXrefs,
     GrameneHomologs,
+    KeggPathways,
     LocusGoAnnotations,
     LocusLiterature,
     PhytozomeLocus,
@@ -381,6 +383,27 @@ TOOLS: list[types.Tool] = [
         _meta=_EDAM,
     ),
     types.Tool(
+        name="kegg_pathways",
+        description=(
+            "Fetch KEGG pathway memberships for an Arabidopsis locus from "
+            "rest.kegg.jp. Returns a list of pathway IDs + names + KEGG "
+            "category classes the locus participates in. Pairs with "
+            "locus_go_annotations for the GO-level functional view."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "Arabidopsis AGI locus, e.g. AT1G01010 (lowercased internally)",
+                },
+            },
+            "required": ["locus"],
+        },
+        outputSchema=KeggPathways.model_json_schema(),
+        _meta=_EDAM,
+    ),
+    types.Tool(
         name="tair_locus_info",
         description=(
             "Returns subscription-access info and alternatives for a TAIR "
@@ -689,6 +712,23 @@ TOOLS: list[types.Tool] = [
         outputSchema=BatchEnvelope.model_json_schema(),
         _meta=_EDAM,
     ),
+    types.Tool(
+        name="batch_kegg_pathways",
+        description="Batch version of kegg_pathways. Up to 50 loci per call.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "loci": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "maxItems": 50,
+                },
+            },
+            "required": ["loci"],
+        },
+        outputSchema=BatchEnvelope.model_json_schema(),
+        _meta=_EDAM,
+    ),
 ]
 
 
@@ -854,12 +894,16 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     organism_id=args.get("organism_id", uniprot.DEFAULT_TAXON_ID),
                     limit=args.get("limit", quickgo.DEFAULT_LIMIT),
                 )
+            case "batch_kegg_pathways":
+                return await batch.batch_kegg_pathways(client, args["loci"])
             case "batch_gramene_homologs":
                 return await batch.batch_gramene_homologs(
                     client,
                     args["loci"],
                     homology_type=args.get("homology_type", "ortholog"),
                 )
+            case "kegg_pathways":
+                return await kegg.lookup_pathways(client, args["locus"])
             case "gramene_homologs":
                 return await gramene.lookup_homologs(
                     client,

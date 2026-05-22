@@ -37,6 +37,7 @@ async def test_read_cache_stats_returns_per_backend_rollup() -> None:
         "ensembl_plants",
         "europe_pmc",
         "gramene",
+        "kegg",
         "phytozome",
         "quickgo",
         "uniprot",
@@ -63,7 +64,15 @@ async def test_read_backends_status_lists_live_and_stub_backends() -> None:
     payload = json.loads(out[0].content)
     by_name = {entry["name"]: entry for entry in payload}
     # Live backends.
-    for name in ("ensembl_plants", "phytozome", "uniprot", "europe_pmc", "quickgo", "gramene"):
+    for name in (
+        "ensembl_plants",
+        "phytozome",
+        "uniprot",
+        "europe_pmc",
+        "quickgo",
+        "gramene",
+        "kegg",
+    ):
         e = by_name[name]
         assert e["kind"] == "live"
         assert e["subscription_gated"] is False

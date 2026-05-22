@@ -27,7 +27,15 @@ from typing import Any, Awaitable, Callable
 
 import httpx
 
-from plant_genomics_mcp import ensembl_plants, europe_pmc, gramene, phytozome, quickgo, uniprot
+from plant_genomics_mcp import (
+    ensembl_plants,
+    europe_pmc,
+    gramene,
+    kegg,
+    phytozome,
+    quickgo,
+    uniprot,
+)
 from plant_genomics_mcp.errors import PlantGenomicsError
 
 MAX_BATCH = 50  # bound the wire payload; matches Ensembl's documented limit
@@ -224,3 +232,12 @@ async def batch_gramene_homologs(
         lambda locus: gramene.lookup_homologs(client, locus, homology_type=homology_type),
     )
     return _envelope("gramene_homologs", loci, results, errors)
+
+
+async def batch_kegg_pathways(
+    client: httpx.AsyncClient,
+    loci: list[str],
+) -> dict[str, Any]:
+    loci = _bound(loci)
+    results, errors = await _gather(loci, lambda locus: kegg.lookup_pathways(client, locus))
+    return _envelope("kegg_pathways", loci, results, errors)
