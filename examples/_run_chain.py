@@ -1,6 +1,6 @@
-"""Real-execution proof-transcript generator for the two prompts.
+"""Real-execution proof-transcript generator for the MCP prompts.
 
-Drives the underlying client functions (NOT the MCP wire) for both
+Drives the underlying client functions (NOT the MCP wire) for the
 canonical chains and dumps the captured inputs/outputs to JSON so the
 sibling Markdown files can quote real upstream responses.
 
@@ -16,8 +16,9 @@ output (rendered in prompts.py) already captures the chain framing an LLM
 would receive.
 
 Runtime budget:
-  * analyze_locus chain: ~5-15s (5 fast REST calls)
-  * find_homologs chain: ~60-180s (BLAST polls have a 60s NCBI floor)
+  * analyze_locus chain:        ~5-15s   (5 fast REST calls)
+  * find_homologs chain:        ~60-180s (BLAST polls have a 60s NCBI floor)
+  * biological_context chain:   ~10-30s  (5 REST calls, KEGG fan-out)
 
 Each chain writes:
   * examples/<chain>_<query>.json  — full raw outputs per step
@@ -38,10 +39,14 @@ from typing import Any
 import httpx
 
 from plant_genomics_mcp import (
+    atted,
     blast,
     ensembl_plants,
     europe_pmc,
+    gramene,
+    kegg,
     quickgo,
+    string_db,
     uniprot,
 )
 
@@ -49,6 +54,7 @@ EXAMPLES_DIR = Path(__file__).resolve().parent
 
 ANALYZE_LOCUS_QUERY = "AT1G01010"
 ANALYZE_LOCUS_SPECIES = "arabidopsis_thaliana"
+BIOLOGICAL_CONTEXT_QUERY = "AT1G01010"
 
 # NAC domain of Arabidopsis NAC001 (AT1G01010 product) — short enough to
 # keep BLAST runtime tractable but distinctive enough that the top hits
@@ -238,6 +244,138 @@ async def run_find_homologs() -> dict[str, Any]:
     return captured
 
 
+async def run_biological_context() -> dict[str, Any]:
+    """Drive the biological_context chain end-to-end and capture per-step output.
+
+    If any upstream raises (NotFoundError / RateLimitError /
+    UpstreamUnavailableError / other), the step is recorded with the
+    exception class + message inline and the chain continues — downstream
+    steps that depend on a missing value (e.g. step 4 needs the UniProt
+    accession from step 3) gracefully record their own skip reason.
+    """
+    locus = BIOLOGICAL_CONTEXT_QUERY
+    top_n = 10
+    print(f"\n[biological_context] locus={locus}")
+    captured: dict[str, Any] = {
+        "chain": "biological_context",
+        "query": {"locus": locus, "top_n": top_n},
+        "captured_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "steps": [],
+    }
+
+    async with httpx.AsyncClient() as client:
+        # Step 1 — Gramene orthologs
+        t0 = time.monotonic()
+        step1_input = {"locus": locus, "homology_type": "ortholog"}
+        step1_row: dict[str, Any] = {
+            "step": 1,
+            "tool": "gramene_homologs",
+            "input": step1_input,
+        }
+        try:
+            step1 = await gramene.lookup_homologs(client, locus, homology_type="ortholog")
+            step1_row["elapsed_s"] = round(time.monotonic() - t0, 2)
+            step1_row["output"] = step1
+            n_orth = len(step1.get("homologs", []))
+            print(f"  step 1 gramene_homologs → {n_orth} orthologs")
+        except Exception as e:  # noqa: BLE001 — record class+msg for the transcript
+            step1_row["elapsed_s"] = round(time.monotonic() - t0, 2)
+            step1_row["output"] = None
+            step1_row["error"] = f"{type(e).__name__}: {e}"
+            print(f"  step 1 gramene_homologs → ERROR {step1_row['error']}")
+        captured["steps"].append(step1_row)
+
+        # Step 2 — KEGG pathway memberships
+        t0 = time.monotonic()
+        step2_input = {"locus": locus}
+        step2_row: dict[str, Any] = {
+            "step": 2,
+            "tool": "kegg_pathways",
+            "input": step2_input,
+        }
+        try:
+            step2 = await kegg.lookup_pathways(client, locus)
+            step2_row["elapsed_s"] = round(time.monotonic() - t0, 2)
+            step2_row["output"] = step2
+            n_pw = len(step2.get("pathways", []))
+            print(f"  step 2 kegg_pathways → {n_pw} pathways")
+        except Exception as e:  # noqa: BLE001
+            step2_row["elapsed_s"] = round(time.monotonic() - t0, 2)
+            step2_row["output"] = None
+            step2_row["error"] = f"{type(e).__name__}: {e}"
+            print(f"  step 2 kegg_pathways → ERROR {step2_row['error']}")
+        captured["steps"].append(step2_row)
+
+        # Step 3 — UniProt resolution (gates step 4)
+        t0 = time.monotonic()
+        step3_input = {"locus": locus}
+        step3_row: dict[str, Any] = {
+            "step": 3,
+            "tool": "resolve_locus_to_uniprot",
+            "input": step3_input,
+        }
+        uniprot_acc: str | None = None
+        try:
+            step3 = await uniprot.lookup_locus(client, locus)
+            step3_row["elapsed_s"] = round(time.monotonic() - t0, 2)
+            step3_row["output"] = step3
+            uniprot_acc = step3.get("primaryAccession")
+            print(f"  step 3 resolve_locus_to_uniprot → {uniprot_acc}")
+        except Exception as e:  # noqa: BLE001
+            step3_row["elapsed_s"] = round(time.monotonic() - t0, 2)
+            step3_row["output"] = None
+            step3_row["error"] = f"{type(e).__name__}: {e}"
+            print(f"  step 3 resolve_locus_to_uniprot → ERROR {step3_row['error']}")
+        captured["steps"].append(step3_row)
+
+        # Step 4 — STRING interactions (uses accession from step 3 if present;
+        # otherwise falls back to the locus, since string_db.lookup_partners
+        # accepts either form).
+        t0 = time.monotonic()
+        string_query = uniprot_acc or locus
+        step4_input = {"locus_or_accession": string_query, "limit": 10}
+        step4_row: dict[str, Any] = {
+            "step": 4,
+            "tool": "string_interactions",
+            "input": step4_input,
+        }
+        try:
+            step4 = await string_db.lookup_partners(client, string_query, limit=10)
+            step4_row["elapsed_s"] = round(time.monotonic() - t0, 2)
+            step4_row["output"] = step4
+            n_part = len(step4.get("partners", []))
+            print(f"  step 4 string_interactions → {n_part} partners (query={string_query!r})")
+        except Exception as e:  # noqa: BLE001
+            step4_row["elapsed_s"] = round(time.monotonic() - t0, 2)
+            step4_row["output"] = None
+            step4_row["error"] = f"{type(e).__name__}: {e}"
+            print(f"  step 4 string_interactions → ERROR {step4_row['error']}")
+        captured["steps"].append(step4_row)
+
+        # Step 5 — ATTED-II coexpression
+        t0 = time.monotonic()
+        step5_input = {"locus": locus, "top_n": top_n}
+        step5_row: dict[str, Any] = {
+            "step": 5,
+            "tool": "atted_coexpression",
+            "input": step5_input,
+        }
+        try:
+            step5 = await atted.lookup_coexpression(client, locus, top_n=top_n)
+            step5_row["elapsed_s"] = round(time.monotonic() - t0, 2)
+            step5_row["output"] = step5
+            n_cox = len(step5.get("neighbors", []))
+            print(f"  step 5 atted_coexpression → {n_cox} neighbors")
+        except Exception as e:  # noqa: BLE001
+            step5_row["elapsed_s"] = round(time.monotonic() - t0, 2)
+            step5_row["output"] = None
+            step5_row["error"] = f"{type(e).__name__}: {e}"
+            print(f"  step 5 atted_coexpression → ERROR {step5_row['error']}")
+        captured["steps"].append(step5_row)
+
+    return captured
+
+
 _UNIPROT_RE = __import__("re").compile(
     r"^[OPQ][0-9][A-Z0-9]{3}[0-9]$|^[A-NR-Z][0-9][A-Z][A-Z0-9]{2}[0-9]$"
 )
@@ -358,6 +496,60 @@ def render_find_homologs_md(data: dict[str, Any]) -> str:
     return "\n".join(sections)
 
 
+def render_biological_context_md(data: dict[str, Any]) -> str:
+    q = data["query"]
+    steps = data["steps"]
+
+    sections = [
+        f"# Example chain — `biological_context` for {q['locus']}",
+        "",
+        f"**Query:** `{q['locus']}` (top_n `{q['top_n']}`)",
+        f"**Captured:** {data['captured_at']}",
+        "",
+        "Real-execution transcript of the five-tool chain rendered by the "
+        "`biological_context` MCP prompt. Outputs below are verbatim from "
+        "upstream (Gramene compara, KEGG, UniProt, STRING-DB, ATTED-II) at "
+        "capture time and may drift on re-run — the matching `.json` sibling "
+        "preserves the full payload. Any step that raised an upstream error "
+        "is recorded inline with the class + message; the chain does NOT "
+        "bail on a partial failure.",
+        "",
+        "---",
+        "",
+    ]
+
+    any_error = any(s.get("error") for s in steps)
+    if any_error:
+        errored = [
+            f"step {s['step']} (`{s['tool']}`): `{s['error']}`" for s in steps if s.get("error")
+        ]
+        sections.append("**Partial capture — upstream errors observed:**")
+        sections.append("")
+        for line in errored:
+            sections.append(f"- {line}")
+        sections.append("")
+        sections.append("---")
+        sections.append("")
+
+    for s in steps:
+        sections.append(f"## Step {s['step']} — `{s['tool']}`")
+        sections.append("")
+        sections.append(f"**Input:** `{json.dumps(s['input'])}`  ")
+        sections.append(f"**Elapsed:** {s['elapsed_s']}s")
+        if s.get("error"):
+            sections.append("")
+            sections.append(f"_upstream error:_ `{s['error']}`")
+            sections.append("")
+            continue
+        sections.append("")
+        sections.append("```json")
+        sections.append(_excerpt(s["output"]))
+        sections.append("```")
+        sections.append("")
+
+    return "\n".join(sections)
+
+
 async def main() -> None:
     print("Generating real-execution proof transcripts...")
 
@@ -373,6 +565,13 @@ async def main() -> None:
     md_path = EXAMPLES_DIR / f"find_homologs_{FIND_HOMOLOGS_LABEL}.md"
     _write_json(json_path, h)
     md_path.write_text(render_find_homologs_md(h))
+    print(f"  wrote {md_path.relative_to(EXAMPLES_DIR.parent)}")
+
+    b = await run_biological_context()
+    json_path = EXAMPLES_DIR / f"biological_context_{BIOLOGICAL_CONTEXT_QUERY}.json"
+    md_path = EXAMPLES_DIR / f"biological_context_{BIOLOGICAL_CONTEXT_QUERY}.md"
+    _write_json(json_path, b)
+    md_path.write_text(render_biological_context_md(b))
     print(f"  wrote {md_path.relative_to(EXAMPLES_DIR.parent)}")
 
     print("\nDone.")
