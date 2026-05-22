@@ -251,3 +251,26 @@ async def test_batch_gramene_homologs_mixed(httpx_mock: HTTPXMock):
     assert env["results"]["AT1G01010"]["total"] == 1
     assert "NOPE" in env["errors"]
     assert "[NotFoundError]" in env["errors"]["NOPE"]
+
+
+@pytest.mark.asyncio
+async def test_batch_kegg_pathways_mixed(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/link/pathway/ath:at1g01010",
+        text="ath:at1g01010\tpath:ath04075\n",
+    )
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/get/path:ath04075",
+        text="ENTRY       ath04075                    Pathway\nNAME        Plant hormone signal transduction\n",
+    )
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/link/pathway/ath:atnope",
+        text="",
+    )
+    async with httpx.AsyncClient() as client:
+        env = await batch.batch_kegg_pathways(client, ["AT1G01010", "ATNOPE"])
+    assert env["tool"] == "kegg_pathways"
+    assert env["count"] == 2
+    assert "AT1G01010" in env["results"]
+    assert "ATNOPE" in env["errors"]
+    assert "[NotFoundError]" in env["errors"]["ATNOPE"]

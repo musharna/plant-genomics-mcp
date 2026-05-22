@@ -38,6 +38,7 @@ from plant_genomics_mcp import (
     ensembl_plants,
     europe_pmc,
     gramene,
+    kegg,
     phytozome,
     plantcyc,
     quickgo,
@@ -94,6 +95,7 @@ def _cache_stats_payload() -> dict[str, dict[str, int]]:
         "ensembl_plants": ensembl_plants._CACHE.stats(),
         "europe_pmc": europe_pmc._CACHE.stats(),
         "gramene": gramene._CACHE.stats(),
+        "kegg": kegg._CACHE.stats(),
         "phytozome": phytozome._CACHE.stats(),
         "quickgo": quickgo._CACHE.stats(),
         "uniprot": uniprot._CACHE.stats(),
@@ -141,6 +143,12 @@ def _backends_status_payload() -> list[dict[str, object]]:
         {
             "name": "gramene",
             "base_url": gramene.BASE_URL,
+            "kind": "live",
+            "subscription_gated": False,
+        },
+        {
+            "name": "kegg",
+            "base_url": kegg.BASE_URL,
             "kind": "live",
             "subscription_gated": False,
         },
