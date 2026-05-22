@@ -999,3 +999,81 @@ def test_consensus_homologs_fixtures_match_real_response_shapes():
             "elapsed_seconds": 0.0,
         }
     )
+
+
+# ---------------------------------------------------------------------------
+# Live tests — gated by PLANT_GENOMICS_MCP_LIVE=1
+#
+# Real-execution checks per feedback_real_execution_testing.md. These hit
+# UniProt / Ensembl / Gramene / KEGG / STRING / ATTED-II / NCBI BLAST and
+# are SKIPPED by default. Run locally with PLANT_GENOMICS_MCP_LIVE=1.
+# ---------------------------------------------------------------------------
+import os  # for PLANT_GENOMICS_MCP_LIVE gate
+
+LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
+live_only = pytest.mark.skipif(not LIVE, reason="requires PLANT_GENOMICS_MCP_LIVE=1")
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_analyze_locus_synth_live_at1g01010():
+    from plant_genomics_mcp.synthesis import analyze_locus_synth
+
+    async with httpx.AsyncClient() as client:
+        env = await analyze_locus_synth(client, "AT1G01010")
+    assert env.result is not None
+    assert env.result["reconciled"]["best_uniprot_accession"] == "Q0WV96"
+    statuses = [s.status for s in env.steps]
+    assert statuses[0] == "ok"
+    # At least 3 of 4 phase-2 backends typically succeed; partial OK.
+    ok_count = sum(1 for s in env.steps[1:] if s.status == "ok")
+    assert ok_count >= 3, f"expected ≥3 phase-2 successes, got {ok_count}: {statuses}"
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_find_homologs_synth_live_at1g01010_seq():
+    # AT1G01010 (Q0WV96) N-terminal — short enough for fast BLAST
+    sequence = (
+        "MEDQVGFGFRPNDEELVGHYLRNKIEGNTSRDVEVAISEVNICSYDPWNLRFQSKYKSRDA"
+        "MWYFFSRRENNKGNRQSRTTVSGKWKLTGES"
+    )
+    from plant_genomics_mcp.synthesis import find_homologs_synth
+
+    async with httpx.AsyncClient(timeout=900.0) as client:
+        env = await find_homologs_synth(client, sequence, program="blastp", top_n=5)
+    assert env.steps[0].status == "ok", f"BLAST failed: {env.steps[0].error}"
+    # At least one self-hit with a UniProt record populated
+    populated = [h for h in env.result["ranked_hits"] if h["uniprot_record"]]
+    assert populated, "no ranked hit had a UniProt record"
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_biological_context_synth_live_at1g01010():
+    from plant_genomics_mcp.synthesis import biological_context_synth
+
+    async with httpx.AsyncClient() as client:
+        env = await biological_context_synth(client, "AT1G01010", top_n=5)
+    assert env.result is not None
+    assert env.result["uniprot_accession"] == "Q0WV96"
+    # consensus_partners might be empty if both STRING and ATTED return zero
+    # neighbors for this locus, but the field must exist as a list.
+    assert isinstance(env.result["consensus_partners"], list)
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_consensus_homologs_live_at1g01010():
+    from plant_genomics_mcp.synthesis import consensus_homologs
+
+    async with httpx.AsyncClient(timeout=900.0) as client:
+        env = await consensus_homologs(client, "AT1G01010", top_n=5)
+    assert env.result is not None
+    consensus = env.result["consensus"]
+    assert consensus, "consensus list empty — at least one cross-source pick expected"
+    two_source = [c for c in consensus if c["n_sources"] == 2]
+    # If BLAST and Gramene both returned hits, at least one should overlap
+    # by (species, gene) — this is the dedup validation.
+    if env.steps[2].status == "ok" and env.steps[3].status == "ok":
+        assert two_source, "both backends succeeded but no 2-source consensus pick"
