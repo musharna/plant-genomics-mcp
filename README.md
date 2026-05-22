@@ -1,9 +1,10 @@
 # plant-genomics-mcp
 
-> **14 tools** for plant-genomics locus lookup via the Model Context Protocol —
-> 8 single-locus + 6 parallel-batch variants.
+> **23 tools** for plant-genomics locus lookup via the Model Context Protocol —
+> 13 single-locus + 10 parallel-batch variants.
 > Free, public sources: Ensembl Plants + Phytozome BioMart + UniProtKB +
-> Europe PMC + QuickGO. TAIR
+> Europe PMC + QuickGO + NCBI BLAST + Gramene + KEGG + STRING-DB + ATTED-II.
+> TAIR
 >
 > - PlantCyc are informational stubs that redirect to the free alternatives
 >   (both services are paid-subscription-gated, probed 2026-05-21).
@@ -15,18 +16,22 @@
 
 ## Tools at a glance
 
-| #   | Category                | Tool                          | What it does                                                                |
-| --- | ----------------------- | ----------------------------- | --------------------------------------------------------------------------- |
-| 1   | Gene metadata (live)    | `ensembl_plants_lookup_locus` | Fetches gene record from Ensembl Plants REST (any plant species).           |
-| 2   | Cross-references (live) | `get_gene_xrefs`              | Fetches cross-DB references (UniProt, NCBI Gene, TAIR, GO, …) from Ensembl. |
-| 3   | Gene metadata (live)    | `phytozome_lookup_locus`      | Fetches gene record from Phytozome BioMart (any Phytozome proteome).        |
-| 4   | Protein (live)          | `resolve_locus_to_uniprot`    | Resolves a locus to its UniProtKB record (Swiss-Prot preferred, TrEMBL OK). |
-| 5   | Literature (live)       | `locus_literature`            | Searches Europe PMC for papers mentioning the locus (free, no API key).     |
-| 6   | GO annotations (live)   | `locus_go_annotations`        | Fetches QuickGO GO annotations (locus → UniProt → QuickGO).                 |
-| 7   | Subscription redirect   | `tair_locus_info`             | Returns subscription notice + redirect to live backends. No upstream call.  |
-| 8   | Subscription redirect   | `plantcyc_locus_info`         | Returns subscription notice + redirect to live backends. No upstream call.  |
-| 9   | Sequence search (live)  | `blast_sequence`              | NCBI BLAST URLAPI — async Put/Get polling with progress notifications.      |
-| 10  | Batch (live)            | `batch_*` (six variants)      | Parallel per-locus fanout for tools 1–6. Up to 50 loci per call.            |
+| #   | Category                | Tool                          | What it does                                                                  |
+| --- | ----------------------- | ----------------------------- | ----------------------------------------------------------------------------- |
+| 1   | Gene metadata (live)    | `ensembl_plants_lookup_locus` | Fetches gene record from Ensembl Plants REST (any plant species).             |
+| 2   | Cross-references (live) | `get_gene_xrefs`              | Fetches cross-DB references (UniProt, NCBI Gene, TAIR, GO, …) from Ensembl.   |
+| 3   | Gene metadata (live)    | `phytozome_lookup_locus`      | Fetches gene record from Phytozome BioMart (any Phytozome proteome).          |
+| 4   | Protein (live)          | `resolve_locus_to_uniprot`    | Resolves a locus to its UniProtKB record (Swiss-Prot preferred, TrEMBL OK).   |
+| 5   | Literature (live)       | `locus_literature`            | Searches Europe PMC for papers mentioning the locus (free, no API key).       |
+| 6   | GO annotations (live)   | `locus_go_annotations`        | Fetches QuickGO GO annotations (locus → UniProt → QuickGO).                   |
+| 7   | Sequence search (live)  | `blast_sequence`              | NCBI BLAST URLAPI — async Put/Get polling with progress notifications.        |
+| 8   | Homology (live)         | `gramene_homologs`            | Fetches Gramene v69 homology entries (ortholog / paralog) with gene_tree_id.  |
+| 9   | Pathways (live)         | `kegg_pathways`               | Fetches KEGG `ath:` pathway memberships for an Arabidopsis locus.             |
+| 10  | Interactions (live)     | `string_interactions`         | Fetches STRING-DB first-neighbor interaction partners with per-channel score. |
+| 11  | Coexpression (live)     | `atted_coexpression`          | Fetches ATTED-II Ath-u.c4-0 top-N coexpression neighbors with z-scores.       |
+| 12  | Subscription redirect   | `tair_locus_info`             | Returns subscription notice + redirect to live backends. No upstream call.    |
+| 13  | Subscription redirect   | `plantcyc_locus_info`         | Returns subscription notice + redirect to live backends. No upstream call.    |
+| 14  | Batch (live)            | `batch_*` (ten variants)      | Parallel per-locus fanout for tools 1–6, 8–11. Up to 50 loci per call.        |
 
 Live tools take a TAIR-style locus (e.g. `AT1G01010`) plus optional
 `species=` / `organism_id=` and return a structured record. UniProt
@@ -39,7 +44,9 @@ gated upstream.
 Batch variants (`batch_ensembl_plants_lookup_locus`,
 `batch_get_gene_xrefs`, `batch_phytozome_lookup_locus`,
 `batch_resolve_locus_to_uniprot`, `batch_locus_literature`,
-`batch_locus_go_annotations`) take a `loci: string[]` (1–50 items) plus
+`batch_locus_go_annotations`, `batch_gramene_homologs`,
+`batch_kegg_pathways`, `batch_string_interactions`,
+`batch_atted_coexpression`) take a `loci: string[]` (1–50 items) plus
 the same optional `species=` / `organism_id=` arguments. They return
 `{tool, count, results, errors}` where `results[locus]` is the same
 shape as the single-locus tool and `errors[locus]` is a
@@ -48,7 +55,7 @@ shape as the single-locus tool and `errors[locus]` is a
 the native `POST /lookup/id` endpoint (one HTTP round-trip);
 everything else fans out via `asyncio.gather`.
 
-All fifteen tools publish JSON `outputSchema` for client-side validation
+All twenty-three tools publish JSON `outputSchema` for client-side validation
 and EDAM ontology tags (`operation_2422` Data retrieval; topic
 `topic_0780` Plant biology + `topic_0114` Gene structure) on `_meta`
 for registry indexers.
@@ -60,7 +67,7 @@ The server also advertises three read-only MCP resources (JSON,
 
 | URI                           | What                                                                                                           |
 | ----------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `pgmcp://cache/stats`         | Per-backend `TTLCache` rollup — `{hits, misses, size}` for each of the five live backends                      |
+| `pgmcp://cache/stats`         | Per-backend `TTLCache` rollup — `{hits, misses, size}` for each of the nine live backends                      |
 | `pgmcp://organisms/phytozome` | Slug → Phytozome `organism_id` map (only `arabidopsis_thaliana=167` is controller-verified; rest are hints)    |
 | `pgmcp://backends/status`     | Per-backend liveness rollup — `name`, `base_url`, `kind` (`live` or `stub`), `subscription_gated`, `probed_at` |
 
@@ -70,19 +77,20 @@ supported organisms / backends programmatically.
 
 ## Prompts
 
-The server exposes two parameterized prompts (`prompts/list` +
+The server exposes three parameterized prompts (`prompts/list` +
 `prompts/get`) for one-click multi-tool workflows:
 
-| Name            | Required args | Optional args                              | What it chains                                                                      |
-| --------------- | ------------- | ------------------------------------------ | ----------------------------------------------------------------------------------- |
-| `analyze_locus` | `locus`       | `species` (default `arabidopsis_thaliana`) | Ensembl annotation → xrefs → UniProt → Europe PMC literature → QuickGO annotations  |
-| `find_homologs` | `sequence`    | `program` (default `blastp`)               | `blast_sequence` → per-hit `resolve_locus_to_uniprot` for UniProt-shaped accessions |
+| Name                 | Required args | Optional args                              | What it chains                                                                           |
+| -------------------- | ------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `analyze_locus`      | `locus`       | `species` (default `arabidopsis_thaliana`) | Ensembl annotation → xrefs → UniProt → Europe PMC literature → QuickGO annotations       |
+| `find_homologs`      | `sequence`    | `program` (default `blastp`)               | `blast_sequence` → per-hit `resolve_locus_to_uniprot` for UniProt-shaped accessions      |
+| `biological_context` | `locus`       | `top_n` (default 10)                       | Gramene homologs → KEGG pathways → UniProt → STRING interactions → ATTED-II coexpression |
 
 Clients populate their slash-command menu from `prompts/list`, so the
 workflow is one user selection deep instead of requiring the user to
 remember the tool ordering.
 
-Real-execution proof transcripts of both chains (against the live
+Real-execution proof transcripts of all three chains (against the live
 upstream APIs) live in [`examples/`](examples/) — one JSON + Markdown
 pair per prompt.
 
@@ -465,6 +473,27 @@ hops, expecting an external AlphaFold / RCSB tool downstream):
 3. On `[NotFoundError]`, the locus has no UniProt entry — usually a
    non-coding or recently-annotated gene; fall back to
    `ensembl_plants_lookup_locus` for the `biotype` to confirm.
+
+**Biological context** — homology + pathways + interactions +
+coexpression for one locus, cross-referenced into a high-confidence
+functional-partner shortlist:
+
+```python
+homologs = await gramene_homologs(locus="AT1G01010")
+pathways = await kegg_pathways(locus="AT1G01010")
+uniprot = await resolve_locus_to_uniprot(locus="AT1G01010")
+interactions = await string_interactions(
+    locus_or_accession=uniprot["primaryAccession"], limit=10
+)
+coex = await atted_coexpression(locus="AT1G01010", top_n=10)
+# Cross-reference: interactors ∩ coex_neighbors = high-confidence functional partners.
+```
+
+Or as one parameterized prompt:
+
+```
+prompts/get biological_context locus=AT1G01010 top_n=10
+```
 
 ## Development
 

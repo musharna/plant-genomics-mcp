@@ -17,10 +17,30 @@ from __future__ import annotations
 
 import pytest
 
-from plant_genomics_mcp import ensembl_plants, europe_pmc, phytozome, quickgo, uniprot
+from plant_genomics_mcp import (
+    atted,
+    ensembl_plants,
+    europe_pmc,
+    gramene,
+    kegg,
+    phytozome,
+    quickgo,
+    string_db,
+    uniprot,
+)
 
 
 @pytest.fixture(autouse=True)
 def _clear_module_caches() -> None:
-    for mod in (ensembl_plants, europe_pmc, phytozome, quickgo, uniprot):
+    for mod in (
+        atted,
+        ensembl_plants,
+        europe_pmc,
+        gramene,
+        kegg,
+        phytozome,
+        quickgo,
+        string_db,
+        uniprot,
+    ):
         mod._CACHE.clear()
