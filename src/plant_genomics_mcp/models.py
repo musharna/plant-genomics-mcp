@@ -347,3 +347,40 @@ class PlantCycLocusInfo(SubscriptionGatedRedirect):
     """PlantCyc stub response — adds ``plantcyc_web_url`` to the shared shape."""
 
     plantcyc_web_url: str = Field(description="Browser URL for the PlantCyc gene page")
+
+
+class GrameneHomolog(BaseModel):
+    """One ortholog/paralog entry from Gramene compara.
+
+    Gramene's ``fl=homology`` projection groups homologs by category and
+    only emits target loci (as strings), plus a single gene_tree_id at the
+    record level. Per-row taxon, identity, protein ID, dn/ds, and
+    goc_score are NOT exposed by this endpoint, so we deliberately omit
+    those fields rather than carry always-None placeholders.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    target_locus: str | None = Field(default=None)
+    type: str | None = Field(
+        default=None,
+        description=(
+            "Homology category: ortholog_one2one | ortholog_one2many | "
+            "ortholog_many2many | within_species_paralog | between_species_paralog"
+        ),
+    )
+    gene_tree_id: str | None = Field(
+        default=None,
+        description="Gramene gene-tree ID (shared across all homologs in the record)",
+    )
+
+
+class GrameneHomologs(BaseModel):
+    """Gramene compara homology response wrapper."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str
+    release: str = Field(description="Gramene release identifier, e.g. v69")
+    total: int = Field(description="Number of homologs after filtering")
+    homologs: list[GrameneHomolog]

@@ -47,6 +47,7 @@ from plant_genomics_mcp import (
     blast,
     ensembl_plants,
     europe_pmc,
+    gramene,
     phytozome,
     plantcyc,
     progress,
@@ -61,6 +62,7 @@ from plant_genomics_mcp.models import (
     BlastResult,
     EnsemblPlantsLocus,
     GeneXrefs,
+    GrameneHomologs,
     LocusGoAnnotations,
     LocusLiterature,
     PhytozomeLocus,
@@ -346,6 +348,37 @@ TOOLS: list[types.Tool] = [
         },
         outputSchema=LocusGoAnnotations.model_json_schema(),
         _meta=_EDAM_GO,
+    ),
+    types.Tool(
+        name="gramene_homologs",
+        description=(
+            "Fetch orthologs and paralogs for a plant locus from Gramene compara "
+            "(data.gramene.org v69). Default homology_type='ortholog'; pass "
+            "'paralog' for in-species duplicates or 'all' for everything. "
+            "Returns target_locus + homology category (type) + shared gene_tree_id "
+            "per hit. The fl=homology projection does not carry per-row taxon, "
+            "identity, or protein ID; pair with resolve_locus_to_uniprot for "
+            "protein-level enrichment and with blast_sequence for sequence "
+            "similarity discovery."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "e.g. AT1G01010 (Arabidopsis), Os01g0100100 (rice)",
+                },
+                "homology_type": {
+                    "type": "string",
+                    "enum": ["ortholog", "paralog", "all"],
+                    "description": "Filter on homology kind",
+                    "default": "ortholog",
+                },
+            },
+            "required": ["locus"],
+        },
+        outputSchema=GrameneHomologs.model_json_schema(),
+        _meta=_EDAM,
     ),
     types.Tool(
         name="tair_locus_info",
@@ -793,6 +826,12 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     args["loci"],
                     organism_id=args.get("organism_id", uniprot.DEFAULT_TAXON_ID),
                     limit=args.get("limit", quickgo.DEFAULT_LIMIT),
+                )
+            case "gramene_homologs":
+                return await gramene.lookup_homologs(
+                    client,
+                    args["locus"],
+                    homology_type=args.get("homology_type", "ortholog"),
                 )
             case _:
                 raise ValueError(f"unknown tool: {name}")
