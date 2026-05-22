@@ -43,9 +43,10 @@ CALLER_IDENTITY = "plant-genomics-mcp"
 # UniProt accession: 6 or 10 chars. The 10-char form (NEW format) is
 # documented at https://www.uniprot.org/help/accession_numbers.
 _UNIPROT_RE = re.compile(
-    r"^[OPQ][0-9][A-Z0-9]{3}[0-9]"
-    r"|^[A-NR-Z][0-9](?:[A-Z][A-Z0-9]{2}[0-9]){1,2}"
-    r"$"
+    r"^(?:"
+    r"[OPQ][0-9][A-Z0-9]{3}[0-9]"
+    r"|[A-NR-Z][0-9](?:[A-Z][A-Z0-9]{2}[0-9]){1,2}"
+    r")$"
 )
 
 _CACHE = cache.TTLCache(default_ttl=CACHE_TTL_SECONDS)
