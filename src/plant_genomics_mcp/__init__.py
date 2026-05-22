@@ -8,4 +8,4 @@ coexpression; TAIR / PlantCyc ship as subscription-gated informational
 stubs. See ``server.py`` for the full tool catalog.
 """
 
-__version__ = "0.7.0"
+__version__ = "0.7.1"

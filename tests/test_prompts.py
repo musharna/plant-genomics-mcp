@@ -112,7 +112,7 @@ async def test_get_prompt_accepts_none_arguments() -> None:
 
 @pytest.mark.asyncio
 async def test_biological_context_renders_chain():
-    result = await prompts.get_prompt("biological_context", {"locus": "AT1G01010"})
+    result = await prompts.get_prompt(prompts.BIOLOGICAL_CONTEXT, {"locus": "AT1G01010"})
     assert "AT1G01010" in result.description
     assert len(result.messages) == 1
     text = result.messages[0].content.text
@@ -128,15 +128,31 @@ async def test_biological_context_renders_chain():
 
 @pytest.mark.asyncio
 async def test_biological_context_top_n_propagates():
-    result = await prompts.get_prompt("biological_context", {"locus": "AT1G01010", "top_n": "30"})
+    result = await prompts.get_prompt(
+        prompts.BIOLOGICAL_CONTEXT, {"locus": "AT1G01010", "top_n": "30"}
+    )
     text = result.messages[0].content.text
     assert "limit=30" in text or "top_n=30" in text
 
 
 @pytest.mark.asyncio
 async def test_biological_context_missing_locus_raises():
-    from plant_genomics_mcp.errors import NotFoundError
-
     with pytest.raises(NotFoundError) as exc:
-        await prompts.get_prompt("biological_context", {})
+        await prompts.get_prompt(prompts.BIOLOGICAL_CONTEXT, {})
     assert "[NotFoundError]" in str(exc.value)
+
+
+@pytest.mark.asyncio
+async def test_biological_context_uses_default_top_n_when_omitted():
+    """Default DEFAULT_TOP_N (int 10) renders as ``limit=10`` / ``top_n=10`` in the chain."""
+    result = await prompts.get_prompt(prompts.BIOLOGICAL_CONTEXT, {"locus": "AT1G01010"})
+    text = result.messages[0].content.text
+    assert "limit=10" in text
+    assert "top_n=10" in text
+    assert result.description.endswith("(top_n=10)")
+
+
+@pytest.mark.asyncio
+async def test_biological_context_bad_top_n_raises_typed():
+    with pytest.raises(NotFoundError, match="top_n 'abc' must be parseable as int"):
+        await prompts.get_prompt(prompts.BIOLOGICAL_CONTEXT, {"locus": "AT1G01010", "top_n": "abc"})

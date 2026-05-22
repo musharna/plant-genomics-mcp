@@ -35,7 +35,7 @@ from plant_genomics_mcp.errors import NotFoundError
 ANALYZE_LOCUS = "analyze_locus"
 FIND_HOMOLOGS = "find_homologs"
 BIOLOGICAL_CONTEXT = "biological_context"
-DEFAULT_TOP_N = "10"
+DEFAULT_TOP_N = 10
 
 DEFAULT_SPECIES = "arabidopsis_thaliana"
 DEFAULT_BLAST_PROGRAM = "blastp"
@@ -227,11 +227,16 @@ async def get_prompt(name: str, arguments: dict[str, str] | None) -> types.GetPr
         locus = args.get("locus")
         if not locus:
             raise NotFoundError(f"prompt {name!r}: missing required argument 'locus'")
-        top_n_raw = args.get("top_n") or DEFAULT_TOP_N
-        try:
-            top_n = int(top_n_raw)
-        except ValueError:
-            raise NotFoundError(f"prompt {name!r}: top_n {top_n_raw!r} must be parseable as int")
+        top_n_raw = args.get("top_n")
+        if top_n_raw is None or top_n_raw == "":
+            top_n = DEFAULT_TOP_N
+        else:
+            try:
+                top_n = int(top_n_raw)
+            except ValueError:
+                raise NotFoundError(
+                    f"prompt {name!r}: top_n {top_n_raw!r} must be parseable as int"
+                )
         text = _render_biological_context(locus, top_n)
         description = f"Biological-context profile for {locus} (top_n={top_n})"
     else:
