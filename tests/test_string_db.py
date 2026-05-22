@@ -7,6 +7,8 @@ first (mirrors v0.6's input-shape detection in resolve_locus_to_uniprot).
 
 from __future__ import annotations
 
+import os
+
 import httpx
 import pytest
 from pytest_httpx import HTTPXMock
@@ -140,3 +142,16 @@ async def test_lookup_partners_empty_array_raises_not_found(httpx_mock: HTTPXMoc
 )
 def test_looks_like_accession(acc, looks_like):
     assert string_db._looks_like_accession(acc) is looks_like
+
+
+@pytest.mark.skipif(
+    not os.environ.get("PLANT_GENOMICS_MCP_LIVE"),
+    reason="set PLANT_GENOMICS_MCP_LIVE=1 to hit string-db.org",
+)
+@pytest.mark.asyncio
+async def test_live_string_q0wv96_has_partners():
+    async with httpx.AsyncClient() as client:
+        result = await string_db.lookup_partners(client, "Q0WV96", limit=5)
+    assert result["accession"] == "Q0WV96"
+    assert len(result["partners"]) > 0
+    assert result["partners"][0]["score"] is not None

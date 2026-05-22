@@ -34,6 +34,7 @@ from plant_genomics_mcp import (
     kegg,
     phytozome,
     quickgo,
+    string_db,
     uniprot,
 )
 from plant_genomics_mcp.errors import PlantGenomicsError
@@ -241,3 +242,16 @@ async def batch_kegg_pathways(
     loci = _bound(loci)
     results, errors = await _gather(loci, lambda locus: kegg.lookup_pathways(client, locus))
     return _envelope("kegg_pathways", loci, results, errors)
+
+
+async def batch_string_interactions(
+    client: httpx.AsyncClient,
+    loci_or_accessions: list[str],
+    limit: int = string_db.DEFAULT_LIMIT,
+) -> dict[str, Any]:
+    loci = _bound(loci_or_accessions)
+    results, errors = await _gather(
+        loci,
+        lambda q: string_db.lookup_partners(client, q, limit=limit),
+    )
+    return _envelope("string_interactions", loci, results, errors)

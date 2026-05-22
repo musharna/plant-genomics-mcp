@@ -274,3 +274,28 @@ async def test_batch_kegg_pathways_mixed(httpx_mock: HTTPXMock):
     assert "AT1G01010" in env["results"]
     assert "ATNOPE" in env["errors"]
     assert "[NotFoundError]" in env["errors"]["ATNOPE"]
+
+
+@pytest.mark.asyncio
+async def test_batch_string_interactions_mixed(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(
+        url=(
+            "https://string-db.org/api/json/interaction_partners"
+            "?identifiers=Q0WV96&species=3702&limit=20"
+            "&caller_identity=plant-genomics-mcp"
+        ),
+        json=[{"stringId_B": "3702.AT3G15500.1", "preferredName_B": "NAC3", "score": 0.8}],
+    )
+    httpx_mock.add_response(
+        url=(
+            "https://string-db.org/api/json/interaction_partners"
+            "?identifiers=Q9LXQ5&species=3702&limit=20"
+            "&caller_identity=plant-genomics-mcp"
+        ),
+        json=[],
+    )
+    async with httpx.AsyncClient() as client:
+        env = await batch.batch_string_interactions(client, ["Q0WV96", "Q9LXQ5"])
+    assert env["count"] == 2
+    assert "Q0WV96" in env["results"]
+    assert "Q9LXQ5" in env["errors"]
