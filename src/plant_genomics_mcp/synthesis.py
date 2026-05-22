@@ -335,34 +335,40 @@ async def find_homologs_synth(
     blast_payload = root.result
     hits = list(blast_payload.get("hits") or [])[:top_n]
 
-    # Phase 2 — extract UniProt-shaped accessions, dedupe, batch-resolve
+    # Phase 2 — extract UniProt-shaped accessions per hit (single pass), dedupe,
+    # batch-resolve. blast._parse_hit_table emits hits keyed on "accession"
+    # (no "subject_id", no "rank"). Rank is positional from the BLAST table.
     notes: list[str] = []
-    accessions: list[str] = []
-    seen: set[str] = set()
+    hit_accessions: list[str | None] = []  # parallel to hits; None = non-UniProt
+    canonical_seen: set[str] = set()
+    to_lookup: list[str] = []
     for hit in hits:
-        acc = _extract_uniprot_accession(hit.get("subject_id", ""))
-        if acc is None:
+        raw_acc = _extract_uniprot_accession(hit.get("accession", ""))
+        hit_accessions.append(raw_acc)
+        if raw_acc is None:
             if "non_uniprot_subject" not in notes:
                 notes.append("non_uniprot_subject")
             continue
-        if acc in seen:
+        # Canonicalize: strip ".N" version suffix so Q0WV96 and Q0WV96.1
+        # collapse to one batch lookup. uniprot._fetch_by_accession strips
+        # the suffix downstream regardless.
+        canonical = raw_acc.split(".", 1)[0]
+        if canonical in canonical_seen:
             continue
-        seen.add(acc)
-        accessions.append(acc)
+        canonical_seen.add(canonical)
+        to_lookup.append(canonical)
 
-    if accessions:
+    if to_lookup:
         lookup_step = await _timed_step(
             2,
             "resolve_locus_to_uniprot",
-            batch.batch_resolve_locus_to_uniprot(client, accessions),
+            batch.batch_resolve_locus_to_uniprot(client, to_lookup),
         )
     else:
-        lookup_step = StepRow(
-            step=2,
-            tool="resolve_locus_to_uniprot",
-            status="ok",
-            elapsed_s=0.0,
-            result={"tool": "resolve_locus_to_uniprot", "count": 0, "results": {}, "errors": {}},
+        lookup_step = _skipped(
+            2,
+            "resolve_locus_to_uniprot",
+            "no UniProt-shaped subjects in BLAST hits",
         )
 
     by_acc: dict[str, dict] = {}
@@ -370,12 +376,12 @@ async def find_homologs_synth(
         by_acc = dict((lookup_step.result or {}).get("results", {}))
 
     ranked = []
-    for hit in hits:
-        acc = _extract_uniprot_accession(hit.get("subject_id", ""))
-        record = by_acc.get(acc) if acc else None
+    for rank, (hit, raw_acc) in enumerate(zip(hits, hit_accessions), start=1):
+        canonical = raw_acc.split(".", 1)[0] if raw_acc else None
+        record = by_acc.get(canonical) if canonical else None
         ranked.append(
             {
-                "rank": hit.get("rank"),
+                "rank": rank,
                 "blast_hit": hit,
                 "uniprot_record": record,
             }
@@ -392,7 +398,7 @@ async def find_homologs_synth(
                 "rid": blast_payload.get("rid"),
                 "program": blast_payload.get("program"),
                 "database": blast_payload.get("database"),
-                "hit_count": blast_payload.get("hit_count"),
+                "hit_count": blast_payload.get("hitCount"),
             },
             "ranked_hits": ranked,
             "notes": notes,
