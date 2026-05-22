@@ -55,3 +55,26 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Compute image tags (http)
+        id: meta_http
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/plant-genomics-mcp-http
+          tags: |
+            type=ref,event=branch,suffix=,enable=${{ github.ref == 'refs/heads/main' }},value=edge
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+
+      - name: Build and push (http)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.http
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta_http.outputs.tags }}
+          labels: ${{ steps.meta_http.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
