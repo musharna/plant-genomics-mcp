@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 import httpx
 import pytest
 from pytest_httpx import HTTPXMock
@@ -119,3 +121,18 @@ async def test_lookup_coexpression_500_exhausts(httpx_mock: HTTPXMock):
     async with httpx.AsyncClient() as client:
         with pytest.raises(UpstreamUnavailableError):
             await atted.lookup_coexpression(client, "AT1G01010")
+
+
+@pytest.mark.skipif(
+    not os.environ.get("PLANT_GENOMICS_MCP_LIVE"),
+    reason="set PLANT_GENOMICS_MCP_LIVE=1 to hit atted.jp",
+)
+@pytest.mark.asyncio
+async def test_live_atted_at1g01010_has_neighbors():
+    async with httpx.AsyncClient() as client:
+        result = await atted.lookup_coexpression(client, "AT1G01010", top_n=5)
+    assert result["locus"] == "AT1G01010"
+    assert result["atted_release"] == atted.ATTED_RELEASE
+    assert len(result["neighbors"]) > 0
+    assert result["neighbors"][0]["z_score"] is not None
+    assert result["neighbors"][0]["locus"]

@@ -28,6 +28,7 @@ from typing import Any, Awaitable, Callable
 import httpx
 
 from plant_genomics_mcp import (
+    atted,
     ensembl_plants,
     europe_pmc,
     gramene,
@@ -255,3 +256,15 @@ async def batch_string_interactions(
         lambda q: string_db.lookup_partners(client, q, limit=limit),
     )
     return _envelope("string_interactions", loci, results, errors)
+
+
+async def batch_atted_coexpression(
+    client: httpx.AsyncClient,
+    loci: list[str],
+    top_n: int = atted.DEFAULT_TOP_N,
+) -> dict[str, Any]:
+    loci = _bound(loci)
+    results, errors = await _gather(
+        loci, lambda locus: atted.lookup_coexpression(client, locus, top_n=top_n)
+    )
+    return _envelope("atted_coexpression", loci, results, errors)

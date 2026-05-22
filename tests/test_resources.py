@@ -34,6 +34,7 @@ async def test_read_cache_stats_returns_per_backend_rollup() -> None:
     assert item.mime_type == "application/json"
     payload = json.loads(item.content)
     assert set(payload) == {
+        "atted",
         "ensembl_plants",
         "europe_pmc",
         "gramene",
@@ -66,6 +67,7 @@ async def test_read_backends_status_lists_live_and_stub_backends() -> None:
     by_name = {entry["name"]: entry for entry in payload}
     # Live backends.
     for name in (
+        "atted",
         "ensembl_plants",
         "phytozome",
         "uniprot",

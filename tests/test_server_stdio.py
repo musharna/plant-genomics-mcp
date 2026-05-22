@@ -4,7 +4,7 @@ This is a real-execution check, not a unit test. It verifies that the
 ``plant-genomics-mcp`` console script:
 
   1. Accepts the MCP ``initialize`` handshake over stdio.
-  2. Advertises 21 tools via ``list_tools``, all with non-empty descriptions
+  2. Advertises 23 tools via ``list_tools``, all with non-empty descriptions
      and a non-empty ``outputSchema``.
   3. Advertises 2 prompts via ``list_prompts`` with required-arg flags
      preserved on the wire.
@@ -69,6 +69,7 @@ async def test_initialize_and_list_tools(server_params: StdioServerParameters) -
                 "gramene_homologs",
                 "kegg_pathways",
                 "string_interactions",
+                "atted_coexpression",
                 "tair_locus_info",
                 "plantcyc_locus_info",
                 "blast_sequence",
@@ -81,6 +82,7 @@ async def test_initialize_and_list_tools(server_params: StdioServerParameters) -
                 "batch_gramene_homologs",
                 "batch_kegg_pathways",
                 "batch_string_interactions",
+                "batch_atted_coexpression",
             }, f"got {names}"
 
             # Every tool publishes an outputSchema (P0.1).

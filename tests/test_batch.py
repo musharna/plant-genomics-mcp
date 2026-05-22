@@ -299,3 +299,33 @@ async def test_batch_string_interactions_mixed(httpx_mock: HTTPXMock):
     assert env["count"] == 2
     assert "Q0WV96" in env["results"]
     assert "Q9LXQ5" in env["errors"]
+
+
+@pytest.mark.asyncio
+async def test_batch_atted_coexpression_mixed(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(
+        url="https://atted.jp/api5/?gene=AT1G01010&topN=25&db=Ath-u.c4-0",
+        json={
+            "request": {"query_id": "AT1G01010", "topN": 25},
+            "result_set": [
+                {
+                    "entrez_gene_id": 839580,
+                    "type": "z",
+                    "results": [{"gene": 842367, "other_id": ["At4g36990"], "z": 4.58}],
+                    "other_id": "At1g01010",
+                }
+            ],
+        },
+    )
+    httpx_mock.add_response(
+        url="https://atted.jp/api5/?gene=ATNOPE&topN=25&db=Ath-u.c4-0",
+        json={
+            "request": {"query_id": "ATNOPE"},
+            "result_set": [{"entrez_gene_id": 0, "type": "z", "results": [], "other_id": "ATNOPE"}],
+        },
+    )
+    async with httpx.AsyncClient() as client:
+        env = await batch.batch_atted_coexpression(client, ["AT1G01010", "ATNOPE"])
+    assert env["count"] == 2
+    assert "AT1G01010" in env["results"]
+    assert "ATNOPE" in env["errors"]

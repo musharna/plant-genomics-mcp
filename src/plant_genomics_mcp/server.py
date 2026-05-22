@@ -43,6 +43,7 @@ from mcp.server.stdio import stdio_server
 from pydantic import AnyUrl
 
 from plant_genomics_mcp import (
+    atted,
     batch,
     blast,
     ensembl_plants,
@@ -60,6 +61,7 @@ from plant_genomics_mcp import (
     uniprot,
 )
 from plant_genomics_mcp.models import (
+    AttedCoexpression,
     BatchEnvelope,
     BlastResult,
     EnsemblPlantsLocus,
@@ -779,6 +781,53 @@ TOOLS: list[types.Tool] = [
         outputSchema=BatchEnvelope.model_json_schema(),
         _meta=_EDAM,
     ),
+    types.Tool(
+        name="atted_coexpression",
+        description=(
+            "Fetch co-expressed gene neighbors from ATTED-II (atted.jp, "
+            "API v5, Ath-u.c4-0 release) for an Arabidopsis locus. Returns "
+            "top_n neighbors with target locus + NCBI Entrez gene ID + "
+            "z-score (higher = stronger coexpression). Pairs with "
+            "string_interactions to surface high-confidence functional "
+            "partners (interactors that are also coexpressed)."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "Arabidopsis AGI locus, e.g. AT1G01010",
+                },
+                "top_n": {
+                    "type": "integer",
+                    "default": 25,
+                    "minimum": 1,
+                    "maximum": 300,
+                },
+            },
+            "required": ["locus"],
+        },
+        outputSchema=AttedCoexpression.model_json_schema(),
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="batch_atted_coexpression",
+        description="Batch version of atted_coexpression. Up to 50 loci per call.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "loci": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "maxItems": 50,
+                },
+                "top_n": {"type": "integer", "default": 25, "minimum": 1, "maximum": 300},
+            },
+            "required": ["loci"],
+        },
+        outputSchema=BatchEnvelope.model_json_schema(),
+        _meta=_EDAM,
+    ),
 ]
 
 
@@ -965,6 +1014,18 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     client,
                     args["locus_or_accession"],
                     limit=args.get("limit", string_db.DEFAULT_LIMIT),
+                )
+            case "atted_coexpression":
+                return await atted.lookup_coexpression(
+                    client,
+                    args["locus"],
+                    top_n=args.get("top_n", atted.DEFAULT_TOP_N),
+                )
+            case "batch_atted_coexpression":
+                return await batch.batch_atted_coexpression(
+                    client,
+                    args["loci"],
+                    top_n=args.get("top_n", atted.DEFAULT_TOP_N),
                 )
             case "gramene_homologs":
                 return await gramene.lookup_homologs(
