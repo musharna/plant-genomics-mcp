@@ -65,6 +65,7 @@ from plant_genomics_mcp import (
     quickgo,
     resources,
     string_db,
+    synthesis,
     tair,
     uniprot,
 )
@@ -81,6 +82,7 @@ from plant_genomics_mcp.models import (
     PhytozomeLocus,
     PlantCycLocusInfo,
     StringInteractions,
+    SynthesisEnvelope,
     TairLocusInfo,
     UniProtLocus,
 )
@@ -150,6 +152,21 @@ _EDAM_BLAST = {
     "edam": {
         "operation": ["operation_0292"],  # Sequence alignment
         "topic": ["topic_0182", "topic_0080"],  # Sequence analysis, Sequence sites
+    },
+}
+
+# Synthesis tools compose multiple backends and don't fit a single EDAM
+# operation, so we list all three operations the orchestrator covers.
+# Topic stays on Plant biology + Functional genomics — the synthesis
+# layer is most often used for functional context.
+_EDAM_SYNTHESIS = {
+    "edam": {
+        "operation": [
+            "operation_0224",  # Query and retrieval
+            "operation_2424",  # Comparison
+            "operation_2422",  # Data retrieval
+        ],
+        "topic": ["topic_0780", "topic_0085"],  # Plant biology, Functional genomics
     },
 }
 
@@ -836,6 +853,104 @@ TOOLS: list[types.Tool] = [
         outputSchema=BatchEnvelope.model_json_schema(),
         _meta=_EDAM,
     ),
+    types.Tool(
+        name="analyze_locus_synth",
+        description=(
+            "Synthesis: one-call equivalent of the analyze_locus prompt. "
+            "Resolves a locus through Ensembl Plants, then fans out to xrefs, "
+            "UniProt, Europe PMC, and QuickGO in parallel. Returns a "
+            "SynthesisEnvelope with per-step status and a reconciled summary "
+            "flagging cross-source name/accession disagreements."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {"type": "string", "description": "Locus name, e.g. AT1G01010"},
+                "species": {
+                    "type": "string",
+                    "default": "arabidopsis_thaliana",
+                    "description": "Ensembl Plants species slug",
+                },
+            },
+            "required": ["locus"],
+            "additionalProperties": False,
+        },
+        outputSchema=SynthesisEnvelope.model_json_schema(),
+        _meta=_EDAM_SYNTHESIS,
+    ),
+    types.Tool(
+        name="find_homologs_synth",
+        description=(
+            "Synthesis: one-call equivalent of the find_homologs prompt. "
+            "Runs BLAST then resolves UniProt-shaped subject accessions via "
+            "the batch UniProt helper. Returns ranked hits each annotated with "
+            "their UniProt record (or null if subject_id is not a UniProt "
+            "accession)."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "sequence": {
+                    "type": "string",
+                    "description": "Query sequence (protein or nucleotide)",
+                },
+                "program": {
+                    "type": "string",
+                    "enum": ["blastn", "blastp", "blastx", "tblastn", "tblastx"],
+                    "default": "blastp",
+                },
+                "top_n": {"type": "integer", "minimum": 1, "maximum": 50, "default": 10},
+            },
+            "required": ["sequence"],
+            "additionalProperties": False,
+        },
+        outputSchema=SynthesisEnvelope.model_json_schema(),
+        _meta=_EDAM_SYNTHESIS,
+    ),
+    types.Tool(
+        name="biological_context_synth",
+        description=(
+            "Synthesis: one-call equivalent of the biological_context prompt. "
+            "Resolves UniProt accession, then fans out to Gramene homologs, "
+            "KEGG pathways, STRING-DB partners, and ATTED-II coexpression in "
+            "parallel. Adds a consensus_partners ranking that merges STRING + "
+            "ATTED scores."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {"type": "string"},
+                "species": {"type": "string", "default": "arabidopsis_thaliana"},
+                "top_n": {"type": "integer", "minimum": 1, "maximum": 50, "default": 10},
+            },
+            "required": ["locus"],
+            "additionalProperties": False,
+        },
+        outputSchema=SynthesisEnvelope.model_json_schema(),
+        _meta=_EDAM_SYNTHESIS,
+    ),
+    types.Tool(
+        name="consensus_homologs",
+        description=(
+            "Synthesis: cross-source homology consensus. Resolves UniProt + "
+            "FASTA sequence, then runs Gramene homology calls and NCBI BLAST "
+            "in parallel. Dedupes hits by normalized locus token and scores "
+            "by n_sources * mean_identity — Gramene contributes identity=1.0, "
+            "BLAST contributes pident/100."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {"type": "string"},
+                "species": {"type": "string", "default": "arabidopsis_thaliana"},
+                "top_n": {"type": "integer", "minimum": 1, "maximum": 50, "default": 10},
+            },
+            "required": ["locus"],
+            "additionalProperties": False,
+        },
+        outputSchema=SynthesisEnvelope.model_json_schema(),
+        _meta=_EDAM_SYNTHESIS,
+    ),
 ]
 
 
@@ -1041,6 +1156,37 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     args["locus"],
                     homology_type=args.get("homology_type", "ortholog"),
                 )
+            case "analyze_locus_synth":
+                env = await synthesis.analyze_locus_synth(
+                    client,
+                    args["locus"],
+                    species=args.get("species", "arabidopsis_thaliana"),
+                )
+                return env.model_dump()
+            case "find_homologs_synth":
+                env = await synthesis.find_homologs_synth(
+                    client,
+                    args["sequence"],
+                    program=args.get("program", "blastp"),
+                    top_n=args.get("top_n", 10),
+                )
+                return env.model_dump()
+            case "biological_context_synth":
+                env = await synthesis.biological_context_synth(
+                    client,
+                    args["locus"],
+                    species=args.get("species", "arabidopsis_thaliana"),
+                    top_n=args.get("top_n", 10),
+                )
+                return env.model_dump()
+            case "consensus_homologs":
+                env = await synthesis.consensus_homologs(
+                    client,
+                    args["locus"],
+                    species=args.get("species", "arabidopsis_thaliana"),
+                    top_n=args.get("top_n", 10),
+                )
+                return env.model_dump()
             case _:
                 raise ValueError(f"unknown tool: {name}")
 
