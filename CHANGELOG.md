@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.8.1 — 2026-05-22
+
+Hosted endpoint release — no new tools or backends. Adds a public Streamable-HTTP deployment so MCP clients and registry indexers can connect without cloning the repo. Image published to GHCR as a parallel artifact alongside the existing stdio image.
+
+- **`GET /healthz` route** added to `server_http.build_app()` ahead of the `/mcp` mount. Returns `200 {"status":"ok","version":<__version__>}`. No new dependency, no MCP-protocol entanglement — drop-in target for Uptime Kuma, Diun, or curl-in-cron.
+- **`Dockerfile.http` + `ghcr.io/mjarnold/plant-genomics-mcp-http`** new image (two-stage builder + slim runtime, non-root mcp uid 10001, EXPOSE 8765, ENTRYPOINT `plant-genomics-mcp-http`). The existing `plant-genomics-mcp` stdio image is unchanged.
+- **`.github/workflows/docker.yml` publishes both images** from the same trigger via parallel `metadata-action` + `build-push-action` steps sharing the buildx GHA cache. Same tag policy on both — push to `main` → `:edge`; semver tag → `:vX.Y.Z` + `:vX.Y` + `:latest`.
+- **Hosted instance** at `https://mjarnoldgt76.tail86d19d.ts.net/mcp` (Tailscale Funnel → gt76 → Docker on `127.0.0.1:8765`). Open access — no token, no IP allowlist; upstream backends self-rate-limit. Best-effort uptime, demo-grade. README has the full `claude mcp add` recipe.
+
 ## v0.8.0 — 2026-05-22
 
 P3.5 closeout — synthesis layer. Adds 4 MCP tools that compose the v0.7 live backends in parallel and reconcile cross-source results, with per-step `SynthesisEnvelope` accounting. No new backend integrations this release; v0.9 adds multi-organism resolution and v0.10 brings sequence + structure backends. Server surface grows 23 → 27 tools.
