@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## v0.7.0 — 2026-05-21
+
+P3 closeout — bio-breadth release. Adds four new biological-context backends (Gramene homology, KEGG pathways, STRING interactions, ATTED-II coexpression) with batch variants, a `biological_context` MCP prompt that chains them, and a third real-execution proof transcript. Server surface grows 15 → 23 tools, 2 → 3 prompts. Arabidopsis-only this release; fallback backends (OMA, Reactome, IntAct, EBI Expression Atlas) and multi-organism resolver layer defer to v0.8.
+
+- **`gramene_homologs` + `batch_gramene_homologs`** (P3.1-P3.5): async httpx client for `data.gramene.org/v69/genes?fl=homology`. Returns ortholog / paralog / all entries with target locus + homology category (ortholog_one2one / ortholog_one2many / ortholog_many2many / within_species_paralog / between_species_paralog) + Gramene gene_tree_id; the `fl=homology` projection does not carry per-row taxon, identity, protein ID, dn/ds, or goc_score. 24h cache TTL (Gramene v69 is a frozen release). Live-gated regression test (`PLANT_GENOMICS_MCP_LIVE=1`) hits the real endpoint.
+- **`kegg_pathways` + `batch_kegg_pathways`** (P3.6-P3.8): two-call sequence against `rest.kegg.jp` — `/link/pathway/ath:{locus}` then `/get/path:athNNNNN` per pathway. Parses KEGG's flat-file format. Per-pathway step-2 failures land in inline `errors[]` rather than aborting the call. 24h cache TTL.
+- **`string_interactions` + `batch_string_interactions`** (P3.9-P3.11): STRING-DB `/api/json/interaction_partners` with input-shape dispatch (accepts UniProt accession or Arabidopsis locus; locus input resolves via `resolve_locus_to_uniprot` first). Returns first-neighbor partners with combined STRING score plus per-channel `escore`/`dscore`/`tscore`/`pscore`. `caller_identity=plant-genomics-mcp` etiquette parameter. 1h cache TTL.
+- **`atted_coexpression` + `batch_atted_coexpression`** (P3.12-P3.14): ATTED-II `/api5/?gene={locus}&topN={n}&db=Ath-u.c4-0` against the tissue-aggregated Arabidopsis release (API v5). Returns co-expression neighbors with locus + Entrez gene ID + z-score (higher = stronger coex). Friendly User-Agent header. 24h cache TTL.
+- **`biological_context` MCP prompt** (P3.15): third parameterized prompt. Args: `locus` (required), `top_n` (optional, default 10). Renders a 5-tool chain: gramene_homologs → kegg_pathways → resolve_locus_to_uniprot → string_interactions → atted_coexpression. Synthesis instructions cross-reference the three result sets to surface high-confidence functional partners (interactors that are also coexpressed).
+- **Real-execution proof transcript** (P3.16): `examples/biological_context_AT1G01010.{json,md}` captures the full chain against live upstreams, in the same shape as the v0.6 `analyze_locus` and `find_homologs` transcripts. Doubles as a real-execution smoke that mocked unit tests can't replace.
+- **Resources updated**: `pgmcp://cache/stats` now enumerates 9 backends (was 5); `pgmcp://backends/status` lists the 4 new backends with `kind=live`, `subscription_gated=false`. No new exception classes — existing `NotFoundError` / `RateLimitError` / `UpstreamUnavailableError` cover all 4 new backends.
+
 ## v0.6.0 — 2026-05-21
 
 P2 closeout — adds `blast_sequence`, MCP resources + prompts primitives, subscription-token config slots, live-verified Phytozome organism IDs, and verbatim real-execution transcripts of both `prompts/get` chains (which surfaced + fixed two latent bugs in the BLAST parser and UniProt accession-input dispatch).

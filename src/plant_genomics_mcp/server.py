@@ -1,7 +1,7 @@
 """MCP server entry point — exposes plant genomics tools over stdio.
 
-This dispatch ships fifteen tools — eight single-locus, one BLAST
-sequence-similarity search, plus six batch variants that fan out
+This dispatch ships twenty-three tools — twelve single-locus, one BLAST
+sequence-similarity search, plus ten batch variants that fan out
 per-locus calls in parallel:
 
   - ``ensembl_plants_lookup_locus``       — Ensembl Plants REST (live)
@@ -11,6 +11,10 @@ per-locus calls in parallel:
   - ``locus_literature``                  — Europe PMC search (live)
   - ``locus_go_annotations``              — QuickGO GO annotations (live, locus→UniProt→QuickGO)
   - ``blast_sequence``                    — NCBI BLAST URLAPI (live, async Put/Get polling)
+  - ``gramene_homologs``                  — Gramene v69 homology (live, ortholog/paralog + gene_tree_id)
+  - ``kegg_pathways``                     — KEGG pathway memberships (live, ath: orgcode)
+  - ``string_interactions``               — STRING-DB first-neighbor partners (live, per-channel scores)
+  - ``atted_coexpression``                — ATTED-II Ath-u.c4-0 coexpression (live, z-scores)
   - ``tair_locus_info``                   — informational stub (subscription-gated)
   - ``plantcyc_locus_info``               — informational stub (subscription-gated)
   - ``batch_ensembl_plants_lookup_locus`` — Ensembl Plants POST /lookup/id (one round-trip)
@@ -19,6 +23,10 @@ per-locus calls in parallel:
   - ``batch_resolve_locus_to_uniprot``    — gather over resolve_locus_to_uniprot
   - ``batch_locus_literature``            — gather over locus_literature
   - ``batch_locus_go_annotations``        — gather over locus_go_annotations
+  - ``batch_gramene_homologs``            — gather over gramene_homologs
+  - ``batch_kegg_pathways``               — gather over kegg_pathways
+  - ``batch_string_interactions``         — gather over string_interactions
+  - ``batch_atted_coexpression``          — gather over atted_coexpression
 
 The TAIR and PlantCyc stubs are pure-data — both backends gate their free
 per-locus REST APIs behind paid subscriptions (Phoenix Bioinformatics for
