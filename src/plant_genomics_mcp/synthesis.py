@@ -26,6 +26,7 @@ from typing import Any
 import httpx
 
 from plant_genomics_mcp import (
+    blast,
     ensembl_plants,
     europe_pmc,
     quickgo,
@@ -280,3 +281,147 @@ def _reconcile_analyze(
         "best_uniprot_accession": best_uniprot_accession,
         "conflict_flags": conflict_flags,
     }
+
+
+# ---------------------------------------------------------------------------
+# 4.2 find_homologs_synth
+# ---------------------------------------------------------------------------
+
+from plant_genomics_mcp import batch  # late import to avoid circular
+
+
+_BLAST_PROGRAMS = {"blastn", "blastp", "blastx", "tblastn", "tblastx"}
+
+
+async def find_homologs_synth(
+    client: httpx.AsyncClient,
+    sequence: str,
+    program: str = "blastp",
+    top_n: int = DEFAULT_TOP_N,
+) -> SynthesisEnvelope:
+    """Mirror the find_homologs prompt: BLAST + UniProt lookup of subject accessions.
+
+    Phase 1: blast.blast_sequence (hitlist=top_n)
+    Phase 2: batch_resolve_locus_to_uniprot over deduped UniProt-shaped subjects
+    """
+    if program not in _BLAST_PROGRAMS:
+        raise ValueError(f"program {program!r} not in {sorted(_BLAST_PROGRAMS)}")
+    top_n = _bound_top_n(top_n)
+    started_at = _now_iso()
+    t0 = time.perf_counter()
+    input_args = {"sequence_length": len(sequence), "program": program, "top_n": top_n}
+
+    # Phase 1 — BLAST
+    root = await _timed_step(
+        1,
+        "blast_sequence",
+        blast.blast_sequence(client, sequence, program=program, hitlist_size=top_n),
+    )
+    if root.status != "ok":
+        return SynthesisEnvelope(
+            tool="find_homologs_synth",
+            input=input_args,
+            started_at=started_at,
+            elapsed_s=time.perf_counter() - t0,
+            steps=[
+                root,
+                _skipped(
+                    2, "resolve_locus_to_uniprot", "phase-1 BLAST failed; subject lookup skipped"
+                ),
+            ],
+            result=None,
+        )
+
+    blast_payload = root.result
+    hits = list(blast_payload.get("hits") or [])[:top_n]
+
+    # Phase 2 — extract UniProt-shaped accessions, dedupe, batch-resolve
+    notes: list[str] = []
+    accessions: list[str] = []
+    seen: set[str] = set()
+    for hit in hits:
+        acc = _extract_uniprot_accession(hit.get("subject_id", ""))
+        if acc is None:
+            if "non_uniprot_subject" not in notes:
+                notes.append("non_uniprot_subject")
+            continue
+        if acc in seen:
+            continue
+        seen.add(acc)
+        accessions.append(acc)
+
+    if accessions:
+        lookup_step = await _timed_step(
+            2,
+            "resolve_locus_to_uniprot",
+            batch.batch_resolve_locus_to_uniprot(client, accessions),
+        )
+    else:
+        lookup_step = StepRow(
+            step=2,
+            tool="resolve_locus_to_uniprot",
+            status="ok",
+            elapsed_s=0.0,
+            result={"tool": "resolve_locus_to_uniprot", "count": 0, "results": {}, "errors": {}},
+        )
+
+    by_acc: dict[str, dict] = {}
+    if lookup_step.status == "ok":
+        by_acc = dict((lookup_step.result or {}).get("results", {}))
+
+    ranked = []
+    for hit in hits:
+        acc = _extract_uniprot_accession(hit.get("subject_id", ""))
+        record = by_acc.get(acc) if acc else None
+        ranked.append(
+            {
+                "rank": hit.get("rank"),
+                "blast_hit": hit,
+                "uniprot_record": record,
+            }
+        )
+
+    return SynthesisEnvelope(
+        tool="find_homologs_synth",
+        input=input_args,
+        started_at=started_at,
+        elapsed_s=time.perf_counter() - t0,
+        steps=[root, lookup_step],
+        result={
+            "blast": {
+                "rid": blast_payload.get("rid"),
+                "program": blast_payload.get("program"),
+                "database": blast_payload.get("database"),
+                "hit_count": blast_payload.get("hit_count"),
+            },
+            "ranked_hits": ranked,
+            "notes": notes,
+        },
+    )
+
+
+# UniProt accession syntax — same regex shape uniprot._looks_like_uniprot_accession uses.
+# Subject IDs come in many forms; we look for the accession token where possible.
+import re as _re
+
+_UNIPROT_ACCESSION_TOKEN = _re.compile(
+    r"\b(?:[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9](?:[A-Z][A-Z0-9]{2}[0-9]){1,2})(?:\.[0-9]+)?\b"
+)
+
+
+def _extract_uniprot_accession(subject_id: str) -> str | None:
+    """Pull a UniProtKB accession out of a BLAST subject_id, or None.
+
+    Handles forms NCBI BLAST emits in plant searches:
+      - ``sp|Q0WV96.1|Y_ARATH`` / ``tr|A0A1B2C3D4|X_ARATH``  — Swiss-Prot / TrEMBL
+      - ``Q0WV96`` / ``Q0WV96.1``                              — bare accession
+      - Plant-specific locus IDs (e.g. ``AT1G01010.1``) → return None.
+
+    The bare regex above matches an accession anywhere in the string, so we
+    pick the first match. ``.N`` version suffix is preserved and stripped by
+    downstream uniprot._fetch_by_accession.
+    """
+    if not subject_id:
+        return None
+    m = _UNIPROT_ACCESSION_TOKEN.search(subject_id)
+    return m.group(0) if m else None
