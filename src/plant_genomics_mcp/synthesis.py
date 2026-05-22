@@ -26,10 +26,14 @@ from typing import Any
 import httpx
 
 from plant_genomics_mcp import (
+    atted,
     blast,
     ensembl_plants,
     europe_pmc,
+    gramene,
+    kegg,
     quickgo,
+    string_db,
     uniprot,
 )
 from plant_genomics_mcp.errors import PlantGenomicsError
@@ -431,3 +435,186 @@ def _extract_uniprot_accession(subject_id: str) -> str | None:
         return None
     m = _UNIPROT_ACCESSION_TOKEN.search(subject_id)
     return m.group(0) if m else None
+
+
+# ---------------------------------------------------------------------------
+# 4.3 biological_context_synth
+# ---------------------------------------------------------------------------
+
+
+async def biological_context_synth(
+    client: httpx.AsyncClient,
+    locus: str,
+    species: str = DEFAULT_SPECIES,
+    top_n: int = DEFAULT_TOP_N,
+) -> SynthesisEnvelope:
+    """Mirror the biological_context prompt: gramene + KEGG + STRING + ATTED.
+
+    Phase 1: uniprot.lookup_locus (need accession for STRING).
+    Phase 2 (gather): gramene.homologs, kegg.pathways, string_db.partners,
+                      atted.coexpression.
+
+    Phase-1 failure skips all of phase 2 — keeps envelope atomic (either
+    complete coordinated result set or unambiguous root failure). Per spec 4.3.
+
+    Per-backend signatures verified against live source 2026-05-22:
+      - gramene.lookup_homologs(client, locus, homology_type="ortholog") — no species/top_n
+      - kegg.lookup_pathways(client, locus) — no species (ath-only)
+      - string_db.lookup_partners(client, locus_or_accession, limit=..., organism_taxid=...)
+        Passing the uniprot accession bypasses the internal locus→accession
+        re-resolution (string_db.py:144 _looks_like_accession path).
+      - atted.lookup_coexpression(client, locus, top_n=...) — no species (Ath-only upstream).
+    """
+    top_n = _bound_top_n(top_n)
+    started_at = _now_iso()
+    t0 = time.perf_counter()
+    input_args = {"locus": locus, "species": species, "top_n": top_n}
+    taxon_id = uniprot.KNOWN_TAXA.get(species, uniprot.DEFAULT_TAXON_ID)
+
+    # Phase 1 — UniProt for accession
+    root = await _timed_step(
+        1,
+        "resolve_locus_to_uniprot",
+        uniprot.lookup_locus(client, locus, organism_id=taxon_id),
+    )
+    if root.status != "ok":
+        skip_reason = "phase-1 UniProt resolution failed; downstream calls skipped"
+        return SynthesisEnvelope(
+            tool="biological_context_synth",
+            input=input_args,
+            started_at=started_at,
+            elapsed_s=time.perf_counter() - t0,
+            steps=[
+                root,
+                _skipped(2, "gramene_homologs", skip_reason),
+                _skipped(3, "kegg_pathways", skip_reason),
+                _skipped(4, "string_interactions", skip_reason),
+                _skipped(5, "atted_coexpression", skip_reason),
+            ],
+            result=None,
+        )
+
+    uniprot_acc = root.result["primaryAccession"]
+
+    p2 = await _gather_phase2(
+        [
+            (2, "gramene_homologs", gramene.lookup_homologs(client, locus)),
+            (3, "kegg_pathways", kegg.lookup_pathways(client, locus)),
+            (
+                4,
+                "string_interactions",
+                string_db.lookup_partners(
+                    client, uniprot_acc, limit=top_n, organism_taxid=taxon_id
+                ),
+            ),
+            (5, "atted_coexpression", atted.lookup_coexpression(client, locus, top_n=top_n)),
+        ]
+    )
+    gramene_row, kegg_row, string_row, atted_row = p2
+
+    def _ok(row: StepRow) -> Any:
+        return row.result if row.status == "ok" else None
+
+    consensus = _consensus_partners(
+        string_payload=_ok(string_row),
+        atted_payload=_ok(atted_row),
+        top_n=top_n,
+    )
+
+    return SynthesisEnvelope(
+        tool="biological_context_synth",
+        input=input_args,
+        started_at=started_at,
+        elapsed_s=time.perf_counter() - t0,
+        steps=[root, *p2],
+        result={
+            "uniprot_accession": uniprot_acc,
+            "homologs": _ok(gramene_row),
+            "pathways": _ok(kegg_row),
+            "string_partners": _ok(string_row),
+            "atted_coexpression": _ok(atted_row),
+            "consensus_partners": consensus,
+        },
+    )
+
+
+def _string_partner_locus(string_id: str | None) -> str | None:
+    """Strip the taxid prefix + transcript suffix from STRING's <taxid>.<locus>.<N>.
+
+    STRING-DB's stringId_B for Arabidopsis is ``3702.AT3G15500.1``; we
+    surface the bare locus (``AT3G15500``) so it can merge with ATTED's
+    ``locus`` field. Returns the input unchanged when it doesn't look
+    taxid-prefixed.
+    """
+    if not string_id:
+        return None
+    parts = string_id.split(".", 2)
+    if len(parts) >= 2 and parts[0].isdigit():
+        return parts[1]
+    return string_id
+
+
+def _consensus_partners(
+    string_payload: dict | None,
+    atted_payload: dict | None,
+    top_n: int,
+) -> list[dict]:
+    """Rank-merge STRING partners + ATTED coexpression neighbors.
+
+    Live-shape consumption (verified 2026-05-22 against backend modules):
+      - STRING normalized partners carry ``string_id`` (``<taxid>.<locus>.<N>``)
+        and ``score`` (combined_score, already 0-1).
+      - ATTED normalized neighbors carry ``locus`` and ``z_score`` (NOT
+        ``mr`` — atted._normalize does not emit a mutual_rank field).
+
+    Scoring:
+      STRING combined_score already 0-1.
+      ATTED z-score normalized via ``z / (1 + z)`` → bounded 0-1
+        (z=3 → 0.75, z=5 → 0.83, z=10 → 0.91).
+      combined_score = mean(normalized_scores across sources).
+      sort by (n_sources desc, combined_score desc, target_locus asc), top-N.
+    """
+    scores: dict[str, dict[str, Any]] = {}
+
+    if string_payload:
+        for p in string_payload.get("partners") or []:
+            locus = _string_partner_locus(p.get("string_id"))
+            if not locus:
+                continue
+            score = float(p.get("score") or 0.0)  # combined_score, already 0-1
+            entry = scores.setdefault(
+                locus, {"target_locus": locus, "sources": [], "normalized": []}
+            )
+            if "string" not in entry["sources"]:
+                entry["sources"].append("string")
+                entry["normalized"].append(score)
+
+    if atted_payload:
+        for n in atted_payload.get("neighbors") or []:
+            locus = n.get("locus")
+            if not locus:
+                continue
+            z = float(n.get("z_score") or 0.0)
+            normalized = z / (1.0 + z) if z > 0 else 0.0
+            entry = scores.setdefault(
+                locus, {"target_locus": locus, "sources": [], "normalized": []}
+            )
+            if "atted" not in entry["sources"]:
+                entry["sources"].append("atted")
+                entry["normalized"].append(normalized)
+
+    out: list[dict] = []
+    for locus, entry in scores.items():
+        if not entry["normalized"]:
+            continue
+        combined = sum(entry["normalized"]) / len(entry["normalized"])
+        out.append(
+            {
+                "target_locus": locus,
+                "n_sources": len(entry["sources"]),
+                "combined_score": round(combined, 4),
+                "sources": list(entry["sources"]),
+            }
+        )
+    out.sort(key=lambda d: (-d["n_sources"], -d["combined_score"], d["target_locus"]))
+    return out[:top_n]
