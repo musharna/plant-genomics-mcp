@@ -27,7 +27,7 @@ from typing import Any, Awaitable, Callable
 
 import httpx
 
-from plant_genomics_mcp import ensembl_plants, europe_pmc, phytozome, quickgo, uniprot
+from plant_genomics_mcp import ensembl_plants, europe_pmc, gramene, phytozome, quickgo, uniprot
 from plant_genomics_mcp.errors import PlantGenomicsError
 
 MAX_BATCH = 50  # bound the wire payload; matches Ensembl's documented limit
@@ -211,3 +211,16 @@ async def batch_locus_go_annotations(
 
     results, errors = await _gather(loci, _one)
     return _envelope("locus_go_annotations", loci, results, errors)
+
+
+async def batch_gramene_homologs(
+    client: httpx.AsyncClient,
+    loci: list[str],
+    homology_type: str = "ortholog",
+) -> dict[str, Any]:
+    loci = _bound(loci)
+    results, errors = await _gather(
+        loci,
+        lambda locus: gramene.lookup_homologs(client, locus, homology_type=homology_type),
+    )
+    return _envelope("gramene_homologs", loci, results, errors)

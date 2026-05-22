@@ -223,3 +223,31 @@ async def test_live_batch_ensembl_at1g01010_plus_miss() -> None:
     assert result["results"]["AT1G01010"]["display_name"] == "NAC001"
     assert "AT9G99999" in result["errors"]
     assert result["errors"]["AT9G99999"].startswith("[NotFoundError]")
+
+
+@pytest.mark.asyncio
+async def test_batch_gramene_homologs_mixed(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(
+        url="https://data.gramene.org/v69/genes?idList=AT1G01010&fl=homology",
+        json=[
+            {
+                "_id": "AT1G01010",
+                "homology": {
+                    "gene_tree": {"id": "EPlGT01130000406172"},
+                    "homologous_genes": {"ortholog_one2many": ["Os01g0100100"]},
+                },
+            }
+        ],
+    )
+    httpx_mock.add_response(
+        url="https://data.gramene.org/v69/genes?idList=NOPE&fl=homology",
+        json=[],
+    )
+    async with httpx.AsyncClient() as client:
+        env = await batch.batch_gramene_homologs(client, ["AT1G01010", "NOPE"])
+    assert env["tool"] == "gramene_homologs"
+    assert env["count"] == 2
+    assert "AT1G01010" in env["results"]
+    assert env["results"]["AT1G01010"]["total"] == 1
+    assert "NOPE" in env["errors"]
+    assert "[NotFoundError]" in env["errors"]["NOPE"]

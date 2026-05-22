@@ -662,6 +662,33 @@ TOOLS: list[types.Tool] = [
         outputSchema=_BATCH_OUTPUT,
         _meta=_EDAM_GO,
     ),
+    types.Tool(
+        name="batch_gramene_homologs",
+        description=(
+            "Batch version of gramene_homologs. Up to 50 loci per call; "
+            "shares the homology_type filter across all loci. Returns the "
+            "standard batch envelope (count + results dict + errors dict)."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "loci": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "maxItems": 50,
+                    "description": "List of locus identifiers (max 50)",
+                },
+                "homology_type": {
+                    "type": "string",
+                    "enum": ["ortholog", "paralog", "all"],
+                    "default": "ortholog",
+                },
+            },
+            "required": ["loci"],
+        },
+        outputSchema=BatchEnvelope.model_json_schema(),
+        _meta=_EDAM,
+    ),
 ]
 
 
@@ -826,6 +853,12 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     args["loci"],
                     organism_id=args.get("organism_id", uniprot.DEFAULT_TAXON_ID),
                     limit=args.get("limit", quickgo.DEFAULT_LIMIT),
+                )
+            case "batch_gramene_homologs":
+                return await batch.batch_gramene_homologs(
+                    client,
+                    args["loci"],
+                    homology_type=args.get("homology_type", "ortholog"),
                 )
             case "gramene_homologs":
                 return await gramene.lookup_homologs(
