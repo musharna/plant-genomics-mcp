@@ -748,3 +748,254 @@ def test_biological_context_synth_fixtures_match_real_response_shapes():
             "neighbors": [{"locus": "AT4G36990", "entrez_gene_id": 842367, "z_score": 7.0}],
         }
     )
+
+
+@pytest.mark.asyncio
+async def test_consensus_homologs_happy_path(httpx_mock, monkeypatch):
+    # Phase 1.a — uniprot lookup (search endpoint, JSON results)
+    httpx_mock.add_response(
+        url=re.compile(r"https://rest\.uniprot\.org/uniprotkb/search.*"),
+        json={
+            "results": [
+                {
+                    "primaryAccession": "Q0WV96",
+                    "uniProtkbId": "Y_ARATH",
+                    "entryType": "UniProtKB reviewed (Swiss-Prot)",
+                    "proteinDescription": {"recommendedName": {"fullName": {"value": "X"}}},
+                    "genes": [{"geneName": {"value": "NAC001"}}],
+                    "organism": {"scientificName": "Arabidopsis thaliana", "taxonId": 3702},
+                    "sequence": {"length": 429},
+                }
+            ]
+        },
+    )
+    # Phase 1.b — fetch_sequence (FASTA endpoint, plain text)
+    httpx_mock.add_response(
+        url="https://rest.uniprot.org/uniprotkb/Q0WV96.fasta",
+        text=">sp|Q0WV96|Y_ARATH\nMEDQVGFGFRPNDEELVGHYLRNK\n",
+    )
+    # Phase 2.a — Gramene v69 raw response: list[record] with homology block.
+    httpx_mock.add_response(
+        url=re.compile(r"https://data\.gramene\.org/v69/genes.*"),
+        json=[
+            {
+                "homology": {
+                    "gene_tree": {"id": "EPlGT00190000001", "root_taxon_name": "Liliopsida"},
+                    "homologous_genes": {
+                        "ortholog_one2one": ["OS01G0100100"],
+                    },
+                }
+            }
+        ],
+    )
+
+    # Phase 2.b — stub BLAST. Real shape per blast._parse_hit_table + blast_sequence.
+    async def fake_blast(client, sequence, **kw):
+        return {
+            "rid": "FAKE",
+            "program": "blastp",
+            "database": "swissprot",
+            "status": "READY",
+            "hitCount": 1,
+            "hits": [
+                {
+                    "accession": "sp|Q5VMS9.1|Y_ORYSJ",
+                    "description": "Hypothetical protein OS=Oryza sativa GN=Os01g0100100 PE=4 SV=1",
+                    "bit_score": 412.0,
+                    "evalue": 1e-50,
+                    "identity": "78%",
+                }
+            ],
+            "raw_report_excerpt": "",
+            "raw_report_truncated": False,
+            "elapsed_seconds": 0.0,
+        }
+
+    monkeypatch.setattr("plant_genomics_mcp.synthesis.blast.blast_sequence", fake_blast)
+
+    from plant_genomics_mcp.synthesis import consensus_homologs
+
+    async with httpx.AsyncClient() as client:
+        env = await consensus_homologs(client, "AT1G01010", top_n=10)
+
+    assert env.tool == "consensus_homologs"
+    statuses = [s.status for s in env.steps]
+    # Steps: 1=uniprot, 2=fetch_sequence, 3=gramene, 4=blast
+    assert statuses == ["ok", "ok", "ok", "ok"]
+    assert env.result is not None
+    # Step 2 envelope row carries metadata-only payload (not the raw sequence).
+    assert env.steps[1].result == {"accession": "Q0WV96", "sequence_length": 24}
+    consensus = env.result["consensus"]
+    assert len(consensus) == 1
+    pick = consensus[0]
+    assert pick["target_locus_normalized"] == "os01g0100100"
+    assert pick["target_species"] == "oryza_sativa"
+    assert pick["n_sources"] == 2
+    assert set(pick["sources"]) == {"gramene", "blast"}
+    # mean_identity = (1.0 + 0.78) / 2 = 0.89; score = 2 * 0.89 = 1.78
+    assert pick["mean_identity"] == 0.89
+    assert pick["score"] == 1.78
+
+
+def test_parse_blast_subject_extracts_species_and_gene_from_swissprot_defline():
+    from plant_genomics_mcp.synthesis import _parse_blast_subject_for_consensus
+
+    hit = {
+        "accession": "sp|Q5VMS9.1|Y_ORYSJ",
+        "description": "Hypothetical protein OS=Oryza sativa GN=Os01g0100100 PE=4 SV=1",
+    }
+    sp, gn = _parse_blast_subject_for_consensus(hit)
+    assert sp == "oryza_sativa"
+    assert gn == "Os01g0100100"
+
+
+def test_parse_blast_subject_falls_back_to_plant_locus_token():
+    from plant_genomics_mcp.synthesis import _parse_blast_subject_for_consensus
+
+    hit = {"accession": "AT1G01010.1", "description": ""}
+    sp, gn = _parse_blast_subject_for_consensus(hit)
+    assert sp is None
+    assert gn == "AT1G01010"
+
+
+def test_parse_blast_subject_returns_nones_for_unparseable():
+    from plant_genomics_mcp.synthesis import _parse_blast_subject_for_consensus
+
+    sp, gn = _parse_blast_subject_for_consensus(
+        {"accession": "ref|XP_999999.1|", "description": ""}
+    )
+    assert (sp, gn) == (None, None)
+
+
+def test_normalize_locus_token_strips_species_prefix_and_lowercases():
+    from plant_genomics_mcp.synthesis import _normalize_locus_token
+
+    assert _normalize_locus_token("ORYSA_OS01G0100100") == "os01g0100100"
+    assert _normalize_locus_token("Os01g0100100.1") == "os01g0100100"
+    assert _normalize_locus_token("AT1G01010") == "at1g01010"
+    assert _normalize_locus_token("") == ""
+
+
+def test_parse_blast_identity_pct_handles_percent_string_and_float():
+    from plant_genomics_mcp.synthesis import _parse_blast_identity_pct
+
+    assert _parse_blast_identity_pct("78%") == 0.78
+    assert _parse_blast_identity_pct("78") == 0.78
+    assert _parse_blast_identity_pct(78.5) == 0.785
+    assert _parse_blast_identity_pct(0.785) == 0.785
+    assert _parse_blast_identity_pct(None) is None
+    assert _parse_blast_identity_pct("bad%") is None
+
+
+def test_consensus_homologs_dedupe_groups_by_normalized_locus():
+    from plant_genomics_mcp.synthesis import _consensus_homologs_compose
+
+    gramene = {
+        "homologs": [
+            {"target_locus": "ORYSA_OS01G0100100", "type": "ortholog_one2one", "gene_tree_id": "T1"}
+        ]
+    }
+    blast = {
+        "hits": [
+            {
+                "accession": "sp|Q5VMS9.1|Y_ORYSJ",
+                "description": "X OS=Oryza sativa GN=Os01g0100100",
+                "bit_score": 400.0,
+                "evalue": 1e-50,
+                "identity": "80%",
+            }
+        ]
+    }
+    out = _consensus_homologs_compose(gramene, blast, top_n=10)
+    assert len(out) == 1
+    assert out[0]["n_sources"] == 2
+    assert out[0]["target_locus_normalized"] == "os01g0100100"
+    assert out[0]["target_species"] == "oryza_sativa"
+
+
+def test_consensus_homologs_scoring_prefers_two_source_hits():
+    from plant_genomics_mcp.synthesis import _consensus_homologs_compose
+
+    gramene = {
+        "homologs": [
+            {"target_locus": "ORYSA_OS01G0100001"},
+            {"target_locus": "ORYSA_OS01G0100002"},
+        ]
+    }
+    blast = {
+        "hits": [
+            {
+                "accession": "x",
+                "description": "OS=Oryza sativa GN=OS01G0100002",
+                "bit_score": 100.0,
+                "evalue": 1e-10,
+                "identity": "50%",
+            },
+        ]
+    }
+    out = _consensus_homologs_compose(gramene, blast, top_n=10)
+    assert out[0]["target_locus_normalized"] == "os01g0100002"
+    assert out[0]["n_sources"] == 2
+    assert out[0]["sources"] == ["gramene", "blast"]
+    assert out[0]["mean_identity"] == 0.75
+    assert out[0]["score"] == 1.5
+    assert out[1]["n_sources"] == 1
+
+
+def test_consensus_homologs_single_source_degenerates_gracefully():
+    from plant_genomics_mcp.synthesis import _consensus_homologs_compose
+
+    out = _consensus_homologs_compose(
+        gramene_payload={
+            "homologs": [
+                {"target_locus": "ORYSA_OS01G0100001"},
+                {"target_locus": "ORYSA_OS01G0100002"},
+            ]
+        },
+        blast_payload=None,
+        top_n=10,
+    )
+    assert all(c["n_sources"] == 1 for c in out)
+    assert all(c["target_species"] == "oryza_sativa" for c in out)
+    assert {c["target_locus_normalized"] for c in out} == {"os01g0100001", "os01g0100002"}
+
+
+def test_consensus_homologs_fixtures_match_real_response_shapes():
+    """Boundary check: fixture shapes used by the happy-path test must validate
+    against the live Pydantic wrappers (extra=forbid outer schemas)."""
+    from plant_genomics_mcp.gramene import _normalize as _gramene_normalize
+    from plant_genomics_mcp.models import BlastResult, GrameneHomologs
+
+    gramene_homologs = [
+        _gramene_normalize("ortholog_one2one", "OS01G0100100", "EPlGT00190000001"),
+    ]
+    GrameneHomologs.model_validate(
+        {
+            "locus": "AT1G01010",
+            "release": "v69",
+            "total": len(gramene_homologs),
+            "homologs": gramene_homologs,
+        }
+    )
+
+    BlastResult.model_validate(
+        {
+            "rid": "FAKE",
+            "program": "blastp",
+            "database": "swissprot",
+            "status": "READY",
+            "hitCount": 1,
+            "hits": [
+                {
+                    "accession": "sp|Q5VMS9.1|Y_ORYSJ",
+                    "description": "Hypothetical protein OS=Oryza sativa GN=Os01g0100100 PE=4 SV=1",
+                    "bit_score": 412.0,
+                    "evalue": 1e-50,
+                    "identity": "78%",
+                }
+            ],
+            "raw_report_excerpt": "",
+            "raw_report_truncated": False,
+            "elapsed_seconds": 0.0,
+        }
+    )

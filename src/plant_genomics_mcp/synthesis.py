@@ -618,3 +618,295 @@ def _consensus_partners(
         )
     out.sort(key=lambda d: (-d["n_sources"], -d["combined_score"], d["target_locus"]))
     return out[:top_n]
+
+
+# ---------------------------------------------------------------------------
+# 4.4 consensus_homologs
+# ---------------------------------------------------------------------------
+
+
+_BLAST_DEFLINE_GN = _re.compile(r"GN=([A-Za-z0-9_.\-]+)")
+_BLAST_DEFLINE_OS = _re.compile(r"OS=([A-Z][A-Za-z]+(?:\s+[A-Za-z]+)+?)(?=\s+[A-Z]{2}=|$)")
+_PLANT_LOCUS_TOKEN = _re.compile(r"\b([A-Za-z]{2,3}\d{1,2}[GgMmCcTtDd]\d{3,8})(?:\.\d+)?\b")
+_GRAMENE_SPECIES_PREFIX = _re.compile(r"^[A-Z]{4,8}_")
+_GRAMENE_PREFIX_TO_SPECIES = {
+    "ARATH": "arabidopsis_thaliana",
+    "ORYSA": "oryza_sativa",
+    "MAIZE": "zea_mays",
+    "SOLLC": "solanum_lycopersicum",
+    "SOYBN": "glycine_max",
+    "SORBI": "sorghum_bicolor",
+    "WHEAT": "triticum_aestivum",
+    "HORVU": "hordeum_vulgare",
+    "BRADI": "brachypodium_distachyon",
+}
+
+
+def _normalize_locus_token(raw: str) -> str:
+    s = (raw or "").strip()
+    if not s:
+        return ""
+    s = _GRAMENE_SPECIES_PREFIX.sub("", s)
+    s = s.split(".", 1)[0]
+    return s.lower()
+
+
+def _species_from_gramene_locus(raw: str) -> str | None:
+    s = (raw or "").strip()
+    m = _re.match(r"^([A-Z]{4,8})_", s)
+    if not m:
+        return None
+    return _GRAMENE_PREFIX_TO_SPECIES.get(m.group(1))
+
+
+def _parse_blast_subject_for_consensus(hit: dict) -> tuple[str | None, str | None]:
+    description = hit.get("description") or ""
+    accession = hit.get("accession") or ""
+
+    species: str | None = None
+    m_os = _BLAST_DEFLINE_OS.search(description)
+    if m_os:
+        species = m_os.group(1).strip().replace(" ", "_").lower()
+
+    gene: str | None = None
+    m_gn = _BLAST_DEFLINE_GN.search(description)
+    if m_gn:
+        gene = m_gn.group(1).strip()
+    else:
+        m_pl = _PLANT_LOCUS_TOKEN.search(accession) or _PLANT_LOCUS_TOKEN.search(description)
+        if m_pl:
+            gene = m_pl.group(1).strip()
+
+    return species, gene
+
+
+def _parse_blast_identity_pct(raw: object) -> float | None:
+    if raw is None:
+        return None
+    if isinstance(raw, (int, float)):
+        f = float(raw)
+        return f / 100.0 if f > 1.0 else f
+    s = str(raw).strip().rstrip("%")
+    try:
+        return float(s) / 100.0
+    except ValueError:
+        return None
+
+
+async def consensus_homologs(
+    client: httpx.AsyncClient,
+    locus: str,
+    species: str = DEFAULT_SPECIES,
+    top_n: int = DEFAULT_TOP_N,
+) -> SynthesisEnvelope:
+    top_n = _bound_top_n(top_n)
+    started_at = _now_iso()
+    t0 = time.perf_counter()
+    input_args = {"locus": locus, "species": species, "top_n": top_n}
+    taxon_id = uniprot.KNOWN_TAXA.get(species, uniprot.DEFAULT_TAXON_ID)
+
+    # Phase 1.a — UniProt
+    step1 = await _timed_step(
+        1,
+        "resolve_locus_to_uniprot",
+        uniprot.lookup_locus(client, locus, organism_id=taxon_id),
+    )
+    if step1.status != "ok":
+        skip = "phase-1 UniProt resolution failed; sequence + downstream skipped"
+        return SynthesisEnvelope(
+            tool="consensus_homologs",
+            input=input_args,
+            started_at=started_at,
+            elapsed_s=time.perf_counter() - t0,
+            steps=[
+                step1,
+                _skipped(2, "uniprot_fetch_sequence", skip),
+                _skipped(3, "gramene_homologs", skip),
+                _skipped(4, "blast_sequence", skip),
+            ],
+            result=None,
+        )
+
+    # Phase 1.b — fetch sequence.
+    #
+    # Bypass _timed_step here: uniprot.fetch_sequence returns a bare str, but
+    # StepRow.result is typed `dict | list | None` (models.py:488, extra=forbid).
+    # Time it inline and put metadata (accession + length) in the envelope —
+    # the raw 400+ residue protein sequence doesn't belong in an envelope JSON
+    # blob, and we need the bare string for the phase-2 BLAST call anyway.
+    acc = step1.result["primaryAccession"]
+    t_step2 = time.perf_counter()
+    try:
+        sequence = await uniprot.fetch_sequence(client, acc)
+        step2 = StepRow(
+            step=2,
+            tool="uniprot_fetch_sequence",
+            status="ok",
+            elapsed_s=time.perf_counter() - t_step2,
+            result={"accession": acc, "sequence_length": len(sequence)},
+        )
+    except PlantGenomicsError as e:
+        step2 = StepRow(
+            step=2,
+            tool="uniprot_fetch_sequence",
+            status="error",
+            elapsed_s=time.perf_counter() - t_step2,
+            error=str(e),
+        )
+        skip = "phase-1.b sequence fetch failed; downstream skipped"
+        return SynthesisEnvelope(
+            tool="consensus_homologs",
+            input=input_args,
+            started_at=started_at,
+            elapsed_s=time.perf_counter() - t0,
+            steps=[
+                step1,
+                step2,
+                _skipped(3, "gramene_homologs", skip),
+                _skipped(4, "blast_sequence", skip),
+            ],
+            result=None,
+        )
+    except httpx.HTTPError as e:
+        step2 = StepRow(
+            step=2,
+            tool="uniprot_fetch_sequence",
+            status="error",
+            elapsed_s=time.perf_counter() - t_step2,
+            error=f"[HTTPError] {e}",
+        )
+        skip = "phase-1.b sequence fetch failed; downstream skipped"
+        return SynthesisEnvelope(
+            tool="consensus_homologs",
+            input=input_args,
+            started_at=started_at,
+            elapsed_s=time.perf_counter() - t0,
+            steps=[
+                step1,
+                step2,
+                _skipped(3, "gramene_homologs", skip),
+                _skipped(4, "blast_sequence", skip),
+            ],
+            result=None,
+        )
+
+    # Phase 2 — gather Gramene + BLAST.
+    raw_top = 50
+    p2 = await _gather_phase2(
+        [
+            (3, "gramene_homologs", gramene.lookup_homologs(client, locus)),
+            (
+                4,
+                "blast_sequence",
+                blast.blast_sequence(client, sequence, program="blastp", hitlist_size=raw_top),
+            ),
+        ]
+    )
+    gramene_row, blast_row = p2
+
+    consensus = _consensus_homologs_compose(
+        gramene_payload=gramene_row.result if gramene_row.status == "ok" else None,
+        blast_payload=blast_row.result if blast_row.status == "ok" else None,
+        top_n=top_n,
+    )
+
+    return SynthesisEnvelope(
+        tool="consensus_homologs",
+        input=input_args,
+        started_at=started_at,
+        elapsed_s=time.perf_counter() - t0,
+        steps=[step1, step2, *p2],
+        result={
+            "uniprot_accession": acc,
+            "sequence_length": len(sequence),
+            "consensus": consensus,
+        },
+    )
+
+
+def _consensus_homologs_compose(
+    gramene_payload: dict | None,
+    blast_payload: dict | None,
+    top_n: int,
+) -> list[dict]:
+    groups: dict[str, dict] = {}
+
+    if gramene_payload:
+        for h in gramene_payload.get("homologs") or []:
+            raw_locus = h.get("target_locus") or ""
+            key = _normalize_locus_token(raw_locus)
+            if not key:
+                continue
+            entry = groups.setdefault(
+                key,
+                {
+                    "target_locus_normalized": key,
+                    "target_locus_gramene": None,
+                    "target_gene_blast": None,
+                    "target_species": _species_from_gramene_locus(raw_locus),
+                    "sources": [],
+                    "identities": [],
+                    "gramene_hit": None,
+                    "blast_hit": None,
+                },
+            )
+            if "gramene" not in entry["sources"]:
+                entry["sources"].append("gramene")
+                entry["identities"].append(1.0)
+                entry["gramene_hit"] = h
+                entry["target_locus_gramene"] = raw_locus
+
+    if blast_payload:
+        for h in blast_payload.get("hits") or []:
+            species_raw, gene_raw = _parse_blast_subject_for_consensus(h)
+            if not gene_raw:
+                continue
+            key = _normalize_locus_token(gene_raw)
+            if not key:
+                continue
+            entry = groups.setdefault(
+                key,
+                {
+                    "target_locus_normalized": key,
+                    "target_locus_gramene": None,
+                    "target_gene_blast": None,
+                    "target_species": species_raw,
+                    "sources": [],
+                    "identities": [],
+                    "gramene_hit": None,
+                    "blast_hit": None,
+                },
+            )
+            if "blast" not in entry["sources"]:
+                entry["sources"].append("blast")
+                identity_frac = _parse_blast_identity_pct(h.get("identity"))
+                if identity_frac is not None:
+                    entry["identities"].append(identity_frac)
+                entry["blast_hit"] = h
+                entry["target_gene_blast"] = gene_raw
+                if species_raw:
+                    entry["target_species"] = species_raw
+
+    out: list[dict] = []
+    for entry in groups.values():
+        if not entry["identities"]:
+            continue
+        mean_identity = sum(entry["identities"]) / len(entry["identities"])
+        n_sources = len(entry["sources"])
+        score = n_sources * mean_identity
+        out.append(
+            {
+                "target_locus_normalized": entry["target_locus_normalized"],
+                "target_locus_gramene": entry["target_locus_gramene"],
+                "target_gene_blast": entry["target_gene_blast"],
+                "target_species": entry["target_species"],
+                "n_sources": n_sources,
+                "sources": list(entry["sources"]),
+                "mean_identity": round(mean_identity, 4),
+                "score": round(score, 4),
+                "gramene_hit": entry["gramene_hit"],
+                "blast_hit": entry["blast_hit"],
+            }
+        )
+    out.sort(key=lambda d: (-d["n_sources"], -d["score"], d["target_locus_normalized"]))
+    return out[:top_n]
