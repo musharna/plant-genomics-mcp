@@ -112,6 +112,28 @@ the right shape for registry indexers and remote hosting. Env knobs:
 | `PLANT_GENOMICS_MCP_HTTP_STATELESS` | `1`         | `0` keeps per-client session state (SSE-style)          |
 | `PLANT_GENOMICS_MCP_HTTP_JSON`      | `1`         | `0` switches the response shape to streaming SSE events |
 
+## Hosted endpoint
+
+A read-only public deployment runs at:
+
+https://mjarnoldgt76.tail86d19d.ts.net/mcp
+
+Liveness probe:
+
+```bash
+curl https://mjarnoldgt76.tail86d19d.ts.net/healthz
+# {"status":"ok","version":"0.8.1"}
+```
+
+Connect from Claude Code:
+
+```bash
+claude mcp add --transport http plant-genomics-mcp \
+  https://mjarnoldgt76.tail86d19d.ts.net/mcp
+```
+
+No auth required. Best-effort uptime — upstream backends (Ensembl, NCBI BLAST, UniProt, Gramene, …) self-rate-limit, so a misbehaving client mostly hurts itself. For production workloads, run the stdio entry point locally (see [Install](#install)) — the hosted endpoint is for evaluation, registry indexers, and one-off interactive use.
+
 ## Install
 
 ### pipx (recommended)
