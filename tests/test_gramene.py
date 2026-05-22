@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 import httpx
 import pytest
 from pytest_httpx import HTTPXMock
@@ -133,3 +135,19 @@ async def test_lookup_homologs_429_exhausts_raises(httpx_mock: HTTPXMock):
     async with httpx.AsyncClient() as client:
         with pytest.raises(RateLimitError):
             await gramene.lookup_homologs(client, "AT1G01010")
+
+
+@pytest.mark.skipif(
+    not os.environ.get("PLANT_GENOMICS_MCP_LIVE"),
+    reason="set PLANT_GENOMICS_MCP_LIVE=1 to hit data.gramene.org",
+)
+@pytest.mark.asyncio
+async def test_live_gramene_at1g01010_has_homologs():
+    """Smoke against real Gramene v69 — regression for upstream schema drift."""
+    async with httpx.AsyncClient() as client:
+        result = await gramene.lookup_homologs(client, "AT1G01010", homology_type="all")
+    assert result["locus"] == "AT1G01010"
+    assert result["release"] == "v69"
+    assert result["total"] > 0, "AT1G01010 should have at least one homolog in v69"
+    sample = result["homologs"][0]
+    assert sample["type"], "homology_type field should populate"
