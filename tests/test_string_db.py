@@ -55,3 +55,17 @@ async def test_lookup_partners_by_accession_happy(httpx_mock: HTTPXMock):
     assert p["accession"] == "Q0WV96" or p["accession"] is not None  # raw stringId field too
     assert p["preferred_name"] == "NAC3"
     assert p["score"] == 0.812
+
+
+def test_looks_like_accession_rejects_trailing_garbage():
+    """Both regex branches must anchor with ``$`` — bug fix regression."""
+    assert string_db._looks_like_accession("Q0WV96") is True
+    assert string_db._looks_like_accession("P12345") is True
+    assert string_db._looks_like_accession("A0A123B456") is True
+    assert string_db._looks_like_accession("Q0WV96.1") is True
+    # Trailing garbage must be rejected on BOTH the 6-char and 10-char branch.
+    assert string_db._looks_like_accession("Q0WV96extra") is False
+    assert string_db._looks_like_accession("P12345junk") is False
+    assert string_db._looks_like_accession("A0A123B456junk") is False
+    # Non-accession (locus) stays rejected.
+    assert string_db._looks_like_accession("AT1G01010") is False
