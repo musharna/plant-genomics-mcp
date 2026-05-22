@@ -14,5 +14,5 @@ startCommand:
   commandFunction: |-
     (config) => ({
       command: 'docker',
-      args: ['run', '--rm', '-i', 'ghcr.io/mjarnold/plant-genomics-mcp:latest']
+      args: ['run', '--rm', '-i', 'ghcr.io/musharna/plant-genomics-mcp:latest']
     })

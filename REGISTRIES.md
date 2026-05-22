@@ -5,13 +5,13 @@ local artifacts (`server.json`, `smithery.yaml`) are committed; the
 external submission steps still require an authenticated push and a
 human-in-the-loop click. PyPI publication is deliberately deferred until
 the final-publish gate, so all current submissions reference the GHCR
-Docker image (`ghcr.io/mjarnold/plant-genomics-mcp:0.5.0`) rather than a
+Docker image (`ghcr.io/musharna/plant-genomics-mcp:0.5.0`) rather than a
 `pip install`-able package.
 
 ## registry.modelcontextprotocol.io (official)
 
 **Artifact:** [`server.json`](./server.json) — registers under the
-namespace `io.github.mjarnold/plant-genomics-mcp` (GitHub-auth verifies
+namespace `io.github.musharna/plant-genomics-mcp` (GitHub-auth verifies
 the namespace owns the repo).
 
 **Submission steps:**
@@ -43,7 +43,7 @@ runs the GHCR image via `docker run --rm -i`.
 **Submission steps:**
 
 1. Browse to https://smithery.ai/new and sign in with GitHub.
-2. Point Smithery at the GitHub repo `mjarnold/plant-genomics-mcp`.
+2. Point Smithery at the GitHub repo `musharna/plant-genomics-mcp`.
 3. Smithery reads `smithery.yaml` from the repo root and builds the
    sandbox listing. No additional fields to fill in.
 4. Smoke-test the in-browser inspector run against a default locus
@@ -60,7 +60,7 @@ listing appears once the crawler picks up the repo.
 **Submission steps:**
 
 1. Verify the listing exists at
-   `https://glama.ai/mcp/servers/mjarnold/plant-genomics-mcp` (may take
+   `https://glama.ai/mcp/servers/musharna/plant-genomics-mcp` (may take
    24–72h after the repo first goes public).
 2. (Optional) Sign in with GitHub and **claim** the server from the
    listing page — claiming unlocks the admin panel (set categories,
@@ -78,7 +78,7 @@ top-right of any directory page.
 
 1. Navigate to https://www.pulsemcp.com/servers and click **Submit**.
 2. Fill in:
-   - GitHub URL: `https://github.com/mjarnold/plant-genomics-mcp`
+   - GitHub URL: `https://github.com/musharna/plant-genomics-mcp`
    - Description: see the `description` field in `server.json`.
    - Classification: community
    - Tags: `plant-biology`, `genomics`, `bioinformatics`, `ensembl`,

@@ -7,8 +7,8 @@
 > TAIR + PlantCyc are informational stubs that redirect to the free
 > alternatives (both services are paid-subscription-gated, probed 2026-05-21).
 
-[![CI](https://github.com/mjarnold/plant-genomics-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/mjarnold/plant-genomics-mcp/actions/workflows/test.yml)
-[![Docker](https://github.com/mjarnold/plant-genomics-mcp/actions/workflows/docker.yml/badge.svg)](https://github.com/mjarnold/plant-genomics-mcp/actions/workflows/docker.yml)
+[![CI](https://github.com/musharna/plant-genomics-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/musharna/plant-genomics-mcp/actions/workflows/test.yml)
+[![Docker](https://github.com/musharna/plant-genomics-mcp/actions/workflows/docker.yml/badge.svg)](https://github.com/musharna/plant-genomics-mcp/actions/workflows/docker.yml)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -146,15 +146,15 @@ claude mcp add plant-genomics --scope local -- plant-genomics-mcp
 ### Docker (GHCR)
 
 ```bash
-docker pull ghcr.io/mjarnold/plant-genomics-mcp:latest
+docker pull ghcr.io/musharna/plant-genomics-mcp:latest
 claude mcp add plant-genomics --scope local -- \
-  docker run --rm -i ghcr.io/mjarnold/plant-genomics-mcp:latest
+  docker run --rm -i ghcr.io/musharna/plant-genomics-mcp:latest
 ```
 
 ### From source
 
 ```bash
-git clone https://github.com/mjarnold/plant-genomics-mcp.git
+git clone https://github.com/musharna/plant-genomics-mcp.git
 cd plant-genomics-mcp
 python -m venv .venv && .venv/bin/pip install -e .
 claude mcp add plant-genomics --scope local -- "$(pwd)/.venv/bin/plant-genomics-mcp"
