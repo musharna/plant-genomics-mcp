@@ -299,3 +299,130 @@ async def test_analyze_locus_synth_network_error_records_error_row_not_crash(htt
     assert xrefs_row.status == "error"
     assert xrefs_row.error is not None
     assert xrefs_row.error.startswith("[ReadTimeout]")
+
+
+@pytest.mark.asyncio
+async def test_find_homologs_synth_all_backends_succeed_returns_full_envelope(
+    httpx_mock, monkeypatch
+):
+    # Stub blast_sequence to skip the actual NCBI Put/Poll/Get cycle.
+    async def fake_blast(
+        client,
+        sequence,
+        program="blastp",
+        database=None,
+        *,
+        hitlist_size=10,
+        expect=10.0,
+        megablast=False,
+        poll_interval=60.0,
+        max_wait=600.0,
+    ):
+        return {
+            "rid": "FAKE",
+            "program": program,
+            "database": database or "swissprot",
+            "hit_count": 2,
+            "hits": [
+                {"rank": 1, "subject_id": "sp|Q0WV96.1|Y_ARATH", "pident": 100.0, "evalue": 0.0},
+                {"rank": 2, "subject_id": "sp|Q9LIV2.1|X_ARATH", "pident": 88.0, "evalue": 1e-90},
+            ],
+            "report_truncated": False,
+            "raw_report_excerpt": "...",
+        }
+
+    monkeypatch.setattr("plant_genomics_mcp.synthesis.blast.blast_sequence", fake_blast)
+
+    httpx_mock.add_response(
+        url="https://rest.uniprot.org/uniprotkb/Q0WV96.json",
+        json={
+            "primaryAccession": "Q0WV96",
+            "uniProtkbId": "Y_ARATH",
+            "entryType": "UniProtKB reviewed (Swiss-Prot)",
+            "proteinDescription": {"recommendedName": {"fullName": {"value": "X"}}},
+            "genes": [{"geneName": {"value": "NAC001"}}],
+            "organism": {"scientificName": "Arabidopsis thaliana", "taxonId": 3702},
+            "sequence": {"length": 429},
+        },
+    )
+    httpx_mock.add_response(
+        url="https://rest.uniprot.org/uniprotkb/Q9LIV2.json",
+        json={
+            "primaryAccession": "Q9LIV2",
+            "uniProtkbId": "X_ARATH",
+            "entryType": "UniProtKB reviewed (Swiss-Prot)",
+            "proteinDescription": {"recommendedName": {"fullName": {"value": "Y"}}},
+            "genes": [{"geneName": {"value": "X1"}}],
+            "organism": {"scientificName": "Arabidopsis thaliana", "taxonId": 3702},
+            "sequence": {"length": 200},
+        },
+    )
+
+    from plant_genomics_mcp.synthesis import find_homologs_synth
+
+    async with httpx.AsyncClient() as client:
+        env = await find_homologs_synth(client, "MEDQ", program="blastp", top_n=10)
+
+    assert env.tool == "find_homologs_synth"
+    assert env.input["program"] == "blastp"
+    assert len(env.steps) == 2  # phase 1 blast + phase 2 rolled-up batch lookup
+    assert [s.status for s in env.steps] == ["ok", "ok"]
+    assert env.result is not None
+    ranked = env.result["ranked_hits"]
+    assert len(ranked) == 2
+    assert ranked[0]["uniprot_record"]["primaryAccession"] == "Q0WV96"
+    assert ranked[1]["uniprot_record"]["primaryAccession"] == "Q9LIV2"
+    assert env.result["notes"] == []
+
+
+@pytest.mark.asyncio
+async def test_find_homologs_synth_non_uniprot_subjects_flagged(monkeypatch):
+    async def fake_blast(client, sequence, **kw):
+        return {
+            "rid": "FAKE",
+            "program": "blastp",
+            "database": "core_nt",
+            "hit_count": 1,
+            "hits": [
+                {"rank": 1, "subject_id": "AT1G01010.1", "pident": 99.0, "evalue": 0.0},
+            ],
+            "report_truncated": False,
+            "raw_report_excerpt": "",
+        }
+
+    monkeypatch.setattr("plant_genomics_mcp.synthesis.blast.blast_sequence", fake_blast)
+
+    from plant_genomics_mcp.synthesis import find_homologs_synth
+
+    async with httpx.AsyncClient() as client:
+        env = await find_homologs_synth(client, "MEDQ", program="blastp", top_n=5)
+    assert env.result["notes"] == ["non_uniprot_subject"]
+    assert env.result["ranked_hits"][0]["uniprot_record"] is None
+
+
+@pytest.mark.asyncio
+async def test_find_homologs_synth_phase1_failure_skips_phase2(monkeypatch):
+    from plant_genomics_mcp.errors import UpstreamUnavailableError
+
+    async def fake_blast(*a, **kw):
+        raise UpstreamUnavailableError("BLAST RID=X reported Status=FAILED after 60s")
+
+    monkeypatch.setattr("plant_genomics_mcp.synthesis.blast.blast_sequence", fake_blast)
+
+    from plant_genomics_mcp.synthesis import find_homologs_synth
+
+    async with httpx.AsyncClient() as client:
+        env = await find_homologs_synth(client, "MEDQ", program="blastp")
+    assert env.result is None
+    assert env.steps[0].status == "error"
+    assert env.steps[1].status == "skipped"
+
+
+def test_extract_uniprot_accession_handles_all_blast_subject_forms():
+    from plant_genomics_mcp.synthesis import _extract_uniprot_accession
+
+    assert _extract_uniprot_accession("sp|Q0WV96.1|Y_ARATH") == "Q0WV96.1"
+    assert _extract_uniprot_accession("tr|A0A1B2C3D4|X_ARATH") == "A0A1B2C3D4"
+    assert _extract_uniprot_accession("Q0WV96") == "Q0WV96"
+    assert _extract_uniprot_accession("AT1G01010.1") is None
+    assert _extract_uniprot_accession("") is None
