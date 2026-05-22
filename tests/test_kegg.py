@@ -11,6 +11,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import kegg
+from plant_genomics_mcp.errors import NotFoundError
 
 
 @pytest.fixture(autouse=True)
@@ -46,3 +47,46 @@ async def test_lookup_pathways_happy_path(httpx_mock: HTTPXMock):
     assert "Plant hormone" in p0["name"]
     assert "Signal transduction" in p0["pathway_class"]
     assert result["errors"] == []
+
+
+@pytest.mark.asyncio
+async def test_lookup_pathways_empty_link_raises_not_found(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/link/pathway/ath:atnope",
+        text="",
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError) as exc:
+            await kegg.lookup_pathways(client, "ATNOPE")
+    assert "[NotFoundError]" in str(exc.value)
+
+
+@pytest.mark.asyncio
+async def test_lookup_pathways_step2_failure_lands_in_errors(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/link/pathway/ath:at1g01010",
+        text="ath:at1g01010\tpath:ath99999\n",
+    )
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/get/path:ath99999",
+        text="",
+    )
+    async with httpx.AsyncClient() as client:
+        result = await kegg.lookup_pathways(client, "AT1G01010")
+    assert len(result["pathways"]) == 1
+    assert result["pathways"][0]["id"] == "ath99999"
+    assert result["pathways"][0]["name"] == ""
+    assert len(result["errors"]) == 1
+    assert "ath99999" in result["errors"][0]
+
+
+@pytest.mark.asyncio
+async def test_lookup_pathways_404_treated_as_empty(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/link/pathway/ath:atnope",
+        status_code=404,
+        text="",
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError):
+            await kegg.lookup_pathways(client, "ATNOPE")
