@@ -21,8 +21,9 @@ import pytest
 import uvicorn
 from starlette.applications import Starlette
 from starlette.routing import Mount
+from starlette.testclient import TestClient
 
-from plant_genomics_mcp import server_http
+from plant_genomics_mcp import __version__, server_http
 
 
 # ---------- unit ----------
@@ -81,10 +82,6 @@ def test_healthz_returns_status_ok_with_version() -> None:
     liveness without sending a JSON-RPC POST. The version field doubles
     as a cheap deploy-confirmation probe.
     """
-    from starlette.testclient import TestClient
-
-    from plant_genomics_mcp import __version__
-
     app = server_http.build_app()
     with TestClient(app) as client:
         resp = client.get("/healthz")
@@ -119,6 +116,7 @@ async def test_http_tools_list_via_real_uvicorn() -> None:
             health_resp = await client.get("/healthz")
             assert health_resp.status_code == 200, health_resp.text
             assert health_resp.json()["status"] == "ok"
+            assert health_resp.json()["version"] == __version__
 
             init_payload: dict[str, Any] = {
                 "jsonrpc": "2.0",
