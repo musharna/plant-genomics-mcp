@@ -1,9 +1,10 @@
 # Examples — real-execution proof transcripts
 
-Verbatim captures of the two `prompts/get` chains executed against the live
-upstream APIs (Ensembl Plants, UniProt, Europe PMC, QuickGO, NCBI BLAST).
-Each transcript ships as a pair: a JSON file with the full payload and a
-sibling Markdown file that quotes the load-bearing fields inline.
+Verbatim captures of the `prompts/get` chains executed against the live
+upstream APIs (Ensembl Plants, UniProt, Europe PMC, QuickGO, NCBI BLAST,
+Gramene, KEGG, STRING-DB, ATTED-II). Each transcript ships as a pair: a
+JSON file with the full payload and a sibling Markdown file that quotes
+the load-bearing fields inline.
 
 Outputs may drift on re-run as upstream curates new data; the JSON files are
 the durable reference. The chains are driven by `_run_chain.py` (uses the
@@ -13,10 +14,11 @@ latency without showing anything new).
 
 ## Transcripts
 
-| Prompt          | Query                                     | Files                                                                                                                                                                   |
-| --------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `analyze_locus` | `AT1G01010` (Arabidopsis NAC001)          | [`analyze_locus_AT1G01010.json`](analyze_locus_AT1G01010.json) · [`analyze_locus_AT1G01010.md`](analyze_locus_AT1G01010.md)                                             |
-| `find_homologs` | NAC domain peptide from AT1G01010 product | [`find_homologs_AT1G01010_NAC_domain.json`](find_homologs_AT1G01010_NAC_domain.json) · [`find_homologs_AT1G01010_NAC_domain.md`](find_homologs_AT1G01010_NAC_domain.md) |
+| Prompt               | Query                                     | Files                                                                                                                                                                   |
+| -------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `analyze_locus`      | `AT1G01010` (Arabidopsis NAC001)          | [`analyze_locus_AT1G01010.json`](analyze_locus_AT1G01010.json) · [`analyze_locus_AT1G01010.md`](analyze_locus_AT1G01010.md)                                             |
+| `find_homologs`      | NAC domain peptide from AT1G01010 product | [`find_homologs_AT1G01010_NAC_domain.json`](find_homologs_AT1G01010_NAC_domain.json) · [`find_homologs_AT1G01010_NAC_domain.md`](find_homologs_AT1G01010_NAC_domain.md) |
+| `biological_context` | `AT1G01010` (Arabidopsis NAC001)          | [`biological_context_AT1G01010.json`](biological_context_AT1G01010.json) · [`biological_context_AT1G01010.md`](biological_context_AT1G01010.md)                         |
 
 ## What each chain demonstrates
 
@@ -39,11 +41,27 @@ latency without showing anything new).
    endpoint, returning the full normalized record. Versioned-accession
    suffix (`.1`, `.2`) is stripped before fetch.
 
+**`biological_context`** — 5-tool walkthrough for biological context:
+
+1. `gramene_homologs` → orthologs across plant species (Gramene compara).
+2. `kegg_pathways` → KEGG pathway memberships in Arabidopsis.
+3. `resolve_locus_to_uniprot` → canonical Swiss-Prot accession (needed for STRING).
+4. `string_interactions` → STRING first-neighbor PPI partners with combined + per-channel scores.
+5. `atted_coexpression` → ATTED-II coexpression neighbors with locus + Entrez gene ID + z-score (higher = stronger).
+
+Note on partial captures: any step that raises an upstream typed error
+(`NotFoundError`, `RateLimitError`, `UpstreamUnavailableError`) records the
+error class + message inline and the chain continues with the remaining
+steps — a partial transcript is more useful than no transcript. The
+captured `biological_context_AT1G01010` happens to show a `kegg_pathways`
+miss (NAC001 has no curated KEGG pathway membership), with the other
+four steps completing successfully.
+
 ## Re-running
 
 ```bash
 .venv/bin/python examples/_run_chain.py
 ```
 
-Both chains together take ~2-4 minutes (BLAST polls have a 60s NCBI
+All three chains together take ~3-5 minutes (BLAST polls have a 60s NCBI
 etiquette floor). Re-running overwrites the existing JSON + Markdown.
