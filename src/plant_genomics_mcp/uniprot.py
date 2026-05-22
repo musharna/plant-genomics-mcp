@@ -241,6 +241,58 @@ async def _fetch_by_accession(
     )
 
 
+async def fetch_sequence(
+    client: httpx.AsyncClient,
+    accession: str,
+) -> str:
+    """Fetch the raw amino-acid sequence for a UniProt accession.
+
+    Returns the sequence string (newlines stripped, header line dropped).
+    Strips trailing ``.N`` version suffix on the same rationale as
+    ``_fetch_by_accession``. Retries on 429/5xx mirror the search path;
+    NotFoundError on 404.
+    """
+    bare = accession.split(".", 1)[0]
+    url = f"{BASE_URL}/uniprotkb/{bare}.fasta"
+    key = cache.make_key("GET", BASE_URL, f"/uniprotkb/{bare}.fasta", {})
+    cached = _CACHE.get(key)
+    if cached is not None:
+        return str(cached)
+    delay = 1.0
+    last_status: int | None = None
+    for attempt in range(MAX_RETRIES):
+        resp = await client.get(url, timeout=DEFAULT_TIMEOUT)
+        last_status = resp.status_code
+        if resp.status_code == 200:
+            lines = resp.text.splitlines()
+            seq = "".join(line.strip() for line in lines if not line.startswith(">"))
+            _CACHE.set(key, seq)
+            return seq
+        if resp.status_code == 404:
+            raise NotFoundError(f"UniProt has no FASTA for accession={bare!r}")
+        if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_RETRIES - 1:
+            retry_after = float(resp.headers.get("Retry-After", delay))
+            await progress.notify(
+                f"UniProt /uniprotkb/{bare}.fasta: HTTP {resp.status_code}, retrying in "
+                f"{retry_after:.1f}s (attempt {attempt + 2}/{MAX_RETRIES})"
+            )
+            await asyncio.sleep(retry_after)
+            delay *= 2
+            continue
+        if resp.status_code == 429:
+            raise RateLimitError(f"UniProt FASTA rate-limited (HTTP 429): {resp.text[:200]}")
+        if resp.status_code in (500, 502, 503, 504):
+            raise UpstreamUnavailableError(
+                f"UniProt FASTA → HTTP {resp.status_code}: {resp.text[:200]}"
+            )
+        raise PlantGenomicsError(f"UniProt FASTA → HTTP {resp.status_code}: {resp.text[:200]}")
+    if last_status == 429:
+        raise RateLimitError(f"UniProt FASTA exhausted {MAX_RETRIES} retries (429)")
+    raise UpstreamUnavailableError(
+        f"UniProt FASTA exhausted {MAX_RETRIES} retries (last HTTP {last_status})"
+    )
+
+
 async def lookup_locus(
     client: httpx.AsyncClient,
     locus: str,
