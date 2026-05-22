@@ -58,13 +58,3 @@ class UpstreamUnavailableError(PlantGenomicsError):
     LLM clients should treat this as a service outage and consider
     falling back to a peer backend (e.g. Phytozome when Ensembl is down).
     """
-
-
-class SubscriptionGatedError(PlantGenomicsError):
-    """Raised when a tool would have to call a paid-subscription endpoint.
-
-    Currently unused — the TAIR and PlantCyc tools return a structured
-    redirect record instead of raising, because the redirect is more
-    actionable for an LLM client than an exception. Reserved as a slot
-    for future ``force=True`` paths that bypass the redirect.
-    """
