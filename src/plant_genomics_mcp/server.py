@@ -1,8 +1,9 @@
 """MCP server entry point — exposes plant genomics tools over stdio.
 
-This dispatch ships twenty-three tools — twelve single-locus, one BLAST
-sequence-similarity search, plus ten batch variants that fan out
-per-locus calls in parallel:
+This dispatch ships twenty-seven tools — twelve single-locus, one BLAST
+sequence-similarity search, ten batch variants that fan out per-locus
+calls in parallel, and four cross-source synthesis tools that compose
+the live backends:
 
   - ``ensembl_plants_lookup_locus``       — Ensembl Plants REST (live)
   - ``get_gene_xrefs``                    — Ensembl Plants xrefs (live)
@@ -27,6 +28,10 @@ per-locus calls in parallel:
   - ``batch_kegg_pathways``               — gather over kegg_pathways
   - ``batch_string_interactions``         — gather over string_interactions
   - ``batch_atted_coexpression``          — gather over atted_coexpression
+  - ``analyze_locus_synth``               — v0.8 synthesis: Ensembl + Phytozome + UniProt + xrefs in one envelope
+  - ``find_homologs_synth``               — v0.8 synthesis: BLAST + per-hit UniProt resolution
+  - ``biological_context_synth``          — v0.8 synthesis: GO + literature + KEGG + STRING + ATTED + consensus_partners
+  - ``consensus_homologs``                — v0.8 synthesis: cross-source ranking (Gramene + BLAST agreement)
 
 The TAIR and PlantCyc stubs are pure-data — both backends gate their free
 per-locus REST APIs behind paid subscriptions (Phoenix Bioinformatics for

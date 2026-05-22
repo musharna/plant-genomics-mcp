@@ -27,6 +27,7 @@ import httpx
 
 from plant_genomics_mcp import (
     atted,
+    batch,
     blast,
     ensembl_plants,
     europe_pmc,
@@ -290,8 +291,6 @@ def _reconcile_analyze(
 # ---------------------------------------------------------------------------
 # 4.2 find_homologs_synth
 # ---------------------------------------------------------------------------
-
-from plant_genomics_mcp import batch  # late import to avoid circular
 
 
 _BLAST_PROGRAMS = {"blastn", "blastp", "blastx", "tblastn", "tblastx"}
@@ -878,10 +877,14 @@ def _consensus_homologs_compose(
                 },
             )
             if "blast" not in entry["sources"]:
-                entry["sources"].append("blast")
                 identity_frac = _parse_blast_identity_pct(h.get("identity"))
-                if identity_frac is not None:
-                    entry["identities"].append(identity_frac)
+                if identity_frac is None:
+                    # Drop hits with missing identity — scoring weights mean_identity
+                    # by n_sources, so a None-identity hit would inflate n_sources
+                    # without contributing a measurable signal.
+                    continue
+                entry["sources"].append("blast")
+                entry["identities"].append(identity_frac)
                 entry["blast_hit"] = h
                 entry["target_gene_blast"] = gene_raw
                 if species_raw:

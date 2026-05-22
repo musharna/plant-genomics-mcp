@@ -615,6 +615,106 @@ async def test_biological_context_synth_all_backends_succeed_returns_full_envelo
 
 
 @pytest.mark.asyncio
+async def test_biological_context_synth_partial_phase2_failure_returns_composed_envelope(
+    httpx_mock,
+):
+    # Phase 1 — UniProt resolve succeeds.
+    httpx_mock.add_response(
+        url=re.compile(r"^https://rest\.uniprot\.org/uniprotkb/search.*"),
+        json={
+            "results": [
+                {
+                    "primaryAccession": "Q0WV96",
+                    "uniProtkbId": "Y_ARATH",
+                    "entryType": "UniProtKB reviewed (Swiss-Prot)",
+                    "proteinDescription": {"recommendedName": {"fullName": {"value": "X"}}},
+                    "genes": [{"geneName": {"value": "NAC001"}}],
+                    "organism": {"scientificName": "Arabidopsis thaliana", "taxonId": 3702},
+                    "sequence": {"length": 429},
+                }
+            ]
+        },
+    )
+    # Phase 2 — Gramene OK.
+    httpx_mock.add_response(
+        url=re.compile(r"^https://data\.gramene\.org/v69/genes.*"),
+        json=[
+            {
+                "_id": "AT1G01010",
+                "homology": {
+                    "gene_tree": {"id": "EPlGT01130000406172"},
+                    "homologous_genes": {"ortholog_one2one": ["Os01g0100100"]},
+                },
+            }
+        ],
+    )
+    # Phase 2 — KEGG: 404 on /link/pathway/... → empty body → NotFoundError in kegg_pathways.
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/link/pathway/ath:at1g01010",
+        status_code=404,
+        text="",
+    )
+    # Phase 2 — STRING OK.
+    httpx_mock.add_response(
+        url=re.compile(r"^https://string-db\.org/api/json/interaction_partners.*"),
+        json=[
+            {
+                "stringId_A": "3702.AT1G01010.1",
+                "stringId_B": "3702.AT3G15500.1",
+                "preferredName_A": "NAC001",
+                "preferredName_B": "NAC3",
+                "score": 0.85,
+                "escore": 0.4,
+                "dscore": 0.0,
+                "tscore": 0.2,
+                "pscore": 0.1,
+            }
+        ],
+    )
+    # Phase 2 — ATTED-II OK.
+    httpx_mock.add_response(
+        url=re.compile(r"^https://atted\.jp/api5/.*"),
+        json={
+            "request": {"gene": "AT1G01010"},
+            "result_set": [
+                {
+                    "entrez_gene_id": 839580,
+                    "type": "z",
+                    "results": [
+                        {"gene": 820194, "other_id": ["AT3G15500"], "z": 5.5},
+                    ],
+                    "other_id": "AT1G01010",
+                }
+            ],
+        },
+    )
+
+    from plant_genomics_mcp.synthesis import biological_context_synth
+
+    async with httpx.AsyncClient() as client:
+        env = await biological_context_synth(client, "AT1G01010", top_n=10)
+
+    assert env.tool == "biological_context_synth"
+    # Envelope composes despite the KEGG failure: result is present.
+    assert env.result is not None
+    # 1 phase-1 + 4 phase-2 step rows.
+    assert len(env.steps) == 5
+    by_tool = {s.tool: s for s in env.steps}
+    assert by_tool["kegg_pathways"].status == "error"
+    assert by_tool["gramene_homologs"].status == "ok"
+    assert by_tool["string_interactions"].status == "ok"
+    assert by_tool["atted_coexpression"].status == "ok"
+    # Result still reflects the OK backends.
+    r = env.result
+    assert r["uniprot_accession"] == "Q0WV96"
+    assert r["homologs"]["total"] == 1
+    assert r["string_partners"]["partners"][0]["string_id"] == "3702.AT3G15500.1"
+    assert r["atted_coexpression"]["neighbors"][0]["locus"] == "AT3G15500"
+    # KEGG payload is absent / empty under the failure row.
+    assert not r.get("pathways") or not r["pathways"].get("pathways")
+
+
+@pytest.mark.asyncio
 async def test_biological_context_synth_phase1_failure_skips_all_phase2(httpx_mock):
     # UniProt search: 0 reviewed hits → fallback (drop reviewed) → 0 hits → NotFoundError
     httpx_mock.add_response(
