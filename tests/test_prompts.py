@@ -8,9 +8,13 @@ from plant_genomics_mcp import prompts
 from plant_genomics_mcp.errors import NotFoundError
 
 
-def test_prompt_catalog_has_two_entries() -> None:
+def test_prompt_catalog_has_three_entries() -> None:
     names = {p.name for p in prompts.PROMPTS}
-    assert names == {prompts.ANALYZE_LOCUS, prompts.FIND_HOMOLOGS}
+    assert names == {
+        prompts.ANALYZE_LOCUS,
+        prompts.FIND_HOMOLOGS,
+        prompts.BIOLOGICAL_CONTEXT,
+    }
 
 
 def test_each_prompt_has_description_and_arguments() -> None:
@@ -104,3 +108,35 @@ async def test_get_prompt_accepts_none_arguments() -> None:
     """MCP spec allows arguments to be omitted — should still raise for required args."""
     with pytest.raises(NotFoundError, match="missing required argument"):
         await prompts.get_prompt(prompts.ANALYZE_LOCUS, None)
+
+
+@pytest.mark.asyncio
+async def test_biological_context_renders_chain():
+    result = await prompts.get_prompt("biological_context", {"locus": "AT1G01010"})
+    assert "AT1G01010" in result.description
+    assert len(result.messages) == 1
+    text = result.messages[0].content.text
+    for tool in (
+        "gramene_homologs",
+        "kegg_pathways",
+        "resolve_locus_to_uniprot",
+        "string_interactions",
+        "atted_coexpression",
+    ):
+        assert tool in text, f"chain missing {tool}"
+
+
+@pytest.mark.asyncio
+async def test_biological_context_top_n_propagates():
+    result = await prompts.get_prompt("biological_context", {"locus": "AT1G01010", "top_n": "30"})
+    text = result.messages[0].content.text
+    assert "limit=30" in text or "top_n=30" in text
+
+
+@pytest.mark.asyncio
+async def test_biological_context_missing_locus_raises():
+    from plant_genomics_mcp.errors import NotFoundError
+
+    with pytest.raises(NotFoundError) as exc:
+        await prompts.get_prompt("biological_context", {})
+    assert "[NotFoundError]" in str(exc.value)
