@@ -74,6 +74,25 @@ def _free_port() -> int:
     return port
 
 
+def test_healthz_returns_status_ok_with_version() -> None:
+    """`GET /healthz` returns 200 with the package version.
+
+    Lets external watchers (Uptime Kuma, Diun, curl-in-cron) verify
+    liveness without sending a JSON-RPC POST. The version field doubles
+    as a cheap deploy-confirmation probe.
+    """
+    from starlette.testclient import TestClient
+
+    from plant_genomics_mcp import __version__
+
+    app = server_http.build_app()
+    with TestClient(app) as client:
+        resp = client.get("/healthz")
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body == {"status": "ok", "version": __version__}, body
+
+
 @pytest.mark.asyncio
 async def test_http_tools_list_via_real_uvicorn() -> None:
     """End-to-end: real uvicorn → real Starlette → real session manager.
@@ -97,6 +116,10 @@ async def test_http_tools_list_via_real_uvicorn() -> None:
 
         headers = {"Accept": "application/json, text/event-stream"}
         async with httpx.AsyncClient(base_url=f"http://127.0.0.1:{port}", timeout=10.0) as client:
+            health_resp = await client.get("/healthz")
+            assert health_resp.status_code == 200, health_resp.text
+            assert health_resp.json()["status"] == "ok"
+
             init_payload: dict[str, Any] = {
                 "jsonrpc": "2.0",
                 "id": 1,
