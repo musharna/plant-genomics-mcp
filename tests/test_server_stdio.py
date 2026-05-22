@@ -6,7 +6,7 @@ This is a real-execution check, not a unit test. It verifies that the
   1. Accepts the MCP ``initialize`` handshake over stdio.
   2. Advertises 23 tools via ``list_tools``, all with non-empty descriptions
      and a non-empty ``outputSchema``.
-  3. Advertises 2 prompts via ``list_prompts`` with required-arg flags
+  3. Advertises 3 prompts via ``list_prompts`` with required-arg flags
      preserved on the wire.
   3. Returns BOTH ``content`` (text) and ``structuredContent`` (dict) for
      a real call to ``tair_locus_info`` (the offline stub — doesn't need
@@ -136,7 +136,7 @@ async def test_invalid_locus_surfaces_typed_error(
 
 
 @pytest.mark.asyncio
-async def test_list_prompts_advertises_both_prompts(
+async def test_list_prompts_advertises_all_prompts(
     server_params: StdioServerParameters,
 ) -> None:
     """prompts/list over the wire — discoverable surface for slash-command menus."""
@@ -145,7 +145,7 @@ async def test_list_prompts_advertises_both_prompts(
             await session.initialize()
             result = await session.list_prompts()
             names = {p.name for p in result.prompts}
-            assert names == {"analyze_locus", "find_homologs"}, f"got {names}"
+            assert names == {"analyze_locus", "find_homologs", "biological_context"}, f"got {names}"
             by_name = {p.name: p for p in result.prompts}
             # Required-arg flags must round-trip (clients rely on these for UX).
             analyze_args = {a.name: a for a in by_name["analyze_locus"].arguments or []}
@@ -153,6 +153,9 @@ async def test_list_prompts_advertises_both_prompts(
             assert not analyze_args["species"].required
             homolog_args = {a.name: a for a in by_name["find_homologs"].arguments or []}
             assert homolog_args["sequence"].required is True
+            bio_args = {a.name: a for a in by_name["biological_context"].arguments or []}
+            assert bio_args["locus"].required is True
+            assert not bio_args["top_n"].required
 
 
 @pytest.mark.asyncio
@@ -175,6 +178,26 @@ async def test_get_prompt_renders_chain(
                 "resolve_locus_to_uniprot",
                 "locus_literature",
                 "locus_go_annotations",
+            ):
+                assert tool in text, f"chain missing {tool}"
+
+
+@pytest.mark.asyncio
+async def test_get_biological_context_prompt_renders_chain(
+    server_params: StdioServerParameters,
+) -> None:
+    async with stdio_client(server_params) as (read, write):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
+            result = await session.get_prompt("biological_context", {"locus": "AT1G01010"})
+            assert result.description and "AT1G01010" in result.description
+            text = result.messages[0].content.text
+            for tool in (
+                "gramene_homologs",
+                "kegg_pathways",
+                "resolve_locus_to_uniprot",
+                "string_interactions",
+                "atted_coexpression",
             ):
                 assert tool in text, f"chain missing {tool}"
 

@@ -34,6 +34,8 @@ from plant_genomics_mcp.errors import NotFoundError
 
 ANALYZE_LOCUS = "analyze_locus"
 FIND_HOMOLOGS = "find_homologs"
+BIOLOGICAL_CONTEXT = "biological_context"
+DEFAULT_TOP_N = "10"
 
 DEFAULT_SPECIES = "arabidopsis_thaliana"
 DEFAULT_BLAST_PROGRAM = "blastp"
@@ -84,6 +86,30 @@ PROMPTS: list[types.Prompt] = [
                 description=(
                     f"BLAST program (default {DEFAULT_BLAST_PROGRAM}). One of "
                     "blastn / blastp / blastx / tblastn / tblastx."
+                ),
+                required=False,
+            ),
+        ],
+    ),
+    types.Prompt(
+        name=BIOLOGICAL_CONTEXT,
+        description=(
+            "Build a biological-context profile for an Arabidopsis locus by "
+            "chaining homology (Gramene) → pathways (KEGG) → interactions "
+            "(STRING) → coexpression (ATTED-II). Cross-references the result "
+            "lists to surface high-confidence functional partners."
+        ),
+        arguments=[
+            types.PromptArgument(
+                name="locus",
+                description="Arabidopsis AGI locus, e.g. AT1G01010",
+                required=True,
+            ),
+            types.PromptArgument(
+                name="top_n",
+                description=(
+                    "Caps STRING partners and ATTED-II neighbors (default 10). "
+                    "MCP prompt args are always strings; we cast to int internally."
                 ),
                 required=False,
             ),
@@ -140,6 +166,35 @@ def _render_find_homologs(sequence: str, program: str) -> str:
     )
 
 
+def _render_biological_context(locus: str, top_n: int) -> str:
+    return (
+        f"Build a biological-context profile for Arabidopsis locus {locus!r}. "
+        "Use this MCP server's tools in this order:\n"
+        "\n"
+        f"1. `gramene_homologs` with locus={locus!r}, homology_type='ortholog' "
+        "— retrieve orthologs across plant species from Gramene compara.\n"
+        f"2. `kegg_pathways` with locus={locus!r} — list KEGG pathway "
+        "memberships in Arabidopsis.\n"
+        f"3. `resolve_locus_to_uniprot` with locus={locus!r} — fetch the "
+        "canonical UniProt accession (needed for STRING).\n"
+        f"4. `string_interactions` with locus_or_accession=<accession from step 3>, "
+        f"limit={top_n} — fetch first-neighbor protein-protein interactors "
+        "(STRING combined + per-channel sub-scores).\n"
+        f"5. `atted_coexpression` with locus={locus!r}, top_n={top_n} — "
+        "fetch co-expression neighbors from ATTED-II.\n"
+        "\n"
+        "Then synthesize: cross-reference the three sets (orthologs, "
+        "interactors, coexpression neighbors). Interactors that are ALSO "
+        "in the coexpression neighbor set are higher-confidence functional "
+        "partners. Orthologs that recur as interactors across plant species "
+        "suggest a conserved functional module. Flag any pathway from step 2 "
+        "that contains multiple interactors or coexpression partners — that "
+        "is a candidate functional context for the locus. If any step "
+        "returns a [NotFoundError], report which one and continue with the "
+        "remaining steps."
+    )
+
+
 async def get_prompt(name: str, arguments: dict[str, str] | None) -> types.GetPromptResult:
     """Render one of the named prompts to a single user-role message.
 
@@ -168,6 +223,17 @@ async def get_prompt(name: str, arguments: dict[str, str] | None) -> types.GetPr
             )
         text = _render_find_homologs(sequence, program)
         description = f"BLAST homolog search ({program}, {len(sequence)} chars)"
+    elif name == BIOLOGICAL_CONTEXT:
+        locus = args.get("locus")
+        if not locus:
+            raise NotFoundError(f"prompt {name!r}: missing required argument 'locus'")
+        top_n_raw = args.get("top_n") or DEFAULT_TOP_N
+        try:
+            top_n = int(top_n_raw)
+        except ValueError:
+            raise NotFoundError(f"prompt {name!r}: top_n {top_n_raw!r} must be parseable as int")
+        text = _render_biological_context(locus, top_n)
+        description = f"Biological-context profile for {locus} (top_n={top_n})"
     else:
         raise NotFoundError(f"unknown prompt: {name!r}")
 
