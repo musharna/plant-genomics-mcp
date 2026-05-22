@@ -408,3 +408,32 @@ class KeggPathways(BaseModel):
         default_factory=list,
         description="Per-pathway step-2 failures (kept inline so the call doesn't abort)",
     )
+
+
+class StringPartner(BaseModel):
+    """One STRING interaction-partner row."""
+
+    model_config = ConfigDict(extra="allow")
+
+    string_id: str | None = Field(default=None, description='e.g. "3702.AT3G15500.1"')
+    accession: str | None = Field(
+        default=None,
+        description="Partner's stringId; UniProt resolution is the caller's job",
+    )
+    preferred_name: str | None = Field(default=None, description="Human-readable gene symbol")
+    score: float | None = Field(default=None, description="Combined STRING confidence [0,1]")
+    escore: float | None = Field(default=None, description="Experimental sub-score")
+    dscore: float | None = Field(default=None, description="Database sub-score")
+    tscore: float | None = Field(default=None, description="Textmining sub-score")
+    pscore: float | None = Field(default=None, description="Predicted (homology) sub-score")
+
+
+class StringInteractions(BaseModel):
+    """STRING interaction-partners response wrapper."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    query: str = Field(description="The locus or accession the user passed")
+    accession: str = Field(description="UniProt accession actually queried at STRING")
+    organism_taxid: int = Field(description="NCBI taxonomy ID (3702 for Arabidopsis)")
+    partners: list[StringPartner]

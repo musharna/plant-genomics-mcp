@@ -42,6 +42,7 @@ from plant_genomics_mcp import (
     phytozome,
     plantcyc,
     quickgo,
+    string_db,
     tair,
     uniprot,
 )
@@ -98,6 +99,7 @@ def _cache_stats_payload() -> dict[str, dict[str, int]]:
         "kegg": kegg._CACHE.stats(),
         "phytozome": phytozome._CACHE.stats(),
         "quickgo": quickgo._CACHE.stats(),
+        "string_db": string_db._CACHE.stats(),
         "uniprot": uniprot._CACHE.stats(),
     }
 
@@ -149,6 +151,12 @@ def _backends_status_payload() -> list[dict[str, object]]:
         {
             "name": "kegg",
             "base_url": kegg.BASE_URL,
+            "kind": "live",
+            "subscription_gated": False,
+        },
+        {
+            "name": "string_db",
+            "base_url": string_db.BASE_URL,
             "kind": "live",
             "subscription_gated": False,
         },

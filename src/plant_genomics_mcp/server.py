@@ -55,6 +55,7 @@ from plant_genomics_mcp import (
     prompts,
     quickgo,
     resources,
+    string_db,
     tair,
     uniprot,
 )
@@ -69,6 +70,7 @@ from plant_genomics_mcp.models import (
     LocusLiterature,
     PhytozomeLocus,
     PlantCycLocusInfo,
+    StringInteractions,
     TairLocusInfo,
     UniProtLocus,
 )
@@ -404,6 +406,36 @@ TOOLS: list[types.Tool] = [
         _meta=_EDAM,
     ),
     types.Tool(
+        name="string_interactions",
+        description=(
+            "Fetch protein-protein interaction partners from STRING-DB "
+            "(string-db.org). Accepts either a UniProt accession or an "
+            "Arabidopsis locus identifier — the latter is resolved via "
+            "UniProt first. Returns first-neighbor partners with the "
+            "combined STRING score plus per-channel sub-scores "
+            "(experimental, database, textmining, predicted)."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus_or_accession": {
+                    "type": "string",
+                    "description": "UniProt accession (Q0WV96) or locus (AT1G01010)",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Number of partners to return",
+                    "default": 20,
+                    "minimum": 1,
+                    "maximum": 500,
+                },
+            },
+            "required": ["locus_or_accession"],
+        },
+        outputSchema=StringInteractions.model_json_schema(),
+        _meta=_EDAM,
+    ),
+    types.Tool(
         name="tair_locus_info",
         description=(
             "Returns subscription-access info and alternatives for a TAIR "
@@ -729,6 +761,24 @@ TOOLS: list[types.Tool] = [
         outputSchema=BatchEnvelope.model_json_schema(),
         _meta=_EDAM,
     ),
+    types.Tool(
+        name="batch_string_interactions",
+        description="Batch version of string_interactions. Up to 50 inputs per call.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "loci_or_accessions": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "maxItems": 50,
+                },
+                "limit": {"type": "integer", "default": 20, "minimum": 1, "maximum": 500},
+            },
+            "required": ["loci_or_accessions"],
+        },
+        outputSchema=BatchEnvelope.model_json_schema(),
+        _meta=_EDAM,
+    ),
 ]
 
 
@@ -896,6 +946,12 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                 )
             case "batch_kegg_pathways":
                 return await batch.batch_kegg_pathways(client, args["loci"])
+            case "batch_string_interactions":
+                return await batch.batch_string_interactions(
+                    client,
+                    args["loci_or_accessions"],
+                    limit=args.get("limit", string_db.DEFAULT_LIMIT),
+                )
             case "batch_gramene_homologs":
                 return await batch.batch_gramene_homologs(
                     client,
@@ -904,6 +960,12 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                 )
             case "kegg_pathways":
                 return await kegg.lookup_pathways(client, args["locus"])
+            case "string_interactions":
+                return await string_db.lookup_partners(
+                    client,
+                    args["locus_or_accession"],
+                    limit=args.get("limit", string_db.DEFAULT_LIMIT),
+                )
             case "gramene_homologs":
                 return await gramene.lookup_homologs(
                     client,
