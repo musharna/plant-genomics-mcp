@@ -437,3 +437,34 @@ class StringInteractions(BaseModel):
     accession: str = Field(description="UniProt accession actually queried at STRING")
     organism_taxid: int = Field(description="NCBI taxonomy ID (3702 for Arabidopsis)")
     partners: list[StringPartner]
+
+
+class CoexNeighbor(BaseModel):
+    """One ATTED-II co-expression neighbor entry (API v5)."""
+
+    model_config = ConfigDict(extra="allow")
+
+    locus: str | None = Field(
+        default=None,
+        description="Target locus (first element of upstream 'other_id' list)",
+    )
+    entrez_gene_id: int | None = Field(
+        default=None,
+        description="NCBI Entrez gene ID (upstream 'gene' field)",
+    )
+    z_score: float | None = Field(
+        default=None,
+        description="ATTED-II z-score; higher = stronger coexpression",
+    )
+
+
+class AttedCoexpression(BaseModel):
+    """ATTED-II coexpression response wrapper."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str
+    atted_release: str = Field(
+        description="ATTED-II DB identifier, e.g. Ath-u.c4-0 (release version included)",
+    )
+    neighbors: list[CoexNeighbor]

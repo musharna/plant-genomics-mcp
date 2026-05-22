@@ -35,6 +35,7 @@ from mcp.server.lowlevel.helper_types import ReadResourceContents
 from pydantic import AnyUrl
 
 from plant_genomics_mcp import (
+    atted,
     ensembl_plants,
     europe_pmc,
     gramene,
@@ -93,6 +94,7 @@ def _cache_stats_payload() -> dict[str, dict[str, int]]:
     want a current reading, not a stale snapshot).
     """
     return {
+        "atted": atted._CACHE.stats(),
         "ensembl_plants": ensembl_plants._CACHE.stats(),
         "europe_pmc": europe_pmc._CACHE.stats(),
         "gramene": gramene._CACHE.stats(),
@@ -112,6 +114,12 @@ def _backends_status_payload() -> list[dict[str, object]]:
     whether to retry.
     """
     return [
+        {
+            "name": "atted",
+            "base_url": atted.BASE_URL,
+            "kind": "live",
+            "subscription_gated": False,
+        },
         {
             "name": "ensembl_plants",
             "base_url": ensembl_plants.BASE_URL,
