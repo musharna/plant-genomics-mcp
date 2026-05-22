@@ -223,3 +223,79 @@ async def test_analyze_locus_synth_phase2_single_failure_returns_partial(httpx_m
     assert "error" in statuses
     assert env.result["xrefs"] is None
     assert env.result["uniprot_record"] is not None
+
+
+@pytest.mark.asyncio
+async def test_timed_step_network_error_becomes_error_steprow():
+    """Raw httpx network errors must land as status="error" StepRows with
+    the [ClassName] prefix wire format — they must NOT propagate out of
+    _timed_step and crash the envelope."""
+    from plant_genomics_mcp.synthesis import _timed_step
+
+    async def _raises_timeout():
+        raise httpx.TimeoutException("upstream slow")
+
+    row = await _timed_step(1, "fake", _raises_timeout())
+    assert row.status == "error"
+    assert row.tool == "fake"
+    assert row.step == 1
+    assert row.error is not None
+    assert row.error.startswith("[TimeoutException]")
+
+
+@pytest.mark.asyncio
+async def test_analyze_locus_synth_network_error_records_error_row_not_crash(httpx_mock):
+    """A raw httpx network error on one phase-2 backend (xrefs) must record
+    a status="error" StepRow with the [ClassName] prefix, while the rest of
+    the envelope still composes from the other successful rows."""
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0",
+        json={
+            "id": "AT1G01010",
+            "species": "arabidopsis_thaliana",
+            "display_name": "NAC001",
+        },
+    )
+    # xrefs raises a raw httpx network error (not a PlantGenomicsError)
+    httpx_mock.add_exception(
+        httpx.ReadTimeout("read timed out"),
+        url="https://rest.ensembl.org/xrefs/id/AT1G01010?species=arabidopsis_thaliana",
+    )
+    httpx_mock.add_response(
+        url=re.compile(r"^https://rest\.uniprot\.org/uniprotkb/search.*"),
+        json={
+            "results": [
+                {
+                    "primaryAccession": "Q0WV96",
+                    "uniProtkbId": "Y_ARATH",
+                    "entryType": "UniProtKB reviewed (Swiss-Prot)",
+                    "proteinDescription": {"recommendedName": {"fullName": {"value": "X"}}},
+                    "genes": [{"geneName": {"value": "NAC001"}}],
+                    "organism": {"scientificName": "Arabidopsis thaliana", "taxonId": 3702},
+                    "sequence": {"length": 429},
+                }
+            ]
+        },
+    )
+    httpx_mock.add_response(
+        url=re.compile(r"^https://www\.ebi\.ac\.uk/europepmc/webservices/rest/search.*"),
+        json={"hitCount": 0, "resultList": {"result": []}},
+    )
+    httpx_mock.add_response(
+        url=re.compile(r"^https://www\.ebi\.ac\.uk/QuickGO/services/annotation/search.*"),
+        json={"numberOfHits": 0, "results": []},
+    )
+    from plant_genomics_mcp.synthesis import analyze_locus_synth
+
+    async with httpx.AsyncClient() as client:
+        env = await analyze_locus_synth(client, "AT1G01010")
+
+    assert env.result is not None
+    assert env.result["xrefs"] is None
+    # Find the xrefs row (tool == "get_gene_xrefs")
+    xrefs_rows = [s for s in env.steps if s.tool == "get_gene_xrefs"]
+    assert len(xrefs_rows) == 1
+    xrefs_row = xrefs_rows[0]
+    assert xrefs_row.status == "error"
+    assert xrefs_row.error is not None
+    assert xrefs_row.error.startswith("[ReadTimeout]")

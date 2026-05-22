@@ -55,8 +55,10 @@ async def _timed_step(step: int, tool: str, coro) -> StepRow:
     """Run ``coro`` and wrap its outcome in a StepRow.
 
     PlantGenomicsError subclasses → status="error" with the existing
-    [ClassName] message wire format. Non-PlantGenomicsError exceptions
-    re-raise so the outer SDK handler still sees them.
+    [ClassName] message wire format. Raw httpx network errors (timeout,
+    connect, read) → status="error" with an explicit [ClassName] prefix
+    so the wire format stays consistent. Other exceptions re-raise so
+    the outer SDK handler still sees them.
     """
     started = time.perf_counter()
     try:
@@ -68,6 +70,14 @@ async def _timed_step(step: int, tool: str, coro) -> StepRow:
             status="error",
             elapsed_s=time.perf_counter() - started,
             error=str(e),
+        )
+    except httpx.HTTPError as e:
+        return StepRow(
+            step=step,
+            tool=tool,
+            status="error",
+            elapsed_s=time.perf_counter() - started,
+            error=f"[{type(e).__name__}] {e}",
         )
     return StepRow(
         step=step,
@@ -81,13 +91,23 @@ async def _timed_step(step: int, tool: str, coro) -> StepRow:
 def _gather_step(step: int, tool: str, outcome: Any, elapsed_s: float) -> StepRow:
     """Convert one slot of ``asyncio.gather(return_exceptions=True)`` into a StepRow.
 
-    Used for phase-2 fanout — each coroutine's outcome lands here. Non-
-    PlantGenomicsError exceptions re-raise (caller wraps in try, or the
-    gather machinery propagates).
+    Used for phase-2 fanout — each coroutine's outcome lands here.
+    PlantGenomicsError → status="error" using its existing [ClassName] __str__.
+    Raw httpx network errors → status="error" with explicit [ClassName] prefix.
+    Other exceptions re-raise (caller wraps in try, or the gather machinery
+    propagates).
     """
     if isinstance(outcome, PlantGenomicsError):
         return StepRow(
             step=step, tool=tool, status="error", elapsed_s=elapsed_s, error=str(outcome)
+        )
+    if isinstance(outcome, httpx.HTTPError):
+        return StepRow(
+            step=step,
+            tool=tool,
+            status="error",
+            elapsed_s=elapsed_s,
+            error=f"[{type(outcome).__name__}] {outcome}",
         )
     if isinstance(outcome, BaseException):
         raise outcome
