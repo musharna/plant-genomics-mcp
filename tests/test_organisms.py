@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import pytest
 
 from plant_genomics_mcp import organisms
 
@@ -52,3 +53,38 @@ def test_organism_not_supported_carries_backend_and_supported() -> None:
     assert exc.backend == "phytozome"
     assert exc.organism == "vitis_vinifera"
     assert exc.supported == ["arabidopsis_thaliana", "glycine_max"]
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "arabidopsis_thaliana",
+        "arabidopsis thaliana",
+        "arabidopsis-thaliana",
+        "Arabidopsis thaliana",
+        "ARABIDOPSIS_THALIANA",
+        "  arabidopsis_thaliana  ",
+        "a. thaliana",
+        "A. thaliana",
+        "thale cress",
+        "thale-cress",
+        "at",
+        3702,
+    ],
+)
+def test_resolve_arabidopsis_from_all_forms(query) -> None:
+    record = organisms.resolve(query)
+    assert record.canonical == "arabidopsis_thaliana"
+
+
+def test_resolve_unknown_raises_organism_not_found() -> None:
+    with pytest.raises(OrganismNotFound) as excinfo:
+        organisms.resolve("zucchini")
+    assert excinfo.value.query == "zucchini"
+    assert "arabidopsis_thaliana" in excinfo.value.supported
+
+
+def test_resolve_unknown_taxid_raises() -> None:
+    with pytest.raises(OrganismNotFound) as excinfo:
+        organisms.resolve(99999999)
+    assert excinfo.value.query == 99999999
