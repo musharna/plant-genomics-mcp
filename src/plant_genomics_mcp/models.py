@@ -317,12 +317,6 @@ class SubscriptionGatedRedirect(BaseModel):
     alternatives_note: str = Field(description="What the alternatives do and do NOT cover")
 
 
-class TairLocusInfo(SubscriptionGatedRedirect):
-    """TAIR stub response — adds ``tair_web_url`` to the shared shape."""
-
-    tair_web_url: str = Field(description="Browser URL for the TAIR locus page")
-
-
 class PlantCycLocusInfo(SubscriptionGatedRedirect):
     """PlantCyc stub response — adds ``plantcyc_web_url`` to the shared shape."""
 

@@ -19,7 +19,7 @@ the live backends:
   - ``bar_gene_summary``                  — BAR ThaleMine + GAIA aliases (live, Arabidopsis curator summary)
   - ``bar_efp_expression``                — BAR world-eFP natural-variation expression (live, ~36 Arabidopsis ecotypes)
   - ``bar_aiv_interactions``              — BAR AIV interactions (live, Arabidopsis GRN paper refs / Rice predicted PPI pairs)
-  - ``tair_locus_info``                   — informational stub (subscription-gated)
+  - ``tair_locus_info``                   — alias of ``bar_gene_summary`` (TAIR REST is subscription-gated; BAR mirrors the curator data)
   - ``plantcyc_locus_info``               — informational stub (subscription-gated)
   - ``batch_ensembl_plants_lookup_locus`` — Ensembl Plants POST /lookup/id (one round-trip)
   - ``batch_get_gene_xrefs``              — gather over get_gene_xrefs
@@ -96,7 +96,6 @@ from plant_genomics_mcp.models import (
     PlantCycLocusInfo,
     StringInteractions,
     SynthesisEnvelope,
-    TairLocusInfo,
     UniProtLocus,
 )
 
@@ -570,24 +569,25 @@ TOOLS: list[types.Tool] = [
     types.Tool(
         name="tair_locus_info",
         description=(
-            "Returns subscription-access info and alternatives for a TAIR "
-            "locus. Does NOT fetch annotation data — TAIR's free per-locus "
-            "REST API was retired (Phoenix Bioinformatics subscription "
-            "gate, probed 2026-05-21); use ensembl_plants_lookup_locus or "
-            "phytozome_lookup_locus for the same Arabidopsis annotation. "
-            "Returns a structured redirect with rationale and probed_at date."
+            "Fetch the TAIR curator-vetted Arabidopsis locus summary. Served "
+            "via BAR/ThaleMine (U Toronto, Global Core Biodata Resource 2023) "
+            "since TAIR's free per-locus REST API is gated behind a paid "
+            "Phoenix Bioinformatics subscription. Returns TAIR curator summary "
+            "+ Araport11 computational description + NCBI Gene ID + cross-DB "
+            "aliases (RefSeq, UniProt, TIGR locus-model IDs). Arabidopsis "
+            "only. Alias of bar_gene_summary."
         ),
         inputSchema={
             "type": "object",
             "properties": {
                 "locus": {
                     "type": "string",
-                    "description": "TAIR-canonical locus, e.g. AT1G01010",
+                    "description": "Arabidopsis AGI locus, e.g. AT1G01010",
                 },
             },
             "required": ["locus"],
         },
-        outputSchema=TairLocusInfo.model_json_schema(),
+        outputSchema=BarGeneSummary.model_json_schema(),
         _meta=_EDAM,
     ),
     types.Tool(
@@ -1219,9 +1219,10 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     limit=args.get("limit", quickgo.DEFAULT_LIMIT),
                 )
             case "tair_locus_info":
-                # Pure-data sync call — no client, no await. Returns a
-                # structured redirect; see plant_genomics_mcp.tair docstring.
-                return tair.lookup_locus(args["locus"])
+                # Silent upgrade (Wave A.6.8): delegates to bar.gene_summary.
+                # MCP tool name preserved; body now returns real BAR/ThaleMine
+                # curator summary instead of a subscription_required stub.
+                return await tair.lookup_locus(client, args["locus"])
             case "plantcyc_locus_info":
                 # Pure-data sync call — no client, no await. Returns a
                 # structured redirect; see plant_genomics_mcp.plantcyc docstring.
