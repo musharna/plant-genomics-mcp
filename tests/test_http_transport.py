@@ -23,7 +23,7 @@ from starlette.applications import Starlette
 from starlette.routing import Mount
 from starlette.testclient import TestClient
 
-from plant_genomics_mcp import __version__, server_http
+from plant_genomics_mcp import server_http
 
 
 # ---------- unit ----------
@@ -75,19 +75,23 @@ def _free_port() -> int:
     return port
 
 
-def test_healthz_returns_status_ok_with_version() -> None:
-    """`GET /healthz` returns 200 with the package version.
+def test_healthz_returns_status_ok_without_version() -> None:
+    """`GET /healthz` returns 200 with status only — no version field.
 
     Lets external watchers (Uptime Kuma, Diun, curl-in-cron) verify
-    liveness without sending a JSON-RPC POST. The version field doubles
-    as a cheap deploy-confirmation probe.
+    liveness without sending a JSON-RPC POST. Version is deliberately
+    omitted from the unauthenticated payload (security audit P-1):
+    leaking the exact version string to anonymous callers hands them a
+    CVE-targeting shortcut. Authenticated callers can read __version__
+    from the MCP initialize handshake.
     """
     app = server_http.build_app()
     with TestClient(app) as client:
         resp = client.get("/healthz")
     assert resp.status_code == 200, resp.text
     body = resp.json()
-    assert body == {"status": "ok", "version": __version__}, body
+    assert body == {"status": "ok"}, body
+    assert "version" not in body
 
 
 @pytest.mark.asyncio
@@ -115,8 +119,7 @@ async def test_http_tools_list_via_real_uvicorn() -> None:
         async with httpx.AsyncClient(base_url=f"http://127.0.0.1:{port}", timeout=10.0) as client:
             health_resp = await client.get("/healthz")
             assert health_resp.status_code == 200, health_resp.text
-            assert health_resp.json()["status"] == "ok"
-            assert health_resp.json()["version"] == __version__
+            assert health_resp.json() == {"status": "ok"}
 
             init_payload: dict[str, Any] = {
                 "jsonrpc": "2.0",

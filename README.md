@@ -135,7 +135,7 @@ Liveness probe:
 
 ```bash
 curl https://mjarnoldgt76.tail86d19d.ts.net/healthz
-# {"status":"ok","version":"0.10.0"}
+# {"status":"ok"}
 ```
 
 Connect from Claude Code:
