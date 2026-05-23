@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .errors import OrganismNotFound
+from .errors import OrganismNotFound, OrganismNotSupported
 
 
 @dataclass(frozen=True)
