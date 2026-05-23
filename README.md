@@ -32,13 +32,14 @@
 | 14  | Batch (live)            | `batch_*` (ten variants)                | Parallel per-locus fanout for tools 1–6, 8–11. Up to 50 loci per call.               |
 | 15  | Synthesis (live)        | `*_synth` / `consensus_homologs` (four) | Compose 2–5 backends in parallel, return a `SynthesisEnvelope` with per-step status. |
 
-Live tools take a TAIR-style locus (e.g. `AT1G01010`) plus optional
-`species=` / `organism_id=` and return a structured record. UniProt
-expects an NCBI taxonomy ID for `organism_id` (default `3702` =
-_Arabidopsis thaliana_); the gene-metadata tools each have their own
-species/organism conventions documented below. Subscription tools take
-a locus and return a structured redirect record — they do not call the
-gated upstream.
+Live tools take a TAIR-style locus (e.g. `AT1G01010`) plus an optional
+unified `organism=` parameter (default `arabidopsis_thaliana`) and
+return a structured record. `organism=` accepts a canonical slug
+(`oryza_sativa`), scientific name (`Oryza sativa`), common name
+(`rice`), or NCBI taxonomy ID (`39947`) — all resolve to the same
+12-plant curated coverage matrix (see `pgmcp://organisms/coverage`).
+Subscription tools take a locus and return a structured redirect record —
+they do not call the gated upstream.
 
 Batch variants (`batch_ensembl_plants_lookup_locus`,
 `batch_get_gene_xrefs`, `batch_phytozome_lookup_locus`,
@@ -46,7 +47,7 @@ Batch variants (`batch_ensembl_plants_lookup_locus`,
 `batch_locus_go_annotations`, `batch_gramene_homologs`,
 `batch_kegg_pathways`, `batch_string_interactions`,
 `batch_atted_coexpression`) take a `loci: string[]` (1–50 items) plus
-the same optional `species=` / `organism_id=` arguments. They return
+the same optional `organism=` argument. They return
 `{tool, count, results, errors}` where `results[locus]` is the same
 shape as the single-locus tool and `errors[locus]` is a
 `[ClassName] message` string for `PlantGenomicsError` failures
@@ -61,29 +62,32 @@ for registry indexers.
 
 ## Resources
 
-The server also advertises three read-only MCP resources (JSON,
-`resources/list` + `resources/read`):
+The server advertises four read-only MCP resources (`resources/list` +
+`resources/read`); JSON unless otherwise noted:
 
-| URI                           | What                                                                                                           |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `pgmcp://cache/stats`         | Per-backend `TTLCache` rollup — `{hits, misses, size}` for each of the nine live backends                      |
-| `pgmcp://organisms/phytozome` | Slug → Phytozome `organism_id` map (only `arabidopsis_thaliana=167` is controller-verified; rest are hints)    |
-| `pgmcp://backends/status`     | Per-backend liveness rollup — `name`, `base_url`, `kind` (`live` or `stub`), `subscription_gated`, `probed_at` |
+| URI                           | MIME             | What                                                                                                           |
+| ----------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------- |
+| `pgmcp://cache/stats`         | application/json | Per-backend `TTLCache` rollup — `{hits, misses, size}` for each of the nine live backends                      |
+| `pgmcp://organisms/phytozome` | application/json | Slug → Phytozome `organism_id` map, derived from the curated v0.9 `organisms.ORGANISMS` registry               |
+| `pgmcp://backends/status`     | application/json | Per-backend liveness rollup — `name`, `base_url`, `kind` (`live` or `stub`), `subscription_gated`, `probed_at` |
+| `pgmcp://organisms/coverage`  | text/markdown    | Markdown table of all 12 supported plants × 5 backend ID slots (ensembl, phytozome, string, europe_pmc, ncbi)  |
 
 Useful for an operator to confirm caching is doing work without
 shelling into the process, and for clients that want to enumerate
-supported organisms / backends programmatically.
+supported organisms / backends programmatically. The coverage matrix
+lets a client introspect supported organism coverage in one read
+instead of probing `resolve_organism` per organism.
 
 ## Prompts
 
 The server exposes three parameterized prompts (`prompts/list` +
 `prompts/get`) for one-click multi-tool workflows:
 
-| Name                 | Required args | Optional args                              | What it chains                                                                           |
-| -------------------- | ------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| `analyze_locus`      | `locus`       | `species` (default `arabidopsis_thaliana`) | Ensembl annotation → xrefs → UniProt → Europe PMC literature → QuickGO annotations       |
-| `find_homologs`      | `sequence`    | `program` (default `blastp`)               | `blast_sequence` → per-hit `resolve_locus_to_uniprot` for UniProt-shaped accessions      |
-| `biological_context` | `locus`       | `top_n` (default 10)                       | Gramene homologs → KEGG pathways → UniProt → STRING interactions → ATTED-II coexpression |
+| Name                 | Required args | Optional args                               | What it chains                                                                           |
+| -------------------- | ------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `analyze_locus`      | `locus`       | `organism` (default `arabidopsis_thaliana`) | Ensembl annotation → xrefs → UniProt → Europe PMC literature → QuickGO annotations       |
+| `find_homologs`      | `sequence`    | `program` (default `blastp`)                | `blast_sequence` → per-hit `resolve_locus_to_uniprot` for UniProt-shaped accessions      |
+| `biological_context` | `locus`       | `top_n` (default 10)                        | Gramene homologs → KEGG pathways → UniProt → STRING interactions → ATTED-II coexpression |
 
 Clients populate their slash-command menu from `prompts/list`, so the
 workflow is one user selection deep instead of requiring the user to
@@ -164,9 +168,9 @@ claude mcp add plant-genomics --scope local -- "$(pwd)/.venv/bin/plant-genomics-
 
 ### 1. `ensembl_plants_lookup_locus`
 
-Fetch a gene record from Ensembl Plants. Default species is
-`arabidopsis_thaliana`; pass `species=` for any other Ensembl Plants
-species (`oryza_sativa`, `zea_mays`, `solanum_lycopersicum`, ...).
+Fetch a gene record from Ensembl Plants. Default organism is
+`arabidopsis_thaliana`; pass `organism=` for any other supported plant
+(`oryza_sativa`, `zea_mays`, `solanum_lycopersicum`, ...).
 
 ```jsonc
 // arguments
@@ -175,7 +179,7 @@ species (`oryza_sativa`, `zea_mays`, `solanum_lycopersicum`, ...).
 // result (truncated)
 {
   "id": "AT1G01010",
-  "species": "arabidopsis_thaliana",
+  "organism": "arabidopsis_thaliana",
   "display_name": "NAC001",
   "biotype": "protein_coding",
   "seq_region_name": "1",
@@ -190,13 +194,13 @@ species (`oryza_sativa`, `zea_mays`, `solanum_lycopersicum`, ...).
 Cross-species:
 
 ```jsonc
-{ "locus": "Os01g0100100", "species": "oryza_sativa" }
+{ "locus": "Os01g0100100", "organism": "oryza_sativa" }
 ```
 
 ### 2. `get_gene_xrefs`
 
 Fetch cross-database references from Ensembl Plants. Same host /
-species conventions as `ensembl_plants_lookup_locus`. The response
+organism conventions as `ensembl_plants_lookup_locus`. The response
 wraps Ensembl's top-level array (so it validates against the MCP
 `outputSchema`'s required `type=object` root) and adds a `by_db`
 rollup keyed on Ensembl's `dbname` — so a chain consumer can lift
@@ -208,7 +212,7 @@ out a single foreign accession without walking the list.
 // result (xrefs[] truncated)
 {
   "locus": "AT1G01010",
-  "species": "arabidopsis_thaliana",
+  "organism": "arabidopsis_thaliana",
   "count": 8,
   "xrefs": [
     { "dbname": "Uniprot_gn", "primary_id": "Q0WV96", "info_type": "DEPENDENT" },
@@ -238,11 +242,11 @@ NCBI sibling MCP.
 ### 3. `phytozome_lookup_locus`
 
 Fetch a gene record from Phytozome BioMart. Default organism is
-Arabidopsis thaliana TAIR10 (`organism_id=167`, controller-verified
-live). Other Phytozome proteome integer IDs are documented as hints
-in `src/plant_genomics_mcp/phytozome.py::KNOWN_ORGANISMS` (`275` for
-_Glycine max_, `313` for _Sorghum bicolor_, etc.) but only Arabidopsis
-is empirically verified.
+`arabidopsis_thaliana` (Phytozome `organism_id=167`,
+controller-verified live). Pass `organism=` for any other Phytozome
+proteome covered by the curated registry — see
+`pgmcp://organisms/phytozome` for the slug → `organism_id` map, or
+`pgmcp://organisms/coverage` for the full per-backend coverage matrix.
 
 ```jsonc
 { "locus": "AT1G01010" }
@@ -264,8 +268,9 @@ is empirically verified.
 Resolve a plant locus to its canonical UniProtKB record. Prefers
 reviewed (Swiss-Prot) entries; falls back to unreviewed (TrEMBL) when
 no curated record exists — the common case for non-Arabidopsis plants.
-`organism_id` is the NCBI taxonomy ID (`3702` = Arabidopsis, `39947` =
-Oryza sativa japonica, `4577` = Zea mays, …; defaults to `3702`).
+`organism=` defaults to `arabidopsis_thaliana`; pass a canonical slug,
+scientific name, common name, or NCBI taxid for any of the 12 supported
+plants.
 
 ```jsonc
 { "locus": "AT1G01010" }
@@ -296,7 +301,7 @@ the human-orthology bridge).
 Search Europe PMC for literature mentioning a plant locus. Free,
 no API key. Returns up to `size` records (default 10, capped at 25)
 with title, authors, journal, year, DOI/PMID/PMCID, open-access status,
-citation count, and abstract. For non-Arabidopsis species the species
+citation count, and abstract. For non-Arabidopsis organisms the species
 common name is appended to the query (`rice`, `maize`, `tomato`, …)
 to disambiguate locus IDs that might otherwise collide with unrelated
 literature.
@@ -307,7 +312,7 @@ literature.
 // result (hits[] truncated)
 {
   "locus": "AT1G01010",
-  "species": "arabidopsis_thaliana",
+  "organism": "arabidopsis_thaliana",
   "query": "AT1G01010",
   "hitCount": 40,
   "returned": 3,
@@ -469,9 +474,9 @@ graceful degradation:
 **Cross-species ortholog probe** (manual today, candidate for a built-in
 chain in a future release):
 
-1. `ensembl_plants_lookup_locus { locus, species: "arabidopsis_thaliana" }`
+1. `ensembl_plants_lookup_locus { locus, organism: "arabidopsis_thaliana" }`
    → save the `display_name`.
-2. `ensembl_plants_lookup_locus { locus: <ortholog_id>, species: "oryza_sativa" }`
+2. `ensembl_plants_lookup_locus { locus: <ortholog_id>, organism: "oryza_sativa" }`
    → compare biotype + description.
 
 **Locus → protein → structure** (gene to AlphaFold model in two MCP
@@ -555,6 +560,44 @@ What gets reported:
 
 `progress` is a monotonically increasing step counter (not a percentage);
 `total` is omitted because retry budgets aren't a useful denominator.
+
+## Migrating from v0.8 to v0.9
+
+Every backend tool that previously accepted `species=` (Ensembl slug) or
+`organism_id=` (NCBI taxid) now accepts a single `organism=` parameter:
+
+```python
+# v0.8 (deprecated)
+await ensembl_plants.lookup_locus(client, "AT1G01010", species="arabidopsis_thaliana")
+await uniprot.lookup_locus(client, "AT1G01010", organism_id=3702)
+
+# v0.9
+await ensembl_plants.lookup_locus(client, "AT1G01010", organism="arabidopsis_thaliana")
+await uniprot.lookup_locus(client, "AT1G01010", organism="arabidopsis_thaliana")
+# All of these also work:
+await ensembl_plants.lookup_locus(client, "AT1G01010", organism="Arabidopsis thaliana")
+await ensembl_plants.lookup_locus(client, "AT1G01010", organism="thale cress")
+await ensembl_plants.lookup_locus(client, "AT1G01010", organism=3702)
+```
+
+`sed` migration for downstream callers:
+
+```bash
+sed -i 's/species=/organism=/g; s/organism_id=/organism=/g' your_code.py
+```
+
+The default value (`arabidopsis_thaliana`) is unchanged, so calls that never
+passed `species=` or `organism_id=` continue to work without code changes.
+
+Output Pydantic models also rename `species` → `organism` and
+`organism_taxid` → `organism` (the string slug, not the int). See
+`CHANGELOG.md` for the full breaking-change list.
+
+### Supported organisms in v0.9
+
+12 plants across the major Ensembl / STRING / Phytozome / Europe PMC
+backends. See the `pgmcp://organisms/coverage` MCP resource for the live
+coverage matrix, or `organisms.ORGANISMS` in the source.
 
 ## License
 
