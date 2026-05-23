@@ -107,7 +107,7 @@ async def test_lookup_locus_falls_back_to_unreviewed(httpx_mock: HTTPXMock) -> N
         ),
     )
     async with httpx.AsyncClient() as client:
-        result = await uniprot.lookup_locus(client, "Os01g0100100", organism_id=39947)
+        result = await uniprot.lookup_locus(client, "Os01g0100100", organism=39947)
     assert result["primaryAccession"] == "Q0JRI1"
     assert result["reviewed"] is False
     assert "TrEMBL" in result["entryType"]
@@ -282,8 +282,32 @@ async def test_live_lookup_at1g01010() -> None:
 async def test_live_lookup_rice_falls_back_to_trembl() -> None:
     """Real call for rice locus — should fall back to TrEMBL (no Swiss-Prot)."""
     async with httpx.AsyncClient() as client:
-        result = await uniprot.lookup_locus(client, "Os01g0100100", organism_id=39947)
+        result = await uniprot.lookup_locus(client, "Os01g0100100", organism=39947)
     assert result["primaryAccession"]  # any non-empty accession
     # If UniProt later curates this locus into Swiss-Prot, this test will need
     # updating — for now, asserting TrEMBL doubles as a wire-format guard.
     assert "TrEMBL" in result["entryType"]
+
+
+# ---------- v0.9 resolver migration ----------
+
+
+def test_lookup_locus_accepts_organism_param(httpx_mock: HTTPXMock) -> None:
+    """v0.9 T9: lookup_locus accepts organism= (slug/name/taxid) via resolver."""
+    import asyncio
+    import re
+
+    import httpx as _httpx
+
+    httpx_mock.add_response(
+        url=re.compile(r"https://rest\.uniprot\.org/.*"),
+        json=_one_hit(),
+    )
+
+    async def run() -> dict:
+        async with _httpx.AsyncClient() as client:
+            return await uniprot.lookup_locus(client, "AT1G01010", organism="arabidopsis_thaliana")
+
+    result = asyncio.run(run())
+    assert result is not None
+    assert result["primaryAccession"] == "Q0WV96"
