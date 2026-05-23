@@ -109,58 +109,123 @@ async def _get(
     )
 
 
-# Positional indices of /thalemine/gene_information/{locus} array response.
-# Live shape (probed 2026-05-23 against AT1G01010):
-#   [0] "AT1G01010"                                          → input echo
-#   [1] "NAC domain containing protein 1"                    → full_name
-#   [2] "locus:2200935"                                      → tair_locus_id
-#   [3] "NAC domain containing protein 1"                    → display_name (dup)
-#   [4] "NAC001"                                              → symbol
-#   [5] "ANAC001, NAC001, NTL10"                             → synonyms (CSV)
-#   [6] "NAC domain containing protein 1;(source:Araport11)" → computational_description
-#   [7] "Member of the NAC domain containing family..."      → curator_summary
-#   [8] "NAC domain containing protein 1"                    → brief_description
+# BAR uses a body-level success envelope, not HTTP status. Both endpoints
+# return HTTP 200 even for missing loci; the `wasSuccessful` flag carries
+# the real outcome. Failure modes seen live 2026-05-23:
+#   /thalemine/gene_information/AT1G99999  → 200 {"wasSuccessful":true,"results":[]}
+#   /thalemine/gene_information/LOC_Os01g01080 → 400 {"wasSuccessful":false,"error":"Invalid gene id"}
+#   /gaia/aliases/AT1G99999                → 200 {"wasSuccessful":false,"error":"Nothing found"}
+
+# Positional indices into thalemine's results[0] row. Order is fixed by the
+# InterMine `views` list (column ordering survives schema versions). Live
+# shape (probed 2026-05-23 against AT1G01010):
+#   [0] "AT1G01010"                                          → agi (Gene.primaryIdentifier)
+#   [1] "NAC domain containing protein 1"                    → full_name (Gene.name)
+#   [2] "locus:2200935"                                      → tair_locus_id (Gene.secondaryIdentifier)
+#   [3] "NAC domain containing protein 1"                    → brief_description (Gene.briefDescription)
+#   [4] "NAC001"                                              → symbol (Gene.symbol)
+#   [5] "ANAC001, NAC001, NTL10"                             → synonyms (Gene.tairAliases, CSV)
+#   [6] "NAC domain containing protein 1;(source:Araport11)" → computational_description (Gene.tairComputationalDescription)
+#   [7] "Member of the NAC domain containing family..."      → curator_summary (Gene.tairCuratorSummary)
+#   [8] "NAC domain containing protein 1"                    → tair_short_description (Gene.tairShortDescription)
 _GI_AGI = 0
 _GI_FULL_NAME = 1
 _GI_TAIR_LOCUS_ID = 2
+_GI_BRIEF = 3
 _GI_SYMBOL = 4
 _GI_SYNONYMS = 5
 _GI_COMPUTATIONAL = 6
 _GI_CURATOR = 7
-_GI_BRIEF = 8
+_GI_TAIR_SHORT = 8
 
 
 async def gene_summary(
     client: httpx.AsyncClient,
     locus: str,
 ) -> dict[str, Any]:
-    """Fetch Arabidopsis gene summary from BAR/ThaleMine.
+    """Fetch Arabidopsis gene summary from BAR/ThaleMine + /gaia/aliases/.
 
-    Hits ``/thalemine/gene_information/{locus}`` and projects the positional
-    response array into a named-field dict. Arabidopsis only — BAR's
-    ThaleMine instance carries only taxon 3702.
+    Two BAR endpoints fetched in parallel:
+      - ``/thalemine/gene_information/{locus}`` → InterMine envelope with
+        ``results: [[positional]]`` carrying TAIR curator summary + Araport11
+        computational description.
+      - ``/gaia/aliases/{locus}`` → ``{data: [{species, locus, geneid,
+        aliases:[...]}]}`` carrying NCBI Gene ID + cross-DB synonyms
+        (RefSeq, UniProt, locus-model IDs).
 
-    The returned ``curator_summary`` is the TAIR-curated functional summary
-    that the v0.9 ``tair_locus_info`` stub could not provide for free.
+    Arabidopsis only — BAR's ThaleMine instance carries taxon 3702 plus
+    yeast/human for ortholog cross-reference. Non-Arabidopsis loci raise
+    NotFoundError because thalemine 400s and gaia returns empty.
+
+    Aliases are best-effort: a /gaia failure does not fail the call, since
+    the canonical TAIR fields come from thalemine. Returns ``ncbi_gene_id:
+    None`` and ``aliases: []`` in that case.
     """
     if not _LOCUS_RE.match(locus):
         raise NotFoundError(f"BAR: invalid locus {locus!r} (must match {_LOCUS_RE.pattern})")
-    raw = await _get(client, f"/thalemine/gene_information/{locus}")
-    if not isinstance(raw, list) or len(raw) <= _GI_BRIEF:
+    gi_env, aliases_env = await asyncio.gather(
+        _get(client, f"/thalemine/gene_information/{locus}"),
+        _get(client, f"/gaia/aliases/{locus}"),
+        return_exceptions=True,
+    )
+    if isinstance(gi_env, BaseException):
+        raise gi_env
+    if not isinstance(gi_env, dict) or not gi_env.get("wasSuccessful"):
+        err = gi_env.get("error") if isinstance(gi_env, dict) else "non-dict response"
+        raise NotFoundError(f"BAR /thalemine/gene_information/{locus}: {err}")
+    results = gi_env.get("results") or []
+    if not results:
         raise NotFoundError(
-            f"BAR /thalemine/gene_information/{locus}: empty or malformed "
-            f"response ({type(raw).__name__} of len {len(raw) if hasattr(raw, '__len__') else '?'})"
+            f"BAR /thalemine/gene_information/{locus}: no record (wasSuccessful but empty results)"
         )
+    row = results[0]
+    if not isinstance(row, list) or len(row) <= _GI_TAIR_SHORT:
+        raise NotFoundError(
+            f"BAR /thalemine/gene_information/{locus}: malformed row "
+            f"({type(row).__name__} of len {len(row) if hasattr(row, '__len__') else '?'})"
+        )
+
+    ncbi_gene_id: str | None = None
+    aliases_list: list[str] = []
+    if (
+        not isinstance(aliases_env, BaseException)
+        and isinstance(aliases_env, dict)
+        and aliases_env.get("wasSuccessful")
+    ):
+        entries = aliases_env.get("data") or []
+        # /gaia/aliases/ can return multiple entries per locus (case-variant
+        # rows, e.g. At1g01010 + AT1G01010 — only the uppercase one carries
+        # the geneid). Prefer the exact-uppercase match, then any entry with
+        # a non-null geneid, then the first entry.
+        chosen = next(
+            (
+                e
+                for e in entries
+                if e.get("geneid") and (e.get("locus") or "").upper() == locus.upper()
+            ),
+            None,
+        )
+        if chosen is None:
+            chosen = next((e for e in entries if e.get("geneid")), None)
+        if chosen is None and entries:
+            chosen = entries[0]
+        if chosen is not None:
+            ncbi_gene_id = chosen.get("geneid")
+            aliases_list = list(chosen.get("aliases") or [])
+
     return {
         "locus": locus,
-        "agi": raw[_GI_AGI],
-        "symbol": raw[_GI_SYMBOL],
-        "full_name": raw[_GI_FULL_NAME],
-        "tair_locus_id": raw[_GI_TAIR_LOCUS_ID],
-        "synonyms": [s.strip() for s in raw[_GI_SYNONYMS].split(",")] if raw[_GI_SYNONYMS] else [],
-        "computational_description": raw[_GI_COMPUTATIONAL],
-        "curator_summary": raw[_GI_CURATOR],
-        "brief_description": raw[_GI_BRIEF],
+        "agi": row[_GI_AGI],
+        "symbol": row[_GI_SYMBOL],
+        "full_name": row[_GI_FULL_NAME],
+        "tair_locus_id": row[_GI_TAIR_LOCUS_ID],
+        "synonyms": [s.strip() for s in row[_GI_SYNONYMS].split(",")] if row[_GI_SYNONYMS] else [],
+        "computational_description": row[_GI_COMPUTATIONAL],
+        "curator_summary": row[_GI_CURATOR],
+        "brief_description": row[_GI_BRIEF],
+        "tair_short_description": row[_GI_TAIR_SHORT],
+        "ncbi_gene_id": ncbi_gene_id,
+        "aliases": aliases_list,
         "species": "arabidopsis_thaliana",
         "source_url": f"https://bar.utoronto.ca/api/thalemine/gene_information/{locus}",
     }
