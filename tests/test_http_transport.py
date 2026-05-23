@@ -248,6 +248,62 @@ def test_healthz_exempt_from_bearer_auth(monkeypatch: pytest.MonkeyPatch) -> Non
     assert resp.json()["status"] == "ok"
 
 
+def test_mcp_rejects_oversized_body_413(monkeypatch: pytest.MonkeyPatch) -> None:
+    """POST with Content-Length over the configured cap → 413.
+
+    Defends against memory-exhaustion DoS — a 100 MB JSON payload would
+    blow the process before the MCP manager even sees it. We cap at 2 MB
+    by default; this test lowers the cap so the 413 fires on a small
+    payload without allocating multi-MB strings in the test process.
+    """
+    monkeypatch.delenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", raising=False)
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_MAX_BODY", "1024")
+    app = server_http.build_app()
+    oversized = "x" * 4096  # 4 KB body > 1 KB cap
+    with TestClient(app) as client:
+        resp = client.post(
+            "/mcp/",
+            content=oversized,
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/json, text/event-stream",
+            },
+        )
+    assert resp.status_code == 413, resp.text
+
+
+def test_mcp_passes_through_body_under_cap(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Default 2 MB cap doesn't reject a normal JSON-RPC payload."""
+    monkeypatch.delenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", raising=False)
+    monkeypatch.delenv("PLANT_GENOMICS_MCP_HTTP_MAX_BODY", raising=False)
+    app = server_http.build_app()
+    with TestClient(app) as client:
+        resp = client.post(
+            "/mcp/",
+            json={"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
+            headers={"Accept": "application/json, text/event-stream"},
+        )
+    assert resp.status_code != 413, resp.text
+
+
+def test_blast_sequence_inputschema_has_maxlength_cap() -> None:
+    """Schema-layer guard: `blast_sequence` and `find_homologs_synth`
+    declare ``maxLength`` on the ``sequence`` field so MCP clients can
+    reject oversize input before submitting, and the JSON-Schema
+    validation layer rejects monster payloads even when the HTTP body
+    cap isn't in play (stdio transport).
+    """
+    from plant_genomics_mcp import server as server_module
+
+    by_name = {t.name: t for t in server_module.TOOLS}
+    blast = by_name["blast_sequence"].inputSchema
+    seq = blast["properties"]["sequence"]
+    assert seq.get("maxLength") == 1_000_000, seq
+    homologs = by_name["find_homologs_synth"].inputSchema
+    seq2 = homologs["properties"]["sequence"]
+    assert seq2.get("maxLength") == 1_000_000, seq2
+
+
 @pytest.mark.asyncio
 async def test_bearer_auth_via_real_uvicorn(monkeypatch: pytest.MonkeyPatch) -> None:
     """Real-execution check: middleware fires through actual uvicorn.
