@@ -96,16 +96,32 @@ PROMPTS: list[types.Prompt] = [
     types.Prompt(
         name=BIOLOGICAL_CONTEXT,
         description=(
-            "Build a biological-context profile for an Arabidopsis locus by "
-            "chaining homology (Gramene) → pathways (KEGG) → interactions "
-            "(STRING) → coexpression (ATTED-II). Cross-references the result "
-            "lists to surface high-confidence functional partners."
+            "Build a biological-context profile for a plant locus by "
+            "chaining homology (Gramene) → pathways (KEGG, Arabidopsis "
+            "only) → interactions (STRING) → coexpression (ATTED-II, "
+            "Arabidopsis only). Cross-references the result lists to "
+            "surface high-confidence functional partners. For "
+            "non-Arabidopsis organisms, KEGG + ATTED steps are omitted "
+            "automatically because those backends only ship Arabidopsis "
+            "data — the chain still runs Gramene + UniProt + STRING."
         ),
         arguments=[
             types.PromptArgument(
                 name="locus",
-                description="Arabidopsis AGI locus, e.g. AT1G01010",
+                description=(
+                    "Locus identifier, e.g. AT1G01010 (Arabidopsis) or Os01g0100100 (rice)."
+                ),
                 required=True,
+            ),
+            types.PromptArgument(
+                name="organism",
+                description=(
+                    f"Plant organism (default {DEFAULT_ORGANISM}). Accepts "
+                    "canonical slug, scientific name, common name, or NCBI "
+                    "taxid. For arabidopsis_thaliana the full 5-step chain "
+                    "runs; for other organisms KEGG + ATTED are skipped."
+                ),
+                required=False,
             ),
             types.PromptArgument(
                 name="top_n",
@@ -171,32 +187,67 @@ def _render_find_homologs(sequence: str, program: str) -> str:
     )
 
 
-def _render_biological_context(locus: str, top_n: int) -> str:
+def _render_biological_context(locus: str, organism: str | int, top_n: int) -> str:
+    record = organisms.resolve(organism)
+    canonical = record.canonical
+    is_arabidopsis = canonical == organisms.DEFAULT_ORGANISM
+
+    # Steps 1, 3, 4 always run; KEGG + ATTED only for Arabidopsis (their
+    # upstream APIs only ship the Arabidopsis genome — ATTED-II calls itself
+    # "ATTED-Ath", and KEGG uses the hardcoded "ath:" gene-id prefix).
+    gramene = (
+        f"1. `gramene_homologs` with locus={locus!r}, organism={canonical!r}, "
+        "homology_type='ortholog' — retrieve orthologs across plant species "
+        "from Gramene compara.\n"
+    )
+    uniprot_step = (
+        f"`resolve_locus_to_uniprot` with locus={locus!r}, organism={canonical!r} "
+        "— fetch the canonical UniProt accession (needed for STRING).\n"
+    )
+    string_step = (
+        "`string_interactions` with locus_or_accession=<accession from "
+        f"previous step>, organism={canonical!r}, limit={top_n} — fetch "
+        "first-neighbor protein-protein interactors (STRING combined + "
+        "per-channel sub-scores).\n"
+    )
+
+    if is_arabidopsis:
+        steps = (
+            gramene + f"2. `kegg_pathways` with locus={locus!r} — list KEGG pathway "
+            "memberships in Arabidopsis.\n"
+            + f"3. {uniprot_step}"
+            + f"4. {string_step}"
+            + f"5. `atted_coexpression` with locus={locus!r}, top_n={top_n} — "
+            "fetch co-expression neighbors from ATTED-II.\n"
+        )
+        synthesis = (
+            "Then synthesize: cross-reference the three sets (orthologs, "
+            "interactors, coexpression neighbors). Interactors that are ALSO "
+            "in the coexpression neighbor set are higher-confidence functional "
+            "partners. Orthologs that recur as interactors across plant species "
+            "suggest a conserved functional module. Flag any pathway from step 2 "
+            "that contains multiple interactors or coexpression partners — that "
+            "is a candidate functional context for the locus."
+        )
+    else:
+        steps = gramene + f"2. {uniprot_step}" + f"3. {string_step}"
+        synthesis = (
+            f"KEGG and ATTED-II are omitted for {record.scientific} because "
+            "those backends only ship Arabidopsis data. Then synthesize: "
+            "cross-reference orthologs from Gramene with the STRING interactor "
+            "set. Orthologs that recur as interactors across plant species "
+            "suggest a conserved functional module."
+        )
+
     return (
-        f"Build a biological-context profile for Arabidopsis locus {locus!r}. "
-        "Use this MCP server's tools in this order:\n"
+        f"Build a biological-context profile for plant locus {locus!r} "
+        f"(organism: {record.scientific}). Use this MCP server's tools in "
+        "this order:\n"
         "\n"
-        f"1. `gramene_homologs` with locus={locus!r}, homology_type='ortholog' "
-        "— retrieve orthologs across plant species from Gramene compara.\n"
-        f"2. `kegg_pathways` with locus={locus!r} — list KEGG pathway "
-        "memberships in Arabidopsis.\n"
-        f"3. `resolve_locus_to_uniprot` with locus={locus!r} — fetch the "
-        "canonical UniProt accession (needed for STRING).\n"
-        f"4. `string_interactions` with locus_or_accession=<accession from step 3>, "
-        f"limit={top_n} — fetch first-neighbor protein-protein interactors "
-        "(STRING combined + per-channel sub-scores).\n"
-        f"5. `atted_coexpression` with locus={locus!r}, top_n={top_n} — "
-        "fetch co-expression neighbors from ATTED-II.\n"
+        f"{steps}"
         "\n"
-        "Then synthesize: cross-reference the three sets (orthologs, "
-        "interactors, coexpression neighbors). Interactors that are ALSO "
-        "in the coexpression neighbor set are higher-confidence functional "
-        "partners. Orthologs that recur as interactors across plant species "
-        "suggest a conserved functional module. Flag any pathway from step 2 "
-        "that contains multiple interactors or coexpression partners — that "
-        "is a candidate functional context for the locus. If any step "
-        "returns a [NotFoundError], report which one and continue with the "
-        "remaining steps."
+        f"{synthesis} If any step returns a [NotFoundError], report which "
+        "one and continue with the remaining steps."
     )
 
 
@@ -236,6 +287,11 @@ async def get_prompt(name: str, arguments: dict[str, str] | None) -> types.GetPr
         locus = args.get("locus")
         if not locus:
             raise NotFoundError(f"prompt {name!r}: missing required argument 'locus'")
+        organism = args.get("organism") or DEFAULT_ORGANISM
+        try:
+            record = organisms.resolve(organism)
+        except OrganismNotFound as exc:
+            raise NotFoundError(f"prompt {name!r}: {exc}") from exc
         top_n_raw = args.get("top_n")
         if top_n_raw is None or top_n_raw == "":
             top_n = DEFAULT_TOP_N
@@ -246,8 +302,8 @@ async def get_prompt(name: str, arguments: dict[str, str] | None) -> types.GetPr
                 raise NotFoundError(
                     f"prompt {name!r}: top_n {top_n_raw!r} must be parseable as int"
                 )
-        text = _render_biological_context(locus, top_n)
-        description = f"Biological-context profile for {locus} (top_n={top_n})"
+        text = _render_biological_context(locus, organism, top_n)
+        description = f"Biological-context profile for {locus} ({record.canonical}, top_n={top_n})"
     else:
         raise NotFoundError(f"unknown prompt: {name!r}")
 

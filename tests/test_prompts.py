@@ -173,10 +173,72 @@ async def test_biological_context_uses_default_top_n_when_omitted():
     text = result.messages[0].content.text
     assert "limit=10" in text
     assert "top_n=10" in text
-    assert result.description.endswith("(top_n=10)")
+    assert result.description.endswith("top_n=10)")
 
 
 @pytest.mark.asyncio
 async def test_biological_context_bad_top_n_raises_typed():
     with pytest.raises(NotFoundError, match="top_n 'abc' must be parseable as int"):
         await prompts.get_prompt(prompts.BIOLOGICAL_CONTEXT, {"locus": "AT1G01010", "top_n": "abc"})
+
+
+@pytest.mark.asyncio
+async def test_biological_context_marks_locus_required_and_organism_optional() -> None:
+    p = next(p for p in prompts.PROMPTS if p.name == prompts.BIOLOGICAL_CONTEXT)
+    by_name = {a.name: a for a in p.arguments or []}
+    assert by_name["locus"].required is True
+    assert not by_name["organism"].required
+
+
+@pytest.mark.asyncio
+async def test_biological_context_arabidopsis_passes_canonical_to_organism_aware_tools() -> None:
+    """Default arabidopsis renders the full 5-step chain with organism= on the
+    tools that take it (gramene/uniprot/string); kegg + atted are organism-fixed."""
+    result = await prompts.get_prompt(prompts.BIOLOGICAL_CONTEXT, {"locus": "AT1G01010"})
+    text = result.messages[0].content.text
+    assert "organism='arabidopsis_thaliana'" in text
+    # Full 5-step chain still present for arabidopsis.
+    for tool in ("gramene_homologs", "kegg_pathways", "string_interactions", "atted_coexpression"):
+        assert tool in text
+
+
+@pytest.mark.asyncio
+async def test_biological_context_non_arabidopsis_skips_kegg_and_atted() -> None:
+    """Non-Arabidopsis renders Gramene+UniProt+STRING only; KEGG and ATTED are
+    skipped because those backends only ship Arabidopsis data (audit C5)."""
+    result = await prompts.get_prompt(
+        prompts.BIOLOGICAL_CONTEXT,
+        {"locus": "Os01g0100100", "organism": "oryza_sativa"},
+    )
+    text = result.messages[0].content.text
+    assert "oryza_sativa" in text
+    assert "arabidopsis_thaliana" not in text
+    # Three steps that DO run.
+    for tool in ("gramene_homologs", "resolve_locus_to_uniprot", "string_interactions"):
+        assert tool in text
+    # Two steps that are skipped.
+    assert "kegg_pathways" not in text
+    assert "atted_coexpression" not in text
+    # Synthesis note explains the omission.
+    assert "KEGG and ATTED-II are omitted" in text
+
+
+@pytest.mark.asyncio
+async def test_biological_context_organism_alias_resolves() -> None:
+    """Common name 'rice' resolves to oryza_sativa; scientific name displayed."""
+    result = await prompts.get_prompt(
+        prompts.BIOLOGICAL_CONTEXT,
+        {"locus": "Os01g0100100", "organism": "rice"},
+    )
+    text = result.messages[0].content.text
+    assert "Oryza sativa" in text  # scientific display
+    assert "organism='oryza_sativa'" in text  # canonical slug in tool calls
+
+
+@pytest.mark.asyncio
+async def test_biological_context_unknown_organism_raises_typed() -> None:
+    with pytest.raises(NotFoundError, match="OrganismNotFound"):
+        await prompts.get_prompt(
+            prompts.BIOLOGICAL_CONTEXT,
+            {"locus": "AT1G01010", "organism": "zucchini"},
+        )
