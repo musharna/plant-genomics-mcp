@@ -7,21 +7,23 @@ import json
 import pytest
 from pydantic import AnyUrl
 
-from plant_genomics_mcp import phytozome, plantcyc, resources, tair
+from plant_genomics_mcp import plantcyc, resources, tair
 
 
-def test_resources_catalog_has_three_entries() -> None:
+def test_resources_catalog_has_four_entries() -> None:
     uris = {str(r.uri) for r in resources.RESOURCES}
     assert uris == {
         resources.CACHE_STATS_URI,
         resources.PHYTOZOME_ORGANISMS_URI,
         resources.BACKENDS_STATUS_URI,
+        resources.COVERAGE_MATRIX_URI,
     }
 
 
-def test_resources_catalog_all_json_mime() -> None:
+def test_resources_catalog_all_named_with_known_mime() -> None:
+    """Every resource carries a name + description; mime is JSON or markdown."""
     for r in resources.RESOURCES:
-        assert r.mimeType == "application/json"
+        assert r.mimeType in ("application/json", "text/markdown")
         assert r.name
         assert r.description
 
@@ -52,12 +54,57 @@ async def test_read_cache_stats_returns_per_backend_rollup() -> None:
 
 
 @pytest.mark.asyncio
-async def test_read_phytozome_organisms_matches_known_organisms_dict() -> None:
+async def test_read_phytozome_organisms_matches_organisms_registry() -> None:
+    """Phytozome resource derives its slug→int map from organisms.ORGANISMS.
+
+    The legacy phytozome.KNOWN_ORGANISMS module-level dict was deprecated
+    in T11 when the multi-organism registry landed; the resource now
+    filters ORGANISMS to records with a non-None phytozome_int.
+    """
+    from plant_genomics_mcp import organisms
+
     out = list(await resources.read_resource(AnyUrl(resources.PHYTOZOME_ORGANISMS_URI)))
     payload = json.loads(out[0].content)
-    assert payload == phytozome.KNOWN_ORGANISMS
-    # Spot-check the only verified entry.
+    expected = {
+        canonical: r.phytozome_int
+        for canonical, r in organisms.ORGANISMS.items()
+        if r.phytozome_int is not None
+    }
+    assert payload == expected
     assert payload["arabidopsis_thaliana"] == 167
+
+
+@pytest.mark.asyncio
+async def test_read_coverage_matrix_lists_all_organisms() -> None:
+    """Markdown coverage matrix mentions every organism in ORGANISMS."""
+    from plant_genomics_mcp import organisms
+
+    out = list(await resources.read_resource(AnyUrl(resources.COVERAGE_MATRIX_URI)))
+    assert len(out) == 1
+    item = out[0]
+    assert item.mime_type == "text/markdown"
+    body = item.content
+    for canonical in organisms.ORGANISMS:
+        assert canonical in body, f"coverage matrix missing {canonical}"
+    # Header + key column names so a client can parse it.
+    assert "canonical" in body
+    assert "phytozome" in body
+    assert "europe_pmc" in body
+
+
+@pytest.mark.asyncio
+async def test_coverage_matrix_renders_missing_slots_as_dash() -> None:
+    """Backends with no ID for an organism render as `—`, not 'None' or empty.
+
+    oryza_sativa carries phytozome_int=None — that cell must be em-dash.
+    """
+    out = list(await resources.read_resource(AnyUrl(resources.COVERAGE_MATRIX_URI)))
+    body = out[0].content
+    oryza_row = next(line for line in body.splitlines() if line.startswith("| oryza_sativa "))
+    assert "—" in oryza_row
+    # The europe_pmc "None (no strip)" sentinel is allowed; bare "None" is not.
+    cleaned = oryza_row.replace("None (no strip)", "")
+    assert "None" not in cleaned
 
 
 @pytest.mark.asyncio
