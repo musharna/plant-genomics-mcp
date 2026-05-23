@@ -7,7 +7,7 @@ import json
 import pytest
 from pydantic import AnyUrl
 
-from plant_genomics_mcp import plantcyc, resources, tair
+from plant_genomics_mcp import organisms, plantcyc, resources, tair
 
 
 def test_resources_catalog_has_four_entries() -> None:
@@ -93,17 +93,28 @@ async def test_read_coverage_matrix_lists_all_organisms() -> None:
 
 
 @pytest.mark.asyncio
-async def test_coverage_matrix_renders_missing_slots_as_dash() -> None:
+async def test_coverage_matrix_renders_missing_slots_as_dash(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Backends with no ID for an organism render as `—`, not 'None' or empty.
 
-    oryza_sativa carries phytozome_int=None — that cell must be em-dash.
+    Wave A2 (2026-05-23) populated every phytozome_int / ensembl_slug /
+    string_taxid in the live registry, so we shadow one record with a
+    None phytozome_int to exercise the dash-rendering contract.
     """
+    from dataclasses import replace
+
+    record = organisms.ORGANISMS["vitis_vinifera"]
+    shadowed = dict(organisms.ORGANISMS)
+    shadowed["vitis_vinifera"] = replace(record, phytozome_int=None)
+    monkeypatch.setattr(organisms, "ORGANISMS", shadowed)
+
     out = list(await resources.read_resource(AnyUrl(resources.COVERAGE_MATRIX_URI)))
     body = out[0].content
-    oryza_row = next(line for line in body.splitlines() if line.startswith("| oryza_sativa "))
-    assert "—" in oryza_row
+    grape_row = next(line for line in body.splitlines() if line.startswith("| vitis_vinifera "))
+    assert "—" in grape_row
     # The europe_pmc "None (no strip)" sentinel is allowed; bare "None" is not.
-    cleaned = oryza_row.replace("None (no strip)", "")
+    cleaned = grape_row.replace("None (no strip)", "")
     assert "None" not in cleaned
 
 

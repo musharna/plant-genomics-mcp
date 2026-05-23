@@ -158,20 +158,13 @@ def test_phytozome_int_carries_over_from_known_organisms() -> None:
     assert organisms.ORGANISMS["populus_trichocarpa"].phytozome_int == 210
 
 
-def test_unverified_records_have_none_phytozome_int() -> None:
-    # The 7 spec-only records ship with None until verify_organisms.py
-    # populates them (Task 7).
-    for canonical in [
-        "oryza_sativa",
-        "zea_mays",
-        "triticum_aestivum",
-        "solanum_lycopersicum",
-        "hordeum_vulgare",
-        "vitis_vinifera",
-        "medicago_truncatula",
-    ]:
-        assert organisms.ORGANISMS[canonical].phytozome_int is None, (
-            f"{canonical} should have phytozome_int=None pre-Task-7"
+def test_all_records_have_phytozome_int() -> None:
+    # Post-Wave-A2 (pre-1.0): every organism in the registry must carry
+    # a verified Phytozome organism_id. Wave A2 (2026-05-23) live-probed
+    # BioMart for the 7 records that previously shipped as None.
+    for canonical, record in organisms.ORGANISMS.items():
+        assert record.phytozome_int is not None, (
+            f"{canonical} has phytozome_int=None; Wave A2 populates all 12"
         )
 
 
@@ -189,8 +182,17 @@ def test_ncbi_taxid_for_rice() -> None:
     assert organisms.ncbi_taxid_for("rice") == 39947
 
 
-def test_phytozome_unsupported_raises() -> None:
-    # vitis_vinifera has phytozome_int=None pre-Task-7
+def test_phytozome_unsupported_raises(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Wave A2 populated every record's phytozome_int, so to exercise the
+    # OrganismNotSupported branch we shadow the registry with a None slot
+    # for one organism. The accessor must still raise the same way for any
+    # future record that ships as None.
+    from dataclasses import replace
+
+    record = organisms.ORGANISMS["vitis_vinifera"]
+    shadowed = dict(organisms.ORGANISMS)
+    shadowed["vitis_vinifera"] = replace(record, phytozome_int=None)
+    monkeypatch.setattr(organisms, "ORGANISMS", shadowed)
     with pytest.raises(OrganismNotSupported) as excinfo:
         organisms.phytozome_int_for("vitis_vinifera")
     assert excinfo.value.backend == "phytozome"

@@ -125,13 +125,28 @@ async def test_lookup_accepts_organism_alias(httpx_mock: HTTPXMock) -> None:
 
 
 @pytest.mark.asyncio
-async def test_lookup_unsupported_organism_raises_not_supported() -> None:
-    """Resolving an organism without a phytozome_int raises OrganismNotSupported."""
+async def test_lookup_unsupported_organism_raises_not_supported(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Resolving an organism without a phytozome_int raises OrganismNotSupported.
+
+    Wave A2 (2026-05-23) populated every record's phytozome_int. To still
+    exercise the unsupported branch (the contract guarantees None slots
+    raise rather than silently returning), shadow the registry with a
+    None for one organism.
+    """
+    from dataclasses import replace
+
+    from plant_genomics_mcp import organisms
     from plant_genomics_mcp.errors import OrganismNotSupported
+
+    record = organisms.ORGANISMS["vitis_vinifera"]
+    shadowed = dict(organisms.ORGANISMS)
+    shadowed["vitis_vinifera"] = replace(record, phytozome_int=None)
+    monkeypatch.setattr(organisms, "ORGANISMS", shadowed)
 
     async with httpx.AsyncClient() as client:
         with pytest.raises(OrganismNotSupported) as excinfo:
-            # vitis_vinifera has phytozome_int=None in organisms.ORGANISMS
             await phytozome.lookup_locus(client, "irrelevant", organism="vitis_vinifera")
     assert excinfo.value.backend == "phytozome"
 
@@ -159,6 +174,13 @@ _PHYTOZOME_PROBES: dict[str, str] = {
     "sorghum_bicolor": "Sobic.001G000200",
     "brachypodium_distachyon": "Bradi1g00200",
     "populus_trichocarpa": "Potri.001G000100",
+    "oryza_sativa": "LOC_Os01g01010",
+    "zea_mays": "Zm00001eb000010",
+    "triticum_aestivum": "TraesCS5A03G0137600",
+    "solanum_lycopersicum": "Solyc01g005000",
+    "hordeum_vulgare": "HORVU.MOREX.r3.UnG0790040",
+    "vitis_vinifera": "VIT_201s0011g00010",
+    "medicago_truncatula": "Medtr1g004990",
 }
 
 
