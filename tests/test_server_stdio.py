@@ -225,13 +225,38 @@ async def test_get_prompt_unknown_name_surfaces_typed_error(
 
 @pytest.mark.asyncio
 async def test_tool_schemas_use_organism_param(server_params: StdioServerParameters) -> None:
-    """v0.9 contract: every tool exposes a single 'organism' input field,
-    accepting string | integer. Old 'species' and 'organism_id' fields
-    must not appear in any tool's inputSchema."""
+    """v0.9/1.0 contract: every multi-organism tool exposes a single
+    'organism' input field accepting string | integer, defaulting to
+    'arabidopsis_thaliana'. Old 'species' and 'organism_id' fields must
+    not appear anywhere. Tools whose backend is intrinsically single-
+    organism (KEGG, ATTED-II Arabidopsis-only), sequence-driven (BLAST,
+    find_homologs_synth), Gramene's own cross-species index, or stub
+    redirects (TAIR, PlantCyc) are explicitly out of scope.
+    """
+    organism_aware = {
+        "ensembl_plants_lookup_locus",
+        "get_gene_xrefs",
+        "phytozome_lookup_locus",
+        "resolve_locus_to_uniprot",
+        "locus_literature",
+        "locus_go_annotations",
+        "string_interactions",
+        "batch_ensembl_plants_lookup_locus",
+        "batch_get_gene_xrefs",
+        "batch_phytozome_lookup_locus",
+        "batch_resolve_locus_to_uniprot",
+        "batch_locus_literature",
+        "batch_locus_go_annotations",
+        "batch_string_interactions",
+        "analyze_locus_synth",
+        "biological_context_synth",
+        "consensus_homologs",
+    }
     async with stdio_client(server_params) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()
             result = await session.list_tools()
+            actual_organism = set()
             for tool in result.tools:
                 props = (tool.inputSchema or {}).get("properties", {})
                 assert "species" not in props, f"{tool.name} still has 'species' in inputSchema"
@@ -239,9 +264,20 @@ async def test_tool_schemas_use_organism_param(server_params: StdioServerParamet
                     f"{tool.name} still has 'organism_id' in inputSchema"
                 )
                 if "organism" in props:
+                    actual_organism.add(tool.name)
                     field = props["organism"]
-                    # Union-typed per v0.9 spec
                     assert field.get("type") == ["string", "integer"], (
                         f"{tool.name}.organism type is {field.get('type')!r}, "
                         "expected ['string', 'integer']"
                     )
+                    assert field.get("default") == "arabidopsis_thaliana", (
+                        f"{tool.name}.organism default is {field.get('default')!r}, "
+                        "expected 'arabidopsis_thaliana'"
+                    )
+            missing = organism_aware - actual_organism
+            extra = actual_organism - organism_aware
+            assert not missing, f"multi-organism tools missing organism field: {sorted(missing)}"
+            assert not extra, (
+                f"tools declare organism but aren't in the canonical "
+                f"multi-organism set (update this test if intentional): {sorted(extra)}"
+            )
