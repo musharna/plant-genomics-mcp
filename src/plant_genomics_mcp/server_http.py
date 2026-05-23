@@ -54,7 +54,6 @@ from starlette.responses import JSONResponse
 from starlette.routing import Mount, Route
 from starlette.types import Receive, Scope, Send
 
-from plant_genomics_mcp import __version__
 from plant_genomics_mcp.server import server
 
 
@@ -103,7 +102,11 @@ def build_app() -> Starlette:
     )
 
     async def healthz(_request: Request) -> JSONResponse:
-        return JSONResponse({"status": "ok", "version": __version__})
+        # Version intentionally omitted: /healthz is unauthenticated for
+        # liveness probes, and leaking the exact version string to anonymous
+        # callers hands them a CVE-targeting shortcut. Authenticated callers
+        # can read __version__ from the initialize handshake.
+        return JSONResponse({"status": "ok"})
 
     async def handle_mcp(scope: Scope, receive: Receive, send: Send) -> None:
         # /mcp gated on bearer token when PLANT_GENOMICS_MCP_HTTP_TOKEN
