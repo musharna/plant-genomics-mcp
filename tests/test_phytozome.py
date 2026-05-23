@@ -115,6 +115,27 @@ async def test_lookup_locus_rejects_xml_injection() -> None:
             await phytozome.lookup_locus(client, "AT1G01010<x>")
 
 
+@pytest.mark.asyncio
+async def test_lookup_accepts_organism_alias(httpx_mock: HTTPXMock) -> None:
+    """Resolver-driven organism kwarg accepts an alias (e.g. 'arabidopsis')."""
+    httpx_mock.add_response(url=_BIOMART_URL, method="POST", text=_AT1G01010_TSV)
+    async with httpx.AsyncClient() as client:
+        result = await phytozome.lookup_locus(client, "AT1G01010", organism="arabidopsis")
+    assert result["gene_name"] == "AT1G01010"
+
+
+@pytest.mark.asyncio
+async def test_lookup_unsupported_organism_raises_not_supported() -> None:
+    """Resolving an organism without a phytozome_int raises OrganismNotSupported."""
+    from plant_genomics_mcp.errors import OrganismNotSupported
+
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(OrganismNotSupported) as excinfo:
+            # vitis_vinifera has phytozome_int=None in organisms.ORGANISMS
+            await phytozome.lookup_locus(client, "irrelevant", organism="vitis_vinifera")
+    assert excinfo.value.backend == "phytozome"
+
+
 # ---------- live integration (real-execution check) ----------
 
 
@@ -128,44 +149,48 @@ async def test_live_lookup_at1g01010_phytozome() -> None:
     assert "NAC" in result["description"]
 
 
-# Snapshot of canonical first-gene probes used to verify each KNOWN_ORGANISMS
-# entry on 2026-05-21 (P2.19). Drives the live-only regression below.
-_KNOWN_ORGANISM_PROBES: dict[str, str] = {
+# Canonical first-gene probes for organisms that have a Phytozome ID.
+# Trimmed from the legacy 10-entry KNOWN_ORGANISMS table (2026-05-21
+# P2.19 probes) to the 5 organisms also present in
+# organisms.ORGANISMS. Drives the live-only regression below.
+_PHYTOZOME_PROBES: dict[str, str] = {
     "arabidopsis_thaliana": "AT1G01010",
     "glycine_max": "Glyma.01G000100",
     "sorghum_bicolor": "Sobic.001G000200",
     "brachypodium_distachyon": "Bradi1g00200",
-    "manihot_esculenta": "Manes.01G000100",
-    "eucalyptus_grandis": "Eucgr.A00010",
     "populus_trichocarpa": "Potri.001G000100",
-    "phaseolus_vulgaris": "Phvul.002G000200",
-    "chlamydomonas_reinhardtii": "Cre01.g000017",
-    "daucus_carota": "DCAR_001000",
 }
 
 
-def test_known_organisms_probe_table_matches_dict_keys() -> None:
-    """Cheap consistency check between the catalog and its probe table.
+def test_phytozome_probes_match_organisms_with_phytozome_int() -> None:
+    """Cheap consistency check between the probe table and organisms.ORGANISMS.
 
-    Runs without network: guards against silently dropping a species
-    from KNOWN_ORGANISMS without dropping its probe (or vice versa).
+    Runs without network: guards against silently dropping an organism's
+    phytozome_int (or vice versa) without updating the probe table.
     """
-    assert set(_KNOWN_ORGANISM_PROBES) == set(phytozome.KNOWN_ORGANISMS)
+    from plant_genomics_mcp import organisms
+
+    supported = {
+        canon for canon, rec in organisms.ORGANISMS.items() if rec.phytozome_int is not None
+    }
+    assert set(_PHYTOZOME_PROBES) == supported
 
 
 @live_only
 @pytest.mark.asyncio
-async def test_live_known_organisms_all_resolve() -> None:
-    """Every KNOWN_ORGANISMS entry must resolve its canonical probe gene.
+async def test_live_phytozome_probes_all_resolve() -> None:
+    """Every organism with a phytozome_int must resolve its canonical probe.
 
     Real-execution check guards against ID drift in BioMart (Phytozome
     occasionally renumbers proteome IDs across releases). If this test
-    starts failing, re-probe via /tmp/verify_all_organisms.py.
+    starts failing, re-probe via scripts/verify_organisms.py.
     """
+    from plant_genomics_mcp import organisms
+
     async with httpx.AsyncClient() as client:
-        for species, oid in phytozome.KNOWN_ORGANISMS.items():
-            probe = _KNOWN_ORGANISM_PROBES[species]
-            row = await phytozome.lookup_locus(client, probe, organism_id=oid)
+        for canon, probe in _PHYTOZOME_PROBES.items():
+            row = await phytozome.lookup_locus(client, probe, organism=canon)
             assert row["gene_name"] == probe, (
-                f"{species} (id={oid}) probe {probe} returned {row['gene_name']!r}"
+                f"{canon} (phyto_int={organisms.ORGANISMS[canon].phytozome_int}) "
+                f"probe {probe} returned {row['gene_name']!r}"
             )

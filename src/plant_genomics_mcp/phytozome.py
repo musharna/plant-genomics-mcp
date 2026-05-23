@@ -12,12 +12,9 @@ Quirks worth knowing:
   * Zero-row filter matches return only the header line (or empty body).
     Treated as a 404-equivalent here.
   * The ``organism_id`` filter is a Phytozome proteome integer ID, NOT a
-    species slug. All 10 entries in ``KNOWN_ORGANISMS`` below were
-    controller-verified live against the BioMart endpoint on 2026-05-21
-    by resolving a canonical first-gene per genome. Two entries were
-    corrected from prior registry-hints (sorghum_bicolor 313 → 454,
-    phaseolus_vulgaris 218 → 442) — the originals 404'd against the
-    BioMart filter list and have been removed.
+    species slug. Per-organism IDs live in ``organisms.ORGANISMS`` (the
+    ``phytozome_int`` slot); ``organisms.phytozome_int_for()`` raises
+    ``OrganismNotSupported`` for records with no Phytozome coverage.
 
 We reuse ``ensembl_plants.PlantGenomicsError`` as the shared error type so
 the server dispatch can handle one exception class for all backends.
@@ -31,7 +28,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import cache, progress
+from plant_genomics_mcp import cache, organisms, progress
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
@@ -45,24 +42,6 @@ MAX_RETRIES = 3
 
 # Per-module response cache. See plant_genomics_mcp.cache for env knobs.
 _CACHE = cache.TTLCache()
-
-# All entries controller-verified live 2026-05-21 against BioMart
-# (canonical first-gene probe per genome). Probe loci recorded in commit
-# message; if a downstream call 404s, re-probe with the BioMart filter
-# registry (`?type=filters&dataset=phytozome`) to confirm the ID is still
-# valid before changing.
-KNOWN_ORGANISMS: dict[str, int] = {
-    "arabidopsis_thaliana": 167,  # Athaliana_TAIR10 (AT1G01010)
-    "glycine_max": 275,  # Gmax_Wm82.a2.v1 (Glyma.01G000100)
-    "sorghum_bicolor": 454,  # Sbicolor_v3.1.1 (Sobic.001G000200)
-    "brachypodium_distachyon": 314,  # Bdistachyon_v3.1 (Bradi1g00200)
-    "manihot_esculenta": 305,  # Mesculenta_v6.1 (Manes.01G000100)
-    "eucalyptus_grandis": 297,  # Egrandis_v2.0 (Eucgr.A00010)
-    "populus_trichocarpa": 210,  # Ptrichocarpa_v3.0 (Potri.001G000100)
-    "phaseolus_vulgaris": 442,  # Pvulgaris_v2.1 (Phvul.002G000200)
-    "chlamydomonas_reinhardtii": 281,  # Creinhardtii_v5.6 (Cre01.g000017)
-    "daucus_carota": 388,  # Dcarota_v2.0 (DCAR_001000)
-}
 
 # Identifier whitelist guards the string-formatted XML against injection.
 # Phytozome locus identifiers are alphanumeric plus dot / underscore / hyphen
@@ -157,14 +136,16 @@ async def _post(client: httpx.AsyncClient, xml_payload: str) -> str:
 async def lookup_locus(
     client: httpx.AsyncClient,
     locus: str,
-    organism_id: int = 167,
+    organism: str | int = organisms.DEFAULT_ORGANISM,
 ) -> dict[str, Any]:
     """Fetch Phytozome BioMart gene record for a locus.
 
     ``locus`` is the Phytozome / source-genome gene name (e.g. ``AT1G01010``
     for Arabidopsis thaliana TAIR10, ``Glyma.01G000100`` for soybean).
-    ``organism_id`` is the Phytozome proteome integer ID; defaults to 167
-    (Arabidopsis thaliana TAIR10).
+    ``organism`` accepts any form the resolver supports (canonical slug,
+    scientific or common name, NCBI taxid). Defaults to Arabidopsis.
+    Raises ``OrganismNotSupported`` if the resolved record has no
+    ``phytozome_int`` (Phytozome doesn't index every plant we support).
 
     Returns a dict with string-valued keys: organism_name, gene_name,
     chromosome, gene_start, gene_end, strand, description. Numeric fields
@@ -178,7 +159,9 @@ async def lookup_locus(
         # / shell quoting damage.
         raise NotFoundError(f"Phytozome: invalid locus {locus!r} (must match {_LOCUS_RE.pattern})")
 
-    xml_payload = _QUERY_TEMPLATE.format(organism_id=organism_id, locus=locus)
+    phyto_id = organisms.phytozome_int_for(organism)
+
+    xml_payload = _QUERY_TEMPLATE.format(organism_id=phyto_id, locus=locus)
     body = await _post(client, xml_payload)
 
     # BioMart returns 200 with a "Query ERROR:" body on filter / dataset
@@ -192,7 +175,7 @@ async def lookup_locus(
     if len(lines) < 2:
         # Header present (no rows) OR empty body → nothing matched the
         # gene_name_filter for that organism_id.
-        raise NotFoundError(f"Phytozome: locus {locus} not found for organism_id {organism_id}")
+        raise NotFoundError(f"Phytozome: locus {locus} not found for organism_id {phyto_id}")
 
     # First non-empty line is the header (we don't use it — column order is
     # pinned by our Attribute order). Second line is the first data row.
