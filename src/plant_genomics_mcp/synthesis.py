@@ -33,14 +33,15 @@ from plant_genomics_mcp import (
     europe_pmc,
     gramene,
     kegg,
+    organisms,
     quickgo,
     string_db,
     uniprot,
 )
-from plant_genomics_mcp.errors import PlantGenomicsError
+from plant_genomics_mcp.errors import OrganismNotFound, OrganismNotSupported, PlantGenomicsError
 from plant_genomics_mcp.models import StepRow, SynthesisEnvelope
 
-DEFAULT_SPECIES = "arabidopsis_thaliana"
+DEFAULT_ORGANISM = organisms.DEFAULT_ORGANISM
 DEFAULT_TOP_N = 10
 MAX_TOP_N = 50  # matches batch.MAX_BATCH convention
 
@@ -69,6 +70,16 @@ async def _timed_step(step: int, tool: str, coro) -> StepRow:
     started = time.perf_counter()
     try:
         result = await coro
+    except OrganismNotSupported as e:
+        # Backend explicitly has no ID for this organism — treat as skip,
+        # not error, so the envelope composes around it.
+        return StepRow(
+            step=step,
+            tool=tool,
+            status="skipped",
+            elapsed_s=time.perf_counter() - started,
+            error=str(e),
+        )
     except PlantGenomicsError as e:
         return StepRow(
             step=step,
@@ -103,6 +114,12 @@ def _gather_step(step: int, tool: str, outcome: Any, elapsed_s: float) -> StepRo
     Other exceptions re-raise (caller wraps in try, or the gather machinery
     propagates).
     """
+    if isinstance(outcome, OrganismNotSupported):
+        # Same translation as _timed_step: phase-2 backends that don't
+        # support the requested organism become "skipped", not "error".
+        return StepRow(
+            step=step, tool=tool, status="skipped", elapsed_s=elapsed_s, error=str(outcome)
+        )
     if isinstance(outcome, PlantGenomicsError):
         return StepRow(
             step=step, tool=tool, status="error", elapsed_s=elapsed_s, error=str(outcome)
@@ -149,7 +166,7 @@ async def _gather_phase2(
 async def analyze_locus_synth(
     client: httpx.AsyncClient,
     locus: str,
-    species: str = DEFAULT_SPECIES,
+    organism: str | int = DEFAULT_ORGANISM,
 ) -> SynthesisEnvelope:
     """Mirror the analyze_locus prompt as a single tool call.
 
@@ -158,8 +175,37 @@ async def analyze_locus_synth(
     """
     started_at = _now_iso()
     t0 = time.perf_counter()
-    input_args = {"locus": locus, "species": species}
-    taxon_id = uniprot.KNOWN_TAXA.get(species, uniprot.DEFAULT_TAXON_ID)
+    input_args = {"locus": locus, "organism": organism}
+
+    # Phase 0 — resolve the organism alias once; root-fail the whole envelope
+    # if it doesn't exist so phase-1/phase-2 don't fire with a bogus slug.
+    try:
+        organisms.resolve(organism)
+    except OrganismNotFound as exc:
+        return SynthesisEnvelope(
+            tool="analyze_locus_synth",
+            input=input_args,
+            started_at=started_at,
+            elapsed_s=time.perf_counter() - t0,
+            steps=[
+                StepRow(
+                    step=1,
+                    tool="ensembl_plants_lookup_locus",
+                    status="error",
+                    elapsed_s=0.0,
+                    error=str(exc),
+                ),
+                _skipped(
+                    2,
+                    "resolve_locus_to_uniprot",
+                    "phase 1 failed; resolve_locus_to_uniprot skipped",
+                ),
+                _skipped(3, "get_gene_xrefs", "phase 1 failed; get_gene_xrefs skipped"),
+                _skipped(4, "locus_literature", "phase 1 failed; locus_literature skipped"),
+                _skipped(5, "locus_go_annotations", "phase 1 failed; locus_go_annotations skipped"),
+            ],
+            result=None,
+        )
 
     # Phase 1 — root resolution: ensembl + uniprot in parallel.
     # UniProt is sequenced into phase 1 (not phase 2) because the QuickGO
@@ -170,12 +216,12 @@ async def analyze_locus_synth(
             (
                 1,
                 "ensembl_plants_lookup_locus",
-                ensembl_plants.lookup_locus(client, locus, species=species),
+                ensembl_plants.lookup_locus(client, locus, organism=organism),
             ),
             (
                 2,
                 "resolve_locus_to_uniprot",
-                uniprot.lookup_locus(client, locus, organism_id=taxon_id),
+                uniprot.lookup_locus(client, locus, organism=organism),
             ),
         ]
     )
@@ -199,8 +245,8 @@ async def analyze_locus_synth(
 
     # Phase 2 — fan out the rest; quickgo only when uniprot resolved.
     phase2_items: list[tuple[int, str, Any]] = [
-        (3, "get_gene_xrefs", ensembl_plants.lookup_xrefs(client, locus, species=species)),
-        (4, "locus_literature", europe_pmc.lookup_locus(client, locus, species=species)),
+        (3, "get_gene_xrefs", ensembl_plants.lookup_xrefs(client, locus, organism=organism)),
+        (4, "locus_literature", europe_pmc.lookup_locus(client, locus, organism=organism)),
     ]
     if uniprot_row.status == "ok":
         acc = uniprot_row.result["primaryAccession"]
@@ -444,7 +490,7 @@ def _extract_uniprot_accession(subject_id: str) -> str | None:
 async def biological_context_synth(
     client: httpx.AsyncClient,
     locus: str,
-    species: str = DEFAULT_SPECIES,
+    organism: str | int = DEFAULT_ORGANISM,
     top_n: int = DEFAULT_TOP_N,
 ) -> SynthesisEnvelope:
     """Mirror the biological_context prompt: gramene + KEGG + STRING + ATTED.
@@ -459,7 +505,7 @@ async def biological_context_synth(
     Per-backend signatures verified against live source 2026-05-22:
       - gramene.lookup_homologs(client, locus, homology_type="ortholog") — no species/top_n
       - kegg.lookup_pathways(client, locus) — no species (ath-only)
-      - string_db.lookup_partners(client, locus_or_accession, limit=..., organism_taxid=...)
+      - string_db.lookup_partners(client, locus_or_accession, limit=..., organism=...)
         Passing the uniprot accession bypasses the internal locus→accession
         re-resolution (string_db.py:144 _looks_like_accession path).
       - atted.lookup_coexpression(client, locus, top_n=...) — no species (Ath-only upstream).
@@ -467,14 +513,38 @@ async def biological_context_synth(
     top_n = _bound_top_n(top_n)
     started_at = _now_iso()
     t0 = time.perf_counter()
-    input_args = {"locus": locus, "species": species, "top_n": top_n}
-    taxon_id = uniprot.KNOWN_TAXA.get(species, uniprot.DEFAULT_TAXON_ID)
+    input_args = {"locus": locus, "organism": organism, "top_n": top_n}
+
+    # Phase 0 — resolve organism alias; root-fail the envelope on unknown.
+    try:
+        organisms.resolve(organism)
+    except OrganismNotFound as exc:
+        return SynthesisEnvelope(
+            tool="biological_context_synth",
+            input=input_args,
+            started_at=started_at,
+            elapsed_s=time.perf_counter() - t0,
+            steps=[
+                StepRow(
+                    step=1,
+                    tool="resolve_locus_to_uniprot",
+                    status="error",
+                    elapsed_s=0.0,
+                    error=str(exc),
+                ),
+                _skipped(2, "gramene_homologs", "phase 1 failed; gramene_homologs skipped"),
+                _skipped(3, "kegg_pathways", "phase 1 failed; kegg_pathways skipped"),
+                _skipped(4, "string_interactions", "phase 1 failed; string_interactions skipped"),
+                _skipped(5, "atted_coexpression", "phase 1 failed; atted_coexpression skipped"),
+            ],
+            result=None,
+        )
 
     # Phase 1 — UniProt for accession
     root = await _timed_step(
         1,
         "resolve_locus_to_uniprot",
-        uniprot.lookup_locus(client, locus, organism_id=taxon_id),
+        uniprot.lookup_locus(client, locus, organism=organism),
     )
     if root.status != "ok":
         skip_reason = "phase-1 UniProt resolution failed; downstream calls skipped"
@@ -502,9 +572,7 @@ async def biological_context_synth(
             (
                 4,
                 "string_interactions",
-                string_db.lookup_partners(
-                    client, uniprot_acc, limit=top_n, organism_taxid=taxon_id
-                ),
+                string_db.lookup_partners(client, uniprot_acc, limit=top_n, organism=organism),
             ),
             (5, "atted_coexpression", atted.lookup_coexpression(client, locus, top_n=top_n)),
         ]
@@ -695,20 +763,45 @@ def _parse_blast_identity_pct(raw: object) -> float | None:
 async def consensus_homologs(
     client: httpx.AsyncClient,
     locus: str,
-    species: str = DEFAULT_SPECIES,
+    organism: str | int = DEFAULT_ORGANISM,
     top_n: int = DEFAULT_TOP_N,
 ) -> SynthesisEnvelope:
     top_n = _bound_top_n(top_n)
     started_at = _now_iso()
     t0 = time.perf_counter()
-    input_args = {"locus": locus, "species": species, "top_n": top_n}
-    taxon_id = uniprot.KNOWN_TAXA.get(species, uniprot.DEFAULT_TAXON_ID)
+    input_args = {"locus": locus, "organism": organism, "top_n": top_n}
+
+    # Phase 0 — resolve organism alias; root-fail the envelope on unknown.
+    try:
+        organisms.resolve(organism)
+    except OrganismNotFound as exc:
+        return SynthesisEnvelope(
+            tool="consensus_homologs",
+            input=input_args,
+            started_at=started_at,
+            elapsed_s=time.perf_counter() - t0,
+            steps=[
+                StepRow(
+                    step=1,
+                    tool="resolve_locus_to_uniprot",
+                    status="error",
+                    elapsed_s=0.0,
+                    error=str(exc),
+                ),
+                _skipped(
+                    2, "uniprot_fetch_sequence", "phase 1 failed; uniprot_fetch_sequence skipped"
+                ),
+                _skipped(3, "gramene_homologs", "phase 1 failed; gramene_homologs skipped"),
+                _skipped(4, "blast_sequence", "phase 1 failed; blast_sequence skipped"),
+            ],
+            result=None,
+        )
 
     # Phase 1.a — UniProt
     step1 = await _timed_step(
         1,
         "resolve_locus_to_uniprot",
-        uniprot.lookup_locus(client, locus, organism_id=taxon_id),
+        uniprot.lookup_locus(client, locus, organism=organism),
     )
     if step1.status != "ok":
         skip = "phase-1 UniProt resolution failed; sequence + downstream skipped"

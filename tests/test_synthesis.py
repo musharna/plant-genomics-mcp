@@ -122,10 +122,10 @@ async def test_analyze_locus_synth_all_backends_succeed_returns_full_envelope(ht
     from plant_genomics_mcp.synthesis import analyze_locus_synth
 
     async with httpx.AsyncClient() as client:
-        env = await analyze_locus_synth(client, "AT1G01010", species="arabidopsis_thaliana")
+        env = await analyze_locus_synth(client, "AT1G01010", organism="arabidopsis_thaliana")
 
     assert env.tool == "analyze_locus_synth"
-    assert env.input == {"locus": "AT1G01010", "species": "arabidopsis_thaliana"}
+    assert env.input == {"locus": "AT1G01010", "organism": "arabidopsis_thaliana"}
     assert len(env.steps) == 5
     assert [s.tool for s in env.steps] == [
         "ensembl_plants_lookup_locus",
@@ -1099,6 +1099,106 @@ def test_consensus_homologs_fixtures_match_real_response_shapes():
             "elapsed_seconds": 0.0,
         }
     )
+
+
+# ---------------------------------------------------------------------------
+# v0.9 — organism resolver migration (T14)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_analyze_locus_synth_resolves_organism_alias(httpx_mock):
+    """organism='thale cress' resolves to arabidopsis_thaliana; wire calls
+    still target the canonical slug; envelope.input echoes the user form."""
+    # Wire format uses the canonical Ensembl slug — the same mocks apply
+    # whether the caller passes "thale cress" or "arabidopsis_thaliana".
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0",
+        json={
+            "id": "AT1G01010",
+            "species": "arabidopsis_thaliana",
+            "biotype": "protein_coding",
+            "display_name": "NAC001",
+        },
+    )
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/xrefs/id/AT1G01010?species=arabidopsis_thaliana",
+        json=[{"dbname": "Uniprot_gn", "primary_id": "Q0WV96", "display_id": "NAC001"}],
+    )
+    httpx_mock.add_response(
+        url=re.compile(r"^https://rest\.uniprot\.org/uniprotkb/search.*"),
+        json={
+            "results": [
+                {
+                    "primaryAccession": "Q0WV96",
+                    "uniProtkbId": "Y1010_ARATH",
+                    "entryType": "UniProtKB reviewed (Swiss-Prot)",
+                    "proteinDescription": {"recommendedName": {"fullName": {"value": "X"}}},
+                    "genes": [{"geneName": {"value": "NAC001"}}],
+                    "organism": {"scientificName": "Arabidopsis thaliana", "taxonId": 3702},
+                    "sequence": {"length": 429},
+                }
+            ]
+        },
+    )
+    httpx_mock.add_response(
+        url=re.compile(r"^https://www\.ebi\.ac\.uk/europepmc/webservices/rest/search.*"),
+        json={"hitCount": 0, "resultList": {"result": []}},
+    )
+    httpx_mock.add_response(
+        url=re.compile(r"^https://www\.ebi\.ac\.uk/QuickGO/services/annotation/search.*"),
+        json={"numberOfHits": 0, "results": []},
+    )
+
+    from plant_genomics_mcp.synthesis import analyze_locus_synth
+
+    async with httpx.AsyncClient() as client:
+        env = await analyze_locus_synth(client, "AT1G01010", organism="thale cress")
+
+    # envelope.input echoes the caller's literal form
+    assert env.input == {"locus": "AT1G01010", "organism": "thale cress"}
+    # Phase-1 ensembl call succeeded because the wire used the canonical slug
+    assert env.steps[0].status == "ok"
+    assert env.steps[0].tool == "ensembl_plants_lookup_locus"
+
+
+def test_analyze_locus_synth_unknown_organism_root_fails():
+    import asyncio
+
+    import httpx as _httpx
+
+    async def run():
+        async with _httpx.AsyncClient() as client:
+            from plant_genomics_mcp.synthesis import analyze_locus_synth
+
+            return await analyze_locus_synth(client, "AT1G01010", organism="zucchini")
+
+    envelope = asyncio.run(run())
+    assert envelope.result is None
+    assert envelope.steps[0].status == "error"
+    assert "[OrganismNotFound]" in (envelope.steps[0].error or "")
+    for step in envelope.steps[1:]:
+        assert step.status == "skipped"
+        assert "phase 1 failed" in (step.error or "")
+
+
+def test_biological_context_synth_unknown_organism_root_fails():
+    import asyncio
+
+    import httpx as _httpx
+
+    async def run():
+        async with _httpx.AsyncClient() as client:
+            from plant_genomics_mcp.synthesis import biological_context_synth
+
+            return await biological_context_synth(client, "AT1G01010", organism="zucchini")
+
+    envelope = asyncio.run(run())
+    assert envelope.result is None
+    assert envelope.steps[0].status == "error"
+    assert "[OrganismNotFound]" in (envelope.steps[0].error or "")
+    for step in envelope.steps[1:]:
+        assert step.status == "skipped"
 
 
 # ---------------------------------------------------------------------------
