@@ -19,7 +19,6 @@ import sys
 import httpx
 
 from plant_genomics_mcp import organisms
-from plant_genomics_mcp.phytozome import KNOWN_ORGANISMS as PHYTOZOME_KNOWN
 
 
 async def probe_ensembl(client: httpx.AsyncClient, slug: str) -> bool:
@@ -47,11 +46,6 @@ async def probe_string(client: httpx.AsyncClient, taxid: int) -> bool:
         return False
 
 
-def known_phytozome_int(canonical: str) -> int | None:
-    """Mirror current phytozome.KNOWN_ORGANISMS verified values."""
-    return PHYTOZOME_KNOWN.get(canonical)
-
-
 async def main() -> int:
     if os.environ.get("PLANT_GENOMICS_MCP_LIVE") != "1":
         print("Refusing to run without PLANT_GENOMICS_MCP_LIVE=1", file=sys.stderr)
@@ -63,8 +57,7 @@ async def main() -> int:
         for canonical, record in organisms.ORGANISMS.items():
             ens_ok = await probe_ensembl(client, record.ensembl_slug or "")
             str_ok = await probe_string(client, record.string_taxid or 0)
-            phy_int = known_phytozome_int(canonical)
-            phy_str = str(phy_int) if phy_int is not None else "TBD"
+            phy_str = str(record.phytozome_int) if record.phytozome_int is not None else "TBD"
             print(
                 f"{canonical:<28} {record.ncbi_taxid:<7} "
                 f"{'OK' if ens_ok else 'MISS':<8} "
