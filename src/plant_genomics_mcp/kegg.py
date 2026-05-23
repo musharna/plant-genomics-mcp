@@ -62,7 +62,7 @@ async def _get(client: httpx.AsyncClient, path: str) -> str:
             _CACHE.set(key, "")
             return ""
         if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_RETRIES - 1:
-            retry_after = float(resp.headers.get("Retry-After", delay))
+            retry_after = min(float(resp.headers.get("Retry-After", delay)), 60.0)
             await progress.notify(
                 f"KEGG {path}: HTTP {resp.status_code}, retrying in "
                 f"{retry_after:.1f}s (attempt {attempt + 2}/{MAX_RETRIES})"

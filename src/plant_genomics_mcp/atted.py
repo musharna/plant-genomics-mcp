@@ -87,7 +87,7 @@ async def _get(
             _CACHE.set(key, result)
             return result
         if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_RETRIES - 1:
-            retry_after = float(resp.headers.get("Retry-After", delay))
+            retry_after = min(float(resp.headers.get("Retry-After", delay)), 60.0)
             await progress.notify(
                 f"ATTED-II {path}: HTTP {resp.status_code}, retrying in "
                 f"{retry_after:.1f}s (attempt {attempt + 2}/{MAX_RETRIES})"
