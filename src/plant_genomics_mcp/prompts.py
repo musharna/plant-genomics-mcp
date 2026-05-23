@@ -7,7 +7,7 @@ the chat model through a deterministic chain of this server's tools.
 
 Two prompts ship in P2.18:
 
-  * ``analyze_locus``  — args: ``locus`` (required), ``species`` (opt,
+  * ``analyze_locus``  — args: ``locus`` (required), ``organism`` (opt,
     default ``arabidopsis_thaliana``). Drives the canonical
     multi-backend gene-profile walkthrough: Ensembl annotation →
     cross-refs → UniProt protein → literature → GO terms.
@@ -30,14 +30,15 @@ from __future__ import annotations
 
 from mcp import types
 
-from plant_genomics_mcp.errors import NotFoundError
+from plant_genomics_mcp import organisms
+from plant_genomics_mcp.errors import NotFoundError, OrganismNotFound
 
 ANALYZE_LOCUS = "analyze_locus"
 FIND_HOMOLOGS = "find_homologs"
 BIOLOGICAL_CONTEXT = "biological_context"
 DEFAULT_TOP_N = 10
 
-DEFAULT_SPECIES = "arabidopsis_thaliana"
+DEFAULT_ORGANISM = organisms.DEFAULT_ORGANISM
 DEFAULT_BLAST_PROGRAM = "blastp"
 _BLAST_PROGRAMS = {"blastn", "blastp", "blastx", "tblastn", "tblastx"}
 
@@ -58,11 +59,12 @@ PROMPTS: list[types.Prompt] = [
                 required=True,
             ),
             types.PromptArgument(
-                name="species",
+                name="organism",
                 description=(
-                    f"Ensembl species slug (default {DEFAULT_SPECIES}). "
-                    "Used for ensembl_plants_lookup_locus, get_gene_xrefs, "
-                    "and locus_literature."
+                    f"Plant organism (default {DEFAULT_ORGANISM}). Accepts "
+                    "canonical slug, scientific name, common name, or NCBI "
+                    "taxid. Used for ensembl_plants_lookup_locus, "
+                    "get_gene_xrefs, and locus_literature."
                 ),
                 required=False,
             ),
@@ -118,20 +120,23 @@ PROMPTS: list[types.Prompt] = [
 ]
 
 
-def _render_analyze_locus(locus: str, species: str) -> str:
+def _render_analyze_locus(locus: str, organism: str | int) -> str:
+    record = organisms.resolve(organism)
+    canonical = record.canonical
     return (
         f"Build a complete gene profile for plant locus {locus!r} "
-        f"(species: {species}). Use this MCP server's tools in this order, "
-        "passing the same locus + species to each:\n"
+        f"(organism: {record.scientific}). Use this MCP server's tools in this order, "
+        "passing the same locus + organism to each:\n"
         "\n"
-        f"1. `ensembl_plants_lookup_locus` with locus={locus!r}, species={species!r} "
+        f"1. `ensembl_plants_lookup_locus` with locus={locus!r}, organism={canonical!r} "
         "— fetch the canonical Ensembl Plants annotation (biotype, location, description).\n"
-        f"2. `get_gene_xrefs` with locus={locus!r}, species={species!r} — list "
+        f"2. `get_gene_xrefs` with locus={locus!r}, organism={canonical!r} — list "
         "cross-references (UniProt, NCBI Gene, TAIR, ArrayExpress…) and note the "
         "primary UniProt accession.\n"
-        f"3. `resolve_locus_to_uniprot` with locus={locus!r} — fetch the canonical "
-        "UniProt record (gene names, organism, sequence length, recommended name).\n"
-        f"4. `locus_literature` with locus={locus!r}, species={species!r}, size=10 "
+        f"3. `resolve_locus_to_uniprot` with locus={locus!r}, organism={canonical!r} "
+        "— fetch the canonical UniProt record (gene names, organism, sequence "
+        "length, recommended name).\n"
+        f"4. `locus_literature` with locus={locus!r}, organism={canonical!r}, size=10 "
         "— pull recent Europe PMC articles citing this locus.\n"
         f"5. `locus_go_annotations` with locus={locus!r} — list GO term annotations "
         "(molecular_function / biological_process / cellular_component).\n"
@@ -209,9 +214,13 @@ async def get_prompt(name: str, arguments: dict[str, str] | None) -> types.GetPr
         locus = args.get("locus")
         if not locus:
             raise NotFoundError(f"prompt {name!r}: missing required argument 'locus'")
-        species = args.get("species") or DEFAULT_SPECIES
-        text = _render_analyze_locus(locus, species)
-        description = f"Full gene profile for {locus} ({species})"
+        organism = args.get("organism") or DEFAULT_ORGANISM
+        try:
+            record = organisms.resolve(organism)
+        except OrganismNotFound as exc:
+            raise NotFoundError(f"prompt {name!r}: {exc}") from exc
+        text = _render_analyze_locus(locus, organism)
+        description = f"Full gene profile for {locus} ({record.canonical})"
     elif name == FIND_HOMOLOGS:
         sequence = args.get("sequence")
         if not sequence:
