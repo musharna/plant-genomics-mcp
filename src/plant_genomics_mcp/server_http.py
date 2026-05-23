@@ -29,6 +29,12 @@ Env knobs:
   PLANT_GENOMICS_MCP_HTTP_MAX_BODY   default 2_097_152 (2 MiB) — POSTs
                                      advertising a larger Content-Length
                                      return 413 before the body is read
+
+CORS is deny-all: no browser origin gets an
+``Access-Control-Allow-Origin`` header, so cross-origin XHRs are
+blocked client-side. MCP clients are stdio bridges or HTTP libraries,
+not browser JS — non-browser callers (no ``Origin`` header) are
+unaffected.
 """
 
 from __future__ import annotations
@@ -41,6 +47,8 @@ from collections.abc import AsyncIterator
 import uvicorn
 from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
 from starlette.applications import Starlette
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Mount, Route
@@ -137,6 +145,19 @@ def build_app() -> Starlette:
         routes=[
             Route("/healthz", healthz),
             Mount("/mcp", app=handle_mcp),
+        ],
+        middleware=[
+            # Deny-all CORS: ``allow_origins=[]`` means no browser origin
+            # ever gets an ``Access-Control-Allow-Origin`` header back, so
+            # cross-origin XHRs/fetches are blocked client-side. Non-
+            # browser callers (no ``Origin`` header) are unaffected. MCP
+            # clients are stdio bridges or HTTP libraries, never browser
+            # JS, so deny-all costs us nothing while closing the surface.
+            Middleware(
+                CORSMiddleware,
+                allow_origins=[],
+                allow_methods=["GET", "POST"],
+            ),
         ],
         lifespan=lifespan,
     )

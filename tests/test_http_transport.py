@@ -304,6 +304,69 @@ def test_blast_sequence_inputschema_has_maxlength_cap() -> None:
     assert seq2.get("maxLength") == 1_000_000, seq2
 
 
+# ---------- CORS deny-all (Wave B5) ----------
+
+
+def test_cors_middleware_is_installed() -> None:
+    """CORSMiddleware appears in the Starlette middleware stack.
+
+    Structural assertion — the deny-all policy must be wired in
+    declaratively. ASGI middleware doesn't show up in routes; the
+    canonical surface is ``app.user_middleware``.
+    """
+    from starlette.middleware.cors import CORSMiddleware
+
+    app = server_http.build_app()
+    assert any(m.cls is CORSMiddleware for m in app.user_middleware), [
+        m.cls.__name__ for m in app.user_middleware
+    ]
+
+
+def test_cors_preflight_is_intercepted_not_405() -> None:
+    """OPTIONS preflight with ``Access-Control-Request-Method`` is
+    intercepted by CORSMiddleware — it short-circuits and never reaches
+    the route, so the response is NOT a plain 405 from the routing
+    layer. With no middleware installed, OPTIONS /healthz returns 405
+    ``Allow: HEAD, GET`` — this test fails in that state.
+    """
+    app = server_http.build_app()
+    with TestClient(app) as client:
+        resp = client.options(
+            "/healthz",
+            headers={
+                "Origin": "https://evil.example",
+                "Access-Control-Request-Method": "GET",
+            },
+        )
+    assert resp.status_code != 405, (resp.status_code, dict(resp.headers))
+
+
+def test_cors_omits_acao_on_disallowed_origin() -> None:
+    """Cross-origin GET with a disallowed Origin → no Access-Control-
+    Allow-Origin header. Browsers refuse the response when ACAO is
+    absent, enforcing the deny-all policy client-side.
+    """
+    app = server_http.build_app()
+    with TestClient(app) as client:
+        resp = client.get(
+            "/healthz",
+            headers={"Origin": "https://evil.example"},
+        )
+    assert resp.status_code == 200, resp.text
+    assert resp.headers.get("access-control-allow-origin") is None, dict(resp.headers)
+
+
+def test_cors_does_not_break_non_browser_clients() -> None:
+    """No Origin header (CLI / stdio bridge / curl) → request flows
+    through untouched and gets a normal response.
+    """
+    app = server_http.build_app()
+    with TestClient(app) as client:
+        resp = client.get("/healthz")
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["status"] == "ok"
+
+
 @pytest.mark.asyncio
 async def test_bearer_auth_via_real_uvicorn(monkeypatch: pytest.MonkeyPatch) -> None:
     """Real-execution check: middleware fires through actual uvicorn.
