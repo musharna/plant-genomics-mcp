@@ -367,6 +367,150 @@ def test_cors_does_not_break_non_browser_clients() -> None:
     assert resp.json()["status"] == "ok"
 
 
+# ---------- auth × body-size integration (Wave B7) ----------
+
+
+def test_413_fires_before_401_when_both_would_apply(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Oversized POST with no Authorization header (token configured) → 413.
+
+    Documents the deliberate precedence in ``handle_mcp``: the
+    Content-Length precheck runs before the bearer-auth check. Knowing
+    "your body was too big" is not sensitive — the server publicly
+    advertises a body cap anyway. The opposite order (auth first) would
+    burn cycles reading and discarding a 100 MB body before issuing 401.
+    If a future edit re-orders these gates, this test fails loudly.
+    """
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", "s3cret-token")
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_MAX_BODY", "1024")
+    app = server_http.build_app()
+    oversized = "x" * 4096
+    with TestClient(app) as client:
+        resp = client.post(
+            "/mcp/",
+            content=oversized,
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/json, text/event-stream",
+                # No Authorization header — auth would 401 if it ran first.
+            },
+        )
+    assert resp.status_code == 413, (resp.status_code, resp.text)
+
+
+def test_413_fires_with_valid_auth_when_oversized(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Valid bearer + oversized body → 413.
+
+    Body cap is independent of auth state — a legitimate caller still
+    can't punch through with a multi-MB payload. Pairs with the
+    precedence test: together they confirm body-cap is universal, not
+    conditional on the auth posture.
+    """
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", "s3cret-token")
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_MAX_BODY", "1024")
+    app = server_http.build_app()
+    oversized = "x" * 4096
+    with TestClient(app) as client:
+        resp = client.post(
+            "/mcp/",
+            content=oversized,
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/json, text/event-stream",
+                "Authorization": "Bearer s3cret-token",
+            },
+        )
+    assert resp.status_code == 413, (resp.status_code, resp.text)
+
+
+@pytest.mark.asyncio
+async def test_auth_plus_body_cap_via_real_uvicorn(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Real-execution: both gates configured, exercised across one socket.
+
+    Boundary parity check — TestClient runs ASGI in-process; this drives
+    a live uvicorn so we know the combined ordering (body-cap → auth →
+    manager) survives the real network stack. Four assertions in one
+    server lifetime:
+      * /healthz still 200 with token configured (exempt)
+      * oversized body + no auth → 413 (body cap wins precedence)
+      * under-cap body + wrong auth → 401 (auth wins when body ok)
+      * under-cap body + valid auth → 200 (handshake reaches manager)
+    """
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", "live-secret")
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_MAX_BODY", "1024")
+    app = server_http.build_app()
+    port = _free_port()
+    config = uvicorn.Config(app, host="127.0.0.1", port=port, log_level="error")
+    uv_server = uvicorn.Server(config)
+    serve_task = asyncio.create_task(uv_server.serve())
+    try:
+        for _ in range(100):
+            if uv_server.started:
+                break
+            await asyncio.sleep(0.05)
+        assert uv_server.started, "uvicorn never reported started"
+
+        oversized = "x" * 4096
+
+        async with httpx.AsyncClient(base_url=f"http://127.0.0.1:{port}", timeout=10.0) as client:
+            # /healthz remains open even with token configured.
+            health_resp = await client.get("/healthz")
+            assert health_resp.status_code == 200, health_resp.text
+
+            # Oversized + no auth → body-cap precedence: 413, not 401.
+            over_no_auth = await client.post(
+                "/mcp/",
+                content=oversized,
+                headers={
+                    "Content-Type": "application/json",
+                    "Accept": "application/json, text/event-stream",
+                },
+            )
+            assert over_no_auth.status_code == 413, over_no_auth.text
+
+            # Under cap + wrong auth → auth fires: 401.
+            small_wrong_auth = await client.post(
+                "/mcp/",
+                json={"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
+                headers={
+                    "Accept": "application/json, text/event-stream",
+                    "Authorization": "Bearer wrong-token",
+                },
+            )
+            assert small_wrong_auth.status_code == 401, small_wrong_auth.text
+
+            # Under cap + valid auth → manager handshake completes.
+            good = await client.post(
+                "/mcp/",
+                json={
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "initialize",
+                    "params": {
+                        "protocolVersion": "2025-03-26",
+                        "capabilities": {},
+                        "clientInfo": {"name": "pgmcp-test", "version": "0.0.1"},
+                    },
+                },
+                headers={
+                    "Accept": "application/json, text/event-stream",
+                    "Authorization": "Bearer live-secret",
+                },
+            )
+            assert good.status_code == 200, good.text
+    finally:
+        uv_server.should_exit = True
+        try:
+            await asyncio.wait_for(serve_task, timeout=5.0)
+        except asyncio.TimeoutError:
+            serve_task.cancel()
+
+
 @pytest.mark.asyncio
 async def test_bearer_auth_via_real_uvicorn(monkeypatch: pytest.MonkeyPatch) -> None:
     """Real-execution check: middleware fires through actual uvicorn.
