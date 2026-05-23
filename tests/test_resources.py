@@ -128,6 +128,7 @@ async def test_read_backends_status_lists_live_and_stub_backends() -> None:
     for name in (
         "atted",
         "bar",
+        "blast",
         "ensembl_plants",
         "phytozome",
         "uniprot",
@@ -141,6 +142,12 @@ async def test_read_backends_status_lists_live_and_stub_backends() -> None:
         assert e["kind"] == "live"
         assert e["subscription_gated"] is False
         assert e["base_url"].startswith("http")
+    # BLAST surfaces its concurrency cap (Wave B4 NCBI etiquette knob);
+    # other live backends don't need one because they're single-shot
+    # REST. The cap is the operator's lever on per-server BLAST load.
+    from plant_genomics_mcp import blast as blast_mod
+
+    assert by_name["blast"]["concurrency_cap"] == blast_mod.MAX_CONCURRENT_BLAST
     # PlantCyc remains a subscription_required stub; TAIR was promoted to
     # an alias of bar_gene_summary in Wave A.6.8 (no longer listed as a
     # standalone backend — BAR carries the curator data).
