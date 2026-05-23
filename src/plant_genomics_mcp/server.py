@@ -759,6 +759,7 @@ TOOLS: list[types.Tool] = [
                 "sequence": {
                     "type": "string",
                     "description": "Raw or FASTA-formatted query sequence.",
+                    "maxLength": 1_000_000,
                 },
                 "program": {
                     "type": "string",
@@ -1045,6 +1046,7 @@ TOOLS: list[types.Tool] = [
                 "sequence": {
                     "type": "string",
                     "description": "Query sequence (protein or nucleotide)",
+                    "maxLength": 1_000_000,
                 },
                 "program": {
                     "type": "string",

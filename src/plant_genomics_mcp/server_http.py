@@ -26,6 +26,9 @@ Env knobs:
                                      set → /mcp requires
                                      ``Authorization: Bearer <token>``;
                                      /healthz always exempt
+  PLANT_GENOMICS_MCP_HTTP_MAX_BODY   default 2_097_152 (2 MiB) — POSTs
+                                     advertising a larger Content-Length
+                                     return 413 before the body is read
 """
 
 from __future__ import annotations
@@ -82,6 +85,7 @@ def build_app() -> Starlette:
     stateless = _env_flag("PLANT_GENOMICS_MCP_HTTP_STATELESS", True)
     json_response = _env_flag("PLANT_GENOMICS_MCP_HTTP_JSON", True)
     expected_token = os.environ.get("PLANT_GENOMICS_MCP_HTTP_TOKEN")
+    max_body = int(os.environ.get("PLANT_GENOMICS_MCP_HTTP_MAX_BODY", "2097152"))
 
     session_manager = StreamableHTTPSessionManager(
         app=server,
@@ -96,6 +100,22 @@ def build_app() -> Starlette:
     async def handle_mcp(scope: Scope, receive: Receive, send: Send) -> None:
         # /mcp gated on bearer token when PLANT_GENOMICS_MCP_HTTP_TOKEN
         # is set. /healthz routed separately, never enters this handler.
+        # Content-Length pre-check rejects oversize bodies before the
+        # session manager streams them into memory.
+        for name, value in scope.get("headers", []):
+            if name == b"content-length":
+                try:
+                    declared = int(value)
+                except ValueError:
+                    break
+                if declared > max_body:
+                    response = JSONResponse(
+                        {"error": "payload too large", "max_body": max_body},
+                        status_code=413,
+                    )
+                    await response(scope, receive, send)
+                    return
+                break
         if expected_token:
             provided = _extract_bearer(scope)
             if not hmac.compare_digest(provided, expected_token):
