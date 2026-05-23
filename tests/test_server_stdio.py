@@ -154,7 +154,7 @@ async def test_list_prompts_advertises_all_prompts(
             # Required-arg flags must round-trip (clients rely on these for UX).
             analyze_args = {a.name: a for a in by_name["analyze_locus"].arguments or []}
             assert analyze_args["locus"].required is True
-            assert not analyze_args["species"].required
+            assert not analyze_args["organism"].required
             homolog_args = {a.name: a for a in by_name["find_homologs"].arguments or []}
             assert homolog_args["sequence"].required is True
             bio_args = {a.name: a for a in by_name["biological_context"].arguments or []}
@@ -221,3 +221,27 @@ async def test_get_prompt_unknown_name_surfaces_typed_error(
             assert "[NotFoundError]" in str(exc_info.value), (
                 f"missing typed prefix in: {exc_info.value!r}"
             )
+
+
+@pytest.mark.asyncio
+async def test_tool_schemas_use_organism_param(server_params: StdioServerParameters) -> None:
+    """v0.9 contract: every tool exposes a single 'organism' input field,
+    accepting string | integer. Old 'species' and 'organism_id' fields
+    must not appear in any tool's inputSchema."""
+    async with stdio_client(server_params) as (read, write):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
+            result = await session.list_tools()
+            for tool in result.tools:
+                props = (tool.inputSchema or {}).get("properties", {})
+                assert "species" not in props, f"{tool.name} still has 'species' in inputSchema"
+                assert "organism_id" not in props, (
+                    f"{tool.name} still has 'organism_id' in inputSchema"
+                )
+                if "organism" in props:
+                    field = props["organism"]
+                    # Union-typed per v0.9 spec
+                    assert field.get("type") == ["string", "integer"], (
+                        f"{tool.name}.organism type is {field.get('type')!r}, "
+                        "expected ['string', 'integer']"
+                    )
