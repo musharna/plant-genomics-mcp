@@ -58,3 +58,39 @@ class UpstreamUnavailableError(PlantGenomicsError):
     LLM clients should treat this as a service outage and consider
     falling back to a peer backend (e.g. Phytozome when Ensembl is down).
     """
+
+
+class OrganismNotFound(PlantGenomicsError):
+    """Input did not match any record in the organisms registry.
+
+    Carries the supported organism list so the caller (typically an LLM)
+    can pick a valid one without a second round trip.
+    """
+
+    def __init__(self, query: str | int, *, supported: list[str]) -> None:
+        super().__init__(f"organism {query!r} not in registry; supported: {sorted(supported)}")
+        self.query = query
+        self.supported = sorted(supported)
+
+
+class OrganismNotSupported(PlantGenomicsError):
+    """Input resolved, but the requested backend has no ID for it.
+
+    Synthesis tools catch this and translate it into ``StepRow(status="skipped")``
+    so partial-success semantics carry through the envelope.
+    """
+
+    def __init__(
+        self,
+        *,
+        backend: str,
+        organism: str,
+        supported: list[str],
+    ) -> None:
+        super().__init__(
+            f"backend {backend!r} has no ID for {organism!r}; "
+            f"supported by {backend!r}: {sorted(supported)}"
+        )
+        self.backend = backend
+        self.organism = organism
+        self.supported = sorted(supported)
