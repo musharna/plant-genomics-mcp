@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.10.0 — 2026-05-23
+
+BAR backend release — adds the Bio-Analytic Resource for Plant Biology (U Toronto, Global Core Biodata Resource 2023) as the tenth live backend. Surface grows 27 → 32 tools (3 new single-locus + 2 new batch). BAR is free, keyless, no rate limit; it mirrors TAIR's curator-annotated locus data plus eFP-Browser tissue expression and the AIV (Arabidopsis Interactions Viewer) protein-protein interaction graph, all without the Phoenix Bioinformatics paid subscription. `tair_locus_info` is **silently upgraded** to a direct alias of `bar_gene_summary` — the MCP tool name stays for client compatibility, but the body now returns real curator data instead of a `subscription_required` redirect record.
+
+- **`src/plant_genomics_mcp/bar.py`** (new) — three live module functions wrapping the BAR REST surface:
+  - `gene_summary(client, locus)` — `/api/thalemine/gene_information/{locus}` + `/api/gaia/aliases/{locus}` merged into `BarGeneSummary` (locus, symbol, ncbi_gene_id, aliases, brief_description, full_description, species).
+  - `efp_expression(client, locus)` — `/api/efp/expression/{locus}` (mean ± SD per tissue across the eFP atlas).
+  - `aiv_interactions(client, locus, organism)` — `/api/aiv/{ath|osa}/interactions/{locus}` with organism-dispatch (Arabidopsis + rice) over a curated PPI graph with confidence + supporting papers.
+- **Three new MCP tools** with full `outputSchema` wiring: `bar_gene_summary`, `bar_efp_expression`, `bar_aiv_interactions` — all live, all keyless. EDAM tags (`operation_2422`, `topic_0780`, `topic_0114`) on `_meta` for registry indexers.
+- **Two new batch tools**: `batch_bar_gene_summary`, `batch_bar_aiv_interactions` — fan-out via `asyncio.gather` over a `loci: string[]` (1–50), envelope `{tool, count, results, errors}` matches the rest of the batch family. `bar_efp_expression` has no batch variant (per-locus is the natural unit and the eFP atlas response is already large).
+- **Silent upgrade: `tair_locus_info` is now an alias of `bar_gene_summary`.** The tool name is preserved so existing MCP clients keep working; the body delegates entirely to `bar.gene_summary`, and the `outputSchema` swaps from the old `SubscriptionGatedRedirect` shape to `BarGeneSummary`. Callers that pattern-matched on `status: "subscription_required"` need to switch to the new shape — see Section 7 of the README for the contract. The `[NotFoundError]` typed-prefix on invalid loci is preserved.
+- **`pgmcp://backends/status`** — BAR added to the live-backend rollup with `kind: "live"`, `subscription_gated: false`. TAIR is **removed** from this resource: it's no longer a standalone backend, just a tool alias of BAR. PlantCyc remains the sole `subscription_required` stub.
+- **`pgmcp://cache/stats`** — gains a `bar` rollup alongside the other 9 backends (10 live caches total).
+- **TAIR module rewritten** (`src/plant_genomics_mcp/tair.py`) — was a 70-line subscription-required redirect stub returning a hardcoded `SubscriptionGatedRedirect`; now a 6-line async delegate to `bar.gene_summary`. The `TairLocusInfo` Pydantic model is removed from `models.py` (no consumers).
+- **Stdio smoke test** updated for 32-tool surface; offline-stub call test pivoted from `tair_locus_info` to `plantcyc_locus_info` (which remains the deterministic-offline contract anchor). `bar_aiv_interactions` + `batch_bar_aiv_interactions` added to the canonical multi-organism set in `test_tool_schemas_use_organism_param`.
+
 ## v0.9.0 — 2026-05-23
 
 Multi-organism resolver release. Broadens the project from Arabidopsis-default-with-ad-hoc-overrides to a curated 12-plant coverage matrix accessed through a single unified `organism=` parameter on every backend tool. Same 27 tools, same 9 live backends — what changes is that you can now pass `oryza_sativa`, `Oryza sativa`, `rice`, or `39947` and have every backend resolve to the same canonical record without the caller knowing the per-backend slug / taxid / proteome-id translation.

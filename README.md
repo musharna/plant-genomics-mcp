@@ -1,11 +1,14 @@
 # plant-genomics-mcp
 
-> **27 tools** for plant-genomics locus lookup via the Model Context Protocol —
-> 13 single-locus + 10 parallel-batch + 4 cross-source synthesis variants.
+> **32 tools** for plant-genomics locus lookup via the Model Context Protocol —
+> 16 single-locus + 12 parallel-batch + 4 cross-source synthesis variants.
 > Free, public sources: Ensembl Plants + Phytozome BioMart + UniProtKB +
-> Europe PMC + QuickGO + NCBI BLAST + Gramene + KEGG + STRING-DB + ATTED-II.
-> TAIR + PlantCyc are informational stubs that redirect to the free
-> alternatives (both services are paid-subscription-gated, probed 2026-05-21).
+> Europe PMC + QuickGO + NCBI BLAST + Gramene + KEGG + STRING-DB + ATTED-II
+>
+> - BAR (Bio-Analytic Resource for Plant Biology, U Toronto — Global Core
+>   Biodata Resource 2023). PlantCyc is an informational stub that redirects
+>   to the free alternatives (BioCyc PLANT orgid is paid-subscription-gated,
+>   probed 2026-05-21).
 
 [![CI](https://github.com/musharna/plant-genomics-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/musharna/plant-genomics-mcp/actions/workflows/test.yml)
 [![Docker](https://github.com/musharna/plant-genomics-mcp/actions/workflows/docker.yml/badge.svg)](https://github.com/musharna/plant-genomics-mcp/actions/workflows/docker.yml)
@@ -27,10 +30,13 @@
 | 9   | Pathways (live)         | `kegg_pathways`                         | Fetches KEGG `ath:` pathway memberships for an Arabidopsis locus.                    |
 | 10  | Interactions (live)     | `string_interactions`                   | Fetches STRING-DB first-neighbor interaction partners with per-channel score.        |
 | 11  | Coexpression (live)     | `atted_coexpression`                    | Fetches ATTED-II Ath-u.c4-0 top-N coexpression neighbors with z-scores.              |
-| 12  | Subscription redirect   | `tair_locus_info`                       | Returns subscription notice + redirect to live backends. No upstream call.           |
-| 13  | Subscription redirect   | `plantcyc_locus_info`                   | Returns subscription notice + redirect to live backends. No upstream call.           |
-| 14  | Batch (live)            | `batch_*` (ten variants)                | Parallel per-locus fanout for tools 1–6, 8–11. Up to 50 loci per call.               |
-| 15  | Synthesis (live)        | `*_synth` / `consensus_homologs` (four) | Compose 2–5 backends in parallel, return a `SynthesisEnvelope` with per-step status. |
+| 12  | Curator summary (live)  | `bar_gene_summary`                      | Fetches BAR ThaleMine + GAIA-aliases curator summary for an Arabidopsis locus.       |
+| 13  | Expression (live)       | `bar_efp_expression`                    | Fetches BAR eFP-Browser expression profile (mean ± SD per tissue) for a locus.       |
+| 14  | Interactions (live)     | `bar_aiv_interactions`                  | Fetches BAR AIV interaction partners (Arabidopsis + rice) with confidence + papers.  |
+| 15  | Curator summary (live)  | `tair_locus_info`                       | Silent upgrade — alias of `bar_gene_summary`. MCP tool name preserved for clients.   |
+| 16  | Subscription redirect   | `plantcyc_locus_info`                   | Returns subscription notice + redirect to live backends. No upstream call.           |
+| 17  | Batch (live)            | `batch_*` (twelve variants)             | Parallel per-locus fanout for tools 1–6, 8–12, 14. Up to 50 loci per call.           |
+| 18  | Synthesis (live)        | `*_synth` / `consensus_homologs` (four) | Compose 2–5 backends in parallel, return a `SynthesisEnvelope` with per-step status. |
 
 Live tools take a TAIR-style locus (e.g. `AT1G01010`) plus an optional
 unified `organism=` parameter (default `arabidopsis_thaliana`) and
@@ -46,7 +52,8 @@ Batch variants (`batch_ensembl_plants_lookup_locus`,
 `batch_resolve_locus_to_uniprot`, `batch_locus_literature`,
 `batch_locus_go_annotations`, `batch_gramene_homologs`,
 `batch_kegg_pathways`, `batch_string_interactions`,
-`batch_atted_coexpression`) take a `loci: string[]` (1–50 items) plus
+`batch_atted_coexpression`, `batch_bar_gene_summary`,
+`batch_bar_aiv_interactions`) take a `loci: string[]` (1–50 items) plus
 the same optional `organism=` argument. They return
 `{tool, count, results, errors}` where `results[locus]` is the same
 shape as the single-locus tool and `errors[locus]` is a
@@ -55,7 +62,7 @@ shape as the single-locus tool and `errors[locus]` is a
 the native `POST /lookup/id` endpoint (one HTTP round-trip);
 everything else fans out via `asyncio.gather`.
 
-All twenty-seven tools publish JSON `outputSchema` for client-side validation
+All thirty-two tools publish JSON `outputSchema` for client-side validation
 and EDAM ontology tags (`operation_2422` Data retrieval; topic
 `topic_0780` Plant biology + `topic_0114` Gene structure) on `_meta`
 for registry indexers.
@@ -67,7 +74,7 @@ The server advertises four read-only MCP resources (`resources/list` +
 
 | URI                           | MIME             | What                                                                                                           |
 | ----------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------- |
-| `pgmcp://cache/stats`         | application/json | Per-backend `TTLCache` rollup — `{hits, misses, size}` for each of the nine live backends                      |
+| `pgmcp://cache/stats`         | application/json | Per-backend `TTLCache` rollup — `{hits, misses, size}` for each of the ten live backends                       |
 | `pgmcp://organisms/phytozome` | application/json | Slug → Phytozome `organism_id` map, derived from the curated v0.9 `organisms.ORGANISMS` registry               |
 | `pgmcp://backends/status`     | application/json | Per-backend liveness rollup — `name`, `base_url`, `kind` (`live` or `stub`), `subscription_gated`, `probed_at` |
 | `pgmcp://organisms/coverage`  | text/markdown    | Markdown table of all 12 supported plants × 5 backend ID slots (ensembl, phytozome, string, europe_pmc, ncbi)  |
@@ -394,32 +401,37 @@ term set is one read away.
 entry can't be queried in QuickGO, so the caller gets a typed error
 rather than an empty result that hides the resolution failure.
 
-### 7. `tair_locus_info` / 8. `plantcyc_locus_info`
+### 7. `tair_locus_info` (BAR alias) / 8. `plantcyc_locus_info`
 
-Pure-data redirects — these tools do **not** call upstream. Both TAIR
-and PlantCyc gate their free per-locus REST behind paid subscriptions
-(Phoenix Bioinformatics for TAIR; SRI/Phoenix for the BioCyc PLANT
-orgid). The tools return a structured record so an LLM client can
-route to the live backends transparently:
+`tair_locus_info` is a **silent upgrade** (v0.10.0) — the MCP tool name
+is preserved for client compatibility, but the body now delegates to
+`bar_gene_summary` instead of returning a subscription-required redirect.
+BAR (Bio-Analytic Resource for Plant Biology, U Toronto — Global Core
+Biodata Resource 2023) mirrors the TAIR curator data through ThaleMine +
+GAIA aliases without the Phoenix Bioinformatics paid subscription.
+Returned shape is `BarGeneSummary` (same as `bar_gene_summary`).
+
+`plantcyc_locus_info` remains a pure-data redirect — BioCyc PLANT orgid
+gates its free per-locus REST behind a paid subscription (SRI/Phoenix)
+and no free mirror covers the metabolic-pathway membership data:
 
 ```jsonc
-// tair_locus_info { "locus": "AT1G01010" }
+// plantcyc_locus_info { "locus": "AT1G01010" }
 {
   "locus": "AT1G01010",
-  "tair_web_url": "https://www.arabidopsis.org/locus/AT1G01010",
+  "plantcyc_web_url": "https://pmn.plantcyc.org/gene?orgid=ARA&id=AT1G01010",
   "status": "subscription_required",
   "probed_at": "2026-05-21",
-  "rationale": "TAIR per-locus REST endpoints return 403; Phoenix Bioinformatics requires a paid subscription. This MCP does not ship a live TAIR client — use the alternatives below for the same annotation.",
-  "alternatives": ["ensembl_plants_lookup_locus", "phytozome_lookup_locus"],
-  "alternatives_note": "Both alternatives return the same canonical Arabidopsis annotation; ensembl_plants_lookup_locus also covers other plant species (oryza_sativa, zea_mays, ...).",
+  "rationale": "PlantCyc per-locus REST endpoints require a paid BioCyc subscription. This MCP does not ship a live PlantCyc client — use the alternatives below for partial coverage.",
+  "alternatives": ["kegg_pathways", "ensembl_plants_lookup_locus"],
+  "alternatives_note": "kegg_pathways covers pathway membership (no metabolic-network depth); ensembl_plants_lookup_locus covers gene annotation.",
 }
 ```
 
-These two tools exist for **discoverability** — a caller who knows of
-TAIR or PlantCyc gets a structured pointer to the free backends that
-cover the same data, rather than a 404. PlantCyc's value-add
-(metabolic-pathway membership) is not currently substituted by the
-alternatives.
+`plantcyc_locus_info` exists for **discoverability** — a caller who
+knows of PlantCyc gets a structured pointer to the closest free
+backends rather than a 404. PlantCyc's metabolic-network value-add is
+not currently substituted by the alternatives.
 
 ### 9. Batch variants
 
@@ -466,10 +478,12 @@ so clients can route on failure kind without parsing the message:
 **Annotation fallback chain** — TAIR locus to canonical record, with
 graceful degradation:
 
-1. Call `tair_locus_info { locus }` to detect the gate.
-2. Read its `alternatives` field.
-3. Call `ensembl_plants_lookup_locus { locus }` (or `phytozome_lookup_locus`).
-4. On `[UpstreamUnavailableError]`, fall back to the other backend.
+1. Call `tair_locus_info { locus }` (alias of `bar_gene_summary`) for the
+   curator-vetted summary + alias set.
+2. On `[UpstreamUnavailableError]` (BAR ThaleMine outage), fall back to
+   `ensembl_plants_lookup_locus { locus }` for the Ensembl Plants record.
+3. On a second `[UpstreamUnavailableError]`, fall back to
+   `phytozome_lookup_locus { locus }` for the Phytozome BioMart record.
 
 **Cross-species ortholog probe** (manual today, candidate for a built-in
 chain in a future release):
