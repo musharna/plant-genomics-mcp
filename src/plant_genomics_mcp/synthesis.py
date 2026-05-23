@@ -19,6 +19,7 @@ handle repeated upstream calls.
 from __future__ import annotations
 
 import asyncio
+import re
 import time
 from datetime import datetime, timezone
 from typing import Any
@@ -463,9 +464,7 @@ async def find_homologs_synth(
 
 # UniProt accession syntax — same regex shape uniprot._looks_like_uniprot_accession uses.
 # Subject IDs come in many forms; we look for the accession token where possible.
-import re as _re  # noqa: E402 — intentionally late: scoped helper, not used above
-
-_UNIPROT_ACCESSION_TOKEN = _re.compile(
+_UNIPROT_ACCESSION_TOKEN = re.compile(
     r"\b(?:[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9](?:[A-Z][A-Z0-9]{2}[0-9]){1,2})(?:\.[0-9]+)?\b"
 )
 
@@ -698,10 +697,10 @@ def _consensus_partners(
 # ---------------------------------------------------------------------------
 
 
-_BLAST_DEFLINE_GN = _re.compile(r"GN=([A-Za-z0-9_.\-]+)")
-_BLAST_DEFLINE_OS = _re.compile(r"OS=([A-Z][A-Za-z]+(?:\s+[A-Za-z]+)+?)(?=\s+[A-Z]{2}=|$)")
-_PLANT_LOCUS_TOKEN = _re.compile(r"\b([A-Za-z]{2,3}\d{1,2}[GgMmCcTtDd]\d{3,8})(?:\.\d+)?\b")
-_GRAMENE_SPECIES_PREFIX = _re.compile(r"^[A-Z]{4,8}_")
+_BLAST_DEFLINE_GN = re.compile(r"GN=([A-Za-z0-9_.\-]+)")
+_BLAST_DEFLINE_OS = re.compile(r"OS=([A-Z][A-Za-z]+(?:\s+[A-Za-z]+)+?)(?=\s+[A-Z]{2}=|$)")
+_PLANT_LOCUS_TOKEN = re.compile(r"\b([A-Za-z]{2,3}\d{1,2}[GgMmCcTtDd]\d{3,8})(?:\.\d+)?\b")
+_GRAMENE_SPECIES_PREFIX = re.compile(r"^[A-Z]{4,8}_")
 _GRAMENE_PREFIX_TO_SPECIES = {
     "ARATH": "arabidopsis_thaliana",
     "ORYSA": "oryza_sativa",
@@ -726,7 +725,7 @@ def _normalize_locus_token(raw: str) -> str:
 
 def _species_from_gramene_locus(raw: str) -> str | None:
     s = (raw or "").strip()
-    m = _re.match(r"^([A-Z]{4,8})_", s)
+    m = re.match(r"^([A-Z]{4,8})_", s)
     if not m:
         return None
     return _GRAMENE_PREFIX_TO_SPECIES.get(m.group(1))
