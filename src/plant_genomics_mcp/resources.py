@@ -98,11 +98,11 @@ RESOURCES: list[types.Resource] = [
         uri=AnyUrl(COVERAGE_MATRIX_URI),
         name="Organism coverage matrix",
         description=(
-            "Markdown table of all 12 supported plants × 5 backend ID "
-            "slots (ensembl, phytozome, string, europe_pmc, ncbi). "
-            "Missing backend slots render as em-dash. Lets a client "
-            "introspect coverage in one read instead of probing "
-            "resolve_organism per organism."
+            "Markdown table of all 12 supported plants × 5 ID slots "
+            "(ncbi_taxid, ensembl, phytozome, string, europe_pmc). "
+            "Missing slots render as em-dash. Lets a client introspect "
+            "coverage in one read instead of probing resolve_organism "
+            "per organism."
         ),
         mimeType="text/markdown",
     ),
@@ -244,7 +244,7 @@ def _coverage_matrix_payload() -> str:
     lines = [
         "# Organism Coverage Matrix",
         "",
-        "| canonical | scientific | taxid | ensembl | phytozome | string | europe_pmc |",
+        "| canonical | scientific | ncbi_taxid | ensembl | phytozome | string | europe_pmc |",
         "| --- | --- | --- | --- | --- | --- | --- |",
     ]
     for canonical, r in organisms.ORGANISMS.items():

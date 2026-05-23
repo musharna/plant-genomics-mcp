@@ -77,7 +77,7 @@ The server advertises four read-only MCP resources (`resources/list` +
 | `pgmcp://cache/stats`         | application/json | Per-backend `TTLCache` rollup — `{hits, misses, size}` for each of the ten live backends                       |
 | `pgmcp://organisms/phytozome` | application/json | Slug → Phytozome `organism_id` map, derived from the curated v0.9 `organisms.ORGANISMS` registry               |
 | `pgmcp://backends/status`     | application/json | Per-backend liveness rollup — `name`, `base_url`, `kind` (`live` or `stub`), `subscription_gated`, `probed_at` |
-| `pgmcp://organisms/coverage`  | text/markdown    | Markdown table of all 12 supported plants × 5 backend ID slots (ensembl, phytozome, string, europe_pmc, ncbi)  |
+| `pgmcp://organisms/coverage`  | text/markdown    | Markdown table of all 12 supported plants × 5 ID slots (ncbi_taxid, ensembl, phytozome, string, europe_pmc)    |
 
 Useful for an operator to confirm caching is doing work without
 shelling into the process, and for clients that want to enumerate
