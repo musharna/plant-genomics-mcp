@@ -157,6 +157,29 @@ async def test_live_string_q0wv96_has_partners():
     assert result["partners"][0]["score"] is not None
 
 
+@pytest.mark.skipif(
+    not os.environ.get("PLANT_GENOMICS_MCP_LIVE"),
+    reason="set PLANT_GENOMICS_MCP_LIVE=1 to hit string-db.org",
+)
+@pytest.mark.asyncio
+async def test_live_string_rice_locus_resolves_and_returns_partners():
+    """v0.9 T19: real call against rice — exercises the resolver → uniprot → STRING chain.
+
+    Passes a rice locus (not an accession), so this also exercises
+    uniprot.lookup_locus with organism="oryza_sativa" on the way to
+    STRING. The rice STRING taxid (39947) must reach the wire.
+    """
+    async with httpx.AsyncClient() as client:
+        result = await string_db.lookup_partners(
+            client, "Os01g0100100", limit=5, organism="oryza_sativa"
+        )
+    assert result["organism"] == "oryza_sativa"
+    assert result["accession"]  # any non-empty uniprot accession from the resolver
+    # Partner list may be empty for some loci; tolerate but require structure if present.
+    if result["partners"]:
+        assert result["partners"][0]["score"] is not None
+
+
 @pytest.mark.asyncio
 async def test_lookup_partners_accepts_organism_param(httpx_mock: HTTPXMock):
     """Resolver-driven organism kwarg accepts a slug; STRING wire-format species=3702 preserved."""

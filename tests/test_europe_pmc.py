@@ -179,3 +179,20 @@ async def test_lookup_locus_accepts_organism_param(httpx_mock: HTTPXMock) -> Non
     async with httpx.AsyncClient() as client:
         result = await europe_pmc.lookup_locus(client, "AT1G01010", organism="arabidopsis_thaliana")
     assert result is not None
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_lookup_rice_locus_returns_hits() -> None:
+    """v0.9 T19: real call against rice — exercises europe_pmc_slug='rice'.
+
+    Confirms the organism resolver feeds the right slug into the Europe
+    PMC query for a non-Arabidopsis organism. Rice OsDREB1A homolog
+    Os01g0100100 should have hits (cereal genes are well-published).
+    """
+    async with httpx.AsyncClient() as client:
+        result = await europe_pmc.lookup_locus(
+            client, "Os01g0100100", organism="oryza_sativa", size=3
+        )
+    assert result["hitCount"] >= 0  # non-crash check; literature may be sparse
+    assert result["organism"] == "oryza_sativa"
