@@ -117,3 +117,82 @@ def test_europe_pmc_slug_for_arabidopsis_returns_none() -> None:
 def test_helper_raises_on_unknown_organism() -> None:
     with pytest.raises(OrganismNotFound):
         organisms.ensembl_slug_for("zucchini")
+
+
+EXPECTED_CANONICAL = {
+    "arabidopsis_thaliana",
+    "oryza_sativa",
+    "zea_mays",
+    "triticum_aestivum",
+    "solanum_lycopersicum",
+    "glycine_max",
+    "sorghum_bicolor",
+    "hordeum_vulgare",
+    "vitis_vinifera",
+    "populus_trichocarpa",
+    "medicago_truncatula",
+    "brachypodium_distachyon",
+}
+
+
+def test_full_coverage_matrix() -> None:
+    assert set(organisms.ORGANISMS.keys()) == EXPECTED_CANONICAL
+
+
+@pytest.mark.parametrize("canonical", sorted(EXPECTED_CANONICAL))
+def test_every_record_has_ncbi_taxid_and_ensembl_slug(canonical: str) -> None:
+    record = organisms.ORGANISMS[canonical]
+    assert isinstance(record.ncbi_taxid, int)
+    assert record.ncbi_taxid > 0
+    # Every record in the v0.9 matrix has Ensembl Plants coverage.
+    assert record.ensembl_slug is not None
+
+
+def test_phytozome_int_carries_over_from_known_organisms() -> None:
+    # The 5 records that already had verified phytozome_ints in
+    # phytozome.KNOWN_ORGANISMS reuse those values exactly.
+    assert organisms.ORGANISMS["arabidopsis_thaliana"].phytozome_int == 167
+    assert organisms.ORGANISMS["glycine_max"].phytozome_int == 275
+    assert organisms.ORGANISMS["sorghum_bicolor"].phytozome_int == 454
+    assert organisms.ORGANISMS["brachypodium_distachyon"].phytozome_int == 314
+    assert organisms.ORGANISMS["populus_trichocarpa"].phytozome_int == 210
+
+
+def test_unverified_records_have_none_phytozome_int() -> None:
+    # The 7 spec-only records ship with None until verify_organisms.py
+    # populates them (Task 7).
+    for canonical in [
+        "oryza_sativa",
+        "zea_mays",
+        "triticum_aestivum",
+        "solanum_lycopersicum",
+        "hordeum_vulgare",
+        "vitis_vinifera",
+        "medicago_truncatula",
+    ]:
+        assert organisms.ORGANISMS[canonical].phytozome_int is None, (
+            f"{canonical} should have phytozome_int=None pre-Task-7"
+        )
+
+
+def test_resolve_rice_by_common_name() -> None:
+    assert organisms.resolve("rice").canonical == "oryza_sativa"
+
+
+def test_resolve_maize_by_common_name() -> None:
+    assert organisms.resolve("maize").canonical == "zea_mays"
+    assert organisms.resolve("corn").canonical == "zea_mays"
+
+
+def test_ncbi_taxid_for_rice() -> None:
+    assert organisms.ncbi_taxid_for("oryza_sativa") == 39947
+    assert organisms.ncbi_taxid_for("rice") == 39947
+
+
+def test_phytozome_unsupported_raises() -> None:
+    # vitis_vinifera has phytozome_int=None pre-Task-7
+    with pytest.raises(OrganismNotSupported) as excinfo:
+        organisms.phytozome_int_for("vitis_vinifera")
+    assert excinfo.value.backend == "phytozome"
+    assert excinfo.value.organism == "vitis_vinifera"
+    assert "arabidopsis_thaliana" in excinfo.value.supported
