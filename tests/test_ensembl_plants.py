@@ -38,7 +38,7 @@ async def test_lookup_locus_at1g01010_returns_nac001(httpx_mock: HTTPXMock) -> N
     )
     async with httpx.AsyncClient() as client:
         result = await ensembl_plants.lookup_locus(
-            client, "AT1G01010", species="arabidopsis_thaliana"
+            client, "AT1G01010", organism="arabidopsis_thaliana"
         )
     assert result["id"] == "AT1G01010"
     assert result["display_name"] == "NAC001"
@@ -177,3 +177,33 @@ async def test_live_lookup_xrefs_at1g01010_includes_uniprot() -> None:
     # the direct UniProt query in tests/test_uniprot.py.
     uniprot_ids = result["by_db"].get("Uniprot_gn", [])
     assert "Q0WV96" in uniprot_ids, f"expected Q0WV96 in Uniprot_gn, got {result['by_db']}"
+
+
+def test_lookup_locus_accepts_organism_alias(httpx_mock: HTTPXMock) -> None:
+    """The new organism= param accepts common names + taxids."""
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0",
+        json={"id": "AT1G01010", "biotype": "protein_coding"},
+    )
+    import asyncio
+    import httpx as _httpx
+
+    async def run():
+        async with _httpx.AsyncClient() as client:
+            return await ensembl_plants.lookup_locus(client, "AT1G01010", organism="thale cress")
+
+    result = asyncio.run(run())
+    assert result["id"] == "AT1G01010"
+
+
+def test_lookup_locus_rejects_unknown_organism() -> None:
+    from plant_genomics_mcp.errors import OrganismNotFound
+    import asyncio
+    import httpx as _httpx
+
+    async def run():
+        async with _httpx.AsyncClient() as client:
+            return await ensembl_plants.lookup_locus(client, "AT1G01010", organism="zucchini")
+
+    with pytest.raises(OrganismNotFound):
+        asyncio.run(run())
