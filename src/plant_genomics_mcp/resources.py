@@ -43,6 +43,7 @@ from pydantic import AnyUrl
 from plant_genomics_mcp import (
     atted,
     bar,
+    blast,
     ensembl_plants,
     europe_pmc,
     gramene,
@@ -112,7 +113,11 @@ def _cache_stats_payload() -> dict[str, dict[str, int]]:
     """Live snapshot of each backend's per-module ``_CACHE.stats()``.
 
     Read fresh on every call — we do NOT cache the cache stats (callers
-    want a current reading, not a stale snapshot).
+    want a current reading, not a stale snapshot). BLAST is intentionally
+    absent: it's an async submit/poll workflow with no client-side cache,
+    so a stats entry would be a misleading row of zeros. See
+    ``pgmcp://backends/status`` for the full backend roster including
+    BLAST.
     """
     return {
         "atted": atted._CACHE.stats(),
@@ -195,6 +200,15 @@ def _backends_status_payload() -> list[dict[str, object]]:
             "base_url": string_db.BASE_URL,
             "kind": "live",
             "subscription_gated": False,
+        },
+        {
+            "name": "blast",
+            "base_url": blast.BASE_URL,
+            "kind": "live",
+            "subscription_gated": False,
+            # Concurrency-capped (NCBI etiquette, Wave B4); see
+            # PLANT_GENOMICS_MCP_BLAST_CONCURRENCY for the operator knob.
+            "concurrency_cap": blast.MAX_CONCURRENT_BLAST,
         },
         {
             "name": "plantcyc",
