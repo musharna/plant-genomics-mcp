@@ -62,6 +62,20 @@ MIN_POLL_INTERVAL = 60.0
 DEFAULT_POLL_INTERVAL = 60.0
 DEFAULT_MAX_WAIT = 600.0  # 10 minutes — typical BLAST nr search
 
+# Process-level cap on concurrent BLAST submissions. NCBI etiquette is "no
+# more than one request every 10 seconds"; the public HTTP transport
+# can fan out N parallel ``blast_sequence`` calls per client, so we hold
+# the line here. Two simultaneous searches is a safe middle ground —
+# leaves slots for synthesis fanouts (``find_homologs_synth``,
+# ``consensus_homologs``) without exhausting NCBI goodwill.
+MAX_CONCURRENT_BLAST = 2
+_BLAST_SEMAPHORE = asyncio.Semaphore(MAX_CONCURRENT_BLAST)
+
+# Reserved-TLD placeholder when the operator hasn't set the email env.
+# ``.invalid`` is RFC 2606 — guaranteed unroutable; the tool name in the
+# local-part lets NCBI ops pattern-match the traffic source if needed.
+_UNCONFIGURED_EMAIL = "plant-genomics-mcp-unconfigured@example.invalid"
+
 # Cap raw report bytes returned over the wire so a huge alignment doesn't
 # blow the MCP payload. The full report is always available by re-fetching
 # the RID directly.
@@ -101,7 +115,7 @@ def _identity_params() -> dict[str, str]:
     """NCBI courtesy params — sent on every Put and Get."""
     return {
         "tool": TOOL_ID,
-        "email": os.environ.get("PLANT_GENOMICS_MCP_NCBI_EMAIL", "anonymous@example.org"),
+        "email": os.environ.get("PLANT_GENOMICS_MCP_NCBI_EMAIL", _UNCONFIGURED_EMAIL),
     }
 
 
@@ -303,45 +317,53 @@ async def blast_sequence(
     program = _supported_program(program)
     db = database or _PROGRAM_DEFAULTS[program]
     interval = max(poll_interval, MIN_POLL_INTERVAL)
-    rid, rtoe = await submit(
-        client,
-        sequence,
-        program,
-        db,
-        hitlist_size=hitlist_size,
-        expect=expect,
-        megablast=megablast,
-    )
-    # NCBI's RTOE is usually a few seconds to a few minutes; wait that
-    # long before the first poll to avoid hitting the server while the
-    # search is still being queued. Capped to max_wait.
-    initial_wait = max(0.0, min(float(rtoe), max_wait))
-    if initial_wait > 0:
-        await asyncio.sleep(initial_wait)
-    elapsed = initial_wait
-    status = "WAITING"
-    while elapsed <= max_wait:
-        status = await poll_status(client, rid)
-        if status == "READY":
-            await progress.notify(f"BLAST RID={rid} READY after {elapsed:.0f}s")
-            break
-        if status == "FAILED":
-            raise UpstreamUnavailableError(
-                f"BLAST RID={rid} reported Status=FAILED after {elapsed:.0f}s"
-            )
-        if status == "UNKNOWN":
-            raise NotFoundError(
-                f"BLAST RID={rid} reported Status=UNKNOWN — RID expired or never existed"
-            )
-        await progress.notify(f"BLAST RID={rid} {status} ({elapsed:.0f}s/{max_wait:.0f}s)")
-        await asyncio.sleep(interval)
-        elapsed += interval
-    else:
-        raise NotFoundError(
-            f"BLAST RID={rid} still {status} after max_wait={max_wait:.0f}s — "
-            "re-poll later via fetch_result()"
+    if not os.environ.get("PLANT_GENOMICS_MCP_NCBI_EMAIL"):
+        await progress.notify(
+            "BLAST: PLANT_GENOMICS_MCP_NCBI_EMAIL is not set — using a "
+            "placeholder address. NCBI may throttle or block requests "
+            "without a real contact email; set the env var to your "
+            "operator address before production use."
         )
-    report = await fetch_result(client, rid)
+    async with _BLAST_SEMAPHORE:
+        rid, rtoe = await submit(
+            client,
+            sequence,
+            program,
+            db,
+            hitlist_size=hitlist_size,
+            expect=expect,
+            megablast=megablast,
+        )
+        # NCBI's RTOE is usually a few seconds to a few minutes; wait that
+        # long before the first poll to avoid hitting the server while the
+        # search is still being queued. Capped to max_wait.
+        initial_wait = max(0.0, min(float(rtoe), max_wait))
+        if initial_wait > 0:
+            await asyncio.sleep(initial_wait)
+        elapsed = initial_wait
+        status = "WAITING"
+        while elapsed <= max_wait:
+            status = await poll_status(client, rid)
+            if status == "READY":
+                await progress.notify(f"BLAST RID={rid} READY after {elapsed:.0f}s")
+                break
+            if status == "FAILED":
+                raise UpstreamUnavailableError(
+                    f"BLAST RID={rid} reported Status=FAILED after {elapsed:.0f}s"
+                )
+            if status == "UNKNOWN":
+                raise NotFoundError(
+                    f"BLAST RID={rid} reported Status=UNKNOWN — RID expired or never existed"
+                )
+            await progress.notify(f"BLAST RID={rid} {status} ({elapsed:.0f}s/{max_wait:.0f}s)")
+            await asyncio.sleep(interval)
+            elapsed += interval
+        else:
+            raise NotFoundError(
+                f"BLAST RID={rid} still {status} after max_wait={max_wait:.0f}s — "
+                "re-poll later via fetch_result()"
+            )
+        report = await fetch_result(client, rid)
     hits = _parse_hit_table(report)
     truncated = len(report.encode("utf-8")) > RAW_REPORT_CAP_BYTES
     raw_excerpt = report.encode("utf-8")[:RAW_REPORT_CAP_BYTES].decode("utf-8", "replace")
