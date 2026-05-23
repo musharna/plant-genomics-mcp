@@ -29,6 +29,7 @@ import httpx
 
 from plant_genomics_mcp import (
     atted,
+    bar,
     ensembl_plants,
     europe_pmc,
     gramene,
@@ -245,6 +246,15 @@ async def batch_kegg_pathways(
     loci = _bound(loci)
     results, errors = await _gather(loci, lambda locus: kegg.lookup_pathways(client, locus))
     return _envelope("kegg_pathways", loci, results, errors)
+
+
+async def batch_bar_gene_summary(
+    client: httpx.AsyncClient,
+    loci: list[str],
+) -> dict[str, Any]:
+    loci = _bound(loci)
+    results, errors = await _gather(loci, lambda locus: bar.gene_summary(client, locus))
+    return _envelope("bar_gene_summary", loci, results, errors)
 
 
 async def batch_string_interactions(

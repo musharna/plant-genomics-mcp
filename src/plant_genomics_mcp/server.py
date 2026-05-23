@@ -1,7 +1,7 @@
 """MCP server entry point — exposes plant genomics tools over stdio.
 
-This dispatch ships twenty-seven tools — twelve single-locus, one BLAST
-sequence-similarity search, ten batch variants that fan out per-locus
+This dispatch ships twenty-nine tools — thirteen single-locus, one BLAST
+sequence-similarity search, eleven batch variants that fan out per-locus
 calls in parallel, and four cross-source synthesis tools that compose
 the live backends:
 
@@ -16,6 +16,7 @@ the live backends:
   - ``kegg_pathways``                     — KEGG pathway memberships (live, ath: orgcode)
   - ``string_interactions``               — STRING-DB first-neighbor partners (live, per-channel scores)
   - ``atted_coexpression``                — ATTED-II Ath-u.c4-0 coexpression (live, z-scores)
+  - ``bar_gene_summary``                  — BAR ThaleMine + GAIA aliases (live, Arabidopsis curator summary)
   - ``tair_locus_info``                   — informational stub (subscription-gated)
   - ``plantcyc_locus_info``               — informational stub (subscription-gated)
   - ``batch_ensembl_plants_lookup_locus`` — Ensembl Plants POST /lookup/id (one round-trip)
@@ -28,6 +29,7 @@ the live backends:
   - ``batch_kegg_pathways``               — gather over kegg_pathways
   - ``batch_string_interactions``         — gather over string_interactions
   - ``batch_atted_coexpression``          — gather over atted_coexpression
+  - ``batch_bar_gene_summary``            — gather over bar_gene_summary
   - ``analyze_locus_synth``               — v0.8 synthesis: Ensembl + Phytozome + UniProt + xrefs in one envelope
   - ``find_homologs_synth``               — v0.8 synthesis: BLAST + per-hit UniProt resolution
   - ``biological_context_synth``          — v0.8 synthesis: GO + literature + KEGG + STRING + ATTED + consensus_partners
@@ -76,6 +78,7 @@ from plant_genomics_mcp import (
 )
 from plant_genomics_mcp.models import (
     AttedCoexpression,
+    BarGeneSummary,
     BatchEnvelope,
     BlastResult,
     EnsemblPlantsLocus,
@@ -434,6 +437,33 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
         },
         outputSchema=KeggPathways.model_json_schema(),
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="bar_gene_summary",
+        description=(
+            "Fetch the BAR (Bio-Analytic Resource, U Toronto) merged "
+            "ThaleMine + GAIA-aliases summary for an Arabidopsis locus. "
+            "Returns the TAIR curator summary + Araport11 computational "
+            "description from /thalemine/gene_information/ together with "
+            "the NCBI Gene ID and cross-DB aliases (RefSeq, UniProt, "
+            "TIGR locus-model IDs) from /gaia/aliases/. Arabidopsis only — "
+            "ThaleMine carries taxon 3702 plus yeast/human for ortholog "
+            "cross-reference. BAR is keyless and a Global Core Biodata "
+            "Resource (2023); replaces the v0.9 subscription-gated "
+            "tair_locus_info stub for the curator-summary use case."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "Arabidopsis AGI locus, e.g. AT1G01010",
+                },
+            },
+            "required": ["locus"],
+        },
+        outputSchema=BarGeneSummary.model_json_schema(),
         _meta=_EDAM,
     ),
     types.Tool(
@@ -798,6 +828,25 @@ TOOLS: list[types.Tool] = [
         _meta=_EDAM,
     ),
     types.Tool(
+        name="batch_bar_gene_summary",
+        description=(
+            "Batch variant of bar_gene_summary. Fans out per-locus BAR "
+            "ThaleMine + GAIA-aliases calls in parallel (up to "
+            f"{batch.MAX_BATCH} loci). Each results[locus] is the full "
+            "single-locus payload (curator summary, computational "
+            "description, NCBI Gene ID, cross-DB aliases). Arabidopsis only."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "loci": _LOCI_SCHEMA,
+            },
+            "required": ["loci"],
+        },
+        outputSchema=_BATCH_OUTPUT,
+        _meta=_EDAM,
+    ),
+    types.Tool(
         name="batch_string_interactions",
         description="Batch version of string_interactions. Up to 50 inputs per call.",
         inputSchema={
@@ -1140,6 +1189,10 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                 )
             case "batch_kegg_pathways":
                 return await batch.batch_kegg_pathways(client, args["loci"])
+            case "bar_gene_summary":
+                return await bar.gene_summary(client, args["locus"])
+            case "batch_bar_gene_summary":
+                return await batch.batch_bar_gene_summary(client, args["loci"])
             case "batch_string_interactions":
                 return await batch.batch_string_interactions(
                     client,

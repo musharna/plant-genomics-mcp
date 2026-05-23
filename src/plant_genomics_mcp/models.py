@@ -390,6 +390,68 @@ class KeggPathways(BaseModel):
     )
 
 
+class BarGeneSummary(BaseModel):
+    """BAR ThaleMine + GAIA-aliases response for an Arabidopsis locus.
+
+    Merges ``/thalemine/gene_information/{locus}`` (TAIR curator summary +
+    Araport11 computational description, positional row under an
+    InterMine envelope) with ``/gaia/aliases/{locus}`` (NCBI Gene ID +
+    cross-DB synonyms: RefSeq, UniProt, locus-model IDs). Arabidopsis
+    only — ThaleMine carries only taxon 3702.
+
+    Replaces the v0.9 ``tair_locus_info`` subscription-gated stub for
+    Arabidopsis Curator Summary lookup (BAR is keyless and a Global Core
+    Biodata Resource as of 2023).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str
+    agi: str | None = Field(
+        default=None,
+        description='AGI primary identifier echoed by ThaleMine, e.g. "AT1G01010"',
+    )
+    symbol: str | None = Field(default=None, description='Gene symbol, e.g. "NAC001"')
+    full_name: str | None = Field(default=None, description="Gene name from ThaleMine")
+    tair_locus_id: str | None = Field(
+        default=None,
+        description='TAIR locus ID from Gene.secondaryIdentifier, e.g. "locus:2200935"',
+    )
+    synonyms: list[str] = Field(
+        default_factory=list,
+        description="TAIR aliases (CSV from Gene.tairAliases, split on commas + stripped)",
+    )
+    computational_description: str | None = Field(
+        default=None,
+        description="Gene.tairComputationalDescription — Araport11-sourced computed description",
+    )
+    curator_summary: str | None = Field(
+        default=None,
+        description="Gene.tairCuratorSummary — the TAIR-curated functional summary prose",
+    )
+    brief_description: str | None = Field(
+        default=None,
+        description="Gene.briefDescription — short blurb (often same as full_name)",
+    )
+    tair_short_description: str | None = Field(
+        default=None,
+        description="Gene.tairShortDescription — TAIR-specific short description",
+    )
+    ncbi_gene_id: str | None = Field(
+        default=None,
+        description="NCBI Gene ID from /gaia/aliases/ — None if BAR has no NCBI cross-ref",
+    )
+    aliases: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Cross-DB aliases from /gaia/aliases/ (RefSeq accessions, UniProt accessions, "
+            "TIGR locus-model IDs, and TAIR aliases). Empty list if /gaia degraded."
+        ),
+    )
+    species: Literal["arabidopsis_thaliana"]
+    source_url: str = Field(description="ThaleMine endpoint URL for traceability")
+
+
 class StringPartner(BaseModel):
     """One STRING interaction-partner row."""
 

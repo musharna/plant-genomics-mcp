@@ -42,6 +42,7 @@ from pydantic import AnyUrl
 
 from plant_genomics_mcp import (
     atted,
+    bar,
     ensembl_plants,
     europe_pmc,
     gramene,
@@ -116,6 +117,7 @@ def _cache_stats_payload() -> dict[str, dict[str, int]]:
     """
     return {
         "atted": atted._CACHE.stats(),
+        "bar": bar._CACHE.stats(),
         "ensembl_plants": ensembl_plants._CACHE.stats(),
         "europe_pmc": europe_pmc._CACHE.stats(),
         "gramene": gramene._CACHE.stats(),
@@ -138,6 +140,12 @@ def _backends_status_payload() -> list[dict[str, object]]:
         {
             "name": "atted",
             "base_url": atted.BASE_URL,
+            "kind": "live",
+            "subscription_gated": False,
+        },
+        {
+            "name": "bar",
+            "base_url": bar.BASE_URL,
             "kind": "live",
             "subscription_gated": False,
         },
