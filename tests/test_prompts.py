@@ -26,12 +26,12 @@ def test_each_prompt_has_description_and_arguments() -> None:
             assert arg.description
 
 
-def test_analyze_locus_marks_locus_required_and_species_optional() -> None:
+def test_analyze_locus_marks_locus_required_and_organism_optional() -> None:
     p = next(p for p in prompts.PROMPTS if p.name == prompts.ANALYZE_LOCUS)
     by_name = {a.name: a for a in p.arguments or []}
     assert by_name["locus"].required is True
     # required is None or False is acceptable for optional args
-    assert not by_name["species"].required
+    assert not by_name["organism"].required
 
 
 def test_find_homologs_marks_sequence_required_and_program_optional() -> None:
@@ -63,15 +63,39 @@ async def test_get_analyze_locus_renders_chain_with_all_five_tools() -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_analyze_locus_honors_species_arg() -> None:
+async def test_get_analyze_locus_honors_organism_arg() -> None:
     result = await prompts.get_prompt(
         prompts.ANALYZE_LOCUS,
-        {"locus": "Os01g0100100", "species": "oryza_sativa"},
+        {"locus": "Os01g0100100", "organism": "oryza_sativa"},
     )
     text = result.messages[0].content.text
     assert "Os01g0100100" in text
     assert "oryza_sativa" in text
     assert "arabidopsis_thaliana" not in text
+
+
+@pytest.mark.asyncio
+async def test_get_analyze_locus_accepts_organism_alias() -> None:
+    """organism='thale cress' resolves to arabidopsis_thaliana; scientific name displayed."""
+    result = await prompts.get_prompt(
+        prompts.ANALYZE_LOCUS,
+        {"locus": "AT1G01010", "organism": "thale cress"},
+    )
+    text = result.messages[0].content.text
+    assert "AT1G01010" in text
+    assert "Arabidopsis thaliana" in text  # scientific display name
+    assert "arabidopsis_thaliana" in text  # canonical slug in tool calls
+
+
+@pytest.mark.asyncio
+async def test_get_analyze_locus_unknown_organism_raises_typed() -> None:
+    from plant_genomics_mcp.errors import NotFoundError as _NotFound
+
+    with pytest.raises(_NotFound, match="OrganismNotFound"):
+        await prompts.get_prompt(
+            prompts.ANALYZE_LOCUS,
+            {"locus": "AT1G01010", "organism": "zucchini"},
+        )
 
 
 @pytest.mark.asyncio
