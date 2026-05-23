@@ -50,7 +50,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         ensembl_slug="oryza_sativa",
         phytozome_int=None,
         string_taxid=39947,
-        europe_pmc_slug=None,
+        europe_pmc_slug="rice",
         aliases=("o. sativa",),
     ),
     "zea_mays": OrganismRecord(
@@ -61,7 +61,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         ensembl_slug="zea_mays",
         phytozome_int=None,
         string_taxid=4577,
-        europe_pmc_slug=None,
+        europe_pmc_slug="maize",
         aliases=("z. mays",),
     ),
     "triticum_aestivum": OrganismRecord(
@@ -72,7 +72,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         ensembl_slug="triticum_aestivum",
         phytozome_int=None,
         string_taxid=4565,
-        europe_pmc_slug=None,
+        europe_pmc_slug="wheat",
         aliases=("t. aestivum",),
     ),
     "solanum_lycopersicum": OrganismRecord(
@@ -83,7 +83,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         ensembl_slug="solanum_lycopersicum",
         phytozome_int=None,
         string_taxid=4081,
-        europe_pmc_slug=None,
+        europe_pmc_slug="tomato",
         aliases=("s. lycopersicum",),
     ),
     "glycine_max": OrganismRecord(
@@ -94,7 +94,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         ensembl_slug="glycine_max",
         phytozome_int=275,
         string_taxid=3847,
-        europe_pmc_slug=None,
+        europe_pmc_slug="soybean",
         aliases=("g. max",),
     ),
     "sorghum_bicolor": OrganismRecord(
@@ -105,7 +105,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         ensembl_slug="sorghum_bicolor",
         phytozome_int=454,
         string_taxid=4558,
-        europe_pmc_slug=None,
+        europe_pmc_slug="sorghum",
         aliases=("s. bicolor",),
     ),
     "hordeum_vulgare": OrganismRecord(
@@ -116,7 +116,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         ensembl_slug="hordeum_vulgare",
         phytozome_int=None,
         string_taxid=4513,
-        europe_pmc_slug=None,
+        europe_pmc_slug="barley",
         aliases=("h. vulgare",),
     ),
     "vitis_vinifera": OrganismRecord(
@@ -160,7 +160,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         ensembl_slug="brachypodium_distachyon",
         phytozome_int=314,
         string_taxid=15368,
-        europe_pmc_slug=None,
+        europe_pmc_slug="Brachypodium",
         aliases=("b. distachyon",),
     ),
 }

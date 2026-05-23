@@ -8,6 +8,7 @@ Two tiers (mirrors the ensembl_plants / uniprot pattern):
 from __future__ import annotations
 
 import os
+import re
 
 import httpx
 import pytest
@@ -85,7 +86,7 @@ async def test_lookup_locus_rice_appends_species_common_name(httpx_mock: HTTPXMo
         },
     )
     async with httpx.AsyncClient() as client:
-        result = await europe_pmc.lookup_locus(client, "Os01g0100100", species="oryza_sativa")
+        result = await europe_pmc.lookup_locus(client, "Os01g0100100", organism="oryza_sativa")
     assert result["query"] == "Os01g0100100 AND rice"
     # No pmcid → web_url falls back to PMID-based MED URL.
     assert result["hits"][0]["web_url"] == "https://europepmc.org/article/MED/99999999"
@@ -163,3 +164,18 @@ async def test_live_lookup_at1g01010_returns_hits() -> None:
     assert 1 <= result["returned"] <= 3
     # Sanity: at least one hit has a title.
     assert any(h.get("title") for h in result["hits"])
+
+
+# ---------- T10: organism= param via resolver ----------
+
+
+@pytest.mark.asyncio
+async def test_lookup_locus_accepts_organism_param(httpx_mock: HTTPXMock) -> None:
+    """T10: lookup_locus accepts ``organism=`` (via organisms.resolve), not ``species=``."""
+    httpx_mock.add_response(
+        url=re.compile(r"https://www\.ebi\.ac\.uk/europepmc/.*"),
+        json={"hitCount": 1, "resultList": {"result": [{"id": "12345"}]}},
+    )
+    async with httpx.AsyncClient() as client:
+        result = await europe_pmc.lookup_locus(client, "AT1G01010", organism="arabidopsis_thaliana")
+    assert result is not None
