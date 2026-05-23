@@ -105,14 +105,16 @@ async def _timed_step(step: int, tool: str, coro) -> StepRow:
     )
 
 
-def _gather_step(step: int, tool: str, outcome: Any, elapsed_s: float) -> StepRow:
+def _gather_step(step: int, tool: str, outcome: Any, elapsed_s: float | None) -> StepRow:
     """Convert one slot of ``asyncio.gather(return_exceptions=True)`` into a StepRow.
 
-    Used for phase-2 fanout — each coroutine's outcome lands here.
-    PlantGenomicsError → status="error" using its existing [ClassName] __str__.
-    Raw httpx network errors → status="error" with explicit [ClassName] prefix.
-    Other exceptions re-raise (caller wraps in try, or the gather machinery
-    propagates).
+    Used for phase-2 fanout — each coroutine's outcome lands here. Callers
+    pass ``elapsed_s=None`` for gather rows: the gather wall time can't be
+    honestly attributed per-coroutine, and SynthesisEnvelope.elapsed_s is the
+    authoritative total. PlantGenomicsError → status="error" using its
+    existing [ClassName] __str__. Raw httpx network errors → status="error"
+    with explicit [ClassName] prefix. Other exceptions re-raise (caller wraps
+    in try, or the gather machinery propagates).
     """
     if isinstance(outcome, OrganismNotSupported):
         # Same translation as _timed_step: phase-2 backends that don't
@@ -138,23 +140,27 @@ def _gather_step(step: int, tool: str, outcome: Any, elapsed_s: float) -> StepRo
 
 
 def _skipped(step: int, tool: str, reason: str) -> StepRow:
-    return StepRow(step=step, tool=tool, status="skipped", elapsed_s=0.0, error=reason)
+    # elapsed_s=None: a skip never actually ran the backend, so there's no
+    # per-step wall time to report. SynthesisEnvelope.elapsed_s carries the
+    # authoritative total for the whole orchestrator run.
+    return StepRow(step=step, tool=tool, status="skipped", elapsed_s=None, error=reason)
 
 
 async def _gather_phase2(
     items: list[tuple[int, str, Any]],
 ) -> list[StepRow]:
-    """Run a list of (step, tool, coroutine) concurrently; return StepRows in input order."""
-    started = time.perf_counter()
+    """Run a list of (step, tool, coroutine) concurrently; return StepRows in input order.
+
+    Phase-2 StepRows carry ``elapsed_s=None``. Per-coroutine attribution would
+    require wrapping each await with its own ``perf_counter()``; the
+    gather-aggregate is structurally misleading (every row reports the same
+    total) and the orchestrator-level elapsed_s already captures the real
+    wall time. Honest None > misleading aggregate.
+    """
     raw = await asyncio.gather(*(c for _, _, c in items), return_exceptions=True)
-    elapsed = time.perf_counter() - started
-    # All slots share the gather wall time — we can't attribute per-coroutine
-    # without instrumenting each await, and the orchestrator-level elapsed_s
-    # on SynthesisEnvelope captures the real total. Per-step elapsed_s for
-    # phase-2 rows is the gather-aggregate; this is documented in the spec.
     rows: list[StepRow] = []
     for (step, tool, _), outcome in zip(items, raw, strict=True):
-        rows.append(_gather_step(step, tool, outcome, elapsed))
+        rows.append(_gather_step(step, tool, outcome, None))
     return rows
 
 
@@ -192,7 +198,7 @@ async def analyze_locus_synth(
                     step=1,
                     tool="ensembl_plants_lookup_locus",
                     status="error",
-                    elapsed_s=0.0,
+                    elapsed_s=None,
                     error=str(exc),
                 ),
                 _skipped(
@@ -529,7 +535,7 @@ async def biological_context_synth(
                     step=1,
                     tool="resolve_locus_to_uniprot",
                     status="error",
-                    elapsed_s=0.0,
+                    elapsed_s=None,
                     error=str(exc),
                 ),
                 _skipped(2, "gramene_homologs", "phase 1 failed; gramene_homologs skipped"),
@@ -785,7 +791,7 @@ async def consensus_homologs(
                     step=1,
                     tool="resolve_locus_to_uniprot",
                     status="error",
-                    elapsed_s=0.0,
+                    elapsed_s=None,
                     error=str(exc),
                 ),
                 _skipped(
