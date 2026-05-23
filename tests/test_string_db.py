@@ -155,3 +155,40 @@ async def test_live_string_q0wv96_has_partners():
     assert result["accession"] == "Q0WV96"
     assert len(result["partners"]) > 0
     assert result["partners"][0]["score"] is not None
+
+
+@pytest.mark.asyncio
+async def test_lookup_partners_accepts_organism_param(httpx_mock: HTTPXMock):
+    """Resolver-driven organism kwarg accepts a slug; STRING wire-format species=3702 preserved."""
+    httpx_mock.add_response(
+        url=(
+            "https://string-db.org/api/json/interaction_partners"
+            "?identifiers=Q0WV96&species=3702&limit=20"
+            "&caller_identity=plant-genomics-mcp"
+        ),
+        json=[
+            {"stringId_B": "3702.AT3G15500.1", "preferredName_B": "NAC3", "score": 0.8},
+        ],
+    )
+    async with httpx.AsyncClient() as client:
+        result = await string_db.lookup_partners(client, "Q0WV96", organism="arabidopsis_thaliana")
+    assert result["accession"] == "Q0WV96"
+    assert result["organism_taxid"] == 3702
+    assert result["partners"][0]["preferred_name"] == "NAC3"
+
+
+@pytest.mark.asyncio
+async def test_lookup_partners_unsupported_organism_raises():
+    """Resolving an organism with string_taxid=None raises OrganismNotSupported.
+
+    Note: all 12 records in organisms.ORGANISMS currently have a non-None
+    string_taxid (STRING covers every plant in our matrix). To exercise the
+    error path we use a non-existent organism slug, which raises
+    OrganismNotFound. If a future record drops STRING coverage, swap the
+    assertion to OrganismNotSupported.
+    """
+    from plant_genomics_mcp.errors import OrganismNotFound
+
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(OrganismNotFound):
+            await string_db.lookup_partners(client, "Q0WV96", organism="not_a_real_plant_42")

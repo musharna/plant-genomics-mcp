@@ -22,7 +22,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import cache, progress, uniprot
+from plant_genomics_mcp import cache, organisms, progress, uniprot
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
@@ -37,7 +37,6 @@ CACHE_TTL_SECONDS = 3600.0  # 1h — matches uniprot._CACHE TTL for cache-stats 
 
 DEFAULT_LIMIT = 20
 MAX_LIMIT = 500
-ARABIDOPSIS_TAXID = 3702
 CALLER_IDENTITY = "plant-genomics-mcp"
 
 # UniProt accession: 6 or 10 chars. The 10-char form (NEW format) is
@@ -132,19 +131,21 @@ async def lookup_partners(
     client: httpx.AsyncClient,
     locus_or_accession: str,
     limit: int = DEFAULT_LIMIT,
-    organism_taxid: int = ARABIDOPSIS_TAXID,
+    organism: str | int = organisms.DEFAULT_ORGANISM,
 ) -> dict[str, Any]:
     """Fetch STRING first-neighbor interactors for a protein.
 
     Accepts either a UniProt accession or a locus identifier; the latter
-    is resolved via ``uniprot.lookup_locus`` first.
+    is resolved via ``uniprot.lookup_locus`` first. ``organism`` accepts
+    any form the resolver supports (slug, scientific/common name, taxid).
     """
     limit = max(1, min(limit, MAX_LIMIT))
+    taxid = organisms.string_taxid_for(organism)
     query = locus_or_accession
     if _looks_like_accession(locus_or_accession):
         accession = locus_or_accession.split(".", 1)[0]
     else:
-        up = await uniprot.lookup_locus(client, locus_or_accession, organism_id=organism_taxid)
+        up = await uniprot.lookup_locus(client, locus_or_accession, organism=organism)
         accession = up["primaryAccession"]
 
     raw = await _get(
@@ -152,7 +153,7 @@ async def lookup_partners(
         "/api/json/interaction_partners",
         params={
             "identifiers": accession,
-            "species": organism_taxid,
+            "species": taxid,
             "limit": limit,
             "caller_identity": CALLER_IDENTITY,
         },
@@ -167,6 +168,6 @@ async def lookup_partners(
     return {
         "query": query,
         "accession": accession,
-        "organism_taxid": organism_taxid,
+        "organism_taxid": taxid,
         "partners": partners,
     }
