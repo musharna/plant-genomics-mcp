@@ -103,6 +103,15 @@ async def batch_ensembl_plants_lookup_locus(
     Ensembl returns a dict keyed on the input ID with the per-locus record
     or ``null`` for misses. We translate nulls into [NotFoundError] entries
     so the wire shape matches the gather-based batch tools.
+
+    Retry gap (audit C7, deferred to v1.1): the single-locus path uses
+    ``ensembl_plants._get`` which retries 429/5xx with exponential
+    backoff. The batch POST below skips that retry layer — a transient
+    upstream failure raises ``PlantGenomicsError`` and the whole batch
+    fails. Adding retry here means duplicating the GET retry logic for
+    POST, which is the shared ``_http.py`` refactor scheduled for v1.1.
+    For v1.0 the gap is documented in the tool description; callers
+    needing retry should fall back to the single-locus tool.
     """
     loci = _bound(loci)
     slug = organisms.ensembl_slug_for(organism)
