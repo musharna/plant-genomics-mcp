@@ -184,6 +184,98 @@ async def test_gene_summary_aliases_degrade_on_failure(httpx_mock: HTTPXMock) ->
     assert result["aliases"] == []
 
 
+# Live shape captured 2026-05-23 against
+# /microarray_gene_expression/world_efp/arabidopsis/. Each numeric key is an
+# ecotype "code"; entries carry probeset + per-replicate values + lat/lng.
+# Unknown valid AGI → 200 wasSuccessful=false "There are no data found...";
+# invalid locus → 200 wasSuccessful=false "Invalid gene id".
+_EFP_OK = {
+    "wasSuccessful": True,
+    "data": {
+        "111": {
+            "source": "http://www.arabidopsis.org/servlets/TairObject?type=bio_sample_collection&id=1008803961",
+            "id": "Bay-0 (CS6608) from Bayreuth, Germany<br>Longitude/Latitude/Elevation: E11/N50 at ~300m",
+            "samples": ["ATGE_111_A", "ATGE_111_B", "ATGE_111_C"],
+            "ctrlSamples": ["ATGE_113_A", "ATGE_113_C", "ATGE_113_D"],
+            "position": {"lat": "49.950999", "lng": "11.572323"},
+            "probeset": "261585_at",
+            "values": {"ATGE_111_A": 6.9, "ATGE_111_B": 6.55, "ATGE_111_C": 10.0},
+            "code": "111",
+        },
+        "112": {
+            "source": "http://www.arabidopsis.org/servlets/TairObject?type=bio_sample_collection&id=1008803961",
+            "id": "C24 (CS906) from Coimbra, Portugal",
+            "samples": ["ATGE_112_A", "ATGE_112_C", "ATGE_112_D"],
+            "ctrlSamples": ["ATGE_113_A", "ATGE_113_C", "ATGE_113_D"],
+            "position": {"lat": "40.217684", "lng": "-8.436921"},
+            "probeset": "261585_at",
+            "values": {"ATGE_112_A": 1.05, "ATGE_112_C": 3.65, "ATGE_112_D": 1.45},
+            "code": "112",
+        },
+    },
+}
+
+
+@pytest.mark.asyncio
+async def test_efp_expression_happy(httpx_mock: HTTPXMock) -> None:
+    httpx_mock.add_response(
+        url="https://bar.utoronto.ca/api/microarray_gene_expression/world_efp/arabidopsis/AT1G01010",
+        json=_EFP_OK,
+    )
+    async with httpx.AsyncClient() as client:
+        result = await bar.efp_expression(client, "AT1G01010")
+    assert result["locus"] == "AT1G01010"
+    assert result["probeset"] == "261585_at"
+    assert result["ecotype_count"] == 2
+    assert result["species"] == "arabidopsis_thaliana"
+    by_code = {e["code"]: e for e in result["ecotypes"]}
+    bay = by_code["111"]
+    assert bay["name"].startswith("Bay-0")
+    # HTML <br> stripped from ecotype name so clients don't need to render it.
+    assert "<br>" not in bay["name"]
+    assert bay["samples"] == ["ATGE_111_A", "ATGE_111_B", "ATGE_111_C"]
+    assert bay["values"] == {"ATGE_111_A": 6.9, "ATGE_111_B": 6.55, "ATGE_111_C": 10.0}
+    # mean = (6.9 + 6.55 + 10.0) / 3 ≈ 7.8166...
+    assert abs(bay["mean"] - 7.8166666666666666) < 1e-9
+    assert bay["position"] == {"lat": "49.950999", "lng": "11.572323"}
+    assert (
+        result["source_url"]
+        == "https://bar.utoronto.ca/api/microarray_gene_expression/world_efp/arabidopsis/AT1G01010"
+    )
+
+
+@pytest.mark.asyncio
+async def test_efp_expression_invalid_locus_format() -> None:
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="invalid locus"):
+            await bar.efp_expression(client, "AT1G01010<script>")
+
+
+@pytest.mark.asyncio
+async def test_efp_expression_unknown_locus(httpx_mock: HTTPXMock) -> None:
+    # Unknown valid AGI → 200 wasSuccessful=false (live shape 2026-05-23 for
+    # AT1G99999). NotFoundError carries the upstream error string.
+    httpx_mock.add_response(
+        url="https://bar.utoronto.ca/api/microarray_gene_expression/world_efp/arabidopsis/AT1G99999",
+        json={"wasSuccessful": False, "error": "There are no data found for the given gene"},
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="no data"):
+            await bar.efp_expression(client, "AT1G99999")
+
+
+@pytest.mark.asyncio
+async def test_efp_expression_invalid_gene_id(httpx_mock: HTTPXMock) -> None:
+    # Garbage but regex-passing locus → 200 wasSuccessful=false "Invalid gene id".
+    httpx_mock.add_response(
+        url="https://bar.utoronto.ca/api/microarray_gene_expression/world_efp/arabidopsis/INVALID",
+        json={"wasSuccessful": False, "error": "Invalid gene id"},
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="Invalid gene id"):
+            await bar.efp_expression(client, "INVALID")
+
+
 @pytest.mark.skipif(
     not os.environ.get("PLANT_GENOMICS_MCP_LIVE"),
     reason="set PLANT_GENOMICS_MCP_LIVE=1 to hit bar.utoronto.ca/api",
