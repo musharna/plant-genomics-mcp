@@ -87,8 +87,11 @@ async def test_read_coverage_matrix_lists_all_organisms() -> None:
     body = item.content
     for canonical in organisms.ORGANISMS:
         assert canonical in body, f"coverage matrix missing {canonical}"
-    # Header + key column names so a client can parse it.
+    # Header + key column names so a client can parse it. The taxid column
+    # is `ncbi_taxid` (not bare `taxid` — audit C8) so the column name matches
+    # the OrganismRecord field name and the README description.
     assert "canonical" in body
+    assert "ncbi_taxid" in body
     assert "phytozome" in body
     assert "europe_pmc" in body
 
