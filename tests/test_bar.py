@@ -290,3 +290,22 @@ async def test_live_bar_at1g01010_returns_curator_summary() -> None:
     assert result["curator_summary"] and "NAC" in result["curator_summary"]
     assert result["ncbi_gene_id"] == "839580"
     assert "Q0WV96" in result["aliases"]
+
+
+@pytest.mark.skipif(
+    not os.environ.get("PLANT_GENOMICS_MCP_LIVE"),
+    reason="set PLANT_GENOMICS_MCP_LIVE=1 to hit bar.utoronto.ca/api",
+)
+@pytest.mark.asyncio
+async def test_live_bar_efp_expression_at1g01010() -> None:
+    async with httpx.AsyncClient() as client:
+        result = await bar.efp_expression(client, "AT1G01010")
+    assert result["locus"] == "AT1G01010"
+    assert result["species"] == "arabidopsis_thaliana"
+    assert result["probeset"]  # uniform across ecotypes
+    assert result["ecotype_count"] >= 30  # live shape 2026-05-23 ≈ 36
+    sample = result["ecotypes"][0]
+    assert sample["code"]
+    assert sample["name"]
+    assert sample["samples"]
+    assert sample["mean"] is not None
