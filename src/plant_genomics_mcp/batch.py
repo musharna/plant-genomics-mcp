@@ -257,6 +257,19 @@ async def batch_bar_gene_summary(
     return _envelope("bar_gene_summary", loci, results, errors)
 
 
+async def batch_bar_aiv_interactions(
+    client: httpx.AsyncClient,
+    loci: list[str],
+    organism: str | int = organisms.DEFAULT_ORGANISM,
+) -> dict[str, Any]:
+    loci = _bound(loci)
+    results, errors = await _gather(
+        loci,
+        lambda locus: bar.aiv_interactions(client, locus, organism=organism),
+    )
+    return _envelope("bar_aiv_interactions", loci, results, errors)
+
+
 async def batch_string_interactions(
     client: httpx.AsyncClient,
     loci_or_accessions: list[str],

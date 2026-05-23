@@ -31,9 +31,10 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import __version__, cache, progress
+from plant_genomics_mcp import __version__, cache, organisms, progress
 from plant_genomics_mcp.errors import (
     NotFoundError,
+    OrganismNotSupported,
     PlantGenomicsError,
     RateLimitError,
     UpstreamUnavailableError,
@@ -304,3 +305,128 @@ async def efp_expression(
         "species": "arabidopsis_thaliana",
         "source_url": f"https://bar.utoronto.ca/api{path}",
     }
+
+
+# BAR AIV (Arabidopsis Interactions Viewer) covers two organism lanes with
+# completely different response shapes, so the unified function uses a `kind`
+# discriminator on the envelope:
+#   - arabidopsis  /interactions/get_paper_by_agi/{locus}  →  kind="grn_papers"
+#     curated GRN paper refs (pmid, title, image, comments, tags)
+#   - rice         /interactions/rice/{locus}              →  kind="ppi_predictions"
+#     predicted PPIs (protein_2 = partner, pcc = co-expression Pearson r)
+# Both fail at HTTP 400 (not 200+wasSuccessful=false) for unknown / wrong-format
+# loci, so error paths surface through _get as PlantGenomicsError rather than
+# NotFoundError. Rice strictly requires the MSU LOC_Os* format; RAP-DB
+# (Os01g0100100) is rejected upstream with "Invalid species or gene ID".
+_AIV_SUPPORTED_ORGANISMS = ("arabidopsis_thaliana", "oryza_sativa")
+
+
+def _aiv_arabidopsis_envelope(locus: str, data: list[Any]) -> dict[str, Any]:
+    papers: list[dict[str, Any]] = []
+    for entry in data:
+        if not isinstance(entry, dict):
+            continue
+        tags_raw = entry.get("tags") or ""
+        tags = [t for t in tags_raw.split("|") if t] if isinstance(tags_raw, str) else []
+        papers.append(
+            {
+                "source_id": entry.get("source_id"),
+                "pmid": entry.get("source_name"),
+                "title": entry.get("grn_title"),
+                "image_url": entry.get("image_url"),
+                "comments": entry.get("comments"),
+                "cyjs_layout": entry.get("cyjs_layout"),
+                "tags": tags,
+            }
+        )
+    return {
+        "locus": locus,
+        "organism": "arabidopsis_thaliana",
+        "kind": "grn_papers",
+        "count": len(papers),
+        "papers": papers,
+        "source_url": f"https://bar.utoronto.ca/api/interactions/get_paper_by_agi/{locus}",
+    }
+
+
+def _aiv_rice_envelope(locus: str, data: list[Any]) -> dict[str, Any]:
+    partners: list[dict[str, Any]] = []
+    for entry in data:
+        if not isinstance(entry, dict):
+            continue
+        p1 = entry.get("protein_1")
+        p2 = entry.get("protein_2")
+        # protein_1 is the queried locus in observed responses; partner_locus
+        # is the non-queried side. If protein_1 != input (defensive), fall back
+        # to protein_1 as the partner.
+        partner = p2 if p1 == locus else p1
+        partners.append(
+            {
+                "partner_locus": partner,
+                "protein_1": p1,
+                "protein_2": p2,
+                "pcc": entry.get("pcc"),
+                "total_hits": entry.get("total_hits"),
+                "num_species": entry.get("Num_species"),
+                "quality": entry.get("Quality"),
+            }
+        )
+    return {
+        "locus": locus,
+        "organism": "oryza_sativa",
+        "kind": "ppi_predictions",
+        "count": len(partners),
+        "partners": partners,
+        "source_url": f"https://bar.utoronto.ca/api/interactions/rice/{locus}",
+    }
+
+
+async def aiv_interactions(
+    client: httpx.AsyncClient,
+    locus: str,
+    organism: str = "arabidopsis_thaliana",
+) -> dict[str, Any]:
+    """Fetch BAR AIV interactions for an Arabidopsis or rice locus.
+
+    Dispatches to one of two BAR endpoints by canonical organism slug:
+
+      arabidopsis_thaliana → ``/interactions/get_paper_by_agi/{locus}``
+                             curated GRN paper refs (kind="grn_papers")
+      oryza_sativa         → ``/interactions/rice/{locus}``
+                             predicted PPI partners with PCC (kind="ppi_predictions")
+
+    Other plant organisms in the registry have no AIV lane and raise
+    OrganismNotSupported. Unknown organism strings raise OrganismNotFound.
+
+    BAR AIV returns HTTP 400 (not 200+wasSuccessful=false) for unknown loci
+    and wrong-format inputs, so those failures surface as PlantGenomicsError
+    from ``_get``, with the upstream "Invalid AGI" / "no data" / "Invalid
+    species or gene ID" message preserved in the exception text.
+
+    Rice requires the MSU ``LOC_Os*`` format; RAP-DB (``Os*g*``) is rejected
+    upstream — match locus format to organism before calling.
+    """
+    if not _LOCUS_RE.match(locus):
+        raise NotFoundError(f"BAR: invalid locus {locus!r} (must match {_LOCUS_RE.pattern})")
+    record = organisms.resolve(organism)
+    canonical = record.canonical
+    if canonical == "arabidopsis_thaliana":
+        path = f"/interactions/get_paper_by_agi/{locus}"
+        builder = _aiv_arabidopsis_envelope
+    elif canonical == "oryza_sativa":
+        path = f"/interactions/rice/{locus}"
+        builder = _aiv_rice_envelope
+    else:
+        raise OrganismNotSupported(
+            backend="bar_aiv",
+            organism=canonical,
+            supported=list(_AIV_SUPPORTED_ORGANISMS),
+        )
+    env = await _get(client, path)
+    if not isinstance(env, dict) or not env.get("wasSuccessful"):
+        err = env.get("error") if isinstance(env, dict) else "non-dict response"
+        raise NotFoundError(f"BAR {path}: {err}")
+    data = env.get("data") or []
+    if not isinstance(data, list):
+        raise NotFoundError(f"BAR {path}: malformed data ({type(data).__name__})")
+    return builder(locus, data)
