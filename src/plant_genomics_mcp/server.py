@@ -1,7 +1,7 @@
 """MCP server entry point — exposes plant genomics tools over stdio.
 
-This dispatch ships thirty tools — fourteen single-locus, one BLAST
-sequence-similarity search, eleven batch variants that fan out per-locus
+This dispatch ships thirty-two tools — fifteen single-locus, one BLAST
+sequence-similarity search, twelve batch variants that fan out per-locus
 calls in parallel, and four cross-source synthesis tools that compose
 the live backends:
 
@@ -18,6 +18,7 @@ the live backends:
   - ``atted_coexpression``                — ATTED-II Ath-u.c4-0 coexpression (live, z-scores)
   - ``bar_gene_summary``                  — BAR ThaleMine + GAIA aliases (live, Arabidopsis curator summary)
   - ``bar_efp_expression``                — BAR world-eFP natural-variation expression (live, ~36 Arabidopsis ecotypes)
+  - ``bar_aiv_interactions``              — BAR AIV interactions (live, Arabidopsis GRN paper refs / Rice predicted PPI pairs)
   - ``tair_locus_info``                   — informational stub (subscription-gated)
   - ``plantcyc_locus_info``               — informational stub (subscription-gated)
   - ``batch_ensembl_plants_lookup_locus`` — Ensembl Plants POST /lookup/id (one round-trip)
@@ -31,6 +32,7 @@ the live backends:
   - ``batch_string_interactions``         — gather over string_interactions
   - ``batch_atted_coexpression``          — gather over atted_coexpression
   - ``batch_bar_gene_summary``            — gather over bar_gene_summary
+  - ``batch_bar_aiv_interactions``        — gather over bar_aiv_interactions
   - ``analyze_locus_synth``               — v0.8 synthesis: Ensembl + Phytozome + UniProt + xrefs in one envelope
   - ``find_homologs_synth``               — v0.8 synthesis: BLAST + per-hit UniProt resolution
   - ``biological_context_synth``          — v0.8 synthesis: GO + literature + KEGG + STRING + ATTED + consensus_partners
@@ -79,6 +81,7 @@ from plant_genomics_mcp import (
 )
 from plant_genomics_mcp.models import (
     AttedCoexpression,
+    BarAIVInteractions,
     BarEfpExpression,
     BarGeneSummary,
     BatchEnvelope,
@@ -494,6 +497,40 @@ TOOLS: list[types.Tool] = [
         _meta=_EDAM,
     ),
     types.Tool(
+        name="bar_aiv_interactions",
+        description=(
+            "Fetch BAR AIV (Arabidopsis Interactions Viewer) interactions "
+            "for an Arabidopsis or rice locus. Dispatches by organism: "
+            "Arabidopsis returns curated GRN paper refs from "
+            "/interactions/get_paper_by_agi/{locus} (PubMed ID, title, "
+            "image, comments, pipe-split tags); rice returns predicted "
+            "PPI partners from /interactions/rice/{locus} with Pearson "
+            "co-expression r (pcc), evidence hits, and quality score. "
+            "The `kind` field discriminates the response shape "
+            "(grn_papers vs ppi_predictions). Rice requires the MSU "
+            "LOC_Os* locus format — RAP-DB Os*g* is rejected upstream. "
+            "Only Arabidopsis and rice are supported by AIV; other "
+            "organisms raise OrganismNotSupported."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "AGI locus (AT1G01010) for Arabidopsis or MSU locus (LOC_Os01g01080) for rice",
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "arabidopsis_thaliana or oryza_sativa — slug, scientific/common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
+                },
+            },
+            "required": ["locus"],
+        },
+        outputSchema=BarAIVInteractions.model_json_schema(),
+        _meta=_EDAM,
+    ),
+    types.Tool(
         name="string_interactions",
         description=(
             "Fetch protein-protein interaction partners from STRING-DB "
@@ -874,6 +911,31 @@ TOOLS: list[types.Tool] = [
         _meta=_EDAM,
     ),
     types.Tool(
+        name="batch_bar_aiv_interactions",
+        description=(
+            "Batch variant of bar_aiv_interactions. Fans out per-locus "
+            "BAR AIV calls in parallel (up to "
+            f"{batch.MAX_BATCH} loci); all loci in a single call share "
+            "the same organism. Each results[locus] is the full single-"
+            "locus payload (kind=grn_papers for Arabidopsis with `papers` "
+            "list, kind=ppi_predictions for rice with `partners` list)."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "loci": _LOCI_SCHEMA,
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "arabidopsis_thaliana or oryza_sativa — slug, scientific/common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
+                },
+            },
+            "required": ["loci"],
+        },
+        outputSchema=_BATCH_OUTPUT,
+        _meta=_EDAM,
+    ),
+    types.Tool(
         name="batch_string_interactions",
         description="Batch version of string_interactions. Up to 50 inputs per call.",
         inputSchema={
@@ -1222,6 +1284,18 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                 return await batch.batch_bar_gene_summary(client, args["loci"])
             case "bar_efp_expression":
                 return await bar.efp_expression(client, args["locus"])
+            case "bar_aiv_interactions":
+                return await bar.aiv_interactions(
+                    client,
+                    args["locus"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                )
+            case "batch_bar_aiv_interactions":
+                return await batch.batch_bar_aiv_interactions(
+                    client,
+                    args["loci"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                )
             case "batch_string_interactions":
                 return await batch.batch_string_interactions(
                     client,

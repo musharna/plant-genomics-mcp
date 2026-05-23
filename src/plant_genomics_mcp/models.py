@@ -513,6 +513,101 @@ class BarEfpExpression(BaseModel):
     source_url: str = Field(description="BAR world-eFP endpoint URL for traceability")
 
 
+class BarAIVPaper(BaseModel):
+    """One curated GRN paper row from BAR AIV Arabidopsis lane.
+
+    From ``/interactions/get_paper_by_agi/{locus}``: each entry is a yeast
+    one-hybrid / ChIP / curated TF-target study referencing the queried AGI
+    as a node. `tags` is pipe-split into a list of ``"name:type"`` items
+    (e.g. ``"PLT3:Gene"``, ``"auxin:Misc"``, ``"wound:Condition"``).
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    source_id: int | None = Field(default=None, description="BAR internal study ID")
+    pmid: str | None = Field(default=None, description='PubMed ID, e.g. "29462363"')
+    title: str | None = Field(default=None, description="Study title with citation")
+    image_url: str | None = Field(
+        default=None,
+        description="BAR-hosted thumbnail of the GRN network diagram",
+    )
+    comments: str | None = Field(default=None, description="BAR curator commentary on the study")
+    cyjs_layout: str | None = Field(
+        default=None,
+        description="Cytoscape.js layout config (JSON string) for the GRN view",
+    )
+    tags: list[str] = Field(
+        default_factory=list,
+        description='Pipe-split "name:type" tags, e.g. ["PLT3:Gene", "auxin:Misc"]',
+    )
+
+
+class BarAIVPartner(BaseModel):
+    """One predicted PPI partner row from BAR AIV Rice lane.
+
+    From ``/interactions/rice/{locus}``: each entry is a predicted
+    protein-protein interaction where ``protein_1`` is the queried locus
+    and ``protein_2`` is the partner. ``partner_locus`` is derived as the
+    non-queried side for ergonomic access.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    partner_locus: str | None = Field(
+        default=None,
+        description="MSU LOC_Os* locus of the predicted interactor",
+    )
+    protein_1: str | None = Field(default=None, description="First protein in the pair")
+    protein_2: str | None = Field(default=None, description="Second protein in the pair")
+    pcc: float | None = Field(
+        default=None,
+        description="Pearson correlation of co-expression evidence (range -1 to 1)",
+    )
+    total_hits: int | None = Field(default=None, description="Count of supporting evidence hits")
+    num_species: int | None = Field(
+        default=None,
+        description="Species count supporting the prediction (BAR upstream field: Num_species)",
+    )
+    quality: int | None = Field(
+        default=None,
+        description="BAR-internal evidence quality score (upstream: Quality)",
+    )
+
+
+class BarAIVInteractions(BaseModel):
+    """BAR AIV response wrapper — interactions for Arabidopsis or rice.
+
+    The two BAR AIV lanes return completely different shapes, so this
+    envelope uses ``kind`` as a discriminator:
+
+      ``kind="grn_papers"``      → ``papers`` list populated, ``partners`` empty
+                                   (Arabidopsis, curated GRN references)
+      ``kind="ppi_predictions"`` → ``partners`` list populated, ``papers`` empty
+                                   (Rice, predicted PPI pairs with PCC)
+
+    Other organisms in the registry have no AIV lane — the underlying
+    backend raises ``OrganismNotSupported`` before this model is built.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str
+    organism: Literal["arabidopsis_thaliana", "oryza_sativa"]
+    kind: Literal["grn_papers", "ppi_predictions"] = Field(
+        description="Discriminator: grn_papers (Arabidopsis) or ppi_predictions (rice)",
+    )
+    count: int = Field(description="Total rows returned (len of papers or partners)")
+    papers: list[BarAIVPaper] = Field(
+        default_factory=list,
+        description="GRN paper refs (populated when kind=grn_papers)",
+    )
+    partners: list[BarAIVPartner] = Field(
+        default_factory=list,
+        description="PPI predictions (populated when kind=ppi_predictions)",
+    )
+    source_url: str = Field(description="BAR AIV endpoint URL for traceability")
+
+
 class StringPartner(BaseModel):
     """One STRING interaction-partner row."""
 
