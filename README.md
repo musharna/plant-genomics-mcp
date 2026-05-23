@@ -575,6 +575,23 @@ What gets reported:
 `progress` is a monotonically increasing step counter (not a percentage);
 `total` is omitted because retry budgets aren't a useful denominator.
 
+### NCBI BLAST contact email
+
+NCBI's BLAST URLAPI policy expects every caller to identify itself with a
+real contact email so abusive clients can be reached before they get
+throttled or blocked. `blast_sequence` reads the operator address from
+`PLANT_GENOMICS_MCP_NCBI_EMAIL` and sends it as the `email=` parameter on
+every `Put`/`Get`. **Set this in production** — when the variable is
+unset, the server sends an unmistakable placeholder
+(`plant-genomics-mcp-unconfigured@example.invalid`) and emits a one-shot
+progress warning per call, but NCBI may still throttle or block requests
+that look anonymous.
+
+To prevent the same process from running away with BLAST submissions
+(NCBI rate-limits per-IP, not per-email), `blast_sequence` is wrapped in
+a module-level `asyncio.Semaphore` capped at 2 in-flight searches.
+Excess callers wait their turn rather than racing to upstream.
+
 ## Migrating from v0.8 to v0.9
 
 Every backend tool that previously accepted `species=` (Ensembl slug) or

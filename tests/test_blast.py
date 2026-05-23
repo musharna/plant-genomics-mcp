@@ -18,7 +18,12 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from plant_genomics_mcp import blast
+from plant_genomics_mcp import blast, progress
+
+# Capture the unpatched real sleep BEFORE the autouse _no_sleep fixture
+# can replace ``asyncio.sleep`` — the semaphore concurrency test needs
+# the event loop to actually yield, not a no-op coroutine.
+_REAL_ASYNCIO_SLEEP = asyncio.sleep
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
@@ -316,6 +321,127 @@ async def test_blast_sequence_raw_report_truncated_when_huge(
         result = await blast.blast_sequence(client, "MNSAKQ", program="blastp", max_wait=300.0)
     assert result["raw_report_truncated"] is True
     assert len(result["raw_report_excerpt"].encode("utf-8")) <= 100
+
+
+# ---------- Wave B4: semaphore + operator email ----------
+
+
+def test_identity_params_uses_env_email(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_NCBI_EMAIL", "ops@example.com")
+    params = blast._identity_params()
+    assert params["email"] == "ops@example.com"
+    assert params["tool"] == "plant-genomics-mcp"
+
+
+def test_identity_params_fallback_is_unmistakable_placeholder(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Fallback email when env unset must be:
+    - a reserved/invalid domain so it cannot route to a real inbox
+    - clearly identifying this tool so NCBI ops can pattern-match the
+      traffic source if they ever need to.
+    """
+    monkeypatch.delenv("PLANT_GENOMICS_MCP_NCBI_EMAIL", raising=False)
+    params = blast._identity_params()
+    assert params["email"].endswith(".invalid"), params["email"]
+    assert "plant-genomics-mcp" in params["email"], params["email"]
+
+
+@pytest.mark.asyncio
+async def test_blast_emits_email_warning_when_env_unset(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """When the operator hasn't set NCBI_EMAIL, ``blast_sequence`` emits a
+    progress notification flagging the placeholder — the LLM client surfaces
+    it so the operator notices before NCBI throttles them.
+    """
+    monkeypatch.delenv("PLANT_GENOMICS_MCP_NCBI_EMAIL", raising=False)
+    captured: list[str] = []
+
+    async def _send(_progress: float, _total: float | None, message: str | None) -> None:
+        if message:
+            captured.append(message)
+
+    token = progress.set_reporter(progress.Reporter(_send))
+    try:
+        httpx_mock.add_response(method="POST", url=blast.BASE_URL, text=_put_response("REM1", 0))
+        httpx_mock.add_response(method="GET", text=_searchinfo_response("READY"))
+        httpx_mock.add_response(method="GET", text=RESULT_REPORT)
+        async with httpx.AsyncClient() as client:
+            await blast.blast_sequence(client, "MNSAKQ", program="blastp", max_wait=300.0)
+    finally:
+        progress.reset_reporter(token)
+    assert any("PLANT_GENOMICS_MCP_NCBI_EMAIL" in m for m in captured), captured
+
+
+@pytest.mark.asyncio
+async def test_blast_no_email_warning_when_env_set(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_NCBI_EMAIL", "ops@example.com")
+    captured: list[str] = []
+
+    async def _send(_progress: float, _total: float | None, message: str | None) -> None:
+        if message:
+            captured.append(message)
+
+    token = progress.set_reporter(progress.Reporter(_send))
+    try:
+        httpx_mock.add_response(method="POST", url=blast.BASE_URL, text=_put_response("REM2", 0))
+        httpx_mock.add_response(method="GET", text=_searchinfo_response("READY"))
+        httpx_mock.add_response(method="GET", text=RESULT_REPORT)
+        async with httpx.AsyncClient() as client:
+            await blast.blast_sequence(client, "MNSAKQ", program="blastp", max_wait=300.0)
+    finally:
+        progress.reset_reporter(token)
+    assert not any("PLANT_GENOMICS_MCP_NCBI_EMAIL" in m for m in captured), captured
+
+
+@pytest.mark.asyncio
+async def test_blast_semaphore_caps_concurrent_at_two(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Four parallel ``blast_sequence`` calls — the module-level
+    semaphore must hold the in-flight count at <= MAX_CONCURRENT_BLAST.
+
+    Stubs the three HTTP-bound helpers so the test doesn't need
+    httpx_mock; the slow_submit stub yields the event loop via the
+    captured real ``asyncio.sleep`` so other coroutines actually get
+    a chance to enter the critical section.
+    """
+    assert blast.MAX_CONCURRENT_BLAST == 2
+    in_flight = 0
+    peak = 0
+
+    async def slow_submit(*_args: object, **_kwargs: object) -> tuple[str, int]:
+        nonlocal in_flight, peak
+        in_flight += 1
+        peak = max(peak, in_flight)
+        try:
+            await _REAL_ASYNCIO_SLEEP(0.05)
+        finally:
+            in_flight -= 1
+        return ("RIDSEM", 0)
+
+    async def fast_poll(*_args: object, **_kwargs: object) -> str:
+        return "READY"
+
+    async def fast_fetch(*_args: object, **_kwargs: object) -> str:
+        return RESULT_REPORT
+
+    monkeypatch.setattr(blast, "submit", slow_submit)
+    monkeypatch.setattr(blast, "poll_status", fast_poll)
+    monkeypatch.setattr(blast, "fetch_result", fast_fetch)
+
+    async with httpx.AsyncClient() as client:
+        await asyncio.gather(
+            *[
+                blast.blast_sequence(client, "MNSAKQ", program="blastp", max_wait=10.0)
+                for _ in range(4)
+            ]
+        )
+    assert peak <= blast.MAX_CONCURRENT_BLAST, f"peak in-flight={peak} > cap"
+    assert peak >= 2, f"semaphore unused — got peak={peak}, expected at least 2"
 
 
 # ---------- live integration (real-execution check) ----------
