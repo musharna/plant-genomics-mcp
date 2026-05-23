@@ -4,12 +4,12 @@ This is a real-execution check, not a unit test. It verifies that the
 ``plant-genomics-mcp`` console script:
 
   1. Accepts the MCP ``initialize`` handshake over stdio.
-  2. Advertises 23 tools via ``list_tools``, all with non-empty descriptions
-     and a non-empty ``outputSchema``.
+  2. Advertises all 32 tools via ``list_tools``, all with non-empty
+     descriptions and a non-empty ``outputSchema``.
   3. Advertises 3 prompts via ``list_prompts`` with required-arg flags
      preserved on the wire.
   3. Returns BOTH ``content`` (text) and ``structuredContent`` (dict) for
-     a real call to ``tair_locus_info`` (the offline stub — doesn't need
+     a real call to ``plantcyc_locus_info`` (the offline stub — doesn't need
      network, keeps CI deterministic).
   4. Surfaces our differentiated exception type info — invalid input
      produces an error result whose text contains the ``[NotFoundError]``
@@ -62,7 +62,12 @@ async def test_initialize_and_list_tools(server_params: StdioServerParameters) -
             assert names == {
                 "analyze_locus_synth",
                 "atted_coexpression",
+                "bar_aiv_interactions",
+                "bar_efp_expression",
+                "bar_gene_summary",
                 "batch_atted_coexpression",
+                "batch_bar_aiv_interactions",
+                "batch_bar_gene_summary",
                 "batch_ensembl_plants_lookup_locus",
                 "batch_get_gene_xrefs",
                 "batch_gramene_homologs",
@@ -99,13 +104,15 @@ async def test_initialize_and_list_tools(server_params: StdioServerParameters) -
 
 
 @pytest.mark.asyncio
-async def test_tair_call_returns_structured_content(
+async def test_offline_stub_call_returns_structured_content(
     server_params: StdioServerParameters,
 ) -> None:
     async with stdio_client(server_params) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()
-            result = await session.call_tool("tair_locus_info", arguments={"locus": "AT1G01010"})
+            result = await session.call_tool(
+                "plantcyc_locus_info", arguments={"locus": "AT1G01010"}
+            )
 
             # SDK builds BOTH unstructured (TextContent of JSON) and structured.
             assert result.structuredContent is not None
@@ -129,7 +136,9 @@ async def test_invalid_locus_surfaces_typed_error(
     async with stdio_client(server_params) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()
-            result = await session.call_tool("tair_locus_info", arguments={"locus": "AT1G01010<x>"})
+            result = await session.call_tool(
+                "plantcyc_locus_info", arguments={"locus": "AT1G01010<x>"}
+            )
             assert result.isError, "expected error result for invalid locus"
             assert result.content
             text = result.content[0].text

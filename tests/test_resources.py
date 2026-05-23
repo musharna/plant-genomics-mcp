@@ -7,7 +7,7 @@ import json
 import pytest
 from pydantic import AnyUrl
 
-from plant_genomics_mcp import organisms, plantcyc, resources, tair
+from plant_genomics_mcp import organisms, plantcyc, resources
 
 
 def test_resources_catalog_has_four_entries() -> None:
@@ -141,12 +141,14 @@ async def test_read_backends_status_lists_live_and_stub_backends() -> None:
         assert e["kind"] == "live"
         assert e["subscription_gated"] is False
         assert e["base_url"].startswith("http")
-    # Stub backends carry probed_at + subscription_gated=True.
-    for name, mod in [("tair", tair), ("plantcyc", plantcyc)]:
-        e = by_name[name]
-        assert e["kind"] == "stub"
-        assert e["subscription_gated"] is True
-        assert e["probed_at"] == mod._PROBED_AT
+    # PlantCyc remains a subscription_required stub; TAIR was promoted to
+    # an alias of bar_gene_summary in Wave A.6.8 (no longer listed as a
+    # standalone backend — BAR carries the curator data).
+    assert "tair" not in by_name
+    e = by_name["plantcyc"]
+    assert e["kind"] == "stub"
+    assert e["subscription_gated"] is True
+    assert e["probed_at"] == plantcyc._PROBED_AT
 
 
 @pytest.mark.asyncio

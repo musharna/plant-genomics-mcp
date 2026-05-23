@@ -52,7 +52,6 @@ from plant_genomics_mcp import (
     plantcyc,
     quickgo,
     string_db,
-    tair,
     uniprot,
 )
 
@@ -196,13 +195,6 @@ def _backends_status_payload() -> list[dict[str, object]]:
             "base_url": string_db.BASE_URL,
             "kind": "live",
             "subscription_gated": False,
-        },
-        {
-            "name": "tair",
-            "base_url": "https://www.arabidopsis.org/",
-            "kind": "stub",
-            "subscription_gated": True,
-            "probed_at": tair._PROBED_AT,
         },
         {
             "name": "plantcyc",
