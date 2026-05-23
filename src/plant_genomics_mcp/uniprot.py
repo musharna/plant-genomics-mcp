@@ -27,7 +27,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import cache, progress
+from plant_genomics_mcp import cache, organisms, progress
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
@@ -296,7 +296,7 @@ async def fetch_sequence(
 async def lookup_locus(
     client: httpx.AsyncClient,
     locus: str,
-    organism_id: int = DEFAULT_TAXON_ID,
+    organism: str | int = organisms.DEFAULT_ORGANISM,
 ) -> dict[str, Any]:
     """Resolve a locus OR UniProt accession to its UniProtKB entry.
 
@@ -308,23 +308,27 @@ async def lookup_locus(
     * **UniProt accession** (``Q9LIV2``, ``A0A1B2C3D4``, optionally with a
       trailing ``.N`` version suffix from a BLAST text report) — bypasses
       search and fetches ``/uniprotkb/{accession}.json`` directly. The
-      ``organism_id`` argument is ignored on this path because the
+      ``organism`` argument is ignored on this path because the
       accession is already organism-scoped.
 
-    ``organism_id`` is the NCBI taxonomy ID; defaults to 3702 (Arabidopsis
-    thaliana). See ``KNOWN_TAXA`` for hints.
+    ``organism`` accepts a slug (``"arabidopsis_thaliana"``), scientific
+    name (``"Arabidopsis thaliana"``), common name, alias, or an explicit
+    NCBI taxonomy ID. Resolved via ``organisms.ncbi_taxid_for``. The
+    wire-format query field stays ``organism_id:<taxid>`` — UniProt's
+    REST API has not renamed it.
 
     Raises ``NotFoundError`` if the search/fetch returns zero hits.
     """
     if _looks_like_uniprot_accession(locus):
         record = await _fetch_by_accession(client, locus)
         return _normalize(record, locus_query=locus)
-    base = f"gene:{locus} AND organism_id:{organism_id}"
+    taxid = organisms.ncbi_taxid_for(organism)
+    base = f"gene:{locus} AND organism_id:{taxid}"
     # Pass 1: reviewed only (Swiss-Prot).
     results = await _search(client, f"{base} AND reviewed:true", size=1)
     if not results:
         # Pass 2: drop the reviewed filter; TrEMBL is acceptable.
         results = await _search(client, base, size=1)
     if not results:
-        raise NotFoundError(f"UniProt has no entry for gene={locus} organism_id={organism_id}")
+        raise NotFoundError(f"UniProt has no entry for gene={locus} organism_id={taxid}")
     return _normalize(results[0], locus_query=locus)
