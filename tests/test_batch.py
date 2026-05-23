@@ -143,10 +143,10 @@ async def test_gather_splits_plant_genomics_errors_to_errors_dict(
     """
 
     async def fake_xrefs(
-        client: httpx.AsyncClient, locus: str, species: str = "arabidopsis_thaliana"
+        client: httpx.AsyncClient, locus: str, organism: str | int = "arabidopsis_thaliana"
     ) -> dict[str, Any]:
         if locus == "AT1G01010":
-            return {"locus": locus, "species": species, "count": 1, "xrefs": [], "by_db": {}}
+            return {"locus": locus, "species": organism, "count": 1, "xrefs": [], "by_db": {}}
         if locus == "AT9G99999":
             raise NotFoundError(f"Ensembl /xrefs/id: no record for {locus}")
         if locus == "AT8G88888":
@@ -172,7 +172,7 @@ async def test_gather_reraises_non_plant_genomics_exception(
     """A plain RuntimeError is not the typed-error wire shape — propagate."""
 
     async def boom(
-        client: httpx.AsyncClient, locus: str, species: str = "arabidopsis_thaliana"
+        client: httpx.AsyncClient, locus: str, organism: str | int = "arabidopsis_thaliana"
     ) -> dict[str, Any]:
         raise RuntimeError("something else broke")
 
@@ -193,10 +193,10 @@ async def test_gather_runs_concurrently(monkeypatch: pytest.MonkeyPatch) -> None
     """
 
     async def slow(
-        client: httpx.AsyncClient, locus: str, species: str = "arabidopsis_thaliana"
+        client: httpx.AsyncClient, locus: str, organism: str | int = "arabidopsis_thaliana"
     ) -> dict[str, Any]:
         await asyncio.sleep(0.2)
-        return {"locus": locus, "species": species, "count": 0, "xrefs": [], "by_db": {}}
+        return {"locus": locus, "species": organism, "count": 0, "xrefs": [], "by_db": {}}
 
     monkeypatch.setattr(ensembl_plants, "lookup_xrefs", slow)
 
@@ -329,3 +329,80 @@ async def test_batch_atted_coexpression_mixed(httpx_mock: HTTPXMock):
     assert env["count"] == 2
     assert "AT1G01010" in env["results"]
     assert "ATNOPE" in env["errors"]
+
+
+# ---------- v0.9 resolver-driven organism= (T13) ----------
+
+
+@pytest.mark.asyncio
+async def test_batch_ensembl_lookup_accepts_organism_alias(httpx_mock: HTTPXMock) -> None:
+    """Common-name 'thale cress' resolves to Ensembl slug 'arabidopsis_thaliana'."""
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/lookup/id",
+        method="POST",
+        json={"AT1G01010": {"id": "AT1G01010", "species": "arabidopsis_thaliana"}},
+    )
+    async with httpx.AsyncClient() as client:
+        result = await batch.batch_ensembl_plants_lookup_locus(
+            client, ["AT1G01010"], organism="thale cress"
+        )
+    assert result["count"] == 1
+    assert "AT1G01010" in result["results"]
+    # Inspect the POST body to confirm the resolved slug was sent on the wire.
+    posts = httpx_mock.get_requests()
+    assert any("arabidopsis_thaliana" in r.content.decode() for r in posts)
+
+
+@pytest.mark.asyncio
+async def test_batch_phytozome_accepts_organism_alias(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """organism='arabidopsis' resolves to phytozome_int=167 and reaches the backend."""
+    seen: dict[str, Any] = {}
+
+    async def fake_phytozome(
+        client: httpx.AsyncClient,
+        locus: str,
+        organism: str | int = "arabidopsis_thaliana",
+    ) -> dict[str, Any]:
+        seen["organism"] = organism
+        return {"gene_name": locus, "organism_name": "Athaliana_TAIR10"}
+
+    from plant_genomics_mcp import phytozome as _phyto
+
+    monkeypatch.setattr(_phyto, "lookup_locus", fake_phytozome)
+
+    async with httpx.AsyncClient() as client:
+        result = await batch.batch_phytozome_lookup_locus(
+            client, ["AT1G01010"], organism="arabidopsis"
+        )
+    assert result["count"] == 1
+    # The resolver should have routed "arabidopsis" → canonical slug or taxid
+    # through to phytozome.lookup_locus unchanged (backend resolves itself).
+    assert seen["organism"] == "arabidopsis"
+
+
+@pytest.mark.asyncio
+async def test_batch_locus_literature_accepts_organism_alias(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """organism='rice' passes through to europe_pmc.lookup_locus unchanged."""
+    seen: dict[str, Any] = {}
+
+    async def fake_europepmc(
+        client: httpx.AsyncClient,
+        locus: str,
+        organism: str | int = "arabidopsis_thaliana",
+        size: int = 25,
+    ) -> dict[str, Any]:
+        seen["organism"] = organism
+        return {"locus": locus, "size": size, "results": []}
+
+    from plant_genomics_mcp import europe_pmc as _epmc
+
+    monkeypatch.setattr(_epmc, "lookup_locus", fake_europepmc)
+
+    async with httpx.AsyncClient() as client:
+        result = await batch.batch_locus_literature(client, ["Os01g0100100"], organism="rice")
+    assert result["count"] == 1
+    assert seen["organism"] == "rice"

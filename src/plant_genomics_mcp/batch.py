@@ -33,6 +33,7 @@ from plant_genomics_mcp import (
     europe_pmc,
     gramene,
     kegg,
+    organisms,
     phytozome,
     quickgo,
     string_db,
@@ -94,7 +95,7 @@ def _envelope(
 async def batch_ensembl_plants_lookup_locus(
     client: httpx.AsyncClient,
     loci: list[str],
-    species: str = "arabidopsis_thaliana",
+    organism: str | int = organisms.DEFAULT_ORGANISM,
 ) -> dict[str, Any]:
     """One HTTP round-trip via Ensembl's POST /lookup/id batch endpoint.
 
@@ -103,8 +104,9 @@ async def batch_ensembl_plants_lookup_locus(
     so the wire shape matches the gather-based batch tools.
     """
     loci = _bound(loci)
+    slug = organisms.ensembl_slug_for(organism)
     headers = {"Accept": "application/json", "Content-Type": "application/json"}
-    payload: dict[str, Any] = {"ids": loci, "species": species, "expand": 0}
+    payload: dict[str, Any] = {"ids": loci, "species": slug, "expand": 0}
     resp = await client.post(
         f"{ensembl_plants.BASE_URL}/lookup/id",
         json=payload,
@@ -145,11 +147,11 @@ async def batch_ensembl_plants_lookup_locus(
 async def batch_get_gene_xrefs(
     client: httpx.AsyncClient,
     loci: list[str],
-    species: str = "arabidopsis_thaliana",
+    organism: str | int = organisms.DEFAULT_ORGANISM,
 ) -> dict[str, Any]:
     loci = _bound(loci)
     results, errors = await _gather(
-        loci, lambda locus: ensembl_plants.lookup_xrefs(client, locus, species=species)
+        loci, lambda locus: ensembl_plants.lookup_xrefs(client, locus, organism=organism)
     )
     return _envelope("get_gene_xrefs", loci, results, errors)
 
@@ -157,11 +159,11 @@ async def batch_get_gene_xrefs(
 async def batch_phytozome_lookup_locus(
     client: httpx.AsyncClient,
     loci: list[str],
-    organism_id: int = 167,
+    organism: str | int = organisms.DEFAULT_ORGANISM,
 ) -> dict[str, Any]:
     loci = _bound(loci)
     results, errors = await _gather(
-        loci, lambda locus: phytozome.lookup_locus(client, locus, organism_id=organism_id)
+        loci, lambda locus: phytozome.lookup_locus(client, locus, organism=organism)
     )
     return _envelope("phytozome_lookup_locus", loci, results, errors)
 
@@ -169,11 +171,11 @@ async def batch_phytozome_lookup_locus(
 async def batch_resolve_locus_to_uniprot(
     client: httpx.AsyncClient,
     loci: list[str],
-    organism_id: int = uniprot.DEFAULT_TAXON_ID,
+    organism: str | int = organisms.DEFAULT_ORGANISM,
 ) -> dict[str, Any]:
     loci = _bound(loci)
     results, errors = await _gather(
-        loci, lambda locus: uniprot.lookup_locus(client, locus, organism_id=organism_id)
+        loci, lambda locus: uniprot.lookup_locus(client, locus, organism=organism)
     )
     return _envelope("resolve_locus_to_uniprot", loci, results, errors)
 
@@ -181,13 +183,13 @@ async def batch_resolve_locus_to_uniprot(
 async def batch_locus_literature(
     client: httpx.AsyncClient,
     loci: list[str],
-    species: str = "arabidopsis_thaliana",
+    organism: str | int = organisms.DEFAULT_ORGANISM,
     size: int = europe_pmc.DEFAULT_PAGE_SIZE,
 ) -> dict[str, Any]:
     loci = _bound(loci)
     results, errors = await _gather(
         loci,
-        lambda locus: europe_pmc.lookup_locus(client, locus, species=species, size=size),
+        lambda locus: europe_pmc.lookup_locus(client, locus, organism=organism, size=size),
     )
     return _envelope("locus_literature", loci, results, errors)
 
@@ -195,7 +197,7 @@ async def batch_locus_literature(
 async def batch_locus_go_annotations(
     client: httpx.AsyncClient,
     loci: list[str],
-    organism_id: int = uniprot.DEFAULT_TAXON_ID,
+    organism: str | int = organisms.DEFAULT_ORGANISM,
     limit: int = quickgo.DEFAULT_LIMIT,
 ) -> dict[str, Any]:
     """Two-stage fanout: resolve each locus to UniProt then query QuickGO.
@@ -207,7 +209,7 @@ async def batch_locus_go_annotations(
     loci = _bound(loci)
 
     async def _one(locus: str) -> dict[str, Any]:
-        up = await uniprot.lookup_locus(client, locus, organism_id=organism_id)
+        up = await uniprot.lookup_locus(client, locus, organism=organism)
         accession = up["primaryAccession"]
         go = await quickgo.lookup_by_uniprot(client, accession, limit=limit)
         return {
