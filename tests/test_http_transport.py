@@ -160,3 +160,149 @@ async def test_http_tools_list_via_real_uvicorn() -> None:
             await asyncio.wait_for(serve_task, timeout=5.0)
         except asyncio.TimeoutError:
             serve_task.cancel()
+
+
+# ---------- bearer auth (Wave B1) ----------
+
+
+def test_mcp_open_when_token_unset(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Backward-compat: env var unset → /mcp accepts unauthenticated POSTs.
+
+    Existing deployments that bind to 127.0.0.1 or sit behind a reverse
+    proxy must keep working without operator intervention.
+    """
+    monkeypatch.delenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", raising=False)
+    app = server_http.build_app()
+    with TestClient(app) as client:
+        resp = client.post(
+            "/mcp/",
+            json={"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}},
+            headers={"Accept": "application/json, text/event-stream"},
+        )
+    # Status must not be 401 — the request reached the MCP manager (which
+    # may legitimately return any non-auth error for an incomplete init).
+    assert resp.status_code != 401, resp.text
+
+
+def test_mcp_requires_bearer_when_token_set_no_header(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Token configured + missing Authorization header → 401."""
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", "s3cret-token")
+    app = server_http.build_app()
+    with TestClient(app) as client:
+        resp = client.post(
+            "/mcp/",
+            json={"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
+            headers={"Accept": "application/json, text/event-stream"},
+        )
+    assert resp.status_code == 401, resp.text
+
+
+def test_mcp_requires_bearer_when_token_set_wrong_token(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Token configured + wrong bearer → 401 (constant-time compare)."""
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", "s3cret-token")
+    app = server_http.build_app()
+    with TestClient(app) as client:
+        resp = client.post(
+            "/mcp/",
+            json={"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
+            headers={
+                "Accept": "application/json, text/event-stream",
+                "Authorization": "Bearer not-the-right-token",
+            },
+        )
+    assert resp.status_code == 401, resp.text
+
+
+def test_mcp_accepts_correct_bearer_token(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Token configured + matching bearer → middleware passes request through.
+
+    We don't drive a full JSON-RPC handshake here — the assertion is
+    simply that auth doesn't reject (status != 401), proving the
+    middleware accepted the credential and forwarded to the manager.
+    """
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", "s3cret-token")
+    app = server_http.build_app()
+    with TestClient(app) as client:
+        resp = client.post(
+            "/mcp/",
+            json={"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}},
+            headers={
+                "Accept": "application/json, text/event-stream",
+                "Authorization": "Bearer s3cret-token",
+            },
+        )
+    assert resp.status_code != 401, resp.text
+
+
+def test_healthz_exempt_from_bearer_auth(monkeypatch: pytest.MonkeyPatch) -> None:
+    """/healthz must remain open even with auth configured — external
+    watchers (Uptime Kuma, Diun, k8s probes) can't carry a bearer token.
+    """
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", "s3cret-token")
+    app = server_http.build_app()
+    with TestClient(app) as client:
+        resp = client.get("/healthz")
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["status"] == "ok"
+
+
+@pytest.mark.asyncio
+async def test_bearer_auth_via_real_uvicorn(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Real-execution check: middleware fires through actual uvicorn.
+
+    Boundary test — TestClient invokes the ASGI app in-process; this
+    confirms the middleware also rejects/accepts across a real socket.
+    """
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", "live-secret")
+    app = server_http.build_app()
+    port = _free_port()
+    config = uvicorn.Config(app, host="127.0.0.1", port=port, log_level="error")
+    uv_server = uvicorn.Server(config)
+    serve_task = asyncio.create_task(uv_server.serve())
+    try:
+        for _ in range(100):
+            if uv_server.started:
+                break
+            await asyncio.sleep(0.05)
+        assert uv_server.started, "uvicorn never reported started"
+
+        async with httpx.AsyncClient(base_url=f"http://127.0.0.1:{port}", timeout=10.0) as client:
+            # /healthz still open
+            health_resp = await client.get("/healthz")
+            assert health_resp.status_code == 200, health_resp.text
+
+            # /mcp with no auth → 401
+            no_auth = await client.post(
+                "/mcp/",
+                json={"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
+                headers={"Accept": "application/json, text/event-stream"},
+            )
+            assert no_auth.status_code == 401, no_auth.text
+
+            # /mcp with correct token → passes middleware (not 401)
+            good_auth = await client.post(
+                "/mcp/",
+                json={
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "initialize",
+                    "params": {
+                        "protocolVersion": "2025-03-26",
+                        "capabilities": {},
+                        "clientInfo": {"name": "pgmcp-test", "version": "0.0.1"},
+                    },
+                },
+                headers={
+                    "Accept": "application/json, text/event-stream",
+                    "Authorization": "Bearer live-secret",
+                },
+            )
+            assert good_auth.status_code == 200, good_auth.text
+    finally:
+        uv_server.should_exit = True
+        try:
+            await asyncio.wait_for(serve_task, timeout=5.0)
+        except asyncio.TimeoutError:
+            serve_task.cancel()
