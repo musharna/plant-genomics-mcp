@@ -23,12 +23,11 @@ the server dispatch can handle one exception class for all backends.
 from __future__ import annotations
 
 import asyncio
-import re
 from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import cache, organisms, progress
+from plant_genomics_mcp import cache, organisms, progress, validators
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
@@ -42,11 +41,6 @@ MAX_RETRIES = 3
 
 # Per-module response cache. See plant_genomics_mcp.cache for env knobs.
 _CACHE = cache.TTLCache()
-
-# Identifier whitelist guards the string-formatted XML against injection.
-# Phytozome locus identifiers are alphanumeric plus dot / underscore / hyphen
-# (e.g. AT1G01010, Glyma.01G000100, Sobic.001G000100).
-_LOCUS_RE = re.compile(r"^[A-Za-z0-9._-]+$")
 
 _QUERY_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Query>
@@ -153,11 +147,10 @@ async def lookup_locus(
     is untyped and we preserve the wire representation rather than guess
     casts.
     """
-    if not _LOCUS_RE.match(locus):
-        # Pre-flight reject before any HTTP — prevents XML injection via the
-        # string-formatted template AND fails loud on accidental whitespace
-        # / shell quoting damage.
-        raise NotFoundError(f"Phytozome: invalid locus {locus!r} (must match {_LOCUS_RE.pattern})")
+    # Pre-flight reject before any HTTP — prevents XML injection via the
+    # string-formatted template AND fails loud on accidental whitespace
+    # / shell quoting damage.
+    validators.assert_valid_locus(locus, backend="Phytozome")
 
     phyto_id = organisms.phytozome_int_for(organism)
 

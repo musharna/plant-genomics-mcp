@@ -259,6 +259,33 @@ def test_ensembl_plants_locus_model_field_renamed_to_organism() -> None:
     assert "species" not in schema["properties"]
 
 
+# ---------- Wave B6: shared locus validator at the URL boundary ----------
+
+
+@pytest.mark.asyncio
+async def test_lookup_locus_rejects_malformed_locus_before_http() -> None:
+    """Ensembl ``/lookup/id/{locus}`` splices the locus into the path —
+    a stray slash, space, or NUL would forge a different request than the
+    caller intended. Validation must fire before any HTTP call, so no
+    ``httpx_mock`` is configured here.
+    """
+    from plant_genomics_mcp.errors import NotFoundError
+
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="invalid locus"):
+            await ensembl_plants.lookup_locus(client, "AT1G01010/extra")
+
+
+@pytest.mark.asyncio
+async def test_lookup_xrefs_rejects_malformed_locus_before_http() -> None:
+    """Same validation at the ``/xrefs/id/{locus}`` boundary."""
+    from plant_genomics_mcp.errors import NotFoundError
+
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="invalid locus"):
+            await ensembl_plants.lookup_xrefs(client, "AT1G01010<x>")
+
+
 @live_only
 @pytest.mark.asyncio
 async def test_live_lookup_rice_locus() -> None:

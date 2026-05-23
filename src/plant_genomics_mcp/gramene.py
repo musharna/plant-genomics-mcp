@@ -17,7 +17,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import cache, progress
+from plant_genomics_mcp import cache, progress, validators
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
@@ -127,6 +127,7 @@ async def lookup_homologs(
     fl=homology projection does NOT carry per-row taxon, identity, protein
     ID, dn/ds, or goc_score — so we only surface what's there.
     """
+    validators.assert_valid_locus(locus, backend="Gramene")
     raw = await _get(
         client,
         f"/{GRAMENE_RELEASE}/genes",

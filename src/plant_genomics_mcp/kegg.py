@@ -23,7 +23,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import cache, progress
+from plant_genomics_mcp import cache, progress, validators
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
@@ -136,6 +136,7 @@ async def lookup_pathways(client: httpx.AsyncClient, locus: str) -> dict[str, An
     KEGG step-2 fails for a pathway, we surface the ID in ``pathways[]``
     with empty name/class and append the message to ``errors[]``.
     """
+    validators.assert_valid_locus(locus, backend="KEGG")
     gene_id = f"ath:{locus.lower()}"
     body = await _get(client, f"/link/pathway/{gene_id}")
     if not body.strip():

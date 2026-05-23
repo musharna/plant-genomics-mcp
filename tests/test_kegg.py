@@ -105,3 +105,17 @@ async def test_live_kegg_at1g01010_has_pathways():
     assert result["locus"] == "AT1G01010"
     assert result["kegg_gene_id"] == "ath:at1g01010"
     assert len(result["pathways"]) > 0, "AT1G01010 should be in at least one KEGG pathway"
+
+
+# ---------- Wave B6: shared locus validator at the URL boundary ----------
+
+
+@pytest.mark.asyncio
+async def test_lookup_pathways_rejects_malformed_locus_before_http() -> None:
+    """KEGG splices ``ath:{locus.lower()}`` into ``/link/pathway/{gene_id}``;
+    a slash or whitespace would forge a different upstream call. The
+    rejection must fire before any HTTP, so no ``httpx_mock`` is used.
+    """
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="invalid locus"):
+            await kegg.lookup_pathways(client, "AT1G01010/etc")
