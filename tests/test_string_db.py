@@ -51,7 +51,7 @@ async def test_lookup_partners_by_accession_happy(httpx_mock: HTTPXMock):
         result = await string_db.lookup_partners(client, "Q0WV96", limit=5)
     assert result["query"] == "Q0WV96"
     assert result["accession"] == "Q0WV96"
-    assert result["organism_taxid"] == 3702
+    assert result["organism"] == "arabidopsis_thaliana"
     assert len(result["partners"]) == 1
     p = result["partners"][0]
     assert p["accession"] == "Q0WV96" or p["accession"] is not None  # raw stringId field too
@@ -173,7 +173,7 @@ async def test_lookup_partners_accepts_organism_param(httpx_mock: HTTPXMock):
     async with httpx.AsyncClient() as client:
         result = await string_db.lookup_partners(client, "Q0WV96", organism="arabidopsis_thaliana")
     assert result["accession"] == "Q0WV96"
-    assert result["organism_taxid"] == 3702
+    assert result["organism"] == "arabidopsis_thaliana"
     assert result["partners"][0]["preferred_name"] == "NAC3"
 
 

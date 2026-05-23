@@ -31,7 +31,7 @@ class EnsemblPlantsLocus(BaseModel):
     # Everything else is Optional so a sparse / future Ensembl payload
     # never produces an "Output validation error" for the user.
     id: str = Field(description="Locus identifier, e.g. AT1G01010")
-    species: str = Field(description="Ensembl species slug, e.g. arabidopsis_thaliana")
+    organism: str = Field(description="Plant organism canonical slug, e.g. arabidopsis_thaliana")
 
     object_type: str | None = Field(default=None, description='Usually "Gene"')
     biotype: str | None = Field(default=None, description="protein_coding, lncRNA, miRNA, ...")
@@ -80,7 +80,7 @@ class GeneXrefs(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     locus: str
-    species: str
+    organism: str
     count: int = Field(description="Number of xref records returned")
     xrefs: list[GeneXrefEntry] = Field(description="Raw Ensembl xref records")
     by_db: dict[str, list[str]] = Field(
@@ -163,7 +163,7 @@ class LocusLiterature(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     locus: str
-    species: str
+    organism: str
     query: str = Field(description="Final query string sent to Europe PMC")
     hitCount: int = Field(description="Total hits available upstream (may exceed returned)")
     returned: int = Field(description="Number of hits actually in hits[]")
@@ -415,7 +415,7 @@ class StringInteractions(BaseModel):
 
     query: str = Field(description="The locus or accession the user passed")
     accession: str = Field(description="UniProt accession actually queried at STRING")
-    organism_taxid: int = Field(description="NCBI taxonomy ID (3702 for Arabidopsis)")
+    organism: str = Field(description="Plant organism canonical slug, e.g. arabidopsis_thaliana")
     partners: list[StringPartner]
 
 

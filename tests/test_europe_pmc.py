@@ -63,7 +63,7 @@ async def test_lookup_locus_at1g01010_arabidopsis_strips_species_suffix(
     async with httpx.AsyncClient() as client:
         result = await europe_pmc.lookup_locus(client, "AT1G01010")
     assert result["locus"] == "AT1G01010"
-    assert result["species"] == "arabidopsis_thaliana"
+    assert result["organism"] == "arabidopsis_thaliana"
     assert result["query"] == "AT1G01010"
     assert result["hitCount"] == 40
     assert result["returned"] == 1
