@@ -18,7 +18,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import cache, progress
+from plant_genomics_mcp import cache, organisms, progress
 from plant_genomics_mcp.errors import (
     PlantGenomicsError,
     RateLimitError,
@@ -123,37 +123,24 @@ def _normalize(hit: dict[str, Any]) -> dict[str, Any]:
     return normalized
 
 
-# Common name suffixes for the species slugs we already support elsewhere.
-# Appended to the query for non-Arabidopsis species to disambiguate locus IDs
-# that could overlap with unrelated literature.
-_SPECIES_COMMON_NAME = {
-    "arabidopsis_thaliana": None,  # AT-prefixed IDs are already unambiguous
-    "oryza_sativa": "rice",
-    "zea_mays": "maize",
-    "solanum_lycopersicum": "tomato",
-    "glycine_max": "soybean",
-    "sorghum_bicolor": "sorghum",
-    "triticum_aestivum": "wheat",
-    "hordeum_vulgare": "barley",
-    "brachypodium_distachyon": "Brachypodium",
-}
-
-
 async def lookup_locus(
     client: httpx.AsyncClient,
     locus: str,
-    species: str = "arabidopsis_thaliana",
+    organism: str | int = organisms.DEFAULT_ORGANISM,
     size: int = DEFAULT_PAGE_SIZE,
 ) -> dict[str, Any]:
     """Search Europe PMC for literature mentioning a plant locus.
 
     ``size`` is clamped to [1, MAX_PAGE_SIZE] to bound the wire payload.
-    Returns a dict shaped per ``LocusLiterature``: locus, species, hitCount
-    (total available in Europe PMC), returned (len(hits)), hits[].
+    ``organism`` accepts any form resolvable by :mod:`organisms` (canonical
+    slug, scientific name, common name, NCBI taxid, alias). Returns a dict
+    shaped per ``LocusLiterature``: locus, species (resolved canonical),
+    hitCount (total available in Europe PMC), returned (len(hits)), hits[].
     """
     size = max(1, min(size, MAX_PAGE_SIZE))
+    record = organisms.resolve(organism)
     query = locus
-    suffix = _SPECIES_COMMON_NAME.get(species)
+    suffix = organisms.europe_pmc_slug_for(organism)
     if suffix:
         query = f"{locus} AND {suffix}"
     params: dict[str, Any] = {
@@ -176,7 +163,7 @@ async def lookup_locus(
     hits = [_normalize(r) for r in results if isinstance(r, dict)]
     return {
         "locus": locus,
-        "species": species,
+        "species": record.canonical,
         "query": query,
         "hitCount": int(raw.get("hitCount", 0)),
         "returned": len(hits),
