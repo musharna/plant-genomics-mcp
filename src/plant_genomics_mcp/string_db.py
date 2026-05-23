@@ -140,6 +140,7 @@ async def lookup_partners(
     any form the resolver supports (slug, scientific/common name, taxid).
     """
     limit = max(1, min(limit, MAX_LIMIT))
+    record = organisms.resolve(organism)
     taxid = organisms.string_taxid_for(organism)
     query = locus_or_accession
     if _looks_like_accession(locus_or_accession):
@@ -168,6 +169,6 @@ async def lookup_partners(
     return {
         "query": query,
         "accession": accession,
-        "organism_taxid": taxid,
+        "organism": record.canonical,
         "partners": partners,
     }

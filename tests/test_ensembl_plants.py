@@ -116,7 +116,7 @@ async def test_lookup_xrefs_wraps_array_and_rolls_up_by_db(httpx_mock: HTTPXMock
     async with httpx.AsyncClient() as client:
         result = await ensembl_plants.lookup_xrefs(client, "AT1G01010")
     assert result["locus"] == "AT1G01010"
-    assert result["species"] == "arabidopsis_thaliana"
+    assert result["organism"] == "arabidopsis_thaliana"
     assert result["count"] == 3
     assert len(result["xrefs"]) == 3
     assert result["by_db"]["Uniprot_gn"] == ["Q0WV96"]
@@ -207,3 +207,18 @@ def test_lookup_locus_rejects_unknown_organism() -> None:
 
     with pytest.raises(OrganismNotFound):
         asyncio.run(run())
+
+
+def test_ensembl_plants_locus_model_field_renamed_to_organism() -> None:
+    """v0.9 contract: EnsemblPlantsLocus exposes `organism`, not `species`."""
+    from plant_genomics_mcp.models import EnsemblPlantsLocus
+
+    sample = EnsemblPlantsLocus(
+        id="AT1G01010",
+        organism="arabidopsis_thaliana",
+        biotype="protein_coding",
+    )
+    assert sample.organism == "arabidopsis_thaliana"
+    schema = EnsemblPlantsLocus.model_json_schema()
+    assert "organism" in schema["properties"]
+    assert "species" not in schema["properties"]

@@ -824,7 +824,7 @@ def test_biological_context_synth_fixtures_match_real_response_shapes():
         {
             "query": "Q0WV96",
             "accession": "Q0WV96",
-            "organism_taxid": 3702,
+            "organism": "arabidopsis_thaliana",
             "partners": [
                 {
                     "string_id": "3702.AT3G15500.1",

@@ -117,7 +117,10 @@ async def lookup_locus(
     """
     slug = organisms.ensembl_slug_for(organism)
     params: dict[str, Any] = {"species": slug, "expand": 0}
-    return await _get(client, f"/lookup/id/{locus}", params=params)
+    raw = await _get(client, f"/lookup/id/{locus}", params=params)
+    if isinstance(raw, dict) and "species" in raw:
+        raw["organism"] = raw.pop("species")
+    return raw
 
 
 async def lookup_xrefs(
@@ -152,7 +155,7 @@ async def lookup_xrefs(
             by_db.setdefault(dbname, []).append(primary_id)
     return {
         "locus": locus,
-        "species": slug,
+        "organism": slug,
         "count": len(raw),
         "xrefs": raw,
         "by_db": by_db,

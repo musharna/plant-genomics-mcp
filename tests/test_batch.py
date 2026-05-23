@@ -146,7 +146,7 @@ async def test_gather_splits_plant_genomics_errors_to_errors_dict(
         client: httpx.AsyncClient, locus: str, organism: str | int = "arabidopsis_thaliana"
     ) -> dict[str, Any]:
         if locus == "AT1G01010":
-            return {"locus": locus, "species": organism, "count": 1, "xrefs": [], "by_db": {}}
+            return {"locus": locus, "organism": organism, "count": 1, "xrefs": [], "by_db": {}}
         if locus == "AT9G99999":
             raise NotFoundError(f"Ensembl /xrefs/id: no record for {locus}")
         if locus == "AT8G88888":
@@ -196,7 +196,7 @@ async def test_gather_runs_concurrently(monkeypatch: pytest.MonkeyPatch) -> None
         client: httpx.AsyncClient, locus: str, organism: str | int = "arabidopsis_thaliana"
     ) -> dict[str, Any]:
         await asyncio.sleep(0.2)
-        return {"locus": locus, "species": organism, "count": 0, "xrefs": [], "by_db": {}}
+        return {"locus": locus, "organism": organism, "count": 0, "xrefs": [], "by_db": {}}
 
     monkeypatch.setattr(ensembl_plants, "lookup_xrefs", slow)
 

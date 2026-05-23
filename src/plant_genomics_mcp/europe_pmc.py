@@ -134,7 +134,7 @@ async def lookup_locus(
     ``size`` is clamped to [1, MAX_PAGE_SIZE] to bound the wire payload.
     ``organism`` accepts any form resolvable by :mod:`organisms` (canonical
     slug, scientific name, common name, NCBI taxid, alias). Returns a dict
-    shaped per ``LocusLiterature``: locus, species (resolved canonical),
+    shaped per ``LocusLiterature``: locus, organism (resolved canonical),
     hitCount (total available in Europe PMC), returned (len(hits)), hits[].
     """
     size = max(1, min(size, MAX_PAGE_SIZE))
@@ -163,7 +163,7 @@ async def lookup_locus(
     hits = [_normalize(r) for r in results if isinstance(r, dict)]
     return {
         "locus": locus,
-        "species": record.canonical,
+        "organism": record.canonical,
         "query": query,
         "hitCount": int(raw.get("hitCount", 0)),
         "returned": len(hits),
