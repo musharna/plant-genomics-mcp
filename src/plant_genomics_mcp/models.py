@@ -676,7 +676,15 @@ class StepRow(BaseModel):
     step: int = Field(description="1-indexed position in the orchestrator's execution order")
     tool: str = Field(description="Backend tool name, e.g. ensembl_plants_lookup_locus")
     status: Literal["ok", "error", "skipped"]
-    elapsed_s: float = Field(description="Wall time for this step alone")
+    elapsed_s: float | None = Field(
+        default=None,
+        description=(
+            "Per-step wall time when separately measurable, else None. "
+            "Phase-2 gather rows and phase-0 pre-call validation failures "
+            "return None because their wall time can't be honestly attributed "
+            "per-step; SynthesisEnvelope.elapsed_s carries the authoritative total."
+        ),
+    )
     result: dict | list | None = Field(
         default=None,
         description='Backend payload when status="ok"; None otherwise',

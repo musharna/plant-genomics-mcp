@@ -37,6 +37,17 @@ def test_step_row_validator_rejects_skipped_without_reason():
         StepRow(step=1, tool="x", status="skipped", elapsed_s=0.0)
 
 
+def test_step_row_accepts_none_elapsed_s():
+    # Wave C1: elapsed_s is float | None — None signals "not separately
+    # measurable" (phase-2 gather rows, phase-0 pre-call validation failures).
+    StepRow(step=1, tool="x", status="ok", elapsed_s=None, result={})
+    StepRow(step=1, tool="x", status="error", elapsed_s=None, error="[E] x")
+    StepRow(step=1, tool="x", status="skipped", elapsed_s=None, error="phase 1 failed")
+    # Default is None when omitted entirely.
+    row = StepRow(step=1, tool="x", status="ok", result={})
+    assert row.elapsed_s is None
+
+
 def test_synthesis_envelope_round_trips_through_model_json_schema():
     schema = SynthesisEnvelope.model_json_schema()
     assert schema["type"] == "object"
@@ -139,6 +150,13 @@ async def test_analyze_locus_synth_all_backends_succeed_returns_full_envelope(ht
     assert env.result["ensembl_record"]["id"] == "AT1G01010"
     assert env.result["reconciled"]["best_uniprot_accession"] == "Q0WV96"
     assert env.result["reconciled"]["canonical_gene_name"] == "NAC001"
+    # Wave C1 contract: gather rows carry elapsed_s=None because per-coroutine
+    # wall time can't be honestly attributed in asyncio.gather. analyze_locus_synth
+    # uses _gather_phase2 for both the parallel ensembl+uniprot root pair AND the
+    # phase-2 fanout, so all 5 rows are gather rows → all None.
+    # Envelope.elapsed_s remains the authoritative orchestrator total.
+    assert all(s.elapsed_s is None for s in env.steps)
+    assert isinstance(env.elapsed_s, float)
 
 
 @pytest.mark.asyncio
@@ -393,6 +411,13 @@ async def test_find_homologs_synth_all_backends_succeed_returns_full_envelope(
     assert ranked[0]["uniprot_record"]["primaryAccession"] == "Q0WV96"
     assert ranked[1]["uniprot_record"]["primaryAccession"] == "Q9LIV2"
     assert env.result["notes"] == []
+    # Wave C1 contract: find_homologs_synth phase-1 BLAST root uses _timed_step,
+    # which DOES measure per-step wall time, so step 0 is a real float. Phase-2
+    # batch lookup also uses _timed_step (single sequential call, not a gather)
+    # so it's also a float. Both _timed_step and orchestrator total are measurable.
+    assert isinstance(env.steps[0].elapsed_s, float)  # _timed_step BLAST
+    assert isinstance(env.steps[1].elapsed_s, float)  # _timed_step batch lookup
+    assert isinstance(env.elapsed_s, float)
 
 
 @pytest.mark.asyncio
