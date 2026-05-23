@@ -199,7 +199,7 @@ TOOLS: list[types.Tool] = [
         name="ensembl_plants_lookup_locus",
         description=(
             "Fetch metadata for a plant locus identifier from Ensembl Plants. "
-            "Defaults to arabidopsis_thaliana; pass species= for other plant "
+            "Defaults to arabidopsis_thaliana; pass organism= for other plant "
             "species (oryza_sativa, zea_mays, ...). Locus is the TAIR-style "
             "identifier (e.g. AT1G01010 for Arabidopsis NAC001)."
         ),
@@ -210,9 +210,9 @@ TOOLS: list[types.Tool] = [
                     "type": "string",
                     "description": "e.g. AT1G01010 (Arabidopsis), Os01g0100100 (rice)",
                 },
-                "species": {
-                    "type": "string",
-                    "description": "Ensembl species slug, e.g. arabidopsis_thaliana",
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
                     "default": "arabidopsis_thaliana",
                 },
             },
@@ -226,7 +226,7 @@ TOOLS: list[types.Tool] = [
         description=(
             "Fetch cross-database references (UniProt, NCBI Gene, TAIR, "
             "ArrayExpress, …) for a plant locus from Ensembl Plants. "
-            "Defaults to arabidopsis_thaliana; pass species= for other "
+            "Defaults to arabidopsis_thaliana; pass organism= for other "
             "Ensembl Plants species. Returns count + raw xref list + a "
             "by_db rollup keyed on Ensembl's dbname (e.g. 'Uniprot_gn', "
             "'EntrezGene') for fast lookup of a single foreign identifier."
@@ -238,9 +238,9 @@ TOOLS: list[types.Tool] = [
                     "type": "string",
                     "description": "e.g. AT1G01010 (Arabidopsis), Os01g0100100 (rice)",
                 },
-                "species": {
-                    "type": "string",
-                    "description": "Ensembl species slug, e.g. arabidopsis_thaliana",
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
                     "default": "arabidopsis_thaliana",
                 },
             },
@@ -253,12 +253,12 @@ TOOLS: list[types.Tool] = [
         name="phytozome_lookup_locus",
         description=(
             "Fetch a gene record from Phytozome BioMart "
-            "(phytozome-next.jgi.doe.gov). Defaults to organism_id=167 "
-            "(Arabidopsis thaliana TAIR10); pass organism_id= for other "
-            "Phytozome proteomes (e.g. 275 Glycine max, 313 Sorghum bicolor "
-            "— hints, unverified). Locus is the source-genome gene name "
-            "(e.g. AT1G01010, Glyma.01G000100). Returns organism_name, "
-            "gene_name, chromosome, gene_start, gene_end, strand, description."
+            "(phytozome-next.jgi.doe.gov). Defaults to arabidopsis_thaliana; "
+            "pass organism= for other Phytozome proteomes (slug, scientific/common "
+            "name, or NCBI taxid — e.g. glycine_max, sorghum_bicolor). Locus is "
+            "the source-genome gene name (e.g. AT1G01010, Glyma.01G000100). "
+            "Returns organism_name, gene_name, chromosome, gene_start, gene_end, "
+            "strand, description."
         ),
         inputSchema={
             "type": "object",
@@ -267,12 +267,10 @@ TOOLS: list[types.Tool] = [
                     "type": "string",
                     "description": "e.g. AT1G01010 (Arabidopsis), Glyma.01G000100 (soybean)",
                 },
-                "organism_id": {
-                    "type": "integer",
-                    "description": (
-                        "Phytozome proteome integer ID (default 167 = Arabidopsis thaliana TAIR10)"
-                    ),
-                    "default": 167,
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
                 },
             },
             "required": ["locus"],
@@ -286,8 +284,9 @@ TOOLS: list[types.Tool] = [
             "Resolve a plant locus to its canonical UniProtKB record. Prefers "
             "reviewed (Swiss-Prot) entries; falls back to unreviewed (TrEMBL) "
             "when no curated record exists (common for non-Arabidopsis plants). "
-            "organism_id is the NCBI taxonomy ID (default 3702 = Arabidopsis "
-            "thaliana; 39947 = Oryza sativa japonica; 4577 = Zea mays). "
+            "organism accepts a canonical slug, scientific/common name, or "
+            "NCBI taxid (default arabidopsis_thaliana; e.g. oryza_sativa, "
+            "zea_mays). "
             "Returns primaryAccession, uniProtkbId, entryType, recommendedName, "
             "geneNames, organism, taxonId, sequenceLength, web_url. This is "
             "the protein-side entry point — pair with InterPro / AlphaFold / "
@@ -300,10 +299,10 @@ TOOLS: list[types.Tool] = [
                     "type": "string",
                     "description": "e.g. AT1G01010 (Arabidopsis), Os01g0100100 (rice)",
                 },
-                "organism_id": {
-                    "type": "integer",
-                    "description": "NCBI taxonomy ID (default 3702 = Arabidopsis thaliana)",
-                    "default": 3702,
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
                 },
             },
             "required": ["locus"],
@@ -330,9 +329,9 @@ TOOLS: list[types.Tool] = [
                     "type": "string",
                     "description": "e.g. AT1G01010 (Arabidopsis), Os01g0100100 (rice)",
                 },
-                "species": {
-                    "type": "string",
-                    "description": "Ensembl species slug, used to qualify the query",
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
                     "default": "arabidopsis_thaliana",
                 },
                 "size": {
@@ -367,10 +366,10 @@ TOOLS: list[types.Tool] = [
                     "type": "string",
                     "description": "e.g. AT1G01010 (Arabidopsis), Os01g0100100 (rice)",
                 },
-                "organism_id": {
-                    "type": "integer",
-                    "description": "NCBI taxonomy ID (default 3702 = Arabidopsis thaliana)",
-                    "default": 3702,
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
                 },
                 "limit": {
                     "type": "integer",
@@ -528,9 +527,9 @@ TOOLS: list[types.Tool] = [
             "type": "object",
             "properties": {
                 "loci": _LOCI_SCHEMA,
-                "species": {
-                    "type": "string",
-                    "description": "Ensembl species slug, e.g. arabidopsis_thaliana",
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
                     "default": "arabidopsis_thaliana",
                 },
             },
@@ -551,9 +550,9 @@ TOOLS: list[types.Tool] = [
             "type": "object",
             "properties": {
                 "loci": _LOCI_SCHEMA,
-                "species": {
-                    "type": "string",
-                    "description": "Ensembl species slug, e.g. arabidopsis_thaliana",
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
                     "default": "arabidopsis_thaliana",
                 },
             },
@@ -574,12 +573,10 @@ TOOLS: list[types.Tool] = [
             "type": "object",
             "properties": {
                 "loci": _LOCI_SCHEMA,
-                "organism_id": {
-                    "type": "integer",
-                    "description": (
-                        "Phytozome proteome integer ID (default 167 = Arabidopsis thaliana TAIR10)"
-                    ),
-                    "default": 167,
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
                 },
             },
             "required": ["loci"],
@@ -600,10 +597,10 @@ TOOLS: list[types.Tool] = [
             "type": "object",
             "properties": {
                 "loci": _LOCI_SCHEMA,
-                "organism_id": {
-                    "type": "integer",
-                    "description": "NCBI taxonomy ID (default 3702 = Arabidopsis thaliana)",
-                    "default": 3702,
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
                 },
             },
             "required": ["loci"],
@@ -623,9 +620,9 @@ TOOLS: list[types.Tool] = [
             "type": "object",
             "properties": {
                 "loci": _LOCI_SCHEMA,
-                "species": {
-                    "type": "string",
-                    "description": "Ensembl species slug, used to qualify the query",
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
                     "default": "arabidopsis_thaliana",
                 },
                 "size": {
@@ -731,10 +728,10 @@ TOOLS: list[types.Tool] = [
             "type": "object",
             "properties": {
                 "loci": _LOCI_SCHEMA,
-                "organism_id": {
-                    "type": "integer",
-                    "description": "NCBI taxonomy ID (default 3702 = Arabidopsis thaliana)",
-                    "default": 3702,
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
                 },
                 "limit": {
                     "type": "integer",
@@ -871,10 +868,10 @@ TOOLS: list[types.Tool] = [
             "type": "object",
             "properties": {
                 "locus": {"type": "string", "description": "Locus name, e.g. AT1G01010"},
-                "species": {
-                    "type": "string",
+                "organism": {
+                    "type": ["string", "integer"],
                     "default": "arabidopsis_thaliana",
-                    "description": "Ensembl Plants species slug",
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
                 },
             },
             "required": ["locus"],
@@ -925,7 +922,11 @@ TOOLS: list[types.Tool] = [
             "type": "object",
             "properties": {
                 "locus": {"type": "string"},
-                "species": {"type": "string", "default": "arabidopsis_thaliana"},
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
+                },
                 "top_n": {"type": "integer", "minimum": 1, "maximum": 50, "default": 10},
             },
             "required": ["locus"],
@@ -947,7 +948,11 @@ TOOLS: list[types.Tool] = [
             "type": "object",
             "properties": {
                 "locus": {"type": "string"},
-                "species": {"type": "string", "default": "arabidopsis_thaliana"},
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
+                },
                 "top_n": {"type": "integer", "minimum": 1, "maximum": 50, "default": 10},
             },
             "required": ["locus"],
@@ -1000,7 +1005,7 @@ async def _get_prompt(name: str, arguments: dict[str, str] | None) -> types.GetP
 async def _resolve_then_go_annotations(
     client: httpx.AsyncClient,
     locus: str,
-    organism_id: int,
+    organism: str | int,
     limit: int,
 ) -> dict[str, Any]:
     """Locus → UniProt accession → QuickGO annotations.
@@ -1009,7 +1014,7 @@ async def _resolve_then_go_annotations(
     entry can't be queried in QuickGO, so the caller gets a typed error
     rather than an empty result that hides the resolution failure.
     """
-    up = await uniprot.lookup_locus(client, locus, organism_id=organism_id)
+    up = await uniprot.lookup_locus(client, locus, organism=organism)
     accession = up["primaryAccession"]
     go = await quickgo.lookup_by_uniprot(client, accession, limit=limit)
     return {
@@ -1029,38 +1034,38 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                 return await ensembl_plants.lookup_locus(
                     client,
                     args["locus"],
-                    species=args.get("species", "arabidopsis_thaliana"),
+                    organism=args.get("organism", "arabidopsis_thaliana"),
                 )
             case "get_gene_xrefs":
                 return await ensembl_plants.lookup_xrefs(
                     client,
                     args["locus"],
-                    species=args.get("species", "arabidopsis_thaliana"),
+                    organism=args.get("organism", "arabidopsis_thaliana"),
                 )
             case "phytozome_lookup_locus":
                 return await phytozome.lookup_locus(
                     client,
                     args["locus"],
-                    organism_id=args.get("organism_id", 167),
+                    organism=args.get("organism", "arabidopsis_thaliana"),
                 )
             case "resolve_locus_to_uniprot":
                 return await uniprot.lookup_locus(
                     client,
                     args["locus"],
-                    organism_id=args.get("organism_id", uniprot.DEFAULT_TAXON_ID),
+                    organism=args.get("organism", "arabidopsis_thaliana"),
                 )
             case "locus_literature":
                 return await europe_pmc.lookup_locus(
                     client,
                     args["locus"],
-                    species=args.get("species", "arabidopsis_thaliana"),
+                    organism=args.get("organism", "arabidopsis_thaliana"),
                     size=args.get("size", europe_pmc.DEFAULT_PAGE_SIZE),
                 )
             case "locus_go_annotations":
                 return await _resolve_then_go_annotations(
                     client,
                     args["locus"],
-                    organism_id=args.get("organism_id", uniprot.DEFAULT_TAXON_ID),
+                    organism=args.get("organism", "arabidopsis_thaliana"),
                     limit=args.get("limit", quickgo.DEFAULT_LIMIT),
                 )
             case "tair_locus_info":
@@ -1075,31 +1080,31 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                 return await batch.batch_ensembl_plants_lookup_locus(
                     client,
                     args["loci"],
-                    species=args.get("species", "arabidopsis_thaliana"),
+                    organism=args.get("organism", "arabidopsis_thaliana"),
                 )
             case "batch_get_gene_xrefs":
                 return await batch.batch_get_gene_xrefs(
                     client,
                     args["loci"],
-                    species=args.get("species", "arabidopsis_thaliana"),
+                    organism=args.get("organism", "arabidopsis_thaliana"),
                 )
             case "batch_phytozome_lookup_locus":
                 return await batch.batch_phytozome_lookup_locus(
                     client,
                     args["loci"],
-                    organism_id=args.get("organism_id", 167),
+                    organism=args.get("organism", "arabidopsis_thaliana"),
                 )
             case "batch_resolve_locus_to_uniprot":
                 return await batch.batch_resolve_locus_to_uniprot(
                     client,
                     args["loci"],
-                    organism_id=args.get("organism_id", uniprot.DEFAULT_TAXON_ID),
+                    organism=args.get("organism", "arabidopsis_thaliana"),
                 )
             case "batch_locus_literature":
                 return await batch.batch_locus_literature(
                     client,
                     args["loci"],
-                    species=args.get("species", "arabidopsis_thaliana"),
+                    organism=args.get("organism", "arabidopsis_thaliana"),
                     size=args.get("size", europe_pmc.DEFAULT_PAGE_SIZE),
                 )
             case "blast_sequence":
@@ -1118,7 +1123,7 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                 return await batch.batch_locus_go_annotations(
                     client,
                     args["loci"],
-                    organism_id=args.get("organism_id", uniprot.DEFAULT_TAXON_ID),
+                    organism=args.get("organism", "arabidopsis_thaliana"),
                     limit=args.get("limit", quickgo.DEFAULT_LIMIT),
                 )
             case "batch_kegg_pathways":
@@ -1165,7 +1170,7 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                 env = await synthesis.analyze_locus_synth(
                     client,
                     args["locus"],
-                    species=args.get("species", "arabidopsis_thaliana"),
+                    organism=args.get("organism", "arabidopsis_thaliana"),
                 )
                 return env.model_dump()
             case "find_homologs_synth":
@@ -1180,7 +1185,7 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                 env = await synthesis.biological_context_synth(
                     client,
                     args["locus"],
-                    species=args.get("species", "arabidopsis_thaliana"),
+                    organism=args.get("organism", "arabidopsis_thaliana"),
                     top_n=args.get("top_n", 10),
                 )
                 return env.model_dump()
@@ -1188,7 +1193,7 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                 env = await synthesis.consensus_homologs(
                     client,
                     args["locus"],
-                    species=args.get("species", "arabidopsis_thaliana"),
+                    organism=args.get("organism", "arabidopsis_thaliana"),
                     top_n=args.get("top_n", 10),
                 )
                 return env.model_dump()
