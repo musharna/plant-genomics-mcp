@@ -222,3 +222,18 @@ def test_ensembl_plants_locus_model_field_renamed_to_organism() -> None:
     schema = EnsemblPlantsLocus.model_json_schema()
     assert "organism" in schema["properties"]
     assert "species" not in schema["properties"]
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_lookup_rice_locus() -> None:
+    """v0.9 T19: real call against a non-Arabidopsis organism (rice).
+
+    Confirms the organisms.resolve → ensembl_slug_for → REST URL chain
+    reaches Ensembl Plants in the right shape for a rice locus.
+    """
+    async with httpx.AsyncClient() as client:
+        result = await ensembl_plants.lookup_locus(client, "Os01g0100100", organism="oryza_sativa")
+    assert result["id"] == "Os01g0100100"
+    # Translated species → organism via T8 wire-format adapter.
+    assert result.get("organism") == "oryza_sativa" or result.get("species") == "oryza_sativa"
