@@ -88,3 +88,32 @@ def test_resolve_unknown_taxid_raises() -> None:
     with pytest.raises(OrganismNotFound) as excinfo:
         organisms.resolve(99999999)
     assert excinfo.value.query == 99999999
+
+
+def test_ensembl_slug_for_arabidopsis() -> None:
+    assert organisms.ensembl_slug_for("arabidopsis_thaliana") == "arabidopsis_thaliana"
+    assert organisms.ensembl_slug_for(3702) == "arabidopsis_thaliana"
+
+
+def test_ncbi_taxid_for_arabidopsis() -> None:
+    assert organisms.ncbi_taxid_for("arabidopsis_thaliana") == 3702
+    assert organisms.ncbi_taxid_for("A. thaliana") == 3702
+
+
+def test_phytozome_int_for_arabidopsis() -> None:
+    assert organisms.phytozome_int_for("arabidopsis_thaliana") == 167
+
+
+def test_string_taxid_for_arabidopsis() -> None:
+    assert organisms.string_taxid_for("arabidopsis_thaliana") == 3702
+
+
+def test_europe_pmc_slug_for_arabidopsis_returns_none() -> None:
+    # AT-prefixed IDs are already unambiguous — returns None by contract,
+    # NOT raising OrganismNotSupported.
+    assert organisms.europe_pmc_slug_for("arabidopsis_thaliana") is None
+
+
+def test_helper_raises_on_unknown_organism() -> None:
+    with pytest.raises(OrganismNotFound):
+        organisms.ensembl_slug_for("zucchini")
