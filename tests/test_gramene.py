@@ -151,3 +151,18 @@ async def test_live_gramene_at1g01010_has_homologs():
     assert result["total"] > 0, "AT1G01010 should have at least one homolog in v69"
     sample = result["homologs"][0]
     assert sample["type"], "homology_type field should populate"
+
+
+# ---------- Wave B6: shared locus validator at the URL boundary ----------
+
+
+@pytest.mark.asyncio
+async def test_lookup_homologs_rejects_malformed_locus_before_http() -> None:
+    """Gramene passes the locus as the ``idList`` query parameter — httpx
+    encodes it, but we want defense-in-depth: malformed input never
+    reaches the upstream. Test exercises the pre-HTTP guard with no
+    ``httpx_mock`` configured.
+    """
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="invalid locus"):
+            await gramene.lookup_homologs(client, "AT1G01010<x>")

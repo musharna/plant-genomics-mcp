@@ -17,7 +17,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import cache, organisms, progress
+from plant_genomics_mcp import cache, organisms, progress, validators
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
@@ -115,6 +115,7 @@ async def lookup_locus(
     or NCBI taxid the resolver understands; we translate to the Ensembl
     slug before hitting the wire.
     """
+    validators.assert_valid_locus(locus, backend="Ensembl Plants")
     slug = organisms.ensembl_slug_for(organism)
     params: dict[str, Any] = {"species": slug, "expand": 0}
     raw = await _get(client, f"/lookup/id/{locus}", params=params)
@@ -138,6 +139,7 @@ async def lookup_xrefs(
     NCBI taxid the resolver understands; we translate to the Ensembl
     slug before hitting the wire.
     """
+    validators.assert_valid_locus(locus, backend="Ensembl Plants")
     slug = organisms.ensembl_slug_for(organism)
     params: dict[str, Any] = {"species": slug}
     raw = await _get(client, f"/xrefs/id/{locus}", params=params)
