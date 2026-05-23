@@ -125,15 +125,17 @@ the right shape for registry indexers and remote hosting. Env knobs:
 
 ## Hosted endpoint
 
-A read-only public deployment runs at:
+A small **personal demo** of this server runs at:
 
 https://mjarnoldgt76.tail86d19d.ts.net/mcp
+
+This is intended for registry indexers, one-off evaluation, and quick interactive testing — **not for production workloads**. No SLA, no uptime commitment, and the URL may change or disappear without notice. The host is a single laptop on a residential connection.
 
 Liveness probe:
 
 ```bash
 curl https://mjarnoldgt76.tail86d19d.ts.net/healthz
-# {"status":"ok","version":"0.8.1"}
+# {"status":"ok","version":"0.10.0"}
 ```
 
 Connect from Claude Code:
@@ -143,7 +145,7 @@ claude mcp add --transport http plant-genomics-mcp \
   https://mjarnoldgt76.tail86d19d.ts.net/mcp
 ```
 
-No auth required. Best-effort uptime — upstream backends (Ensembl, NCBI BLAST, UniProt, Gramene, …) self-rate-limit, so a misbehaving client mostly hurts itself. For production workloads, run the stdio entry point locally (see [Install](#install)) — the hosted endpoint is for evaluation, registry indexers, and one-off interactive use.
+For anything beyond casual evaluation — **self-host**. The HTTP transport is the same binary (see [Install](#install)). Self-hosting buys you (a) deterministic uptime, (b) a bearer-token gate via `PLANT_GENOMICS_MCP_HTTP_TOKEN`, and (c) NCBI BLAST etiquette under your own `PLANT_GENOMICS_MCP_NCBI_EMAIL`.
 
 ## Install
 
