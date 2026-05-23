@@ -77,9 +77,8 @@ RESOURCES: list[types.Resource] = [
         description=(
             "Map of canonical slug → Phytozome organism_id, derived from "
             "the ORGANISMS registry. Only includes organisms with a "
-            "non-None phytozome_int (Phytozome does not cover the full "
-            "12-organism matrix). See pgmcp://organisms/coverage for the "
-            "full coverage matrix across all backends."
+            "non-None phytozome_int. See pgmcp://organisms/coverage for "
+            "the full coverage matrix across all backends."
         ),
         mimeType="application/json",
     ),
