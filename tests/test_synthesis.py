@@ -1277,3 +1277,36 @@ async def test_consensus_homologs_live_at1g01010():
     # by (species, gene) — this is the dedup validation.
     if env.steps[2].status == "ok" and env.steps[3].status == "ok":
         assert two_source, "both backends succeeded but no 2-source consensus pick"
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_analyze_locus_synth_live_rice_os01g0100100():
+    """Wave A5 (pre-1.0): real synthesis call against a non-Arabidopsis
+    organism. Confirms the end-to-end multi-organism path — organism
+    resolve → ensembl_plants → uniprot → europe_pmc → quickgo — all
+    route correctly when organism='oryza_sativa' is threaded through.
+
+    Rice locus Os01g0100100 is canonical (first protein-coding gene on
+    chromosome 1, RAP-DB convention). Phase-1 always works (Ensembl Plants
+    has rice); phase-2 backends may individually skip if the locus has no
+    UniProt accession yet — we only require phase-1 ok and reconciled
+    organism == 'oryza_sativa'.
+    """
+    from plant_genomics_mcp.synthesis import analyze_locus_synth
+
+    async with httpx.AsyncClient() as client:
+        env = await analyze_locus_synth(client, "Os01g0100100", organism="oryza_sativa")
+    assert env.tool == "analyze_locus_synth"
+    assert env.steps[0].status == "ok", (
+        f"phase-1 ensembl lookup failed for rice: {env.steps[0].error}"
+    )
+    assert env.result is not None
+    # Phase-1 envelope key is ``ensembl_record``; T8 wire-format adapter
+    # rewrites species → organism on the returned dict.
+    ensembl_record = env.result.get("ensembl_record") or {}
+    assert ensembl_record.get("id") == "Os01g0100100"
+    assert (
+        ensembl_record.get("organism") == "oryza_sativa"
+        or ensembl_record.get("species") == "oryza_sativa"
+    ), f"expected oryza_sativa in ensembl_record, got {ensembl_record}"
