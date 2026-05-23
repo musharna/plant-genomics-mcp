@@ -251,11 +251,12 @@ async def batch_string_interactions(
     client: httpx.AsyncClient,
     loci_or_accessions: list[str],
     limit: int = string_db.DEFAULT_LIMIT,
+    organism: str | int = organisms.DEFAULT_ORGANISM,
 ) -> dict[str, Any]:
     loci = _bound(loci_or_accessions)
     results, errors = await _gather(
         loci,
-        lambda q: string_db.lookup_partners(client, q, limit=limit),
+        lambda q: string_db.lookup_partners(client, q, limit=limit, organism=organism),
     )
     return _envelope("string_interactions", loci, results, errors)
 

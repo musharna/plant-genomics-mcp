@@ -440,11 +440,13 @@ TOOLS: list[types.Tool] = [
         name="string_interactions",
         description=(
             "Fetch protein-protein interaction partners from STRING-DB "
-            "(string-db.org). Accepts either a UniProt accession or an "
-            "Arabidopsis locus identifier — the latter is resolved via "
-            "UniProt first. Returns first-neighbor partners with the "
-            "combined STRING score plus per-channel sub-scores "
-            "(experimental, database, textmining, predicted)."
+            "(string-db.org). Accepts either a UniProt accession or a "
+            "locus identifier — the latter is resolved via UniProt first. "
+            "Defaults to arabidopsis_thaliana; pass organism= for other "
+            "plant species (slug, scientific/common name, or NCBI taxid). "
+            "Returns first-neighbor partners with the combined STRING score "
+            "plus per-channel sub-scores (experimental, database, "
+            "textmining, predicted)."
         ),
         inputSchema={
             "type": "object",
@@ -459,6 +461,11 @@ TOOLS: list[types.Tool] = [
                     "default": 20,
                     "minimum": 1,
                     "maximum": 500,
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
                 },
             },
             "required": ["locus_or_accession"],
@@ -802,6 +809,11 @@ TOOLS: list[types.Tool] = [
                     "maxItems": 50,
                 },
                 "limit": {"type": "integer", "default": 20, "minimum": 1, "maximum": 500},
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
+                },
             },
             "required": ["loci_or_accessions"],
         },
@@ -1133,6 +1145,7 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     client,
                     args["loci_or_accessions"],
                     limit=args.get("limit", string_db.DEFAULT_LIMIT),
+                    organism=args.get("organism", "arabidopsis_thaliana"),
                 )
             case "batch_gramene_homologs":
                 return await batch.batch_gramene_homologs(
@@ -1147,6 +1160,7 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     client,
                     args["locus_or_accession"],
                     limit=args.get("limit", string_db.DEFAULT_LIMIT),
+                    organism=args.get("organism", "arabidopsis_thaliana"),
                 )
             case "atted_coexpression":
                 return await atted.lookup_coexpression(
