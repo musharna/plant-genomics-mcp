@@ -229,3 +229,78 @@ async def gene_summary(
         "species": "arabidopsis_thaliana",
         "source_url": f"https://bar.utoronto.ca/api/thalemine/gene_information/{locus}",
     }
+
+
+# BAR encodes ecotype provenance inline in the `id` field with literal "<br>"
+# separators (the same string is rendered into the eFP browser HTML). We strip
+# the first <br>-suffixed chunk so clients get a clean ecotype name without
+# having to parse HTML, but keep the structured `position` lat/lng for callers
+# that want the geographic dimension. Trade-off: this drops the climate
+# fragment (temp, precipitation); use the source URL to recover full provenance.
+def _strip_html_break(text: str) -> str:
+    return text.split("<br>", 1)[0].strip() if "<br>" in text else text.strip()
+
+
+async def efp_expression(
+    client: httpx.AsyncClient,
+    locus: str,
+) -> dict[str, Any]:
+    """Fetch BAR/eFP world-map natural-variation expression for an Arabidopsis locus.
+
+    Wraps ``/microarray_gene_expression/world_efp/arabidopsis/{locus}`` —
+    the world-eFP view returns expression across ~36 ecotypes (Bay-0, Col-0,
+    Cvi-1, Ler-2, ...) with per-replicate values and collection lat/lng. Each
+    ecotype carries the same probeset (one microarray probe per gene).
+
+    Arabidopsis only — the endpoint hard-codes the ``arabidopsis`` species
+    path component. Unknown valid AGI loci 200 with wasSuccessful=false
+    ("There are no data found..."); invalid loci 200 with "Invalid gene id".
+    Both surface as NotFoundError.
+
+    Per-ecotype mean is computed from ``values`` to save the caller a pass;
+    everything else passes through unmodified except ``id``, which we
+    HTML-strip down to the leading ecotype label.
+    """
+    if not _LOCUS_RE.match(locus):
+        raise NotFoundError(f"BAR: invalid locus {locus!r} (must match {_LOCUS_RE.pattern})")
+    path = f"/microarray_gene_expression/world_efp/arabidopsis/{locus}"
+    env = await _get(client, path)
+    if not isinstance(env, dict) or not env.get("wasSuccessful"):
+        err = env.get("error") if isinstance(env, dict) else "non-dict response"
+        # Map upstream "There are no data found..." through to NotFoundError so
+        # callers get a typed miss rather than a generic upstream error.
+        raise NotFoundError(f"BAR {path}: {err}")
+    data = env.get("data") or {}
+    if not isinstance(data, dict) or not data:
+        raise NotFoundError(f"BAR {path}: wasSuccessful but empty data")
+
+    ecotypes: list[dict[str, Any]] = []
+    probeset: str | None = None
+    for code, entry in data.items():
+        if not isinstance(entry, dict):
+            continue
+        values = entry.get("values") or {}
+        mean = sum(values.values()) / len(values) if values else None
+        if probeset is None:
+            probeset = entry.get("probeset")
+        ecotypes.append(
+            {
+                "code": entry.get("code", code),
+                "name": _strip_html_break(entry.get("id") or ""),
+                "samples": list(entry.get("samples") or []),
+                "ctrl_samples": list(entry.get("ctrlSamples") or []),
+                "values": dict(values),
+                "mean": mean,
+                "position": entry.get("position"),
+                "source": entry.get("source"),
+            }
+        )
+
+    return {
+        "locus": locus,
+        "probeset": probeset,
+        "ecotype_count": len(ecotypes),
+        "ecotypes": ecotypes,
+        "species": "arabidopsis_thaliana",
+        "source_url": f"https://bar.utoronto.ca/api{path}",
+    }
