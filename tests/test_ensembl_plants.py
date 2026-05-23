@@ -73,6 +73,41 @@ async def test_lookup_locus_retries_on_429_then_succeeds(httpx_mock: HTTPXMock) 
 
 
 @pytest.mark.asyncio
+async def test_retry_after_capped_at_60s(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Hostile upstream returning ``Retry-After: 3600`` (one hour) must
+    not pin the agent for an hour. Cap the honoured sleep at 60s — a
+    deliberate ceiling shared across all 10 backend modules (Wave B2).
+
+    This is the canonical test for the cap behavior. The same one-line
+    cap lands at every Retry-After site in the codebase; the full suite
+    is the regression check that none of those edits broke other paths.
+    """
+    sleeps: list[float] = []
+
+    async def _record(seconds: float) -> None:
+        sleeps.append(seconds)
+
+    monkeypatch.setattr(ensembl_plants.asyncio, "sleep", _record)
+
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0",
+        status_code=429,
+        headers={"Retry-After": "3600"},
+    )
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0",
+        json={"id": "AT1G01010", "display_name": "NAC001"},
+    )
+    async with httpx.AsyncClient() as client:
+        result = await ensembl_plants.lookup_locus(client, "AT1G01010")
+    assert result["display_name"] == "NAC001"
+    assert sleeps, "retry path never slept"
+    assert max(sleeps) <= 60.0, f"sleep {max(sleeps)} exceeded 60s cap"
+
+
+@pytest.mark.asyncio
 async def test_lookup_locus_raises_on_404(httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         url="https://rest.ensembl.org/lookup/id/NOTREAL?species=arabidopsis_thaliana&expand=0",
