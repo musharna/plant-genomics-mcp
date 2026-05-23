@@ -1,6 +1,6 @@
 """MCP server entry point — exposes plant genomics tools over stdio.
 
-This dispatch ships twenty-nine tools — thirteen single-locus, one BLAST
+This dispatch ships thirty tools — fourteen single-locus, one BLAST
 sequence-similarity search, eleven batch variants that fan out per-locus
 calls in parallel, and four cross-source synthesis tools that compose
 the live backends:
@@ -17,6 +17,7 @@ the live backends:
   - ``string_interactions``               — STRING-DB first-neighbor partners (live, per-channel scores)
   - ``atted_coexpression``                — ATTED-II Ath-u.c4-0 coexpression (live, z-scores)
   - ``bar_gene_summary``                  — BAR ThaleMine + GAIA aliases (live, Arabidopsis curator summary)
+  - ``bar_efp_expression``                — BAR world-eFP natural-variation expression (live, ~36 Arabidopsis ecotypes)
   - ``tair_locus_info``                   — informational stub (subscription-gated)
   - ``plantcyc_locus_info``               — informational stub (subscription-gated)
   - ``batch_ensembl_plants_lookup_locus`` — Ensembl Plants POST /lookup/id (one round-trip)
@@ -78,6 +79,7 @@ from plant_genomics_mcp import (
 )
 from plant_genomics_mcp.models import (
     AttedCoexpression,
+    BarEfpExpression,
     BarGeneSummary,
     BatchEnvelope,
     BlastResult,
@@ -464,6 +466,31 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
         },
         outputSchema=BarGeneSummary.model_json_schema(),
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="bar_efp_expression",
+        description=(
+            "Fetch BAR/eFP world-map natural-variation expression for an "
+            "Arabidopsis locus. Wraps the world-eFP view at "
+            "/microarray_gene_expression/world_efp/arabidopsis/{locus} — "
+            "returns expression across ~36 ecotypes (Bay-0, Col-0, Cvi-1, "
+            "Ler-2, ...) with per-replicate values, control samples, "
+            "collection lat/lng, and a per-ecotype mean computed client-"
+            "side. Arabidopsis only. BAR is keyless and a Global Core "
+            "Biodata Resource (2023)."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "Arabidopsis AGI locus, e.g. AT1G01010",
+                },
+            },
+            "required": ["locus"],
+        },
+        outputSchema=BarEfpExpression.model_json_schema(),
         _meta=_EDAM,
     ),
     types.Tool(
@@ -1193,6 +1220,8 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                 return await bar.gene_summary(client, args["locus"])
             case "batch_bar_gene_summary":
                 return await batch.batch_bar_gene_summary(client, args["loci"])
+            case "bar_efp_expression":
+                return await bar.efp_expression(client, args["locus"])
             case "batch_string_interactions":
                 return await batch.batch_string_interactions(
                     client,

@@ -452,6 +452,67 @@ class BarGeneSummary(BaseModel):
     source_url: str = Field(description="ThaleMine endpoint URL for traceability")
 
 
+class BarEfpEcotype(BaseModel):
+    """One ecotype row from BAR's world-eFP natural-variation expression view."""
+
+    model_config = ConfigDict(extra="allow")
+
+    code: str = Field(description='Ecotype numeric code, e.g. "111"')
+    name: str = Field(
+        description=(
+            'Ecotype name + provenance, e.g. "Bay-0 (CS6608) from Bayreuth, Germany". '
+            "Stripped at first <br> so the leading label is uncluttered; climate "
+            "fragments live in the upstream source URL."
+        ),
+    )
+    samples: list[str] = Field(
+        default_factory=list,
+        description='Replicate sample IDs, e.g. ["ATGE_111_A", "ATGE_111_B"]',
+    )
+    ctrl_samples: list[str] = Field(
+        default_factory=list,
+        description="Control sample IDs used by BAR to compute relative expression",
+    )
+    values: dict[str, float] = Field(
+        default_factory=dict,
+        description="Per-replicate expression values; keys match `samples`",
+    )
+    mean: float | None = Field(
+        default=None,
+        description="Mean of `values`; None if no replicates",
+    )
+    position: dict[str, str] | None = Field(
+        default=None,
+        description='Collection lat/lng, e.g. {"lat": "49.95", "lng": "11.57"}',
+    )
+    source: str | None = Field(
+        default=None,
+        description="Upstream TairObject URL for the bio_sample_collection record",
+    )
+
+
+class BarEfpExpression(BaseModel):
+    """BAR world-eFP natural-variation expression response wrapper.
+
+    Wraps ``/microarray_gene_expression/world_efp/arabidopsis/{locus}``. The
+    world-eFP view returns expression across ~36 Arabidopsis ecotypes (Bay-0,
+    Col-0, Cvi-1, Ler-2, ...) with per-replicate values, control samples for
+    each ecotype, and collection coordinates. Arabidopsis only.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str
+    probeset: str | None = Field(
+        default=None,
+        description="Microarray probeset ID, uniform across ecotypes for one gene",
+    )
+    ecotype_count: int = Field(description="Number of ecotype rows in `ecotypes`")
+    ecotypes: list[BarEfpEcotype]
+    species: Literal["arabidopsis_thaliana"]
+    source_url: str = Field(description="BAR world-eFP endpoint URL for traceability")
+
+
 class StringPartner(BaseModel):
     """One STRING interaction-partner row."""
 
