@@ -115,3 +115,60 @@ def resolve(query: str | int) -> OrganismRecord:
     if canonical is None:
         raise OrganismNotFound(query, supported=list(ORGANISMS.keys()))
     return ORGANISMS[canonical]
+
+
+def _supported_for(backend_field: str) -> list[str]:
+    """Return the canonical names of organisms with a non-None value for this backend."""
+    return [
+        canonical
+        for canonical, record in ORGANISMS.items()
+        if getattr(record, backend_field) is not None
+    ]
+
+
+def ensembl_slug_for(query: str | int) -> str:
+    record = resolve(query)
+    if record.ensembl_slug is None:
+        raise OrganismNotSupported(
+            backend="ensembl",
+            organism=record.canonical,
+            supported=_supported_for("ensembl_slug"),
+        )
+    return record.ensembl_slug
+
+
+def phytozome_int_for(query: str | int) -> int:
+    record = resolve(query)
+    if record.phytozome_int is None:
+        raise OrganismNotSupported(
+            backend="phytozome",
+            organism=record.canonical,
+            supported=_supported_for("phytozome_int"),
+        )
+    return record.phytozome_int
+
+
+def ncbi_taxid_for(query: str | int) -> int:
+    # NCBI taxid is always populated on every record — no support gap.
+    return resolve(query).ncbi_taxid
+
+
+def string_taxid_for(query: str | int) -> int:
+    record = resolve(query)
+    if record.string_taxid is None:
+        raise OrganismNotSupported(
+            backend="string",
+            organism=record.canonical,
+            supported=_supported_for("string_taxid"),
+        )
+    return record.string_taxid
+
+
+def europe_pmc_slug_for(query: str | int) -> str | None:
+    """Return the slug prefix to strip from locus IDs for Europe PMC, or None.
+
+    None means the locus IDs for this organism are already unambiguous and
+    need no slug-stripping (matches the existing ``europe_pmc.py`` contract).
+    This helper does NOT raise OrganismNotSupported — None is a contract value.
+    """
+    return resolve(query).europe_pmc_slug
