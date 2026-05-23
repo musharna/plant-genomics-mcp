@@ -22,11 +22,16 @@ Env knobs:
   PLANT_GENOMICS_MCP_HTTP_PORT       default 8765
   PLANT_GENOMICS_MCP_HTTP_STATELESS  default 1
   PLANT_GENOMICS_MCP_HTTP_JSON       default 1
+  PLANT_GENOMICS_MCP_HTTP_TOKEN      default unset → /mcp open
+                                     set → /mcp requires
+                                     ``Authorization: Bearer <token>``;
+                                     /healthz always exempt
 """
 
 from __future__ import annotations
 
 import contextlib
+import hmac
 import os
 from collections.abc import AsyncIterator
 
@@ -50,6 +55,22 @@ def _env_flag(name: str, default: bool) -> bool:
     return raw.strip().lower() not in ("0", "false", "no", "off", "")
 
 
+def _extract_bearer(scope: Scope) -> str:
+    """Pull the bearer credential out of an ASGI scope's headers.
+
+    Returns the empty string when the header is absent or doesn't carry
+    the ``Bearer `` scheme — the caller compares with ``compare_digest``,
+    which treats the empty string as a non-match against any real token.
+    """
+    for name, value in scope.get("headers", []):
+        if name == b"authorization":
+            decoded = value.decode("latin-1", errors="replace")
+            if decoded.startswith("Bearer "):
+                return decoded[len("Bearer ") :]
+            return ""
+    return ""
+
+
 def build_app() -> Starlette:
     """Build the Starlette ASGI app, mounting the MCP manager at ``/mcp``.
 
@@ -60,6 +81,7 @@ def build_app() -> Starlette:
     """
     stateless = _env_flag("PLANT_GENOMICS_MCP_HTTP_STATELESS", True)
     json_response = _env_flag("PLANT_GENOMICS_MCP_HTTP_JSON", True)
+    expected_token = os.environ.get("PLANT_GENOMICS_MCP_HTTP_TOKEN")
 
     session_manager = StreamableHTTPSessionManager(
         app=server,
@@ -72,6 +94,18 @@ def build_app() -> Starlette:
         return JSONResponse({"status": "ok", "version": __version__})
 
     async def handle_mcp(scope: Scope, receive: Receive, send: Send) -> None:
+        # /mcp gated on bearer token when PLANT_GENOMICS_MCP_HTTP_TOKEN
+        # is set. /healthz routed separately, never enters this handler.
+        if expected_token:
+            provided = _extract_bearer(scope)
+            if not hmac.compare_digest(provided, expected_token):
+                response = JSONResponse(
+                    {"error": "unauthorized"},
+                    status_code=401,
+                    headers={"WWW-Authenticate": 'Bearer realm="plant-genomics-mcp"'},
+                )
+                await response(scope, receive, send)
+                return
         await session_manager.handle_request(scope, receive, send)
 
     @contextlib.asynccontextmanager
