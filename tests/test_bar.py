@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 import httpx
 import pytest
 from pytest_httpx import HTTPXMock
@@ -180,3 +182,19 @@ async def test_gene_summary_aliases_degrade_on_failure(httpx_mock: HTTPXMock) ->
     assert result["symbol"] == "NAC001"
     assert result["ncbi_gene_id"] is None
     assert result["aliases"] == []
+
+
+@pytest.mark.skipif(
+    not os.environ.get("PLANT_GENOMICS_MCP_LIVE"),
+    reason="set PLANT_GENOMICS_MCP_LIVE=1 to hit bar.utoronto.ca/api",
+)
+@pytest.mark.asyncio
+async def test_live_bar_at1g01010_returns_curator_summary() -> None:
+    async with httpx.AsyncClient() as client:
+        result = await bar.gene_summary(client, "AT1G01010")
+    assert result["locus"] == "AT1G01010"
+    assert result["agi"] == "AT1G01010"
+    assert result["symbol"] == "NAC001"
+    assert result["curator_summary"] and "NAC" in result["curator_summary"]
+    assert result["ncbi_gene_id"] == "839580"
+    assert "Q0WV96" in result["aliases"]
