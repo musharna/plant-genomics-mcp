@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.0.4 — 2026-05-24
+
+Registry-publish unblocker. Adds the `mcp-name: io.github.musharna/plant-genomics-mcp` ownership-verification token to the README footer so `mcp-publisher publish` can validate that the PyPI package owner controls the MCP namespace. PyPI versions are immutable, so this is a metadata-only re-release on top of v1.0.3 — no code, schema, or behavior changes. OCI image stays at `ghcr.io/musharna/plant-genomics-mcp:1.0.3` (the registry's ownership check is PyPI-specific).
+
+- **`README.md`** — new `## MCP registry` section above License with the literal `mcp-name:` token in a fenced block.
+- **`pyproject.toml`** / **`src/plant_genomics_mcp/__init__.py`** — version bump 1.0.3 → 1.0.4.
+- **`server.json`** — top-level `version` and `packages[pypi].version` both → 1.0.4; OCI entry unchanged.
+- **No tests affected** — pure documentation/metadata.
+
 ## v1.0.3 — 2026-05-24
 
 Internal refactor — extracts the duplicated 429/5xx-retry + `Retry-After`-cap + progress-notification + status→typed-exception loop from 9 backend modules into a single shared helper `plant_genomics_mcp._http.request_with_retry()`. Behavior is preserved: same retry budget (3), same retryable status set (`429, 500, 502, 503, 504`), same 60s `Retry-After` cap from v1.0.0 Wave B2, same exception classes (`NotFoundError`, `RateLimitError`, `UpstreamUnavailableError`, `PlantGenomicsError`). No API changes; no tool-surface changes; no schema changes. Pure code-deduplication ahead of the v1.1 BAR + StringDB + Gramene shape evolution where divergent retry behavior would otherwise drift further.
