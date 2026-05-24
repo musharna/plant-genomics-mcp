@@ -21,18 +21,14 @@ Public users get the same rate-limit budget as everyone else; we retry on
 
 from __future__ import annotations
 
-import asyncio
 import re
 from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import cache, organisms, progress
+from plant_genomics_mcp import _http, cache, organisms
 from plant_genomics_mcp.errors import (
     NotFoundError,
-    PlantGenomicsError,
-    RateLimitError,
-    UpstreamUnavailableError,
 )
 
 BASE_URL = "https://rest.uniprot.org"
@@ -102,45 +98,20 @@ async def _search(
     cached = _CACHE.get(key)
     if cached is not None:
         return list(cached)
-    headers = {"Accept": "application/json"}
-    delay = 1.0
-    last_status: int | None = None
-    for attempt in range(MAX_RETRIES):
-        resp = await client.get(
-            f"{BASE_URL}/uniprotkb/search",
-            params=params,
-            headers=headers,
-            timeout=DEFAULT_TIMEOUT,
-        )
-        last_status = resp.status_code
-        if resp.status_code == 200:
-            data = resp.json()
-            results = list(data.get("results", []))
-            _CACHE.set(key, results)
-            return results
-        if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_RETRIES - 1:
-            retry_after = min(float(resp.headers.get("Retry-After", delay)), 60.0)
-            await progress.notify(
-                f"UniProt /uniprotkb/search: HTTP {resp.status_code}, retrying in "
-                f"{retry_after:.1f}s (attempt {attempt + 2}/{MAX_RETRIES})"
-            )
-            await asyncio.sleep(retry_after)
-            delay *= 2
-            continue
-        if resp.status_code == 404:
-            raise NotFoundError(f"UniProt search 404: {resp.text[:200]}")
-        if resp.status_code == 429:
-            raise RateLimitError(f"UniProt search rate-limited (HTTP 429): {resp.text[:200]}")
-        if resp.status_code in (500, 502, 503, 504):
-            raise UpstreamUnavailableError(
-                f"UniProt search → HTTP {resp.status_code}: {resp.text[:200]}"
-            )
-        raise PlantGenomicsError(f"UniProt search → HTTP {resp.status_code}: {resp.text[:200]}")
-    if last_status == 429:
-        raise RateLimitError(f"UniProt search exhausted {MAX_RETRIES} retries (429)")
-    raise UpstreamUnavailableError(
-        f"UniProt search exhausted {MAX_RETRIES} retries (last HTTP {last_status})"
+    resp = await _http.request_with_retry(
+        client,
+        "GET",
+        f"{BASE_URL}/uniprotkb/search",
+        service="UniProt search",
+        params=params,
+        headers={"Accept": "application/json"},
+        timeout=DEFAULT_TIMEOUT,
+        max_retries=MAX_RETRIES,
     )
+    data = resp.json()
+    results = list(data.get("results", []))
+    _CACHE.set(key, results)
+    return results
 
 
 def _normalize(hit: dict[str, Any], locus_query: str) -> dict[str, Any]:
@@ -202,43 +173,21 @@ async def _fetch_by_accession(
     cached = _CACHE.get(key)
     if cached is not None:
         return dict(cached)
-    headers = {"Accept": "application/json"}
-    delay = 1.0
-    last_status: int | None = None
-    for attempt in range(MAX_RETRIES):
-        resp = await client.get(url, headers=headers, timeout=DEFAULT_TIMEOUT)
-        last_status = resp.status_code
-        if resp.status_code == 200:
-            data = resp.json()
-            _CACHE.set(key, data)
-            return data
-        if resp.status_code == 404:
-            raise NotFoundError(f"UniProt has no entry for accession={bare!r}")
-        if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_RETRIES - 1:
-            retry_after = min(float(resp.headers.get("Retry-After", delay)), 60.0)
-            await progress.notify(
-                f"UniProt /uniprotkb/{bare}.json: HTTP {resp.status_code}, retrying in "
-                f"{retry_after:.1f}s (attempt {attempt + 2}/{MAX_RETRIES})"
-            )
-            await asyncio.sleep(retry_after)
-            delay *= 2
-            continue
-        if resp.status_code == 429:
-            raise RateLimitError(
-                f"UniProt accession fetch rate-limited (HTTP 429): {resp.text[:200]}"
-            )
-        if resp.status_code in (500, 502, 503, 504):
-            raise UpstreamUnavailableError(
-                f"UniProt accession fetch → HTTP {resp.status_code}: {resp.text[:200]}"
-            )
-        raise PlantGenomicsError(
-            f"UniProt accession fetch → HTTP {resp.status_code}: {resp.text[:200]}"
+    try:
+        resp = await _http.request_with_retry(
+            client,
+            "GET",
+            url,
+            service="UniProt accession fetch",
+            headers={"Accept": "application/json"},
+            timeout=DEFAULT_TIMEOUT,
+            max_retries=MAX_RETRIES,
         )
-    if last_status == 429:
-        raise RateLimitError(f"UniProt accession fetch exhausted {MAX_RETRIES} retries (429)")
-    raise UpstreamUnavailableError(
-        f"UniProt accession fetch exhausted {MAX_RETRIES} retries (last HTTP {last_status})"
-    )
+    except NotFoundError:
+        raise NotFoundError(f"UniProt has no entry for accession={bare!r}") from None
+    data = resp.json()
+    _CACHE.set(key, data)
+    return data
 
 
 async def fetch_sequence(
@@ -258,39 +207,21 @@ async def fetch_sequence(
     cached = _CACHE.get(key)
     if cached is not None:
         return str(cached)
-    delay = 1.0
-    last_status: int | None = None
-    for attempt in range(MAX_RETRIES):
-        resp = await client.get(url, timeout=DEFAULT_TIMEOUT)
-        last_status = resp.status_code
-        if resp.status_code == 200:
-            lines = resp.text.splitlines()
-            seq = "".join(line.strip() for line in lines if not line.startswith(">"))
-            _CACHE.set(key, seq)
-            return seq
-        if resp.status_code == 404:
-            raise NotFoundError(f"UniProt has no FASTA for accession={bare!r}")
-        if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_RETRIES - 1:
-            retry_after = min(float(resp.headers.get("Retry-After", delay)), 60.0)
-            await progress.notify(
-                f"UniProt /uniprotkb/{bare}.fasta: HTTP {resp.status_code}, retrying in "
-                f"{retry_after:.1f}s (attempt {attempt + 2}/{MAX_RETRIES})"
-            )
-            await asyncio.sleep(retry_after)
-            delay *= 2
-            continue
-        if resp.status_code == 429:
-            raise RateLimitError(f"UniProt FASTA rate-limited (HTTP 429): {resp.text[:200]}")
-        if resp.status_code in (500, 502, 503, 504):
-            raise UpstreamUnavailableError(
-                f"UniProt FASTA → HTTP {resp.status_code}: {resp.text[:200]}"
-            )
-        raise PlantGenomicsError(f"UniProt FASTA → HTTP {resp.status_code}: {resp.text[:200]}")
-    if last_status == 429:
-        raise RateLimitError(f"UniProt FASTA exhausted {MAX_RETRIES} retries (429)")
-    raise UpstreamUnavailableError(
-        f"UniProt FASTA exhausted {MAX_RETRIES} retries (last HTTP {last_status})"
-    )
+    try:
+        resp = await _http.request_with_retry(
+            client,
+            "GET",
+            url,
+            service="UniProt FASTA",
+            timeout=DEFAULT_TIMEOUT,
+            max_retries=MAX_RETRIES,
+        )
+    except NotFoundError:
+        raise NotFoundError(f"UniProt has no FASTA for accession={bare!r}") from None
+    lines = resp.text.splitlines()
+    seq = "".join(line.strip() for line in lines if not line.startswith(">"))
+    _CACHE.set(key, seq)
+    return seq
 
 
 async def lookup_locus(

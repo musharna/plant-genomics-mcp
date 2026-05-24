@@ -16,18 +16,15 @@ hardcode ``plant-genomics-mcp``.
 
 from __future__ import annotations
 
-import asyncio
 import re
 from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import cache, organisms, progress, uniprot
+from plant_genomics_mcp import _http, cache, organisms, uniprot
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
-    RateLimitError,
-    UpstreamUnavailableError,
 )
 
 BASE_URL = "https://string-db.org"
@@ -69,42 +66,19 @@ async def _get(
     cached = _CACHE.get(key)
     if cached is not None:
         return cached
-    headers = {"Accept": "application/json"}
-    delay = 1.0
-    last_status: int | None = None
-    for attempt in range(MAX_RETRIES):
-        resp = await client.get(
-            f"{BASE_URL}{path}",
-            params=params,
-            headers=headers,
-            timeout=DEFAULT_TIMEOUT,
-        )
-        last_status = resp.status_code
-        if resp.status_code == 200:
-            result = resp.json()
-            _CACHE.set(key, result)
-            return result
-        if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_RETRIES - 1:
-            retry_after = min(float(resp.headers.get("Retry-After", delay)), 60.0)
-            await progress.notify(
-                f"STRING {path}: HTTP {resp.status_code}, retrying in "
-                f"{retry_after:.1f}s (attempt {attempt + 2}/{MAX_RETRIES})"
-            )
-            await asyncio.sleep(retry_after)
-            delay *= 2
-            continue
-        if resp.status_code == 429:
-            raise RateLimitError(f"STRING {path} rate-limited (HTTP 429): {resp.text[:200]}")
-        if resp.status_code in (500, 502, 503, 504):
-            raise UpstreamUnavailableError(
-                f"STRING {path} → HTTP {resp.status_code}: {resp.text[:200]}"
-            )
-        raise PlantGenomicsError(f"STRING {path} → HTTP {resp.status_code}: {resp.text[:200]}")
-    if last_status == 429:
-        raise RateLimitError(f"STRING {path} exhausted {MAX_RETRIES} retries (429)")
-    raise UpstreamUnavailableError(
-        f"STRING {path} exhausted {MAX_RETRIES} retries (last HTTP {last_status})"
+    resp = await _http.request_with_retry(
+        client,
+        "GET",
+        f"{BASE_URL}{path}",
+        service=f"STRING {path}",
+        params=params,
+        headers={"Accept": "application/json"},
+        timeout=DEFAULT_TIMEOUT,
+        max_retries=MAX_RETRIES,
     )
+    result = resp.json()
+    _CACHE.set(key, result)
+    return result
 
 
 def _normalize(row: dict[str, Any], query_accession: str) -> dict[str, Any]:

@@ -31,13 +31,11 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import __version__, cache, organisms, progress
+from plant_genomics_mcp import __version__, _http, cache, organisms
 from plant_genomics_mcp.errors import (
     NotFoundError,
     OrganismNotSupported,
     PlantGenomicsError,
-    RateLimitError,
-    UpstreamUnavailableError,
 )
 
 BASE_URL = "https://bar.utoronto.ca/api"
@@ -67,47 +65,22 @@ async def _get(
     cached = _CACHE.get(key)
     if cached is not None:
         return cached
-    headers = {"Accept": "application/json", "User-Agent": _user_agent()}
-    delay = 1.0
-    last_status: int | None = None
-    for attempt in range(MAX_RETRIES):
-        resp = await client.get(
-            f"{BASE_URL}{path}",
-            params=params,
-            headers=headers,
-            timeout=DEFAULT_TIMEOUT,
-        )
-        last_status = resp.status_code
-        if resp.status_code == 200:
-            try:
-                result = resp.json()
-            except ValueError as e:
-                raise PlantGenomicsError(f"BAR {path} returned non-JSON: {resp.text[:200]}") from e
-            _CACHE.set(key, result)
-            return result
-        if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_RETRIES - 1:
-            retry_after = min(float(resp.headers.get("Retry-After", delay)), 60.0)
-            await progress.notify(
-                f"BAR {path}: HTTP {resp.status_code}, retrying in "
-                f"{retry_after:.1f}s (attempt {attempt + 2}/{MAX_RETRIES})"
-            )
-            await asyncio.sleep(retry_after)
-            delay *= 2
-            continue
-        if resp.status_code == 429:
-            raise RateLimitError(f"BAR {path} rate-limited (HTTP 429): {resp.text[:200]}")
-        if resp.status_code in (500, 502, 503, 504):
-            raise UpstreamUnavailableError(
-                f"BAR {path} → HTTP {resp.status_code}: {resp.text[:200]}"
-            )
-        if resp.status_code == 404:
-            raise NotFoundError(f"BAR {path}: not found")
-        raise PlantGenomicsError(f"BAR {path} → HTTP {resp.status_code}: {resp.text[:200]}")
-    if last_status == 429:
-        raise RateLimitError(f"BAR {path} exhausted {MAX_RETRIES} retries (429)")
-    raise UpstreamUnavailableError(
-        f"BAR {path} exhausted {MAX_RETRIES} retries (last HTTP {last_status})"
+    resp = await _http.request_with_retry(
+        client,
+        "GET",
+        f"{BASE_URL}{path}",
+        service=f"BAR {path}",
+        params=params,
+        headers={"Accept": "application/json", "User-Agent": _user_agent()},
+        timeout=DEFAULT_TIMEOUT,
+        max_retries=MAX_RETRIES,
     )
+    try:
+        result = resp.json()
+    except ValueError as e:
+        raise PlantGenomicsError(f"BAR {path} returned non-JSON: {resp.text[:200]}") from e
+    _CACHE.set(key, result)
+    return result
 
 
 # BAR uses a body-level success envelope, not HTTP status. Both endpoints

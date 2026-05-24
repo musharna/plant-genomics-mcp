@@ -15,7 +15,7 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from plant_genomics_mcp import ensembl_plants
+from plant_genomics_mcp import _http, ensembl_plants  # noqa: F401
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
@@ -89,7 +89,7 @@ async def test_retry_after_capped_at_60s(
     async def _record(seconds: float) -> None:
         sleeps.append(seconds)
 
-    monkeypatch.setattr(ensembl_plants.asyncio, "sleep", _record)
+    monkeypatch.setattr(_http.asyncio, "sleep", _record)
 
     httpx_mock.add_response(
         url="https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0",
