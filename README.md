@@ -635,6 +635,15 @@ Output Pydantic models also rename `species` → `organism` and
 backends. See the `pgmcp://organisms/coverage` MCP resource for the live
 coverage matrix, or `organisms.ORGANISMS` in the source.
 
+## MCP registry
+
+This package is listed in the [official MCP registry](https://registry.modelcontextprotocol.io)
+under the namespace below (ownership-verification token for `mcp-publisher`):
+
+```
+mcp-name: io.github.musharna/plant-genomics-mcp
+```
+
 ## License
 
 MIT — see [`LICENSE`](LICENSE). Underlying services (Ensembl Plants,
