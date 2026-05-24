@@ -1,0 +1,2161 @@
+{
+  "oryza_sativa__Os01g0100100__analyze_locus_synth": {
+    "tool": "analyze_locus_synth",
+    "input": {
+      "locus": "Os01g0100100",
+      "organism": "oryza_sativa"
+    },
+    "started_at": "2026-05-24T05:57:17Z",
+    "elapsed_s": 1.7804473789874464,
+    "steps": [
+      {
+        "step": 1,
+        "tool": "ensembl_plants_lookup_locus",
+        "status": "ok",
+        "elapsed_s": null,
+        "result": {
+          "id": "Os01g0100100",
+          "strand": 1,
+          "start": 2983,
+          "seq_region_name": "1",
+          "canonical_transcript": "Os01t0100100-01.",
+          "source": "RAP2022-09-01",
+          "logic_name": "rapdb_genes",
+          "db_type": "core",
+          "biotype": "protein_coding",
+          "object_type": "Gene",
+          "assembly_name": "IRGSP-1.0",
+          "end": 10815,
+          "organism": "oryza_sativa"
+        },
+        "error": null
+      },
+      {
+        "step": 2,
+        "tool": "resolve_locus_to_uniprot",
+        "status": "ok",
+        "elapsed_s": null,
+        "result": {
+          "locus_query": "Os01g0100100",
+          "primaryAccession": "Q0JRI1",
+          "uniProtkbId": "Q0JRI1_ORYSJ",
+          "entryType": "UniProtKB unreviewed (TrEMBL)",
+          "reviewed": false,
+          "recommendedName": null,
+          "geneNames": [],
+          "organism": "Oryza sativa subsp. japonica",
+          "taxonId": 39947,
+          "sequenceLength": 410,
+          "web_url": "https://www.uniprot.org/uniprotkb/Q0JRI1"
+        },
+        "error": null
+      },
+      {
+        "step": 3,
+        "tool": "get_gene_xrefs",
+        "status": "ok",
+        "elapsed_s": null,
+        "result": {
+          "locus": "Os01g0100100",
+          "organism": "oryza_sativa",
+          "count": 3,
+          "xrefs": [
+            {
+              "info_type": "DIRECT",
+              "version": "0",
+              "description": null,
+              "dbname": "ArrayExpress",
+              "primary_id": "Os01g0100100",
+              "db_display_name": "Expression Atlas",
+              "synonyms": [],
+              "info_text": "",
+              "display_id": "Os01g0100100"
+            },
+            {
+              "info_text": "",
+              "synonyms": [],
+              "display_id": "LOC4326813",
+              "description": "rab GTPase-activating protein 22",
+              "version": "0",
+              "info_type": "DEPENDENT",
+              "db_display_name": "NCBI gene (formerly Entrezgene)",
+              "primary_id": "4326813",
+              "dbname": "EntrezGene"
+            },
+            {
+              "info_text": "",
+              "synonyms": [],
+              "display_id": "LOC4326813",
+              "info_type": "DEPENDENT",
+              "version": "0",
+              "description": "rab GTPase-activating protein 22",
+              "primary_id": "4326813",
+              "dbname": "WikiGene",
+              "db_display_name": "WikiGene"
+            }
+          ],
+          "by_db": {
+            "ArrayExpress": [
+              "Os01g0100100"
+            ],
+            "EntrezGene": [
+              "4326813"
+            ],
+            "WikiGene": [
+              "4326813"
+            ]
+          }
+        },
+        "error": null
+      },
+      {
+        "step": 4,
+        "tool": "locus_literature",
+        "status": "ok",
+        "elapsed_s": null,
+        "result": {
+          "locus": "Os01g0100100",
+          "organism": "oryza_sativa",
+          "query": "Os01g0100100 AND rice",
+          "hitCount": 4,
+          "returned": 4,
+          "hits": [
+            {
+              "id": "40214100",
+              "source": "MED",
+              "pmid": "40214100",
+              "pmcid": "PMC11986821",
+              "doi": "10.1093/database/baaf021",
+              "title": "GrameneOryza: a comprehensive resource for Oryza genomes, genetic variation, and functional data.",
+              "authorString": "Wei S, Chougule K, Olson A, Lu Z, Tello-Ruiz MK, Kumar V, Kumari S, Zhang L, Olson A, Kim C, Gladman N, Ware D.",
+              "journalTitle": null,
+              "pubYear": "2025",
+              "firstPublicationDate": "2025-04-01",
+              "citedByCount": 1,
+              "isOpenAccess": "N",
+              "hasPDF": "Y",
+              "abstractText": "Rice is a vital staple crop, sustaining over half of the global population, and is a key model for genetic research. To support the growing need for comprehensive and accessible rice genomic data, GrameneOryza (https://oryza.gramene.org) was developed as an online resource adhering to FAIR (Findable, Accessible, Interoperable, and Reusable) principles of data management. It distinguishes itself through its comprehensive multispecies focus, encompassing a wide variety of Oryza genomes and related species, and its integration with FAIR principles to ensure data accessibility and usability. It offers a community curated selection of high-quality Oryza genomes, genetic variation, gene function, and trait data. The latest release, version 8, includes 28 Oryza genomes, covering wild rice and domesticated cultivars. These genomes, along with Leersia perrieri and seven additional outgroup species, form the basis for 38\u2009K protein-coding gene family trees, essential for identifying orthologs, paralogs, and developing pan-gene sets. GrameneOryza's genetic variation data features 66 million single-nucleotide variants (SNVs) anchored to the Os-Nipponbare-Reference-IRGSP-1.0 genome, derived from various studies, including the Rice Genome 3\u2009K (RG3K) project. The RG3K sequence reads were also mapped to seven additional platinum-quality Asian rice genomes, resulting in 19 million SNVs for each genome, significantly expanding the coverage of genetic variation beyond the Nipponbare reference. Of the 66 million SNVs on IRGSP-1.0, 27 million acquired standardized reference SNP cluster identifiers (rsIDs) from the European Variation Archive release v5. Additionally, 1200 distinct phenotypes provide a comprehensive overview of quantitative trait loci (QTL) features. The newly introduced Oryza CLIMtools portal offers insights into environmental impacts on genome adaptation. The platform's integrated search interface, along with a BLAST server and curation tools, facilitates user access to genomic, phylogenetic, gene function, and QTL data, supporting broad research applications. Database URL: https://oryza.gramene.org.",
+              "web_url": "https://europepmc.org/article/PMC/PMC11986821"
+            },
+            {
+              "id": "PPR591253",
+              "source": "PPR",
+              "pmid": null,
+              "pmcid": null,
+              "doi": "10.1101/2023.01.03.520531",
+              "title": "Calling pangenes from plant genome alignments confirms presence-absence variation",
+              "authorString": "Contreras-Moreira B, Saraf S, Naamati G, Casas AM, Amberkar SS, Amberkar SS, Flicek P, Jones AR, Dyer S.",
+              "journalTitle": null,
+              "pubYear": "2023",
+              "firstPublicationDate": "2023-01-03",
+              "citedByCount": 0,
+              "isOpenAccess": "Y",
+              "hasPDF": "Y",
+              "abstractText": "<h4>ABSTRACT</h4>  Consistent gene annotation in crops is becoming harder as genomes for new cultivars are frequently published. Gene sets from recently sequenced accessions have different gene identifiers to those on the reference accession, and might be of higher quality due to technical advances. For these reasons there is a need to define pangenes, which represent all known syntenic orthologues for a gene model and can be linked back to the original annotation sources. A pangene set effectively summarizes our current understanding of the coding potential of a crop and can be used to inform gene model annotation in new cultivars. Here we present an approach (get_pangenes) to identify and analyze pangenes that is not biased towards the reference annotation. The method involves computing Whole Genome Alignments (WGA), which are used to estimate gene model overlaps. After a benchmark on  Arabidopsis , rice, wheat and barley datasets, we find that minimap2 performs better than the GSAlign WGA algorithm. Our results show that pangenes recapitulate known phylogeny-based orthologies while adding extra core gene models in rice. More importantly, get_pangenes can also produce clusters of genome segments (gDNA) that overlap with gene models annotated in other cultivars. By lifting-over CDS sequences, gDNA clusters can help refine gene models across individuals and confirm or reject observed gene Presence-Absence Variation. A collection of flowering-related genes from the barley pangenome are discussed in detail. Documentation and source code are available at  https://github.com/Ensembl/plant-scripts .",
+              "web_url": null
+            },
+            {
+              "id": "37798615",
+              "source": "MED",
+              "pmid": "37798615",
+              "pmcid": "PMC10552430",
+              "doi": "10.1186/s13059-023-03071-z",
+              "title": "GET_PANGENES: calling pangenes from plant genome alignments confirms presence-absence variation.",
+              "authorString": "Contreras-Moreira B, Saraf S, Naamati G, Casas AM, Amberkar SS, Flicek P, Jones AR, Dyer S.",
+              "journalTitle": null,
+              "pubYear": "2023",
+              "firstPublicationDate": "2023-10-05",
+              "citedByCount": 13,
+              "isOpenAccess": "Y",
+              "hasPDF": "Y",
+              "abstractText": "Crop pangenomes made from individual cultivar assemblies promise easy access to conserved genes, but genome content variability and inconsistent identifiers hamper their exploration. To address this, we define pangenes, which summarize a species coding potential and link back to original annotations. The protocol get_pangenes performs whole genome alignments (WGA) to call syntenic gene models based on coordinate overlaps. A benchmark with small and large plant genomes shows that pangenes recapitulate phylogeny-based orthologies and produce complete soft-core gene sets. Moreover, WGAs support lift-over and help confirm gene presence-absence variation. Source code and documentation: https://github.com/Ensembl/plant-scripts .",
+              "web_url": "https://europepmc.org/article/PMC/PMC10552430"
+            },
+            {
+              "id": "32619768",
+              "source": "MED",
+              "pmid": "32619768",
+              "pmcid": "PMC7646087",
+              "doi": "10.1016/j.gpb.2020.03.002",
+              "title": "SR4R: An Integrative SNP Resource for Genomic Breeding and Population Research in Rice.",
+              "authorString": "Yan J, Zou D, Li C, Zhang Z, Song S, Wang X.",
+              "journalTitle": null,
+              "pubYear": "2020",
+              "firstPublicationDate": "2020-04-01",
+              "citedByCount": 17,
+              "isOpenAccess": "Y",
+              "hasPDF": "Y",
+              "abstractText": "The information commons for rice (IC4R) database is a collection of 18 million single nucleotide polymorphisms (SNPs) identified by resequencing of 5152 rice accessions. Although IC4R offers ultra-high density rice variation map, these raw SNPs are not readily usable for the public. To satisfy different research utilizations of SNPs for population genetics, evolutionary analysis, association studies, and genomic breeding in rice, raw genotypic data of these 18 million SNPs were processed by unified bioinformatics pipelines. The outcomes were used to develop a daughter database of IC4R - SnpReady for Rice (SR4R). SR4R presents four reference SNP panels, including 2,097,405 hapmapSNPs after data filtration and genotype imputation, 156,502 tagSNPs selected from linkage disequilibrium-based redundancy removal, 1180 fixedSNPs selected from genes exhibiting selective sweep signatures, and 38 barcodeSNPs selected from DNA fingerprinting simulation. SR4R thus offers a highly efficient rice variation map that combines reduced SNP redundancy with extensive data describing the genetic diversity of rice populations. In addition, SR4R provides rice researchers with a web interface that enables them to browse all four SNP panels, use online toolkits, as well as retrieve the original data and scripts for a variety of population genetics analyses on local computers. SR4R is freely available to academic users at http://sr4r.ic4r.org/.",
+              "web_url": "https://europepmc.org/article/PMC/PMC7646087"
+            }
+          ]
+        },
+        "error": null
+      },
+      {
+        "step": 5,
+        "tool": "locus_go_annotations",
+        "status": "ok",
+        "elapsed_s": null,
+        "result": {
+          "uniprot_accession": "Q0JRI1",
+          "numberOfHits": 0,
+          "returned": 0,
+          "annotations": [],
+          "by_aspect": {}
+        },
+        "error": null
+      }
+    ],
+    "result": {
+      "ensembl_record": {
+        "id": "Os01g0100100",
+        "strand": 1,
+        "start": 2983,
+        "seq_region_name": "1",
+        "canonical_transcript": "Os01t0100100-01.",
+        "source": "RAP2022-09-01",
+        "logic_name": "rapdb_genes",
+        "db_type": "core",
+        "biotype": "protein_coding",
+        "object_type": "Gene",
+        "assembly_name": "IRGSP-1.0",
+        "end": 10815,
+        "organism": "oryza_sativa"
+      },
+      "xrefs": {
+        "locus": "Os01g0100100",
+        "organism": "oryza_sativa",
+        "count": 3,
+        "xrefs": [
+          {
+            "info_type": "DIRECT",
+            "version": "0",
+            "description": null,
+            "dbname": "ArrayExpress",
+            "primary_id": "Os01g0100100",
+            "db_display_name": "Expression Atlas",
+            "synonyms": [],
+            "info_text": "",
+            "display_id": "Os01g0100100"
+          },
+          {
+            "info_text": "",
+            "synonyms": [],
+            "display_id": "LOC4326813",
+            "description": "rab GTPase-activating protein 22",
+            "version": "0",
+            "info_type": "DEPENDENT",
+            "db_display_name": "NCBI gene (formerly Entrezgene)",
+            "primary_id": "4326813",
+            "dbname": "EntrezGene"
+          },
+          {
+            "info_text": "",
+            "synonyms": [],
+            "display_id": "LOC4326813",
+            "info_type": "DEPENDENT",
+            "version": "0",
+            "description": "rab GTPase-activating protein 22",
+            "primary_id": "4326813",
+            "dbname": "WikiGene",
+            "db_display_name": "WikiGene"
+          }
+        ],
+        "by_db": {
+          "ArrayExpress": [
+            "Os01g0100100"
+          ],
+          "EntrezGene": [
+            "4326813"
+          ],
+          "WikiGene": [
+            "4326813"
+          ]
+        }
+      },
+      "uniprot_record": {
+        "locus_query": "Os01g0100100",
+        "primaryAccession": "Q0JRI1",
+        "uniProtkbId": "Q0JRI1_ORYSJ",
+        "entryType": "UniProtKB unreviewed (TrEMBL)",
+        "reviewed": false,
+        "recommendedName": null,
+        "geneNames": [],
+        "organism": "Oryza sativa subsp. japonica",
+        "taxonId": 39947,
+        "sequenceLength": 410,
+        "web_url": "https://www.uniprot.org/uniprotkb/Q0JRI1"
+      },
+      "literature": {
+        "locus": "Os01g0100100",
+        "organism": "oryza_sativa",
+        "query": "Os01g0100100 AND rice",
+        "hitCount": 4,
+        "returned": 4,
+        "hits": [
+          {
+            "id": "40214100",
+            "source": "MED",
+            "pmid": "40214100",
+            "pmcid": "PMC11986821",
+            "doi": "10.1093/database/baaf021",
+            "title": "GrameneOryza: a comprehensive resource for Oryza genomes, genetic variation, and functional data.",
+            "authorString": "Wei S, Chougule K, Olson A, Lu Z, Tello-Ruiz MK, Kumar V, Kumari S, Zhang L, Olson A, Kim C, Gladman N, Ware D.",
+            "journalTitle": null,
+            "pubYear": "2025",
+            "firstPublicationDate": "2025-04-01",
+            "citedByCount": 1,
+            "isOpenAccess": "N",
+            "hasPDF": "Y",
+            "abstractText": "Rice is a vital staple crop, sustaining over half of the global population, and is a key model for genetic research. To support the growing need for comprehensive and accessible rice genomic data, GrameneOryza (https://oryza.gramene.org) was developed as an online resource adhering to FAIR (Findable, Accessible, Interoperable, and Reusable) principles of data management. It distinguishes itself through its comprehensive multispecies focus, encompassing a wide variety of Oryza genomes and related species, and its integration with FAIR principles to ensure data accessibility and usability. It offers a community curated selection of high-quality Oryza genomes, genetic variation, gene function, and trait data. The latest release, version 8, includes 28 Oryza genomes, covering wild rice and domesticated cultivars. These genomes, along with Leersia perrieri and seven additional outgroup species, form the basis for 38\u2009K protein-coding gene family trees, essential for identifying orthologs, paralogs, and developing pan-gene sets. GrameneOryza's genetic variation data features 66 million single-nucleotide variants (SNVs) anchored to the Os-Nipponbare-Reference-IRGSP-1.0 genome, derived from various studies, including the Rice Genome 3\u2009K (RG3K) project. The RG3K sequence reads were also mapped to seven additional platinum-quality Asian rice genomes, resulting in 19 million SNVs for each genome, significantly expanding the coverage of genetic variation beyond the Nipponbare reference. Of the 66 million SNVs on IRGSP-1.0, 27 million acquired standardized reference SNP cluster identifiers (rsIDs) from the European Variation Archive release v5. Additionally, 1200 distinct phenotypes provide a comprehensive overview of quantitative trait loci (QTL) features. The newly introduced Oryza CLIMtools portal offers insights into environmental impacts on genome adaptation. The platform's integrated search interface, along with a BLAST server and curation tools, facilitates user access to genomic, phylogenetic, gene function, and QTL data, supporting broad research applications. Database URL: https://oryza.gramene.org.",
+            "web_url": "https://europepmc.org/article/PMC/PMC11986821"
+          },
+          {
+            "id": "PPR591253",
+            "source": "PPR",
+            "pmid": null,
+            "pmcid": null,
+            "doi": "10.1101/2023.01.03.520531",
+            "title": "Calling pangenes from plant genome alignments confirms presence-absence variation",
+            "authorString": "Contreras-Moreira B, Saraf S, Naamati G, Casas AM, Amberkar SS, Amberkar SS, Flicek P, Jones AR, Dyer S.",
+            "journalTitle": null,
+            "pubYear": "2023",
+            "firstPublicationDate": "2023-01-03",
+            "citedByCount": 0,
+            "isOpenAccess": "Y",
+            "hasPDF": "Y",
+            "abstractText": "<h4>ABSTRACT</h4>  Consistent gene annotation in crops is becoming harder as genomes for new cultivars are frequently published. Gene sets from recently sequenced accessions have different gene identifiers to those on the reference accession, and might be of higher quality due to technical advances. For these reasons there is a need to define pangenes, which represent all known syntenic orthologues for a gene model and can be linked back to the original annotation sources. A pangene set effectively summarizes our current understanding of the coding potential of a crop and can be used to inform gene model annotation in new cultivars. Here we present an approach (get_pangenes) to identify and analyze pangenes that is not biased towards the reference annotation. The method involves computing Whole Genome Alignments (WGA), which are used to estimate gene model overlaps. After a benchmark on  Arabidopsis , rice, wheat and barley datasets, we find that minimap2 performs better than the GSAlign WGA algorithm. Our results show that pangenes recapitulate known phylogeny-based orthologies while adding extra core gene models in rice. More importantly, get_pangenes can also produce clusters of genome segments (gDNA) that overlap with gene models annotated in other cultivars. By lifting-over CDS sequences, gDNA clusters can help refine gene models across individuals and confirm or reject observed gene Presence-Absence Variation. A collection of flowering-related genes from the barley pangenome are discussed in detail. Documentation and source code are available at  https://github.com/Ensembl/plant-scripts .",
+            "web_url": null
+          },
+          {
+            "id": "37798615",
+            "source": "MED",
+            "pmid": "37798615",
+            "pmcid": "PMC10552430",
+            "doi": "10.1186/s13059-023-03071-z",
+            "title": "GET_PANGENES: calling pangenes from plant genome alignments confirms presence-absence variation.",
+            "authorString": "Contreras-Moreira B, Saraf S, Naamati G, Casas AM, Amberkar SS, Flicek P, Jones AR, Dyer S.",
+            "journalTitle": null,
+            "pubYear": "2023",
+            "firstPublicationDate": "2023-10-05",
+            "citedByCount": 13,
+            "isOpenAccess": "Y",
+            "hasPDF": "Y",
+            "abstractText": "Crop pangenomes made from individual cultivar assemblies promise easy access to conserved genes, but genome content variability and inconsistent identifiers hamper their exploration. To address this, we define pangenes, which summarize a species coding potential and link back to original annotations. The protocol get_pangenes performs whole genome alignments (WGA) to call syntenic gene models based on coordinate overlaps. A benchmark with small and large plant genomes shows that pangenes recapitulate phylogeny-based orthologies and produce complete soft-core gene sets. Moreover, WGAs support lift-over and help confirm gene presence-absence variation. Source code and documentation: https://github.com/Ensembl/plant-scripts .",
+            "web_url": "https://europepmc.org/article/PMC/PMC10552430"
+          },
+          {
+            "id": "32619768",
+            "source": "MED",
+            "pmid": "32619768",
+            "pmcid": "PMC7646087",
+            "doi": "10.1016/j.gpb.2020.03.002",
+            "title": "SR4R: An Integrative SNP Resource for Genomic Breeding and Population Research in Rice.",
+            "authorString": "Yan J, Zou D, Li C, Zhang Z, Song S, Wang X.",
+            "journalTitle": null,
+            "pubYear": "2020",
+            "firstPublicationDate": "2020-04-01",
+            "citedByCount": 17,
+            "isOpenAccess": "Y",
+            "hasPDF": "Y",
+            "abstractText": "The information commons for rice (IC4R) database is a collection of 18 million single nucleotide polymorphisms (SNPs) identified by resequencing of 5152 rice accessions. Although IC4R offers ultra-high density rice variation map, these raw SNPs are not readily usable for the public. To satisfy different research utilizations of SNPs for population genetics, evolutionary analysis, association studies, and genomic breeding in rice, raw genotypic data of these 18 million SNPs were processed by unified bioinformatics pipelines. The outcomes were used to develop a daughter database of IC4R - SnpReady for Rice (SR4R). SR4R presents four reference SNP panels, including 2,097,405 hapmapSNPs after data filtration and genotype imputation, 156,502 tagSNPs selected from linkage disequilibrium-based redundancy removal, 1180 fixedSNPs selected from genes exhibiting selective sweep signatures, and 38 barcodeSNPs selected from DNA fingerprinting simulation. SR4R thus offers a highly efficient rice variation map that combines reduced SNP redundancy with extensive data describing the genetic diversity of rice populations. In addition, SR4R provides rice researchers with a web interface that enables them to browse all four SNP panels, use online toolkits, as well as retrieve the original data and scripts for a variety of population genetics analyses on local computers. SR4R is freely available to academic users at http://sr4r.ic4r.org/.",
+            "web_url": "https://europepmc.org/article/PMC/PMC7646087"
+          }
+        ]
+      },
+      "go_annotations": {
+        "uniprot_accession": "Q0JRI1",
+        "numberOfHits": 0,
+        "returned": 0,
+        "annotations": [],
+        "by_aspect": {}
+      },
+      "reconciled": {
+        "canonical_gene_name": null,
+        "best_uniprot_accession": "Q0JRI1",
+        "conflict_flags": []
+      }
+    }
+  },
+  "oryza_sativa__Os01g0100100__biological_context_synth": {
+    "tool": "biological_context_synth",
+    "input": {
+      "locus": "Os01g0100100",
+      "organism": "oryza_sativa",
+      "top_n": 5
+    },
+    "started_at": "2026-05-24T05:57:19Z",
+    "elapsed_s": 8.615742456982844,
+    "steps": [
+      {
+        "step": 1,
+        "tool": "resolve_locus_to_uniprot",
+        "status": "ok",
+        "elapsed_s": 5.192699609324336e-05,
+        "result": {
+          "locus_query": "Os01g0100100",
+          "primaryAccession": "Q0JRI1",
+          "uniProtkbId": "Q0JRI1_ORYSJ",
+          "entryType": "UniProtKB unreviewed (TrEMBL)",
+          "reviewed": false,
+          "recommendedName": null,
+          "geneNames": [],
+          "organism": "Oryza sativa subsp. japonica",
+          "taxonId": 39947,
+          "sequenceLength": 410,
+          "web_url": "https://www.uniprot.org/uniprotkb/Q0JRI1"
+        },
+        "error": null
+      },
+      {
+        "step": 2,
+        "tool": "gramene_homologs",
+        "status": "ok",
+        "elapsed_s": null,
+        "result": {
+          "locus": "Os01g0100100",
+          "release": "v69",
+          "total": 156,
+          "homologs": [
+            {
+              "target_locus": "Mp4g13805",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Pp3c1_2510",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "C5167_025963",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "FCD_00024607",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "BVRB_3g057880",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "TCM_019958",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Cla97C07G138400",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "MELO3C017792.2",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Csa_4G010920",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "MD04G0042200",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Prudul26B027895",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "PRUPE_1G200000",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "C.cajan_13416",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "gene-LATHSAT_LOCUS5381",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "TanjilG_30035",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "gene12509",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "PHAVU_005G155000g",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Psat5g290800",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Vfaba.Hedin2.R1.1g027240",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "LR48_Vigan05g203300",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Vradi0332s00250",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Vigun05g270800.v1.2",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Solyc03g058470.2",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "AeUmb.TA1851.r1.7UG0048050",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "gene-LSAT_3X111301",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "HanXRQr2_Chr03g0133631",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "KYUSg_chr6.22333",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "KN541486.1_FG001",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "ORUFI01G00040",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "OB01G10010",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "OPUNC01G00010",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "SECCE3Rv1G0158090",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "SETIT_000493mg",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "SORBI_3003G110000",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "SEVIR_5G063600v2",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "TRITD3Bv1G028830",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "TraesCS3B02G102400",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "TraesCS3A02G087000",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "TraesCS3D02G087200",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "TuG1812G0300000987.01",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Tritim_EIv0.3_0575730",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Tritim_EIv0.3_0472080",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Aco008037.1.path1",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "A4U43_C09F4980",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "AMTR_s00066p00146980",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Zm00001eb127200",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Cav01g15370",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "BRADI_1g74660v3",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "itb01g27400",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "gene-AYBTSS11_LOCUS16165",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "NC3G0204160",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "GSCOC_T00015214001",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "OBART01G00010",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "CCACVL1_07405",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Tp57577_TGAC_v2_gene6502",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "gene-CFP56_52609",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "AET3Gv20188500",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "DCAR_029914",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "EUGRSUZ_H00337",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "BGIOSGA002569",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Sspon.03G0017920-1A",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "TRIDC3AG010530",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "TRIDC3BG014290",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "HORVU.MOREX.r3.3HG0232870",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "QL10p051768",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "GQ55_5G440900",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "EUTSA_v10001327mg",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Csa05g006970",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Csa06g049720",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Csa04g061130",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Pav_sc0000525.1_g410.1.mk",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "TraesTSP3A01G093600",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "TraesTSP3B01G121400",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "TraesTSP3D01G101900",
+              "type": "ortholog_one2one",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Potri.007G132900.v4.1",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Potri.017G023200.v4.1",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "AT2G43490",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "AT3G59570",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "BjuA09g15460S",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "BjuB08g02480S",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "BjuB01g48240S",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "BjuA05g03350S",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "BjuA04g27400S",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "BjuB06g55220S",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "GSBRNA2T00132657001",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "GSBRNA2T00002271001",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "GSBRNA2T00121831001",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "GSBRNA2T00021969001",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "GSBRNA2T00045107001",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "GSBRNA2T00155637001",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "arahy.Tifrunner.gnm2.ann2.Ah08g148300",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "arahy.Tifrunner.gnm2.ann2.Ah18g031300",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "GLYMA_13G346200",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "GLYMA_15G028000",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "LOC114387978",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "LOC114377020",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Manes.04G048209.v8.1",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Manes.11G126700.v8.1",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "T459_08577",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "T459_08576",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "SIN_1015927",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "SIN_1019188",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "AVESA.00010b.r2.7AG1188750",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "AVESA.00010b.r2.7AG1188740",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "AVESA.00010b.r2.3DG0569350",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "AVESA.00010b.r2.1DG0149120",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "AVESA.00001b.r3.3Dg0002689",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "AVESA.00001b.r3.7Ag0000054",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "AVESA.00001b.r3.1Dg0002330",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "B456_005G126100",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "B456_011G138800",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Vitis05g01963",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Vitis05g01976",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "FRAEX38873_v2_000070970",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "FRAEX38873_v2_000142680",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "g22846",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "g18015",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Jr07_10980",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Jr07_10990",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Jr07_11000",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "gene-BT93_H0059",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "gene-BT93_H0058",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "EVM0000539",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "EVM0014561",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "CEY00_Acc24903",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "CEY00_Acc08938",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Dexi5A01G0010670",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Dexi5B01G0010910",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "OE9A119787",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "OE9A068349",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "OE9A000872",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "OE9A091720",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "scaffold_403239.1",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "fgenesh2_kg.5__2415__AT3G59570.1",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "DRNTG_07125",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "DRNTG_13246",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "AUR62023823",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "AUR62002362",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Bo4g194370",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Bo8g094330",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Bo4g019830",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "scaffold109.87",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "scaffold298.80",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "scaffold47.296",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Et_4B_036836",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Et_4A_032653",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Ma06_g30430",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "Ma09_g07850",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "SELMODRAFT_442016",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "SELMODRAFT_451481",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "SELMODRAFT_416728",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "A05p005090.1_BraROA",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "A04p038680.1_BraROA",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "A09p065020.1_BraROA",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "CICLE_v100189891mg",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            },
+            {
+              "target_locus": "CICLE_v100189892mg",
+              "type": "ortholog_one2many",
+              "gene_tree_id": "EPlGT00940000167767"
+            }
+          ]
+        },
+        "error": null
+      },
+      {
+        "step": 3,
+        "tool": "kegg_pathways",
+        "status": "error",
+        "elapsed_s": null,
+        "result": null,
+        "error": "[NotFoundError] KEGG: no pathway memberships for Os01g0100100 (ath gene db)"
+      },
+      {
+        "step": 4,
+        "tool": "string_interactions",
+        "status": "error",
+        "elapsed_s": null,
+        "result": null,
+        "error": "[NotFoundError] STRING /api/json/interaction_partners \u2192 HTTP 404: [{ \"Error\" : \"not found\", \"ErrorMessage\" : \"<p>Sorry, STRING did not find a protein called 'Q0JRI1' in the taxon '39947'.</p><p>Generally, STRING understands a number of different names/symbols for pr"
+      },
+      {
+        "step": 5,
+        "tool": "atted_coexpression",
+        "status": "error",
+        "elapsed_s": null,
+        "result": null,
+        "error": "[NotFoundError] ATTED-II: no co-expression neighbors for Os01g0100100"
+      }
+    ],
+    "result": {
+      "uniprot_accession": "Q0JRI1",
+      "homologs": {
+        "locus": "Os01g0100100",
+        "release": "v69",
+        "total": 156,
+        "homologs": [
+          {
+            "target_locus": "Mp4g13805",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Pp3c1_2510",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "C5167_025963",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "FCD_00024607",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "BVRB_3g057880",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "TCM_019958",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Cla97C07G138400",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "MELO3C017792.2",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Csa_4G010920",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "MD04G0042200",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Prudul26B027895",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "PRUPE_1G200000",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "C.cajan_13416",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "gene-LATHSAT_LOCUS5381",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "TanjilG_30035",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "gene12509",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "PHAVU_005G155000g",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Psat5g290800",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Vfaba.Hedin2.R1.1g027240",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "LR48_Vigan05g203300",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Vradi0332s00250",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Vigun05g270800.v1.2",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Solyc03g058470.2",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "AeUmb.TA1851.r1.7UG0048050",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "gene-LSAT_3X111301",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "HanXRQr2_Chr03g0133631",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "KYUSg_chr6.22333",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "KN541486.1_FG001",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "ORUFI01G00040",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "OB01G10010",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "OPUNC01G00010",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "SECCE3Rv1G0158090",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "SETIT_000493mg",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "SORBI_3003G110000",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "SEVIR_5G063600v2",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "TRITD3Bv1G028830",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "TraesCS3B02G102400",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "TraesCS3A02G087000",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "TraesCS3D02G087200",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "TuG1812G0300000987.01",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Tritim_EIv0.3_0575730",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Tritim_EIv0.3_0472080",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Aco008037.1.path1",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "A4U43_C09F4980",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "AMTR_s00066p00146980",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Zm00001eb127200",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Cav01g15370",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "BRADI_1g74660v3",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "itb01g27400",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "gene-AYBTSS11_LOCUS16165",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "NC3G0204160",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "GSCOC_T00015214001",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "OBART01G00010",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "CCACVL1_07405",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Tp57577_TGAC_v2_gene6502",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "gene-CFP56_52609",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "AET3Gv20188500",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "DCAR_029914",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "EUGRSUZ_H00337",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "BGIOSGA002569",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Sspon.03G0017920-1A",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "TRIDC3AG010530",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "TRIDC3BG014290",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "HORVU.MOREX.r3.3HG0232870",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "QL10p051768",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "GQ55_5G440900",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "EUTSA_v10001327mg",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Csa05g006970",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Csa06g049720",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Csa04g061130",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Pav_sc0000525.1_g410.1.mk",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "TraesTSP3A01G093600",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "TraesTSP3B01G121400",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "TraesTSP3D01G101900",
+            "type": "ortholog_one2one",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Potri.007G132900.v4.1",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Potri.017G023200.v4.1",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "AT2G43490",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "AT3G59570",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "BjuA09g15460S",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "BjuB08g02480S",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "BjuB01g48240S",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "BjuA05g03350S",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "BjuA04g27400S",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "BjuB06g55220S",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "GSBRNA2T00132657001",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "GSBRNA2T00002271001",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "GSBRNA2T00121831001",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "GSBRNA2T00021969001",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "GSBRNA2T00045107001",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "GSBRNA2T00155637001",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "arahy.Tifrunner.gnm2.ann2.Ah08g148300",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "arahy.Tifrunner.gnm2.ann2.Ah18g031300",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "GLYMA_13G346200",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "GLYMA_15G028000",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "LOC114387978",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "LOC114377020",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Manes.04G048209.v8.1",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Manes.11G126700.v8.1",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "T459_08577",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "T459_08576",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "SIN_1015927",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "SIN_1019188",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "AVESA.00010b.r2.7AG1188750",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "AVESA.00010b.r2.7AG1188740",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "AVESA.00010b.r2.3DG0569350",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "AVESA.00010b.r2.1DG0149120",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "AVESA.00001b.r3.3Dg0002689",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "AVESA.00001b.r3.7Ag0000054",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "AVESA.00001b.r3.1Dg0002330",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "B456_005G126100",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "B456_011G138800",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Vitis05g01963",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Vitis05g01976",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "FRAEX38873_v2_000070970",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "FRAEX38873_v2_000142680",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "g22846",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "g18015",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Jr07_10980",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Jr07_10990",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Jr07_11000",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "gene-BT93_H0059",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "gene-BT93_H0058",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "EVM0000539",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "EVM0014561",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "CEY00_Acc24903",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "CEY00_Acc08938",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Dexi5A01G0010670",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Dexi5B01G0010910",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "OE9A119787",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "OE9A068349",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "OE9A000872",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "OE9A091720",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "scaffold_403239.1",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "fgenesh2_kg.5__2415__AT3G59570.1",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "DRNTG_07125",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "DRNTG_13246",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "AUR62023823",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "AUR62002362",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Bo4g194370",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Bo8g094330",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Bo4g019830",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "scaffold109.87",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "scaffold298.80",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "scaffold47.296",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Et_4B_036836",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Et_4A_032653",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Ma06_g30430",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "Ma09_g07850",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "SELMODRAFT_442016",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "SELMODRAFT_451481",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "SELMODRAFT_416728",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "A05p005090.1_BraROA",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "A04p038680.1_BraROA",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "A09p065020.1_BraROA",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "CICLE_v100189891mg",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          },
+          {
+            "target_locus": "CICLE_v100189892mg",
+            "type": "ortholog_one2many",
+            "gene_tree_id": "EPlGT00940000167767"
+          }
+        ]
+      },
+      "pathways": null,
+      "string_partners": null,
+      "atted_coexpression": null,
+      "consensus_partners": []
+    }
+  },
+  "zea_mays__Zm00001d027231__analyze_locus_synth": {
+    "tool": "analyze_locus_synth",
+    "input": {
+      "locus": "Zm00001d027231",
+      "organism": "zea_mays"
+    },
+    "started_at": "2026-05-24T05:57:28Z",
+    "elapsed_s": 0.6645430459757335,
+    "steps": [
+      {
+        "step": 1,
+        "tool": "ensembl_plants_lookup_locus",
+        "status": "error",
+        "elapsed_s": null,
+        "result": null,
+        "error": "Ensembl Plants /lookup/id/Zm00001d027231 \u2192 HTTP 400: {\"error\":\"ID 'Zm00001d027231' not found\"}"
+      },
+      {
+        "step": 2,
+        "tool": "resolve_locus_to_uniprot",
+        "status": "ok",
+        "elapsed_s": null,
+        "result": {
+          "locus_query": "Zm00001d027231",
+          "primaryAccession": "A0A1D6JJ72",
+          "uniProtkbId": "A0A1D6JJ72_MAIZE",
+          "entryType": "UniProtKB unreviewed (TrEMBL)",
+          "reviewed": false,
+          "recommendedName": null,
+          "geneNames": [],
+          "organism": "Zea mays",
+          "taxonId": 4577,
+          "sequenceLength": 482,
+          "web_url": "https://www.uniprot.org/uniprotkb/A0A1D6JJ72"
+        },
+        "error": null
+      },
+      {
+        "step": 3,
+        "tool": "get_gene_xrefs",
+        "status": "skipped",
+        "elapsed_s": null,
+        "result": null,
+        "error": "phase-1 ensembl lookup failed; skipped"
+      },
+      {
+        "step": 4,
+        "tool": "locus_literature",
+        "status": "skipped",
+        "elapsed_s": null,
+        "result": null,
+        "error": "phase-1 ensembl lookup failed; skipped"
+      },
+      {
+        "step": 5,
+        "tool": "locus_go_annotations",
+        "status": "skipped",
+        "elapsed_s": null,
+        "result": null,
+        "error": "phase-1 ensembl lookup failed; skipped"
+      }
+    ],
+    "result": null
+  },
+  "zea_mays__Zm00001d027231__biological_context_synth": {
+    "tool": "biological_context_synth",
+    "input": {
+      "locus": "Zm00001d027231",
+      "organism": "zea_mays",
+      "top_n": 5
+    },
+    "started_at": "2026-05-24T05:57:29Z",
+    "elapsed_s": 2.879482792050112,
+    "steps": [
+      {
+        "step": 1,
+        "tool": "resolve_locus_to_uniprot",
+        "status": "ok",
+        "elapsed_s": 2.7041009161621332e-05,
+        "result": {
+          "locus_query": "Zm00001d027231",
+          "primaryAccession": "A0A1D6JJ72",
+          "uniProtkbId": "A0A1D6JJ72_MAIZE",
+          "entryType": "UniProtKB unreviewed (TrEMBL)",
+          "reviewed": false,
+          "recommendedName": null,
+          "geneNames": [],
+          "organism": "Zea mays",
+          "taxonId": 4577,
+          "sequenceLength": 482,
+          "web_url": "https://www.uniprot.org/uniprotkb/A0A1D6JJ72"
+        },
+        "error": null
+      },
+      {
+        "step": 2,
+        "tool": "gramene_homologs",
+        "status": "error",
+        "elapsed_s": null,
+        "result": null,
+        "error": "[NotFoundError] Gramene: no record for locus Zm00001d027231 in v69"
+      },
+      {
+        "step": 3,
+        "tool": "kegg_pathways",
+        "status": "error",
+        "elapsed_s": null,
+        "result": null,
+        "error": "[NotFoundError] KEGG: no pathway memberships for Zm00001d027231 (ath gene db)"
+      },
+      {
+        "step": 4,
+        "tool": "string_interactions",
+        "status": "error",
+        "elapsed_s": null,
+        "result": null,
+        "error": "[NotFoundError] STRING /api/json/interaction_partners \u2192 HTTP 404: [{ \"Error\" : \"not found\", \"ErrorMessage\" : \"<p>Sorry, STRING did not find a protein called 'A0A1D6JJ72' in the taxon '4577'.</p><p>Generally, STRING understands a number of different names/symbols for"
+      },
+      {
+        "step": 5,
+        "tool": "atted_coexpression",
+        "status": "error",
+        "elapsed_s": null,
+        "result": null,
+        "error": "[NotFoundError] ATTED-II: no co-expression neighbors for Zm00001d027231"
+      }
+    ],
+    "result": {
+      "uniprot_accession": "A0A1D6JJ72",
+      "homologs": null,
+      "pathways": null,
+      "string_partners": null,
+      "atted_coexpression": null,
+      "consensus_partners": []
+    }
+  }
+}
