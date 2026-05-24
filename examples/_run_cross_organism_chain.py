@@ -34,12 +34,12 @@ async def main() -> None:
             for tool_name, coro_factory in [
                 (
                     "analyze_locus_synth",
-                    lambda c=client, l=locus, o=organism: analyze_locus_synth(c, l, organism=o),
+                    lambda c=client, loc=locus, o=organism: analyze_locus_synth(c, loc, organism=o),
                 ),
                 (
                     "biological_context_synth",
-                    lambda c=client, l=locus, o=organism: biological_context_synth(
-                        c, l, organism=o, top_n=5
+                    lambda c=client, loc=locus, o=organism: biological_context_synth(
+                        c, loc, organism=o, top_n=5
                     ),
                 ),
             ]:
