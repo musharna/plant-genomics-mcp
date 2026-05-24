@@ -115,7 +115,7 @@ async def test_batch_ensembl_http_error_raises(httpx_mock: HTTPXMock) -> None:
             text="upstream broke",
         )
     async with httpx.AsyncClient() as client:
-        with pytest.raises(Exception, match="500"):
+        with pytest.raises(Exception, match="HTTP 500"):
             await batch.batch_ensembl_plants_lookup_locus(client, ["AT1G01010"])
 
 
@@ -405,6 +405,7 @@ async def test_batch_ensembl_plants_lookup_locus_retries_on_503(
     assert envelope["count"] == 1
     assert envelope["results"]["AT1G01010"]["id"] == "AT1G01010"
     assert envelope["errors"] == {}
+    assert len(httpx_mock.get_requests()) == 2
 
 
 @pytest.mark.asyncio
