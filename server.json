@@ -2,17 +2,25 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.musharna/plant-genomics-mcp",
   "title": "Plant Genomics",
-  "description": "Plant genomics MCP — Ensembl Plants + Phytozome + UniProt + Europe PMC + QuickGO, 14 tools.",
+  "description": "Plant genomics MCP — 32 tools across 11 live backends (Ensembl Plants, Phytozome, UniProt, Europe PMC, QuickGO, BLAST, Gramene, KEGG, STRING, ATTED-II, BAR) with cross-source synthesis and multi-organism resolver.",
   "websiteUrl": "https://github.com/musharna/plant-genomics-mcp",
   "repository": {
     "url": "https://github.com/musharna/plant-genomics-mcp",
     "source": "github"
   },
-  "version": "0.5.0",
+  "version": "1.0.3",
   "packages": [
     {
+      "registryType": "pypi",
+      "identifier": "plant-genomics-mcp",
+      "version": "1.0.3",
+      "transport": {
+        "type": "stdio"
+      }
+    },
+    {
       "registryType": "oci",
-      "identifier": "ghcr.io/musharna/plant-genomics-mcp:0.5.0",
+      "identifier": "ghcr.io/musharna/plant-genomics-mcp:1.0.3",
       "transport": {
         "type": "stdio"
       }
@@ -21,7 +29,7 @@
   "_meta": {
     "io.modelcontextprotocol.registry/publisher-provided": {
       "tool": "manual",
-      "version": "0.5.0",
+      "version": "1.0.3",
       "edam": {
         "operation": ["operation_2422"],
         "topic": ["topic_0780", "topic_0114", "topic_3068", "topic_0085"]

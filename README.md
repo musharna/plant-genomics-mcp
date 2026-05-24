@@ -10,6 +10,7 @@
 >   to the free alternatives (BioCyc PLANT orgid is paid-subscription-gated,
 >   probed 2026-05-21).
 
+[![PyPI](https://img.shields.io/pypi/v/plant-genomics-mcp)](https://pypi.org/project/plant-genomics-mcp/)
 [![CI](https://github.com/musharna/plant-genomics-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/musharna/plant-genomics-mcp/actions/workflows/test.yml)
 [![Docker](https://github.com/musharna/plant-genomics-mcp/actions/workflows/docker.yml/badge.svg)](https://github.com/musharna/plant-genomics-mcp/actions/workflows/docker.yml)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
