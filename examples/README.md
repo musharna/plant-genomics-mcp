@@ -14,11 +14,25 @@ latency without showing anything new).
 
 ## Transcripts
 
+### Arabidopsis (single-locus v0.7 chains)
+
 | Prompt               | Query                                     | Files                                                                                                                                                                   |
 | -------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `analyze_locus`      | `AT1G01010` (Arabidopsis NAC001)          | [`analyze_locus_AT1G01010.json`](analyze_locus_AT1G01010.json) · [`analyze_locus_AT1G01010.md`](analyze_locus_AT1G01010.md)                                             |
 | `find_homologs`      | NAC domain peptide from AT1G01010 product | [`find_homologs_AT1G01010_NAC_domain.json`](find_homologs_AT1G01010_NAC_domain.json) · [`find_homologs_AT1G01010_NAC_domain.md`](find_homologs_AT1G01010_NAC_domain.md) |
 | `biological_context` | `AT1G01010` (Arabidopsis NAC001)          | [`biological_context_AT1G01010.json`](biological_context_AT1G01010.json) · [`biological_context_AT1G01010.md`](biological_context_AT1G01010.md)                         |
+
+### Arabidopsis (v0.8 synthesis tools — `*_synth`)
+
+| Walkthrough                                                                                                                    | Coverage                                                                                                                                                                                 |
+| ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`v0.8_synthesis_walkthrough.md`](v0.8_synthesis_walkthrough.md) (runner [`_run_synthesis_chain.py`](_run_synthesis_chain.py)) | All 4 v0.8 synthesis tools against `AT1G01010` — `analyze_locus_synth` (5/5), `find_homologs_synth` (2/2), `biological_context_synth` (4/5, KEGG-not-found), `consensus_homologs` (4/4). |
+
+### Cross-organism (v0.9 multi-organism resolver against rice + maize)
+
+| Walkthrough                                                                                                                                                                                               | Coverage                                                                                                                                                                                                                                                                                                                                                                                          |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`cross_organism_walkthrough.md`](cross_organism_walkthrough.md) + [`cross_organism_captures.json`](cross_organism_captures.json) (runner [`_run_cross_organism_chain.py`](_run_cross_organism_chain.py)) | `analyze_locus_synth` + `biological_context_synth` against rice (`oryza_sativa` / `Os01g0100100`) and maize (`zea_mays` / `Zm00001d027231`) on PyPI v1.0.4. Demonstrates correct per-backend routing and surfaces real-world partial-coverage outcomes (TrEMBL vs Swiss-Prot data cliff, Maize v4→v5 assembly drift, two unmigrated backends — KEGG + ATTED-II — still hardcoded to Arabidopsis). |
 
 ## What each chain demonstrates
 
