@@ -104,6 +104,13 @@ Cross-species — pass `organism=`:
 { "locus": "Os01g0100100", "organism": "oryza_sativa" }
 ```
 
+In Claude Code, the same prompt fans out across Ensembl, UniProtKB, and
+Europe PMC in a single turn ([animated demo](examples/assets/cc-demo.gif)):
+
+<p align="center">
+  <img src="examples/assets/cc-demo.png" alt="Claude Code (Opus 4.7) calling plant-genomics-mcp 8 times to return the AT1G01010 / NAC1_ARATH record with Ensembl, UniProt Q0WV96, and the top-3 Europe PMC papers" width="820">
+</p>
+
 Full per-tool walkthroughs (with real upstream-API transcripts) live in
 [`examples/`](examples/):
 
