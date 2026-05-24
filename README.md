@@ -1,4 +1,4 @@
-# plant-genomics-mcp
+# 🌱 plant-genomics-mcp
 
 > **32 tools** for plant-genomics locus lookup over the Model Context Protocol —
 > 16 single-locus + 12 parallel-batch + 4 cross-source synthesis variants.
@@ -12,7 +12,11 @@
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-## Install
+<p align="center">
+  <img src="examples/assets/demo.svg" alt="plant-genomics-mcp stdio demo — initialize, tools/list (32), and a coverage-matrix resource read" width="780">
+</p>
+
+## 📦 Install
 
 ```bash
 pipx install plant-genomics-mcp
@@ -37,7 +41,7 @@ claude mcp add plant-genomics --scope local -- "$(pwd)/.venv/bin/plant-genomics-
 
 </details>
 
-## Tools at a glance
+## 🛠️ Tools at a glance
 
 | #   | Category                | Tool                                    | What it does                                                                         |
 | --- | ----------------------- | --------------------------------------- | ------------------------------------------------------------------------------------ |
@@ -70,7 +74,7 @@ all resolve to the same 12-plant curated coverage matrix. See the
 All 32 tools publish JSON `outputSchema` for client-side validation and
 EDAM ontology tags on `_meta` for registry indexers.
 
-## Quickstart
+## ⚡ Quickstart
 
 After install, the simplest call returns the Ensembl Plants record for
 NAC001 — the canonical worked example used throughout `examples/`:
@@ -111,7 +115,7 @@ Full per-tool walkthroughs (with real upstream-API transcripts) live in
 | [`v0.8_synthesis_walkthrough.md`](examples/v0.8_synthesis_walkthrough.md)                 | All 4 v0.8 synthesis tools (`*_synth` + `consensus_homologs`) on the same locus.        |
 | [`cross_organism_walkthrough.md`](examples/cross_organism_walkthrough.md)                 | v0.9 multi-organism resolver against rice + maize — per-backend routing on PyPI v1.0.4. |
 
-## Resources & prompts
+## 📚 Resources & prompts
 
 The server advertises four read-only MCP resources and three
 parameterized prompts. Clients discover them via `resources/list` and
@@ -134,7 +138,7 @@ parameterized prompts. Clients discover them via `resources/list` and
 | `find_homologs`      | `sequence` | `program` (default `blastp`)                | `blast_sequence` → per-hit `resolve_locus_to_uniprot` for UniProt-shaped accessions. |
 | `biological_context` | `locus`    | `top_n` (default 10)                        | Gramene → KEGG → UniProt → STRING → ATTED-II.                                        |
 
-## Transports
+## 🔌 Transports
 
 | Transport       | How to launch                                                       |
 | --------------- | ------------------------------------------------------------------- |
@@ -172,7 +176,7 @@ is the same binary; self-hosting buys deterministic uptime, your own
 bearer-token gate (`PLANT_GENOMICS_MCP_HTTP_TOKEN`), and NCBI BLAST
 etiquette under your own contact email.
 
-## Configuration
+## ⚙️ Configuration
 
 All runtime knobs read from environment variables at startup or first
 use. None are required for stdio. The HTTP transport requires
@@ -198,7 +202,7 @@ Long-running calls (retry storms, multi-second Phytozome BioMart POSTs)
 emit MCP `notifications/progress` over the active session; clients opt
 in via `progressToken` in the request `_meta`.
 
-## Error model
+## ⚠️ Error model
 
 All live tools raise `PlantGenomicsError` subclasses; the MCP SDK
 stringifies them into the wire `content` with a `[ClassName]` prefix so
@@ -217,7 +221,7 @@ Batch tools return `{tool, count, results, errors}` where
 batch uses the native `POST /lookup/id` endpoint (one HTTP round-trip);
 everything else fans out via `asyncio.gather`.
 
-## Development
+## 🧪 Development
 
 ```bash
 .venv/bin/pip install -e '.[dev]'
