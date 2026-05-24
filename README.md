@@ -41,7 +41,18 @@ claude mcp add plant-genomics --scope local -- "$(pwd)/.venv/bin/plant-genomics-
 
 </details>
 
-## 🛠️ Tools at a glance
+## 🛠️ Tools
+
+**32 tools across 11 backends** — Ensembl Plants, Phytozome BioMart,
+UniProtKB, Europe PMC, QuickGO, NCBI BLAST, Gramene, KEGG, STRING-DB,
+ATTED-II, BAR. 16 single-locus + 12 parallel-batch + 4 cross-source
+synthesis. All take a TAIR-style locus (e.g. `AT1G01010`) plus
+optional `organism=` (slug / scientific name / common name / NCBI taxid
+— 12-plant curated coverage matrix at the `pgmcp://organisms/coverage`
+MCP resource). All publish JSON `outputSchema` and EDAM ontology tags.
+
+<details>
+<summary>Full tool matrix</summary>
 
 | #   | Category                | Tool                                    | What it does                                                                         |
 | --- | ----------------------- | --------------------------------------- | ------------------------------------------------------------------------------------ |
@@ -64,15 +75,7 @@ claude mcp add plant-genomics --scope local -- "$(pwd)/.venv/bin/plant-genomics-
 | 17  | Batch (live)            | `batch_*` (twelve variants)             | Parallel per-locus fanout for tools 1–6, 8–12, 14. Up to 50 loci per call.           |
 | 18  | Synthesis (live)        | `*_synth` / `consensus_homologs` (four) | Compose 2–5 backends in parallel, return a `SynthesisEnvelope` with per-step status. |
 
-All live tools take a TAIR-style locus (e.g. `AT1G01010`) plus an
-optional `organism=` parameter (default `arabidopsis_thaliana`).
-`organism=` accepts a canonical slug (`oryza_sativa`), scientific name
-(`Oryza sativa`), common name (`rice`), or NCBI taxonomy ID (`39947`) —
-all resolve to the same 12-plant curated coverage matrix. See the
-`pgmcp://organisms/coverage` MCP resource for the live matrix.
-
-All 32 tools publish JSON `outputSchema` for client-side validation and
-EDAM ontology tags on `_meta` for registry indexers.
+</details>
 
 ## ⚡ Quickstart
 
@@ -124,9 +127,10 @@ Full per-tool walkthroughs (with real upstream-API transcripts) live in
 
 ## 📚 Resources & prompts
 
-The server advertises four read-only MCP resources and three
-parameterized prompts. Clients discover them via `resources/list` and
-`prompts/list`.
+<details>
+<summary>Four read-only MCP resources + three parameterized prompts</summary>
+
+Clients discover them via `resources/list` and `prompts/list`.
 
 **Resources** (`resources/read`):
 
@@ -144,6 +148,8 @@ parameterized prompts. Clients discover them via `resources/list` and
 | `analyze_locus`      | `locus`    | `organism` (default `arabidopsis_thaliana`) | Ensembl → xrefs → UniProt → Europe PMC → QuickGO.                                    |
 | `find_homologs`      | `sequence` | `program` (default `blastp`)                | `blast_sequence` → per-hit `resolve_locus_to_uniprot` for UniProt-shaped accessions. |
 | `biological_context` | `locus`    | `top_n` (default 10)                        | Gramene → KEGG → UniProt → STRING → ATTED-II.                                        |
+
+</details>
 
 ## 🔌 Transports
 
@@ -185,31 +191,39 @@ etiquette under your own contact email.
 
 ## ⚙️ Configuration
 
-All runtime knobs read from environment variables at startup or first
-use. None are required for stdio. The HTTP transport requires
-`PLANT_GENOMICS_MCP_HTTP_TOKEN`; BLAST requests should set
-`PLANT_GENOMICS_MCP_NCBI_EMAIL`.
+Stdio needs no configuration. The two env vars that matter:
 
-| Variable                               | Default                | Effect                                                                                                                                        |
-| -------------------------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PLANT_GENOMICS_MCP_HTTP_HOST`         | `127.0.0.1`            | HTTP bind address.                                                                                                                            |
-| `PLANT_GENOMICS_MCP_HTTP_PORT`         | `8765`                 | HTTP TCP port.                                                                                                                                |
-| `PLANT_GENOMICS_MCP_HTTP_TOKEN`        | _(none, **required**)_ | Bearer token for `/mcp`; **must be ≥32 chars** or the HTTP server aborts at startup. `/healthz` exempt. Generate with `openssl rand -hex 32`. |
-| `PLANT_GENOMICS_MCP_HTTP_MAX_BODY`     | `2097152` (2 MiB)      | Reject POSTs with `Content-Length` larger than this.                                                                                          |
-| `PLANT_GENOMICS_MCP_HTTP_STATELESS`    | `1`                    | `0` keeps per-client session state (SSE-style).                                                                                               |
-| `PLANT_GENOMICS_MCP_HTTP_JSON`         | `1`                    | `0` switches the response shape to streaming SSE events.                                                                                      |
-| `PLANT_GENOMICS_MCP_NCBI_EMAIL`        | placeholder            | NCBI BLAST etiquette contact. Unset → unmistakable placeholder + one-shot per-call warning; NCBI may throttle.                                |
-| `PLANT_GENOMICS_MCP_BLAST_CONCURRENCY` | `2`                    | Max in-flight BLAST searches per process (NCBI per-IP rate limit).                                                                            |
-| `PLANT_GENOMICS_MCP_CACHE_TTL`         | `600`                  | Per-backend TTL+LRU cache entry lifetime, in seconds. 200-only.                                                                               |
-| `PLANT_GENOMICS_MCP_CACHE_SIZE`        | `256`                  | Max entries per backend before LRU eviction.                                                                                                  |
-| `PLANT_GENOMICS_MCP_CACHE_DISABLED`    | unset                  | Any non-empty value makes every cache a no-op.                                                                                                |
+| Variable                        | When                | Effect                                                                                                                |
+| ------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `PLANT_GENOMICS_MCP_HTTP_TOKEN` | HTTP transport only | Bearer token for `/mcp`; **must be ≥32 chars** or the HTTP server aborts at startup. Generate `openssl rand -hex 32`. |
+| `PLANT_GENOMICS_MCP_NCBI_EMAIL` | If you use BLAST    | NCBI etiquette contact. Unset → placeholder + per-call warning; NCBI may throttle.                                    |
+
+<details>
+<summary>All env vars (HTTP bind, body cap, cache, BLAST concurrency)</summary>
+
+| Variable                               | Default           | Effect                                                             |
+| -------------------------------------- | ----------------- | ------------------------------------------------------------------ |
+| `PLANT_GENOMICS_MCP_HTTP_HOST`         | `127.0.0.1`       | HTTP bind address.                                                 |
+| `PLANT_GENOMICS_MCP_HTTP_PORT`         | `8765`            | HTTP TCP port.                                                     |
+| `PLANT_GENOMICS_MCP_HTTP_MAX_BODY`     | `2097152` (2 MiB) | Reject POSTs with `Content-Length` larger than this.               |
+| `PLANT_GENOMICS_MCP_HTTP_STATELESS`    | `1`               | `0` keeps per-client session state (SSE-style).                    |
+| `PLANT_GENOMICS_MCP_HTTP_JSON`         | `1`               | `0` switches the response shape to streaming SSE events.           |
+| `PLANT_GENOMICS_MCP_BLAST_CONCURRENCY` | `2`               | Max in-flight BLAST searches per process (NCBI per-IP rate limit). |
+| `PLANT_GENOMICS_MCP_CACHE_TTL`         | `600`             | Per-backend TTL+LRU cache entry lifetime, in seconds. 200-only.    |
+| `PLANT_GENOMICS_MCP_CACHE_SIZE`        | `256`             | Max entries per backend before LRU eviction.                       |
+| `PLANT_GENOMICS_MCP_CACHE_DISABLED`    | unset             | Any non-empty value makes every cache a no-op.                     |
 
 The cache is process-local — restart the server to drop all entries.
 Long-running calls (retry storms, multi-second Phytozome BioMart POSTs)
 emit MCP `notifications/progress` over the active session; clients opt
 in via `progressToken` in the request `_meta`.
 
+</details>
+
 ## ⚠️ Error model
+
+<details>
+<summary>Wire-prefix taxonomy + batch result shape</summary>
 
 All live tools raise `PlantGenomicsError` subclasses; the MCP SDK
 stringifies them into the wire `content` with a `[ClassName]` prefix so
@@ -227,6 +241,8 @@ Batch tools return `{tool, count, results, errors}` where
 `errors[locus]` is the same `[ClassName] message` string. Ensembl's
 batch uses the native `POST /lookup/id` endpoint (one HTTP round-trip);
 everything else fans out via `asyncio.gather`.
+
+</details>
 
 ## 🧪 Development
 
