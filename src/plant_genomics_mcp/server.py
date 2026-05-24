@@ -13,7 +13,7 @@ the live backends:
   - ``locus_go_annotations``              — QuickGO GO annotations (live, locus→UniProt→QuickGO)
   - ``blast_sequence``                    — NCBI BLAST URLAPI (live, async Put/Get polling)
   - ``gramene_homologs``                  — Gramene v69 homology (live, ortholog/paralog + gene_tree_id)
-  - ``kegg_pathways``                     — KEGG pathway memberships (live, ath: orgcode)
+  - ``kegg_pathways``                     — KEGG pathway memberships (live, multi-organism via ``organism=``)
   - ``string_interactions``               — STRING-DB first-neighbor partners (live, per-channel scores)
   - ``atted_coexpression``                — ATTED-II Ath-u.c4-0 coexpression (live, z-scores)
   - ``bar_gene_summary``                  — BAR ThaleMine + GAIA aliases (live, Arabidopsis curator summary)
@@ -429,14 +429,26 @@ TOOLS: list[types.Tool] = [
             "Fetch KEGG pathway memberships for an Arabidopsis locus from "
             "rest.kegg.jp. Returns a list of pathway IDs + names + KEGG "
             "category classes the locus participates in. Pairs with "
-            "locus_go_annotations for the GO-level functional view."
+            "locus_go_annotations for the GO-level functional view. "
+            "Multi-organism caveat (v1.1.0): the organism= field accepts "
+            "any plant in the matrix for symmetry with the other backends, "
+            "but only arabidopsis_thaliana resolves — KEGG uses NCBI "
+            "Entrez Gene IDs for rice/maize/etc. and our cross-backend "
+            "locus contract can't produce those yet, so any other organism "
+            "raises OrganismNotSupported before any HTTP call. KEGG v118+ "
+            "is case-sensitive on the locus: pass AGI loci as uppercase."
         ),
         inputSchema={
             "type": "object",
             "properties": {
                 "locus": {
                     "type": "string",
-                    "description": "Arabidopsis AGI locus, e.g. AT1G01010 (lowercased internally)",
+                    "description": "Arabidopsis AGI locus, e.g. AT1G01010 (case preserved verbatim — KEGG v118+ is case-sensitive)",
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — only arabidopsis_thaliana is supported in v1.1.0; other plants raise OrganismNotSupported until an Entrez bridge lands",
+                    "default": "arabidopsis_thaliana",
                 },
             },
             "required": ["locus"],
@@ -881,7 +893,13 @@ TOOLS: list[types.Tool] = [
     ),
     types.Tool(
         name="batch_kegg_pathways",
-        description="Batch version of kegg_pathways. Up to 50 loci per call.",
+        description=(
+            "Batch version of kegg_pathways. Up to 50 loci per call. "
+            "v1.1.0: only arabidopsis_thaliana resolves — KEGG uses NCBI "
+            "Entrez Gene IDs for other plants and our cross-backend locus "
+            "contract can't produce those yet, so a non-ath organism= "
+            "raises OrganismNotSupported before any HTTP fan-out."
+        ),
         inputSchema={
             "type": "object",
             "properties": {
@@ -889,6 +907,11 @@ TOOLS: list[types.Tool] = [
                     "type": "array",
                     "items": {"type": "string"},
                     "maxItems": 50,
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — only arabidopsis_thaliana is supported in v1.1.0; other plants raise OrganismNotSupported until an Entrez bridge lands",
+                    "default": "arabidopsis_thaliana",
                 },
             },
             "required": ["loci"],
@@ -1284,7 +1307,11 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     limit=args.get("limit", quickgo.DEFAULT_LIMIT),
                 )
             case "batch_kegg_pathways":
-                return await batch.batch_kegg_pathways(client, args["loci"])
+                return await batch.batch_kegg_pathways(
+                    client,
+                    args["loci"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                )
             case "bar_gene_summary":
                 return await bar.gene_summary(client, args["locus"])
             case "batch_bar_gene_summary":
@@ -1317,7 +1344,11 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     homology_type=args.get("homology_type", "ortholog"),
                 )
             case "kegg_pathways":
-                return await kegg.lookup_pathways(client, args["locus"])
+                return await kegg.lookup_pathways(
+                    client,
+                    args["locus"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                )
             case "string_interactions":
                 return await string_db.lookup_partners(
                     client,

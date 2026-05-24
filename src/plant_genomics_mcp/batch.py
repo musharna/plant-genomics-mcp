@@ -247,9 +247,13 @@ async def batch_gramene_homologs(
 async def batch_kegg_pathways(
     client: httpx.AsyncClient,
     loci: list[str],
+    *,
+    organism: str | int = organisms.DEFAULT_ORGANISM,
 ) -> dict[str, Any]:
     loci = _bound(loci)
-    results, errors = await _gather(loci, lambda locus: kegg.lookup_pathways(client, locus))
+    results, errors = await _gather(
+        loci, lambda locus: kegg.lookup_pathways(client, locus, organism=organism)
+    )
     return _envelope("kegg_pathways", loci, results, errors)
 
 

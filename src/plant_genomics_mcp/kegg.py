@@ -2,10 +2,14 @@
 
 KEGG REST returns plain TSV-like text, not JSON. Two-call sequence:
 
-  1. GET /link/pathway/ath:{locus_lowercased}
-     → per-line ``ath:{locus}\\tpath:ath{NNNNN}\\n`` (empty body = not found)
-  2. For each pathway ID, GET /get/path:ath{NNNNN}
+  1. GET /link/pathway/<org>:<locus>
+     → per-line ``<org>:<locus>\\tpath:<org>{NNNNN}\\n`` (empty body = not found)
+  2. For each pathway ID, GET /get/path:<org>{NNNNN}
      → multi-line record with NAME and CLASS rows
+
+KEGG v118.0 (May 2026) made ``/link/pathway`` case-sensitive on the locus
+side — uppercase AGI loci (``ath:AT1G01010``) return rows, lowercase
+returns empty. We preserve the caller's case verbatim and do not down-case.
 
 KEGG is free for academic use; no API key. ``caller_identity`` parameter
 is not supported by KEGG REST (unlike STRING / NCBI BLAST). The 24h cache
@@ -23,7 +27,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import _http, cache, validators
+from plant_genomics_mcp import _http, cache, organisms, validators
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
@@ -65,7 +69,7 @@ async def _get(client: httpx.AsyncClient, path: str) -> str:
 def _parse_link_pathway(body: str, gene_id: str) -> list[str]:
     """Extract pathway IDs from the /link/pathway response.
 
-    Each line is ``ath:atNgNNNNN\\tpath:athNNNNN``. We pull the second
+    Each line is ``<org>:<locus>\\tpath:<org>NNNNN``. We pull the second
     column and strip the ``path:`` prefix.
     """
     pathway_ids: list[str] = []
@@ -107,18 +111,36 @@ def _parse_pathway_record(body: str) -> dict[str, str]:
     return {"name": name, "pathway_class": pathway_class}
 
 
-async def lookup_pathways(client: httpx.AsyncClient, locus: str) -> dict[str, Any]:
-    """Fetch KEGG pathway memberships for an Arabidopsis locus.
+async def lookup_pathways(
+    client: httpx.AsyncClient, locus: str, *, organism: str | int
+) -> dict[str, Any]:
+    """Fetch KEGG pathway memberships for ``locus`` in ``organism``.
+
+    v1.1.0 BREAKING: ``organism`` is keyword-only and required. The
+    organism is resolved through ``organisms.kegg_org_code_for`` to a
+    3-letter KEGG org code (``ath``, …) and spliced into ``<code>:<locus>``
+    (case preserved — KEGG v118+ is case-sensitive) for the /link/pathway
+    and /get/path calls. Organisms with no KEGG code in the matrix raise
+    :class:`OrganismNotSupported` before any HTTP fires.
+
+    KEGG identifier-namespace caveat (v1.1.0): KEGG accepts AGI loci
+    (``AT1G01010``) for ``ath`` but uses NCBI Entrez Gene IDs (numeric)
+    for ``osa``/``zma``/``gmx``/etc. — RAP-DB / MaizeGDB / Phytozome locus
+    IDs return empty from KEGG. Until an internal Entrez bridge lands,
+    only Arabidopsis has ``kegg_org_code`` populated; all other matrix
+    entries return ``OrganismNotSupported(backend='kegg', ...)`` so the
+    failure is honest at resolution time, not a silent NotFoundError.
 
     Two-call sequence; per-pathway metadata fetches run via gather. If
     KEGG step-2 fails for a pathway, we surface the ID in ``pathways[]``
     with empty name/class and append the message to ``errors[]``.
     """
     validators.assert_valid_locus(locus, backend="KEGG")
-    gene_id = f"ath:{locus.lower()}"
+    org_code = organisms.kegg_org_code_for(organism)
+    gene_id = f"{org_code}:{locus}"
     body = await _get(client, f"/link/pathway/{gene_id}")
     if not body.strip():
-        raise NotFoundError(f"KEGG: no pathway memberships for {locus} (ath gene db)")
+        raise NotFoundError(f"KEGG: no pathway memberships for {locus} ({org_code} gene db)")
     pathway_ids = _parse_link_pathway(body, gene_id)
     if not pathway_ids:
         raise NotFoundError(f"KEGG: response had no pathway IDs for {locus}")
