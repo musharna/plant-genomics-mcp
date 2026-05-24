@@ -196,3 +196,42 @@ def test_phytozome_unsupported_raises(monkeypatch: pytest.MonkeyPatch) -> None:
     assert excinfo.value.backend == "phytozome"
     assert excinfo.value.organism == "vitis_vinifera"
     assert "arabidopsis_thaliana" in excinfo.value.supported
+
+
+# --- v1.1.0 T4: kegg_org_code + atted_release schema migration ---------------
+
+
+def test_organism_record_has_kegg_and_atted_fields() -> None:
+    """v1.1.0 schema: OrganismRecord exposes per-backend kegg + atted slots."""
+    arab = organisms.resolve("arabidopsis_thaliana")
+    assert hasattr(arab, "kegg_org_code")
+    assert hasattr(arab, "atted_release")
+
+
+def test_kegg_org_code_for_arabidopsis_returns_ath() -> None:
+    assert organisms.kegg_org_code_for("arabidopsis_thaliana") == "ath"
+
+
+def test_atted_release_for_arabidopsis_returns_known_release() -> None:
+    # Spec sentinel — the populated value MUST be the live ATTED-II release id
+    # for Arabidopsis confirmed via scripts/verify_organisms.py. Pinned today
+    # at the v1.0.x release ("Ath-u.c4-0"); update if the probe disagrees.
+    assert organisms.atted_release_for("arabidopsis_thaliana") == "Ath-u.c4-0"
+
+
+def test_kegg_org_code_for_unsupported_raises_organism_not_supported() -> None:
+    for canonical in organisms.ORGANISMS:
+        if organisms.ORGANISMS[canonical].kegg_org_code is None:
+            with pytest.raises(OrganismNotSupported):
+                organisms.kegg_org_code_for(canonical)
+            return
+    pytest.skip("KEGG covers all 12 organisms — no negative case to assert")
+
+
+def test_atted_release_for_unsupported_raises_organism_not_supported() -> None:
+    for canonical in organisms.ORGANISMS:
+        if organisms.ORGANISMS[canonical].atted_release is None:
+            with pytest.raises(OrganismNotSupported):
+                organisms.atted_release_for(canonical)
+            return
+    pytest.skip("ATTED covers all 12 organisms — no negative case to assert")

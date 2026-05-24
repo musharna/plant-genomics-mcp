@@ -94,6 +94,20 @@ async def test_read_coverage_matrix_lists_all_organisms() -> None:
     assert "ncbi_taxid" in body
     assert "phytozome" in body
     assert "europe_pmc" in body
+    # v1.1.0 T4: kegg + atted columns surface the new per-backend slots.
+    assert "kegg" in body
+    assert "atted" in body
+    # Header row has 9 named columns (canonical, scientific, ncbi_taxid,
+    # ensembl, phytozome, string, europe_pmc, kegg, atted) — surrounding pipes
+    # produce 10 segments when split on "|".
+    header_line = next(line for line in body.splitlines() if line.startswith("| canonical "))
+    assert header_line.count("|") == 10
+    # Spot-check Arabidopsis row carries the new slots end-to-end.
+    arab_row = next(
+        line for line in body.splitlines() if line.startswith("| arabidopsis_thaliana ")
+    )
+    assert "ath" in arab_row
+    assert "Ath-u.c4-0" in arab_row
 
 
 @pytest.mark.asyncio

@@ -98,8 +98,8 @@ RESOURCES: list[types.Resource] = [
         uri=AnyUrl(COVERAGE_MATRIX_URI),
         name="Organism coverage matrix",
         description=(
-            "Markdown table of all 12 supported plants × 5 ID slots "
-            "(ncbi_taxid, ensembl, phytozome, string, europe_pmc). "
+            "Markdown table of all 12 supported plants × 7 ID slots "
+            "(ncbi_taxid, ensembl, phytozome, string, europe_pmc, kegg, atted). "
             "Missing slots render as em-dash. Lets a client introspect "
             "coverage in one read instead of probing resolve_organism "
             "per organism."
@@ -244,17 +244,19 @@ def _coverage_matrix_payload() -> str:
     lines = [
         "# Organism Coverage Matrix",
         "",
-        "| canonical | scientific | ncbi_taxid | ensembl | phytozome | string | europe_pmc |",
-        "| --- | --- | --- | --- | --- | --- | --- |",
+        "| canonical | scientific | ncbi_taxid | ensembl | phytozome | string | europe_pmc | kegg | atted |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for canonical, r in organisms.ORGANISMS.items():
         ensembl = r.ensembl_slug or "—"
         phyto = str(r.phytozome_int) if r.phytozome_int is not None else "—"
         string = str(r.string_taxid) if r.string_taxid is not None else "—"
         epmc = r.europe_pmc_slug if r.europe_pmc_slug is not None else "None (no strip)"
+        kegg = r.kegg_org_code or "—"
+        atted = r.atted_release or "—"
         lines.append(
             f"| {canonical} | {r.scientific} | {r.ncbi_taxid} | "
-            f"{ensembl} | {phyto} | {string} | {epmc} |"
+            f"{ensembl} | {phyto} | {string} | {epmc} | {kegg} | {atted} |"
         )
     return "\n".join(lines) + "\n"
 
