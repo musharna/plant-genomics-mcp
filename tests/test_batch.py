@@ -106,14 +106,16 @@ async def test_batch_ensembl_native_post_one_round_trip(httpx_mock: HTTPXMock) -
 
 @pytest.mark.asyncio
 async def test_batch_ensembl_http_error_raises(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(
-        url="https://rest.ensembl.org/lookup/id",
-        method="POST",
-        status_code=500,
-        text="upstream broke",
-    )
+    # Retry helper makes max_retries=3 attempts; register one response per attempt.
+    for _ in range(3):
+        httpx_mock.add_response(
+            url="https://rest.ensembl.org/lookup/id",
+            method="POST",
+            status_code=500,
+            text="upstream broke",
+        )
     async with httpx.AsyncClient() as client:
-        with pytest.raises(Exception, match="HTTP 500"):
+        with pytest.raises(Exception, match="500"):
             await batch.batch_ensembl_plants_lookup_locus(client, ["AT1G01010"])
 
 
@@ -380,6 +382,29 @@ async def test_batch_phytozome_accepts_organism_alias(
     # The resolver should have routed "arabidopsis" → canonical slug or taxid
     # through to phytozome.lookup_locus unchanged (backend resolves itself).
     assert seen["organism"] == "arabidopsis"
+
+
+@pytest.mark.asyncio
+async def test_batch_ensembl_plants_lookup_locus_retries_on_503(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """Batch POST adopts the _http retry helper (closes audit C7 / batch.py:107-114 gap)."""
+    url = "https://rest.ensembl.org/lookup/id"
+    # First call: transient 503. Second call: success.
+    httpx_mock.add_response(url=url, method="POST", status_code=503, headers={"Retry-After": "0"})
+    httpx_mock.add_response(
+        url=url,
+        method="POST",
+        status_code=200,
+        json={"AT1G01010": {"id": "AT1G01010", "biotype": "protein_coding"}},
+    )
+    async with httpx.AsyncClient() as client:
+        envelope = await batch.batch_ensembl_plants_lookup_locus(
+            client, ["AT1G01010"], organism="arabidopsis_thaliana"
+        )
+    assert envelope["count"] == 1
+    assert envelope["results"]["AT1G01010"]["id"] == "AT1G01010"
+    assert envelope["errors"] == {}
 
 
 @pytest.mark.asyncio

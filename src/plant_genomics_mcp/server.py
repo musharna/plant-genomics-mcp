@@ -623,13 +623,11 @@ TOOLS: list[types.Tool] = [
             f"up to {batch.MAX_BATCH} loci, materially cheaper than N "
             "parallel GETs. Misses (loci with no record) land in errors[] "
             "with the [NotFoundError] prefix; successes in results[] with "
-            "the same shape as the single-locus tool. NOTE: unlike the "
-            "single-locus path, this POST does NOT retry on 429/5xx — a "
-            "transient upstream failure raises a typed error and the "
-            "whole batch fails. Callers that need retry should fall back "
-            "to the single-locus tool (which retries with exponential "
-            "backoff) or re-submit. A shared retry layer covering POSTs "
-            "is planned for v1.1."
+            "the same shape as the single-locus tool. "
+            "Retries 429/5xx via the shared `_http` helper (Retry-After "
+            "capped at 60 s). Misses (loci with no record) still land in "
+            "`errors[]` with the `[NotFoundError]` prefix; the whole batch "
+            "only fails when the retry budget is exhausted."
         ),
         inputSchema={
             "type": "object",
