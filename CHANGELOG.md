@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.0.3 — 2026-05-24
+
+Internal refactor — extracts the duplicated 429/5xx-retry + `Retry-After`-cap + progress-notification + status→typed-exception loop from 9 backend modules into a single shared helper `plant_genomics_mcp._http.request_with_retry()`. Behavior is preserved: same retry budget (3), same retryable status set (`429, 500, 502, 503, 504`), same 60s `Retry-After` cap from v1.0.0 Wave B2, same exception classes (`NotFoundError`, `RateLimitError`, `UpstreamUnavailableError`, `PlantGenomicsError`). No API changes; no tool-surface changes; no schema changes. Pure code-deduplication ahead of the v1.1 BAR + StringDB + Gramene shape evolution where divergent retry behavior would otherwise drift further.
+
+- **New `src/plant_genomics_mcp/_http.py`** — `request_with_retry(client, method, url, *, service, params=None, data=None, headers=None, timeout, max_retries)` returns the raw `httpx.Response` so each caller retains control of JSON/text parsing and per-backend `cache.TTLCache` write-through. Optional `not_found_returns` parameter accepts a sentinel (used by KEGG, which returns empty-body 404s rather than raising).
+- **Migrated callers (9 modules):** `ensembl_plants.py`, `kegg.py`, `bar.py`, `atted.py`, `europe_pmc.py`, `gramene.py`, `quickgo.py`, `string_db.py`, `phytozome.py` (POST variant), `uniprot.py` (3 inline sites — `_search`, `_fetch_by_accession`, `fetch_sequence`; the latter two wrap with `try/except NotFoundError` to preserve the canonical "UniProt has no entry/FASTA for accession=X" message that several tests assert on).
+- **Test-only change:** `tests/test_ensembl_plants.py` now patches `_http.asyncio.sleep` instead of `ensembl_plants.asyncio.sleep` to intercept retry backoff (the sleep call moved into the shared helper).
+- **Verification:** full suite green (350 passed, 34 skipped — same counts as v1.0.2). Live tests gated by `PLANT_GENOMICS_MCP_LIVE=1` were not re-run; the migration is a pure code move, not a wire-protocol change.
+- **No operational impact.** Docker images `:1.0.3` / `:1.0` / `:latest` retag on merge; Diun on gt76 auto-redeploys. Behavior on the hosted demo at `https://plant-genomics-mcp.tail4dabe.ts.net/mcp` is unchanged.
+
 ## v1.0.2 — 2026-05-23
 
 Hot-fix — repairs the BAR backend, which was DOA in v1.0.0 and v1.0.1. The `bar` module was missing from the `from plant_genomics_mcp import (...)` block in `server.py`, so any dispatch of `bar_gene_summary`, `bar_efp_expression`, or `bar_aiv_interactions` raised `NameError: name 'bar' is not defined` at runtime — three of the 32 tools (plus their batch variants and the silently-aliased `tair_locus_info`) were unusable over stdio/HTTP. Existing BAR unit tests passed because they call `bar.gene_summary(...)` directly and never exercise the server-level dispatcher. Also fixes the related ruff lint failure that has been red on `main` since v1.0.0 (`F821 Undefined name 'bar'` ×3 in `server.py`, `E402 Module level import not at top of file` in `tests/test_organisms.py`).

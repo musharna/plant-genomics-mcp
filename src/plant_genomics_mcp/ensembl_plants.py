@@ -12,12 +12,11 @@ tolerated. We retry on 429 and 5xx with exponential backoff.
 
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import cache, organisms, progress, validators
+from plant_genomics_mcp import _http, cache, organisms, validators
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
@@ -46,59 +45,27 @@ async def _get(
 ) -> Any:
     """GET an Ensembl REST endpoint with retry on 429/5xx.
 
-    Mirrors the genomics-mcp sibling's retry shape: bounded retries with
-    exponential backoff, honors ``Retry-After`` if present. Each retry
-    sleep emits an MCP progress notification so clients that opted in see
-    "still working" updates instead of a silent stall.
+    Thin cache wrapper over the shared :func:`_http.request_with_retry`
+    helper. The retry/cap/error-classification policy is shared with the
+    other 8 backends.
     """
     key = cache.make_key("GET", BASE_URL, path, params)
     cached = _CACHE.get(key)
     if cached is not None:
         return cached
-    headers = {"Accept": "application/json"}
-    delay = 1.0
-    last_status: int | None = None
-    for attempt in range(MAX_RETRIES):
-        resp = await client.get(
-            f"{BASE_URL}{path}",
-            params=params,
-            headers=headers,
-            timeout=DEFAULT_TIMEOUT,
-        )
-        last_status = resp.status_code
-        if resp.status_code == 200:
-            result = resp.json()
-            _CACHE.set(key, result)
-            return result
-        if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_RETRIES - 1:
-            retry_after = min(float(resp.headers.get("Retry-After", delay)), 60.0)
-            await progress.notify(
-                f"Ensembl Plants {path}: HTTP {resp.status_code}, retrying in "
-                f"{retry_after:.1f}s (attempt {attempt + 2}/{MAX_RETRIES})"
-            )
-            await asyncio.sleep(retry_after)
-            delay *= 2
-            continue
-        # Non-retryable / final attempt — pick the most informative subclass.
-        if resp.status_code == 404:
-            raise NotFoundError(f"Ensembl Plants {path} → HTTP 404: {resp.text[:200]}")
-        if resp.status_code == 429:
-            raise RateLimitError(
-                f"Ensembl Plants {path} rate-limited (HTTP 429): {resp.text[:200]}"
-            )
-        if resp.status_code in (500, 502, 503, 504):
-            raise UpstreamUnavailableError(
-                f"Ensembl Plants {path} → HTTP {resp.status_code}: {resp.text[:200]}"
-            )
-        raise PlantGenomicsError(
-            f"Ensembl Plants {path} → HTTP {resp.status_code}: {resp.text[:200]}"
-        )
-    # Loop exhausted retries on a retryable status.
-    if last_status == 429:
-        raise RateLimitError(f"Ensembl Plants {path} exhausted {MAX_RETRIES} retries (429)")
-    raise UpstreamUnavailableError(
-        f"Ensembl Plants {path} exhausted {MAX_RETRIES} retries (last HTTP {last_status})"
+    resp = await _http.request_with_retry(
+        client,
+        "GET",
+        f"{BASE_URL}{path}",
+        service=f"Ensembl Plants {path}",
+        params=params,
+        headers={"Accept": "application/json"},
+        timeout=DEFAULT_TIMEOUT,
+        max_retries=MAX_RETRIES,
     )
+    result = resp.json()
+    _CACHE.set(key, result)
+    return result
 
 
 async def lookup_locus(

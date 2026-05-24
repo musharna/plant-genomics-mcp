@@ -25,17 +25,14 @@ into a flat list of neighbors.
 
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import __version__, cache, progress
+from plant_genomics_mcp import __version__, _http, cache
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
-    RateLimitError,
-    UpstreamUnavailableError,
 )
 
 BASE_URL = "https://atted.jp"
@@ -66,47 +63,22 @@ async def _get(
     cached = _CACHE.get(key)
     if cached is not None:
         return cached
-    headers = {"Accept": "application/json", "User-Agent": _user_agent()}
-    delay = 1.0
-    last_status: int | None = None
-    for attempt in range(MAX_RETRIES):
-        resp = await client.get(
-            f"{BASE_URL}{path}",
-            params=params,
-            headers=headers,
-            timeout=DEFAULT_TIMEOUT,
-        )
-        last_status = resp.status_code
-        if resp.status_code == 200:
-            try:
-                result = resp.json()
-            except ValueError as e:
-                raise PlantGenomicsError(
-                    f"ATTED-II {path} returned non-JSON: {resp.text[:200]}"
-                ) from e
-            _CACHE.set(key, result)
-            return result
-        if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_RETRIES - 1:
-            retry_after = min(float(resp.headers.get("Retry-After", delay)), 60.0)
-            await progress.notify(
-                f"ATTED-II {path}: HTTP {resp.status_code}, retrying in "
-                f"{retry_after:.1f}s (attempt {attempt + 2}/{MAX_RETRIES})"
-            )
-            await asyncio.sleep(retry_after)
-            delay *= 2
-            continue
-        if resp.status_code == 429:
-            raise RateLimitError(f"ATTED-II {path} rate-limited (HTTP 429): {resp.text[:200]}")
-        if resp.status_code in (500, 502, 503, 504):
-            raise UpstreamUnavailableError(
-                f"ATTED-II {path} → HTTP {resp.status_code}: {resp.text[:200]}"
-            )
-        raise PlantGenomicsError(f"ATTED-II {path} → HTTP {resp.status_code}: {resp.text[:200]}")
-    if last_status == 429:
-        raise RateLimitError(f"ATTED-II {path} exhausted {MAX_RETRIES} retries (429)")
-    raise UpstreamUnavailableError(
-        f"ATTED-II {path} exhausted {MAX_RETRIES} retries (last HTTP {last_status})"
+    resp = await _http.request_with_retry(
+        client,
+        "GET",
+        f"{BASE_URL}{path}",
+        service=f"ATTED-II {path}",
+        params=params,
+        headers={"Accept": "application/json", "User-Agent": _user_agent()},
+        timeout=DEFAULT_TIMEOUT,
+        max_retries=MAX_RETRIES,
     )
+    try:
+        result = resp.json()
+    except ValueError as e:
+        raise PlantGenomicsError(f"ATTED-II {path} returned non-JSON: {resp.text[:200]}") from e
+    _CACHE.set(key, result)
+    return result
 
 
 def _normalize(row: dict[str, Any]) -> dict[str, Any]:

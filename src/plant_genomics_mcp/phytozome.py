@@ -22,17 +22,14 @@ the server dispatch can handle one exception class for all backends.
 
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import cache, organisms, progress, validators
+from plant_genomics_mcp import _http, cache, organisms, progress, validators
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
-    RateLimitError,
-    UpstreamUnavailableError,
 )
 
 BASE_URL = "https://phytozome-next.jgi.doe.gov/biomart/martservice"
@@ -87,44 +84,20 @@ async def _post(client: httpx.AsyncClient, xml_payload: str) -> str:
     cached = _CACHE.get(key)
     if cached is not None:
         return cached
-    delay = 1.0
-    last_status: int | None = None
-    for attempt in range(MAX_RETRIES):
-        await progress.notify(
-            f"Phytozome BioMart: submitting query (attempt {attempt + 1}/{MAX_RETRIES})"
-        )
-        resp = await client.post(
-            BASE_URL,
-            data={"query": xml_payload},
-            timeout=DEFAULT_TIMEOUT,
-        )
-        last_status = resp.status_code
-        if resp.status_code == 200:
-            text = resp.text
-            _CACHE.set(key, text)
-            await progress.notify("Phytozome BioMart: query complete")
-            return text
-        if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_RETRIES - 1:
-            retry_after = min(float(resp.headers.get("Retry-After", delay)), 60.0)
-            await progress.notify(
-                f"Phytozome BioMart: HTTP {resp.status_code}, retrying in "
-                f"{retry_after:.1f}s (attempt {attempt + 2}/{MAX_RETRIES})"
-            )
-            await asyncio.sleep(retry_after)
-            delay *= 2
-            continue
-        if resp.status_code == 429:
-            raise RateLimitError(f"Phytozome BioMart rate-limited (HTTP 429): {resp.text[:200]}")
-        if resp.status_code in (500, 502, 503, 504):
-            raise UpstreamUnavailableError(
-                f"Phytozome BioMart → HTTP {resp.status_code}: {resp.text[:200]}"
-            )
-        raise PlantGenomicsError(f"Phytozome BioMart → HTTP {resp.status_code}: {resp.text[:200]}")
-    if last_status == 429:
-        raise RateLimitError(f"Phytozome BioMart exhausted {MAX_RETRIES} retries (429)")
-    raise UpstreamUnavailableError(
-        f"Phytozome BioMart exhausted {MAX_RETRIES} retries (last HTTP {last_status})"
+    await progress.notify("Phytozome BioMart: submitting query")
+    resp = await _http.request_with_retry(
+        client,
+        "POST",
+        BASE_URL,
+        service="Phytozome BioMart",
+        data={"query": xml_payload},
+        timeout=DEFAULT_TIMEOUT,
+        max_retries=MAX_RETRIES,
     )
+    text = resp.text
+    _CACHE.set(key, text)
+    await progress.notify("Phytozome BioMart: query complete")
+    return text
 
 
 async def lookup_locus(
