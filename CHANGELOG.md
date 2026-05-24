@@ -17,7 +17,7 @@ Internal refactor — extracts the duplicated 429/5xx-retry + `Retry-After`-cap 
 - **Migrated callers (9 modules):** `ensembl_plants.py`, `kegg.py`, `bar.py`, `atted.py`, `europe_pmc.py`, `gramene.py`, `quickgo.py`, `string_db.py`, `phytozome.py` (POST variant), `uniprot.py` (3 inline sites — `_search`, `_fetch_by_accession`, `fetch_sequence`; the latter two wrap with `try/except NotFoundError` to preserve the canonical "UniProt has no entry/FASTA for accession=X" message that several tests assert on).
 - **Test-only change:** `tests/test_ensembl_plants.py` now patches `_http.asyncio.sleep` instead of `ensembl_plants.asyncio.sleep` to intercept retry backoff (the sleep call moved into the shared helper).
 - **Verification:** full suite green (350 passed, 34 skipped — same counts as v1.0.2). Live tests gated by `PLANT_GENOMICS_MCP_LIVE=1` were not re-run; the migration is a pure code move, not a wire-protocol change.
-- **No operational impact.** Docker images `:1.0.3` / `:1.0` / `:latest` retag on merge; Diun on gt76 auto-redeploys. Behavior on the hosted demo at `https://plant-genomics-mcp.tail4dabe.ts.net/mcp` is unchanged.
+- **No operational impact.** Docker images `:1.0.3` / `:1.0` / `:latest` retag on merge; Diun on gt76 auto-redeploys. Behavior on the hosted demo at `https://mjarnoldgt76.tail86d19d.ts.net/mcp` is unchanged.
 
 ## v1.0.2 — 2026-05-23
 
@@ -26,7 +26,7 @@ Hot-fix — repairs the BAR backend, which was DOA in v1.0.0 and v1.0.1. The `ba
 - **`src/plant_genomics_mcp/server.py`** — add `bar,` to the import block (alphabetic position between `batch,` and `blast,`), restoring the binding the dispatcher relies on.
 - **`tests/test_bar.py`** — new regression test `test_dispatch_bar_gene_summary_resolves_bar_module` routes through `server._dispatch("bar_gene_summary", ...)` with mocked HTTPX so any future drop of the `bar,` import fails CI loudly. Module-level direct-call tests stayed green through the bug; this test pins the _dispatch path_ contract.
 - **`tests/test_organisms.py`** — move the `from plant_genomics_mcp.errors import (...)` block above the test function defs (E402 cleanup).
-- **Operational impact.** Hosted demo at `https://plant-genomics-mcp.tail4dabe.ts.net/mcp` has been silently 500-ing on BAR tool calls for the v1.0.0 → v1.0.1 window (~few hours). The Docker pipeline retags `:1.0.2` / `:1.0` / `:latest`; Diun on gt76 auto-redeploys.
+- **Operational impact.** Hosted demo at `https://mjarnoldgt76.tail86d19d.ts.net/mcp` has been silently 500-ing on BAR tool calls for the v1.0.0 → v1.0.1 window (~few hours). The Docker pipeline retags `:1.0.2` / `:1.0` / `:latest`; Diun on gt76 auto-redeploys.
 
 ## v1.0.1 — 2026-05-23
 
