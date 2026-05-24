@@ -237,12 +237,12 @@ async def test_tool_schemas_use_organism_param(server_params: StdioServerParamet
     """v0.9/1.0 contract: every multi-organism tool exposes a single
     'organism' input field accepting string | integer, defaulting to
     'arabidopsis_thaliana'. Old 'species' and 'organism_id' fields must
-    not appear anywhere. Tools whose backend is intrinsically single-
-    organism (ATTED-II Arabidopsis-only — slated for v1.1.0 T6),
-    sequence-driven (BLAST, find_homologs_synth), Gramene's own
-    cross-species index, or stub redirects (TAIR, PlantCyc) are
-    explicitly out of scope. KEGG joined the multi-organism set in
-    v1.1.0 T5.
+    not appear anywhere. Tools that are sequence-driven (BLAST,
+    find_homologs_synth), Gramene's own cross-species index, or stub
+    redirects (TAIR, PlantCyc) are explicitly out of scope. KEGG joined
+    the multi-organism set in v1.1.0 T5; ATTED-II joined in v1.1.0 T6
+    (7 organisms with frozen release IDs; 5 unsupported organisms raise
+    OrganismNotSupported).
     """
     organism_aware = {
         "ensembl_plants_lookup_locus",
@@ -254,6 +254,7 @@ async def test_tool_schemas_use_organism_param(server_params: StdioServerParamet
         "string_interactions",
         "bar_aiv_interactions",
         "kegg_pathways",
+        "atted_coexpression",
         "batch_ensembl_plants_lookup_locus",
         "batch_get_gene_xrefs",
         "batch_phytozome_lookup_locus",
@@ -263,6 +264,7 @@ async def test_tool_schemas_use_organism_param(server_params: StdioServerParamet
         "batch_string_interactions",
         "batch_bar_aiv_interactions",
         "batch_kegg_pathways",
+        "batch_atted_coexpression",
         "analyze_locus_synth",
         "biological_context_synth",
         "consensus_homologs",

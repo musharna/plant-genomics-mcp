@@ -296,10 +296,13 @@ async def batch_string_interactions(
 async def batch_atted_coexpression(
     client: httpx.AsyncClient,
     loci: list[str],
+    *,
+    organism: str | int = organisms.DEFAULT_ORGANISM,
     top_n: int = atted.DEFAULT_TOP_N,
 ) -> dict[str, Any]:
     loci = _bound(loci)
     results, errors = await _gather(
-        loci, lambda locus: atted.lookup_coexpression(client, locus, top_n=top_n)
+        loci,
+        lambda locus: atted.lookup_coexpression(client, locus, organism=organism, top_n=top_n),
     )
     return _envelope("atted_coexpression", loci, results, errors)
