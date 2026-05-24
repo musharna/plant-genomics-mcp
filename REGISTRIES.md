@@ -1,20 +1,28 @@
 # Registry submissions
 
-Status of submissions to the four primary MCP server registries. The
-local artifacts (`server.json`, `smithery.yaml`) are committed; the
-external submission steps still require an authenticated push and a
-human-in-the-loop click. **PyPI is live as of v1.0.3** —
+Status of submissions to the four primary MCP server registries. **PyPI
+and the official MCP registry are live as of v1.0.4** —
 `pip install plant-genomics-mcp` (or `pipx install plant-genomics-mcp`)
-works directly, and `server.json` advertises both the PyPI package and
-the GHCR Docker image (`ghcr.io/musharna/plant-genomics-mcp:1.0.3`).
+works directly, and the namespace `io.github.musharna/plant-genomics-mcp`
+is listed at registry.modelcontextprotocol.io. The GHCR Docker image
+stays pinned at v1.0.3 (no rebuild for the metadata-only 1.0.4 cut); the
+`oci` package entry was dropped from `server.json` for the 1.0.4 publish
+and will be re-added in v1.0.5 once the image carries
+`LABEL io.modelcontextprotocol.server.name=io.github.musharna/plant-genomics-mcp`.
 
-## registry.modelcontextprotocol.io (official)
+## registry.modelcontextprotocol.io (official) — LIVE
+
+**Status:** **published at v1.0.4 (2026-05-24).** Listing visible at
+[`https://registry.modelcontextprotocol.io/v0/servers?search=plant-genomics-mcp`](https://registry.modelcontextprotocol.io/v0/servers?search=plant-genomics-mcp).
 
 **Artifact:** [`server.json`](./server.json) — registers under the
-namespace `io.github.musharna/plant-genomics-mcp` (GitHub-auth verifies
-the namespace owns the repo).
+namespace `io.github.musharna/plant-genomics-mcp`. GitHub-auth verifies
+the namespace owns the repo; PyPI ownership-verification reads the
+literal `mcp-name: io.github.musharna/plant-genomics-mcp` token from
+the package README (rendered into wheel METADATA, see footer of
+[`README.md`](./README.md)).
 
-**Submission steps:**
+**Republishing on subsequent releases** (e.g., v1.0.5+):
 
 ```bash
 # 1. Install the publisher CLI (Go binary; build from source or pre-built)
@@ -22,23 +30,18 @@ git clone https://github.com/modelcontextprotocol/registry /tmp/mcp-registry
 make -C /tmp/mcp-registry publisher
 sudo install /tmp/mcp-registry/bin/mcp-publisher /usr/local/bin/
 
-# 2. Authenticate against GitHub (browser flow)
+# 2. Authenticate against GitHub (device-code browser flow; JWT is short-lived)
 mcp-publisher login github
 
-# 3. Validate and publish from the repo root
+# 3. Bump versions in server.json (top-level + each package entry), then
+mcp-publisher validate
 mcp-publisher publish
 ```
 
-Verify at `https://registry.modelcontextprotocol.io/v0/servers?search=plant-genomics-mcp`.
+**Currently published packages:**
 
-**Blocked-on:** none — both packages are live:
-
-- PyPI: https://pypi.org/project/plant-genomics-mcp/1.0.3/
-- GHCR: `ghcr.io/musharna/plant-genomics-mcp:1.0.3`
-
-After running `mcp-publisher publish`, the namespace
-`io.github.musharna/plant-genomics-mcp` will be updated to v1.0.3 with
-both `pypi` and `oci` package entries (see `server.json`).
+- PyPI: https://pypi.org/project/plant-genomics-mcp/1.0.4/
+- GHCR (not in registry yet): `ghcr.io/musharna/plant-genomics-mcp:1.0.3`
 
 ## smithery.ai
 
@@ -93,9 +96,18 @@ top-right of any directory page.
 
 **Blocked-on:** none.
 
-## Why no submissions have fired yet
+## Submission state
 
-These four steps are public, shared-state actions visible to other
-people — per the durable instruction to confirm such actions before
-firing, the local artifacts ship now and the actual submission clicks /
-`mcp-publisher publish` runs are deferred to a human-in-the-loop call.
+- **registry.modelcontextprotocol.io** — LIVE as of v1.0.4 (2026-05-24).
+- **smithery.ai** — local `smithery.yaml` committed; manual Submit click
+  deferred to a human-in-the-loop call.
+- **glama.ai** — auto-discovered from the public GitHub repo on a
+  ~24–72h crawler latency; no active submission step.
+- **pulsemcp.com** — local artifacts ready; manual Submit form deferred
+  to a human-in-the-loop call.
+
+The two manual-submit steps (Smithery + PulseMCP) are public,
+shared-state actions visible to other people — per the durable
+instruction to confirm such actions before firing, the local artifacts
+ship now and the actual submission clicks are deferred to a
+human-in-the-loop call.
