@@ -1,8 +1,10 @@
 """STRING interaction-partners backend unit tests.
 
 STRING returns JSON via /api/json/. We accept either a UniProt accession
-or a locus identifier — the latter dispatches to resolve_locus_to_uniprot
-first (mirrors v0.6's input-shape detection in resolve_locus_to_uniprot).
+or a locus identifier — both are passed through to STRING unchanged
+(v1.1.1 removed the UniProt pre-resolution step; STRING's own resolver
+handles loci, and pre-resolving caused accession-choice mismatches when a
+locus has multiple valid UniProt accessions).
 """
 
 from __future__ import annotations
@@ -50,65 +52,44 @@ async def test_lookup_partners_by_accession_happy(httpx_mock: HTTPXMock):
     async with httpx.AsyncClient() as client:
         result = await string_db.lookup_partners(client, "Q0WV96", limit=5)
     assert result["query"] == "Q0WV96"
-    assert result["accession"] == "Q0WV96"
+    # v1.1.1: accession is STRING's canonical pick from stringId_A (taxid-stripped),
+    # not the input query. STRING canonicalizes arabidopsis on locus IDs.
+    assert result["accession"] == "AT1G01010.1"
     assert result["organism"] == "arabidopsis_thaliana"
     assert len(result["partners"]) == 1
     p = result["partners"][0]
-    assert p["accession"] == "Q0WV96" or p["accession"] is not None  # raw stringId field too
+    assert p["accession"] is not None  # raw stringId_B field
     assert p["preferred_name"] == "NAC3"
     assert p["score"] == 0.812
 
 
-def test_looks_like_accession_rejects_trailing_garbage():
-    """Both regex branches must anchor with ``$`` — bug fix regression."""
-    assert string_db._looks_like_accession("Q0WV96") is True
-    assert string_db._looks_like_accession("P12345") is True
-    assert string_db._looks_like_accession("A0A123B456") is True
-    assert string_db._looks_like_accession("Q0WV96.1") is True
-    # Trailing garbage must be rejected on BOTH the 6-char and 10-char branch.
-    assert string_db._looks_like_accession("Q0WV96extra") is False
-    assert string_db._looks_like_accession("P12345junk") is False
-    assert string_db._looks_like_accession("A0A123B456junk") is False
-    # Non-accession (locus) stays rejected.
-    assert string_db._looks_like_accession("AT1G01010") is False
-
-
 @pytest.mark.asyncio
-async def test_lookup_partners_with_locus_input_resolves_first(httpx_mock: HTTPXMock):
-    # Step 1: uniprot resolution. The real `_search` call sends
-    # query="gene:{locus} AND organism_id:{taxon} AND reviewed:true",
-    # format=json, size=1 — matches what uniprot.py actually emits.
-    httpx_mock.add_response(
-        url=(
-            "https://rest.uniprot.org/uniprotkb/search"
-            "?query=gene%3AAT1G01010+AND+organism_id%3A3702+AND+reviewed%3Atrue"
-            "&format=json&size=1"
-        ),
-        json={
-            "results": [
-                {
-                    "primaryAccession": "Q0WV96",
-                    "uniProtkbId": "NAC1_ARATH",
-                    "entryType": "UniProtKB reviewed (Swiss-Prot)",
-                }
-            ],
-        },
-    )
-    # Step 2: STRING call with resolved accession (default limit=20).
+async def test_lookup_partners_with_locus_passes_through(httpx_mock: HTTPXMock):
+    """v1.1.1: loci pass through to STRING unchanged; no UniProt pre-resolve.
+
+    STRING's own resolver canonicalizes the locus. The species-canonical
+    accession appears taxid-prefixed in ``stringId_A``; we surface the bare
+    accession on ``result["accession"]``.
+    """
     httpx_mock.add_response(
         url=(
             "https://string-db.org/api/json/interaction_partners"
-            "?identifiers=Q0WV96&species=3702&limit=20"
+            "?identifiers=AT1G01010&species=3702&limit=20"
             "&caller_identity=plant-genomics-mcp"
         ),
         json=[
-            {"stringId_B": "3702.AT3G15500.1", "preferredName_B": "NAC3", "score": 0.8},
+            {
+                "stringId_A": "3702.AT1G01010.1",
+                "stringId_B": "3702.AT3G15500.1",
+                "preferredName_B": "NAC3",
+                "score": 0.8,
+            },
         ],
     )
     async with httpx.AsyncClient() as client:
         result = await string_db.lookup_partners(client, "AT1G01010")
     assert result["query"] == "AT1G01010"
-    assert result["accession"] == "Q0WV96"
+    assert result["accession"] == "AT1G01010.1"
     assert result["partners"][0]["preferred_name"] == "NAC3"
 
 
@@ -126,22 +107,6 @@ async def test_lookup_partners_empty_array_raises_not_found(httpx_mock: HTTPXMoc
         with pytest.raises(NotFoundError) as exc:
             await string_db.lookup_partners(client, "Q0WV96")
     assert "[NotFoundError]" in str(exc.value)
-
-
-@pytest.mark.parametrize(
-    "acc,looks_like",
-    [
-        ("Q0WV96", True),  # canonical 6-char
-        ("Q0WV96.1", True),  # versioned
-        ("P12345", True),
-        ("A0A0A0A0A0", True),  # 10-char form
-        ("AT1G01010", False),  # locus, not accession
-        ("Os01g0100100", False),
-        ("foo", False),
-    ],
-)
-def test_looks_like_accession(acc, looks_like):
-    assert string_db._looks_like_accession(acc) is looks_like
 
 
 @pytest.mark.skipif(
@@ -163,18 +128,19 @@ async def test_live_string_q0wv96_has_partners():
 )
 @pytest.mark.asyncio
 async def test_live_string_rice_locus_resolves_and_returns_partners():
-    """v0.9 T19: real call against rice — exercises the resolver → uniprot → STRING chain.
+    """v1.1.1: rice locus passes through to STRING's own resolver.
 
-    Passes a rice locus (not an accession), so this also exercises
-    uniprot.lookup_locus with organism="oryza_sativa" on the way to
-    STRING. The rice STRING taxid (39947) must reach the wire.
+    v1.1.0 pre-resolved Os01g0100100 → UniProt Q0JRI1 and asked STRING for
+    that accession, which 404'd because STRING canonicalizes that locus on
+    A0A0P0UX28. v1.1.1 drops the pre-resolution; STRING handles the locus
+    and we surface whichever species-canonical accession it picks.
     """
     async with httpx.AsyncClient() as client:
         result = await string_db.lookup_partners(
             client, "Os01g0100100", limit=5, organism="oryza_sativa"
         )
     assert result["organism"] == "oryza_sativa"
-    assert result["accession"]  # any non-empty uniprot accession from the resolver
+    assert result["accession"]  # STRING's species-canonical pick
     # Partner list may be empty for some loci; tolerate but require structure if present.
     if result["partners"]:
         assert result["partners"][0]["score"] is not None

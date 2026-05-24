@@ -4,11 +4,14 @@ STRING is the EMBL-hosted protein-protein interaction database. We query
 ``/api/json/interaction_partners`` to retrieve the first-neighbor network
 for a protein, scored by predicted + curated + experimental confidence.
 
-Input shape detection: tools accept either a UniProt accession
-(``Q0WV96``, ``P12345``) or a locus identifier (``AT1G01010``). Accession
-inputs (matching the UniProt regex) route directly; locus inputs route via
-``uniprot.lookup_locus`` first. This mirrors v0.6's
-``resolve_locus_to_uniprot`` dispatch added in P2.b.
+Input shape: tools accept either a UniProt accession (``Q0WV96``,
+``P12345``) or a locus identifier (``AT1G01010``, ``Os01g0100100``). Both
+are passed through to STRING unchanged — STRING's own identifier resolver
+picks the canonical species-scoped accession. Pre-resolving loci through
+UniProt produces accession-choice mismatches when a locus has multiple
+valid UniProt accessions and STRING canonicalizes on a different one
+(observed v1.1.0 with rice Os01g0100100 → UniProt Q0JRI1 vs STRING
+A0A0P0UX28), so v1.1.1 removed the UniProt pre-resolution step.
 
 STRING etiquette: pass ``caller_identity`` to identify the caller. We
 hardcode ``plant-genomics-mcp``.
@@ -16,12 +19,11 @@ hardcode ``plant-genomics-mcp``.
 
 from __future__ import annotations
 
-import re
 from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import _http, cache, organisms, uniprot
+from plant_genomics_mcp import _http, cache, organisms
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
@@ -36,25 +38,7 @@ DEFAULT_LIMIT = 20
 MAX_LIMIT = 500
 CALLER_IDENTITY = "plant-genomics-mcp"
 
-# UniProt accession: 6 or 10 chars. The 10-char form (NEW format) is
-# documented at https://www.uniprot.org/help/accession_numbers.
-_UNIPROT_RE = re.compile(
-    r"^(?:"
-    r"[OPQ][0-9][A-Z0-9]{3}[0-9]"
-    r"|[A-NR-Z][0-9](?:[A-Z][A-Z0-9]{2}[0-9]){1,2}"
-    r")$"
-)
-
 _CACHE = cache.TTLCache(default_ttl=CACHE_TTL_SECONDS)
-
-
-def _looks_like_accession(query: str) -> bool:
-    """True if ``query`` matches the UniProt accession pattern.
-
-    Strips an optional version suffix (``.1``, ``.2``) before matching.
-    """
-    bare = query.split(".", 1)[0]
-    return bool(_UNIPROT_RE.match(bare))
 
 
 async def _get(
@@ -109,25 +93,23 @@ async def lookup_partners(
 ) -> dict[str, Any]:
     """Fetch STRING first-neighbor interactors for a protein.
 
-    Accepts either a UniProt accession or a locus identifier; the latter
-    is resolved via ``uniprot.lookup_locus`` first. ``organism`` accepts
+    Accepts either a UniProt accession or a locus identifier; both are
+    passed through to STRING's ``/api/json/interaction_partners`` endpoint
+    unchanged. STRING's internal resolver picks the species-canonical
+    accession and returns it in ``stringId_A`` (taxid-prefixed); we surface
+    the bare accession as ``accession`` on the result. ``organism`` accepts
     any form the resolver supports (slug, scientific/common name, taxid).
     """
     limit = max(1, min(limit, MAX_LIMIT))
     record = organisms.resolve(organism)
     taxid = organisms.string_taxid_for(organism)
-    query = locus_or_accession
-    if _looks_like_accession(locus_or_accession):
-        accession = locus_or_accession.split(".", 1)[0]
-    else:
-        up = await uniprot.lookup_locus(client, locus_or_accession, organism=organism)
-        accession = up["primaryAccession"]
+    query = locus_or_accession.split(".", 1)[0]  # strip optional UniProt version suffix
 
     raw = await _get(
         client,
         "/api/json/interaction_partners",
         params={
-            "identifiers": accession,
+            "identifiers": query,
             "species": taxid,
             "limit": limit,
             "caller_identity": CALLER_IDENTITY,
@@ -138,11 +120,18 @@ async def lookup_partners(
             f"STRING /api/json/interaction_partners returned non-list: {type(raw).__name__}"
         )
     if not raw:
-        raise NotFoundError(f"STRING: no interaction partners for {accession}")
-    partners = [_normalize(r, accession) for r in raw if isinstance(r, dict)]
+        raise NotFoundError(f"STRING: no interaction partners for {query}")
+
+    # STRING returns stringId_A as "{taxid}.{accession}"; the accession is
+    # STRING's species-canonical pick, which may differ from the input
+    # (e.g. locus → accession resolution, or one of several UniProt accessions).
+    string_id_a = raw[0].get("stringId_A", "") if isinstance(raw[0], dict) else ""
+    canonical_accession = string_id_a.split(".", 1)[1] if "." in string_id_a else query
+
+    partners = [_normalize(r, canonical_accession) for r in raw if isinstance(r, dict)]
     return {
         "query": query,
-        "accession": accession,
+        "accession": canonical_accession,
         "organism": record.canonical,
         "partners": partners,
     }
