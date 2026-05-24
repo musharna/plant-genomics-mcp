@@ -13,7 +13,7 @@ First stable release. No new backends or tools — the 32-tool, 11-backend surfa
 
 **Wave B — security hardening for the hosted HTTP endpoint (7 commits, B1-B7):**
 
-- **Bearer-token auth middleware on `/mcp`** — the hosted endpoint is no longer open by default. Set `PLANT_GENOMICS_MCP_HTTP_AUTH_TOKEN` to enable; absent token disables the endpoint (fail-closed). `/healthz` remains unauthenticated.
+- **Bearer-token auth middleware on `/mcp`** — set `PLANT_GENOMICS_MCP_HTTP_TOKEN` to require `Authorization: Bearer <token>` on `/mcp`; when the env var is unset, `/mcp` remains open (operators self-hosting on the public internet MUST set it). `/healthz` is always exempt for liveness probes.
 - **`Retry-After` capped at 60s** across all 9 backend modules with retry loops — eliminates the "upstream tells us to sleep for an hour" amplification vector.
 - **HTTP body-size cap (1 MB default, env-tunable) + BLAST `sequence` `maxLength` (1 MB)** — closes the 500 MB BLAST sequence acceptance hole.
 - **BLAST concurrency semaphore** (`PLANT_GENOMICS_MCP_BLAST_CONCURRENCY=2` default) and **real operator NCBI email** required via `PLANT_GENOMICS_MCP_NCBI_EMAIL` — NCBI ToS etiquette for `consensus_homologs` and `find_homologs_synth` auto-submit paths.
