@@ -158,7 +158,7 @@ def build_app() -> Starlette:
         async with session_manager.run():
             yield
 
-    return Starlette(
+    app = Starlette(
         routes=[
             Route("/healthz", healthz),
             Mount("/mcp", app=handle_mcp),
@@ -178,6 +178,13 @@ def build_app() -> Starlette:
         ],
         lifespan=lifespan,
     )
+    # Starlette 1.0 removed redirect_slashes from the constructor; set it
+    # on the router directly. Without this, ``GET /mcp`` triggers a
+    # ``307 Location: http://…/mcp/`` redirect — the scheme reflects the
+    # inner HTTP hop through uvicorn, not the outer HTTPS Tailscale Funnel
+    # layer, breaking HTTPS-only clients that follow the redirect.
+    app.router.redirect_slashes = False
+    return app
 
 
 def main() -> None:
