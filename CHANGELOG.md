@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.0.2 — 2026-05-23
+
+Hot-fix — repairs the BAR backend, which was DOA in v1.0.0 and v1.0.1. The `bar` module was missing from the `from plant_genomics_mcp import (...)` block in `server.py`, so any dispatch of `bar_gene_summary`, `bar_efp_expression`, or `bar_aiv_interactions` raised `NameError: name 'bar' is not defined` at runtime — three of the 32 tools (plus their batch variants and the silently-aliased `tair_locus_info`) were unusable over stdio/HTTP. Existing BAR unit tests passed because they call `bar.gene_summary(...)` directly and never exercise the server-level dispatcher. Also fixes the related ruff lint failure that has been red on `main` since v1.0.0 (`F821 Undefined name 'bar'` ×3 in `server.py`, `E402 Module level import not at top of file` in `tests/test_organisms.py`).
+
+- **`src/plant_genomics_mcp/server.py`** — add `bar,` to the import block (alphabetic position between `batch,` and `blast,`), restoring the binding the dispatcher relies on.
+- **`tests/test_bar.py`** — new regression test `test_dispatch_bar_gene_summary_resolves_bar_module` routes through `server._dispatch("bar_gene_summary", ...)` with mocked HTTPX so any future drop of the `bar,` import fails CI loudly. Module-level direct-call tests stayed green through the bug; this test pins the _dispatch path_ contract.
+- **`tests/test_organisms.py`** — move the `from plant_genomics_mcp.errors import (...)` block above the test function defs (E402 cleanup).
+- **Operational impact.** Hosted demo at `https://plant-genomics-mcp.tail4dabe.ts.net/mcp` has been silently 500-ing on BAR tool calls for the v1.0.0 → v1.0.1 window (~few hours). The Docker pipeline retags `:1.0.2` / `:1.0` / `:latest`; Diun on gt76 auto-redeploys.
+
 ## v1.0.1 — 2026-05-23
 
 Security patch — closes the v1.0.0 fail-open gap on the HTTP transport. **Breaking change for self-hosters:** `PLANT_GENOMICS_MCP_HTTP_TOKEN` is now REQUIRED and must be at least 32 characters; `plant-genomics-mcp-http` (and any direct `build_app()` caller) aborts at startup with `SystemExit` if the env var is absent or too short. v1.0.0 documented this as fail-closed but the code shipped fail-open-on-absent; v1.0.1 makes the code match the spec. `/healthz` remains unauthenticated for liveness probes; stdio transport is unaffected.

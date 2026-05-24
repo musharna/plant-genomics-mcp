@@ -62,6 +62,7 @@ from pydantic import AnyUrl
 
 from plant_genomics_mcp import (
     atted,
+    bar,
     batch,
     blast,
     ensembl_plants,

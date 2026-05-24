@@ -5,6 +5,11 @@ from __future__ import annotations
 import pytest
 
 from plant_genomics_mcp import organisms
+from plant_genomics_mcp.errors import (
+    OrganismNotFound,
+    OrganismNotSupported,
+    PlantGenomicsError,
+)
 
 
 def test_arabidopsis_record_canonical_lookup() -> None:
@@ -21,13 +26,6 @@ def test_arabidopsis_record_canonical_lookup() -> None:
 def test_default_organism_is_arabidopsis() -> None:
     assert organisms.DEFAULT_ORGANISM == "arabidopsis_thaliana"
     assert organisms.DEFAULT_ORGANISM in organisms.ORGANISMS
-
-
-from plant_genomics_mcp.errors import (
-    OrganismNotFound,
-    OrganismNotSupported,
-    PlantGenomicsError,
-)
 
 
 def test_organism_not_found_is_plant_genomics_error() -> None:
