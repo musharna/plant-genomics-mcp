@@ -23,11 +23,13 @@ Everything else fans out via ``asyncio.gather`` of single-locus calls.
 from __future__ import annotations
 
 import asyncio
+import json
 from typing import Any, Awaitable, Callable
 
 import httpx
 
 from plant_genomics_mcp import (
+    _http,
     atted,
     bar,
     ensembl_plants,
@@ -100,37 +102,31 @@ async def batch_ensembl_plants_lookup_locus(
 ) -> dict[str, Any]:
     """One HTTP round-trip via Ensembl's POST /lookup/id batch endpoint.
 
-    Ensembl returns a dict keyed on the input ID with the per-locus record
-    or ``null`` for misses. We translate nulls into [NotFoundError] entries
-    so the wire shape matches the gather-based batch tools.
-
-    Retry gap (audit C7, deferred to v1.1): the single-locus path uses
-    ``ensembl_plants._get`` which retries 429/5xx with exponential
-    backoff. The batch POST below skips that retry layer — a transient
-    upstream failure raises ``PlantGenomicsError`` and the whole batch
-    fails. Adding retry here means duplicating the GET retry logic for
-    POST, which is the shared ``_http.py`` refactor scheduled for v1.1.
-    For v1.0 the gap is documented in the tool description; callers
-    needing retry should fall back to the single-locus tool.
+    v1.1.0: now retries 429/5xx via the shared ``_http.request_with_retry``
+    helper (Retry-After capped at 60 s, Wave B2 contract). Misses (null
+    record per ID) still surface as ``[NotFoundError]`` entries in
+    ``errors``; the whole batch only fails when the upstream call
+    exhausts the retry budget.
     """
     loci = _bound(loci)
     slug = organisms.ensembl_slug_for(organism)
-    headers = {"Accept": "application/json", "Content-Type": "application/json"}
     payload: dict[str, Any] = {"ids": loci, "species": slug, "expand": 0}
-    resp = await client.post(
+    resp = await _http.request_with_retry(
+        client,
+        "POST",
         f"{ensembl_plants.BASE_URL}/lookup/id",
-        json=payload,
-        headers=headers,
+        service="Ensembl Plants /lookup/id (batch)",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Accept": "application/json", "Content-Type": "application/json"},
         timeout=ensembl_plants.DEFAULT_TIMEOUT,
     )
-    if resp.status_code != 200:
-        # The single-locus call has retry; the batch endpoint is documented
-        # as idempotent so the same retry policy would apply, but for now we
-        # surface the failure directly with the typed wrapper.
+    # request_with_retry returns the raw httpx.Response on 2xx.
+    try:
+        raw = resp.json()
+    except ValueError as e:
         raise PlantGenomicsError(
-            f"Ensembl Plants /lookup/id (batch) → HTTP {resp.status_code}: {resp.text[:200]}"
-        )
-    raw = resp.json()
+            f"Ensembl Plants /lookup/id (batch) returned non-JSON: {resp.text[:200]}"
+        ) from e
     if not isinstance(raw, dict):
         raise PlantGenomicsError(
             f"Ensembl Plants /lookup/id (batch) returned non-dict payload: {type(raw).__name__}"
