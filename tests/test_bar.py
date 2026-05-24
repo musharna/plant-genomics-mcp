@@ -8,7 +8,7 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from plant_genomics_mcp import bar
+from plant_genomics_mcp import bar, server
 from plant_genomics_mcp.errors import (
     NotFoundError,
     OrganismNotFound,
@@ -555,3 +555,26 @@ async def test_live_bar_aiv_interactions_rice() -> None:
     partner = result["partners"][0]
     assert partner["partner_locus"]
     assert partner["pcc"] is not None
+
+
+# v1.0.0 + v1.0.1 shipped server.py with `bar` missing from the `from
+# plant_genomics_mcp import (...)` block (lines 63-81). Direct-call unit
+# tests above never exercise the MCP dispatch path, so the NameError only
+# fires when a client actually calls the tool over stdio/HTTP. Regression
+# test below routes through server._dispatch so any future drop of the
+# `bar,` import fails CI loudly.
+@pytest.mark.asyncio
+async def test_dispatch_bar_gene_summary_resolves_bar_module(
+    httpx_mock: HTTPXMock,
+) -> None:
+    httpx_mock.add_response(
+        url="https://bar.utoronto.ca/api/thalemine/gene_information/AT1G01010",
+        json=_THALEMINE_OK,
+    )
+    httpx_mock.add_response(
+        url="https://bar.utoronto.ca/api/gaia/aliases/AT1G01010",
+        json=_GAIA_OK,
+    )
+    result = await server._dispatch("bar_gene_summary", {"locus": "AT1G01010"})
+    assert result["locus"] == "AT1G01010"
+    assert result["symbol"] == "NAC001"
