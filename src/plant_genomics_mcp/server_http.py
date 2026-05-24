@@ -22,9 +22,10 @@ Env knobs:
   PLANT_GENOMICS_MCP_HTTP_PORT       default 8765
   PLANT_GENOMICS_MCP_HTTP_STATELESS  default 1
   PLANT_GENOMICS_MCP_HTTP_JSON       default 1
-  PLANT_GENOMICS_MCP_HTTP_TOKEN      default unset → /mcp open
-                                     set → /mcp requires
-                                     ``Authorization: Bearer <token>``;
+  PLANT_GENOMICS_MCP_HTTP_TOKEN      REQUIRED, >= 32 chars — build_app
+                                     aborts with SystemExit if absent or
+                                     too short. ``Authorization: Bearer
+                                     <token>`` is required on /mcp;
                                      /healthz always exempt
   PLANT_GENOMICS_MCP_HTTP_MAX_BODY   default 2_097_152 (2 MiB) — POSTs
                                      advertising a larger Content-Length
@@ -55,6 +56,11 @@ from starlette.routing import Mount, Route
 from starlette.types import Receive, Scope, Send
 
 from plant_genomics_mcp.server import server
+
+# Minimum length for PLANT_GENOMICS_MCP_HTTP_TOKEN — half a `openssl rand
+# -hex 32` value, also the length of a stringified UUID without dashes.
+# Anything shorter is considered toy/test input and refused at startup.
+_MIN_TOKEN_LEN = 32
 
 
 def _env_flag(name: str, default: bool) -> bool:
@@ -91,7 +97,14 @@ def build_app() -> Starlette:
     """
     stateless = _env_flag("PLANT_GENOMICS_MCP_HTTP_STATELESS", True)
     json_response = _env_flag("PLANT_GENOMICS_MCP_HTTP_JSON", True)
-    expected_token = os.environ.get("PLANT_GENOMICS_MCP_HTTP_TOKEN")
+    expected_token = os.environ.get("PLANT_GENOMICS_MCP_HTTP_TOKEN", "")
+    if len(expected_token) < _MIN_TOKEN_LEN:
+        raise SystemExit(
+            "PLANT_GENOMICS_MCP_HTTP_TOKEN is required and must be at least "
+            f"{_MIN_TOKEN_LEN} characters (got {len(expected_token)}). "
+            "Generate one with `openssl rand -hex 32` and pass it via the "
+            "container env_file or docker compose `environment:` block."
+        )
     max_body = int(os.environ.get("PLANT_GENOMICS_MCP_HTTP_MAX_BODY", "2097152"))
 
     session_manager = StreamableHTTPSessionManager(
@@ -109,10 +122,12 @@ def build_app() -> Starlette:
         return JSONResponse({"status": "ok"})
 
     async def handle_mcp(scope: Scope, receive: Receive, send: Send) -> None:
-        # /mcp gated on bearer token when PLANT_GENOMICS_MCP_HTTP_TOKEN
-        # is set. /healthz routed separately, never enters this handler.
-        # Content-Length pre-check rejects oversize bodies before the
-        # session manager streams them into memory.
+        # /mcp is always gated on bearer token (build_app aborts before we
+        # get here if the env var is absent or <32 chars). /healthz is
+        # routed separately and never enters this handler. Content-Length
+        # pre-check rejects oversize bodies before the session manager
+        # streams them into memory; body-cap precedes auth so a 100 MB
+        # POST gets cut off before we burn cycles checking the token.
         for name, value in scope.get("headers", []):
             if name == b"content-length":
                 try:
@@ -127,16 +142,15 @@ def build_app() -> Starlette:
                     await response(scope, receive, send)
                     return
                 break
-        if expected_token:
-            provided = _extract_bearer(scope)
-            if not hmac.compare_digest(provided, expected_token):
-                response = JSONResponse(
-                    {"error": "unauthorized"},
-                    status_code=401,
-                    headers={"WWW-Authenticate": 'Bearer realm="plant-genomics-mcp"'},
-                )
-                await response(scope, receive, send)
-                return
+        provided = _extract_bearer(scope)
+        if not hmac.compare_digest(provided, expected_token):
+            response = JSONResponse(
+                {"error": "unauthorized"},
+                status_code=401,
+                headers={"WWW-Authenticate": 'Bearer realm="plant-genomics-mcp"'},
+            )
+            await response(scope, receive, send)
+            return
         await session_manager.handle_request(scope, receive, send)
 
     @contextlib.asynccontextmanager

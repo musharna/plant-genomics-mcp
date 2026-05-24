@@ -25,6 +25,23 @@ from starlette.testclient import TestClient
 
 from plant_genomics_mcp import server_http
 
+# 32-char placeholder satisfying the v1.0.1 fail-closed length floor — used
+# wherever a test needs a valid token without caring about the value.
+_VALID_TOKEN = "x" * 32
+
+
+@pytest.fixture(autouse=True)
+def _default_http_token(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Default-set a valid token for every test in this module.
+
+    v1.0.1 makes build_app() abort if PLANT_GENOMICS_MCP_HTTP_TOKEN is
+    missing or <32 chars. Tests that exercise that abort path explicitly
+    override via ``monkeypatch.delenv`` or ``monkeypatch.setenv`` with a
+    shorter value — both reuse the same per-test monkeypatch instance, so
+    their override wins over this default.
+    """
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", _VALID_TOKEN)
+
 
 # ---------- unit ----------
 
@@ -115,7 +132,10 @@ async def test_http_tools_list_via_real_uvicorn() -> None:
             await asyncio.sleep(0.05)
         assert uv_server.started, "uvicorn never reported started"
 
-        headers = {"Accept": "application/json, text/event-stream"}
+        headers = {
+            "Accept": "application/json, text/event-stream",
+            "Authorization": f"Bearer {_VALID_TOKEN}",
+        }
         async with httpx.AsyncClient(base_url=f"http://127.0.0.1:{port}", timeout=10.0) as client:
             health_resp = await client.get("/healthz")
             assert health_resp.status_code == 200, health_resp.text
@@ -168,28 +188,49 @@ async def test_http_tools_list_via_real_uvicorn() -> None:
 # ---------- bearer auth (Wave B1) ----------
 
 
-def test_mcp_open_when_token_unset(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Backward-compat: env var unset → /mcp accepts unauthenticated POSTs.
+def test_build_app_raises_systemexit_when_token_unset(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """v1.0.1 contract: HTTP transport refuses to start without a token.
 
-    Existing deployments that bind to 127.0.0.1 or sit behind a reverse
-    proxy must keep working without operator intervention.
+    Closes the v1.0.0 fail-open gap where omitting the env var booted the
+    /mcp endpoint with no auth. The audit B1 spec required abort-on-absent;
+    v1.0.0 shipped fail-open by mistake and the CHANGELOG over-claimed
+    fail-closed. This test pins the corrected behavior at build_app() so
+    the security guarantee lives with construction, not just the CLI.
     """
     monkeypatch.delenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", raising=False)
+    with pytest.raises(SystemExit):
+        server_http.build_app()
+
+
+def test_build_app_raises_systemexit_when_token_too_short(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Short tokens are rejected — 32-char floor enforces real entropy.
+
+    A 4-char "test" token would technically pass a presence check while
+    leaving the endpoint trivially brute-forceable. `openssl rand -hex 32`
+    yields 64 chars; the floor is set to half that to stay friendly to
+    hand-typed UUIDs (32 hex chars) without inviting toy values.
+    """
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", "x" * 31)
+    with pytest.raises(SystemExit):
+        server_http.build_app()
+
+
+def test_build_app_succeeds_when_token_meets_min_length(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Boundary: exactly 32 chars satisfies the length floor."""
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", _VALID_TOKEN)
     app = server_http.build_app()
-    with TestClient(app) as client:
-        resp = client.post(
-            "/mcp/",
-            json={"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}},
-            headers={"Accept": "application/json, text/event-stream"},
-        )
-    # Status must not be 401 — the request reached the MCP manager (which
-    # may legitimately return any non-auth error for an incomplete init).
-    assert resp.status_code != 401, resp.text
+    assert isinstance(app, Starlette)
 
 
 def test_mcp_requires_bearer_when_token_set_no_header(monkeypatch: pytest.MonkeyPatch) -> None:
     """Token configured + missing Authorization header → 401."""
-    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", "s3cret-token")
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", _VALID_TOKEN)
     app = server_http.build_app()
     with TestClient(app) as client:
         resp = client.post(
@@ -204,7 +245,7 @@ def test_mcp_requires_bearer_when_token_set_wrong_token(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Token configured + wrong bearer → 401 (constant-time compare)."""
-    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", "s3cret-token")
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", _VALID_TOKEN)
     app = server_http.build_app()
     with TestClient(app) as client:
         resp = client.post(
@@ -225,7 +266,7 @@ def test_mcp_accepts_correct_bearer_token(monkeypatch: pytest.MonkeyPatch) -> No
     simply that auth doesn't reject (status != 401), proving the
     middleware accepted the credential and forwarded to the manager.
     """
-    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", "s3cret-token")
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", _VALID_TOKEN)
     app = server_http.build_app()
     with TestClient(app) as client:
         resp = client.post(
@@ -233,7 +274,7 @@ def test_mcp_accepts_correct_bearer_token(monkeypatch: pytest.MonkeyPatch) -> No
             json={"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}},
             headers={
                 "Accept": "application/json, text/event-stream",
-                "Authorization": "Bearer s3cret-token",
+                "Authorization": f"Bearer {_VALID_TOKEN}",
             },
         )
     assert resp.status_code != 401, resp.text
@@ -243,7 +284,7 @@ def test_healthz_exempt_from_bearer_auth(monkeypatch: pytest.MonkeyPatch) -> Non
     """/healthz must remain open even with auth configured — external
     watchers (Uptime Kuma, Diun, k8s probes) can't carry a bearer token.
     """
-    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", "s3cret-token")
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", _VALID_TOKEN)
     app = server_http.build_app()
     with TestClient(app) as client:
         resp = client.get("/healthz")
@@ -259,7 +300,6 @@ def test_mcp_rejects_oversized_body_413(monkeypatch: pytest.MonkeyPatch) -> None
     by default; this test lowers the cap so the 413 fires on a small
     payload without allocating multi-MB strings in the test process.
     """
-    monkeypatch.delenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", raising=False)
     monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_MAX_BODY", "1024")
     app = server_http.build_app()
     oversized = "x" * 4096  # 4 KB body > 1 KB cap
@@ -277,14 +317,16 @@ def test_mcp_rejects_oversized_body_413(monkeypatch: pytest.MonkeyPatch) -> None
 
 def test_mcp_passes_through_body_under_cap(monkeypatch: pytest.MonkeyPatch) -> None:
     """Default 2 MB cap doesn't reject a normal JSON-RPC payload."""
-    monkeypatch.delenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", raising=False)
     monkeypatch.delenv("PLANT_GENOMICS_MCP_HTTP_MAX_BODY", raising=False)
     app = server_http.build_app()
     with TestClient(app) as client:
         resp = client.post(
             "/mcp/",
             json={"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
-            headers={"Accept": "application/json, text/event-stream"},
+            headers={
+                "Accept": "application/json, text/event-stream",
+                "Authorization": f"Bearer {_VALID_TOKEN}",
+            },
         )
     assert resp.status_code != 413, resp.text
 
@@ -385,7 +427,7 @@ def test_413_fires_before_401_when_both_would_apply(
     burn cycles reading and discarding a 100 MB body before issuing 401.
     If a future edit re-orders these gates, this test fails loudly.
     """
-    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", "s3cret-token")
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", _VALID_TOKEN)
     monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_MAX_BODY", "1024")
     app = server_http.build_app()
     oversized = "x" * 4096
@@ -412,7 +454,7 @@ def test_413_fires_with_valid_auth_when_oversized(
     precedence test: together they confirm body-cap is universal, not
     conditional on the auth posture.
     """
-    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", "s3cret-token")
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", _VALID_TOKEN)
     monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_MAX_BODY", "1024")
     app = server_http.build_app()
     oversized = "x" * 4096
@@ -423,7 +465,7 @@ def test_413_fires_with_valid_auth_when_oversized(
             headers={
                 "Content-Type": "application/json",
                 "Accept": "application/json, text/event-stream",
-                "Authorization": "Bearer s3cret-token",
+                "Authorization": f"Bearer {_VALID_TOKEN}",
             },
         )
     assert resp.status_code == 413, (resp.status_code, resp.text)
@@ -444,7 +486,7 @@ async def test_auth_plus_body_cap_via_real_uvicorn(
       * under-cap body + wrong auth → 401 (auth wins when body ok)
       * under-cap body + valid auth → 200 (handshake reaches manager)
     """
-    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", "live-secret")
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", _VALID_TOKEN)
     monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_MAX_BODY", "1024")
     app = server_http.build_app()
     port = _free_port()
@@ -502,7 +544,7 @@ async def test_auth_plus_body_cap_via_real_uvicorn(
                 },
                 headers={
                     "Accept": "application/json, text/event-stream",
-                    "Authorization": "Bearer live-secret",
+                    "Authorization": f"Bearer {_VALID_TOKEN}",
                 },
             )
             assert good.status_code == 200, good.text
@@ -521,7 +563,7 @@ async def test_bearer_auth_via_real_uvicorn(monkeypatch: pytest.MonkeyPatch) -> 
     Boundary test — TestClient invokes the ASGI app in-process; this
     confirms the middleware also rejects/accepts across a real socket.
     """
-    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", "live-secret")
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", _VALID_TOKEN)
     app = server_http.build_app()
     port = _free_port()
     config = uvicorn.Config(app, host="127.0.0.1", port=port, log_level="error")
@@ -562,7 +604,7 @@ async def test_bearer_auth_via_real_uvicorn(monkeypatch: pytest.MonkeyPatch) -> 
                 },
                 headers={
                     "Accept": "application/json, text/event-stream",
-                    "Authorization": "Bearer live-secret",
+                    "Authorization": f"Bearer {_VALID_TOKEN}",
                 },
             )
             assert good_auth.status_code == 200, good_auth.text

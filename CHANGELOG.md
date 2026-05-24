@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.0.1 — 2026-05-23
+
+Security patch — closes the v1.0.0 fail-open gap on the HTTP transport. **Breaking change for self-hosters:** `PLANT_GENOMICS_MCP_HTTP_TOKEN` is now REQUIRED and must be at least 32 characters; `plant-genomics-mcp-http` (and any direct `build_app()` caller) aborts at startup with `SystemExit` if the env var is absent or too short. v1.0.0 documented this as fail-closed but the code shipped fail-open-on-absent; v1.0.1 makes the code match the spec. `/healthz` remains unauthenticated for liveness probes; stdio transport is unaffected.
+
+- **`src/plant_genomics_mcp/server_http.py:build_app()`** — reads `PLANT_GENOMICS_MCP_HTTP_TOKEN` from the env, raises `SystemExit` with an actionable message (suggests `openssl rand -hex 32`) when the value is missing or `< _MIN_TOKEN_LEN = 32` chars. The dead `if expected_token:` guard inside `handle_mcp` is removed — the auth gate now runs unconditionally on every `/mcp` request, since the env var is guaranteed non-empty by construction.
+- **`tests/test_http_transport.py`** — 3 new tests pinning the contract (abort-on-absent, abort-on-short, succeed-at-32-chars); existing tests refactored onto a `_VALID_TOKEN = "x" * 32` constant and an autouse fixture that sets a valid token by default; the obsolete `test_mcp_open_when_token_unset` (which asserted the fail-open mechanism we just removed) is deleted.
+- **Upgrade path.** Existing `~/homelab/plant-genomics-mcp/.env` deployments on the hosted demo endpoint already satisfy the new contract (the 64-char token written during the v1.0.0 deploy is well over 32 chars). Self-hosters who relied on the documented-but-never-shipped fail-open default must now set the env var or the container will refuse to start.
+
 ## v1.0.0 — 2026-05-23
 
 First stable release. No new backends or tools — the 32-tool, 11-backend surface from v0.10.0 is the 1.0 contract. What this tag carries is the pre-1.0 readiness sweep across three waves (audit memo `docs/superpowers/audits/2026-05-23-pre-1.0-readiness.md`): resolver-hygiene cleanup, security-hardening for the hosted HTTP endpoint, and API-polish for long-term schema stability.
