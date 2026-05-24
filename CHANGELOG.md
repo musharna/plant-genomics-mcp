@@ -1,5 +1,44 @@
 # Changelog
 
+## v1.0.0 — 2026-05-23
+
+First stable release. No new backends or tools — the 32-tool, 11-backend surface from v0.10.0 is the 1.0 contract. What this tag carries is the pre-1.0 readiness sweep across three waves (audit memo `docs/superpowers/audits/2026-05-23-pre-1.0-readiness.md`): resolver-hygiene cleanup, security-hardening for the hosted HTTP endpoint, and API-polish for long-term schema stability.
+
+**Wave A — resolver hygiene (5 commits, A1-A5):**
+
+- **`scripts/verify_organisms.py` repaired** — was crashing at import on the removed `phytozome.KNOWN_ORGANISMS` symbol; now reads `phytozome_int` from the v0.9 `organisms.ORGANISMS` registry.
+- **Phytozome IDs backfilled for all 12 organisms** — 7 of 12 records had `phytozome_int = None`; live-probed and populated so `phytozome_lookup_locus` no longer raises `OrganismNotSupported` for most non-Arabidopsis input.
+- **`string_interactions` + `batch_string_interactions` wired to `organism=`** — the two tools were silently dropping the parameter; added it to both inputSchemas and dispatch paths. `test_tool_schemas_use_organism_param` strengthened to assert presence (the original test was the root cause of the slip).
+- **Live non-Arabidopsis synthesis test** — end-to-end probe of `analyze_locus_synth` against rice `Os01g0100100`, gated by `PLANT_GENOMICS_MCP_LIVE=1`.
+
+**Wave B — security hardening for the hosted HTTP endpoint (7 commits, B1-B7):**
+
+- **Bearer-token auth middleware on `/mcp`** — the hosted endpoint is no longer open by default. Set `PLANT_GENOMICS_MCP_HTTP_AUTH_TOKEN` to enable; absent token disables the endpoint (fail-closed). `/healthz` remains unauthenticated.
+- **`Retry-After` capped at 60s** across all 9 backend modules with retry loops — eliminates the "upstream tells us to sleep for an hour" amplification vector.
+- **HTTP body-size cap (1 MB default, env-tunable) + BLAST `sequence` `maxLength` (1 MB)** — closes the 500 MB BLAST sequence acceptance hole.
+- **BLAST concurrency semaphore** (`PLANT_GENOMICS_MCP_BLAST_CONCURRENCY=2` default) and **real operator NCBI email** required via `PLANT_GENOMICS_MCP_NCBI_EMAIL` — NCBI ToS etiquette for `consensus_homologs` and `find_homologs_synth` auto-submit paths.
+- **CORS deny-all** on the Starlette app — no browser-origin proxy abuse pre-auth.
+- **Shared `_LOCUS_RE` validator** extracted to `validators.py` and applied to Ensembl / KEGG / Gramene paths that previously interpolated `locus` without regex validation.
+- **HTTP integration tests** — auth × body-size matrix covering 200 / 401 / 413 paths.
+
+**Wave C — API polish for 1.0 contract stability (10 items, C1-C10):**
+
+- **`StepRow.elapsed_s` → `float | None`** — phase-2 synthesis steps (consensus, ranking) now return `None` instead of zero, removing the false-attribution of phase-1 backend latency to phase-2 reducers.
+- **`/healthz` no longer leaks `__version__`** — returns `{"status":"ok"}` only.
+- **`pgmcp://backends/status` includes BLAST** — with its concurrency cap surfaced as `concurrency_cap`.
+- **`biological_context` prompt accepts `organism=`** — mirrors `analyze_locus`. Non-Arabidopsis organisms skip KEGG + ATTED (Arabidopsis-only data) with an explicit synthesis note.
+- **Hosted endpoint README copy** — reframed as "personal demo, best-effort, no SLA — self-host for production."
+- **Late `import re` hoisted to top of `synthesis.py`** — removes a `# noqa: E402` and the `_re` alias.
+- **`batch_ensembl_plants_lookup_locus` POST-no-retry gap documented** — tool description + docstring note that the batch endpoint skips the single-locus path's 429/5xx retry, with shared retry layer scheduled for v1.1.
+- **Coverage-matrix column header aligned** — `taxid` → `ncbi_taxid` to match the `OrganismRecord` field name and README description.
+- **Reproducible Docker builds via `uv.lock`** — both `Dockerfile` and `Dockerfile.http` now use `ghcr.io/astral-sh/uv:0.11.16-python3.12-trixie-slim` with `uv sync --frozen --no-editable`; lockfile is committed and pinned through the project metadata.
+
+**Known deferrals (scheduled for v1.1):**
+
+- Shared `_http.py` retry refactor — gives the batch POST paths the same retry behavior as single-locus GETs.
+- PyPI publish and registry-listing refresh (modelcontextprotocol.io, PulseMCP, Glama).
+- Optional codecov.io coverage badge in the README header.
+
 ## v0.10.0 — 2026-05-23
 
 BAR backend release — adds the Bio-Analytic Resource for Plant Biology (U Toronto, Global Core Biodata Resource 2023) as the tenth live backend. Surface grows 27 → 32 tools (3 new single-locus + 2 new batch). BAR is free, keyless, no rate limit; it mirrors TAIR's curator-annotated locus data plus eFP-Browser tissue expression and the AIV (Arabidopsis Interactions Viewer) protein-protein interaction graph, all without the Phoenix Bioinformatics paid subscription. `tair_locus_info` is **silently upgraded** to a direct alias of `bar_gene_summary` — the MCP tool name stays for client compatibility, but the body now returns real curator data instead of a `subscription_required` redirect record.
