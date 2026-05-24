@@ -1,23 +1,26 @@
 # syntax=docker/dockerfile:1.7
-# Minimal stdio MCP server image. Stage 1 installs the wheel into a venv;
-# stage 2 copies that venv into a slim runtime so the final image ships
-# without build tooling.
+# Minimal stdio MCP server image. Stage 1 uses uv to materialize the locked
+# dependency graph (uv.lock) into a venv; stage 2 copies that venv into a
+# slim runtime so the final image ships without uv or build tooling. Pinning
+# through the lockfile makes the build byte-reproducible across hosts.
 
-FROM python:3.12-slim AS builder
+FROM ghcr.io/astral-sh/uv:0.11.16-python3.12-trixie-slim AS builder
 
-ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    PIP_NO_CACHE_DIR=1 \
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv \
+    UV_LINK_MODE=copy \
+    UV_COMPILE_BYTECODE=1 \
     PYTHONDONTWRITEBYTECODE=1
 
 WORKDIR /build
 
-# Copy only what the build needs first, for layer cache stability.
-COPY pyproject.toml README.md LICENSE ./
+# Lock + manifest first for layer cache; sources change more often than deps.
+COPY pyproject.toml uv.lock README.md LICENSE ./
 COPY src ./src
 
-RUN python -m venv /opt/venv \
- && /opt/venv/bin/pip install --upgrade pip \
- && /opt/venv/bin/pip install .
+# --frozen: use exact versions from uv.lock; fail if lock is out of date.
+# --no-editable: install the project as a wheel so the venv is self-contained
+#                and doesn't reference /build/src in stage 2.
+RUN uv sync --frozen --no-editable
 
 
 FROM python:3.12-slim AS runtime
