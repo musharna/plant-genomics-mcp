@@ -500,7 +500,9 @@ async def biological_context_synth(
 ) -> SynthesisEnvelope:
     """Mirror the biological_context prompt: gramene + KEGG + STRING + ATTED.
 
-    Phase 1: uniprot.lookup_locus (need accession for STRING).
+    Phase 1: uniprot.lookup_locus (returned in the envelope; not threaded
+    into STRING — STRING does its own canonical-accession resolution from
+    the locus, see string_db.lookup_partners).
     Phase 2 (gather): gramene.homologs, kegg.pathways, string_db.partners,
                       atted.coexpression.
 
@@ -512,9 +514,10 @@ async def biological_context_synth(
       - kegg.lookup_pathways(client, locus, organism=...) — v1.1.0 requires organism;
         Arabidopsis-only (non-ath organisms raise OrganismNotSupported until an
         Entrez bridge lands)
-      - string_db.lookup_partners(client, locus_or_accession, limit=..., organism=...)
-        Passing the uniprot accession bypasses the internal locus→accession
-        re-resolution (string_db.py:144 _looks_like_accession path).
+      - string_db.lookup_partners(client, locus_or_accession, limit=..., organism=...) —
+        v1.1.1 drops the pre-resolve-through-UniProt step; pass loci directly
+        and let STRING's internal resolver pick the canonical accession (avoids
+        Q0JRI1-vs-A0A0P0UX28 ambiguity bugs on multi-accession loci).
       - atted.lookup_coexpression(client, locus, organism=..., top_n=...) —
         v1.1.0 requires organism; release resolved per-organism (5 organisms
         currently have no ATTED-II release → OrganismNotSupported).
@@ -572,7 +575,7 @@ async def biological_context_synth(
             result=None,
         )
 
-    uniprot_acc = root.result["primaryAccession"]
+    uniprot_acc = root.result["primaryAccession"]  # surfaced in the envelope result
 
     p2 = await _gather_phase2(
         [
@@ -581,7 +584,7 @@ async def biological_context_synth(
             (
                 4,
                 "string_interactions",
-                string_db.lookup_partners(client, uniprot_acc, limit=top_n, organism=organism),
+                string_db.lookup_partners(client, locus, limit=top_n, organism=organism),
             ),
             (
                 5,

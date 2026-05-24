@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.1.1 — 2026-05-24
+
+Bug fix: STRING locus inputs failed for any organism where the locus has multiple valid UniProt accessions and STRING canonicalizes on a different one than our resolver picks. Surfaced as a 404 on rice `Os01g0100100` (live test `test_live_string_rice_locus_resolves_and_returns_partners`): our `uniprot.lookup_locus` returned the Swiss-Prot `Q0JRI1`, but STRING's species-canonical pick for that locus is the TrEMBL `A0A0P0UX28`, so the subsequent STRING call 404'd.
+
+**Fixed**
+
+- **`string_db.lookup_partners` now passes loci to STRING unchanged.** The v1.0.x → v1.1.0 codepath wrapped STRING in a UniProt pre-resolve step: any input that didn't match `_looks_like_accession()` was sent to `uniprot.lookup_locus` first, and the returned UniProt accession was passed to STRING's `/api/json/interaction_partners`. That step was architecturally redundant — STRING's own resolver handles loci directly — and produced wrong-accession 404s whenever a locus had multiple valid UniProt accessions and STRING canonicalized on a different one than UniProt's reviewed-first heuristic. v1.1.1 drops the pre-resolve entirely; loci and accessions both pass through, and `result["accession"]` surfaces STRING's species-canonical pick extracted from `stringId_A` (e.g. `AT1G01010.1` for arabidopsis loci, `A0A0P0UX28` for the rice case above).
+- **Removed `string_db._looks_like_accession` helper + `_UNIPROT_RE` regex constant + `uniprot` module import from `string_db.py`** — all only existed to gate the now-deleted pre-resolve branch. Two unit tests covering the helper (`test_looks_like_accession_rejects_trailing_garbage`, the parametrized `test_looks_like_accession`) were removed; `test_lookup_partners_with_locus_input_resolves_first` was rewritten as `test_lookup_partners_with_locus_passes_through`, asserting the locus reaches STRING directly with no intermediate UniProt fetch.
+- **`synthesis.biological_context_synth`** — the phase-2 STRING call now receives the original `locus`, not the phase-1 UniProt accession. The envelope still surfaces `uniprot_accession` from phase-1 unchanged.
+
+**Operational impact**
+
+- No schema change; tool signatures and registry metadata unchanged. PyPI republish + Diun-driven Docker retag on gt76 only.
+- Live STRING tests against both arabidopsis (`Q0WV96`) and rice (`Os01g0100100`) pass post-fix.
+
 ## v1.1.0 — 2026-05-24
 
 Polish bundle — two BREAKING contract tightenings on the multi-organism resolver, one HTTP-transport correctness fix, and a small bag of plan-T1–T4 cleanups. Two backends (KEGG, ATTED-II) that were Arabidopsis-only as of v1.0.4 now thread `organism=` through the same resolver chain as the other 9 backends — both raise `TypeError` if called without `organism=`, matching the rest of the multi-organism surface from v0.9 onward. KEGG resolves the organism to a per-organism KEGG `org_code` (e.g. `ath:`, `osa:`); ATTED-II resolves to a per-organism frozen release ID (e.g. `Ath-u.c4-0`, `Osa-u.c1-0`). Five of the 12 curated organisms (wheat, sorghum, barley, poplar, brachypodium) lack ATTED-II coverage and raise `OrganismNotSupported` before any HTTP fires; live coverage is observable at the `pgmcp://organisms/coverage` resource.
