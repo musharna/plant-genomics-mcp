@@ -515,7 +515,9 @@ async def biological_context_synth(
       - string_db.lookup_partners(client, locus_or_accession, limit=..., organism=...)
         Passing the uniprot accession bypasses the internal locus→accession
         re-resolution (string_db.py:144 _looks_like_accession path).
-      - atted.lookup_coexpression(client, locus, top_n=...) — no species (Ath-only upstream).
+      - atted.lookup_coexpression(client, locus, organism=..., top_n=...) —
+        v1.1.0 requires organism; release resolved per-organism (5 organisms
+        currently have no ATTED-II release → OrganismNotSupported).
     """
     top_n = _bound_top_n(top_n)
     started_at = _now_iso()
@@ -581,7 +583,11 @@ async def biological_context_synth(
                 "string_interactions",
                 string_db.lookup_partners(client, uniprot_acc, limit=top_n, organism=organism),
             ),
-            (5, "atted_coexpression", atted.lookup_coexpression(client, locus, top_n=top_n)),
+            (
+                5,
+                "atted_coexpression",
+                atted.lookup_coexpression(client, locus, organism=organism, top_n=top_n),
+            ),
         ]
     )
     gramene_row, kegg_row, string_row, atted_row = p2

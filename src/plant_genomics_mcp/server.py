@@ -990,18 +990,27 @@ TOOLS: list[types.Tool] = [
         name="atted_coexpression",
         description=(
             "Fetch co-expressed gene neighbors from ATTED-II (atted.jp, "
-            "API v5, Ath-u.c4-0 release) for an Arabidopsis locus. Returns "
-            "top_n neighbors with target locus + NCBI Entrez gene ID + "
-            "z-score (higher = stronger coexpression). Pairs with "
-            "string_interactions to surface high-confidence functional "
-            "partners (interactors that are also coexpressed)."
+            "API v5) for a plant locus. Returns top_n neighbors with "
+            "target locus + NCBI Entrez gene ID + z-score (higher = "
+            "stronger coexpression). The ATTED-II release "
+            "(e.g. Ath-u.c4-0 for Arabidopsis, Osa-u.c1-0 for rice) is "
+            "resolved per-organism; wheat, sorghum, barley, poplar, and "
+            "brachypodium have no published release and raise "
+            "OrganismNotSupported. Pairs with string_interactions to "
+            "surface high-confidence functional partners (interactors "
+            "that are also coexpressed)."
         ),
         inputSchema={
             "type": "object",
             "properties": {
                 "locus": {
                     "type": "string",
-                    "description": "Arabidopsis AGI locus, e.g. AT1G01010",
+                    "description": "Plant locus, e.g. AT1G01010 (Arabidopsis) or Os01g0100100 (rice)",
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "default": "arabidopsis_thaliana",
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
                 },
                 "top_n": {
                     "type": "integer",
@@ -1025,6 +1034,11 @@ TOOLS: list[types.Tool] = [
                     "type": "array",
                     "items": {"type": "string"},
                     "maxItems": 50,
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "default": "arabidopsis_thaliana",
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
                 },
                 "top_n": {"type": "integer", "default": 25, "minimum": 1, "maximum": 300},
             },
@@ -1360,12 +1374,14 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                 return await atted.lookup_coexpression(
                     client,
                     args["locus"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
                     top_n=args.get("top_n", atted.DEFAULT_TOP_N),
                 )
             case "batch_atted_coexpression":
                 return await batch.batch_atted_coexpression(
                     client,
                     args["loci"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
                     top_n=args.get("top_n", atted.DEFAULT_TOP_N),
                 )
             case "gramene_homologs":
