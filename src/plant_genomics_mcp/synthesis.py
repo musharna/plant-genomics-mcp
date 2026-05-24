@@ -708,61 +708,6 @@ def _consensus_partners(
 # ---------------------------------------------------------------------------
 
 
-_BLAST_DEFLINE_GN = re.compile(r"GN=([A-Za-z0-9_.\-]+)")
-_BLAST_DEFLINE_OS = re.compile(r"OS=([A-Z][A-Za-z]+(?:\s+[A-Za-z]+)+?)(?=\s+[A-Z]{2}=|$)")
-_PLANT_LOCUS_TOKEN = re.compile(r"\b([A-Za-z]{2,3}\d{1,2}[GgMmCcTtDd]\d{3,8})(?:\.\d+)?\b")
-_GRAMENE_SPECIES_PREFIX = re.compile(r"^[A-Z]{4,8}_")
-_GRAMENE_PREFIX_TO_SPECIES = {
-    "ARATH": "arabidopsis_thaliana",
-    "ORYSA": "oryza_sativa",
-    "MAIZE": "zea_mays",
-    "SOLLC": "solanum_lycopersicum",
-    "SOYBN": "glycine_max",
-    "SORBI": "sorghum_bicolor",
-    "WHEAT": "triticum_aestivum",
-    "HORVU": "hordeum_vulgare",
-    "BRADI": "brachypodium_distachyon",
-}
-
-
-def _normalize_locus_token(raw: str) -> str:
-    s = (raw or "").strip()
-    if not s:
-        return ""
-    s = _GRAMENE_SPECIES_PREFIX.sub("", s)
-    s = s.split(".", 1)[0]
-    return s.lower()
-
-
-def _species_from_gramene_locus(raw: str) -> str | None:
-    s = (raw or "").strip()
-    m = re.match(r"^([A-Z]{4,8})_", s)
-    if not m:
-        return None
-    return _GRAMENE_PREFIX_TO_SPECIES.get(m.group(1))
-
-
-def _parse_blast_subject_for_consensus(hit: dict) -> tuple[str | None, str | None]:
-    description = hit.get("description") or ""
-    accession = hit.get("accession") or ""
-
-    species: str | None = None
-    m_os = _BLAST_DEFLINE_OS.search(description)
-    if m_os:
-        species = m_os.group(1).strip().replace(" ", "_").lower()
-
-    gene: str | None = None
-    m_gn = _BLAST_DEFLINE_GN.search(description)
-    if m_gn:
-        gene = m_gn.group(1).strip()
-    else:
-        m_pl = _PLANT_LOCUS_TOKEN.search(accession) or _PLANT_LOCUS_TOKEN.search(description)
-        if m_pl:
-            gene = m_pl.group(1).strip()
-
-    return species, gene
-
-
 def _parse_blast_identity_pct(raw: object) -> float | None:
     if raw is None:
         return None
@@ -809,6 +754,11 @@ async def consensus_homologs(
                 ),
                 _skipped(3, "gramene_homologs", "phase 1 failed; gramene_homologs skipped"),
                 _skipped(4, "blast_sequence", "phase 1 failed; blast_sequence skipped"),
+                _skipped(
+                    5,
+                    "gramene_homolog_enrichment",
+                    "phase 1 failed; gramene_homolog_enrichment skipped",
+                ),
             ],
             result=None,
         )
@@ -831,6 +781,7 @@ async def consensus_homologs(
                 _skipped(2, "uniprot_fetch_sequence", skip),
                 _skipped(3, "gramene_homologs", skip),
                 _skipped(4, "blast_sequence", skip),
+                _skipped(5, "gramene_homolog_enrichment", skip),
             ],
             result=None,
         )
@@ -872,6 +823,7 @@ async def consensus_homologs(
                 step2,
                 _skipped(3, "gramene_homologs", skip),
                 _skipped(4, "blast_sequence", skip),
+                _skipped(5, "gramene_homolog_enrichment", skip),
             ],
             result=None,
         )
@@ -894,6 +846,7 @@ async def consensus_homologs(
                 step2,
                 _skipped(3, "gramene_homologs", skip),
                 _skipped(4, "blast_sequence", skip),
+                _skipped(5, "gramene_homolog_enrichment", skip),
             ],
             result=None,
         )
@@ -912,9 +865,46 @@ async def consensus_homologs(
     )
     gramene_row, blast_row = p2
 
+    # Phase 3 — enrich Gramene loci with UniProt accession + system_name so
+    # we can dedup against BLAST in UniProt-accession-space. Gramene's
+    # fl=homology projection doesn't carry xrefs, so this is a second batched
+    # call against the same /v69/genes endpoint with fl=_id,xrefs,system_name.
+    # Without this projection, cross-source dedup is structurally impossible:
+    # Gramene returns species-prefixed locus IDs (e.g. ORYSA_OS01G0100100)
+    # while NCBI BLAST against SwissProt returns bare UniProt accessions
+    # (e.g. Q5VMS9.1) — there's no overlap to join on.
+    xref_map: dict[str, dict[str, str | None]] = {}
+    if gramene_row.status == "ok" and gramene_row.result:
+        loci = [
+            h.get("target_locus")
+            for h in (gramene_row.result.get("homologs") or [])
+            if isinstance(h.get("target_locus"), str) and h.get("target_locus")
+        ]
+        if loci:
+            step5 = await _timed_step(
+                5,
+                "gramene_homolog_enrichment",
+                gramene.fetch_homolog_enrichment_batch(client, loci),
+            )
+            if step5.status == "ok" and isinstance(step5.result, dict):
+                xref_map = step5.result
+        else:
+            step5 = _skipped(
+                5,
+                "gramene_homolog_enrichment",
+                "gramene_homologs returned 0 homologs; nothing to enrich",
+            )
+    else:
+        step5 = _skipped(
+            5,
+            "gramene_homolog_enrichment",
+            "gramene_homologs phase did not return ok; enrichment skipped",
+        )
+
     consensus = _consensus_homologs_compose(
         gramene_payload=gramene_row.result if gramene_row.status == "ok" else None,
         blast_payload=blast_row.result if blast_row.status == "ok" else None,
+        xref_map=xref_map,
         top_n=top_n,
     )
 
@@ -923,7 +913,7 @@ async def consensus_homologs(
         input=input_args,
         started_at=started_at,
         elapsed_s=time.perf_counter() - t0,
-        steps=[step1, step2, *p2],
+        steps=[step1, step2, *p2, step5],
         result={
             "uniprot_accession": acc,
             "sequence_length": len(sequence),
@@ -935,23 +925,46 @@ async def consensus_homologs(
 def _consensus_homologs_compose(
     gramene_payload: dict | None,
     blast_payload: dict | None,
+    xref_map: dict[str, dict[str, str | None]] | None,
+    *,
     top_n: int,
 ) -> list[dict]:
+    """Dedup Gramene homologs ∩ NCBI BLAST hits on UniProt accession.
+
+    Both sources project into UniProt-accession-space:
+      - Gramene: via ``xref_map`` (built by ``gramene.fetch_homolog_enrichment_batch``)
+      - BLAST: parsed from ``hit['accession']`` (e.g. ``sp|Q5VMS9.1|Y_ORYSJ``)
+        via the shared ``_extract_uniprot_accession`` helper + ``.N`` version strip.
+
+    Gramene homologs whose ``xref_map`` entry has no UniProt accession are
+    dropped — without an accession they can't dedup with BLAST, so keeping
+    them as single-source rows would just dilute the consensus. This is a
+    known coverage gap: ~half of v69 entries in fringe organisms (cucurbits,
+    bryophytes) have no Swiss-Prot or TrEMBL xref. Tracked in CHANGELOG v1.2.0.
+
+    ``target_species`` is sourced from the Gramene xref (``system_name``).
+    BLAST-only hits report ``target_species=None`` because the NCBI SwissProt
+    defline format (``RecName: Full=...``) doesn't carry the EBI-style
+    ``OS=`` species token — recovering it would need a separate UniProt
+    lookup per hit, which is outside this tool's budget.
+    """
     groups: dict[str, dict] = {}
+    xref_map = xref_map or {}
 
     if gramene_payload:
         for h in gramene_payload.get("homologs") or []:
             raw_locus = h.get("target_locus") or ""
-            key = _normalize_locus_token(raw_locus)
-            if not key:
+            if not raw_locus:
+                continue
+            xref = xref_map.get(raw_locus) or {}
+            acc = xref.get("uniprot_acc")
+            if not acc:
                 continue
             entry = groups.setdefault(
-                key,
+                acc,
                 {
-                    "target_locus_normalized": key,
-                    "target_locus_gramene": None,
-                    "target_gene_blast": None,
-                    "target_species": _species_from_gramene_locus(raw_locus),
+                    "uniprot_accession": acc,
+                    "target_species": xref.get("system_name"),
                     "sources": [],
                     "identities": [],
                     "gramene_hit": None,
@@ -962,23 +975,26 @@ def _consensus_homologs_compose(
                 entry["sources"].append("gramene")
                 entry["identities"].append(1.0)
                 entry["gramene_hit"] = h
-                entry["target_locus_gramene"] = raw_locus
 
     if blast_payload:
         for h in blast_payload.get("hits") or []:
-            species_raw, gene_raw = _parse_blast_subject_for_consensus(h)
-            if not gene_raw:
+            raw_acc = _extract_uniprot_accession(h.get("accession") or "")
+            if not raw_acc:
                 continue
-            key = _normalize_locus_token(gene_raw)
-            if not key:
+            # Strip the ``.N`` version suffix so ``Q5VMS9.1`` (BLAST) and
+            # ``Q5VMS9`` (Gramene xref) collapse into the same dedup key.
+            acc = raw_acc.split(".", 1)[0]
+            identity_frac = _parse_blast_identity_pct(h.get("identity"))
+            if identity_frac is None:
+                # Drop hits with missing identity — scoring weights
+                # mean_identity by n_sources, so a None-identity hit would
+                # inflate n_sources without contributing a measurable signal.
                 continue
             entry = groups.setdefault(
-                key,
+                acc,
                 {
-                    "target_locus_normalized": key,
-                    "target_locus_gramene": None,
-                    "target_gene_blast": None,
-                    "target_species": species_raw,
+                    "uniprot_accession": acc,
+                    "target_species": None,
                     "sources": [],
                     "identities": [],
                     "gramene_hit": None,
@@ -986,18 +1002,9 @@ def _consensus_homologs_compose(
                 },
             )
             if "blast" not in entry["sources"]:
-                identity_frac = _parse_blast_identity_pct(h.get("identity"))
-                if identity_frac is None:
-                    # Drop hits with missing identity — scoring weights mean_identity
-                    # by n_sources, so a None-identity hit would inflate n_sources
-                    # without contributing a measurable signal.
-                    continue
                 entry["sources"].append("blast")
                 entry["identities"].append(identity_frac)
                 entry["blast_hit"] = h
-                entry["target_gene_blast"] = gene_raw
-                if species_raw:
-                    entry["target_species"] = species_raw
 
     out: list[dict] = []
     for entry in groups.values():
@@ -1008,9 +1015,7 @@ def _consensus_homologs_compose(
         score = n_sources * mean_identity
         out.append(
             {
-                "target_locus_normalized": entry["target_locus_normalized"],
-                "target_locus_gramene": entry["target_locus_gramene"],
-                "target_gene_blast": entry["target_gene_blast"],
+                "uniprot_accession": entry["uniprot_accession"],
                 "target_species": entry["target_species"],
                 "n_sources": n_sources,
                 "sources": list(entry["sources"]),
@@ -1020,5 +1025,5 @@ def _consensus_homologs_compose(
                 "blast_hit": entry["blast_hit"],
             }
         )
-    out.sort(key=lambda d: (-d["n_sources"], -d["score"], d["target_locus_normalized"]))
+    out.sort(key=lambda d: (-d["n_sources"], -d["score"], d["uniprot_accession"]))
     return out[:top_n]

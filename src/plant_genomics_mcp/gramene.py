@@ -80,6 +80,88 @@ def _normalize(
     }
 
 
+_UNIPROT_DB_PRIORITY = ("Uniprot/SWISSPROT", "Uniprot/SPTREMBL")
+
+
+def _pick_uniprot_acc(xrefs: Any) -> str | None:
+    """Return preferred UniProt accession from a Gramene xrefs payload.
+
+    SWISSPROT wins over SPTREMBL — mirrors UniProt's own reviewed-first
+    heuristic in ``uniprot.lookup_locus``. Tolerant of missing/malformed
+    xref entries (Gramene occasionally returns ``ids: []`` or omits
+    fields entirely).
+    """
+    if not isinstance(xrefs, list):
+        return None
+    by_db: dict[str, list[str]] = {}
+    for entry in xrefs:
+        if not isinstance(entry, dict):
+            continue
+        db = entry.get("db")
+        ids = entry.get("ids")
+        if not isinstance(db, str) or not isinstance(ids, list):
+            continue
+        flat = [x for x in ids if isinstance(x, str) and x]
+        if flat:
+            by_db[db] = flat
+    for db in _UNIPROT_DB_PRIORITY:
+        if db in by_db:
+            return by_db[db][0]
+    return None
+
+
+async def fetch_homolog_enrichment_batch(
+    client: httpx.AsyncClient,
+    loci: list[str],
+    *,
+    chunk_size: int = 100,
+) -> dict[str, dict[str, str | None]]:
+    """Enrich a batch of Gramene loci with UniProt acc + species slug.
+
+    For each locus in ``loci``, returns a dict
+    ``{"uniprot_acc": <SWISSPROT or SPTREMBL or None>, "system_name": <organism slug or None>}``.
+    Loci absent from Gramene's response (404 or filtered upstream) also map
+    to ``{"uniprot_acc": None, "system_name": None}`` — the output dict is
+    total over the input list so the caller's join doesn't need to handle
+    KeyError.
+
+    Batched via comma-separated ``idList``, chunked to ``chunk_size`` loci
+    per call for URL-length safety on long homology lists. Uses the same
+    24h cache as ``lookup_homologs`` (each chunk URL keyed independently).
+
+    Used by ``synthesis.consensus_homologs`` to project Gramene's locus-
+    space onto UniProt-accession-space so it can dedup with BLAST hits —
+    BLAST returns bare UniProt accessions natively, so accession is the
+    only stable cross-source join key for Gramene v69.
+    """
+    if not loci:
+        return {}
+    result: dict[str, dict[str, str | None]] = {
+        locus: {"uniprot_acc": None, "system_name": None} for locus in loci
+    }
+    for i in range(0, len(loci), chunk_size):
+        chunk = loci[i : i + chunk_size]
+        raw = await _get(
+            client,
+            f"/{GRAMENE_RELEASE}/genes",
+            params={"idList": ",".join(chunk), "fl": "_id,xrefs,system_name"},
+        )
+        if not isinstance(raw, list):
+            continue
+        for record in raw:
+            if not isinstance(record, dict):
+                continue
+            rid = record.get("_id")
+            if not isinstance(rid, str) or rid not in result:
+                continue
+            sys_name = record.get("system_name")
+            result[rid] = {
+                "uniprot_acc": _pick_uniprot_acc(record.get("xrefs")),
+                "system_name": sys_name if isinstance(sys_name, str) and sys_name else None,
+            }
+    return result
+
+
 async def lookup_homologs(
     client: httpx.AsyncClient,
     locus: str,
