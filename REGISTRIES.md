@@ -3,10 +3,10 @@
 Status of submissions to the four primary MCP server registries. The
 local artifacts (`server.json`, `smithery.yaml`) are committed; the
 external submission steps still require an authenticated push and a
-human-in-the-loop click. PyPI publication is deliberately deferred until
-the final-publish gate, so all current submissions reference the GHCR
-Docker image (`ghcr.io/musharna/plant-genomics-mcp:0.5.0`) rather than a
-`pip install`-able package.
+human-in-the-loop click. **PyPI is live as of v1.0.3** —
+`pip install plant-genomics-mcp` (or `pipx install plant-genomics-mcp`)
+works directly, and `server.json` advertises both the PyPI package and
+the GHCR Docker image (`ghcr.io/musharna/plant-genomics-mcp:1.0.3`).
 
 ## registry.modelcontextprotocol.io (official)
 
@@ -31,9 +31,14 @@ mcp-publisher publish
 
 Verify at `https://registry.modelcontextprotocol.io/v0/servers?search=plant-genomics-mcp`.
 
-**Blocked-on:** none — Docker package on GHCR is live (`0.5.0` tag
-shipped via the P0.4 publish workflow). PyPI entry will be added to
-`server.json` when we cut the PyPI release.
+**Blocked-on:** none — both packages are live:
+
+- PyPI: https://pypi.org/project/plant-genomics-mcp/1.0.3/
+- GHCR: `ghcr.io/musharna/plant-genomics-mcp:1.0.3`
+
+After running `mcp-publisher publish`, the namespace
+`io.github.musharna/plant-genomics-mcp` will be updated to v1.0.3 with
+both `pypi` and `oci` package entries (see `server.json`).
 
 ## smithery.ai
 
@@ -82,7 +87,8 @@ top-right of any directory page.
    - Description: see the `description` field in `server.json`.
    - Classification: community
    - Tags: `plant-biology`, `genomics`, `bioinformatics`, `ensembl`,
-     `uniprot`, `phytozome`, `europe-pmc`, `quickgo`
+     `uniprot`, `phytozome`, `europe-pmc`, `quickgo`, `gramene`, `kegg`,
+     `string-db`, `atted-ii`, `blast`, `bar`
 3. Submit and wait for moderation (typically <48h).
 
 **Blocked-on:** none.
