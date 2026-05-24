@@ -2,10 +2,23 @@ name: docker
 
 # Builds and pushes the MCP server image to GHCR.
 #   - on push to main: tags `:edge`
-#   - on push of tag `v*.*.*`: tags `:vX.Y.Z` + `:vX.Y` + `:latest`
+#   - on release published: tags `:vX.Y.Z` + `:vX.Y` + `:latest` (canonical)
+#   - on push of tag `v*.*.*`: same tags (fallback — see release runbook below)
 # Multi-arch (linux/amd64, linux/arm64) for client portability.
+#
+# Release runbook (canonical):
+#   gh release create vX.Y.Z --generate-notes --target main
+# This creates the tag, the GitHub Release object, and fires `release: published`
+# reliably. Do NOT rely on `git push --follow-tags` to trigger this workflow —
+# annotated tags pushed atomically with a branch can be silently dropped by
+# GitHub's webhook delivery (observed v1.1.0, 2026-05-24). The `push: tags:`
+# trigger below is kept as a safety net but is unreliable for annotated tags.
+# If a release tag push didn't fire this workflow, run:
+#   gh workflow run docker.yml --ref vX.Y.Z
 
 on:
+  release:
+    types: [published]
   push:
     branches: [main]
     tags: ["v*.*.*"]
