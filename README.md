@@ -145,7 +145,9 @@ claude mcp add --transport http plant-genomics-mcp \
   https://mjarnoldgt76.tail86d19d.ts.net/mcp
 ```
 
-For anything beyond casual evaluation — **self-host**. The HTTP transport is the same binary (see [Install](#install)). Self-hosting buys you (a) deterministic uptime, (b) a bearer-token gate via `PLANT_GENOMICS_MCP_HTTP_TOKEN`, and (c) NCBI BLAST etiquette under your own `PLANT_GENOMICS_MCP_NCBI_EMAIL`.
+For anything beyond casual evaluation — **self-host**. The HTTP transport is the same binary (see [Install](#install)). Self-hosting buys you (a) deterministic uptime, (b) the required bearer-token gate via `PLANT_GENOMICS_MCP_HTTP_TOKEN`, and (c) NCBI BLAST etiquette under your own `PLANT_GENOMICS_MCP_NCBI_EMAIL`.
+
+> **v1.0.1 breaking change:** `plant-genomics-mcp-http` now **requires** `PLANT_GENOMICS_MCP_HTTP_TOKEN` to be set to a value of at least 32 characters. The container aborts at startup with a clear error if the env var is missing or too short. Generate one with `openssl rand -hex 32` and pass it via `env_file:` or the compose `environment:` block. v1.0.0 documented this as fail-closed but the code shipped fail-open-on-absent — v1.0.1 closes that gap. Stdio transport is unaffected.
 
 ## Install
 
