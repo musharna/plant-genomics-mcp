@@ -27,6 +27,8 @@ class OrganismRecord:
     phytozome_int: int | None
     string_taxid: int | None
     europe_pmc_slug: str | None
+    kegg_org_code: str | None = None  # e.g. "ath", "osa", "zma" — KEGG 3-letter org code
+    atted_release: str | None = None  # e.g. "Ath-u.c4-0" — ATTED-II release id
     aliases: tuple[str, ...] = field(default_factory=tuple)
 
 
@@ -40,6 +42,8 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=167,
         string_taxid=3702,
         europe_pmc_slug=None,
+        kegg_org_code="ath",
+        atted_release="Ath-u.c4-0",
         aliases=("a. thaliana", "at", "arabidopsis"),
     ),
     "oryza_sativa": OrganismRecord(
@@ -51,6 +55,8 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=323,
         string_taxid=39947,
         europe_pmc_slug="rice",
+        kegg_org_code="osa",
+        atted_release="Osa-u.c1-0",
         aliases=("o. sativa",),
     ),
     "zea_mays": OrganismRecord(
@@ -62,6 +68,8 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=833,
         string_taxid=4577,
         europe_pmc_slug="maize",
+        kegg_org_code="zma",
+        atted_release="Zma-u.c1-0",
         aliases=("z. mays",),
     ),
     "triticum_aestivum": OrganismRecord(
@@ -73,6 +81,8 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=725,
         string_taxid=4565,
         europe_pmc_slug="wheat",
+        kegg_org_code="taes",
+        atted_release=None,  # ATTED-II has no Tae-u release (probed 2026-05-24)
         aliases=("t. aestivum",),
     ),
     "solanum_lycopersicum": OrganismRecord(
@@ -84,6 +94,8 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=691,
         string_taxid=4081,
         europe_pmc_slug="tomato",
+        kegg_org_code="sly",
+        atted_release="Sly-u.c1-0",
         aliases=("s. lycopersicum",),
     ),
     "glycine_max": OrganismRecord(
@@ -95,6 +107,8 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=275,
         string_taxid=3847,
         europe_pmc_slug="soybean",
+        kegg_org_code="gmx",
+        atted_release="Gma-u.c1-0",
         aliases=("g. max",),
     ),
     "sorghum_bicolor": OrganismRecord(
@@ -106,6 +120,8 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=454,
         string_taxid=4558,
         europe_pmc_slug="sorghum",
+        kegg_org_code="sbi",
+        atted_release=None,  # ATTED-II has no Sbi-u release (probed 2026-05-24)
         aliases=("s. bicolor",),
     ),
     "hordeum_vulgare": OrganismRecord(
@@ -117,6 +133,8 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=702,
         string_taxid=4513,
         europe_pmc_slug="barley",
+        kegg_org_code="hvg",
+        atted_release=None,  # ATTED-II has no Hvg-u release (probed 2026-05-24)
         aliases=("h. vulgare",),
     ),
     "vitis_vinifera": OrganismRecord(
@@ -128,6 +146,8 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=457,
         string_taxid=29760,
         europe_pmc_slug=None,
+        kegg_org_code="vvi",
+        atted_release="Vvi-u.c1-0",
         aliases=("v. vinifera",),
     ),
     "populus_trichocarpa": OrganismRecord(
@@ -139,6 +159,8 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=210,
         string_taxid=3694,
         europe_pmc_slug=None,
+        kegg_org_code="pop",
+        atted_release=None,  # ATTED-II Pop-u/Ptr-u return invalid-db (probed 2026-05-24)
         aliases=("p. trichocarpa",),
     ),
     "medicago_truncatula": OrganismRecord(
@@ -150,6 +172,8 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=285,
         string_taxid=3880,
         europe_pmc_slug=None,
+        kegg_org_code="mtr",
+        atted_release="Mtr-u.c1-0",
         aliases=("m. truncatula",),
     ),
     "brachypodium_distachyon": OrganismRecord(
@@ -161,6 +185,8 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=314,
         string_taxid=15368,
         europe_pmc_slug="Brachypodium",
+        kegg_org_code="bdi",
+        atted_release=None,  # ATTED-II has no Bdi-u release (probed 2026-05-24)
         aliases=("b. distachyon",),
     ),
 }
@@ -267,6 +293,28 @@ def phytozome_int_for(query: str | int) -> int:
             supported=_supported_for("phytozome_int"),
         )
     return record.phytozome_int
+
+
+def kegg_org_code_for(query: str | int) -> str:
+    record = resolve(query)
+    if record.kegg_org_code is None:
+        raise OrganismNotSupported(
+            backend="kegg",
+            organism=record.canonical,
+            supported=_supported_for("kegg_org_code"),
+        )
+    return record.kegg_org_code
+
+
+def atted_release_for(query: str | int) -> str:
+    record = resolve(query)
+    if record.atted_release is None:
+        raise OrganismNotSupported(
+            backend="atted",
+            organism=record.canonical,
+            supported=_supported_for("atted_release"),
+        )
+    return record.atted_release
 
 
 def ncbi_taxid_for(query: str | int) -> int:
