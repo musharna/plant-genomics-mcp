@@ -53,7 +53,12 @@ async def probe_kegg(client: httpx.AsyncClient, code: str | None) -> bool:
     url = f"https://rest.kegg.jp/info/{code}"
     try:
         resp = await client.get(url, timeout=15.0)
-        return resp.status_code == 200 and bool(resp.text.strip())
+        if resp.status_code != 200:
+            return False
+        body = resp.text.strip()
+        # KEGG occasionally returns 200 + HTML error page for unknown codes;
+        # the real /info response is plain text starting with "T<tab>".
+        return bool(body) and not body.startswith("<")
     except Exception:
         return False
 
