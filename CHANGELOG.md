@@ -1,5 +1,41 @@
 # Changelog
 
+## v1.1.0 — 2026-05-24
+
+Polish bundle — two BREAKING contract tightenings on the multi-organism resolver, one HTTP-transport correctness fix, and a small bag of plan-T1–T4 cleanups. Two backends (KEGG, ATTED-II) that were Arabidopsis-only as of v1.0.4 now thread `organism=` through the same resolver chain as the other 9 backends — both raise `TypeError` if called without `organism=`, matching the rest of the multi-organism surface from v0.9 onward. KEGG resolves the organism to a per-organism KEGG `org_code` (e.g. `ath:`, `osa:`); ATTED-II resolves to a per-organism frozen release ID (e.g. `Ath-u.c4-0`, `Osa-u.c1-0`). Five of the 12 curated organisms (wheat, sorghum, barley, poplar, brachypodium) lack ATTED-II coverage and raise `OrganismNotSupported` before any HTTP fires; live coverage is observable at the `pgmcp://organisms/coverage` resource.
+
+**Breaking — KEGG**
+
+- **`kegg_pathways` + `batch_kegg_pathways` now require `organism=`.** v1.0.x hard-coded an `ath:` prefix on every locus and dropped the caller's organism intent on the floor. v1.1.0 makes the contract explicit: calls passing only `locus=` raise `TypeError`. To preserve prior behavior, add `organism="arabidopsis_thaliana"`. For other plants, pass any of the supported organism forms — slug (`"oryza_sativa"`), scientific name (`"Oryza sativa"`), common name (`"rice"`), or NCBI taxid (`4530`). The resolver picks the per-organism KEGG `org_code` (`osa:` for rice) and splices it onto the locus before the `/link/pathway/` call.
+- Live KEGG `/link/pathway` is case-sensitive on the `<org>:<locus>` argument as of KEGG release 118.0 (2026-05-26). v1.0.x callers got lucky because every Arabidopsis locus was already upper-cased after the `ath:` prefix; v1.1.0 preserves the caller's case verbatim.
+- KEGG's non-Arabidopsis organism scopes index NCBI Entrez Gene IDs, **not** RAP-DB (`Os…`), MaizeGDB (`Zm…`), or other community locus namespaces. Calling `kegg_pathways` with a RAP-DB rice locus + `organism="oryza_sativa"` will return zero pathways even though KEGG actually has rich rice coverage indexed under Entrez IDs. A locus → Entrez bridge is deferred to a follow-up — see GitHub issues.
+
+**Breaking — ATTED-II**
+
+- **`atted_coexpression` + `batch_atted_coexpression` now require `organism=`.** v1.0.x exposed a module-level `atted.ATTED_RELEASE = "Ath-u.c4-0"` constant and ignored organism intent entirely; v1.1.0 drops the constant and resolves the release per organism via `organisms.atted_release_for(query)`.
+- ATTED-II coverage is narrower than the 12-organism matrix. The 7 covered organisms (`arabidopsis_thaliana`, `oryza_sativa`, `zea_mays`, `solanum_lycopersicum`, `glycine_max`, `vitis_vinifera`, `medicago_truncatula`) each have a frozen release ID; the remaining 5 (`triticum_aestivum`, `sorghum_bicolor`, `hordeum_vulgare`, `populus_trichocarpa`, `brachypodium_distachyon`) raise `OrganismNotSupported` before any HTTP fires, with the human-readable list surfaced on the exception.
+- Coverage matrix verified by `scripts/verify_organisms.py probe_atted` against `https://atted.jp/api5/` on 2026-05-24 — every populated release ID is the live current ID, not a stale guess.
+
+**Added**
+
+- **`src/plant_genomics_mcp/organisms.py`** — `OrganismRecord` gains `kegg_org_code: str | None` and `atted_release: str | None` fields. Two new module accessors `organisms.kegg_org_code_for(query)` and `organisms.atted_release_for(query)` resolve through the existing alias index and raise `OrganismNotSupported(backend=..., supported=...)` when the resolved record has the slot set to `None`. The matrix is populated for all 12 curated organisms — 12 KEGG codes (every organism is in KEGG), 7 ATTED-II releases (5 unsupported).
+- **`scripts/verify_organisms.py`** — extended with `probe_kegg` + `probe_atted` to ground-truth-verify every `kegg_org_code` and `atted_release` against the live upstreams before release. `probe_kegg` rejects 200+HTML error pages from KEGG's intercept HTML (T4 review nit fix); `probe_atted` parses the `Ath-u.c4-0` release identifier shape and confirms `gene/topN` returns a non-empty `result_set`.
+- **`pgmcp://organisms/coverage` resource** — adds `kegg` and `atted` columns alongside the existing `ensembl_plants`, `phytozome`, `uniprot`, etc. columns. Clients can now read the full per-backend support matrix from a single resource without instantiating every backend.
+- **Codecov badge + CI coverage upload.** README front-page badge + `.github/workflows/ci.yml` uploads `coverage.xml` from the `pytest --cov` step to Codecov on every push. Coverage today: 90% (2026 stmts).
+
+**Changed**
+
+- **`batch.batch_ensembl_plants_lookup_locus`** — now retries 429/5xx via the shared `_http.request_with_retry` helper (Retry-After capped at 60 s, Wave B2 contract). Closes the explicit "scheduled for v1.1" gap left at `batch.py:107-114` when the helper was introduced in v1.0.3. Misses (null record per ID in the upstream batch response) still surface as `[NotFoundError]` entries in the per-locus `errors` map; the whole batch only fails when the upstream call exhausts the retry budget.
+
+**Fixed**
+
+- **HTTP transport: `Starlette(redirect_slashes=False)`.** v1.0.x's default Starlette behavior emitted a 307 on `GET /mcp` (no trailing slash) pointing at `http:///mcp/` — a scheme-downgrade because Starlette generates the `Location` header from the inner request that the reverse proxy has already terminated as `http`. Behind Tailscale Funnel or any HTTPS-terminating reverse proxy, the resulting `Location: http://...` broke HTTPS-only clients. v1.1.0 disables the auto-redirect entirely — clients should register with the trailing-slash form (`/mcp/`); `GET /mcp` now returns a flat 404 from Starlette's route resolver.
+
+**Operational impact**
+
+- Docker images retag `:1.1.0` / `:1.1` / `:latest` on tag-push; Diun on gt76 auto-redeploys the hosted demo. After the redeploy, `curl -sI https://mjarnoldgt76.tail86d19d.ts.net/mcp` returns `404` (was `307` with the broken `Location`); `curl -sI https://mjarnoldgt76.tail86d19d.ts.net/mcp/` with the bearer token returns `200`/`406` per the streamable-HTTP handler.
+- MCP registry metadata (short description, `mcp-name` token) unchanged — no `mcp-publisher publish` re-submit needed beyond the PyPI version bump.
+
 ## v1.0.4 — 2026-05-24
 
 Registry-publish unblocker. Adds the `mcp-name: io.github.musharna/plant-genomics-mcp` ownership-verification token to the README footer so `mcp-publisher publish` can validate that the PyPI package owner controls the MCP namespace. PyPI versions are immutable, so this is a metadata-only re-release on top of v1.0.3 — no code, schema, or behavior changes. OCI image stays at `ghcr.io/musharna/plant-genomics-mcp:1.0.3` (the registry's ownership check is PyPI-specific).
