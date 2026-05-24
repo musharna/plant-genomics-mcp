@@ -1,5 +1,34 @@
 # Changelog
 
+## v1.2.0 — 2026-05-24
+
+**BREAKING** for `consensus_homologs` callers: the per-consensus row dedup key + output schema flip from Gramene-locus-token to UniProt accession. `target_locus_normalized` (string, lowercased species-prefix-stripped locus) is removed; `uniprot_accession` (string, BLAST `.N` version suffix stripped, SWISSPROT-preferred from Gramene xref) takes its place. `target_species` semantics narrow: in v1.1.x it could be inferred from either source's locus token; in v1.2.0 it's sourced exclusively from the Gramene xref `system_name` field and is `None` for BLAST-only rows. Gramene homologs whose UniProt xref returns no accession (~half of v69 entries in fringe organisms like cucurbits + bryophytes) are now dropped from the consensus rather than emitted as 1-source rows. Live test `test_consensus_homologs_live_at1g01010` (red since v0.8 ship) now passes; root cause was an architectural namespace mismatch, not the threshold or fixture choice the prior investigation memo suggested.
+
+**Fixed (causal — root cause was load-bearing)**
+
+- **`consensus_homologs` cross-source dedup now actually works.** v0.8–v1.1.1 dedupped Gramene homologs against BLAST hits on a normalized locus-token namespace built by stripping Gramene's `<SPECIES>_` prefix off `target_locus` strings and parsing `OS=...GN=...` tokens from each BLAST hit's `description` field. Gramene's `fl=homology` projection returns species-prefixed locus IDs (`ORYSA_OS01G0100100`); NCBI BLAST against SwissProt returns deflines in `RecName: Full=...; Short=...` format with **no** `OS=` / `GN=` tokens (the `OS=`/`GN=` convention is EBI's, not NCBI's). The locus-token namespace and the defline-parse namespace never overlapped, so `n_sources==2` was structurally unreachable across the entire v0.8→v1.1.1 series; every consensus row was 1-source even when the same gene appeared in both backends. Fix shifts the join key to UniProt accession, which both backends carry natively: Gramene exposes it via the `fl=xrefs` projection (Uniprot/SWISSPROT preferred, Uniprot/SPTREMBL fallback) and BLAST returns it as `hit['accession']` (e.g. `sp|Q5VMS9.1|Y_ORYSJ`) after a `.N` version-suffix strip. Mechanism removal, not a tripwire fix — the stale regexes and the parser are deleted, not bypassed.
+
+**Added**
+
+- **`src/plant_genomics_mcp/gramene.py:fetch_homolog_enrichment_batch(client, loci, *, chunk_size=100)`** — new module helper. Enriches a list of Gramene loci with their preferred UniProt accession + `system_name` (organism slug) via the `/v69/genes?idList=...&fl=_id,xrefs,system_name` projection, batched comma-separated and chunked for URL-length safety on long homology lists. Returns a dict total over the input list: every input locus maps to `{"uniprot_acc": <SWISSPROT or SPTREMBL or None>, "system_name": <slug or None>}` so callers' joins don't need to handle `KeyError`. Same 24h cache as `lookup_homologs` (v69 is a frozen release).
+- **`consensus_homologs` envelope now has 5 steps.** New `step=5, tool="gramene_homolog_enrichment"` row sits after the parallel `gramene_homologs` + `blast_sequence` gather. All 4 early-exit paths (unknown organism, phase-1 UniProt failure, phase-1.b sequence-fetch PlantGenomicsError, phase-1.b sequence-fetch HTTPError) emit a 5-row envelope with step 5 `_skipped` so envelope shape stays stable across success and failure paths.
+
+**Removed (deleted — not deprecated)**
+
+- **`synthesis._BLAST_DEFLINE_GN`**, **`_BLAST_DEFLINE_OS`**, **`_PLANT_LOCUS_TOKEN`**, **`_GRAMENE_SPECIES_PREFIX`**, **`_GRAMENE_PREFIX_TO_SPECIES`** — five module-level regex / prefix-map constants. None had callers outside `_parse_blast_subject_for_consensus` and `_normalize_locus_token`, both also deleted.
+- **`synthesis._normalize_locus_token`**, **`synthesis._species_from_gramene_locus`**, **`synthesis._parse_blast_subject_for_consensus`** — three internal helpers that propped up the broken locus-token dedup. Their unit tests (`test_parse_blast_subject_extracts_species_and_gene_from_swissprot_defline`, `test_parse_blast_subject_falls_back_to_plant_locus_token`, `test_parse_blast_subject_returns_nones_for_unparseable`, `test_normalize_locus_token_strips_species_prefix_and_lowercases`) are removed from `tests/test_synthesis.py`. The three compose-level tests (`test_consensus_homologs_dedupe_groups_by_normalized_locus`, `test_consensus_homologs_scoring_prefers_two_source_hits`, `test_consensus_homologs_single_source_degenerates_gracefully`) are rewritten on the new compose signature.
+- **Consensus row fields `target_locus_normalized` and the species-inferred-from-locus-token branch of `target_species`** — both removed from `_consensus_homologs_compose` output. Callers reading these fields will see `KeyError` / `None` respectively.
+
+**Changed (signature)**
+
+- **`synthesis._consensus_homologs_compose(gramene_payload, blast_payload, top_n=...)` → `_consensus_homologs_compose(gramene_payload, blast_payload, xref_map, *, top_n)`.** New required positional `xref_map` carries the per-locus UniProt-accession + system-name enrichment from `gramene.fetch_homolog_enrichment_batch`. Pass `xref_map={}` for BLAST-only callers; Gramene-bearing payloads need a real map or every Gramene homolog drops out. Output dict keys: `uniprot_accession`, `target_species`, `n_sources`, `sources`, `mean_identity`, `score`, `gramene_hit`, `blast_hit`.
+
+**Operational impact**
+
+- No HTTP-transport, auth, or registry-metadata change; the breaking surface is a single tool's output schema. Docker tags `:1.2.0` / `:1.2` / `:latest` republish on tag-push; Diun on gt76 auto-redeploys the hosted demo.
+- Known coverage gap, **documented not papered-over**: ~half of Gramene v69 entries in fringe organisms (cucurbits, bryophytes — e.g. `Cla97C03G067000`, `Mp4g11910`) have no Swiss-Prot or TrEMBL xref. Without an accession they can't dedup with BLAST, so they're dropped from the consensus rather than diluting it with 1-source rows. Expanding the fallback to species+gene-name on those organisms is a v1.3 candidate.
+- BLAST-only consensus rows now report `target_species=None` (was: best-effort parse from defline tokens, often `None` anyway against SwissProt). The NCBI SwissProt defline (`RecName: Full=...`) has no `OS=` species token, and we don't pay for a per-hit UniProt lookup to recover it; if you need species per BLAST hit, fetch the UniProt record from `uniprot_accession` yourself.
+
 ## v1.1.1 — 2026-05-24
 
 Bug fix: STRING locus inputs failed for any organism where the locus has multiple valid UniProt accessions and STRING canonicalizes on a different one than our resolver picks. Surfaced as a 404 on rice `Os01g0100100` (live test `test_live_string_rice_locus_resolves_and_returns_partners`): our `uniprot.lookup_locus` returned the Swiss-Prot `Q0JRI1`, but STRING's species-canonical pick for that locus is the TrEMBL `A0A0P0UX28`, so the subsequent STRING call 404'd.

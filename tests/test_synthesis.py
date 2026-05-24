@@ -901,9 +901,9 @@ async def test_consensus_homologs_happy_path(httpx_mock, monkeypatch):
         url="https://rest.uniprot.org/uniprotkb/Q0WV96.fasta",
         text=">sp|Q0WV96|Y_ARATH\nMEDQVGFGFRPNDEELVGHYLRNK\n",
     )
-    # Phase 2.a — Gramene v69 raw response: list[record] with homology block.
+    # Phase 2.a — Gramene v69 homology projection (list[record] with homology block).
     httpx_mock.add_response(
-        url=re.compile(r"https://data\.gramene\.org/v69/genes.*"),
+        url="https://data.gramene.org/v69/genes?idList=AT1G01010&fl=homology",
         json=[
             {
                 "homology": {
@@ -912,6 +912,18 @@ async def test_consensus_homologs_happy_path(httpx_mock, monkeypatch):
                         "ortholog_one2one": ["OS01G0100100"],
                     },
                 }
+            }
+        ],
+    )
+    # Phase 3 — Gramene v69 enrichment projection (UniProt acc + system_name)
+    # so we can dedup Gramene homologs against BLAST in UniProt-accession-space.
+    httpx_mock.add_response(
+        url="https://data.gramene.org/v69/genes?idList=OS01G0100100&fl=_id%2Cxrefs%2Csystem_name",
+        json=[
+            {
+                "_id": "OS01G0100100",
+                "system_name": "oryza_sativa",
+                "xrefs": [{"db": "Uniprot/SWISSPROT", "ids": ["Q5VMS9"]}],
             }
         ],
     )
@@ -947,60 +959,23 @@ async def test_consensus_homologs_happy_path(httpx_mock, monkeypatch):
 
     assert env.tool == "consensus_homologs"
     statuses = [s.status for s in env.steps]
-    # Steps: 1=uniprot, 2=fetch_sequence, 3=gramene, 4=blast
-    assert statuses == ["ok", "ok", "ok", "ok"]
+    # Steps: 1=uniprot, 2=fetch_sequence, 3=gramene_homologs, 4=blast, 5=gramene_homolog_enrichment
+    assert statuses == ["ok", "ok", "ok", "ok", "ok"]
     assert env.result is not None
     # Step 2 envelope row carries metadata-only payload (not the raw sequence).
     assert env.steps[1].result == {"accession": "Q0WV96", "sequence_length": 24}
     consensus = env.result["consensus"]
     assert len(consensus) == 1
     pick = consensus[0]
-    assert pick["target_locus_normalized"] == "os01g0100100"
+    # BLAST returns Q5VMS9.1 (stripped of the .N version suffix); Gramene xref
+    # returns Q5VMS9 — both collapse to the same canonical UniProt-accession key.
+    assert pick["uniprot_accession"] == "Q5VMS9"
     assert pick["target_species"] == "oryza_sativa"
     assert pick["n_sources"] == 2
     assert set(pick["sources"]) == {"gramene", "blast"}
     # mean_identity = (1.0 + 0.78) / 2 = 0.89; score = 2 * 0.89 = 1.78
     assert pick["mean_identity"] == 0.89
     assert pick["score"] == 1.78
-
-
-def test_parse_blast_subject_extracts_species_and_gene_from_swissprot_defline():
-    from plant_genomics_mcp.synthesis import _parse_blast_subject_for_consensus
-
-    hit = {
-        "accession": "sp|Q5VMS9.1|Y_ORYSJ",
-        "description": "Hypothetical protein OS=Oryza sativa GN=Os01g0100100 PE=4 SV=1",
-    }
-    sp, gn = _parse_blast_subject_for_consensus(hit)
-    assert sp == "oryza_sativa"
-    assert gn == "Os01g0100100"
-
-
-def test_parse_blast_subject_falls_back_to_plant_locus_token():
-    from plant_genomics_mcp.synthesis import _parse_blast_subject_for_consensus
-
-    hit = {"accession": "AT1G01010.1", "description": ""}
-    sp, gn = _parse_blast_subject_for_consensus(hit)
-    assert sp is None
-    assert gn == "AT1G01010"
-
-
-def test_parse_blast_subject_returns_nones_for_unparseable():
-    from plant_genomics_mcp.synthesis import _parse_blast_subject_for_consensus
-
-    sp, gn = _parse_blast_subject_for_consensus(
-        {"accession": "ref|XP_999999.1|", "description": ""}
-    )
-    assert (sp, gn) == (None, None)
-
-
-def test_normalize_locus_token_strips_species_prefix_and_lowercases():
-    from plant_genomics_mcp.synthesis import _normalize_locus_token
-
-    assert _normalize_locus_token("ORYSA_OS01G0100100") == "os01g0100100"
-    assert _normalize_locus_token("Os01g0100100.1") == "os01g0100100"
-    assert _normalize_locus_token("AT1G01010") == "at1g01010"
-    assert _normalize_locus_token("") == ""
 
 
 def test_parse_blast_identity_pct_handles_percent_string_and_float():
@@ -1014,13 +989,20 @@ def test_parse_blast_identity_pct_handles_percent_string_and_float():
     assert _parse_blast_identity_pct("bad%") is None
 
 
-def test_consensus_homologs_dedupe_groups_by_normalized_locus():
+def test_consensus_homologs_dedupe_groups_by_uniprot_accession():
+    """Gramene xref (no .N suffix) and BLAST accession (with .N suffix) must
+    collapse into a single 2-source consensus row keyed by UniProt accession.
+    This is the v1.2.0 BREAKING dedup contract — replaces the v1.1 locus-
+    token namespace that BLAST's RecName-format deflines could never match."""
     from plant_genomics_mcp.synthesis import _consensus_homologs_compose
 
     gramene = {
         "homologs": [
-            {"target_locus": "ORYSA_OS01G0100100", "type": "ortholog_one2one", "gene_tree_id": "T1"}
+            {"target_locus": "OS01G0100100", "type": "ortholog_one2one", "gene_tree_id": "T1"}
         ]
+    }
+    xref_map = {
+        "OS01G0100100": {"uniprot_acc": "Q5VMS9", "system_name": "oryza_sativa"},
     }
     blast = {
         "hits": [
@@ -1033,10 +1015,10 @@ def test_consensus_homologs_dedupe_groups_by_normalized_locus():
             }
         ]
     }
-    out = _consensus_homologs_compose(gramene, blast, top_n=10)
+    out = _consensus_homologs_compose(gramene, blast, xref_map=xref_map, top_n=10)
     assert len(out) == 1
     assert out[0]["n_sources"] == 2
-    assert out[0]["target_locus_normalized"] == "os01g0100100"
+    assert out[0]["uniprot_accession"] == "Q5VMS9"
     assert out[0]["target_species"] == "oryza_sativa"
 
 
@@ -1045,23 +1027,27 @@ def test_consensus_homologs_scoring_prefers_two_source_hits():
 
     gramene = {
         "homologs": [
-            {"target_locus": "ORYSA_OS01G0100001"},
-            {"target_locus": "ORYSA_OS01G0100002"},
+            {"target_locus": "OS01G0100001"},
+            {"target_locus": "OS01G0100002"},
         ]
+    }
+    xref_map = {
+        "OS01G0100001": {"uniprot_acc": "Q5VMS1", "system_name": "oryza_sativa"},
+        "OS01G0100002": {"uniprot_acc": "Q5VMS2", "system_name": "oryza_sativa"},
     }
     blast = {
         "hits": [
             {
-                "accession": "x",
-                "description": "OS=Oryza sativa GN=OS01G0100002",
+                "accession": "sp|Q5VMS2.1|Y_ORYSJ",
+                "description": "matched ortholog",
                 "bit_score": 100.0,
                 "evalue": 1e-10,
                 "identity": "50%",
             },
         ]
     }
-    out = _consensus_homologs_compose(gramene, blast, top_n=10)
-    assert out[0]["target_locus_normalized"] == "os01g0100002"
+    out = _consensus_homologs_compose(gramene, blast, xref_map=xref_map, top_n=10)
+    assert out[0]["uniprot_accession"] == "Q5VMS2"
     assert out[0]["n_sources"] == 2
     assert out[0]["sources"] == ["gramene", "blast"]
     assert out[0]["mean_identity"] == 0.75
@@ -1070,21 +1056,61 @@ def test_consensus_homologs_scoring_prefers_two_source_hits():
 
 
 def test_consensus_homologs_single_source_degenerates_gracefully():
+    """Gramene-only (BLAST=None): enriched loci produce 1-source rows; loci
+    with no UniProt xref are dropped (no accession ⇒ structurally unable to
+    dedup with BLAST, so keeping them as singletons would just dilute the
+    consensus). Coverage gap documented at envelope level, not per-locus."""
     from plant_genomics_mcp.synthesis import _consensus_homologs_compose
 
     out = _consensus_homologs_compose(
         gramene_payload={
             "homologs": [
-                {"target_locus": "ORYSA_OS01G0100001"},
-                {"target_locus": "ORYSA_OS01G0100002"},
+                {"target_locus": "OS01G0100001"},
+                {"target_locus": "OS01G0100002"},
+                {"target_locus": "Cla97C03G067000"},  # no UniProt xref — dropped
             ]
         },
         blast_payload=None,
+        xref_map={
+            "OS01G0100001": {"uniprot_acc": "Q5VMS1", "system_name": "oryza_sativa"},
+            "OS01G0100002": {"uniprot_acc": "Q5VMS2", "system_name": "oryza_sativa"},
+            "Cla97C03G067000": {"uniprot_acc": None, "system_name": "citrullus_lanatus"},
+        },
         top_n=10,
     )
     assert all(c["n_sources"] == 1 for c in out)
     assert all(c["target_species"] == "oryza_sativa" for c in out)
-    assert {c["target_locus_normalized"] for c in out} == {"os01g0100001", "os01g0100002"}
+    assert {c["uniprot_accession"] for c in out} == {"Q5VMS1", "Q5VMS2"}
+
+
+def test_consensus_homologs_blast_only_strips_version_suffix():
+    """BLAST-only entry: accession parser strips the .N version suffix so a
+    future cross-source join lands on the same canonical key. target_species
+    stays None for BLAST-only — the NCBI SwissProt defline (``RecName: Full=``)
+    carries no ``OS=`` token, and we don't pay for a per-hit UniProt lookup."""
+    from plant_genomics_mcp.synthesis import _consensus_homologs_compose
+
+    out = _consensus_homologs_compose(
+        gramene_payload=None,
+        blast_payload={
+            "hits": [
+                {
+                    "accession": "sp|Q0WV96.2|NAC001_ARATH",
+                    "description": "RecName: Full=NAC domain-containing protein 1",
+                    "bit_score": 600.0,
+                    "evalue": 1e-100,
+                    "identity": "95%",
+                }
+            ]
+        },
+        xref_map={},
+        top_n=10,
+    )
+    assert len(out) == 1
+    assert out[0]["uniprot_accession"] == "Q0WV96"
+    assert out[0]["target_species"] is None
+    assert out[0]["n_sources"] == 1
+    assert out[0]["sources"] == ["blast"]
 
 
 def test_consensus_homologs_fixtures_match_real_response_shapes():
