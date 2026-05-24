@@ -27,7 +27,13 @@ class OrganismRecord:
     phytozome_int: int | None
     string_taxid: int | None
     europe_pmc_slug: str | None
-    kegg_org_code: str | None = None  # e.g. "ath", "osa", "zma" — KEGG 3-letter org code
+    kegg_org_code: str | None = None
+    # KEGG 3-letter org code (e.g. "ath"). Populated only when KEGG's gene
+    # namespace matches the locus IDs the rest of our backends accept.
+    # KEGG uses NCBI Entrez Gene IDs for non-Arabidopsis plants — until we
+    # add an Entrez bridge, only ``ath`` is populated and all other matrix
+    # entries leave this None so ``kegg_org_code_for`` raises
+    # OrganismNotSupported instead of silently returning empty pathways.
     atted_release: str | None = None  # e.g. "Ath-u.c4-0" — ATTED-II release id
     aliases: tuple[str, ...] = field(default_factory=tuple)
 
@@ -55,7 +61,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=323,
         string_taxid=39947,
         europe_pmc_slug="rice",
-        kegg_org_code="osa",
+        kegg_org_code=None,  # KEGG osa uses NCBI Entrez Gene IDs, not RAP-DB loci
         atted_release="Osa-u.c1-0",
         aliases=("o. sativa",),
     ),
@@ -68,7 +74,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=833,
         string_taxid=4577,
         europe_pmc_slug="maize",
-        kegg_org_code="zma",
+        kegg_org_code=None,  # KEGG zma uses NCBI Entrez Gene IDs, not MaizeGDB loci
         atted_release="Zma-u.c1-0",
         aliases=("z. mays",),
     ),
@@ -81,7 +87,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=725,
         string_taxid=4565,
         europe_pmc_slug="wheat",
-        kegg_org_code="taes",
+        kegg_org_code=None,  # KEGG taes uses NCBI Entrez Gene IDs
         atted_release=None,  # ATTED-II has no Tae-u release (probed 2026-05-24)
         aliases=("t. aestivum",),
     ),
@@ -94,7 +100,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=691,
         string_taxid=4081,
         europe_pmc_slug="tomato",
-        kegg_org_code="sly",
+        kegg_org_code=None,  # KEGG sly uses NCBI Entrez Gene IDs
         atted_release="Sly-u.c1-0",
         aliases=("s. lycopersicum",),
     ),
@@ -107,7 +113,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=275,
         string_taxid=3847,
         europe_pmc_slug="soybean",
-        kegg_org_code="gmx",
+        kegg_org_code=None,  # KEGG gmx uses NCBI Entrez Gene IDs
         atted_release="Gma-u.c1-0",
         aliases=("g. max",),
     ),
@@ -120,7 +126,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=454,
         string_taxid=4558,
         europe_pmc_slug="sorghum",
-        kegg_org_code="sbi",
+        kegg_org_code=None,  # KEGG sbi uses NCBI Entrez Gene IDs
         atted_release=None,  # ATTED-II has no Sbi-u release (probed 2026-05-24)
         aliases=("s. bicolor",),
     ),
@@ -133,7 +139,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=702,
         string_taxid=4513,
         europe_pmc_slug="barley",
-        kegg_org_code="hvg",
+        kegg_org_code=None,  # KEGG hvg uses NCBI Entrez Gene IDs
         atted_release=None,  # ATTED-II has no Hvg-u release (probed 2026-05-24)
         aliases=("h. vulgare",),
     ),
@@ -146,7 +152,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=457,
         string_taxid=29760,
         europe_pmc_slug=None,
-        kegg_org_code="vvi",
+        kegg_org_code=None,  # KEGG vvi uses NCBI Entrez Gene IDs
         atted_release="Vvi-u.c1-0",
         aliases=("v. vinifera",),
     ),
@@ -159,7 +165,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=210,
         string_taxid=3694,
         europe_pmc_slug=None,
-        kegg_org_code="pop",
+        kegg_org_code=None,  # KEGG pop uses NCBI Entrez Gene IDs
         atted_release=None,  # ATTED-II Pop-u/Ptr-u return invalid-db (probed 2026-05-24)
         aliases=("p. trichocarpa",),
     ),
@@ -172,7 +178,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=285,
         string_taxid=3880,
         europe_pmc_slug=None,
-        kegg_org_code="mtr",
+        kegg_org_code=None,  # KEGG mtr uses NCBI Entrez Gene IDs
         atted_release="Mtr-u.c1-0",
         aliases=("m. truncatula",),
     ),
@@ -185,7 +191,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=314,
         string_taxid=15368,
         europe_pmc_slug="Brachypodium",
-        kegg_org_code="bdi",
+        kegg_org_code=None,  # KEGG bdi uses NCBI Entrez Gene IDs
         atted_release=None,  # ATTED-II has no Bdi-u release (probed 2026-05-24)
         aliases=("b. distachyon",),
     ),

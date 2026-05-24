@@ -509,7 +509,9 @@ async def biological_context_synth(
 
     Per-backend signatures verified against live source 2026-05-22:
       - gramene.lookup_homologs(client, locus, homology_type="ortholog") — no species/top_n
-      - kegg.lookup_pathways(client, locus) — no species (ath-only)
+      - kegg.lookup_pathways(client, locus, organism=...) — v1.1.0 requires organism;
+        Arabidopsis-only (non-ath organisms raise OrganismNotSupported until an
+        Entrez bridge lands)
       - string_db.lookup_partners(client, locus_or_accession, limit=..., organism=...)
         Passing the uniprot accession bypasses the internal locus→accession
         re-resolution (string_db.py:144 _looks_like_accession path).
@@ -573,7 +575,7 @@ async def biological_context_synth(
     p2 = await _gather_phase2(
         [
             (2, "gramene_homologs", gramene.lookup_homologs(client, locus)),
-            (3, "kegg_pathways", kegg.lookup_pathways(client, locus)),
+            (3, "kegg_pathways", kegg.lookup_pathways(client, locus, organism=organism)),
             (
                 4,
                 "string_interactions",

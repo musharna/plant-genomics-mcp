@@ -562,10 +562,12 @@ async def test_biological_context_synth_all_backends_succeed_returns_full_envelo
             }
         ],
     )
-    # Phase 2 — KEGG: /link/pathway/<lowercased-gene_id> then /get/path:<id> per pathway
+    # Phase 2 — KEGG: /link/pathway/<gene_id> then /get/path:<id> per pathway.
+    # KEGG v118.0 (May 2026) is case-sensitive on the locus; v1.1.0 preserves
+    # the caller's case verbatim.
     httpx_mock.add_response(
-        url="https://rest.kegg.jp/link/pathway/ath:at1g01010",
-        text="ath:at1g01010\tpath:ath00010\nath:at1g01010\tpath:ath01100\n",
+        url="https://rest.kegg.jp/link/pathway/ath:AT1G01010",
+        text="ath:AT1G01010\tpath:ath00010\nath:AT1G01010\tpath:ath01100\n",
     )
     # asyncio.gather over both pathways → 2 GETs. is_reusable=True covers both.
     httpx_mock.add_response(
@@ -675,7 +677,7 @@ async def test_biological_context_synth_partial_phase2_failure_returns_composed_
     )
     # Phase 2 — KEGG: 404 on /link/pathway/... → empty body → NotFoundError in kegg_pathways.
     httpx_mock.add_response(
-        url="https://rest.kegg.jp/link/pathway/ath:at1g01010",
+        url="https://rest.kegg.jp/link/pathway/ath:AT1G01010",
         status_code=404,
         text="",
     )
@@ -832,7 +834,7 @@ def test_biological_context_synth_fixtures_match_real_response_shapes():
     KeggPathways.model_validate(
         {
             "locus": "AT1G01010",
-            "kegg_gene_id": "ath:at1g01010",
+            "kegg_gene_id": "ath:AT1G01010",
             "pathways": [
                 {
                     "id": "ath00010",

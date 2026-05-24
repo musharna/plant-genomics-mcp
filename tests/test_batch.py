@@ -258,15 +258,15 @@ async def test_batch_gramene_homologs_mixed(httpx_mock: HTTPXMock):
 @pytest.mark.asyncio
 async def test_batch_kegg_pathways_mixed(httpx_mock: HTTPXMock):
     httpx_mock.add_response(
-        url="https://rest.kegg.jp/link/pathway/ath:at1g01010",
-        text="ath:at1g01010\tpath:ath04075\n",
+        url="https://rest.kegg.jp/link/pathway/ath:AT1G01010",
+        text="ath:AT1G01010\tpath:ath04075\n",
     )
     httpx_mock.add_response(
         url="https://rest.kegg.jp/get/path:ath04075",
         text="ENTRY       ath04075                    Pathway\nNAME        Plant hormone signal transduction\n",
     )
     httpx_mock.add_response(
-        url="https://rest.kegg.jp/link/pathway/ath:atnope",
+        url="https://rest.kegg.jp/link/pathway/ath:ATNOPE",
         text="",
     )
     async with httpx.AsyncClient() as client:
