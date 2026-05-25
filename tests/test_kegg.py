@@ -690,3 +690,92 @@ async def test_lookup_pathways_tomato_still_unsupported():
     async with httpx.AsyncClient() as client:
         with pytest.raises(OrganismNotSupported, match="solanum_lycopersicum"):
             await kegg.lookup_pathways(client, "ignored", organism="solanum_lycopersicum")
+
+
+# ---------- v1.5 live tests — real Ensembl + KEGG round-trip ----------
+#
+# One live test per v1.5 pass organism (barley, poplar, brachypodium).
+# Mirrors the v1.4.0 rice/maize/soybean live-test shape, but UNLIKE the
+# v1.4.0 live tests, these assert the BRIDGE FIRED (Ensembl /xrefs →
+# EntrezGene resolved → KEGG gene_id constructed) via a NotFoundError
+# whose message embeds the constructed kegg gene_id. The v1.5 probe
+# (scripts/probe_kegg_bridge_candidates.json) confirmed all three pass
+# organisms have 0 pathway annotations at the chr1-first-gene locus,
+# which triggers kegg.lookup_pathways' empty-/link/pathway-body branch
+# (kegg.py:223): ``raise NotFoundError("KEGG: no pathway memberships
+# for {locus} (queried as {gene_id})")``. The bridge gene_id (e.g.
+# ``hvg:123427420``) appears in the message — that proves Ensembl
+# resolved AND the gene_id was constructed without conflating it with
+# upstream pathway-annotation availability (a KEGG, not bridge, concern).
+# If upstream KEGG later annotates these loci, the test FAILS LOUD with
+# a pytest.raises mismatch, and a future PR can flip these to the
+# v1.4.0-style ``len > 0`` assertion. Entrez-ID drift on Ensembl's
+# ~6-monthly release (v1.4.0 punch-list #10) is tolerated: the
+# constructed gene_id includes the resolved ID verbatim, but only the
+# ``<code>:`` prefix is asserted.
+
+
+@pytest.mark.skipif(
+    not os.environ.get("PLANT_GENOMICS_MCP_LIVE"),
+    reason="set PLANT_GENOMICS_MCP_LIVE=1 to hit rest.kegg.jp + rest.ensembl.org",
+)
+@pytest.mark.asyncio
+async def test_live_kegg_barley_bridge_fires_via_chr1_first_gene():
+    """Barley HORVU.MOREX.r3.1HG0000090 (chr1-first-gene) — v1.5 probe pass.
+    Real Ensembl /xrefs + KEGG /link/pathway round-trip. Probe found 0
+    KEGG pathway annotations for this locus, so kegg.lookup_pathways
+    raises NotFoundError with the bridge-constructed ``hvg:<entrez>``
+    gene_id in the message. The assertion proves the bridge fired
+    (Ensembl → Entrez → KEGG gene_id). See
+    scripts/probe_kegg_bridge_candidates.json.
+    """
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match=r"queried as hvg:\d+") as excinfo:
+            await kegg.lookup_pathways(
+                client, "HORVU.MOREX.r3.1HG0000090", organism="hordeum_vulgare"
+            )
+    assert "HORVU.MOREX.r3.1HG0000090" in str(excinfo.value)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("PLANT_GENOMICS_MCP_LIVE"),
+    reason="set PLANT_GENOMICS_MCP_LIVE=1 to hit rest.kegg.jp + rest.ensembl.org",
+)
+@pytest.mark.asyncio
+async def test_live_kegg_poplar_bridge_fires_via_chr1_first_gene():
+    """Poplar Potri.001G006600.v4.1 (chr1-first-gene) — v1.5 probe pass.
+    Real Ensembl /xrefs + KEGG /link/pathway round-trip. Probe found 0
+    KEGG pathway annotations for this locus, so kegg.lookup_pathways
+    raises NotFoundError with the bridge-constructed ``pop:<entrez>``
+    gene_id in the message. The assertion proves the bridge fired
+    (Ensembl → Entrez → KEGG gene_id). See
+    scripts/probe_kegg_bridge_candidates.json.
+    """
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match=r"queried as pop:\d+") as excinfo:
+            await kegg.lookup_pathways(
+                client, "Potri.001G006600.v4.1", organism="populus_trichocarpa"
+            )
+    assert "Potri.001G006600.v4.1" in str(excinfo.value)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("PLANT_GENOMICS_MCP_LIVE"),
+    reason="set PLANT_GENOMICS_MCP_LIVE=1 to hit rest.kegg.jp + rest.ensembl.org",
+)
+@pytest.mark.asyncio
+async def test_live_kegg_brachypodium_bridge_fires_via_chr1_first_gene():
+    """Brachypodium BRADI_1g00485v3 (chr1-first-gene) — v1.5 probe pass.
+    Real Ensembl /xrefs + KEGG /link/pathway round-trip. Probe found 0
+    KEGG pathway annotations for this locus, so kegg.lookup_pathways
+    raises NotFoundError with the bridge-constructed ``bdi:<entrez>``
+    gene_id in the message. The assertion proves the bridge fired
+    (Ensembl → Entrez → KEGG gene_id). See
+    scripts/probe_kegg_bridge_candidates.json.
+    """
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match=r"queried as bdi:\d+") as excinfo:
+            await kegg.lookup_pathways(
+                client, "BRADI_1g00485v3", organism="brachypodium_distachyon"
+            )
+    assert "BRADI_1g00485v3" in str(excinfo.value)
