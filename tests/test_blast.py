@@ -137,8 +137,15 @@ def test_supported_program_rejects_unknown() -> None:
 
 
 @pytest.fixture(autouse=True)
-def _no_sleep(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Skip the orchestrator's poll-interval sleep so tests don't block 60s+."""
+def _no_sleep(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Skip the orchestrator's poll-interval sleep so mocked tests don't block 60s+.
+
+    Bypassed for live tests (``test_live_*``) which hit real NCBI and must
+    honor the per-RID 60s poll floor — without this gate the autouse mock
+    collapses the live polling loop and raises NotFoundError in seconds.
+    """
+    if request.node.name.startswith("test_live_"):
+        return
 
     async def _instant(_: float) -> None:
         return None
@@ -452,8 +459,9 @@ async def test_blast_semaphore_caps_concurrent_at_two(
 async def test_live_blastp_small_query_returns_hits() -> None:
     """Real call to NCBI BLAST — short Arabidopsis NAC1 peptide vs Swiss-Prot.
 
-    BLAST searches typically take 30–120s; we allow up to 8 minutes and a
-    60s poll cadence (NCBI etiquette floor).
+    BLAST searches typically take 30–120s; we allow up to 12 minutes and a
+    60s poll cadence (NCBI etiquette floor). 12min absorbs the queue-depth
+    variance observed in the v1.3.0 baseline (job 804: WAITING after 480s).
     """
     # First 40 residues of NAC001 / NP_001185207.1 — should hit itself + paralogs.
     query = "MEDQVGFGFRPNDEELVGHYLRNKIESQTSRSAIEVDLNK"
@@ -465,7 +473,7 @@ async def test_live_blastp_small_query_returns_hits() -> None:
             database="swissprot",
             hitlist_size=5,
             poll_interval=60.0,
-            max_wait=480.0,
+            max_wait=720.0,
         )
     assert result["status"] == "READY"
     assert result["hitCount"] >= 1
