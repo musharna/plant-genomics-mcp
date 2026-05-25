@@ -301,3 +301,133 @@ async def test_lookup_pathways_rejects_malformed_locus_before_http() -> None:
     async with httpx.AsyncClient() as client:
         with pytest.raises(NotFoundError, match="invalid locus"):
             await kegg.lookup_pathways(client, "AT1G01010/etc", organism="arabidopsis_thaliana")
+
+
+# ---------- v1.4.0 integration: lookup_pathways dispatches via bridge ----------
+
+
+@pytest.mark.asyncio
+async def test_lookup_pathways_rice_via_bridge(httpx_mock: HTTPXMock):
+    """Rice (Os01g0100100 → osa:4326813) — the v1.4.0 headline path.
+    Asserts ``locus`` is the user-facing form, ``kegg_gene_id`` is the
+    Entrez-bound KEGG form, ``entrez_gene_id`` surfaces the bridge result.
+    """
+    # Bridge step: Ensembl /xrefs
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/xrefs/id/Os01g0100100?species=oryza_sativa",
+        json=[{"dbname": "EntrezGene", "primary_id": "4326813", "display_id": "x"}],
+    )
+    # KEGG step 1
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/link/pathway/osa:4326813",
+        text="osa:4326813\tpath:osa00010\n",
+    )
+    # KEGG step 2 (per-pathway record)
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/get/path:osa00010",
+        text="ENTRY       osa00010                    Pathway\nNAME        Glycolysis / Gluconeogenesis - Oryza sativa\nCLASS       Metabolism; Carbohydrate metabolism\n",
+    )
+    async with httpx.AsyncClient() as client:
+        result = await kegg.lookup_pathways(client, "Os01g0100100", organism="oryza_sativa")
+    assert result["locus"] == "Os01g0100100"
+    assert result["kegg_gene_id"] == "osa:4326813"
+    assert result["entrez_gene_id"] == "4326813"
+    assert len(result["pathways"]) == 1
+    assert result["pathways"][0]["id"] == "osa00010"
+    assert "Glycolysis" in result["pathways"][0]["name"]
+
+
+@pytest.mark.asyncio
+async def test_lookup_pathways_maize_via_bridge(httpx_mock: HTTPXMock):
+    """Maize (Zm00001eb000010 → zma:103644366)."""
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/xrefs/id/Zm00001eb000010?species=zea_mays",
+        json=[{"dbname": "EntrezGene", "primary_id": "103644366", "display_id": "x"}],
+    )
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/link/pathway/zma:103644366",
+        text="zma:103644366\tpath:zma04075\n",
+    )
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/get/path:zma04075",
+        text="ENTRY       zma04075                    Pathway\nNAME        Plant hormone signal transduction - Zea mays\nCLASS       Environmental Information Processing; Signal transduction\n",
+    )
+    async with httpx.AsyncClient() as client:
+        result = await kegg.lookup_pathways(client, "Zm00001eb000010", organism="zea_mays")
+    assert result["locus"] == "Zm00001eb000010"
+    assert result["kegg_gene_id"] == "zma:103644366"
+    assert result["entrez_gene_id"] == "103644366"
+    assert result["pathways"][0]["id"] == "zma04075"
+
+
+@pytest.mark.asyncio
+async def test_lookup_pathways_soybean_via_bridge_normalizes_locus(httpx_mock: HTTPXMock):
+    """Soybean — caller passes SoyBase form ``Glyma.04G220900``; the
+    bridge MUST hit Ensembl with normalized ``GLYMA_04G220900``. The
+    user-facing ``locus`` field stays the SoyBase form. The mocked Ensembl
+    URL with normalized form is the discriminator — if the normalizer
+    doesn't fire, pytest-httpx errors with no-mock-match.
+    """
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/xrefs/id/GLYMA_04G220900?species=glycine_max",
+        json=[{"dbname": "EntrezGene", "primary_id": "100810680", "display_id": "x"}],
+    )
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/link/pathway/gmx:100810680",
+        text="gmx:100810680\tpath:gmx00010\n",
+    )
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/get/path:gmx00010",
+        text="ENTRY       gmx00010                    Pathway\nNAME        Glycolysis / Gluconeogenesis - Glycine max\nCLASS       Metabolism; Carbohydrate metabolism\n",
+    )
+    async with httpx.AsyncClient() as client:
+        result = await kegg.lookup_pathways(client, "Glyma.04G220900", organism="glycine_max")
+    # User-facing locus stays the SoyBase form even though the bridge
+    # rewrote it on the wire.
+    assert result["locus"] == "Glyma.04G220900"
+    assert result["kegg_gene_id"] == "gmx:100810680"
+    assert result["entrez_gene_id"] == "100810680"
+
+
+@pytest.mark.asyncio
+async def test_lookup_pathways_arabidopsis_bypasses_bridge(httpx_mock: HTTPXMock):
+    """Arabidopsis path is unchanged — KEGG's ``ath:`` scope accepts AGI
+    loci natively, so no Ensembl /xrefs call should fire. We register the
+    KEGG mocks only; if the bridge fires unexpectedly, pytest-httpx errors
+    with 'No response can be found' on the unmatched Ensembl request.
+    The output MUST NOT contain ``entrez_gene_id``.
+    """
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/link/pathway/ath:AT1G01010",
+        text="ath:AT1G01010\tpath:ath04075\n",
+    )
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/get/path:ath04075",
+        text="ENTRY       ath04075                    Pathway\nNAME        Plant hormone signal transduction\nCLASS       Environmental Information Processing; Signal transduction\n",
+    )
+    async with httpx.AsyncClient() as client:
+        result = await kegg.lookup_pathways(client, "AT1G01010", organism="arabidopsis_thaliana")
+    assert result["kegg_gene_id"] == "ath:AT1G01010"
+    assert "entrez_gene_id" not in result, (
+        "Arabidopsis path must not surface entrez_gene_id — bridge did not fire"
+    )
+
+
+@pytest.mark.asyncio
+async def test_lookup_pathways_ensembl_xrefs_503_propagates(httpx_mock: HTTPXMock):
+    """If Ensembl is unhealthy during the bridge call, the
+    UpstreamUnavailableError raised by _http.request_with_retry must
+    propagate — no swallowing, no fallback to "0 pathways". 3× 503
+    matches MAX_RETRIES in ensembl_plants.
+    """
+    from plant_genomics_mcp.errors import UpstreamUnavailableError
+
+    for _ in range(3):
+        httpx_mock.add_response(
+            url="https://rest.ensembl.org/xrefs/id/Os01g0100100?species=oryza_sativa",
+            status_code=503,
+            text="",
+        )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError):
+            await kegg.lookup_pathways(client, "Os01g0100100", organism="oryza_sativa")
