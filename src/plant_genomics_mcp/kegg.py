@@ -27,7 +27,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import _http, cache, organisms, validators
+from plant_genomics_mcp import _http, cache, ensembl_plants, organisms, validators
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
@@ -55,6 +55,40 @@ def _normalize_locus_for_ensembl(locus: str, organism_canonical: str) -> str:
     if organism_canonical == "glycine_max" and locus.startswith("Glyma."):
         return "GLYMA_" + locus[len("Glyma.") :]
     return locus
+
+
+async def _resolve_locus_to_entrez_id(
+    client: httpx.AsyncClient, locus: str, *, organism: str | int
+) -> str:
+    """Resolve a community locus to an NCBI Entrez Gene ID via Ensembl /xrefs.
+
+    KEGG indexes Entrez Gene IDs for all non-Arabidopsis plants. The Ensembl
+    Plants ``/xrefs/id`` endpoint returns a cross-reference list that
+    includes the ``EntrezGene`` dbname when available — empirically per-
+    species (tomato counter-example: only ArrayExpress, no EntrezGene).
+
+    Soybean loci are normalized from SoyBase form (``Glyma.X``) to Ensembl
+    form (``GLYMA_X``) before lookup; other organisms pass through.
+
+    When multiple EntrezGene xrefs exist (rare; read-through fusions,
+    pseudogene/parent pairings), returns the first. Matches the pragmatic
+    policy STRING uses for multi-UniProt loci.
+
+    Raises :class:`NotFoundError` if no EntrezGene xref exists for this
+    locus in Ensembl Plants — fail-loud so the caller doesn't get a
+    silently-empty pathway list mistaken for "no annotation".
+    """
+    organism_canonical = organisms.resolve(organism).canonical
+    ensembl_locus = _normalize_locus_for_ensembl(locus, organism_canonical)
+    result = await ensembl_plants.lookup_xrefs(client, ensembl_locus, organism=organism)
+    entrez_ids = result["by_db"].get("EntrezGene", [])
+    if not entrez_ids:
+        raise NotFoundError(
+            f"KEGG: no Entrez Gene ID for {locus} ({organism_canonical}) — "
+            f"Ensembl Plants /xrefs returned {result['count']} cross-refs, "
+            f"none from EntrezGene"
+        )
+    return entrez_ids[0]
 
 
 async def _get(client: httpx.AsyncClient, path: str) -> str:
