@@ -12,11 +12,18 @@ side — uppercase AGI loci (``ath:AT1G01010``) return rows, lowercase
 returns empty. We preserve the caller's case verbatim and do not down-case.
 
 v1.4.0 KEGG ↔ Entrez bridge: KEGG accepts AGI loci natively for ``ath`` but
-indexes NCBI Entrez Gene IDs for all other plant scopes (``osa``/``zma``/
-``gmx``/…). The bridge — ``_resolve_locus_to_entrez_id`` calling Ensembl
-Plants ``/xrefs/id`` — resolves community loci (RAP-DB, MaizeGDB, SoyBase)
-to Entrez IDs before the KEGG call. Soybean loci are normalized from
-``Glyma.X`` (SoyBase) to ``GLYMA_X`` (Ensembl) inside the bridge.
+indexes NCBI Entrez Gene IDs for all other plant scopes. The bridge —
+``_resolve_locus_to_entrez_id`` calling Ensembl Plants ``/xrefs/id`` —
+resolves community loci to Entrez IDs before the KEGG call. Soybean loci
+are normalized from ``Glyma.X`` (SoyBase) to ``GLYMA_X`` (Ensembl) inside
+the bridge. v1.5 expanded the populated KEGG matrix to barley, poplar,
+and Brachypodium after the chr1-first-gene probe confirmed Ensembl /xrefs
+exposes EntrezGene cross-references for these assemblies (see
+``scripts/probe_kegg_bridge_candidates.json``). Pathway-annotation
+coverage in KEGG for the v1.5 additions is sparse — many loci raise
+``NotFoundError`` ("no pathway memberships") even when the bridge fires
+successfully; this matches v1.4.0 behavior for un-annotated rice/maize/
+soybean loci.
 
 KEGG is free for academic use; no API key. ``caller_identity`` parameter
 is not supported by KEGG REST (unlike STRING / NCBI BLAST). The 24h cache
@@ -186,16 +193,19 @@ async def lookup_pathways(
     no KEGG code in the matrix raise :class:`OrganismNotSupported` before
     any HTTP fires.
 
-    v1.4.0 KEGG ↔ Entrez bridge: for the 4 supported organisms outside
-    Arabidopsis (rice/maize/soybean as of this release; tomato + 7 others
-    still deferred), the gene_id splice is ``<code>:<entrez_id>`` rather
-    than ``<code>:<locus>`` because KEGG indexes Entrez Gene IDs for those
-    organisms. The bridge calls ``_resolve_locus_to_entrez_id`` (which
-    routes through ``ensembl_plants.lookup_xrefs``) and surfaces the
-    resolved Entrez ID as an additive ``entrez_gene_id`` output field.
-    Arabidopsis is the singular exception — ``ath:`` accepts AGI loci
-    natively, so no bridge fires and ``entrez_gene_id`` is omitted from
-    the output (no ``None`` placeholder).
+    v1.4.0 KEGG ↔ Entrez bridge: for each populated non-Arabidopsis
+    organism in the matrix, the gene_id splice is ``<code>:<entrez_id>``
+    rather than ``<code>:<locus>`` because KEGG indexes Entrez Gene IDs
+    for those organisms. The bridge calls ``_resolve_locus_to_entrez_id``
+    (which routes through ``ensembl_plants.lookup_xrefs``) and surfaces
+    the resolved Entrez ID as an additive ``entrez_gene_id`` output
+    field. Arabidopsis is the singular exception — ``ath:`` accepts AGI
+    loci natively, so no bridge fires and ``entrez_gene_id`` is omitted
+    from the output (no ``None`` placeholder). v1.5 broadened the
+    populated set beyond rice/maize/soybean (see module docstring) — the
+    bridge mechanics are identical; un-annotated loci in newly populated
+    organisms raise ``NotFoundError`` the same way un-annotated rice/
+    maize/soybean loci did in v1.4.0.
 
     Two-call KEGG sequence; per-pathway metadata fetches run via gather.
     If KEGG step-2 fails for a pathway, we surface the ID in
