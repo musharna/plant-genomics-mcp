@@ -38,6 +38,8 @@ from plant_genomics_mcp import _http, cache, ensembl_plants, organisms, validato
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
+    RateLimitError,
+    UpstreamUnavailableError,
 )
 
 BASE_URL = "https://rest.kegg.jp"
@@ -208,9 +210,12 @@ async def lookup_pathways(
     else:
         try:
             entrez_gene_id = await _resolve_locus_to_entrez_id(client, locus, organism=organism)
-        except PlantGenomicsError as e:
-            # Re-raise as the same subclass with a KEGG-bridge breadcrumb so users
-            # don't see a bare Ensembl error from a KEGG call site.
+        except (NotFoundError, RateLimitError, UpstreamUnavailableError) as e:
+            # Narrowed from PlantGenomicsError so `type(e)(msg) from e` stays safe:
+            # OrganismNotSupported / OrganismNotFound use keyword-only __init__ and
+            # would TypeError on a positional re-raise. Those two are pre-empted by
+            # kegg_org_code_for() above, but the narrow `except` documents the
+            # contract instead of relying on call-order luck.
             raise type(e)(f"KEGG bridge (Ensembl Plants /xrefs): {e}") from e
         gene_id = f"{org_code}:{entrez_gene_id}"
     body = await _get(client, f"/link/pathway/{gene_id}")

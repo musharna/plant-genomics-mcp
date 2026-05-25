@@ -22,7 +22,7 @@ KEGG ↔ NCBI Entrez bridge — `kegg_pathways` + `batch_kegg_pathways` now retu
 - Non-breaking. The 3 in-scope organisms previously raised `OrganismNotSupported` at resolution time, so no live consumer could have stable behavior to regress against.
 - One additional Ensembl `/xrefs/id` call per non-Arabidopsis `kegg_pathways` invocation. Both calls (Ensembl + KEGG) share their respective `_CACHE` TTL (~24h) and pipeline across the same `httpx.AsyncClient` — cold call ≈ 1 Ensembl + 1 KEGG `/link` + N KEGG `/get` in parallel; warm call hits 0 network.
 - Pre-impl probe confirmed live coverage (`scripts/verify_organisms.py` matrix re-probe ready): rice `Os01g0100100` → `EntrezGene 4326813`, maize `Zm00001eb000010` → `103644366`, soybean `GLYMA_01G001700` → `100810680`. Tomato `Solyc01g005610.3` returned only `ArrayExpress` — bridge mechanism falsified for tomato, deferred to v1.5.0 with a different mechanism (UniProt → Entrez two-hop, or NCBI Datasets).
-- `batch_kegg_pathways` picks up the bridge automatically (it fans out to `lookup_pathways` per locus); no batch-specific change shipped, no batch-specific test added.
+- `batch_kegg_pathways` picks up the bridge automatically via composition — it fans out to `lookup_pathways` per locus.
 - Docker tags `:1.4.0` / `:1.4` / `:latest` republish on tag-push; Diun on gt76 auto-redeploys the hosted demo. No HTTP-transport, auth, or registry-metadata change.
 
 ## v1.3.0 — 2026-05-24

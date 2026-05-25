@@ -434,7 +434,7 @@ async def test_lookup_pathways_bridge_no_entrez_xref_raises_not_found(httpx_mock
         ],
     )
     async with httpx.AsyncClient() as client:
-        with pytest.raises(NotFoundError, match="KEGG bridge"):
+        with pytest.raises(NotFoundError, match=r"KEGG bridge.*no Entrez Gene ID.*cross-ref"):
             await kegg.lookup_pathways(client, "Os01g0100100", organism="oryza_sativa")
 
 
