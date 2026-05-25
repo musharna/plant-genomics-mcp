@@ -61,7 +61,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=323,
         string_taxid=39947,
         europe_pmc_slug="rice",
-        kegg_org_code=None,  # KEGG osa uses NCBI Entrez Gene IDs, not RAP-DB loci
+        kegg_org_code="osa",  # v1.4.0: bridge via Ensembl /xrefs EntrezGene resolves RAP-DB loci → Entrez Gene IDs
         atted_release="Osa-u.c1-0",
         aliases=("o. sativa",),
     ),
@@ -74,7 +74,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=833,
         string_taxid=4577,
         europe_pmc_slug="maize",
-        kegg_org_code=None,  # KEGG zma uses NCBI Entrez Gene IDs, not MaizeGDB loci
+        kegg_org_code="zma",  # v1.4.0: bridge via Ensembl /xrefs EntrezGene resolves MaizeGDB loci → Entrez Gene IDs
         atted_release="Zma-u.c1-0",
         aliases=("z. mays",),
     ),
@@ -113,7 +113,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=275,
         string_taxid=3847,
         europe_pmc_slug="soybean",
-        kegg_org_code=None,  # KEGG gmx uses NCBI Entrez Gene IDs
+        kegg_org_code="gmx",  # v1.4.0: bridge via Ensembl /xrefs EntrezGene; SoyBase ``Glyma.`` form normalized to Ensembl ``GLYMA_`` on the wire
         atted_release="Gma-u.c1-0",
         aliases=("g. max",),
     ),
