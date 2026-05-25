@@ -524,3 +524,169 @@ async def test_live_kegg_soybean_returns_pathways_via_bridge():
     assert len(result["pathways"]) > 0, (
         "Soybean Glyma.19G000700 should have ≥1 KEGG pathway via bridge; got 0"
     )
+
+
+# ---------- v1.5 — deferred-organism expansion ----------
+#
+# 3 mocked happy-path tests for the v1.5 pass organisms (barley, poplar,
+# brachypodium) + 5 still-unsupported tests for the v1.5 falsified
+# organisms (wheat, sorghum, grape, medicago, tomato). Probe evidence
+# lives in scripts/probe_kegg_bridge_candidates.json (generated
+# 2026-05-25). Pathway-annotation counts in the probe are 0 across all
+# three pass organisms — the probe gate was relaxed to entrez_xref
+# presence — so these mocks register a single synthetic pathway to
+# exercise the end-to-end bridge wiring (Ensembl /xrefs → KEGG
+# /link/pathway → KEGG /get/path) rather than to mirror live counts.
+
+
+@pytest.mark.asyncio
+async def test_lookup_pathways_barley_via_bridge(httpx_mock: HTTPXMock):
+    """Barley (HORVU.MOREX.r3.1HG0000090 → hvg:123427420) — v1.5 probe
+    pass. Probe evidence: chr1 locus HORVU.MOREX.r3.1HG0000090, EntrezGene
+    123427420; pathway-annotation count 0 (informational — probe relaxed
+    the pathway gate). See scripts/probe_kegg_bridge_candidates.json.
+    """
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/xrefs/id/HORVU.MOREX.r3.1HG0000090?species=hordeum_vulgare",
+        json=[{"dbname": "EntrezGene", "primary_id": "123427420", "display_id": "x"}],
+    )
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/link/pathway/hvg:123427420",
+        text="hvg:123427420\tpath:hvg00010\n",
+    )
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/get/path:hvg00010",
+        text="ENTRY       hvg00010                    Pathway\nNAME        Glycolysis / Gluconeogenesis - Hordeum vulgare\nCLASS       Metabolism; Carbohydrate metabolism\n",
+    )
+    async with httpx.AsyncClient() as client:
+        result = await kegg.lookup_pathways(
+            client, "HORVU.MOREX.r3.1HG0000090", organism="hordeum_vulgare"
+        )
+    assert result["locus"] == "HORVU.MOREX.r3.1HG0000090"
+    assert result["kegg_gene_id"] == "hvg:123427420"
+    assert result["entrez_gene_id"] == "123427420"
+    assert len(result["pathways"]) == 1
+    assert result["pathways"][0]["id"] == "hvg00010"
+    assert "Glycolysis" in result["pathways"][0]["name"]
+
+
+@pytest.mark.asyncio
+async def test_lookup_pathways_poplar_via_bridge(httpx_mock: HTTPXMock):
+    """Poplar (Potri.001G006600.v4.1 → pop:7483252) — v1.5 probe pass.
+    Probe evidence: chr1 locus Potri.001G006600.v4.1, EntrezGene 7483252;
+    pathway-annotation count 0 (informational — probe relaxed the pathway
+    gate). See scripts/probe_kegg_bridge_candidates.json.
+    """
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/xrefs/id/Potri.001G006600.v4.1?species=populus_trichocarpa",
+        json=[{"dbname": "EntrezGene", "primary_id": "7483252", "display_id": "x"}],
+    )
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/link/pathway/pop:7483252",
+        text="pop:7483252\tpath:pop00010\n",
+    )
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/get/path:pop00010",
+        text="ENTRY       pop00010                    Pathway\nNAME        Glycolysis / Gluconeogenesis - Populus trichocarpa\nCLASS       Metabolism; Carbohydrate metabolism\n",
+    )
+    async with httpx.AsyncClient() as client:
+        result = await kegg.lookup_pathways(
+            client, "Potri.001G006600.v4.1", organism="populus_trichocarpa"
+        )
+    assert result["locus"] == "Potri.001G006600.v4.1"
+    assert result["kegg_gene_id"] == "pop:7483252"
+    assert result["entrez_gene_id"] == "7483252"
+    assert len(result["pathways"]) == 1
+    assert result["pathways"][0]["id"] == "pop00010"
+    assert "Glycolysis" in result["pathways"][0]["name"]
+
+
+@pytest.mark.asyncio
+async def test_lookup_pathways_brachypodium_via_bridge(httpx_mock: HTTPXMock):
+    """Brachypodium (BRADI_1g00485v3 → bdi:100837010) — v1.5 probe pass.
+    Probe evidence: chr1 locus BRADI_1g00485v3, EntrezGene 100837010;
+    pathway-annotation count 0 (informational — probe relaxed the pathway
+    gate). See scripts/probe_kegg_bridge_candidates.json.
+    """
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/xrefs/id/BRADI_1g00485v3?species=brachypodium_distachyon",
+        json=[{"dbname": "EntrezGene", "primary_id": "100837010", "display_id": "x"}],
+    )
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/link/pathway/bdi:100837010",
+        text="bdi:100837010\tpath:bdi00010\n",
+    )
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/get/path:bdi00010",
+        text="ENTRY       bdi00010                    Pathway\nNAME        Glycolysis / Gluconeogenesis - Brachypodium distachyon\nCLASS       Metabolism; Carbohydrate metabolism\n",
+    )
+    async with httpx.AsyncClient() as client:
+        result = await kegg.lookup_pathways(
+            client, "BRADI_1g00485v3", organism="brachypodium_distachyon"
+        )
+    assert result["locus"] == "BRADI_1g00485v3"
+    assert result["kegg_gene_id"] == "bdi:100837010"
+    assert result["entrez_gene_id"] == "100837010"
+    assert len(result["pathways"]) == 1
+    assert result["pathways"][0]["id"] == "bdi00010"
+    assert "Glycolysis" in result["pathways"][0]["name"]
+
+
+@pytest.mark.asyncio
+async def test_lookup_pathways_wheat_still_unsupported():
+    """v1.5 probe verdict: no_entrez_xref (Ensembl /xrefs returned only
+    ArrayExpress/KNETMINER_WHEAT/WHEATEXP_GENE, no EntrezGene). Matrix
+    kegg_org_code stays None. Guards against accidental flip-on in a
+    future edit. See scripts/probe_kegg_bridge_candidates.json.
+    """
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(OrganismNotSupported, match="triticum_aestivum"):
+            await kegg.lookup_pathways(client, "ignored", organism="triticum_aestivum")
+
+
+@pytest.mark.asyncio
+async def test_lookup_pathways_sorghum_still_unsupported():
+    """v1.5 probe verdict: no_entrez_xref (Ensembl /xrefs returned only
+    ArrayExpress-tier dbs, no EntrezGene). Matrix kegg_org_code stays
+    None. Guards against accidental flip-on in a future edit. See
+    scripts/probe_kegg_bridge_candidates.json.
+    """
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(OrganismNotSupported, match="sorghum_bicolor"):
+            await kegg.lookup_pathways(client, "ignored", organism="sorghum_bicolor")
+
+
+@pytest.mark.asyncio
+async def test_lookup_pathways_grape_still_unsupported():
+    """v1.5 probe verdict: no_entrez_xref (Ensembl /xrefs returned only
+    ArrayExpress-tier dbs, no EntrezGene). Matrix kegg_org_code stays
+    None. Guards against accidental flip-on in a future edit. See
+    scripts/probe_kegg_bridge_candidates.json.
+    """
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(OrganismNotSupported, match="vitis_vinifera"):
+            await kegg.lookup_pathways(client, "ignored", organism="vitis_vinifera")
+
+
+@pytest.mark.asyncio
+async def test_lookup_pathways_medicago_still_unsupported():
+    """v1.5 probe verdict: no_entrez_xref (Ensembl /xrefs returned only
+    ArrayExpress-tier dbs, no EntrezGene). Matrix kegg_org_code stays
+    None. Guards against accidental flip-on in a future edit. See
+    scripts/probe_kegg_bridge_candidates.json.
+    """
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(OrganismNotSupported, match="medicago_truncatula"):
+            await kegg.lookup_pathways(client, "ignored", organism="medicago_truncatula")
+
+
+@pytest.mark.asyncio
+async def test_lookup_pathways_tomato_still_unsupported():
+    """v1.5 probe verdict: no_entrez_xref (Ensembl /xrefs returned only
+    ArrayExpress-tier dbs, no EntrezGene). Matrix kegg_org_code stays
+    None. Guards against accidental flip-on in a future edit. See
+    scripts/probe_kegg_bridge_candidates.json.
+    """
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(OrganismNotSupported, match="solanum_lycopersicum"):
+            await kegg.lookup_pathways(client, "ignored", organism="solanum_lycopersicum")
