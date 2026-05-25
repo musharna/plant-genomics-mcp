@@ -41,6 +41,22 @@ CACHE_TTL_SECONDS = 86400.0  # 24h
 _CACHE = cache.TTLCache(default_ttl=CACHE_TTL_SECONDS)
 
 
+def _normalize_locus_for_ensembl(locus: str, organism_canonical: str) -> str:
+    """Transform community-locus IDs into the form Ensembl Plants indexes.
+
+    Soybean: SoyBase ``Glyma.04G220900`` → Ensembl ``GLYMA_04G220900``.
+    Other organisms (and soybean inputs without the ``Glyma.`` prefix):
+    pass-through. Literal prefix swap, no regex.
+
+    Scoped to the KEGG→Entrez bridge — ``ensembl_plants.lookup_xrefs`` is
+    exposed as its own MCP tool with other callers; silently rewriting
+    locus there would surprise consumers who pass either form intentionally.
+    """
+    if organism_canonical == "glycine_max" and locus.startswith("Glyma."):
+        return "GLYMA_" + locus[len("Glyma.") :]
+    return locus
+
+
 async def _get(client: httpx.AsyncClient, path: str) -> str:
     """GET a KEGG endpoint with retry. Returns response body as text.
 
