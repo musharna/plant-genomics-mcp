@@ -13,7 +13,7 @@ KEGG ↔ NCBI Entrez bridge — `kegg_pathways` + `batch_kegg_pathways` now retu
 **Changed**
 
 - **`organisms.ORGANISMS["oryza_sativa"].kegg_org_code` flipped from `None` → `"osa"`**; same for `zea_mays` → `"zma"` and `glycine_max` → `"gmx"`. The matrix guard at `organisms.kegg_org_code_for` now accepts these 4 organisms (Arabidopsis + 3 new); the other 8 still raise `OrganismNotSupported(backend="kegg", ...)` pre-HTTP.
-- **`kegg_pathways(locus, organism=...)` output schema gains `entrez_gene_id` for the 3 newly-supported organisms.** Existing `kegg_gene_id` field value changes from "would have been `osa:<community-locus>`" to `osa:<entrez-id>` for the 3 in-scope organisms — but since the prior call path raised `OrganismNotSupported` before reaching output, no live consumer can have been affected.
+- **`kegg_pathways(locus, organism=...)` output schema gains `entrez_gene_id` for the 3 newly-supported organisms.** `kegg_gene_id` for the 3 newly-supported organisms is `<code>:<entrez-id>` (e.g., `osa:4326813`) rather than the `<code>:<community-locus>` form a naive port would have produced. No live consumer existed pre-v1.4.0 — the prior call path raised `OrganismNotSupported` before reaching output.
 - **`kegg.lookup_pathways` dispatches on `org_code != "ath"`** to bridge; Arabidopsis continues to splice `gene_id = f"ath:{locus}"` with no bridge call.
 - **Two existing kegg tests** (`test_lookup_pathways_unsupported_organism_raises`, `test_live_kegg_non_arabidopsis_raises_unsupported`) **swapped their organism from rice → wheat** (`triticum_aestivum`) so they continue to guard the deferred-organism branch post-bridge.
 
@@ -22,6 +22,7 @@ KEGG ↔ NCBI Entrez bridge — `kegg_pathways` + `batch_kegg_pathways` now retu
 - Non-breaking. The 3 in-scope organisms previously raised `OrganismNotSupported` at resolution time, so no live consumer could have stable behavior to regress against.
 - One additional Ensembl `/xrefs/id` call per non-Arabidopsis `kegg_pathways` invocation. Both calls (Ensembl + KEGG) share their respective `_CACHE` TTL (~24h) and pipeline across the same `httpx.AsyncClient` — cold call ≈ 1 Ensembl + 1 KEGG `/link` + N KEGG `/get` in parallel; warm call hits 0 network.
 - Pre-impl probe confirmed live coverage (`scripts/verify_organisms.py` matrix re-probe ready): rice `Os01g0100100` → `EntrezGene 4326813`, maize `Zm00001eb000010` → `103644366`, soybean `GLYMA_01G001700` → `100810680`. Tomato `Solyc01g005610.3` returned only `ArrayExpress` — bridge mechanism falsified for tomato, deferred to v1.5.0 with a different mechanism (UniProt → Entrez two-hop, or NCBI Datasets).
+- `batch_kegg_pathways` picks up the bridge automatically (it fans out to `lookup_pathways` per locus); no batch-specific change shipped, no batch-specific test added.
 - Docker tags `:1.4.0` / `:1.4` / `:latest` republish on tag-push; Diun on gt76 auto-redeploys the hosted demo. No HTTP-transport, auth, or registry-metadata change.
 
 ## v1.3.0 — 2026-05-24

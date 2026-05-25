@@ -78,8 +78,9 @@ async def _resolve_locus_to_entrez_id(
     form (``GLYMA_X``) before lookup; other organisms pass through.
 
     When multiple EntrezGene xrefs exist (rare; read-through fusions,
-    pseudogene/parent pairings), returns the first. Matches the pragmatic
-    policy STRING uses for multi-UniProt loci.
+    pseudogene/parent pairings), returns the first. First-wins is pragmatic
+    — the alternative (raise) would over-fail on a rare edge case where any
+    of the IDs would round-trip through KEGG.
 
     Raises :class:`NotFoundError` if no EntrezGene xref exists for this
     locus in Ensembl Plants — fail-loud so the caller doesn't get a
@@ -90,9 +91,11 @@ async def _resolve_locus_to_entrez_id(
     result = await ensembl_plants.lookup_xrefs(client, ensembl_locus, organism=organism)
     entrez_ids = result["by_db"].get("EntrezGene", [])
     if not entrez_ids:
+        count = result["count"]
+        suffix = "cross-ref" if count == 1 else "cross-refs"
         raise NotFoundError(
             f"KEGG: no Entrez Gene ID for {locus} ({organism_canonical}) — "
-            f"Ensembl Plants /xrefs returned {result['count']} cross-refs, "
+            f"Ensembl Plants /xrefs returned {count} {suffix}, "
             f"none from EntrezGene"
         )
     return entrez_ids[0]
@@ -199,18 +202,23 @@ async def lookup_pathways(
     """
     validators.assert_valid_locus(locus, backend="KEGG")
     org_code = organisms.kegg_org_code_for(organism)
+    entrez_gene_id: str | None = None
     if org_code == "ath":
         gene_id = f"{org_code}:{locus}"
-        entrez_gene_id: str | None = None
     else:
-        entrez_gene_id = await _resolve_locus_to_entrez_id(client, locus, organism=organism)
+        try:
+            entrez_gene_id = await _resolve_locus_to_entrez_id(client, locus, organism=organism)
+        except PlantGenomicsError as e:
+            # Re-raise as the same subclass with a KEGG-bridge breadcrumb so users
+            # don't see a bare Ensembl error from a KEGG call site.
+            raise type(e)(f"KEGG bridge (Ensembl Plants /xrefs): {e}") from e
         gene_id = f"{org_code}:{entrez_gene_id}"
     body = await _get(client, f"/link/pathway/{gene_id}")
     if not body.strip():
-        raise NotFoundError(f"KEGG: no pathway memberships for {locus} ({org_code} gene db)")
+        raise NotFoundError(f"KEGG: no pathway memberships for {locus} (queried as {gene_id})")
     pathway_ids = _parse_link_pathway(body, gene_id)
     if not pathway_ids:
-        raise NotFoundError(f"KEGG: response had no pathway IDs for {locus}")
+        raise NotFoundError(f"KEGG: response had no pathway IDs for {locus} (queried as {gene_id})")
 
     pathways: list[dict[str, Any]] = []
     errors: list[str] = []
