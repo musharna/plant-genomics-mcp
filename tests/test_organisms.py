@@ -235,3 +235,27 @@ def test_atted_release_for_unsupported_raises_organism_not_supported() -> None:
                 organisms.atted_release_for(canonical)
             return
     pytest.skip("ATTED covers all 12 organisms — no negative case to assert")
+
+
+# --- v1.5: pass-organism matrix-flip positive assertions ---
+
+
+def test_kegg_org_code_for_hordeum_vulgare_returns_hvg() -> None:
+    """v1.5 probe pass — KEGG bridge round-tripped via chr1 locus
+    HORVU.MOREX.r3.1HG0000090 (see scripts/probe_kegg_bridge_candidates.json).
+    Guards against accidental matrix flip-back."""
+    assert organisms.kegg_org_code_for("hordeum_vulgare") == "hvg"
+
+
+def test_kegg_org_code_for_populus_trichocarpa_returns_pop() -> None:
+    """v1.5 probe pass — KEGG bridge round-tripped via chr1 locus
+    Potri.001G006600.v4.1 (see scripts/probe_kegg_bridge_candidates.json).
+    Guards against accidental matrix flip-back."""
+    assert organisms.kegg_org_code_for("populus_trichocarpa") == "pop"
+
+
+def test_kegg_org_code_for_brachypodium_distachyon_returns_bdi() -> None:
+    """v1.5 probe pass — KEGG bridge round-tripped via chr1 locus
+    BRADI_1g00485v3 (see scripts/probe_kegg_bridge_candidates.json).
+    Guards against accidental matrix flip-back."""
+    assert organisms.kegg_org_code_for("brachypodium_distachyon") == "bdi"
