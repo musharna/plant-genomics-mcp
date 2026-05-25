@@ -176,6 +176,23 @@ async def test_live_kegg_non_arabidopsis_raises_unsupported():
             await kegg.lookup_pathways(client, "Os01g0100100", organism="oryza_sativa")
 
 
+# ---------- v1.4.0 — KEGG locus → Entrez bridge ----------
+
+
+def test_soybean_normalizer_only_transforms_glyma_prefix() -> None:
+    """The bridge rewrites SoyBase `Glyma.X` → Ensembl `GLYMA_X` only for
+    soybean — every other organism + already-normalized inputs pass through.
+    Literal-substring transform, no regex, so no over-matching surprises.
+    """
+    assert kegg._normalize_locus_for_ensembl("Glyma.04G220900", "glycine_max") == "GLYMA_04G220900"
+    # Wrong organism: don't rewrite even if the prefix matches.
+    assert kegg._normalize_locus_for_ensembl("Glyma.04G220900", "oryza_sativa") == "Glyma.04G220900"
+    # Already-normalized: pass through (no double-prefix).
+    assert kegg._normalize_locus_for_ensembl("GLYMA_04G220900", "glycine_max") == "GLYMA_04G220900"
+    # No Glyma. prefix on a soybean call: pass through unchanged.
+    assert kegg._normalize_locus_for_ensembl("Os01g0100100", "glycine_max") == "Os01g0100100"
+
+
 # ---------- Wave B6: shared locus validator at the URL boundary ----------
 
 
