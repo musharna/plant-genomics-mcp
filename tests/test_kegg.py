@@ -59,14 +59,15 @@ async def test_lookup_pathways_arabidopsis_uses_ath_prefix(httpx_mock: HTTPXMock
 
 @pytest.mark.asyncio
 async def test_lookup_pathways_unsupported_organism_raises():
-    """Non-Arabidopsis organisms have ``kegg_org_code=None`` in v1.1.0
-    (KEGG uses NCBI Entrez Gene IDs for them, which our cross-backend
-    locus contract can't currently produce). The accessor must raise
-    OrganismNotSupported(backend='kegg', ...) before any HTTP fires.
+    """Organisms in the 8 deferred set (tomato, wheat, sorghum, barley,
+    grape, poplar, medicago, brachypodium) still have ``kegg_org_code=None``
+    post-v1.4.0 — the bridge only landed for rice/maize/soybean. The
+    accessor must raise OrganismNotSupported(backend='kegg', ...) before
+    any HTTP fires. v1.4.0: swapped from rice (now supported) to wheat.
     """
     async with httpx.AsyncClient() as client:
         with pytest.raises(OrganismNotSupported):
-            await kegg.lookup_pathways(client, "Os01g0100100", organism="oryza_sativa")
+            await kegg.lookup_pathways(client, "TraesCS1A02G000100", organism="triticum_aestivum")
 
 
 @pytest.mark.asyncio
@@ -165,15 +166,17 @@ async def test_live_kegg_at3g52930_has_pathways():
     reason="set PLANT_GENOMICS_MCP_LIVE=1 to hit rest.kegg.jp",
 )
 @pytest.mark.asyncio
-async def test_live_kegg_non_arabidopsis_raises_unsupported():
-    """v1.1.0: non-Arabidopsis organisms have ``kegg_org_code=None`` in the
-    matrix until an Entrez bridge lands. The accessor must raise before
-    any HTTP fires; this guards against accidentally re-populating an
-    org code without also adding the Entrez resolver.
+async def test_live_kegg_deferred_organism_raises_unsupported():
+    """v1.4.0: the 8 deferred organisms (tomato/wheat/sorghum/barley/grape/
+    poplar/medicago/brachypodium) still have ``kegg_org_code=None``. The
+    accessor must raise before any HTTP fires; this guards against
+    accidentally extending the bridge to another organism without also
+    populating its matrix slot. Swapped from rice (now supported via the
+    v1.4.0 bridge) to wheat.
     """
     async with httpx.AsyncClient() as client:
         with pytest.raises(OrganismNotSupported):
-            await kegg.lookup_pathways(client, "Os01g0100100", organism="oryza_sativa")
+            await kegg.lookup_pathways(client, "TraesCS1A02G000100", organism="triticum_aestivum")
 
 
 # ---------- v1.4.0 — KEGG locus → Entrez bridge ----------
