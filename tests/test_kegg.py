@@ -193,6 +193,99 @@ def test_soybean_normalizer_only_transforms_glyma_prefix() -> None:
     assert kegg._normalize_locus_for_ensembl("Os01g0100100", "glycine_max") == "Os01g0100100"
 
 
+@pytest.mark.asyncio
+async def test_resolve_locus_to_entrez_id_returns_first_entrez(httpx_mock: HTTPXMock):
+    """Happy path — Ensembl /xrefs returns one EntrezGene xref; bridge
+    returns the primary_id verbatim.
+    """
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/xrefs/id/Os01g0100100?species=oryza_sativa",
+        json=[
+            {"dbname": "EntrezGene", "primary_id": "4326813", "display_id": "Os01g0100100"},
+            {"dbname": "ArrayExpress", "primary_id": "Os01g0100100", "display_id": "Os01g0100100"},
+        ],
+    )
+    async with httpx.AsyncClient() as client:
+        entrez_id = await kegg._resolve_locus_to_entrez_id(
+            client, "Os01g0100100", organism="oryza_sativa"
+        )
+    assert entrez_id == "4326813"
+
+
+@pytest.mark.asyncio
+async def test_resolve_locus_to_entrez_id_multi_entrez_picks_first(httpx_mock: HTTPXMock):
+    """When Ensembl returns multiple EntrezGene xrefs (rare; read-through
+    fusions, pseudogene/parent pairings), first-wins. Matches STRING's
+    multi-UniProt policy.
+    """
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/xrefs/id/Os01g0100100?species=oryza_sativa",
+        json=[
+            {"dbname": "EntrezGene", "primary_id": "4326813", "display_id": "primary"},
+            {"dbname": "EntrezGene", "primary_id": "9876543", "display_id": "secondary"},
+        ],
+    )
+    async with httpx.AsyncClient() as client:
+        entrez_id = await kegg._resolve_locus_to_entrez_id(
+            client, "Os01g0100100", organism="oryza_sativa"
+        )
+    assert entrez_id == "4326813"
+
+
+@pytest.mark.asyncio
+async def test_resolve_locus_to_entrez_id_no_entrez_xref_raises(httpx_mock: HTTPXMock):
+    """Ensembl returned cross-refs but none from EntrezGene (the tomato
+    case observed in the pre-impl probe — only ArrayExpress shows up).
+    Bridge must raise loud — no silent empty pathway list.
+    """
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/xrefs/id/Solyc01g005610.3?species=solanum_lycopersicum",
+        json=[
+            {"dbname": "ArrayExpress", "primary_id": "Solyc01g005610", "display_id": "x"},
+        ],
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="none from EntrezGene"):
+            await kegg._resolve_locus_to_entrez_id(
+                client, "Solyc01g005610.3", organism="solanum_lycopersicum"
+            )
+
+
+@pytest.mark.asyncio
+async def test_resolve_locus_to_entrez_id_empty_xref_list_raises(httpx_mock: HTTPXMock):
+    """Ensembl returned an empty list (locus has no xrefs at all). Surface
+    the same NotFoundError shape as the no-EntrezGene case — caller doesn't
+    care about the distinction, just that the bridge can't proceed.
+    """
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/xrefs/id/Os01g0100100?species=oryza_sativa",
+        json=[],
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="0 cross-refs, none from EntrezGene"):
+            await kegg._resolve_locus_to_entrez_id(client, "Os01g0100100", organism="oryza_sativa")
+
+
+@pytest.mark.asyncio
+async def test_resolve_locus_to_entrez_id_soybean_normalizes_on_wire(httpx_mock: HTTPXMock):
+    """Caller passes SoyBase form ``Glyma.04G220900``; the bridge MUST hit
+    Ensembl with the normalized ``GLYMA_04G220900``. If the registered mock
+    URL contains the un-normalized form, pytest-httpx errors with
+    'No response found' — making the test guard the normalizer firing.
+    """
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/xrefs/id/GLYMA_04G220900?species=glycine_max",
+        json=[
+            {"dbname": "EntrezGene", "primary_id": "100810680", "display_id": "x"},
+        ],
+    )
+    async with httpx.AsyncClient() as client:
+        entrez_id = await kegg._resolve_locus_to_entrez_id(
+            client, "Glyma.04G220900", organism="glycine_max"
+        )
+    assert entrez_id == "100810680"
+
+
 # ---------- Wave B6: shared locus validator at the URL boundary ----------
 
 
