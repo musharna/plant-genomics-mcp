@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.3.0 — 2026-05-24
+
+**BREAKING** for `consensus_homologs` callers: the synthesis compose now passes `homology_type="all"` to `gramene.lookup_homologs` instead of relying on the module default `"ortholog"`. The semantic contract widens from "cross-species ortholog consensus" to "all-homology consensus" — within-species paralogs (Gramene `within_species_paralog` filter class) are now eligible for the Gramene set on every `consensus_homologs` call. Live test `test_consensus_homologs_live_at1g01010` (passed v1.2.0 unit suite but failed post-deploy real-execution) now returns 9 two-source picks for AT1G01010 and 2 for AT5G38420.
+
+**Fixed (causal — mechanism removal, root cause was data-scope, not code)**
+
+- **`consensus_homologs` now produces non-empty 2-source intersections for Arabidopsis-rooted queries.** v1.2.0's UniProt-accession pivot was the correct mechanism removal for the v0.8 defline-regex namespace bug, but post-deploy real-execution against `AT1G01010` revealed a structurally disjoint biological scope between the two sources: NCBI BLAST `blastp` vs `swissprot` ranks hits by sequence identity, so its top-N is dominated by **within-species paralogs** (e.g. `AT5G38420` → other RBCS isoforms `P10795`/`P10796`/`P10798`). Gramene `homology_type="ortholog"` — the module default at `gramene.py:64-68`, inherited at `synthesis.py:858` — explicitly excludes the `within_species_paralog` filter class. The two sources' output sets were therefore disjoint at the biological-scope layer, **before** any UniProt-acc dedup ran. Switching the compose to `"all"` aligns Gramene's filter scope with BLAST's actual ranking behavior. Validated via jobd job 801 (760s, laptop): `AT1G01010` → 9 shared accs (A4VCM0, A8MQY1, B5X570, O81913, O81914, Q5PP28, Q9FFI5, Q9M126, Q9SCK6); `AT5G38420` → 2 shared (P10795, P10796). Per `feedback_causal_vs_bandaid`: switching the filter (Option A in the recon memo) is mechanism removal — alternative options C/D (weakening the live-test assertion / xfail) were band-aids hiding the upstream scope mismatch.
+
+**Changed (semantic contract, not signature)**
+
+- **`synthesis.consensus_homologs` Gramene phase now includes within-species paralogs.** No tool signature or output-schema change; the same compose still emits `uniprot_accession`/`target_species`/`n_sources`/`sources`/`mean_identity`/`score`/`gramene_hit`/`blast_hit` keys per consensus row. Callers that depended on Gramene rows being strictly cross-species (one2one/one2many/many2many) will now see within-species paralog rows mixed in, with `target_species` matching the input organism. Filter downstream if you need the prior behavior.
+
+**Operational impact**
+
+- Docker tags `:1.3.0` / `:1.3` / `:latest` republish on tag-push; Diun on gt76 auto-redeploys the hosted demo. No HTTP-transport, auth, or registry-metadata change.
+- Module-level `gramene.lookup_homologs(client, locus)` (with no `homology_type` kwarg) still defaults to `"ortholog"` — only the synthesis compose is affected. Direct callers of `gramene.lookup_homologs` see no behavior change.
+- Unit tests pass unchanged: the Gramene fixture uses `ortholog_one2one`, which is in both the `"ortholog"` and `"all"` filter sets, so `homology_type` does not leak to the mocked HTTP layer.
+
 ## v1.2.0 — 2026-05-24
 
 **BREAKING** for `consensus_homologs` callers: the per-consensus row dedup key + output schema flip from Gramene-locus-token to UniProt accession. `target_locus_normalized` (string, lowercased species-prefix-stripped locus) is removed; `uniprot_accession` (string, BLAST `.N` version suffix stripped, SWISSPROT-preferred from Gramene xref) takes its place. `target_species` semantics narrow: in v1.1.x it could be inferred from either source's locus token; in v1.2.0 it's sourced exclusively from the Gramene xref `system_name` field and is `None` for BLAST-only rows. Gramene homologs whose UniProt xref returns no accession (~half of v69 entries in fringe organisms like cucurbits + bryophytes) are now dropped from the consensus rather than emitted as 1-source rows. Live test `test_consensus_homologs_live_at1g01010` (red since v0.8 ship) now passes; root cause was an architectural namespace mismatch, not the threshold or fixture choice the prior investigation memo suggested.

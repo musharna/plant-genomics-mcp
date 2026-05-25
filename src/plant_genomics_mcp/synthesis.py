@@ -852,10 +852,15 @@ async def consensus_homologs(
         )
 
     # Phase 2 — gather Gramene + BLAST.
+    # v1.3.0: homology_type="all" includes within-species paralogs. BLAST's
+    # swissprot top hits are ranked by sequence identity, so they are dominated
+    # by same-species paralogs (e.g. AT5G38420 → other RBCS isoforms). The v1.2
+    # default ("ortholog") explicitly excluded that class, making any 2-source
+    # intersect structurally impossible for Arabidopsis-rooted queries.
     raw_top = 50
     p2 = await _gather_phase2(
         [
-            (3, "gramene_homologs", gramene.lookup_homologs(client, locus)),
+            (3, "gramene_homologs", gramene.lookup_homologs(client, locus, homology_type="all")),
             (
                 4,
                 "blast_sequence",
