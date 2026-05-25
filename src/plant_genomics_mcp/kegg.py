@@ -2,14 +2,21 @@
 
 KEGG REST returns plain TSV-like text, not JSON. Two-call sequence:
 
-  1. GET /link/pathway/<org>:<locus>
-     → per-line ``<org>:<locus>\\tpath:<org>{NNNNN}\\n`` (empty body = not found)
+  1. GET /link/pathway/<org>:<id>
+     → per-line ``<org>:<id>\\tpath:<org>{NNNNN}\\n`` (empty body = not found)
   2. For each pathway ID, GET /get/path:<org>{NNNNN}
      → multi-line record with NAME and CLASS rows
 
 KEGG v118.0 (May 2026) made ``/link/pathway`` case-sensitive on the locus
 side — uppercase AGI loci (``ath:AT1G01010``) return rows, lowercase
 returns empty. We preserve the caller's case verbatim and do not down-case.
+
+v1.4.0 KEGG ↔ Entrez bridge: KEGG accepts AGI loci natively for ``ath`` but
+indexes NCBI Entrez Gene IDs for all other plant scopes (``osa``/``zma``/
+``gmx``/…). The bridge — ``_resolve_locus_to_entrez_id`` calling Ensembl
+Plants ``/xrefs/id`` — resolves community loci (RAP-DB, MaizeGDB, SoyBase)
+to Entrez IDs before the KEGG call. Soybean loci are normalized from
+``Glyma.X`` (SoyBase) to ``GLYMA_X`` (Ensembl) inside the bridge.
 
 KEGG is free for academic use; no API key. ``caller_identity`` parameter
 is not supported by KEGG REST (unlike STRING / NCBI BLAST). The 24h cache
@@ -168,26 +175,36 @@ async def lookup_pathways(
 
     v1.1.0 BREAKING: ``organism`` is keyword-only and required. The
     organism is resolved through ``organisms.kegg_org_code_for`` to a
-    3-letter KEGG org code (``ath``, …) and spliced into ``<code>:<locus>``
-    (case preserved — KEGG v118+ is case-sensitive) for the /link/pathway
-    and /get/path calls. Organisms with no KEGG code in the matrix raise
-    :class:`OrganismNotSupported` before any HTTP fires.
+    3-letter KEGG org code (``ath``, ``osa``, ``zma``, ``gmx``) and
+    spliced into ``<code>:<id>`` (case preserved — KEGG v118+ is case-
+    sensitive) for the /link/pathway and /get/path calls. Organisms with
+    no KEGG code in the matrix raise :class:`OrganismNotSupported` before
+    any HTTP fires.
 
-    KEGG identifier-namespace caveat (v1.1.0): KEGG accepts AGI loci
-    (``AT1G01010``) for ``ath`` but uses NCBI Entrez Gene IDs (numeric)
-    for ``osa``/``zma``/``gmx``/etc. — RAP-DB / MaizeGDB / Phytozome locus
-    IDs return empty from KEGG. Until an internal Entrez bridge lands,
-    only Arabidopsis has ``kegg_org_code`` populated; all other matrix
-    entries return ``OrganismNotSupported(backend='kegg', ...)`` so the
-    failure is honest at resolution time, not a silent NotFoundError.
+    v1.4.0 KEGG ↔ Entrez bridge: for the 4 supported organisms outside
+    Arabidopsis (rice/maize/soybean as of this release; tomato + 7 others
+    still deferred), the gene_id splice is ``<code>:<entrez_id>`` rather
+    than ``<code>:<locus>`` because KEGG indexes Entrez Gene IDs for those
+    organisms. The bridge calls ``_resolve_locus_to_entrez_id`` (which
+    routes through ``ensembl_plants.lookup_xrefs``) and surfaces the
+    resolved Entrez ID as an additive ``entrez_gene_id`` output field.
+    Arabidopsis is the singular exception — ``ath:`` accepts AGI loci
+    natively, so no bridge fires and ``entrez_gene_id`` is omitted from
+    the output (no ``None`` placeholder).
 
-    Two-call sequence; per-pathway metadata fetches run via gather. If
-    KEGG step-2 fails for a pathway, we surface the ID in ``pathways[]``
-    with empty name/class and append the message to ``errors[]``.
+    Two-call KEGG sequence; per-pathway metadata fetches run via gather.
+    If KEGG step-2 fails for a pathway, we surface the ID in
+    ``pathways[]`` with empty name/class and append the message to
+    ``errors[]``.
     """
     validators.assert_valid_locus(locus, backend="KEGG")
     org_code = organisms.kegg_org_code_for(organism)
-    gene_id = f"{org_code}:{locus}"
+    if org_code == "ath":
+        gene_id = f"{org_code}:{locus}"
+        entrez_gene_id: str | None = None
+    else:
+        entrez_gene_id = await _resolve_locus_to_entrez_id(client, locus, organism=organism)
+        gene_id = f"{org_code}:{entrez_gene_id}"
     body = await _get(client, f"/link/pathway/{gene_id}")
     if not body.strip():
         raise NotFoundError(f"KEGG: no pathway memberships for {locus} ({org_code} gene db)")
@@ -215,9 +232,12 @@ async def lookup_pathways(
         else:
             pathways.append({"id": pid, **outcome})
 
-    return {
+    result: dict[str, Any] = {
         "locus": locus,
         "kegg_gene_id": gene_id,
         "pathways": pathways,
         "errors": errors,
     }
+    if entrez_gene_id is not None:
+        result["entrez_gene_id"] = entrez_gene_id
+    return result
