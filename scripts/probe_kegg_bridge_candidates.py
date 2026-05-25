@@ -8,16 +8,29 @@ the v1.4.0 bridge depends on. Emits a markdown table to stdout and a JSON
 sidecar to scripts/probe_kegg_bridge_candidates.json (overridable via
 --output-json).
 
+The "chr1" region name is discovered per-organism by calling Ensembl's
+/info/assembly endpoint and picking the first chromosome-coord_system
+region in a numeric-aware sort (so "1" beats "10"/"Mt"; "1H" / "1A" beat
+"2"; organelle chromosomes Mt/Pt/Cp are filtered out so the picked chr1
+is always nuclear). This avoids hardcoding per-organism locus formats —
+the spec explicitly disallows author-recall of region names as
+load-bearing input.
+
 Pass condition (both must hold):
   1. Ensembl /xrefs returns >=1 cross-reference with dbname == "EntrezGene"
   2. KEGG /link/pathway/<kegg_code>:<entrez_id> returns a non-empty body
 
 Falsified verdicts:
-  - no_chr1_gene_found  — Ensembl /overlap returned no protein_coding gene
-  - no_entrez_xref      — Ensembl /xrefs returned no EntrezGene xref
-  - kegg_no_pathway     — KEGG /link/pathway returned empty body
-  - bad_kegg_code       — KEGG /link/pathway returned HTTP 400
-  - probe_walltime      — signal.alarm tripped on a single-organism call
+  - no_chromosome_region — Ensembl /info/assembly returned no
+                            chromosome-coord_system region (organism may
+                            only have scaffolds in current assembly)
+  - no_chr1_gene_found   — Ensembl /overlap returned no protein_coding gene
+  - no_entrez_xref       — Ensembl /xrefs returned no EntrezGene xref
+  - kegg_no_pathway      — KEGG /link/pathway returned empty body
+  - bad_kegg_code        — KEGG /link/pathway returned HTTP 400
+  - ensembl_http_error   — Ensembl returned a non-2xx (status recorded in
+                            the record under "ensembl_http_status")
+  - probe_walltime       — signal.alarm tripped on a single-organism call
 
 Walltime guarded per-organism (signal.alarm(60)); 2s sleep between
 organisms (polite to Ensembl + KEGG). Re-runnable; deterministic given
@@ -28,6 +41,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import signal
 import sys
 import time
@@ -39,19 +53,29 @@ import httpx
 ENSEMBL_BASE = "https://rest.ensembl.org"
 KEGG_BASE = "https://rest.kegg.jp"
 
-# (organism canonical, ensembl_slug, KEGG 3-letter code candidate, chr1 region)
+# (organism canonical, ensembl_slug, KEGG 3-letter code candidate)
 # kegg codes per the KEGG genome list; the probe verifies each by issuing a
-# real /link/pathway call (bad_kegg_code surfaces if 400).
-PROBE_TARGETS: list[tuple[str, str, str, str]] = [
-    ("triticum_aestivum", "triticum_aestivum", "taes", "1A:1-1000000"),
-    ("sorghum_bicolor", "sorghum_bicolor", "sbi", "1:1-1000000"),
-    ("hordeum_vulgare", "hordeum_vulgare", "hvg", "1:1-1000000"),
-    ("vitis_vinifera", "vitis_vinifera", "vvi", "1:1-1000000"),
-    ("populus_trichocarpa", "populus_trichocarpa", "pop", "1:1-1000000"),
-    ("medicago_truncatula", "medicago_truncatula", "mtr", "1:1-1000000"),
-    ("brachypodium_distachyon", "brachypodium_distachyon", "bdi", "1:1-1000000"),
-    ("solanum_lycopersicum", "solanum_lycopersicum", "sly", "1:1-1000000"),
+# real /link/pathway call (bad_kegg_code surfaces if 400). The per-organism
+# chr1 region name is discovered at runtime via /info/assembly — see
+# _top_level_chromosome — so this table does NOT encode locus formats.
+PROBE_TARGETS: list[tuple[str, str, str]] = [
+    ("triticum_aestivum", "triticum_aestivum", "taes"),
+    ("sorghum_bicolor", "sorghum_bicolor", "sbi"),
+    ("hordeum_vulgare", "hordeum_vulgare", "hvg"),
+    ("vitis_vinifera", "vitis_vinifera", "vvi"),
+    ("populus_trichocarpa", "populus_trichocarpa", "pop"),
+    ("medicago_truncatula", "medicago_truncatula", "mtr"),
+    ("brachypodium_distachyon", "brachypodium_distachyon", "bdi"),
+    ("solanum_lycopersicum", "solanum_lycopersicum", "sly"),
 ]
+
+# Organelle chromosome names (case-insensitive exact-match) — excluded from
+# the chr1 pick so we always land on a nuclear chromosome. Exact-match
+# rather than prefix-match to avoid catching GenBank accessions like
+# "CP126648.1" (vitis) or "MT9..." scaffolds.
+_ORGANELLE_NAMES = frozenset(
+    {"mt", "pt", "cp", "chloroplast", "mitochondria", "mitochondrion", "plastid"}
+)
 
 
 class _WalltimeError(RuntimeError):
@@ -60,6 +84,71 @@ class _WalltimeError(RuntimeError):
 
 def _alarm_handler(_signum: int, _frame: Any) -> None:  # noqa: ANN401
     raise _WalltimeError("probe walltime exceeded")
+
+
+_NUMERIC_PREFIX_RE = re.compile(r"^(\d+)(.*)$")
+
+
+def _chr_sort_key(name: str) -> tuple[int, int, str]:
+    """Numeric-aware sort key for chromosome names.
+
+    Sort order: numeric-prefixed names first (1, 1A, 1H, 2, 10, ...), then
+    non-numeric names (alphabetical, GenBank accessions, etc.). Within the
+    numeric set, sort by (int_part, suffix) so "1" < "1A" < "1H" < "2" < "10".
+
+    Returns (bucket, int_part, tiebreak_string) where bucket=0 for
+    numeric-prefixed and bucket=1 for non-numeric.
+    """
+    m = _NUMERIC_PREFIX_RE.match(name)
+    if m is None:
+        return (1, 0, name)
+    int_part = int(m.group(1))
+    suffix = m.group(2)
+    return (0, int_part, suffix)
+
+
+def _top_level_chromosome(client: httpx.Client, slug: str) -> str | None:
+    """Return the name of the first chromosome per Ensembl's own assembly metadata.
+
+    Calls Ensembl /info/assembly/{slug}. Strategy:
+
+    1. PREFERRED: use the response's "karyotype" field. Ensembl curates this
+       per-assembly to list the "real" chromosomes (nuclear; organelles
+       sometimes appended at the end; scaffolds excluded). Sorted by
+       _chr_sort_key, the first entry is the first chromosome regardless of
+       naming convention ("1" / "1A" / "1H" / GenBank accession).
+    2. FALLBACK: if karyotype is absent or empty, filter top_level_region to
+       entries whose coord_system == "chromosome", drop organelles, and pick
+       the first by _chr_sort_key. This is the original strategy and works
+       for assemblies where Ensembl populated coord_system="chromosome".
+
+    Returns None when neither strategy yields a candidate (organism may only
+    have scaffolds in the current assembly).
+    """
+    url = f"{ENSEMBL_BASE}/info/assembly/{slug}"
+    r = client.get(url, headers={"Accept": "application/json"})
+    r.raise_for_status()
+    payload = r.json()
+
+    # Strategy 1: karyotype (preferred). Filter organelles defensively.
+    karyotype = payload.get("karyotype") or []
+    karyotype = [name for name in karyotype if name.lower() not in _ORGANELLE_NAMES]
+    if karyotype:
+        karyotype.sort(key=_chr_sort_key)
+        return karyotype[0]
+
+    # Strategy 2: top_level_region filtered to coord_system=="chromosome".
+    regions = payload.get("top_level_region") or []
+    chroms = [
+        entry["name"]
+        for entry in regions
+        if entry.get("coord_system") == "chromosome"
+        and entry.get("name", "").lower() not in _ORGANELLE_NAMES
+    ]
+    if not chroms:
+        return None
+    chroms.sort(key=_chr_sort_key)
+    return chroms[0]
 
 
 def _chr1_first_protein_coding(client: httpx.Client, slug: str, region: str) -> str | None:
@@ -98,14 +187,58 @@ def _kegg_pathway_count(
     return len(body.splitlines()), 200
 
 
-def probe_one(
-    client: httpx.Client, organism: str, slug: str, kegg_code: str, region: str
-) -> dict[str, Any]:
+def probe_one(client: httpx.Client, organism: str, slug: str, kegg_code: str) -> dict[str, Any]:
     """Probe one organism end-to-end; return a structured verdict dict."""
     signal.signal(signal.SIGALRM, _alarm_handler)
     signal.alarm(60)
+    region: str | None = None
     try:
-        locus = _chr1_first_protein_coding(client, slug, region)
+        try:
+            chr1_name = _top_level_chromosome(client, slug)
+        except httpx.HTTPStatusError as exc:
+            return {
+                "organism": organism,
+                "slug": slug,
+                "kegg_code": kegg_code,
+                "chr1_region": None,
+                "chr1_locus": None,
+                "entrez_xrefs": [],
+                "observed_dbs": [],
+                "kegg_pathway_count": None,
+                "ensembl_http_status": exc.response.status_code,
+                "verdict": "falsified",
+                "verdict_reason": "ensembl_http_error",
+            }
+        if chr1_name is None:
+            return {
+                "organism": organism,
+                "slug": slug,
+                "kegg_code": kegg_code,
+                "chr1_region": None,
+                "chr1_locus": None,
+                "entrez_xrefs": [],
+                "observed_dbs": [],
+                "kegg_pathway_count": None,
+                "verdict": "falsified",
+                "verdict_reason": "no_chromosome_region",
+            }
+        region = f"{chr1_name}:1-1000000"
+        try:
+            locus = _chr1_first_protein_coding(client, slug, region)
+        except httpx.HTTPStatusError as exc:
+            return {
+                "organism": organism,
+                "slug": slug,
+                "kegg_code": kegg_code,
+                "chr1_region": region,
+                "chr1_locus": None,
+                "entrez_xrefs": [],
+                "observed_dbs": [],
+                "kegg_pathway_count": None,
+                "ensembl_http_status": exc.response.status_code,
+                "verdict": "falsified",
+                "verdict_reason": "ensembl_http_error",
+            }
         if locus is None:
             return {
                 "organism": organism,
@@ -119,7 +252,22 @@ def probe_one(
                 "verdict": "falsified",
                 "verdict_reason": "no_chr1_gene_found",
             }
-        entrez, observed = _entrez_xrefs(client, slug, locus)
+        try:
+            entrez, observed = _entrez_xrefs(client, slug, locus)
+        except httpx.HTTPStatusError as exc:
+            return {
+                "organism": organism,
+                "slug": slug,
+                "kegg_code": kegg_code,
+                "chr1_region": region,
+                "chr1_locus": locus,
+                "entrez_xrefs": [],
+                "observed_dbs": [],
+                "kegg_pathway_count": None,
+                "ensembl_http_status": exc.response.status_code,
+                "verdict": "falsified",
+                "verdict_reason": "ensembl_http_error",
+            }
         if not entrez:
             return {
                 "organism": organism,
@@ -229,9 +377,9 @@ def main(argv: list[str] | None = None) -> int:
 
     with httpx.Client(timeout=30.0) as client:
         results: list[dict[str, Any]] = []
-        for i, (organism, slug, kegg_code, region) in enumerate(targets):
+        for i, (organism, slug, kegg_code) in enumerate(targets):
             print(f"... probing {organism}", file=sys.stderr, flush=True)
-            results.append(probe_one(client, organism, slug, kegg_code, region))
+            results.append(probe_one(client, organism, slug, kegg_code))
             if i < len(targets) - 1:
                 time.sleep(2.0)
 
