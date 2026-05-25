@@ -1,5 +1,29 @@
 # Changelog
 
+## v1.4.0 — 2026-05-25
+
+KEGG ↔ NCBI Entrez bridge — `kegg_pathways` + `batch_kegg_pathways` now return real pathway memberships for rice (`oryza_sativa` / `osa`), maize (`zea_mays` / `zma`), and soybean (`glycine_max` / `gmx`) instead of `OrganismNotSupported`. The v1.1.0 KEGG migration intentionally left `kegg_org_code = None` for these organisms because KEGG's non-Arabidopsis scopes index NCBI Entrez Gene IDs, not the community locus namespaces (RAP-DB, MaizeGDB, SoyBase) the rest of the project speaks. v1.4.0 adds the missing locus → Entrez bridge via Ensembl Plants `/xrefs/id`. Tomato (`solanum_lycopersicum`) and the other 7 matrix organisms remain `kegg_org_code=None` — tomato was falsified at pre-impl probe (Ensembl /xrefs does not expose `EntrezGene` for tomato, only `ArrayExpress`; deferred to v1.5.0 via a different mechanism), and the other 7 are queued for a future wave once the bridge proves stable in the wild.
+
+**Added**
+
+- **Locus → Entrez bridge inside `kegg.py`.** Private async helper `_resolve_locus_to_entrez_id(client, locus, *, organism)` reads `ensembl_plants.lookup_xrefs(...)["by_db"]["EntrezGene"][0]` and raises `NotFoundError` with `"none from EntrezGene"` context if the locus has no EntrezGene cross-reference. When multiple EntrezGene xrefs exist (rare — read-through fusions, pseudogene/parent pairings), first-wins. Pure module-private — no new MCP tool, no new exported helper. The decision to keep the bridge inside `kegg.py` rather than promote to a standalone `entrez.py` is YAGNI: KEGG is the only consumer today. If v1.5+ adds another Entrez-bound consumer, refactor then.
+- **Soybean locus normalizer `_normalize_locus_for_ensembl(locus, organism_canonical)`.** Soybean's community locus (`Glyma.04G220900` per SoyBase) is NOT what Ensembl Plants indexes (`GLYMA_04G220900` — uppercase + underscore). The bridge organism-aware-rewrites inside the helper so the user-facing `locus` field stays the SoyBase form. Other organisms and already-normalized inputs pass through unchanged. Scoped to the KEGG bridge — `ensembl_plants.lookup_xrefs` is exposed as its own MCP tool with other callers and is left untouched.
+- **`entrez_gene_id` output field on `lookup_pathways`** for the bridge-firing case. Additive — omitted from the output when the bridge didn't fire (Arabidopsis). Schema stays loose: no `entrez_gene_id: null` placeholder.
+
+**Changed**
+
+- **`organisms.ORGANISMS["oryza_sativa"].kegg_org_code` flipped from `None` → `"osa"`**; same for `zea_mays` → `"zma"` and `glycine_max` → `"gmx"`. The matrix guard at `organisms.kegg_org_code_for` now accepts these 4 organisms (Arabidopsis + 3 new); the other 8 still raise `OrganismNotSupported(backend="kegg", ...)` pre-HTTP.
+- **`kegg_pathways(locus, organism=...)` output schema gains `entrez_gene_id` for the 3 newly-supported organisms.** Existing `kegg_gene_id` field value changes from "would have been `osa:<community-locus>`" to `osa:<entrez-id>` for the 3 in-scope organisms — but since the prior call path raised `OrganismNotSupported` before reaching output, no live consumer can have been affected.
+- **`kegg.lookup_pathways` dispatches on `org_code != "ath"`** to bridge; Arabidopsis continues to splice `gene_id = f"ath:{locus}"` with no bridge call.
+- **Two existing kegg tests** (`test_lookup_pathways_unsupported_organism_raises`, `test_live_kegg_non_arabidopsis_raises_unsupported`) **swapped their organism from rice → wheat** (`triticum_aestivum`) so they continue to guard the deferred-organism branch post-bridge.
+
+**Operational impact**
+
+- Non-breaking. The 3 in-scope organisms previously raised `OrganismNotSupported` at resolution time, so no live consumer could have stable behavior to regress against.
+- One additional Ensembl `/xrefs/id` call per non-Arabidopsis `kegg_pathways` invocation. Both calls (Ensembl + KEGG) share their respective `_CACHE` TTL (~24h) and pipeline across the same `httpx.AsyncClient` — cold call ≈ 1 Ensembl + 1 KEGG `/link` + N KEGG `/get` in parallel; warm call hits 0 network.
+- Pre-impl probe confirmed live coverage (`scripts/verify_organisms.py` matrix re-probe ready): rice `Os01g0100100` → `EntrezGene 4326813`, maize `Zm00001eb000010` → `103644366`, soybean `GLYMA_01G001700` → `100810680`. Tomato `Solyc01g005610.3` returned only `ArrayExpress` — bridge mechanism falsified for tomato, deferred to v1.5.0 with a different mechanism (UniProt → Entrez two-hop, or NCBI Datasets).
+- Docker tags `:1.4.0` / `:1.4` / `:latest` republish on tag-push; Diun on gt76 auto-redeploys the hosted demo. No HTTP-transport, auth, or registry-metadata change.
+
 ## v1.3.0 — 2026-05-24
 
 **BREAKING** for `consensus_homologs` callers: the synthesis compose now passes `homology_type="all"` to `gramene.lookup_homologs` instead of relying on the module default `"ortholog"`. The semantic contract widens from "cross-species ortholog consensus" to "all-homology consensus" — within-species paralogs (Gramene `within_species_paralog` filter class) are now eligible for the Gramene set on every `consensus_homologs` call. Live test `test_consensus_homologs_live_at1g01010` (passed v1.2.0 unit suite but failed post-deploy real-execution) now returns 9 two-source picks for AT1G01010 and 2 for AT5G38420.
