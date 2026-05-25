@@ -28,12 +28,16 @@ class OrganismRecord:
     string_taxid: int | None
     europe_pmc_slug: str | None
     kegg_org_code: str | None = None
-    # KEGG 3-letter org code (e.g. "ath"). Populated only when KEGG's gene
-    # namespace matches the locus IDs the rest of our backends accept.
-    # KEGG uses NCBI Entrez Gene IDs for non-Arabidopsis plants — until we
-    # add an Entrez bridge, only ``ath`` is populated and all other matrix
-    # entries leave this None so ``kegg_org_code_for`` raises
-    # OrganismNotSupported instead of silently returning empty pathways.
+    # KEGG 3-letter org code (e.g. "ath"). Arabidopsis ``ath`` accepts AGI
+    # loci natively; all other plant scopes index NCBI Entrez Gene IDs.
+    # v1.4.0 added an Ensembl Plants ``/xrefs/id`` bridge in ``kegg.py``
+    # that resolves community loci to Entrez IDs for the populated set
+    # (rice / maize / soybean). v1.5 extended the populated set to any
+    # additional organism whose chr1 first-gene probe round-tripped through
+    # Ensembl /xrefs → EntrezGene successfully (see
+    # ``scripts/probe_kegg_bridge_candidates.json``). Matrix entries that
+    # still leave this ``None`` did not pass the probe; line comments per
+    # entry record the probe-dated falsification reason.
     atted_release: str | None = None  # e.g. "Ath-u.c4-0" — ATTED-II release id
     aliases: tuple[str, ...] = field(default_factory=tuple)
 
@@ -141,7 +145,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=702,
         string_taxid=4513,
         europe_pmc_slug="barley",
-        kegg_org_code=None,  # KEGG hvg uses NCBI Entrez Gene IDs
+        kegg_org_code="hvg",  # v1.5: bridge probed pass — Ensembl /xrefs returns EntrezGene for chr1 locus HORVU.MOREX.r3.1HG0000090 (probed 2026-05-25, scripts/probe_kegg_bridge_candidates.json)
         atted_release=None,  # ATTED-II has no Hvg-u release (probed 2026-05-24)
         aliases=("h. vulgare",),
     ),
@@ -167,7 +171,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=210,
         string_taxid=3694,
         europe_pmc_slug=None,
-        kegg_org_code=None,  # KEGG pop uses NCBI Entrez Gene IDs
+        kegg_org_code="pop",  # v1.5: bridge probed pass — Ensembl /xrefs returns EntrezGene for chr1 locus Potri.001G006600.v4.1 (probed 2026-05-25, scripts/probe_kegg_bridge_candidates.json)
         atted_release=None,  # ATTED-II Pop-u/Ptr-u return invalid-db (probed 2026-05-24)
         aliases=("p. trichocarpa",),
     ),
@@ -193,7 +197,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=314,
         string_taxid=15368,
         europe_pmc_slug="Brachypodium",
-        kegg_org_code=None,  # KEGG bdi uses NCBI Entrez Gene IDs
+        kegg_org_code="bdi",  # v1.5: bridge probed pass — Ensembl /xrefs returns EntrezGene for chr1 locus BRADI_1g00485v3 (probed 2026-05-25, scripts/probe_kegg_bridge_candidates.json)
         atted_release=None,  # ATTED-II has no Bdi-u release (probed 2026-05-24)
         aliases=("b. distachyon",),
     ),
