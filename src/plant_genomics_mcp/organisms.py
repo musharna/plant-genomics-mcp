@@ -91,7 +91,13 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=725,
         string_taxid=4565,
         europe_pmc_slug="wheat",
-        kegg_org_code=None,  # KEGG taes uses NCBI Entrez Gene IDs
+        # v1.5 probe: Ensembl /xrefs returned no EntrezGene xref for chr1
+        # locus TraesCS1A02G000300 (observed dbs: ArrayExpress,
+        # KNETMINER_WHEAT, WHEATEXP_GENE); v1.4.0 bridge mechanism
+        # falsified. KEGG taes indexes NCBI Entrez Gene IDs and would
+        # need a UniProt → Entrez two-hop fallback (probed 2026-05-25,
+        # deferred to v1.6+).
+        kegg_org_code=None,
         atted_release=None,  # ATTED-II has no Tae-u release (probed 2026-05-24)
         aliases=("t. aestivum",),
     ),
@@ -104,8 +110,11 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=691,
         string_taxid=4081,
         europe_pmc_slug="tomato",
-        # KEGG sly uses NCBI Entrez Gene IDs; Ensembl /xrefs does not expose
-        # EntrezGene for tomato (probed 2026-05-25, deferred to v1.5.0).
+        # v1.5 probe: Ensembl /xrefs returned no EntrezGene xref for chr1
+        # locus Solyc01g005610.3 (observed dbs: ArrayExpress); v1.4.0
+        # bridge mechanism falsified. KEGG sly indexes NCBI Entrez Gene
+        # IDs and would need a UniProt → Entrez two-hop fallback
+        # (probed 2026-05-25, deferred to v1.6+).
         kegg_org_code=None,
         atted_release="Sly-u.c1-0",
         aliases=("s. lycopersicum",),
@@ -132,7 +141,12 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=454,
         string_taxid=4558,
         europe_pmc_slug="sorghum",
-        kegg_org_code=None,  # KEGG sbi uses NCBI Entrez Gene IDs
+        # v1.5 probe: Ensembl /xrefs returned no EntrezGene xref for chr1
+        # locus SORBI_3001G002100 (observed dbs: ArrayExpress); v1.4.0
+        # bridge mechanism falsified. KEGG sbi indexes NCBI Entrez Gene
+        # IDs and would need a UniProt → Entrez two-hop fallback
+        # (probed 2026-05-25, deferred to v1.6+).
+        kegg_org_code=None,
         atted_release=None,  # ATTED-II has no Sbi-u release (probed 2026-05-24)
         aliases=("s. bicolor",),
     ),
@@ -158,7 +172,12 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=457,
         string_taxid=29760,
         europe_pmc_slug=None,
-        kegg_org_code=None,  # KEGG vvi uses NCBI Entrez Gene IDs
+        # v1.5 probe: Ensembl /xrefs returned no EntrezGene xref for chr1
+        # locus Vitis01g00017 (observed dbs: ArrayExpress); v1.4.0
+        # bridge mechanism falsified. KEGG vvi indexes NCBI Entrez Gene
+        # IDs and would need a UniProt → Entrez two-hop fallback
+        # (probed 2026-05-25, deferred to v1.6+).
+        kegg_org_code=None,
         atted_release="Vvi-u.c1-0",
         aliases=("v. vinifera",),
     ),
@@ -184,7 +203,12 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=285,
         string_taxid=3880,
         europe_pmc_slug=None,
-        kegg_org_code=None,  # KEGG mtr uses NCBI Entrez Gene IDs
+        # v1.5 probe: Ensembl /xrefs returned no EntrezGene xref for chr1
+        # locus gene55 (observed dbs: ArrayExpress); v1.4.0 bridge
+        # mechanism falsified. KEGG mtr indexes NCBI Entrez Gene IDs
+        # and would need a UniProt → Entrez two-hop fallback (probed
+        # 2026-05-25, deferred to v1.6+).
+        kegg_org_code=None,
         atted_release="Mtr-u.c1-0",
         aliases=("m. truncatula",),
     ),
