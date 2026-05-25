@@ -100,7 +100,9 @@ ORGANISMS: dict[str, OrganismRecord] = {
         phytozome_int=691,
         string_taxid=4081,
         europe_pmc_slug="tomato",
-        kegg_org_code=None,  # KEGG sly uses NCBI Entrez Gene IDs; Ensembl /xrefs does not expose EntrezGene for tomato (probed 2026-05-25, deferred to v1.5.0)
+        # KEGG sly uses NCBI Entrez Gene IDs; Ensembl /xrefs does not expose
+        # EntrezGene for tomato (probed 2026-05-25, deferred to v1.5.0).
+        kegg_org_code=None,
         atted_release="Sly-u.c1-0",
         aliases=("s. lycopersicum",),
     ),

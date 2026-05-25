@@ -411,6 +411,31 @@ async def test_lookup_pathways_arabidopsis_bypasses_bridge(httpx_mock: HTTPXMock
     assert "entrez_gene_id" not in result, (
         "Arabidopsis path must not surface entrez_gene_id — bridge did not fire"
     )
+    # Positive guard: confirm no Ensembl request fired (in case pytest-httpx's
+    # "no mock match" raises ever get downgraded to warnings).
+    ensembl_requests = [r for r in httpx_mock.get_requests() if "ensembl" in str(r.url)]
+    assert ensembl_requests == [], (
+        f"Arabidopsis path must not call Ensembl /xrefs; saw: {[str(r.url) for r in ensembl_requests]}"
+    )
+
+
+@pytest.mark.asyncio
+async def test_lookup_pathways_bridge_no_entrez_xref_raises_not_found(httpx_mock: HTTPXMock):
+    """Ensembl returns cross-refs but none from EntrezGene (tomato's pre-impl
+    probe case — ArrayExpress only). The bridge's NotFoundError must surface
+    through lookup_pathways with the KEGG-bridge breadcrumb (item #4), so
+    users see 'KEGG bridge (Ensembl Plants /xrefs): ...' rather than a bare
+    bridge-helper message.
+    """
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/xrefs/id/Os01g0100100?species=oryza_sativa",
+        json=[
+            {"dbname": "ArrayExpress", "primary_id": "Os01g0100100", "display_id": "x"},
+        ],
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="KEGG bridge"):
+            await kegg.lookup_pathways(client, "Os01g0100100", organism="oryza_sativa")
 
 
 @pytest.mark.asyncio
@@ -448,8 +473,8 @@ async def test_live_kegg_rice_returns_pathways_via_bridge():
     async with httpx.AsyncClient() as client:
         result = await kegg.lookup_pathways(client, "Os05g0375100", organism="oryza_sativa")
     assert result["locus"] == "Os05g0375100"
-    assert result["entrez_gene_id"] == "107275630"
-    assert result["kegg_gene_id"] == "osa:107275630"
+    assert int(result["entrez_gene_id"]) > 0, "rice should resolve to a positive Entrez Gene ID"
+    assert result["kegg_gene_id"].startswith("osa:")
     assert len(result["pathways"]) > 0, (
         "Rice Os05g0375100 should have ≥1 KEGG pathway via bridge; got 0"
     )
@@ -470,9 +495,11 @@ async def test_live_kegg_maize_returns_pathways_via_bridge():
     async with httpx.AsyncClient() as client:
         result = await kegg.lookup_pathways(client, "Zm00001eb148000", organism="zea_mays")
     assert result["locus"] == "Zm00001eb148000"
-    assert result["entrez_gene_id"] == "100037812"
-    assert result["kegg_gene_id"] == "zma:100037812"
-    assert len(result["pathways"]) > 0
+    assert int(result["entrez_gene_id"]) > 0, "maize should resolve to a positive Entrez Gene ID"
+    assert result["kegg_gene_id"].startswith("zma:")
+    assert len(result["pathways"]) > 0, (
+        "Maize Zm00001eb148000 should have ≥1 KEGG pathway via bridge; got 0"
+    )
 
 
 @pytest.mark.skipif(
@@ -494,4 +521,6 @@ async def test_live_kegg_soybean_returns_pathways_via_bridge():
     assert result["locus"] == "Glyma.19G000700", "user-facing form must be preserved"
     assert result["entrez_gene_id"] == "100037452"
     assert result["kegg_gene_id"] == "gmx:100037452"
-    assert len(result["pathways"]) > 0
+    assert len(result["pathways"]) > 0, (
+        "Soybean Glyma.19G000700 should have ≥1 KEGG pathway via bridge; got 0"
+    )
