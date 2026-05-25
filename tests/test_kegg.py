@@ -431,3 +431,67 @@ async def test_lookup_pathways_ensembl_xrefs_503_propagates(httpx_mock: HTTPXMoc
     async with httpx.AsyncClient() as client:
         with pytest.raises(UpstreamUnavailableError):
             await kegg.lookup_pathways(client, "Os01g0100100", organism="oryza_sativa")
+
+
+@pytest.mark.skipif(
+    not os.environ.get("PLANT_GENOMICS_MCP_LIVE"),
+    reason="set PLANT_GENOMICS_MCP_LIVE=1 to hit rest.kegg.jp + rest.ensembl.org",
+)
+@pytest.mark.asyncio
+async def test_live_kegg_rice_returns_pathways_via_bridge():
+    """Rice RAP-DB locus ``Os05g0375100`` (hexokinase-10-like) — live probe
+    (2026-05-25) confirmed Ensembl /xrefs → EntrezGene 107275630 and KEGG
+    ``osa:107275630`` has ≥8 pathway memberships (glycolysis + starch/sucrose
+    metabolism). Original spec locus Os01g0100100 resolved the Entrez ID
+    correctly but had zero KEGG pathway annotations. ≥1 pathway expected.
+    """
+    async with httpx.AsyncClient() as client:
+        result = await kegg.lookup_pathways(client, "Os05g0375100", organism="oryza_sativa")
+    assert result["locus"] == "Os05g0375100"
+    assert result["entrez_gene_id"] == "107275630"
+    assert result["kegg_gene_id"] == "osa:107275630"
+    assert len(result["pathways"]) > 0, (
+        "Rice Os05g0375100 should have ≥1 KEGG pathway via bridge; got 0"
+    )
+
+
+@pytest.mark.skipif(
+    not os.environ.get("PLANT_GENOMICS_MCP_LIVE"),
+    reason="set PLANT_GENOMICS_MCP_LIVE=1 to hit rest.kegg.jp + rest.ensembl.org",
+)
+@pytest.mark.asyncio
+async def test_live_kegg_maize_returns_pathways_via_bridge():
+    """Maize MaizeGDB locus ``Zm00001eb148000`` (aldose reductase) — live
+    probe (2026-05-25) confirmed Ensembl /xrefs → EntrezGene 100037812 and
+    KEGG ``zma:100037812`` has ≥3 pathway memberships (glycolysis, pentose
+    phosphate). Original spec locus Zm00001eb000010 resolved the Entrez ID
+    correctly but had zero KEGG pathway annotations. ≥1 pathway expected.
+    """
+    async with httpx.AsyncClient() as client:
+        result = await kegg.lookup_pathways(client, "Zm00001eb148000", organism="zea_mays")
+    assert result["locus"] == "Zm00001eb148000"
+    assert result["entrez_gene_id"] == "100037812"
+    assert result["kegg_gene_id"] == "zma:100037812"
+    assert len(result["pathways"]) > 0
+
+
+@pytest.mark.skipif(
+    not os.environ.get("PLANT_GENOMICS_MCP_LIVE"),
+    reason="set PLANT_GENOMICS_MCP_LIVE=1 to hit rest.kegg.jp + rest.ensembl.org",
+)
+@pytest.mark.asyncio
+async def test_live_kegg_soybean_returns_pathways_via_bridge():
+    """Soybean SoyBase locus ``Glyma.19G000700`` (pyruvate kinase) — live
+    probe (2026-05-25) confirmed Glyma.→GLYMA_ normalizer fires, Ensembl
+    ``GLYMA_19G000700`` → EntrezGene 100037452, and KEGG ``gmx:100037452``
+    has ≥3 pathway memberships (glycolysis, pyruvate metabolism). Original
+    spec locus Glyma.04G220900 resolved the Entrez ID correctly but had zero
+    KEGG pathway annotations. Live assertion uses the SoyBase ``Glyma.`` form
+    to exercise the normalizer end-to-end. ≥1 pathway expected.
+    """
+    async with httpx.AsyncClient() as client:
+        result = await kegg.lookup_pathways(client, "Glyma.19G000700", organism="glycine_max")
+    assert result["locus"] == "Glyma.19G000700", "user-facing form must be preserved"
+    assert result["entrez_gene_id"] == "100037452"
+    assert result["kegg_gene_id"] == "gmx:100037452"
+    assert len(result["pathways"]) > 0
