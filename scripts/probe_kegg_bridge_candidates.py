@@ -16,9 +16,18 @@ is always nuclear). This avoids hardcoding per-organism locus formats —
 the spec explicitly disallows author-recall of region names as
 load-bearing input.
 
-Pass condition (both must hold):
+Pass condition (bridge-viability; both must hold):
   1. Ensembl /xrefs returns >=1 cross-reference with dbname == "EntrezGene"
-  2. KEGG /link/pathway/<kegg_code>:<entrez_id> returns a non-empty body
+     on the probed locus
+  2. KEGG /link/pathway/<kegg_code>:<entrez_id> did NOT return HTTP 400
+     (i.e. KEGG recognizes the organism code)
+
+The KEGG pathway count (0 or N) is INFORMATIONAL only — a 0-count on a
+specific locus does NOT falsify the bridge for the organism. KEGG pathway
+annotation is per-gene and somewhat random for any single locus; the v1.5
+question is whether the bridge mechanism (Ensembl EntrezGene xref → KEGG
+org-code) is viable for the organism, not whether the chr1 first gene
+happens to be in a pathway.
 
 Falsified verdicts:
   - no_chromosome_region — Ensembl /info/assembly returned no
@@ -26,8 +35,10 @@ Falsified verdicts:
                             only have scaffolds in current assembly)
   - no_chr1_gene_found   — Ensembl /overlap returned no protein_coding gene
   - no_entrez_xref       — Ensembl /xrefs returned no EntrezGene xref
-  - kegg_no_pathway      — KEGG /link/pathway returned empty body
+                            (bridge unviable — no path to a KEGG-keyed id)
   - bad_kegg_code        — KEGG /link/pathway returned HTTP 400
+                            (bridge unviable — KEGG doesn't recognize the
+                            candidate org code)
   - ensembl_http_error   — Ensembl returned a non-2xx (status recorded in
                             the record under "ensembl_http_status")
   - probe_walltime       — signal.alarm tripped on a single-organism call
@@ -296,19 +307,8 @@ def probe_one(client: httpx.Client, organism: str, slug: str, kegg_code: str) ->
                 "verdict": "falsified",
                 "verdict_reason": "bad_kegg_code",
             }
-        if count == 0:
-            return {
-                "organism": organism,
-                "slug": slug,
-                "kegg_code": kegg_code,
-                "chr1_region": region,
-                "chr1_locus": locus,
-                "entrez_xrefs": entrez,
-                "observed_dbs": observed,
-                "kegg_pathway_count": 0,
-                "verdict": "falsified",
-                "verdict_reason": "kegg_no_pathway",
-            }
+        # status == 200; pathway count (0 or N) is informational only —
+        # bridge viability for the organism is established at this point.
         return {
             "organism": organism,
             "slug": slug,
