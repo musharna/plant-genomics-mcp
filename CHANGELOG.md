@@ -1,5 +1,31 @@
 # Changelog
 
+## v1.5.0 — 2026-05-25
+
+KEGG ↔ NCBI Entrez bridge extended to 3 additional organisms: barley (`hordeum_vulgare` → `hvg`), poplar (`populus_trichocarpa` → `pop`), Brachypodium (`brachypodium_distachyon` → `bdi`). `kegg_pathways` and `batch_kegg_pathways` now exercise the v1.4.0 bridge for these organisms instead of raising `OrganismNotSupported` at the matrix guard. The bridge mechanism is unchanged from v1.4.0 — these organisms passed the same Ensembl Plants `/xrefs/id → EntrezGene → KEGG /link/pathway` round-trip; v1.4.0 helpers in `kegg.py` are organism-agnostic and required no code change. Frozen probe evidence at `scripts/probe_kegg_bridge_candidates.json`.
+
+**Added**
+
+- **`kegg_org_code` flipped from `None` → populated for 3 matrix organisms:** `hordeum_vulgare` (`"hvg"`), `populus_trichocarpa` (`"pop"`), `brachypodium_distachyon` (`"bdi"`). The matrix guard at `organisms.kegg_org_code_for` now accepts these organisms; `OrganismNotSupported` is no longer raised for them.
+- **`scripts/probe_kegg_bridge_candidates.py`** — operator/CI tool that probes each candidate organism's chromosome-1 first protein-coding locus through Ensembl `/info/assembly` (to discover the chromosome region name), `/overlap/region` (to pick the first gene), `/xrefs/id` (to check for EntrezGene cross-references), and KEGG `/link/pathway` (to confirm the org code is accepted). Emits a structured `pass` / `falsified` verdict per organism. Reusable for future organism additions.
+- **`scripts/probe_kegg_bridge_candidates.json`** — frozen probe evidence for the 8 v1.5-scope organisms (verdict, observed cross-reference dbnames, chr1 probe locus, Entrez Gene ID, KEGG pathway count for the specific probe locus). Matrix line comments in `organisms.py` cite this artifact.
+
+**Probed but still deferred**
+
+- 5 organisms still raise `OrganismNotSupported` at matrix-guard time because Ensembl Plants `/xrefs/id` does not expose `EntrezGene` cross-references for the probed chr1-first-gene locus (only `ArrayExpress`-tier dbs): `triticum_aestivum`, `sorghum_bicolor`, `vitis_vinifera`, `medicago_truncatula`, `solanum_lycopersicum`. Matrix comments in `src/plant_genomics_mcp/organisms.py` document the probe date and observed cross-reference dbnames per organism. A UniProt → Entrez two-hop bridge is a candidate v1.6+ mechanism for organisms returning only non-EntrezGene cross-references; no version commitment (the UniProt fallback has not been probed against these loci).
+
+**Pathway-annotation coverage caveat**
+
+- The 3 v1.5 pass organisms' chr1-first-gene loci (the probe loci) happen to have 0 KEGG pathway annotations. Calling `kegg_pathways(<chr1-first-gene>, organism="hordeum_vulgare")` etc. raises `NotFoundError` ("no pathway memberships") — the bridge mechanism fires, the gene_id is constructed, but KEGG returns an empty pathway body. This matches v1.4.0 behavior for any un-annotated rice/maize/soybean locus. KEGG indexes 163 pathways for each of `hvg`/`pop`/`bdi`; pathway-annotated loci within these organisms return real data. The v1.5 ship-set widens which organisms the bridge CAN serve, not which loci are KEGG-annotated.
+
+**Operational impact**
+
+- Non-breaking. The 3 newly-enabled organisms previously raised `OrganismNotSupported` at resolution time, so no live consumer has stable behavior to regress against.
+- Output schema unchanged — the additive `entrez_gene_id` field shipped in v1.4.0 appears for the expanded organism set; Arabidopsis still omits it.
+- One additional Ensembl `/xrefs/id` call per newly-enabled `kegg_pathways` invocation, same shape as v1.4.0. Both calls share their respective `_CACHE` TTL (~24h); cold call ≈ 1 Ensembl + 1 KEGG `/link` + N KEGG `/get` in parallel (or zero KEGG `/get` if `/link` returned empty → NotFoundError); warm call hits zero network.
+- `batch_kegg_pathways` picks up the new organisms automatically via composition — it fans out to `lookup_pathways` per locus.
+- Docker tags `:1.5.0` / `:1.5` / `:latest` republish on tag-push; gt76 redeploy via `docker compose pull && docker compose up -d` (Diun is notifier-only per `bugs_fixed.md` #4). No HTTP-transport, auth, or registry-metadata change.
+
 ## v1.4.0 — 2026-05-25
 
 KEGG ↔ NCBI Entrez bridge — `kegg_pathways` + `batch_kegg_pathways` now return real pathway memberships for rice (`oryza_sativa` / `osa`), maize (`zea_mays` / `zma`), and soybean (`glycine_max` / `gmx`) instead of `OrganismNotSupported`. The v1.1.0 KEGG migration intentionally left `kegg_org_code = None` for these organisms because KEGG's non-Arabidopsis scopes index NCBI Entrez Gene IDs, not the community locus namespaces (RAP-DB, MaizeGDB, SoyBase) the rest of the project speaks. v1.4.0 adds the missing locus → Entrez bridge via Ensembl Plants `/xrefs/id`. Tomato (`solanum_lycopersicum`) and the other 7 matrix organisms remain `kegg_org_code=None` — tomato was falsified at pre-impl probe (Ensembl /xrefs does not expose `EntrezGene` for tomato, only `ArrayExpress`; deferred to v1.5.0 via a different mechanism), and the other 7 are queued for a future wave once the bridge proves stable in the wild.
