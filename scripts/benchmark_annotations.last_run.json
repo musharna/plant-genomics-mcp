@@ -1,0 +1,805 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-05-26T04:09:29.893953+00:00",
+  "baseline_ref": "2026-05-26T04:03:43.977490+00:00",
+  "summary": {
+    "total_assertions": 92,
+    "passed": 81,
+    "drifted": 0,
+    "failed": 0,
+    "exception_ok": 11,
+    "exception_bad": 0,
+    "exception_different": 0,
+    "timed_out": 0,
+    "skipped": 0,
+    "exit_code": 0
+  },
+  "loci": [
+    {
+      "locus_id": "AT1G01010",
+      "organism": "arabidopsis_thaliana",
+      "rationale": "Arabidopsis canonical reference; covers BAR/TAIR/ATTED Arabidopsis-only tools + KEGG ath: native path + Europe PMC; densest annotation coverage. KEGG happens to be unannotated for this specific locus \u2192 expects_exception NotFoundError (same shape as v1.5 barley/poplar/brachypodium).",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "arabidopsis_thaliana",
+              "expected": "arabidopsis_thaliana",
+              "note": ""
+            },
+            "ncbi_taxid": {
+              "verdict": "PASS",
+              "actual": 3702,
+              "expected": 3702,
+              "note": ""
+            },
+            "kegg_org_code": {
+              "verdict": "PASS",
+              "actual": "ath",
+              "expected": "ath",
+              "note": ""
+            },
+            "ensembl_slug": {
+              "verdict": "PASS",
+              "actual": "arabidopsis_thaliana",
+              "expected": "arabidopsis_thaliana",
+              "note": ""
+            }
+          }
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "assertions": {
+            "xrefs.len": {
+              "verdict": "PASS",
+              "actual": 8,
+              "expected": 8,
+              "note": ""
+            },
+            "by_db.keys.len": {
+              "verdict": "PASS",
+              "actual": 8,
+              "expected": 8,
+              "note": ""
+            },
+            "by_db.NASC_GENE_ID.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.TAIR_LOCUS.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.TAIR_SYMBOL.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.Uniprot_gn.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.WikiGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.KNETMINER_ARA.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.EntrezGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.ArrayExpress.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
+        },
+        "uniprot.lookup_locus": {
+          "assertions": {
+            "geneNames.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
+        },
+        "kegg.lookup_pathways": {
+          "assertions": {
+            "_exception": {
+              "verdict": "EXCEPTION_OK",
+              "actual": "NotFoundError",
+              "expected": "NotFoundError",
+              "note": ""
+            }
+          }
+        },
+        "atted.lookup_coexpression": {
+          "assertions": {
+            "neighbors.len": {
+              "verdict": "PASS",
+              "actual": 25,
+              "expected": 25,
+              "note": ""
+            }
+          }
+        },
+        "europe_pmc.lookup_locus": {
+          "assertions": {
+            "hits.len": {
+              "verdict": "PASS",
+              "actual": 10,
+              "expected": 10,
+              "note": ""
+            }
+          }
+        },
+        "bar.gene_summary": {
+          "assertions": {
+            "synonyms.len": {
+              "verdict": "PASS",
+              "actual": 3,
+              "expected": 3,
+              "note": ""
+            },
+            "aliases.len": {
+              "verdict": "PASS",
+              "actual": 11,
+              "expected": 11,
+              "note": ""
+            }
+          }
+        },
+        "bar.efp_expression": {
+          "assertions": {
+            "ecotypes.len": {
+              "verdict": "PASS",
+              "actual": 34,
+              "expected": 34,
+              "note": ""
+            }
+          }
+        },
+        "bar.aiv_interactions": {
+          "assertions": {
+            "papers.len": {
+              "verdict": "PASS",
+              "actual": 2,
+              "expected": 2,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {}
+    },
+    {
+      "locus_id": "Os01g0100100",
+      "organism": "oryza_sativa",
+      "rationale": "Rice canonical (v0.7 / v1.4.0 live test locus); KEGG bridge (osa), Phytozome, Gramene, Ensembl /xrefs",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "oryza_sativa",
+              "expected": "oryza_sativa",
+              "note": ""
+            },
+            "ncbi_taxid": {
+              "verdict": "PASS",
+              "actual": 39947,
+              "expected": 39947,
+              "note": ""
+            },
+            "kegg_org_code": {
+              "verdict": "PASS",
+              "actual": "osa",
+              "expected": "osa",
+              "note": ""
+            }
+          }
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "assertions": {
+            "xrefs.len": {
+              "verdict": "PASS",
+              "actual": 3,
+              "expected": 3,
+              "note": ""
+            },
+            "by_db.keys.len": {
+              "verdict": "PASS",
+              "actual": 3,
+              "expected": 3,
+              "note": ""
+            },
+            "by_db.ArrayExpress.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.EntrezGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.WikiGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
+        },
+        "kegg.lookup_pathways": {
+          "assertions": {
+            "_exception": {
+              "verdict": "EXCEPTION_OK",
+              "actual": "NotFoundError",
+              "expected": "NotFoundError",
+              "note": ""
+            }
+          }
+        },
+        "phytozome.lookup_locus": {
+          "assertions": {
+            "_exception": {
+              "verdict": "EXCEPTION_OK",
+              "actual": "NotFoundError",
+              "expected": "NotFoundError",
+              "note": ""
+            }
+          }
+        },
+        "gramene.lookup_homologs": {
+          "assertions": {}
+        },
+        "string_db.lookup_partners": {
+          "assertions": {
+            "partners.len": {
+              "verdict": "PASS",
+              "actual": 20,
+              "expected": 20,
+              "note": ""
+            }
+          }
+        },
+        "europe_pmc.lookup_locus": {
+          "assertions": {
+            "hits.len": {
+              "verdict": "PASS",
+              "actual": 4,
+              "expected": 4,
+              "note": ""
+            }
+          }
+        },
+        "uniprot.lookup_locus": {
+          "assertions": {
+            "geneNames.len": {
+              "verdict": "PASS",
+              "actual": 0,
+              "expected": 0,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {}
+    },
+    {
+      "locus_id": "Zm00001eb000010",
+      "organism": "zea_mays",
+      "rationale": "Maize v1.4.0 live test locus; KEGG bridge (zma), Phytozome. MaizeGDB rotation handled by tolerance.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "zea_mays",
+              "expected": "zea_mays",
+              "note": ""
+            },
+            "ncbi_taxid": {
+              "verdict": "PASS",
+              "actual": 4577,
+              "expected": 4577,
+              "note": ""
+            },
+            "kegg_org_code": {
+              "verdict": "PASS",
+              "actual": "zma",
+              "expected": "zma",
+              "note": ""
+            }
+          }
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "assertions": {
+            "xrefs.len": {
+              "verdict": "PASS",
+              "actual": 3,
+              "expected": 3,
+              "note": ""
+            },
+            "by_db.keys.len": {
+              "verdict": "PASS",
+              "actual": 3,
+              "expected": 3,
+              "note": ""
+            },
+            "by_db.ArrayExpress.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.EntrezGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.WikiGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
+        },
+        "kegg.lookup_pathways": {
+          "assertions": {
+            "_exception": {
+              "verdict": "EXCEPTION_OK",
+              "actual": "NotFoundError",
+              "expected": "NotFoundError",
+              "note": ""
+            }
+          }
+        },
+        "phytozome.lookup_locus": {
+          "assertions": {}
+        }
+      },
+      "probe_exceptions": {}
+    },
+    {
+      "locus_id": "GLYMA_01G001700",
+      "organism": "glycine_max",
+      "rationale": "Soybean v1.4.0 live test locus; KEGG bridge (gmx, Glyma.\u2192GLYMA_ normalizer fires), Phytozome",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "glycine_max",
+              "expected": "glycine_max",
+              "note": ""
+            },
+            "kegg_org_code": {
+              "verdict": "PASS",
+              "actual": "gmx",
+              "expected": "gmx",
+              "note": ""
+            }
+          }
+        },
+        "kegg.lookup_pathways": {
+          "assertions": {
+            "_exception": {
+              "verdict": "EXCEPTION_OK",
+              "actual": "NotFoundError",
+              "expected": "NotFoundError",
+              "note": ""
+            }
+          }
+        },
+        "phytozome.lookup_locus": {
+          "assertions": {
+            "_exception": {
+              "verdict": "EXCEPTION_OK",
+              "actual": "NotFoundError",
+              "expected": "NotFoundError",
+              "note": ""
+            }
+          }
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "assertions": {
+            "xrefs.len": {
+              "verdict": "PASS",
+              "actual": 6,
+              "expected": 6,
+              "note": ""
+            },
+            "by_db.keys.len": {
+              "verdict": "PASS",
+              "actual": 5,
+              "expected": 5,
+              "note": ""
+            },
+            "by_db.UniGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.GOA.len": {
+              "verdict": "PASS",
+              "actual": 2,
+              "expected": 2,
+              "note": ""
+            },
+            "by_db.WikiGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.ArrayExpress.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.EntrezGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {}
+    },
+    {
+      "locus_id": "HORVU.MOREX.r3.1HG0000090",
+      "organism": "hordeum_vulgare",
+      "rationale": "Barley v1.5 ship-locus. Bridge fires, KEGG returns 0 pathways \u2192 NotFoundError raised.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "hordeum_vulgare",
+              "expected": "hordeum_vulgare",
+              "note": ""
+            },
+            "kegg_org_code": {
+              "verdict": "PASS",
+              "actual": "hvg",
+              "expected": "hvg",
+              "note": ""
+            }
+          }
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "assertions": {
+            "xrefs.len": {
+              "verdict": "PASS",
+              "actual": 3,
+              "expected": 3,
+              "note": ""
+            },
+            "by_db.keys.len": {
+              "verdict": "PASS",
+              "actual": 3,
+              "expected": 3,
+              "note": ""
+            },
+            "by_db.EntrezGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.ArrayExpress.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.WikiGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
+        },
+        "kegg.lookup_pathways": {
+          "assertions": {
+            "_exception": {
+              "verdict": "EXCEPTION_OK",
+              "actual": "NotFoundError",
+              "expected": "NotFoundError",
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {}
+    },
+    {
+      "locus_id": "Potri.001G006600.v4.1",
+      "organism": "populus_trichocarpa",
+      "rationale": "Poplar v1.5 ship-locus. Same expected-exception shape as barley.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "populus_trichocarpa",
+              "expected": "populus_trichocarpa",
+              "note": ""
+            },
+            "kegg_org_code": {
+              "verdict": "PASS",
+              "actual": "pop",
+              "expected": "pop",
+              "note": ""
+            }
+          }
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "assertions": {
+            "xrefs.len": {
+              "verdict": "PASS",
+              "actual": 3,
+              "expected": 3,
+              "note": ""
+            },
+            "by_db.keys.len": {
+              "verdict": "PASS",
+              "actual": 3,
+              "expected": 3,
+              "note": ""
+            },
+            "by_db.ArrayExpress.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.EntrezGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.WikiGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
+        },
+        "kegg.lookup_pathways": {
+          "assertions": {
+            "_exception": {
+              "verdict": "EXCEPTION_OK",
+              "actual": "NotFoundError",
+              "expected": "NotFoundError",
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {}
+    },
+    {
+      "locus_id": "BRADI_1g00485v3",
+      "organism": "brachypodium_distachyon",
+      "rationale": "Brachypodium v1.5 ship-locus. Same expected-exception shape as barley.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "brachypodium_distachyon",
+              "expected": "brachypodium_distachyon",
+              "note": ""
+            },
+            "kegg_org_code": {
+              "verdict": "PASS",
+              "actual": "bdi",
+              "expected": "bdi",
+              "note": ""
+            }
+          }
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "assertions": {
+            "xrefs.len": {
+              "verdict": "PASS",
+              "actual": 3,
+              "expected": 3,
+              "note": ""
+            },
+            "by_db.keys.len": {
+              "verdict": "PASS",
+              "actual": 3,
+              "expected": 3,
+              "note": ""
+            },
+            "by_db.EntrezGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.ArrayExpress.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.WikiGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
+        },
+        "kegg.lookup_pathways": {
+          "assertions": {
+            "_exception": {
+              "verdict": "EXCEPTION_OK",
+              "actual": "NotFoundError",
+              "expected": "NotFoundError",
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {}
+    },
+    {
+      "locus_id": "TraesCS1A02G000300",
+      "organism": "triticum_aestivum",
+      "rationale": "Wheat v1.5 falsified-organism: KEGG raises OrganismNotSupported pre-HTTP; positive for Ensembl/Phytozome",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "triticum_aestivum",
+              "expected": "triticum_aestivum",
+              "note": ""
+            }
+          }
+        },
+        "kegg.lookup_pathways": {
+          "assertions": {
+            "_exception": {
+              "verdict": "EXCEPTION_OK",
+              "actual": "OrganismNotSupported",
+              "expected": "OrganismNotSupported",
+              "note": ""
+            }
+          }
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "assertions": {
+            "xrefs.len": {
+              "verdict": "PASS",
+              "actual": 3,
+              "expected": 3,
+              "note": ""
+            },
+            "by_db.keys.len": {
+              "verdict": "PASS",
+              "actual": 3,
+              "expected": 3,
+              "note": ""
+            },
+            "by_db.KNETMINER_WHEAT.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.WHEATEXP_GENE.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.ArrayExpress.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {}
+    },
+    {
+      "locus_id": "Solyc01g005610.3",
+      "organism": "solanum_lycopersicum",
+      "rationale": "Tomato v1.5 re-falsified: KEGG raises OrganismNotSupported; positive for Ensembl/Phytozome/Europe PMC",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "solanum_lycopersicum",
+              "expected": "solanum_lycopersicum",
+              "note": ""
+            }
+          }
+        },
+        "kegg.lookup_pathways": {
+          "assertions": {
+            "_exception": {
+              "verdict": "EXCEPTION_OK",
+              "actual": "OrganismNotSupported",
+              "expected": "OrganismNotSupported",
+              "note": ""
+            }
+          }
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "assertions": {
+            "xrefs.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.keys.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            },
+            "by_db.ArrayExpress.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
+        },
+        "europe_pmc.lookup_locus": {
+          "assertions": {
+            "hits.len": {
+              "verdict": "PASS",
+              "actual": 0,
+              "expected": 0,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {}
+    }
+  ]
+}
