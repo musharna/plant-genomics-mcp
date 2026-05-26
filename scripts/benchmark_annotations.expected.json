@@ -1,0 +1,575 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-05-26T04:03:43.977490+00:00",
+  "loci": [
+    {
+      "locus_id": "AT1G01010",
+      "organism": "arabidopsis_thaliana",
+      "rationale": "Arabidopsis canonical reference; covers BAR/TAIR/ATTED Arabidopsis-only tools + KEGG ath: native path + Europe PMC; densest annotation coverage. KEGG happens to be unannotated for this specific locus \u2192 expects_exception NotFoundError (same shape as v1.5 barley/poplar/brachypodium).",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "arabidopsis_thaliana",
+            "ncbi_taxid": 3702,
+            "kegg_org_code": "ath",
+            "ensembl_slug": "arabidopsis_thaliana"
+          },
+          "variable_facts": {}
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "stable_facts": {},
+          "variable_facts": {
+            "xrefs.len": {
+              "baseline": 8,
+              "tolerance_pct": 25,
+              "floor": 2
+            },
+            "by_db.keys.len": {
+              "baseline": 8,
+              "tolerance_pct": 25,
+              "floor": 2
+            },
+            "by_db.NASC_GENE_ID.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.TAIR_LOCUS.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.TAIR_SYMBOL.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.Uniprot_gn.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.WikiGene.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.KNETMINER_ARA.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.EntrezGene.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.ArrayExpress.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            }
+          }
+        },
+        "uniprot.lookup_locus": {
+          "stable_facts": {},
+          "variable_facts": {
+            "geneNames.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            }
+          }
+        },
+        "kegg.lookup_pathways": {
+          "expects_exception": "NotFoundError"
+        },
+        "atted.lookup_coexpression": {
+          "stable_facts": {},
+          "variable_facts": {
+            "neighbors.len": {
+              "baseline": 25,
+              "tolerance_pct": 25,
+              "floor": 6
+            }
+          }
+        },
+        "europe_pmc.lookup_locus": {
+          "stable_facts": {},
+          "variable_facts": {
+            "hits.len": {
+              "baseline": 10,
+              "tolerance_pct": 25,
+              "floor": 2
+            }
+          }
+        },
+        "bar.gene_summary": {
+          "stable_facts": {},
+          "variable_facts": {
+            "synonyms.len": {
+              "baseline": 3,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "aliases.len": {
+              "baseline": 11,
+              "tolerance_pct": 25,
+              "floor": 2
+            }
+          }
+        },
+        "bar.efp_expression": {
+          "stable_facts": {},
+          "variable_facts": {
+            "ecotypes.len": {
+              "baseline": 34,
+              "tolerance_pct": 25,
+              "floor": 8
+            }
+          }
+        },
+        "bar.aiv_interactions": {
+          "stable_facts": {},
+          "variable_facts": {
+            "papers.len": {
+              "baseline": 2,
+              "tolerance_pct": 25,
+              "floor": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "locus_id": "Os01g0100100",
+      "organism": "oryza_sativa",
+      "rationale": "Rice canonical (v0.7 / v1.4.0 live test locus); KEGG bridge (osa), Phytozome, Gramene, Ensembl /xrefs",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "oryza_sativa",
+            "ncbi_taxid": 39947,
+            "kegg_org_code": "osa"
+          },
+          "variable_facts": {}
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "stable_facts": {},
+          "variable_facts": {
+            "xrefs.len": {
+              "baseline": 3,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.keys.len": {
+              "baseline": 3,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.ArrayExpress.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.EntrezGene.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.WikiGene.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            }
+          }
+        },
+        "kegg.lookup_pathways": {
+          "expects_exception": "NotFoundError"
+        },
+        "phytozome.lookup_locus": {
+          "expects_exception": "NotFoundError"
+        },
+        "gramene.lookup_homologs": {
+          "stable_facts": {},
+          "variable_facts": {}
+        },
+        "string_db.lookup_partners": {
+          "stable_facts": {},
+          "variable_facts": {
+            "partners.len": {
+              "baseline": 20,
+              "tolerance_pct": 25,
+              "floor": 5
+            }
+          }
+        },
+        "europe_pmc.lookup_locus": {
+          "stable_facts": {},
+          "variable_facts": {
+            "hits.len": {
+              "baseline": 4,
+              "tolerance_pct": 25,
+              "floor": 1
+            }
+          }
+        },
+        "uniprot.lookup_locus": {
+          "stable_facts": {},
+          "variable_facts": {
+            "geneNames.len": {
+              "baseline": 0,
+              "tolerance_pct": 25,
+              "floor": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "locus_id": "Zm00001eb000010",
+      "organism": "zea_mays",
+      "rationale": "Maize v1.4.0 live test locus; KEGG bridge (zma), Phytozome. MaizeGDB rotation handled by tolerance.",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "zea_mays",
+            "ncbi_taxid": 4577,
+            "kegg_org_code": "zma"
+          },
+          "variable_facts": {}
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "stable_facts": {},
+          "variable_facts": {
+            "xrefs.len": {
+              "baseline": 3,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.keys.len": {
+              "baseline": 3,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.ArrayExpress.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.EntrezGene.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.WikiGene.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            }
+          }
+        },
+        "kegg.lookup_pathways": {
+          "expects_exception": "NotFoundError"
+        },
+        "phytozome.lookup_locus": {
+          "stable_facts": {},
+          "variable_facts": {}
+        }
+      }
+    },
+    {
+      "locus_id": "GLYMA_01G001700",
+      "organism": "glycine_max",
+      "rationale": "Soybean v1.4.0 live test locus; KEGG bridge (gmx, Glyma.\u2192GLYMA_ normalizer fires), Phytozome",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "glycine_max",
+            "kegg_org_code": "gmx"
+          },
+          "variable_facts": {}
+        },
+        "kegg.lookup_pathways": {
+          "expects_exception": "NotFoundError"
+        },
+        "phytozome.lookup_locus": {
+          "expects_exception": "NotFoundError"
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "stable_facts": {},
+          "variable_facts": {
+            "xrefs.len": {
+              "baseline": 6,
+              "tolerance_pct": 25,
+              "floor": 1
+            },
+            "by_db.keys.len": {
+              "baseline": 5,
+              "tolerance_pct": 25,
+              "floor": 1
+            },
+            "by_db.UniGene.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.GOA.len": {
+              "baseline": 2,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.WikiGene.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.ArrayExpress.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.EntrezGene.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "locus_id": "HORVU.MOREX.r3.1HG0000090",
+      "organism": "hordeum_vulgare",
+      "rationale": "Barley v1.5 ship-locus. Bridge fires, KEGG returns 0 pathways \u2192 NotFoundError raised.",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "hordeum_vulgare",
+            "kegg_org_code": "hvg"
+          },
+          "variable_facts": {}
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "stable_facts": {},
+          "variable_facts": {
+            "xrefs.len": {
+              "baseline": 3,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.keys.len": {
+              "baseline": 3,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.EntrezGene.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.ArrayExpress.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.WikiGene.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            }
+          }
+        },
+        "kegg.lookup_pathways": {
+          "expects_exception": "NotFoundError"
+        }
+      }
+    },
+    {
+      "locus_id": "Potri.001G006600.v4.1",
+      "organism": "populus_trichocarpa",
+      "rationale": "Poplar v1.5 ship-locus. Same expected-exception shape as barley.",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "populus_trichocarpa",
+            "kegg_org_code": "pop"
+          },
+          "variable_facts": {}
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "stable_facts": {},
+          "variable_facts": {
+            "xrefs.len": {
+              "baseline": 3,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.keys.len": {
+              "baseline": 3,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.ArrayExpress.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.EntrezGene.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.WikiGene.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            }
+          }
+        },
+        "kegg.lookup_pathways": {
+          "expects_exception": "NotFoundError"
+        }
+      }
+    },
+    {
+      "locus_id": "BRADI_1g00485v3",
+      "organism": "brachypodium_distachyon",
+      "rationale": "Brachypodium v1.5 ship-locus. Same expected-exception shape as barley.",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "brachypodium_distachyon",
+            "kegg_org_code": "bdi"
+          },
+          "variable_facts": {}
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "stable_facts": {},
+          "variable_facts": {
+            "xrefs.len": {
+              "baseline": 3,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.keys.len": {
+              "baseline": 3,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.EntrezGene.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.ArrayExpress.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.WikiGene.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            }
+          }
+        },
+        "kegg.lookup_pathways": {
+          "expects_exception": "NotFoundError"
+        }
+      }
+    },
+    {
+      "locus_id": "TraesCS1A02G000300",
+      "organism": "triticum_aestivum",
+      "rationale": "Wheat v1.5 falsified-organism: KEGG raises OrganismNotSupported pre-HTTP; positive for Ensembl/Phytozome",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "triticum_aestivum"
+          },
+          "variable_facts": {}
+        },
+        "kegg.lookup_pathways": {
+          "expects_exception": "OrganismNotSupported"
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "stable_facts": {},
+          "variable_facts": {
+            "xrefs.len": {
+              "baseline": 3,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.keys.len": {
+              "baseline": 3,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.KNETMINER_WHEAT.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.WHEATEXP_GENE.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.ArrayExpress.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "locus_id": "Solyc01g005610.3",
+      "organism": "solanum_lycopersicum",
+      "rationale": "Tomato v1.5 re-falsified: KEGG raises OrganismNotSupported; positive for Ensembl/Phytozome/Europe PMC",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "solanum_lycopersicum"
+          },
+          "variable_facts": {}
+        },
+        "kegg.lookup_pathways": {
+          "expects_exception": "OrganismNotSupported"
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "stable_facts": {},
+          "variable_facts": {
+            "xrefs.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.keys.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            },
+            "by_db.ArrayExpress.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 0
+            }
+          }
+        },
+        "europe_pmc.lookup_locus": {
+          "stable_facts": {},
+          "variable_facts": {
+            "hits.len": {
+              "baseline": 0,
+              "tolerance_pct": 25,
+              "floor": 0
+            }
+          }
+        }
+      }
+    }
+  ]
+}

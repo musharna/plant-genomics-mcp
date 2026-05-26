@@ -156,7 +156,8 @@ _TOOLS: dict[str, ToolCallable] = {
     "string_db.lookup_partners": lambda c, locus, o: string_db.lookup_partners(
         c, locus, organism=o
     ),
-    "gramene.lookup_homologs": lambda c, locus, o: gramene.lookup_homologs(c, locus, organism=o),
+    # Gramene takes homology_type, NOT organism — organism is encoded in the locus stem.
+    "gramene.lookup_homologs": lambda c, locus, _o: gramene.lookup_homologs(c, locus),
     "europe_pmc.lookup_locus": lambda c, locus, o: europe_pmc.lookup_locus(c, locus, organism=o),
     "phytozome.lookup_locus": lambda c, locus, o: phytozome.lookup_locus(c, locus, organism=o),
     # BAR Arabidopsis-only functions: gene_summary + efp_expression accept no
@@ -651,6 +652,118 @@ def _write_sidecar(
     output_path.write_text(json.dumps(payload, indent=2, default=str) + "\n")
 
 
+def _stable_key_paths_for_response(response: Any) -> dict[str, int]:
+    """Capture a canonical set of count-derived metrics from a tool's response.
+
+    Default capture set:
+      - For every top-level list value: ``<key>.len``
+      - For every top-level dict value with .keys(): ``<key>.keys.len``
+      - For every nested list one level deep: ``<key>.<subkey>.len``
+
+    Operator can hand-edit captured baselines to add finer-grained keys before
+    commit. The auto-capture is a starting point, not a final corpus.
+    """
+    captured: dict[str, int] = {}
+    if not isinstance(response, dict):
+        return captured
+    for key, value in response.items():
+        if isinstance(value, list):
+            captured[f"{key}.len"] = len(value)
+        elif isinstance(value, dict):
+            captured[f"{key}.keys.len"] = len(value)
+            for subkey, subvalue in value.items():
+                if isinstance(subvalue, list):
+                    captured[f"{key}.{subkey}.len"] = len(subvalue)
+    return captured
+
+
+async def _capture_baseline(expected: dict[str, Any], args: argparse.Namespace) -> dict[str, Any]:
+    """Walk every locus × tool in expected.json, probe live, capture variable_facts."""
+    new_expected = json.loads(json.dumps(expected))  # deep copy
+    new_expected["generated_at"] = _dt.datetime.now(_dt.timezone.utc).isoformat()
+    signal.signal(signal.SIGALRM, _alarm_handler)
+    async with httpx.AsyncClient(timeout=60) as client:
+        for locus_record in new_expected["loci"]:
+            print(
+                f"... capturing {locus_record['locus_id']}",
+                file=sys.stderr,
+                flush=True,
+            )
+            signal.alarm(PER_ORGANISM_WALLTIME_S)
+            try:
+                for tool_name, tool_assertions in locus_record["tools"].items():
+                    if "expects_exception" in tool_assertions:
+                        continue
+                    if tool_name == "blast.blast_sequence" and not args.include_blast:
+                        continue
+                    probe = await _probe_one_tool(
+                        client,
+                        locus_record["locus_id"],
+                        locus_record["organism"],
+                        tool_name,
+                    )
+                    if probe.exception_class is not None:
+                        print(
+                            f"  ! {tool_name} raised {probe.exception_class}: {probe.exception_message[:100]}",
+                            file=sys.stderr,
+                        )
+                        continue
+                    auto_captured = _stable_key_paths_for_response(probe.response)
+                    tool_assertions["variable_facts"] = {
+                        path: {
+                            "baseline": count,
+                            "tolerance_pct": DEFAULT_TOLERANCE_PCT,
+                            "floor": max(0, int(count * 0.25)),
+                        }
+                        for path, count in auto_captured.items()
+                    }
+            except _WalltimeError:
+                print(f"  T walltime for {locus_record['locus_id']}", file=sys.stderr)
+            finally:
+                signal.alarm(0)
+            time.sleep(INTER_ORGANISM_SLEEP_S)
+    return new_expected
+
+
+async def _capture_baseline_one(
+    expected: dict[str, Any],
+    target_locus: str,
+    target_key: str,
+    args: argparse.Namespace,  # noqa: ARG001 — kept for symmetry with --regenerate-baseline-all
+) -> dict[str, Any]:
+    """Re-capture variable_facts for one specific (locus, tool.key) pair."""
+    new_expected = json.loads(json.dumps(expected))
+    parts = target_key.split(".")
+    if len(parts) < 3:
+        raise ValueError(
+            f"target_key {target_key!r} too short — expected 'module.function.key.subkey'"
+        )
+    tool_name = f"{parts[0]}.{parts[1]}"
+    dotted_path = ".".join(parts[2:])
+
+    for locus_record in new_expected["loci"]:
+        if locus_record["locus_id"] != target_locus:
+            continue
+        if tool_name not in locus_record["tools"]:
+            raise KeyError(f"tool {tool_name!r} not in locus {target_locus!r}")
+        async with httpx.AsyncClient(timeout=60) as client:
+            probe = await _probe_one_tool(client, target_locus, locus_record["organism"], tool_name)
+            if probe.exception_class is not None:
+                raise RuntimeError(
+                    f"probe raised {probe.exception_class}: {probe.exception_message}"
+                )
+            actual = _resolve_path(probe.response, dotted_path)
+            vf = locus_record["tools"][tool_name].setdefault("variable_facts", {})
+            vf[dotted_path] = {
+                "baseline": actual,
+                "tolerance_pct": DEFAULT_TOLERANCE_PCT,
+                "floor": max(0, int(actual * 0.25)) if isinstance(actual, (int, float)) else None,
+            }
+        break
+    new_expected["generated_at"] = _dt.datetime.now(_dt.timezone.utc).isoformat()
+    return new_expected
+
+
 async def _process_locus(
     client: httpx.AsyncClient,
     locus_record: dict[str, Any],
@@ -917,13 +1030,29 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ERROR: malformed expected.json: {e}", file=sys.stderr)
         return 2
 
-    if args.regenerate_baseline_all or args.regenerate_baseline:
-        # Task 6 covers the regenerate flow — placeholder fail-loud for now.
-        print(
-            "ERROR: --regenerate-baseline* not implemented yet (Task 6 lands the flow)",
-            file=sys.stderr,
+    if args.regenerate_baseline_all:
+        prompt = (
+            "About to overwrite variable_facts in the expected.json baseline "
+            "for all loci. Type 'regenerate' to confirm: "
         )
-        return 2
+        try:
+            answer = input(prompt).strip()
+        except EOFError:
+            answer = ""
+        if answer != "regenerate":
+            print("aborted (didn't type 'regenerate')", file=sys.stderr)
+            return 2
+        new_expected = asyncio.run(_capture_baseline(expected, args))
+        args.expected_json.write_text(json.dumps(new_expected, indent=2) + "\n")
+        print(f"wrote new baseline to {args.expected_json}", file=sys.stderr)
+        return 0
+
+    if args.regenerate_baseline:
+        target_locus, target_key = args.regenerate_baseline
+        new_expected = asyncio.run(_capture_baseline_one(expected, target_locus, target_key, args))
+        args.expected_json.write_text(json.dumps(new_expected, indent=2) + "\n")
+        print(f"wrote per-key baseline update to {args.expected_json}", file=sys.stderr)
+        return 0
 
     results, summary = asyncio.run(_run_benchmark(args, expected))
 
