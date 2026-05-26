@@ -33,11 +33,59 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
+import asyncio
 import sys
+import time
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Any
+
+import httpx
+
+# Production backend modules — benchmark reuses async code path
+from plant_genomics_mcp import (
+    atted,
+    bar,
+    blast,
+    ensembl_plants,
+    europe_pmc,
+    gramene,
+    kegg,
+    organisms,
+    phytozome,
+    string_db,
+    synthesis,
+    uniprot,
+)
+from plant_genomics_mcp.errors import (
+    NotFoundError,
+    OrganismNotFound,
+    OrganismNotSupported,
+    PlantGenomicsError,
+    RateLimitError,
+    UpstreamUnavailableError,
+)
+
+# Tuple of typed exception classes that benchmark wrappers may surface from
+# upstream backends. Listed at module scope (not inside the except-clause) so
+# the imports at the top of the file are unambiguously used, surviving the
+# formatter's unused-import strip.
+_BENCHMARK_TYPED_EXCEPTIONS: tuple[type[BaseException], ...] = (
+    OrganismNotSupported,
+    OrganismNotFound,
+    NotFoundError,
+    RateLimitError,
+    UpstreamUnavailableError,
+    PlantGenomicsError,
+)
+
+# Re-exported submodule references so the formatter sees the asyncio + time
+# imports as load-bearing (they are: _probe_one_tool uses time.monotonic, and
+# _run_benchmark in Task 5 will use asyncio.run). Cheap touch, no runtime cost.
+_ASYNCIO_REF = asyncio
+_TIME_REF = time
 
 
 class Verdict(str, Enum):
@@ -68,6 +116,120 @@ DEFAULT_LAST_RUN_JSON = SCRIPT_DIR / "benchmark_annotations.last_run.json"
 PER_ORGANISM_WALLTIME_S = 120
 INTER_ORGANISM_SLEEP_S = 2.0
 DEFAULT_TOLERANCE_PCT = 25
+
+
+# Tool registry — maps the spec's tool-name string to a callable wrapper.
+# Each wrapper takes (client, locus, organism) and returns an awaitable.
+# This abstracts away per-backend arg-shape variation (kwarg-only organism,
+# positional-with-default, no-organism BAR-only, etc.).
+
+ToolCallable = Callable[[httpx.AsyncClient, str, str], Awaitable[Any]]
+
+
+async def _call_organisms_resolve(
+    _client: httpx.AsyncClient, locus: str, organism: str
+) -> dict[str, Any]:
+    """organisms.resolve is sync + has no client/locus inputs — wrap as fake-async tool."""
+    record = organisms.resolve(organism)
+    return {
+        "canonical": record.canonical,
+        "ncbi_taxid": record.ncbi_taxid,
+        "kegg_org_code": record.kegg_org_code,
+        "ensembl_slug": record.ensembl_slug,
+        "phytozome_int": record.phytozome_int,
+        "string_taxid": record.string_taxid,
+        "scientific": record.scientific,
+    }
+
+
+_TOOLS: dict[str, ToolCallable] = {
+    "organisms.resolve": _call_organisms_resolve,
+    "kegg.lookup_pathways": lambda c, locus, o: kegg.lookup_pathways(c, locus, organism=o),
+    "ensembl_plants.lookup_xrefs": lambda c, locus, o: ensembl_plants.lookup_xrefs(c, locus, o),
+    "uniprot.lookup_locus": lambda c, locus, o: uniprot.lookup_locus(c, locus, o),
+    "atted.lookup_coexpression": lambda c, locus, o: atted.lookup_coexpression(
+        c, locus, organism=o
+    ),
+    "string_db.lookup_partners": lambda c, locus, o: string_db.lookup_partners(
+        c, locus, organism=o
+    ),
+    "gramene.lookup_homologs": lambda c, locus, o: gramene.lookup_homologs(c, locus, organism=o),
+    "europe_pmc.lookup_locus": lambda c, locus, o: europe_pmc.lookup_locus(c, locus, organism=o),
+    "phytozome.lookup_locus": lambda c, locus, o: phytozome.lookup_locus(c, locus, organism=o),
+    # BAR Arabidopsis-only functions: gene_summary + efp_expression accept no
+    # organism kwarg (taxon 3702 hardcoded in URL path). aiv_interactions DOES
+    # accept organism= and dispatches arabidopsis vs rice, so we pass it through.
+    "bar.gene_summary": lambda c, locus, _o: bar.gene_summary(c, locus),
+    "bar.efp_expression": lambda c, locus, _o: bar.efp_expression(c, locus),
+    "bar.aiv_interactions": lambda c, locus, o: bar.aiv_interactions(c, locus, organism=o),
+    "synthesis.analyze_locus_synth": lambda c, locus, o: synthesis.analyze_locus_synth(
+        c, locus, organism=o
+    ),
+    "synthesis.find_homologs_synth": lambda c, locus, o: synthesis.find_homologs_synth(
+        c, locus, organism=o
+    ),
+    "synthesis.biological_context_synth": lambda c, locus, o: synthesis.biological_context_synth(
+        c, locus, organism=o
+    ),
+    "synthesis.consensus_homologs": lambda c, locus, o: synthesis.consensus_homologs(
+        c, locus, organism=o
+    ),
+    # BLAST is sequence-input not locus-input — special-cased; skipped without --include-blast.
+    # Wrapper signature matches but ignores organism; corpus encodes a sequence under the locus slot.
+    "blast.blast_sequence": lambda c, locus, _o: blast.blast_sequence(c, locus, program="blastp"),
+}
+
+
+def _module_name(tool_name: str) -> str:
+    """Return the backend module name part of a tool key (e.g. 'kegg' from 'kegg.lookup_pathways')."""
+    return tool_name.split(".", 1)[0]
+
+
+@dataclass
+class ToolProbe:
+    """Result of probing one (locus, tool) pair before assertion comparison."""
+
+    tool_name: str
+    response: Any | None = None  # set on success
+    exception_class: str | None = None  # set on exception
+    exception_message: str = ""
+    elapsed_s: float = 0.0
+
+
+async def _probe_one_tool(
+    client: httpx.AsyncClient, locus: str, organism: str, tool_name: str
+) -> ToolProbe:
+    """Drive one (locus, tool) probe; catch + classify exceptions; never raise.
+
+    Catches the project's typed exception hierarchy via _BENCHMARK_TYPED_EXCEPTIONS,
+    plus a final defensive Exception catch-all so a single misbehaving wrapper
+    can't abort the whole sweep.
+    """
+    if tool_name not in _TOOLS:
+        return ToolProbe(
+            tool_name=tool_name,
+            exception_class="UnknownTool",
+            exception_message=f"Tool {tool_name!r} not in _TOOLS registry",
+        )
+    start = time.monotonic()
+    try:
+        callable_ = _TOOLS[tool_name]
+        result = await callable_(client, locus, organism)
+        return ToolProbe(tool_name=tool_name, response=result, elapsed_s=time.monotonic() - start)
+    except _BENCHMARK_TYPED_EXCEPTIONS as e:
+        return ToolProbe(
+            tool_name=tool_name,
+            exception_class=type(e).__name__,
+            exception_message=str(e),
+            elapsed_s=time.monotonic() - start,
+        )
+    except Exception as e:  # noqa: BLE001 — defensive catch-all for benchmark
+        return ToolProbe(
+            tool_name=tool_name,
+            exception_class=type(e).__name__,
+            exception_message=str(e),
+            elapsed_s=time.monotonic() - start,
+        )
 
 
 def _resolve_path(actual: Any, dotted_path: str) -> Any:
