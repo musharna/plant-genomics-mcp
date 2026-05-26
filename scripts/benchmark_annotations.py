@@ -34,6 +34,8 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import datetime as _dt
+import json
 import sys
 import time
 from collections.abc import Awaitable, Callable
@@ -391,6 +393,253 @@ def _apply_assertion(
             f"[{band_lo:.1f}, {band_hi:.1f}] (baseline {baseline}, ±{tolerance_pct}%)"
         ),
     )
+
+
+@dataclass
+class LocusResult:
+    """Aggregated results for one locus across all probed tools."""
+
+    locus_id: str
+    organism: str
+    rationale: str
+    tools: dict[str, dict[str, AssertionResult]]  # tool_name → {dotted_key → AssertionResult}
+    probe_exceptions: dict[str, ToolProbe]  # tool_name → ToolProbe (for tools that raised)
+
+
+@dataclass
+class BenchmarkSummary:
+    """Whole-run summary statistics."""
+
+    total_assertions: int = 0
+    passed: int = 0
+    drifted: int = 0
+    failed: int = 0
+    exception_ok: int = 0
+    exception_bad: int = 0
+    exception_different: int = 0
+    timed_out: int = 0
+    skipped: int = 0
+
+    def increment(self, verdict: Verdict) -> None:
+        self.total_assertions += 1
+        if verdict == Verdict.PASS:
+            self.passed += 1
+        elif verdict == Verdict.DRIFT:
+            self.drifted += 1
+        elif verdict == Verdict.FAIL:
+            self.failed += 1
+        elif verdict == Verdict.EXCEPTION_OK:
+            self.exception_ok += 1
+        elif verdict == Verdict.EXCEPTION_BAD:
+            self.exception_bad += 1
+        elif verdict == Verdict.EXCEPTION_DIFFERENT:
+            self.exception_different += 1
+        elif verdict == Verdict.TIMEOUT:
+            self.timed_out += 1
+        elif verdict == Verdict.SKIPPED:
+            self.skipped += 1
+
+    @property
+    def exit_code(self) -> int:
+        if (
+            self.failed > 0
+            or self.exception_bad > 0
+            or self.exception_different > 0
+            or self.timed_out > 0
+        ):
+            return 1
+        return 0
+
+
+_VERDICT_GLYPH = {
+    Verdict.PASS: "✓",
+    Verdict.DRIFT: "~",
+    Verdict.FAIL: "✗",
+    Verdict.EXCEPTION_OK: "✓",
+    Verdict.EXCEPTION_BAD: "!",
+    Verdict.EXCEPTION_DIFFERENT: "!",
+    Verdict.TIMEOUT: "T",
+    Verdict.SKIPPED: "-",
+}
+
+
+def _worst_verdict_for_tool(tool_results: dict[str, AssertionResult]) -> Verdict:
+    """Pick the worst-of-N verdict for a tool's assertion set, for the pivot table."""
+    if not tool_results:
+        return Verdict.SKIPPED
+    order = [
+        Verdict.FAIL,
+        Verdict.EXCEPTION_BAD,
+        Verdict.EXCEPTION_DIFFERENT,
+        Verdict.TIMEOUT,
+        Verdict.DRIFT,
+        Verdict.PASS,
+        Verdict.EXCEPTION_OK,
+        Verdict.SKIPPED,
+    ]
+    verdicts = [r.verdict for r in tool_results.values()]
+    for v in order:
+        if v in verdicts:
+            return v
+    return Verdict.PASS
+
+
+def _render_markdown(
+    results: list[LocusResult],
+    summary: BenchmarkSummary,
+    baseline_generated_at: str,
+) -> str:
+    """Render the per-locus × per-tool pivot table + summary."""
+    # Collect the tool axis: every tool that appeared in any locus's probe set.
+    tool_axis: list[str] = sorted(
+        {tool for r in results for tool in r.tools.keys()}
+        | {tool for r in results for tool in r.probe_exceptions.keys()}
+    )
+
+    lines: list[str] = []
+    lines.append("```")
+    lines.append("=== plant-genomics-mcp benchmark ===")
+    lines.append(f"ref: {baseline_generated_at}")
+    lines.append(
+        f"{len(results)} loci × {len(tool_axis)} tools = {summary.total_assertions} assertions"
+    )
+    lines.append("")
+    lines.append(
+        "LEGEND:  ✓ PASS   ~ DRIFT   ✗ FAIL   ! EXCEPTION_BAD/DIFFERENT   T TIMEOUT   - SKIPPED"
+    )
+    lines.append("")
+
+    # Pivot table header
+    locus_col_w = max(len(r.locus_id) for r in results) if results else 10
+    locus_col_w = max(locus_col_w, len("LOCUS"))
+    header = (
+        "| "
+        + "LOCUS".ljust(locus_col_w)
+        + " | "
+        + " | ".join(t.split(".")[0][:8] for t in tool_axis)
+        + " |"
+    )
+    sep = "|" + "-" * (locus_col_w + 2) + "|" + "|".join("-" * 10 for _ in tool_axis) + "|"
+    lines.append(header)
+    lines.append(sep)
+
+    for r in results:
+        row_cells = []
+        for tool in tool_axis:
+            if tool in r.probe_exceptions:
+                # tool raised; check if any assertion in r.tools[tool] is EXCEPTION_OK
+                if tool in r.tools and r.tools[tool]:
+                    v = _worst_verdict_for_tool(r.tools[tool])
+                else:
+                    v = Verdict.EXCEPTION_BAD
+            elif tool in r.tools:
+                v = _worst_verdict_for_tool(r.tools[tool])
+            else:
+                v = Verdict.SKIPPED
+            row_cells.append(_VERDICT_GLYPH[v].center(8))
+        lines.append("| " + r.locus_id.ljust(locus_col_w) + " | " + " | ".join(row_cells) + " |")
+
+    lines.append("")
+    lines.append("SUMMARY:")
+    lines.append(f"  {summary.total_assertions} assertions total")
+    if summary.total_assertions:
+        pct = 100.0 * summary.passed / summary.total_assertions
+        lines.append(f"  ✓ {summary.passed:3d} PASS  ({pct:.1f}%)")
+    lines.append(f"  ~ {summary.drifted:3d} DRIFT (within tolerance; review)")
+    lines.append(f"  ✗ {summary.failed:3d} FAIL  (regressed)")
+    if summary.exception_ok:
+        lines.append(f"  ✓ {summary.exception_ok:3d} EXCEPTION_OK (anticipated)")
+    if summary.exception_bad:
+        lines.append(f"  ! {summary.exception_bad:3d} EXCEPTION_BAD (unanticipated)")
+    if summary.exception_different:
+        lines.append(f"  ! {summary.exception_different:3d} EXCEPTION_DIFFERENT")
+    if summary.timed_out:
+        lines.append(f"  T {summary.timed_out:3d} TIMEOUT")
+    if summary.skipped:
+        lines.append(f"  - {summary.skipped:3d} SKIPPED")
+    lines.append("")
+
+    # Worst offenders (DRIFT)
+    drift_offenders = []
+    fail_offenders = []
+    for r in results:
+        for tool_name, assertions in r.tools.items():
+            for key, ar in assertions.items():
+                if ar.verdict == Verdict.DRIFT:
+                    drift_offenders.append((r.locus_id, tool_name, key, ar))
+                elif ar.verdict == Verdict.FAIL:
+                    fail_offenders.append((r.locus_id, tool_name, key, ar))
+    if drift_offenders:
+        lines.append("WORST OFFENDERS (DRIFT):")
+        for locus, tool, key, ar in drift_offenders[:10]:
+            lines.append(f"  - {tool}.{key} for {locus}: {ar.expected} → {ar.actual} ({ar.note})")
+        lines.append("")
+    if fail_offenders:
+        lines.append("REGRESSIONS (FAIL):")
+        for locus, tool, key, ar in fail_offenders:
+            lines.append(f"  - {tool}.{key} for {locus}: {ar.expected} → {ar.actual} ({ar.note})")
+        lines.append("")
+
+    lines.append(f"Exit code: {summary.exit_code}")
+    lines.append("```")
+    return "\n".join(lines)
+
+
+def _write_sidecar(
+    output_path: Path,
+    results: list[LocusResult],
+    summary: BenchmarkSummary,
+    expected_baseline_generated_at: str,
+) -> None:
+    """Write the per-(locus, tool, key) JSON record to disk."""
+    payload = {
+        "schema_version": 1,
+        "generated_at": _dt.datetime.now(_dt.timezone.utc).isoformat(),
+        "baseline_ref": expected_baseline_generated_at,
+        "summary": {
+            "total_assertions": summary.total_assertions,
+            "passed": summary.passed,
+            "drifted": summary.drifted,
+            "failed": summary.failed,
+            "exception_ok": summary.exception_ok,
+            "exception_bad": summary.exception_bad,
+            "exception_different": summary.exception_different,
+            "timed_out": summary.timed_out,
+            "skipped": summary.skipped,
+            "exit_code": summary.exit_code,
+        },
+        "loci": [
+            {
+                "locus_id": r.locus_id,
+                "organism": r.organism,
+                "rationale": r.rationale,
+                "tools": {
+                    tool_name: {
+                        "assertions": {
+                            key: {
+                                "verdict": ar.verdict.value,
+                                "actual": ar.actual,
+                                "expected": ar.expected,
+                                "note": ar.note,
+                            }
+                            for key, ar in assertions.items()
+                        },
+                    }
+                    for tool_name, assertions in r.tools.items()
+                },
+                "probe_exceptions": {
+                    tool_name: {
+                        "exception_class": probe.exception_class,
+                        "exception_message": probe.exception_message,
+                        "elapsed_s": probe.elapsed_s,
+                    }
+                    for tool_name, probe in r.probe_exceptions.items()
+                },
+            }
+            for r in results
+        ],
+    }
+    output_path.write_text(json.dumps(payload, indent=2, default=str) + "\n")
 
 
 def main(argv: list[str] | None = None) -> int:
