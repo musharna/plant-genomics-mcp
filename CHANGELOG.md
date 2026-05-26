@@ -1,5 +1,31 @@
 # Changelog
 
+## v1.6.0 — 2026-05-26
+
+Added `scripts/benchmark_annotations.py` — operator-runnable scientific-validation + drift detector covering all 9 backend modules + 5 synthesis pipelines against a curated 9-locus corpus. Twin-tier assertions: strict for stable facts (organism canonical, taxid, KEGG org code, gene_id prefix), tolerance-band for variable facts (annotation counts). Operationalizes external review critique #3 (scientific validation) + #4 (benchmark/eval script).
+
+**Added**
+
+- **`scripts/benchmark_annotations.py`** — driver script (single Python file, sync `main()`, async backend calls via `asyncio.run`). Reuses production async code path; no new HTTP logic. Per-organism `signal.alarm(120)` walltime guard. 2s sleep between organism-blocks. Verdict enumeration: PASS / DRIFT / FAIL / EXCEPTION_OK / EXCEPTION_BAD / EXCEPTION_DIFFERENT / TIMEOUT / SKIPPED.
+- **`scripts/benchmark_annotations.expected.json`** — frozen baseline corpus (9 loci × 12 tools = 92 assertions). Hand-curated stable facts + first-run-captured variable facts with default 25% tolerance bands and floors. Re-baselineable via `--regenerate-baseline-all` (interactive confirmation) or `--regenerate-baseline <locus> <key>` (per-key).
+- **`scripts/benchmark_annotations.last_run.json`** — most-recent run output committed for diff visibility against `expected.json`.
+- **`docs/benchmarking.md`** — operator guide (read-the-table / triage-drift / re-baseline / pre-release ritual / known sparse-coverage caveats).
+
+**First-attested baseline**
+
+- 92 assertions / 81 PASS / 11 EXCEPTION_OK / 0 DRIFT / 0 FAIL. Exit code 0.
+- 11 EXCEPTION_OK cases: 8 KEGG NotFoundError (rice/maize/soybean/barley/poplar/brachypodium chr1-first-gene loci aren't pathway-annotated; bridge mechanism still validated via resolved Entrez ID in error message) + 2 KEGG OrganismNotSupported (wheat + tomato matrix-falsified) + 1 Phytozome NotFoundError (rice + soybean canonical loci return empty BioMart response; possibly upstream data drift).
+- No KEGG happy-path is currently validated — pathway-annotated loci per organism would need to be operator-selected; out of scope for v1.6.
+
+**Operational impact**
+
+- Non-breaking. No runtime code change. No new dependencies. No new MCP tool/resource/prompt. No CI changes.
+- Added to per-release ritual: run `benchmark_annotations.py` pre-tag; pin summary counts in deploy memo. Establishes per-release benchmark history.
+- Exit codes: 0 = all PASS+DRIFT (safe to ship). 1 = any FAIL (block release; investigate). 2 = script error.
+- Default sweep ~3-5 min wall (without `--include-blast`); ~10-15 min with BLAST opt-in.
+- Frozen baseline + tolerance bands honor the v1.4.0 #10 doctrine: Ensembl/KEGG/UniProt drift on ~6-monthly release cycles surfaces as DRIFT, not FAIL.
+- Docker tags `:1.6.0` / `:1.6` / `:latest` republish on tag-push; gt76 redeploy via `docker compose pull && docker compose up -d` (Diun is notifier-only per `bugs_fixed.md` #4). No HTTP-transport, auth, or registry-metadata change.
+
 ## v1.5.0 — 2026-05-25
 
 KEGG ↔ NCBI Entrez bridge extended to 3 additional organisms: barley (`hordeum_vulgare` → `hvg`), poplar (`populus_trichocarpa` → `pop`), Brachypodium (`brachypodium_distachyon` → `bdi`). `kegg_pathways` and `batch_kegg_pathways` now exercise the v1.4.0 bridge for these organisms instead of raising `OrganismNotSupported` at the matrix guard. The bridge mechanism is unchanged from v1.4.0 — these organisms passed the same Ensembl Plants `/xrefs/id → EntrezGene → KEGG /link/pathway` round-trip; v1.4.0 helpers in `kegg.py` are organism-agnostic and required no code change. Frozen probe evidence at `scripts/probe_kegg_bridge_candidates.json`.
