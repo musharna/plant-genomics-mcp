@@ -36,6 +36,7 @@ import argparse
 import asyncio
 import datetime as _dt
 import json
+import signal
 import sys
 import time
 from collections.abc import Awaitable, Callable
@@ -185,6 +186,14 @@ _TOOLS: dict[str, ToolCallable] = {
 def _module_name(tool_name: str) -> str:
     """Return the backend module name part of a tool key (e.g. 'kegg' from 'kegg.lookup_pathways')."""
     return tool_name.split(".", 1)[0]
+
+
+class _WalltimeError(RuntimeError):
+    pass
+
+
+def _alarm_handler(_signum: int, _frame: Any) -> None:  # noqa: ANN401
+    raise _WalltimeError(f"per-organism walltime exceeded ({PER_ORGANISM_WALLTIME_S}s)")
 
 
 @dataclass
@@ -642,6 +651,203 @@ def _write_sidecar(
     output_path.write_text(json.dumps(payload, indent=2, default=str) + "\n")
 
 
+async def _process_locus(
+    client: httpx.AsyncClient,
+    locus_record: dict[str, Any],
+    tools_filter: set[str] | None,
+    include_blast: bool,
+    summary: BenchmarkSummary,
+) -> LocusResult:
+    """Probe every tool for one locus, apply assertions, accumulate into LocusResult."""
+    locus_id = locus_record["locus_id"]
+    organism = locus_record["organism"]
+    rationale = locus_record.get("rationale", "")
+    tools_spec = locus_record.get("tools", {})
+
+    result = LocusResult(
+        locus_id=locus_id,
+        organism=organism,
+        rationale=rationale,
+        tools={},
+        probe_exceptions={},
+    )
+
+    for tool_name, tool_assertions in tools_spec.items():
+        # Tool filtering by backend module name
+        if tools_filter is not None and _module_name(tool_name) not in tools_filter:
+            continue
+        if tool_name == "blast.blast_sequence" and not include_blast:
+            result.tools[tool_name] = {
+                "_skipped": AssertionResult(
+                    Verdict.SKIPPED, None, None, note="gated by --include-blast"
+                )
+            }
+            summary.increment(Verdict.SKIPPED)
+            continue
+
+        # Per-locus per-tool skip flag from expected.json
+        if tool_assertions.get("skip_for_this_locus"):
+            result.tools[tool_name] = {
+                "_skipped": AssertionResult(
+                    Verdict.SKIPPED, None, None, note="expected.json skip_for_this_locus"
+                )
+            }
+            summary.increment(Verdict.SKIPPED)
+            continue
+
+        probe = await _probe_one_tool(client, locus_id, organism, tool_name)
+
+        # Expected-exception path
+        expected_exception = tool_assertions.get("expects_exception")
+        if expected_exception:
+            if probe.exception_class is None:
+                result.tools[tool_name] = {
+                    "_exception": AssertionResult(
+                        Verdict.FAIL,
+                        None,
+                        expected_exception,
+                        note=f"expected {expected_exception} but tool returned a response",
+                    )
+                }
+                summary.increment(Verdict.FAIL)
+            elif probe.exception_class == expected_exception:
+                result.tools[tool_name] = {
+                    "_exception": AssertionResult(
+                        Verdict.EXCEPTION_OK, probe.exception_class, expected_exception
+                    )
+                }
+                summary.increment(Verdict.EXCEPTION_OK)
+            else:
+                result.tools[tool_name] = {
+                    "_exception": AssertionResult(
+                        Verdict.EXCEPTION_DIFFERENT,
+                        probe.exception_class,
+                        expected_exception,
+                        note=f"expected {expected_exception}, got {probe.exception_class}: {probe.exception_message}",
+                    )
+                }
+                summary.increment(Verdict.EXCEPTION_DIFFERENT)
+            continue
+
+        # Non-exception path — but tool unexpectedly raised
+        if probe.exception_class is not None:
+            result.probe_exceptions[tool_name] = probe
+            result.tools[tool_name] = {
+                "_exception": AssertionResult(
+                    Verdict.EXCEPTION_BAD,
+                    probe.exception_class,
+                    None,
+                    note=f"unanticipated {probe.exception_class}: {probe.exception_message}",
+                )
+            }
+            summary.increment(Verdict.EXCEPTION_BAD)
+            continue
+
+        # Apply each assertion
+        tool_result: dict[str, AssertionResult] = {}
+        for facts_kind, is_var in [("stable_facts", False), ("variable_facts", True)]:
+            for dotted_path, expected_spec in tool_assertions.get(facts_kind, {}).items():
+                if is_var:
+                    if not isinstance(expected_spec, dict) or "baseline" not in expected_spec:
+                        tool_result[dotted_path] = AssertionResult(
+                            Verdict.FAIL,
+                            None,
+                            expected_spec,
+                            note="malformed variable_facts entry: needs {baseline, tolerance_pct?, floor?, ceiling?}",
+                        )
+                        summary.increment(Verdict.FAIL)
+                        continue
+                    baseline = expected_spec["baseline"]
+                    tolerance_pct = expected_spec.get("tolerance_pct", DEFAULT_TOLERANCE_PCT)
+                    floor = expected_spec.get("floor")
+                    ceiling = expected_spec.get("ceiling")
+                else:
+                    baseline = expected_spec
+                    tolerance_pct = 0
+                    floor = None
+                    ceiling = None
+
+                try:
+                    actual = _resolve_path(probe.response, dotted_path)
+                except (KeyError, TypeError, IndexError) as e:
+                    tool_result[dotted_path] = AssertionResult(
+                        Verdict.FAIL,
+                        None,
+                        baseline,
+                        note=f"could not resolve path {dotted_path!r}: {type(e).__name__}: {e}",
+                    )
+                    summary.increment(Verdict.FAIL)
+                    continue
+                ar = _apply_assertion(
+                    baseline,
+                    actual,
+                    tolerance_pct=tolerance_pct,
+                    floor=floor,
+                    ceiling=ceiling,
+                    is_variable=is_var,
+                )
+                tool_result[dotted_path] = ar
+                summary.increment(ar.verdict)
+        result.tools[tool_name] = tool_result
+
+    return result
+
+
+async def _run_benchmark(
+    args: argparse.Namespace, expected: dict[str, Any]
+) -> tuple[list[LocusResult], BenchmarkSummary]:
+    """Drive the whole benchmark — per-organism walltime + 2s sleep + shared httpx client."""
+    loci_filter: set[str] | None = None
+    if args.loci:
+        loci_filter = {s.strip() for s in args.loci.split(",") if s.strip()}
+    tools_filter: set[str] | None = None
+    if args.tools:
+        tools_filter = {s.strip() for s in args.tools.split(",") if s.strip()}
+
+    targets = [
+        locus_record
+        for locus_record in expected["loci"]
+        if loci_filter is None or locus_record["locus_id"] in loci_filter
+    ]
+
+    signal.signal(signal.SIGALRM, _alarm_handler)
+    summary = BenchmarkSummary()
+    results: list[LocusResult] = []
+
+    async with httpx.AsyncClient(timeout=60) as client:
+        for i, locus_record in enumerate(targets):
+            print(
+                f"... probing {locus_record['locus_id']} ({locus_record['organism']})",
+                file=sys.stderr,
+                flush=True,
+            )
+            signal.alarm(PER_ORGANISM_WALLTIME_S)
+            try:
+                result = await _process_locus(
+                    client, locus_record, tools_filter, args.include_blast, summary
+                )
+            except _WalltimeError as e:
+                result = LocusResult(
+                    locus_id=locus_record["locus_id"],
+                    organism=locus_record["organism"],
+                    rationale=locus_record.get("rationale", ""),
+                    tools={
+                        "_walltime": {
+                            "_": AssertionResult(Verdict.TIMEOUT, None, None, note=str(e))
+                        }
+                    },
+                    probe_exceptions={},
+                )
+                summary.increment(Verdict.TIMEOUT)
+            finally:
+                signal.alarm(0)
+            results.append(result)
+            if i < len(targets) - 1:
+                time.sleep(INTER_ORGANISM_SLEEP_S)
+
+    return results, summary
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="plant-genomics-mcp v1.6 benchmark — scientific validation + drift detector"
@@ -694,15 +900,38 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    # Task 1 lands a no-op main() — subsequent tasks wire in behavior.
-    print("benchmark_annotations.py — scaffolding only (no probes yet)", file=sys.stderr)
-    print(f"  --loci             = {args.loci}", file=sys.stderr)
-    print(f"  --tools            = {args.tools}", file=sys.stderr)
-    print(f"  --include-blast    = {args.include_blast}", file=sys.stderr)
-    print(f"  --expected-json    = {args.expected_json}", file=sys.stderr)
-    print(f"  --output-json      = {args.output_json}", file=sys.stderr)
-    print(f"  --quiet            = {args.quiet}", file=sys.stderr)
-    return 0
+    if not args.expected_json.exists():
+        print(f"ERROR: expected.json not found at {args.expected_json}", file=sys.stderr)
+        print(
+            "  → first-run? Author scripts/benchmark_annotations.expected.json manually (stable_facts),",
+            file=sys.stderr,
+        )
+        print(
+            "     then run --regenerate-baseline-all to capture variable_facts.",
+            file=sys.stderr,
+        )
+        return 2
+    try:
+        expected = json.loads(args.expected_json.read_text())
+    except json.JSONDecodeError as e:
+        print(f"ERROR: malformed expected.json: {e}", file=sys.stderr)
+        return 2
+
+    if args.regenerate_baseline_all or args.regenerate_baseline:
+        # Task 6 covers the regenerate flow — placeholder fail-loud for now.
+        print(
+            "ERROR: --regenerate-baseline* not implemented yet (Task 6 lands the flow)",
+            file=sys.stderr,
+        )
+        return 2
+
+    results, summary = asyncio.run(_run_benchmark(args, expected))
+
+    if not args.quiet:
+        print(_render_markdown(results, summary, expected.get("generated_at", "<unknown>")))
+    _write_sidecar(args.output_json, results, summary, expected.get("generated_at", "<unknown>"))
+    print(f"wrote {args.output_json}", file=sys.stderr)
+    return summary.exit_code
 
 
 if __name__ == "__main__":
