@@ -195,8 +195,12 @@ def _render_biological_context(locus: str, organism: str | int, top_n: int) -> s
     # Steps 1, 3, 4 always run; KEGG + ATTED only for Arabidopsis (their
     # upstream APIs only ship the Arabidopsis genome — ATTED-II calls itself
     # "ATTED-Ath", and KEGG uses the hardcoded "ath:" gene-id prefix).
+    # NB: gramene_homologs takes only locus + homology_type — the Gramene
+    # locus already disambiguates species, so no organism= is passed (and the
+    # tool would silently drop it). Keep organism= on the kegg/uniprot/string/
+    # atted steps below, where the tools genuinely accept it.
     gramene = (
-        f"1. `gramene_homologs` with locus={locus!r}, organism={canonical!r}, "
+        f"1. `gramene_homologs` with locus={locus!r}, "
         "homology_type='ortholog' — retrieve orthologs across plant species "
         "from Gramene compara.\n"
     )

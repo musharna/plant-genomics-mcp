@@ -834,6 +834,7 @@ def test_biological_context_synth_fixtures_match_real_response_shapes():
     KeggPathways.model_validate(
         {
             "locus": "AT1G01010",
+            "organism": "arabidopsis_thaliana",
             "kegg_gene_id": "ath:AT1G01010",
             "pathways": [
                 {
