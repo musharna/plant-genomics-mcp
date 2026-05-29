@@ -1,5 +1,36 @@
 # Changelog
 
+## v1.7.0 — 2026-05-29
+
+Remediates all 13 findings from the first multi-agent `/workflows` code audit of v1.6.0 (0 blockers / 4 important / 9 polish, each adversarially verified against live source). No release-blocker was found; this release closes contract inconsistencies, backfills the dispatch/batch/progress/consensus test gaps that let the v0.9 wrong-arg-key class ship undetected, and makes the cache + locus-validation contracts uniform across all backends. Happy-path behavior is unchanged. Minor (not patch) for the new `KeggPathways.organism` output field + the surface-wide input-validation tightening; not major (nothing removed; only undocumented extra args are now rejected). Audit + per-finding rationale: project memory `workflow_audit_2026-05-29.md`.
+
+**Added**
+
+- **`KeggPathways.organism`** — `kegg_pathways` / `batch_kegg_pathways` now echo the resolved canonical organism slug, matching every other species-scoped wrapper (`EnsemblPlantsLocus`, `GeneXrefs`, `LocusLiterature`, `StringInteractions`, `BarAIVInteractions`). The output model also now declares the conditionally-emitted `entrez_gene_id` field (present for the non-Arabidopsis KEGG↔Entrez bridge, absent for `ath`), so the advertised output schema matches runtime. (audit P3)
+- **`additionalProperties: false` on all 28 single-locus/batch tool input schemas** — uniform reject-unknown-args contract matching the 4 synthesis tools. A misspelled or spurious arg key (e.g. `organsim=`) is now rejected at the boundary instead of silently dropped by the `args.get(...)` dispatcher. (audit I1/P4)
+- **Coverage floor** — `[tool.coverage.report] fail_under = 92` in `pyproject.toml`, honored by the existing CI `pytest --cov` run; coverage can no longer regress silently. (audit P8)
+- **Tests (+45):** `tests/test_server_dispatch.py` (every tool arm through `server._dispatch` with stubbed backends; identifier+default-organism routing; spec↔`TOOLS` lock; unknown-tool branch — audit I2), three batch tools incl. the two-stage `batch_locus_go_annotations` resolve-ok/QuickGO-404 split (I4), `tests/test_progress_bridge.py` (progressToken→Reporter bridge end-to-end — I3), `consensus_homologs` phase-1.b error arms (P7), `tests/test_server_schema.py` (P4 invariant), plus cache copy-on-hit / make-key-collision / bar trailing-newline / string_db separator regressions. server.py coverage 41%→91%, TOTAL 90%→94%.
+
+**Changed**
+
+- **`biological_context` prompt** — dropped the bogus `organism=` from the step-1 `gramene_homologs` instruction (both Arabidopsis and non-Arabidopsis branches). `gramene_homologs` accepts only `locus` + `homology_type`; the Gramene locus already encodes species, so the key was silently dropped — a model following the prompt could have believed it scoped to a species it never did. `organism=` is kept on the kegg/uniprot/string/atted steps where the tools accept it. (audit I1)
+- **`TTLCache.get` / `set` now copy on read and store** (`copy.deepcopy`) — a consumer that mutates a returned value (or aliases it into tool output) can no longer corrupt the shared cache entry for the next concurrent reader. Fulfills the cache's own share-safety docstring promise at the store layer, making the read-only-cached-value contract uniform across all 9 backends in one place rather than per-helper. `ensembl_plants.lookup_locus` also rebuilt to construct a fresh dict instead of mutating the response in place. (audit P5)
+- **`cache.make_key` params serialization** — JSON-serializes the sorted `(k, v)` pairs instead of joining with literal `&`/`=`, so a param value containing those separators can't alias a different param set. Order-invariance preserved. (audit P6)
+- **`string_db.lookup_partners` now validates its identifier** via `validators.assert_valid_locus` — it was the lone locus-accepting backend that skipped pre-flight validation, letting an identifier with cache-key separators reach `make_key` unescaped. UniProt accessions and loci both match the `[A-Za-z0-9._-]` class, so only genuinely malformed input is rejected. (audit P6)
+- **`bar.py` switched to the shared `\Z`-anchored validator** (`validators.assert_valid_locus`) at all three path-interpolating sites, replacing its local `$`-anchored regex (Python's `$` matched before a trailing newline). Now every path-interpolating backend rejects the same inputs. (audit P2)
+
+**Fixed**
+
+- **`bar.py` module docstring** column order corrected to match the verified ThaleMine index map (`brief_description`@3, `tair_short_description`@8; the nonexistent `display_name` removed). Code and tests already used the correct indices — this was a stale doc that could have misled a maintainer editing the constants. (audit P1)
+
+**Operational impact**
+
+- **Input contract tightening:** clients passing unrecognized arguments to any tool now receive a rejection instead of having the extra key silently ignored. No documented argument is affected; only typos/extras. Review any client that relied on passing ignored keys before upgrading.
+- **Output additive:** `KeggPathways` gains `organism` (always present) and `entrez_gene_id` (present for non-Arabidopsis). Consumers reading specific fields are unaffected; strict-schema consumers gain two fields.
+- No new MCP tools/resources/prompts. No new dependencies. No HTTP-transport, auth, or registry-metadata change.
+- Verification: 432 passed / 41 skipped, coverage 94% (floor 92), `ruff check .` clean, CI green on 3.11 + 3.12.
+- Docker tags `:1.7.0` / `:1.7` / `:latest` republish on tag-push; gt76 redeploy via `docker compose pull && docker compose up -d` (Diun is notifier-only per `bugs_fixed.md` #4).
+
 ## v1.6.0 — 2026-05-26
 
 Added `scripts/benchmark_annotations.py` — operator-runnable scientific-validation + drift detector covering all 9 backend modules + 5 synthesis pipelines against a curated 9-locus corpus. Twin-tier assertions: strict for stable facts (organism canonical, taxid, KEGG org code, gene_id prefix), tolerance-band for variable facts (annotation counts). Operationalizes external review critique #3 (scientific validation) + #4 (benchmark/eval script).
