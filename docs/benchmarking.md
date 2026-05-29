@@ -47,6 +47,19 @@ LEGEND:  ✓ PASS   ~ DRIFT   ✗ FAIL   ! EXCEPTION_BAD/DIFFERENT   T TIMEOUT  
 
 Pivot rows are loci; columns are tools (truncated module names). Each cell shows the WORST verdict across that locus×tool's assertion set. A `~` cell means at least one assertion drifted; check the `WORST OFFENDERS (DRIFT)` block below the table for specifics.
 
+## Cross-source invariants (v1.7)
+
+Below the per-tool table, a `CROSS-SOURCE INVARIANTS` block reports assertions that check **agreement across backends** for the same locus — beyond what any single tool's stable/variable facts can see. They are reuse-only: each invariant reads tool responses already collected during the run (near-zero extra HTTP), runs as a post-pass per locus, and folds its verdict (PASS / FAIL / SKIPPED) into the summary counts and exit code. A FAIL here blocks release exactly like a stable_fact FAIL.
+
+Each invariant has an `applies()` gate (→ SKIPPED when the locus lacks the needed responses or is on a different code path) and a `check()` (→ PASS / FAIL). Current invariants:
+
+| Invariant                       | Applies when                                                                                                             | Checks                                                                        | Guards                                                                                                     |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `kegg_entrez_in_ensembl_xrefs`  | bridge organism (non-Arabidopsis), KEGG succeeded with an `entrez_gene_id`, and `ensembl_plants.lookup_xrefs` is present | the Entrez ID KEGG's bridge resolved to ∈ Ensembl `/xrefs` `by_db.EntrezGene` | the v1.4 KEGG↔Entrez bridge — proves KEGG resolved to an Entrez ID Ensembl actually attests, not a phantom |
+| `kegg_orgcode_matches_resolver` | `kegg.lookup_pathways` and `organisms.resolve` both succeeded                                                            | `kegg_gene_id` org-code prefix == resolver `kegg_org_code`                    | the org-code wiring between the resolver and live KEGG gene id                                             |
+
+Arabidopsis uses the native `ath:` KEGG path (no Entrez bridge), so `kegg_entrez_in_ensembl_xrefs` is SKIPPED there; `kegg_orgcode_matches_resolver` still applies. The invariant registry lives in `scripts/benchmark_annotations.py` (`INVARIANTS`); add one by appending an `Invariant(name, applies, check)`. Excluded as flaky: Ensembl-xref-UniProt-acc vs `uniprot.primaryAccession` (legitimate SwissProt/TrEMBL divergence).
+
 ## Triaging DRIFT
 
 DRIFT means a `variable_facts` actual was outside the tolerance band but still within floor/ceiling. Not a failure — surfaces for review.
@@ -98,9 +111,9 @@ If FAIL count > 0 at this point, decide before tagging: re-baseline + ship, or i
 | `scripts/benchmark_annotations.expected.json` | Frozen baseline (committed, hand-curated stable + auto-captured variable) |
 | `scripts/benchmark_annotations.last_run.json` | Most-recent output (committed for diff visibility)                        |
 
-## Corpus shape (v1.6 baseline)
+## Corpus shape (v1.7 baseline)
 
-9 loci × 12 tools = 92 assertions. Coverage:
+16 loci. The original 9 (below) + 7 KEGG happy-path loci added in v1.7 (one pathway-annotated locus per supported organism — see the happy-path table). Coverage:
 
 | #   | Locus                       | Organism            | Coverage                                                                                                                                                                  |
 | --- | --------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -114,9 +127,23 @@ If FAIL count > 0 at this point, decide before tagging: re-baseline + ship, or i
 | 8   | `TraesCS1A02G000300`        | Wheat (falsified)   | Ensembl; KEGG raises OrganismNotSupported (matrix guard)                                                                                                                  |
 | 9   | `Solyc01g005610.3`          | Tomato (falsified)  | Ensembl, Europe PMC; KEGG raises OrganismNotSupported (matrix guard)                                                                                                      |
 
-**Known sparse coverage:** No KEGG happy-path is currently validated. Every non-Arabidopsis KEGG call in the corpus raises NotFoundError (because the chr1-first-gene loci happen to have 0 pathway annotations) or OrganismNotSupported (matrix-falsified). The bridge mechanism is still validated — the resolved Entrez ID appears in the NotFoundError message. To add a KEGG happy-path assertion, swap in a known pathway-annotated locus per organism (operator-determined; not currently in scope).
+### KEGG happy-path loci (v1.7)
 
-**Known data drift:** Phytozome for rice / soybean returns NotFoundError for the canonical Wave A2 loci. Possibly upstream BioMart data drift. Tracked separately; not addressed in v1.6.
+Seven loci that DO carry pathway annotations — one per supported organism — discovered by `scripts/probe_kegg_happy_path.py` (scans the first ~5 Mb of chr1 per genome for a pathway-annotated gene). Each asserts the live `kegg.lookup_pathways` success path (stable `kegg_gene_id` + `organism`; variable `pathways.len`). The 6 bridge loci also carry `ensembl_plants.lookup_xrefs` (a within-run cache hit — the bridge already fetched it) so the `kegg_entrez_in_ensembl_xrefs` cross-source invariant can run.
+
+| Organism     | Locus                       | `kegg_gene_id`           | pathways |
+| ------------ | --------------------------- | ------------------------ | -------- |
+| Arabidopsis  | `AT1G01050`                 | `ath:AT1G01050` (native) | 1        |
+| Rice         | `Os01g0100700`              | `osa:4326457`            | 1        |
+| Maize        | `Zm00001eb000210`           | `zma:100383860`          | 3        |
+| Soybean      | `GLYMA_01G001300`           | `gmx:548054`             | 3        |
+| Barley       | `HORVU.MOREX.r3.1HG0000040` | `hvg:123394901`          | 2        |
+| Poplar       | `Potri.001G000500.v4.1`     | `pop:7483226`            | 2        |
+| Brachypodium | `BRADI_1g00460v3`           | `bdi:100836389`          | 1        |
+
+The original 9 corpus loci still validate the KEGG bridge's _failure_ path: non-Arabidopsis chr1-first-gene loci raise NotFoundError (0 annotations; resolved Entrez ID still appears in the message), and matrix-falsified organisms raise OrganismNotSupported.
+
+**Known data drift:** Phytozome for rice / soybean returns NotFoundError for the canonical Wave A2 loci. Possibly upstream BioMart data drift. Tracked separately (v1.7+ probe candidate).
 
 ## Adding a new organism
 
@@ -133,7 +160,8 @@ Estimated effort: ~1 hour per organism.
 
 - Continuous monitoring (cron, GH Actions weekly).
 - MCP-server-layer dispatch testing.
-- Cross-source consistency invariants (Ensembl xref UniProt-acc == UniProt primary).
 - Annotation-quality scoring.
-- KEGG happy-path coverage (need pathway-annotated loci per organism).
 - Phytozome rice/soybean data drift investigation.
+- More cross-source invariants (e.g. INV-3 organism-echo agreement; the Ensembl-xref-UniProt-acc invariant is deliberately excluded as flaky).
+
+**Done in v1.7:** KEGG happy-path coverage (7 loci) · cross-source consistency invariants (`kegg_entrez_in_ensembl_xrefs`, `kegg_orgcode_matches_resolver`).

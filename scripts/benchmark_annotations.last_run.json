@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-05-29T15:05:42.935999+00:00",
+  "generated_at": "2026-05-29T15:26:03.908902+00:00",
   "baseline_ref": "2026-05-26T04:03:43.977490+00:00",
   "summary": {
-    "total_assertions": 141,
-    "passed": 130,
+    "total_assertions": 179,
+    "passed": 149,
     "drifted": 0,
     "failed": 0,
     "exception_ok": 11,
     "exception_bad": 0,
     "exception_different": 0,
     "timed_out": 0,
-    "skipped": 0,
+    "skipped": 19,
     "exit_code": 0
   },
   "loci": [
@@ -189,7 +189,17 @@
           }
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
     },
     {
       "locus_id": "Os01g0100100",
@@ -306,7 +316,17 @@
           }
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
     },
     {
       "locus_id": "Zm00001eb000010",
@@ -383,7 +403,17 @@
           "assertions": {}
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
     },
     {
       "locus_id": "GLYMA_01G001700",
@@ -473,7 +503,17 @@
           }
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
     },
     {
       "locus_id": "HORVU.MOREX.r3.1HG0000090",
@@ -541,7 +581,17 @@
           }
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
     },
     {
       "locus_id": "Potri.001G006600.v4.1",
@@ -609,7 +659,17 @@
           }
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
     },
     {
       "locus_id": "BRADI_1g00485v3",
@@ -677,7 +737,17 @@
           }
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
     },
     {
       "locus_id": "TraesCS1A02G000300",
@@ -739,7 +809,17 @@
           }
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
     },
     {
       "locus_id": "Solyc01g005610.3",
@@ -799,7 +879,17 @@
           }
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
     },
     {
       "locus_id": "AT1G01050",
@@ -857,7 +947,17 @@
           }
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "PASS",
+          "detail": "kegg_gene_id org-code prefix 'ath' == resolver kegg_org_code 'ath'"
+        }
+      }
     },
     {
       "locus_id": "Os01g0100700",
@@ -913,9 +1013,29 @@
               "note": ""
             }
           }
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "assertions": {
+            "by_db.EntrezGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "PASS",
+          "detail": "KEGG bridge Entrez '4326457' in Ensembl /xrefs EntrezGene ['4326457']"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "PASS",
+          "detail": "kegg_gene_id org-code prefix 'osa' == resolver kegg_org_code 'osa'"
+        }
+      }
     },
     {
       "locus_id": "Zm00001eb000210",
@@ -971,9 +1091,29 @@
               "note": ""
             }
           }
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "assertions": {
+            "by_db.EntrezGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "PASS",
+          "detail": "KEGG bridge Entrez '100383860' in Ensembl /xrefs EntrezGene ['100383860']"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "PASS",
+          "detail": "kegg_gene_id org-code prefix 'zma' == resolver kegg_org_code 'zma'"
+        }
+      }
     },
     {
       "locus_id": "GLYMA_01G001300",
@@ -1029,9 +1169,29 @@
               "note": ""
             }
           }
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "assertions": {
+            "by_db.EntrezGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "PASS",
+          "detail": "KEGG bridge Entrez '548054' in Ensembl /xrefs EntrezGene ['548054']"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "PASS",
+          "detail": "kegg_gene_id org-code prefix 'gmx' == resolver kegg_org_code 'gmx'"
+        }
+      }
     },
     {
       "locus_id": "HORVU.MOREX.r3.1HG0000040",
@@ -1087,9 +1247,29 @@
               "note": ""
             }
           }
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "assertions": {
+            "by_db.EntrezGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "PASS",
+          "detail": "KEGG bridge Entrez '123394901' in Ensembl /xrefs EntrezGene ['123394901']"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "PASS",
+          "detail": "kegg_gene_id org-code prefix 'hvg' == resolver kegg_org_code 'hvg'"
+        }
+      }
     },
     {
       "locus_id": "Potri.001G000500.v4.1",
@@ -1145,9 +1325,29 @@
               "note": ""
             }
           }
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "assertions": {
+            "by_db.EntrezGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "PASS",
+          "detail": "KEGG bridge Entrez '7483226' in Ensembl /xrefs EntrezGene ['7483226']"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "PASS",
+          "detail": "kegg_gene_id org-code prefix 'pop' == resolver kegg_org_code 'pop'"
+        }
+      }
     },
     {
       "locus_id": "BRADI_1g00460v3",
@@ -1203,9 +1403,29 @@
               "note": ""
             }
           }
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "assertions": {
+            "by_db.EntrezGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "PASS",
+          "detail": "KEGG bridge Entrez '100836389' in Ensembl /xrefs EntrezGene ['100836389']"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "PASS",
+          "detail": "kegg_gene_id org-code prefix 'bdi' == resolver kegg_org_code 'bdi'"
+        }
+      }
     }
   ]
 }
