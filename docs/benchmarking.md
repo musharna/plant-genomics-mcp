@@ -134,7 +134,7 @@ The Tailscale OAuth client needs the `tag:ci` ACL tag so the ephemeral runner no
 
 ## Corpus shape (v1.7 baseline)
 
-18 loci. The original 9 (below) + 7 KEGG happy-path loci + 2 Phytozome native-ID happy-path loci, all added in v1.7 (see the happy-path tables). Coverage:
+27 loci. The original 9 (below) + 7 KEGG happy-path loci + 11 Phytozome native-ID happy-path loci (one per supported organism), all added across v1.7/v1.8 (see the happy-path tables). Coverage:
 
 | #   | Locus                       | Organism            | Coverage                                                                                                                                                                                                                                        |
 | --- | --------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -164,18 +164,28 @@ Seven loci that DO carry pathway annotations — one per supported organism — 
 
 The original 9 corpus loci still validate the KEGG bridge's _failure_ path: non-Arabidopsis chr1-first-gene loci raise NotFoundError (0 annotations; resolved Entrez ID still appears in the message), and matrix-falsified organisms raise OrganismNotSupported.
 
-### Phytozome happy-path loci (v1.7)
+### Phytozome happy-path loci (v1.7 diagnosis, v1.8 full coverage)
 
-The rice/soybean Phytozome NotFoundError was **diagnosed in v1.7 as an ID-namespace mismatch, not data drift.** Phytozome's `gene_name_filter` indexes each genome's NATIVE gene names, not the Ensembl-style IDs the corpus used: rice wants MSU `LOC_Os...` (not RAP-DB `Os01g...`), soybean wants `Glyma.NNg...` dot-format (not `GLYMA_` underscore). `scripts/probe_phytozome_namespace.py` swept all 12 Phytozome organisms (org-id-only BioMart query, stream-capped, round-trip-confirmed through production `phytozome.lookup_locus`) and found a working native gene for every one; the two flagged organisms' canonical IDs raise while the native IDs succeed (verdict `namespace_mismatch_confirmed`; `organism_name` echo confirms the `phytozome_int` is correct). Findings: `scripts/probe_phytozome_namespace.json`.
+The rice/soybean Phytozome NotFoundError was **diagnosed in v1.7 as an ID-namespace mismatch, not data drift.** Phytozome's `gene_name_filter` indexes each genome's NATIVE gene names, not the Ensembl-style IDs the corpus used: rice wants MSU `LOC_Os...` (not RAP-DB `Os01g...`), soybean wants `Glyma.NNg...` dot-format (not `GLYMA_` underscore). `scripts/probe_phytozome_namespace.py` swept all 12 Phytozome organisms (org-id-only BioMart query, stream-capped, round-trip-confirmed through production `phytozome.lookup_locus`) and found a working native gene for **every** one; the two originally-flagged organisms' canonical IDs raise while the native IDs succeed (verdict `namespace_mismatch_confirmed`; `organism_name` echo confirms the `phytozome_int` is correct). Findings: `scripts/probe_phytozome_namespace.json`.
 
-Two happy-path loci were added (native IDs); the original `expects_exception` entries are **kept** as namespace-mismatch regression guards.
+v1.8 rolled the probe's validated native IDs into the corpus as happy-path loci for **all 12 organisms** (was rice/maize/soybean only). The two originally-flagged organisms' `expects_exception` entries are **kept** as namespace-mismatch regression guards.
 
-| Organism | Native happy-path locus | `organism_name` echo | Canonical guard (still expects NotFoundError) |
-| -------- | ----------------------- | -------------------- | --------------------------------------------- |
-| Rice     | `LOC_Os01g01307`        | `Osativa_v7.0`       | `Os01g0100100`                                |
-| Soybean  | `Glyma.02G140400`       | `Gmax_Wm82.a2.v1`    | `GLYMA_01G001700`                             |
+| Organism     | Native happy-path locus     | `organism_name` prefix asserted | Namespace guard (still expects NotFoundError) |
+| ------------ | --------------------------- | ------------------------------- | --------------------------------------------- |
+| Arabidopsis  | `AT1G07270`                 | `Athaliana`                     | —                                             |
+| Rice         | `LOC_Os01g01307`            | `Osativa`                       | `Os01g0100100` (RAP-DB)                       |
+| Maize        | `Zm00001eb000010`           | (native == Ensembl id)          | —                                             |
+| Wheat        | `TraesCS5A03G0137600`       | `Taestivum`                     | —                                             |
+| Tomato       | `Solyc01g080240`            | `Slycopersicum`                 | —                                             |
+| Soybean      | `Glyma.02G140400`           | `Gmax`                          | `GLYMA_01G001700` (underscore)                |
+| Sorghum      | `Sobic.003G000100`          | `Sbicolor`                      | —                                             |
+| Barley       | `HORVU.MOREX.r3.UnG0785490` | `Hvulgare`                      | —                                             |
+| Grape        | `VIT_201s0010g00130`        | `Vvinifera`                     | —                                             |
+| Poplar       | `Potri.001G226000`          | `Ptrichocarpa`                  | —                                             |
+| Medicago     | `Medtr1g014230`             | `Mtruncatula`                   | —                                             |
+| Brachypodium | `Bradi1g72735`              | `Bdistachyon`                   | —                                             |
 
-The happy-path `organism_name` assertion uses a `startswith` prefix (`Osativa` / `Gmax`) so a Phytozome assembly-version bump (e.g. `v7.0`→`v7.1`) does not spuriously FAIL the build. Maize already worked because its native Phytozome format (`Zm00001eb...`) coincides with the Ensembl ID.
+The happy-path `organism_name` assertion uses a `startswith` prefix (the genus-species token, e.g. `Osativa`) so a Phytozome assembly-version bump (e.g. `v7.0`→`v7.1`) does not spuriously FAIL the build. Maize needed no namespace fix because its native Phytozome id (`Zm00001eb...`) coincides with the Ensembl id. Wheat and tomato are KEGG-matrix-falsified (no KEGG path) but Phytozome-supported, so these are their first happy-path assertions in the corpus.
 
 ## Adding a new organism
 
@@ -194,4 +204,4 @@ Estimated effort: ~1 hour per organism.
 - Annotation-quality scoring.
 - More cross-source invariants (e.g. INV-3 organism-echo agreement; the Ensembl-xref-UniProt-acc invariant is deliberately excluded as flaky).
 
-**Done in v1.7:** KEGG happy-path coverage (7 loci) · cross-source consistency invariants (`kegg_entrez_in_ensembl_xrefs`, `kegg_orgcode_matches_resolver`) · Phytozome namespace diagnosis + 2 native-ID happy-path loci (rice/soybean drift was a namespace mismatch, not data drift) · continuous monitoring (weekly scheduled GH Actions workflow, two-strikes ntfy paging).
+**Done (v1.7 diagnosis → v1.8 release):** KEGG happy-path coverage (7 loci) · cross-source consistency invariants (`kegg_entrez_in_ensembl_xrefs`, `kegg_orgcode_matches_resolver`) · Phytozome namespace diagnosis (rice/soybean drift was a namespace mismatch, not data drift) + native-ID happy-path for **all 12** organisms · continuous monitoring (weekly scheduled GH Actions workflow, two-strikes ntfy paging).

@@ -876,6 +876,199 @@
           }
         }
       }
+    },
+    {
+      "locus_id": "AT1G07270",
+      "organism": "arabidopsis_thaliana",
+      "rationale": "v1.8 Phytozome happy-path: native gene id round-trip-confirmed live (scripts/probe_phytozome_namespace.json). Broadens Phytozome coverage to all 12 supported organisms; organism_name asserted via startswith prefix so an assembly-version bump does not FAIL.",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "arabidopsis_thaliana",
+            "ncbi_taxid": 3702,
+            "kegg_org_code": "ath"
+          },
+          "variable_facts": {}
+        },
+        "phytozome.lookup_locus": {
+          "stable_facts": {
+            "gene_name": "AT1G07270",
+            "organism_name.startswith.Athaliana": true
+          },
+          "variable_facts": {}
+        }
+      }
+    },
+    {
+      "locus_id": "TraesCS5A03G0137600",
+      "organism": "triticum_aestivum",
+      "rationale": "v1.8 Phytozome happy-path: native gene id round-trip-confirmed live (scripts/probe_phytozome_namespace.json). Broadens Phytozome coverage to all 12 supported organisms; organism_name asserted via startswith prefix so an assembly-version bump does not FAIL.",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "triticum_aestivum",
+            "ncbi_taxid": 4565
+          },
+          "variable_facts": {}
+        },
+        "phytozome.lookup_locus": {
+          "stable_facts": {
+            "gene_name": "TraesCS5A03G0137600",
+            "organism_name.startswith.Taestivum": true
+          },
+          "variable_facts": {}
+        }
+      }
+    },
+    {
+      "locus_id": "Solyc01g080240",
+      "organism": "solanum_lycopersicum",
+      "rationale": "v1.8 Phytozome happy-path: native gene id round-trip-confirmed live (scripts/probe_phytozome_namespace.json). Broadens Phytozome coverage to all 12 supported organisms; organism_name asserted via startswith prefix so an assembly-version bump does not FAIL.",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "solanum_lycopersicum",
+            "ncbi_taxid": 4081
+          },
+          "variable_facts": {}
+        },
+        "phytozome.lookup_locus": {
+          "stable_facts": {
+            "gene_name": "Solyc01g080240",
+            "organism_name.startswith.Slycopersicum": true
+          },
+          "variable_facts": {}
+        }
+      }
+    },
+    {
+      "locus_id": "Sobic.003G000100",
+      "organism": "sorghum_bicolor",
+      "rationale": "v1.8 Phytozome happy-path: native gene id round-trip-confirmed live (scripts/probe_phytozome_namespace.json). Broadens Phytozome coverage to all 12 supported organisms; organism_name asserted via startswith prefix so an assembly-version bump does not FAIL.",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "sorghum_bicolor",
+            "ncbi_taxid": 4558
+          },
+          "variable_facts": {}
+        },
+        "phytozome.lookup_locus": {
+          "stable_facts": {
+            "gene_name": "Sobic.003G000100",
+            "organism_name.startswith.Sbicolor": true
+          },
+          "variable_facts": {}
+        }
+      }
+    },
+    {
+      "locus_id": "HORVU.MOREX.r3.UnG0785490",
+      "organism": "hordeum_vulgare",
+      "rationale": "v1.8 Phytozome happy-path: native gene id round-trip-confirmed live (scripts/probe_phytozome_namespace.json). Broadens Phytozome coverage to all 12 supported organisms; organism_name asserted via startswith prefix so an assembly-version bump does not FAIL.",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "hordeum_vulgare",
+            "ncbi_taxid": 4513,
+            "kegg_org_code": "hvg"
+          },
+          "variable_facts": {}
+        },
+        "phytozome.lookup_locus": {
+          "stable_facts": {
+            "gene_name": "HORVU.MOREX.r3.UnG0785490",
+            "organism_name.startswith.Hvulgare": true
+          },
+          "variable_facts": {}
+        }
+      }
+    },
+    {
+      "locus_id": "VIT_201s0010g00130",
+      "organism": "vitis_vinifera",
+      "rationale": "v1.8 Phytozome happy-path: native gene id round-trip-confirmed live (scripts/probe_phytozome_namespace.json). Broadens Phytozome coverage to all 12 supported organisms; organism_name asserted via startswith prefix so an assembly-version bump does not FAIL.",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "vitis_vinifera",
+            "ncbi_taxid": 29760
+          },
+          "variable_facts": {}
+        },
+        "phytozome.lookup_locus": {
+          "stable_facts": {
+            "gene_name": "VIT_201s0010g00130",
+            "organism_name.startswith.Vvinifera": true
+          },
+          "variable_facts": {}
+        }
+      }
+    },
+    {
+      "locus_id": "Potri.001G226000",
+      "organism": "populus_trichocarpa",
+      "rationale": "v1.8 Phytozome happy-path: native gene id round-trip-confirmed live (scripts/probe_phytozome_namespace.json). Broadens Phytozome coverage to all 12 supported organisms; organism_name asserted via startswith prefix so an assembly-version bump does not FAIL.",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "populus_trichocarpa",
+            "ncbi_taxid": 3694,
+            "kegg_org_code": "pop"
+          },
+          "variable_facts": {}
+        },
+        "phytozome.lookup_locus": {
+          "stable_facts": {
+            "gene_name": "Potri.001G226000",
+            "organism_name.startswith.Ptrichocarpa": true
+          },
+          "variable_facts": {}
+        }
+      }
+    },
+    {
+      "locus_id": "Medtr1g014230",
+      "organism": "medicago_truncatula",
+      "rationale": "v1.8 Phytozome happy-path: native gene id round-trip-confirmed live (scripts/probe_phytozome_namespace.json). Broadens Phytozome coverage to all 12 supported organisms; organism_name asserted via startswith prefix so an assembly-version bump does not FAIL.",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "medicago_truncatula",
+            "ncbi_taxid": 3880
+          },
+          "variable_facts": {}
+        },
+        "phytozome.lookup_locus": {
+          "stable_facts": {
+            "gene_name": "Medtr1g014230",
+            "organism_name.startswith.Mtruncatula": true
+          },
+          "variable_facts": {}
+        }
+      }
+    },
+    {
+      "locus_id": "Bradi1g72735",
+      "organism": "brachypodium_distachyon",
+      "rationale": "v1.8 Phytozome happy-path: native gene id round-trip-confirmed live (scripts/probe_phytozome_namespace.json). Broadens Phytozome coverage to all 12 supported organisms; organism_name asserted via startswith prefix so an assembly-version bump does not FAIL.",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "brachypodium_distachyon",
+            "ncbi_taxid": 15368,
+            "kegg_org_code": "bdi"
+          },
+          "variable_facts": {}
+        },
+        "phytozome.lookup_locus": {
+          "stable_facts": {
+            "gene_name": "Bradi1g72735",
+            "organism_name.startswith.Bdistachyon": true
+          },
+          "variable_facts": {}
+        }
+      }
     }
   ]
 }
