@@ -570,6 +570,209 @@
           }
         }
       }
+    },
+    {
+      "locus_id": "AT1G01050",
+      "organism": "arabidopsis_thaliana",
+      "rationale": "KEGG happy-path coverage (v1.7) \u2014 ath:AT1G01050 carries 1 KEGG pathway membership(s); validates the bridge SUCCESS path (vs the chr1-first-gene 0-pathway expects_exception entry for this organism). Discovered via scripts/probe_kegg_happy_path.py.",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "arabidopsis_thaliana",
+            "ncbi_taxid": 3702,
+            "kegg_org_code": "ath",
+            "ensembl_slug": "arabidopsis_thaliana"
+          },
+          "variable_facts": {}
+        },
+        "kegg.lookup_pathways": {
+          "stable_facts": {
+            "kegg_gene_id": "ath:AT1G01050",
+            "organism": "arabidopsis_thaliana"
+          },
+          "variable_facts": {
+            "pathways.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "locus_id": "Os01g0100700",
+      "organism": "oryza_sativa",
+      "rationale": "KEGG happy-path coverage (v1.7) \u2014 osa:4326457 carries 1 KEGG pathway membership(s); validates the bridge SUCCESS path (vs the chr1-first-gene 0-pathway expects_exception entry for this organism). Discovered via scripts/probe_kegg_happy_path.py.",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "oryza_sativa",
+            "ncbi_taxid": 39947,
+            "kegg_org_code": "osa",
+            "ensembl_slug": "oryza_sativa"
+          },
+          "variable_facts": {}
+        },
+        "kegg.lookup_pathways": {
+          "stable_facts": {
+            "kegg_gene_id": "osa:4326457",
+            "organism": "oryza_sativa"
+          },
+          "variable_facts": {
+            "pathways.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "locus_id": "Zm00001eb000210",
+      "organism": "zea_mays",
+      "rationale": "KEGG happy-path coverage (v1.7) \u2014 zma:100383860 carries 3 KEGG pathway membership(s); validates the bridge SUCCESS path (vs the chr1-first-gene 0-pathway expects_exception entry for this organism). Discovered via scripts/probe_kegg_happy_path.py.",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "zea_mays",
+            "ncbi_taxid": 4577,
+            "kegg_org_code": "zma",
+            "ensembl_slug": "zea_mays"
+          },
+          "variable_facts": {}
+        },
+        "kegg.lookup_pathways": {
+          "stable_facts": {
+            "kegg_gene_id": "zma:100383860",
+            "organism": "zea_mays"
+          },
+          "variable_facts": {
+            "pathways.len": {
+              "baseline": 3,
+              "tolerance_pct": 25,
+              "floor": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "locus_id": "GLYMA_01G001300",
+      "organism": "glycine_max",
+      "rationale": "KEGG happy-path coverage (v1.7) \u2014 gmx:548054 carries 3 KEGG pathway membership(s); validates the bridge SUCCESS path (vs the chr1-first-gene 0-pathway expects_exception entry for this organism). Discovered via scripts/probe_kegg_happy_path.py.",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "glycine_max",
+            "ncbi_taxid": 3847,
+            "kegg_org_code": "gmx",
+            "ensembl_slug": "glycine_max"
+          },
+          "variable_facts": {}
+        },
+        "kegg.lookup_pathways": {
+          "stable_facts": {
+            "kegg_gene_id": "gmx:548054",
+            "organism": "glycine_max"
+          },
+          "variable_facts": {
+            "pathways.len": {
+              "baseline": 3,
+              "tolerance_pct": 25,
+              "floor": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "locus_id": "HORVU.MOREX.r3.1HG0000040",
+      "organism": "hordeum_vulgare",
+      "rationale": "KEGG happy-path coverage (v1.7) \u2014 hvg:123394901 carries 2 KEGG pathway membership(s); validates the bridge SUCCESS path (vs the chr1-first-gene 0-pathway expects_exception entry for this organism). Discovered via scripts/probe_kegg_happy_path.py.",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "hordeum_vulgare",
+            "ncbi_taxid": 4513,
+            "kegg_org_code": "hvg",
+            "ensembl_slug": "hordeum_vulgare"
+          },
+          "variable_facts": {}
+        },
+        "kegg.lookup_pathways": {
+          "stable_facts": {
+            "kegg_gene_id": "hvg:123394901",
+            "organism": "hordeum_vulgare"
+          },
+          "variable_facts": {
+            "pathways.len": {
+              "baseline": 2,
+              "tolerance_pct": 25,
+              "floor": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "locus_id": "Potri.001G000500.v4.1",
+      "organism": "populus_trichocarpa",
+      "rationale": "KEGG happy-path coverage (v1.7) \u2014 pop:7483226 carries 2 KEGG pathway membership(s); validates the bridge SUCCESS path (vs the chr1-first-gene 0-pathway expects_exception entry for this organism). Discovered via scripts/probe_kegg_happy_path.py.",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "populus_trichocarpa",
+            "ncbi_taxid": 3694,
+            "kegg_org_code": "pop",
+            "ensembl_slug": "populus_trichocarpa"
+          },
+          "variable_facts": {}
+        },
+        "kegg.lookup_pathways": {
+          "stable_facts": {
+            "kegg_gene_id": "pop:7483226",
+            "organism": "populus_trichocarpa"
+          },
+          "variable_facts": {
+            "pathways.len": {
+              "baseline": 2,
+              "tolerance_pct": 25,
+              "floor": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "locus_id": "BRADI_1g00460v3",
+      "organism": "brachypodium_distachyon",
+      "rationale": "KEGG happy-path coverage (v1.7) \u2014 bdi:100836389 carries 1 KEGG pathway membership(s); validates the bridge SUCCESS path (vs the chr1-first-gene 0-pathway expects_exception entry for this organism). Discovered via scripts/probe_kegg_happy_path.py.",
+      "tools": {
+        "organisms.resolve": {
+          "stable_facts": {
+            "canonical": "brachypodium_distachyon",
+            "ncbi_taxid": 15368,
+            "kegg_org_code": "bdi",
+            "ensembl_slug": "brachypodium_distachyon"
+          },
+          "variable_facts": {}
+        },
+        "kegg.lookup_pathways": {
+          "stable_facts": {
+            "kegg_gene_id": "bdi:100836389",
+            "organism": "brachypodium_distachyon"
+          },
+          "variable_facts": {
+            "pathways.len": {
+              "baseline": 1,
+              "tolerance_pct": 25,
+              "floor": 1
+            }
+          }
+        }
+      }
     }
   ]
 }
