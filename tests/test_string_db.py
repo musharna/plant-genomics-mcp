@@ -181,3 +181,13 @@ async def test_lookup_partners_unsupported_organism_raises():
     async with httpx.AsyncClient() as client:
         with pytest.raises(OrganismNotFound):
             await string_db.lookup_partners(client, "Q0WV96", organism="not_a_real_plant_42")
+
+
+@pytest.mark.asyncio
+async def test_lookup_partners_rejects_separator_identifier() -> None:
+    """audit P6: lookup_partners now validates the identifier (parity with the
+    other locus-accepting backends), so one carrying cache-key separators is
+    rejected before it can reach make_key unescaped."""
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="invalid locus"):
+            await string_db.lookup_partners(client, "AT1G01010&species=9606")

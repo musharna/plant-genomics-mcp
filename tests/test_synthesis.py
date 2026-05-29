@@ -834,6 +834,7 @@ def test_biological_context_synth_fixtures_match_real_response_shapes():
     KeggPathways.model_validate(
         {
             "locus": "AT1G01010",
+            "organism": "arabidopsis_thaliana",
             "kegg_gene_id": "ath:AT1G01010",
             "pathways": [
                 {
@@ -976,6 +977,76 @@ async def test_consensus_homologs_happy_path(httpx_mock, monkeypatch):
     # mean_identity = (1.0 + 0.78) / 2 = 0.89; score = 2 * 0.89 = 1.78
     assert pick["mean_identity"] == 0.89
     assert pick["score"] == 1.78
+
+
+_PHASE1B_SKIP = "phase-1.b sequence fetch failed; downstream skipped"
+
+
+@pytest.mark.asyncio
+async def test_consensus_homologs_phase1b_plant_genomics_error_skips_downstream(monkeypatch):
+    """P7: phase-1.b sequence fetch raising a PlantGenomicsError records an error
+    step2 and skips steps 3-5 with the phase-1.b reason (synthesis.py:807-829).
+
+    step1 (resolve) succeeds; only the FASTA fetch fails. These fail-loud error
+    paths build a specific 5-step skip-everything envelope and were uncovered.
+    """
+    from plant_genomics_mcp.errors import NotFoundError
+    from plant_genomics_mcp.synthesis import consensus_homologs
+
+    async def fake_lookup(client, locus, organism="arabidopsis_thaliana"):
+        return {"primaryAccession": "Q0WV96", "uniProtkbId": "Y_ARATH"}
+
+    async def fake_fetch_sequence(client, accession):
+        raise NotFoundError(f"UniProt FASTA: no sequence for {accession}")
+
+    monkeypatch.setattr("plant_genomics_mcp.synthesis.uniprot.lookup_locus", fake_lookup)
+    monkeypatch.setattr("plant_genomics_mcp.synthesis.uniprot.fetch_sequence", fake_fetch_sequence)
+
+    async with httpx.AsyncClient() as client:
+        env = await consensus_homologs(client, "AT1G01010", top_n=10)
+
+    assert env.tool == "consensus_homologs"
+    assert env.result is None
+    assert [s.status for s in env.steps] == ["ok", "error", "skipped", "skipped", "skipped"]
+    step2 = env.steps[1]
+    assert step2.tool == "uniprot_fetch_sequence"
+    assert step2.error.startswith("[NotFoundError]")
+    # Steps 3-5 skipped with the phase-1.b reason and correct tool labels/order.
+    assert [s.tool for s in env.steps[2:]] == [
+        "gramene_homologs",
+        "blast_sequence",
+        "gramene_homolog_enrichment",
+    ]
+    for s in env.steps[2:]:
+        assert s.error == _PHASE1B_SKIP
+
+
+@pytest.mark.asyncio
+async def test_consensus_homologs_phase1b_httpx_error_skips_downstream(monkeypatch):
+    """P7: phase-1.b fetch raising a raw httpx.HTTPError takes the second except
+    arm (synthesis.py:830-852); step2.error carries the [HTTPError] prefix."""
+    from plant_genomics_mcp.synthesis import consensus_homologs
+
+    async def fake_lookup(client, locus, organism="arabidopsis_thaliana"):
+        return {"primaryAccession": "Q0WV96", "uniProtkbId": "Y_ARATH"}
+
+    async def fake_fetch_sequence(client, accession):
+        raise httpx.ConnectError("connection reset by peer")
+
+    monkeypatch.setattr("plant_genomics_mcp.synthesis.uniprot.lookup_locus", fake_lookup)
+    monkeypatch.setattr("plant_genomics_mcp.synthesis.uniprot.fetch_sequence", fake_fetch_sequence)
+
+    async with httpx.AsyncClient() as client:
+        env = await consensus_homologs(client, "AT1G01010", top_n=10)
+
+    assert env.result is None
+    assert [s.status for s in env.steps] == ["ok", "error", "skipped", "skipped", "skipped"]
+    step2 = env.steps[1]
+    assert step2.tool == "uniprot_fetch_sequence"
+    assert step2.error.startswith("[HTTPError]")
+    assert "connection reset by peer" in step2.error
+    for s in env.steps[2:]:
+        assert s.error == _PHASE1B_SKIP
 
 
 def test_parse_blast_identity_pct_handles_percent_string_and_float():

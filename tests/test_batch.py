@@ -279,6 +279,110 @@ async def test_batch_kegg_pathways_mixed(httpx_mock: HTTPXMock):
 
 
 @pytest.mark.asyncio
+async def test_batch_locus_go_annotations_mixed(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Two-stage fanout (UniProt resolve → QuickGO), audit I4.
+
+    Covers the all-success row, a stage-1 resolve failure, and — the audit's
+    key case — a stage-2 QuickGO failure for a locus whose resolve SUCCEEDED,
+    proving the second-stage error still lands in errors[] with the typed
+    prefix (batch.py:215-231, previously fully uncovered).
+    """
+    from plant_genomics_mcp import quickgo as _quickgo
+    from plant_genomics_mcp import uniprot as _uniprot
+
+    async def fake_uniprot(
+        client: httpx.AsyncClient, locus: str, organism: str | int = "arabidopsis_thaliana"
+    ) -> dict[str, Any]:
+        if locus == "AT1G01010":
+            return {"primaryAccession": "Q0WV96"}
+        if locus == "AT2G02010":  # resolves fine; QuickGO will 404 on this accession
+            return {"primaryAccession": "Q9ZZZ9"}
+        raise NotFoundError(f"UniProt: no accession for {locus}")
+
+    async def fake_quickgo(
+        client: httpx.AsyncClient, accession: str, limit: int = 25
+    ) -> dict[str, Any]:
+        if accession == "Q0WV96":
+            return {
+                "numberOfHits": 1,
+                "returned": 1,
+                "annotations": [{"goId": "GO:0003677"}],
+                "by_aspect": {"F": 1},
+            }
+        raise NotFoundError(f"QuickGO: no annotations for {accession}")
+
+    monkeypatch.setattr(_uniprot, "lookup_locus", fake_uniprot)
+    monkeypatch.setattr(_quickgo, "lookup_by_uniprot", fake_quickgo)
+
+    async with httpx.AsyncClient() as client:
+        env = await batch.batch_locus_go_annotations(client, ["AT1G01010", "AT2G02010", "ATNOPE"])
+    assert env["tool"] == "locus_go_annotations"
+    assert env["count"] == 3
+    # Both stages succeed → success row with the merged two-stage shape.
+    assert set(env["results"]) == {"AT1G01010"}
+    row = env["results"]["AT1G01010"]
+    assert row["uniprot_accession"] == "Q0WV96"
+    assert row["numberOfHits"] == 1
+    assert row["by_aspect"] == {"F": 1}
+    # Stage-2 failure (resolve ok, QuickGO 404) AND stage-1 failure both land
+    # in errors with the typed prefix.
+    assert set(env["errors"]) == {"AT2G02010", "ATNOPE"}
+    assert env["errors"]["AT2G02010"].startswith("[NotFoundError]")  # the two-stage case
+    assert env["errors"]["ATNOPE"].startswith("[NotFoundError]")
+
+
+@pytest.mark.asyncio
+async def test_batch_bar_gene_summary_mixed(monkeypatch: pytest.MonkeyPatch) -> None:
+    """audit I4 — batch_bar_gene_summary envelope + success/error split."""
+    from plant_genomics_mcp import bar as _bar
+
+    async def fake_summary(client: httpx.AsyncClient, locus: str) -> dict[str, Any]:
+        if locus == "AT1G01010":
+            return {"locus": locus, "symbol": "NAC001"}
+        raise NotFoundError(f"BAR ThaleMine: nothing for {locus}")
+
+    monkeypatch.setattr(_bar, "gene_summary", fake_summary)
+
+    async with httpx.AsyncClient() as client:
+        env = await batch.batch_bar_gene_summary(client, ["AT1G01010", "AT9G99999"])
+    assert env["tool"] == "bar_gene_summary"
+    assert env["count"] == 2
+    assert set(env["results"]) == {"AT1G01010"}
+    assert set(env["errors"]) == {"AT9G99999"}
+    assert env["errors"]["AT9G99999"].startswith("[NotFoundError]")
+
+
+@pytest.mark.asyncio
+async def test_batch_bar_aiv_interactions_mixed(monkeypatch: pytest.MonkeyPatch) -> None:
+    """audit I4 — batch_bar_aiv_interactions split + organism forwarding."""
+    from plant_genomics_mcp import bar as _bar
+
+    seen: dict[str, Any] = {}
+
+    async def fake_aiv(
+        client: httpx.AsyncClient, locus: str, organism: str | int = "arabidopsis_thaliana"
+    ) -> dict[str, Any]:
+        seen[locus] = organism
+        if locus == "AT1G01010":
+            return {"locus": locus, "organism": organism, "interactions": []}
+        raise NotFoundError(f"BAR AIV: nothing for {locus}")
+
+    monkeypatch.setattr(_bar, "aiv_interactions", fake_aiv)
+
+    async with httpx.AsyncClient() as client:
+        env = await batch.batch_bar_aiv_interactions(
+            client, ["AT1G01010", "AT9G99999"], organism="rice"
+        )
+    assert env["tool"] == "bar_aiv_interactions"
+    assert env["count"] == 2
+    assert set(env["results"]) == {"AT1G01010"}
+    assert set(env["errors"]) == {"AT9G99999"}
+    assert env["errors"]["AT9G99999"].startswith("[NotFoundError]")
+    # The organism arg reaches the backend unchanged (batch resolves nothing itself).
+    assert seen["AT1G01010"] == "rice"
+
+
+@pytest.mark.asyncio
 async def test_batch_string_interactions_mixed(httpx_mock: HTTPXMock):
     httpx_mock.add_response(
         url=(

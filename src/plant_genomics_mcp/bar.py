@@ -11,8 +11,8 @@ Probe writeup: ``docs/superpowers/audits/2026-05-23-bar-api-probe.md``.
 Endpoints this module wraps:
 
   GET /thalemine/gene_information/{locus} → positional JSON array:
-    [agi, full_name, tair_locus_id, display_name, symbol, synonyms,
-     computational_description, curator_summary, brief_description]
+    [agi, full_name, tair_locus_id, brief_description, symbol, synonyms,
+     computational_description, curator_summary, tair_short_description]
   GET /gaia/aliases/{locus} → {species, locus, geneid, aliases:[...]}
   GET /microarray_gene_expression/world_efp/arabidopsis/{locus} → eFP world map
   GET /interactions/get_paper_by_agi/{locus} → curated Arabidopsis GRN papers
@@ -26,12 +26,11 @@ the /interactions/rice/ lane.
 from __future__ import annotations
 
 import asyncio
-import re
 from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import __version__, _http, cache, organisms
+from plant_genomics_mcp import __version__, _http, cache, organisms, validators
 from plant_genomics_mcp.errors import (
     NotFoundError,
     OrganismNotSupported,
@@ -43,10 +42,11 @@ DEFAULT_TIMEOUT = 30.0
 MAX_RETRIES = 3
 CACHE_TTL_SECONDS = 3600.0  # 1h — BAR doesn't version-stamp releases
 
-# Loose locus regex — BAR accepts AGI ("AT1G01010"), MSU rice loci
-# ("LOC_Os01g01080"), and various synonym forms. Reject obvious garbage
-# (whitespace, HTML, shell metacharacters) but stay permissive.
-_LOCUS_RE = re.compile(r"^[A-Za-z0-9._-]+$")
+# Locus validation uses the shared validators.assert_valid_locus (\Z-anchored)
+# so every path-interpolating backend rejects the same inputs — including a
+# trailing newline, which the old local `$`-anchored regex let through (audit P2).
+# BAR's accepted forms (AGI "AT1G01010", MSU rice "LOC_Os01g01080", synonyms)
+# all match the shared [A-Za-z0-9._-] class.
 
 _CACHE = cache.TTLCache(default_ttl=CACHE_TTL_SECONDS)
 
@@ -135,8 +135,7 @@ async def gene_summary(
     the canonical TAIR fields come from thalemine. Returns ``ncbi_gene_id:
     None`` and ``aliases: []`` in that case.
     """
-    if not _LOCUS_RE.match(locus):
-        raise NotFoundError(f"BAR: invalid locus {locus!r} (must match {_LOCUS_RE.pattern})")
+    validators.assert_valid_locus(locus, backend="BAR")
     gi_env, aliases_env = await asyncio.gather(
         _get(client, f"/thalemine/gene_information/{locus}"),
         _get(client, f"/gaia/aliases/{locus}"),
@@ -235,8 +234,7 @@ async def efp_expression(
     everything else passes through unmodified except ``id``, which we
     HTML-strip down to the leading ecotype label.
     """
-    if not _LOCUS_RE.match(locus):
-        raise NotFoundError(f"BAR: invalid locus {locus!r} (must match {_LOCUS_RE.pattern})")
+    validators.assert_valid_locus(locus, backend="BAR")
     path = f"/microarray_gene_expression/world_efp/arabidopsis/{locus}"
     env = await _get(client, path)
     if not isinstance(env, dict) or not env.get("wasSuccessful"):
@@ -379,8 +377,7 @@ async def aiv_interactions(
     Rice requires the MSU ``LOC_Os*`` format; RAP-DB (``Os*g*``) is rejected
     upstream — match locus format to organism before calling.
     """
-    if not _LOCUS_RE.match(locus):
-        raise NotFoundError(f"BAR: invalid locus {locus!r} (must match {_LOCUS_RE.pattern})")
+    validators.assert_valid_locus(locus, backend="BAR")
     record = organisms.resolve(organism)
     canonical = record.canonical
     if canonical == "arabidopsis_thaliana":

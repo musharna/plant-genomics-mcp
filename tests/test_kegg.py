@@ -330,6 +330,8 @@ async def test_lookup_pathways_rice_via_bridge(httpx_mock: HTTPXMock):
     async with httpx.AsyncClient() as client:
         result = await kegg.lookup_pathways(client, "Os01g0100100", organism="oryza_sativa")
     assert result["locus"] == "Os01g0100100"
+    # P3: organism echo carries the resolved canonical slug, not the input alias.
+    assert result["organism"] == "oryza_sativa"
     assert result["kegg_gene_id"] == "osa:4326813"
     assert result["entrez_gene_id"] == "4326813"
     assert len(result["pathways"]) == 1
@@ -408,6 +410,8 @@ async def test_lookup_pathways_arabidopsis_bypasses_bridge(httpx_mock: HTTPXMock
     async with httpx.AsyncClient() as client:
         result = await kegg.lookup_pathways(client, "AT1G01010", organism="arabidopsis_thaliana")
     assert result["kegg_gene_id"] == "ath:AT1G01010"
+    # P3: every species-scoped wrapper echoes the resolved canonical organism.
+    assert result["organism"] == "arabidopsis_thaliana"
     assert "entrez_gene_id" not in result, (
         "Arabidopsis path must not surface entrez_gene_id — bridge did not fire"
     )
