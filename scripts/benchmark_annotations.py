@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""v1.6 benchmark — scientific validation + drift detector for plant-genomics-mcp.
+"""Benchmark — scientific validation + drift detector for plant-genomics-mcp.
 
 Drives ~12 curated canonical loci through all 9 backend modules + 5 synthesis
 pipelines, compares results to scripts/benchmark_annotations.expected.json,
@@ -1098,7 +1098,7 @@ async def _run_benchmark(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="plant-genomics-mcp v1.6 benchmark — scientific validation + drift detector"
+        description="plant-genomics-mcp benchmark — scientific validation + drift detector"
     )
     parser.add_argument(
         "--loci",

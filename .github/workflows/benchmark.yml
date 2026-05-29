@@ -23,6 +23,7 @@ permissions:
 jobs:
   benchmark:
     runs-on: ubuntu-latest
+    timeout-minutes: 30 # bound the whole run so a wedged backend can't pin the job
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python 3.12
