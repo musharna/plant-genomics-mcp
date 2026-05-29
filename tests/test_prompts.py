@@ -193,13 +193,20 @@ async def test_biological_context_marks_locus_required_and_organism_optional() -
 @pytest.mark.asyncio
 async def test_biological_context_arabidopsis_passes_canonical_to_organism_aware_tools() -> None:
     """Default arabidopsis renders the full 5-step chain with organism= on the
-    tools that take it (gramene/uniprot/string); kegg + atted are organism-fixed."""
+    tools that take it (uniprot/string; kegg + atted are organism-fixed).
+    gramene_homologs takes only locus + homology_type — the Gramene locus
+    already encodes species — so the step-1 instruction must NOT carry organism=
+    (audit I1)."""
     result = await prompts.get_prompt(prompts.BIOLOGICAL_CONTEXT, {"locus": "AT1G01010"})
     text = result.messages[0].content.text
     assert "organism='arabidopsis_thaliana'" in text
     # Full 5-step chain still present for arabidopsis.
     for tool in ("gramene_homologs", "kegg_pathways", "string_interactions", "atted_coexpression"):
         assert tool in text
+    # Regression pin (I1): the gramene step must not instruct callers to pass an
+    # organism= the tool does not accept.
+    gramene_line = next(ln for ln in text.splitlines() if "gramene_homologs" in ln)
+    assert "organism=" not in gramene_line, gramene_line
 
 
 @pytest.mark.asyncio

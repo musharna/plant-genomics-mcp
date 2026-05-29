@@ -1,6 +1,6 @@
 [project]
 name = "plant-genomics-mcp"
-version = "1.6.0"
+version = "1.7.0"
 description = "Plant genomics MCP — 32 tools across 11 live backends (Ensembl Plants, Phytozome, UniProt, Europe PMC, QuickGO, BLAST, Gramene, KEGG, STRING, ATTED-II, BAR) for Claude Code"
 readme = "README.md"
 license = { text = "MIT" }
@@ -51,6 +51,16 @@ packages = ["src/plant_genomics_mcp"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+
+[tool.coverage.report]
+# Coverage floor (audit P8). Measured TOTAL was 94% after the v1.6.0 dispatch/
+# batch/progress/consensus test backfill; 92 leaves ~2pts of slack while
+# failing the build if an untested dispatch arm or a deleted test regresses it.
+# pytest-cov honors fail_under from here, so `pytest --cov` fails below the
+# floor. The __main__/entrypoint block (server._serve/main) is the bulk of the
+# remaining gap and is intentionally not exercised in CI.
+fail_under = 92
+show_missing = true
 
 [tool.ruff]
 line-length = 100

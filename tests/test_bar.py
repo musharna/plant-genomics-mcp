@@ -110,6 +110,15 @@ async def test_gene_summary_invalid_locus() -> None:
 
 
 @pytest.mark.asyncio
+async def test_gene_summary_rejects_trailing_newline() -> None:
+    """audit P2: bar now uses the shared \\Z-anchored validator, so a trailing
+    newline (which Python's `$` accepted) is rejected before URL interpolation."""
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="invalid locus"):
+            await bar.gene_summary(client, "AT1G01010\n")
+
+
+@pytest.mark.asyncio
 async def test_gene_summary_http_400_propagates(httpx_mock: HTTPXMock) -> None:
     # Non-Arabidopsis loci 400 with wasSuccessful=false (live shape 2026-05-23
     # for LOC_Os01g01080). _get raises PlantGenomicsError on 400 before we

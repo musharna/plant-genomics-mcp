@@ -376,7 +376,12 @@ class KeggPathways(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     locus: str
+    organism: str = Field(description="Resolved canonical organism slug, e.g. arabidopsis_thaliana")
     kegg_gene_id: str = Field(description='e.g. "ath:at1g01010"')
+    entrez_gene_id: str | None = Field(
+        default=None,
+        description="Entrez Gene ID from the non-Arabidopsis KEGG↔Entrez bridge; absent for ath.",
+    )
     pathways: list[KeggPathway]
     errors: list[str] = Field(
         default_factory=list,
