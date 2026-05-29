@@ -113,19 +113,19 @@ If FAIL count > 0 at this point, decide before tagging: re-baseline + ship, or i
 
 ## Corpus shape (v1.7 baseline)
 
-16 loci. The original 9 (below) + 7 KEGG happy-path loci added in v1.7 (one pathway-annotated locus per supported organism — see the happy-path table). Coverage:
+18 loci. The original 9 (below) + 7 KEGG happy-path loci + 2 Phytozome native-ID happy-path loci, all added in v1.7 (see the happy-path tables). Coverage:
 
-| #   | Locus                       | Organism            | Coverage                                                                                                                                                                  |
-| --- | --------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | `AT1G01010`                 | Arabidopsis         | BAR (gene_summary / efp / aiv), ATTED, KEGG `ath:` (no annotation → expects NotFoundError), Europe PMC, UniProt, Ensembl                                                  |
-| 2   | `Os01g0100100`              | Rice                | Ensembl, UniProt, Europe PMC, STRING; KEGG bridge fires but 0 pathways (expects NotFoundError); Phytozome data drift (expects NotFoundError); Gramene (no assertions yet) |
-| 3   | `Zm00001eb000010`           | Maize               | Ensembl, KEGG bridge fires but 0 pathways (expects NotFoundError)                                                                                                         |
-| 4   | `GLYMA_01G001700`           | Soybean             | Ensembl, KEGG bridge fires but 0 pathways (expects NotFoundError); Phytozome data drift (expects NotFoundError)                                                           |
-| 5   | `HORVU.MOREX.r3.1HG0000090` | Barley (v1.5)       | Ensembl, KEGG bridge fires but 0 pathways (expects NotFoundError)                                                                                                         |
-| 6   | `Potri.001G006600.v4.1`     | Poplar (v1.5)       | Ensembl, KEGG bridge fires but 0 pathways (expects NotFoundError)                                                                                                         |
-| 7   | `BRADI_1g00485v3`           | Brachypodium (v1.5) | Ensembl, KEGG bridge fires but 0 pathways (expects NotFoundError)                                                                                                         |
-| 8   | `TraesCS1A02G000300`        | Wheat (falsified)   | Ensembl; KEGG raises OrganismNotSupported (matrix guard)                                                                                                                  |
-| 9   | `Solyc01g005610.3`          | Tomato (falsified)  | Ensembl, Europe PMC; KEGG raises OrganismNotSupported (matrix guard)                                                                                                      |
+| #   | Locus                       | Organism            | Coverage                                                                                                                                                                                                                                        |
+| --- | --------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `AT1G01010`                 | Arabidopsis         | BAR (gene_summary / efp / aiv), ATTED, KEGG `ath:` (no annotation → expects NotFoundError), Europe PMC, UniProt, Ensembl                                                                                                                        |
+| 2   | `Os01g0100100`              | Rice                | Ensembl, UniProt, Europe PMC, STRING; KEGG bridge fires but 0 pathways (expects NotFoundError); Phytozome namespace guard (RAP-DB id → expects NotFoundError; native `LOC_Os01g01307` happy-path added separately); Gramene (no assertions yet) |
+| 3   | `Zm00001eb000010`           | Maize               | Ensembl, KEGG bridge fires but 0 pathways (expects NotFoundError)                                                                                                                                                                               |
+| 4   | `GLYMA_01G001700`           | Soybean             | Ensembl, KEGG bridge fires but 0 pathways (expects NotFoundError); Phytozome namespace guard (`GLYMA_` id → expects NotFoundError; native `Glyma.02G140400` happy-path added separately)                                                        |
+| 5   | `HORVU.MOREX.r3.1HG0000090` | Barley (v1.5)       | Ensembl, KEGG bridge fires but 0 pathways (expects NotFoundError)                                                                                                                                                                               |
+| 6   | `Potri.001G006600.v4.1`     | Poplar (v1.5)       | Ensembl, KEGG bridge fires but 0 pathways (expects NotFoundError)                                                                                                                                                                               |
+| 7   | `BRADI_1g00485v3`           | Brachypodium (v1.5) | Ensembl, KEGG bridge fires but 0 pathways (expects NotFoundError)                                                                                                                                                                               |
+| 8   | `TraesCS1A02G000300`        | Wheat (falsified)   | Ensembl; KEGG raises OrganismNotSupported (matrix guard)                                                                                                                                                                                        |
+| 9   | `Solyc01g005610.3`          | Tomato (falsified)  | Ensembl, Europe PMC; KEGG raises OrganismNotSupported (matrix guard)                                                                                                                                                                            |
 
 ### KEGG happy-path loci (v1.7)
 
@@ -143,7 +143,18 @@ Seven loci that DO carry pathway annotations — one per supported organism — 
 
 The original 9 corpus loci still validate the KEGG bridge's _failure_ path: non-Arabidopsis chr1-first-gene loci raise NotFoundError (0 annotations; resolved Entrez ID still appears in the message), and matrix-falsified organisms raise OrganismNotSupported.
 
-**Known data drift:** Phytozome for rice / soybean returns NotFoundError for the canonical Wave A2 loci. Possibly upstream BioMart data drift. Tracked separately (v1.7+ probe candidate).
+### Phytozome happy-path loci (v1.7)
+
+The rice/soybean Phytozome NotFoundError was **diagnosed in v1.7 as an ID-namespace mismatch, not data drift.** Phytozome's `gene_name_filter` indexes each genome's NATIVE gene names, not the Ensembl-style IDs the corpus used: rice wants MSU `LOC_Os...` (not RAP-DB `Os01g...`), soybean wants `Glyma.NNg...` dot-format (not `GLYMA_` underscore). `scripts/probe_phytozome_namespace.py` swept all 12 Phytozome organisms (org-id-only BioMart query, stream-capped, round-trip-confirmed through production `phytozome.lookup_locus`) and found a working native gene for every one; the two flagged organisms' canonical IDs raise while the native IDs succeed (verdict `namespace_mismatch_confirmed`; `organism_name` echo confirms the `phytozome_int` is correct). Findings: `scripts/probe_phytozome_namespace.json`.
+
+Two happy-path loci were added (native IDs); the original `expects_exception` entries are **kept** as namespace-mismatch regression guards.
+
+| Organism | Native happy-path locus | `organism_name` echo | Canonical guard (still expects NotFoundError) |
+| -------- | ----------------------- | -------------------- | --------------------------------------------- |
+| Rice     | `LOC_Os01g01307`        | `Osativa_v7.0`       | `Os01g0100100`                                |
+| Soybean  | `Glyma.02G140400`       | `Gmax_Wm82.a2.v1`    | `GLYMA_01G001700`                             |
+
+The happy-path `organism_name` assertion uses a `startswith` prefix (`Osativa` / `Gmax`) so a Phytozome assembly-version bump (e.g. `v7.0`→`v7.1`) does not spuriously FAIL the build. Maize already worked because its native Phytozome format (`Zm00001eb...`) coincides with the Ensembl ID.
 
 ## Adding a new organism
 
@@ -161,7 +172,6 @@ Estimated effort: ~1 hour per organism.
 - Continuous monitoring (cron, GH Actions weekly).
 - MCP-server-layer dispatch testing.
 - Annotation-quality scoring.
-- Phytozome rice/soybean data drift investigation.
 - More cross-source invariants (e.g. INV-3 organism-echo agreement; the Ensembl-xref-UniProt-acc invariant is deliberately excluded as flaky).
 
-**Done in v1.7:** KEGG happy-path coverage (7 loci) · cross-source consistency invariants (`kegg_entrez_in_ensembl_xrefs`, `kegg_orgcode_matches_resolver`).
+**Done in v1.7:** KEGG happy-path coverage (7 loci) · cross-source consistency invariants (`kegg_entrez_in_ensembl_xrefs`, `kegg_orgcode_matches_resolver`) · Phytozome namespace diagnosis + 2 native-ID happy-path loci (rice/soybean drift was a namespace mismatch, not data drift).

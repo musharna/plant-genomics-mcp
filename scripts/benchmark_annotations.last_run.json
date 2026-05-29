@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-05-29T15:26:03.908902+00:00",
+  "generated_at": "2026-05-29T16:33:03.594494+00:00",
   "baseline_ref": "2026-05-26T04:03:43.977490+00:00",
   "summary": {
-    "total_assertions": 179,
-    "passed": 149,
+    "total_assertions": 192,
+    "passed": 158,
     "drifted": 0,
     "failed": 0,
     "exception_ok": 11,
     "exception_bad": 0,
     "exception_different": 0,
     "timed_out": 0,
-    "skipped": 19,
+    "skipped": 23,
     "exit_code": 0
   },
   "loci": [
@@ -329,6 +329,62 @@
       }
     },
     {
+      "locus_id": "LOC_Os01g01307",
+      "organism": "oryza_sativa",
+      "rationale": "v1.7 seed 3: Phytozome happy-path via the genome's NATIVE gene id. The Ensembl-style Os01g0100100 raises NotFoundError (kept as a namespace-mismatch guard) \u2014 not data drift. Native id + organism_name echo confirmed live via scripts/probe_phytozome_namespace.json.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "oryza_sativa",
+              "expected": "oryza_sativa",
+              "note": ""
+            },
+            "ncbi_taxid": {
+              "verdict": "PASS",
+              "actual": 39947,
+              "expected": 39947,
+              "note": ""
+            },
+            "kegg_org_code": {
+              "verdict": "PASS",
+              "actual": "osa",
+              "expected": "osa",
+              "note": ""
+            }
+          }
+        },
+        "phytozome.lookup_locus": {
+          "assertions": {
+            "gene_name": {
+              "verdict": "PASS",
+              "actual": "LOC_Os01g01307",
+              "expected": "LOC_Os01g01307",
+              "note": ""
+            },
+            "organism_name.startswith.Osativa": {
+              "verdict": "PASS",
+              "actual": true,
+              "expected": true,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
+    },
+    {
       "locus_id": "Zm00001eb000010",
       "organism": "zea_mays",
       "rationale": "Maize v1.4.0 live test locus; KEGG bridge (zma), Phytozome. MaizeGDB rotation handled by tolerance.",
@@ -498,6 +554,56 @@
               "verdict": "PASS",
               "actual": 1,
               "expected": 1,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
+    },
+    {
+      "locus_id": "Glyma.02G140400",
+      "organism": "glycine_max",
+      "rationale": "v1.7 seed 3: Phytozome happy-path via the genome's NATIVE gene id. The Ensembl-style GLYMA_01G001700 raises NotFoundError (kept as a namespace-mismatch guard) \u2014 not data drift. Native id + organism_name echo confirmed live via scripts/probe_phytozome_namespace.json.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "glycine_max",
+              "expected": "glycine_max",
+              "note": ""
+            },
+            "kegg_org_code": {
+              "verdict": "PASS",
+              "actual": "gmx",
+              "expected": "gmx",
+              "note": ""
+            }
+          }
+        },
+        "phytozome.lookup_locus": {
+          "assertions": {
+            "gene_name": {
+              "verdict": "PASS",
+              "actual": "Glyma.02G140400",
+              "expected": "Glyma.02G140400",
+              "note": ""
+            },
+            "organism_name.startswith.Gmax": {
+              "verdict": "PASS",
+              "actual": true,
+              "expected": true,
               "note": ""
             }
           }
