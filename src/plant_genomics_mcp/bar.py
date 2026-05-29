@@ -11,8 +11,8 @@ Probe writeup: ``docs/superpowers/audits/2026-05-23-bar-api-probe.md``.
 Endpoints this module wraps:
 
   GET /thalemine/gene_information/{locus} → positional JSON array:
-    [agi, full_name, tair_locus_id, display_name, symbol, synonyms,
-     computational_description, curator_summary, brief_description]
+    [agi, full_name, tair_locus_id, brief_description, symbol, synonyms,
+     computational_description, curator_summary, tair_short_description]
   GET /gaia/aliases/{locus} → {species, locus, geneid, aliases:[...]}
   GET /microarray_gene_expression/world_efp/arabidopsis/{locus} → eFP world map
   GET /interactions/get_paper_by_agi/{locus} → curated Arabidopsis GRN papers

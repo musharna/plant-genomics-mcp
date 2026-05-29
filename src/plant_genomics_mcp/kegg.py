@@ -257,6 +257,7 @@ async def lookup_pathways(
 
     result: dict[str, Any] = {
         "locus": locus,
+        "organism": organisms.resolve(organism).canonical,
         "kegg_gene_id": gene_id,
         "pathways": pathways,
         "errors": errors,
