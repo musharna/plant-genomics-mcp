@@ -103,13 +103,34 @@ Benchmark baseline (v1.X.0): 92 assertions / 81 PASS / 0 DRIFT / 0 FAIL / 11 EXC
 
 If FAIL count > 0 at this point, decide before tagging: re-baseline + ship, or investigate + delay.
 
+## Continuous monitoring (v1.7)
+
+`.github/workflows/benchmark.yml` runs the benchmark on a schedule so upstream drift is caught between releases, not just at release time.
+
+- **When:** weekly, `cron: '0 11 * * 1'` (Mon 11:00 UTC ≈ 6–7am ET) + manual `workflow_dispatch`. NOT run on push/PR — that CI (`test.yml`) is mocked and offline; this is the only live-calling workflow.
+- **Two-strikes (anti-flake):** run 1 writes `last_run.ci.json`. On a non-zero exit, `scripts/benchmark_failing_loci.py` extracts just the failing `locus_id`s (classified by `benchmark_annotations.EXIT_TRIGGERING_VERDICTS` — the same set the exit code uses) and the workflow re-runs only those (`--loci`). It pages **only if the same loci fail twice**, so a transient ATTED / Europe PMC blip self-heals on the retry. A non-zero exit with _no_ failing locus (a script-level crash) is treated as a confirmed failure — never swallowed.
+- **Surfacing:** on a confirmed failure the runner joins the tailnet (`tailscale/github-action`) and `curl`s an ntfy push (priority high) with the failing loci + run URL; GitHub's red ✗ and scheduled-failure email fire too. Every run uploads `last_run.ci.json` (+ `rerun.ci.json` if a retry happened) as the `benchmark-sidecars` artifact for diffing.
+- **Triage:** a page means run the FAIL/DRIFT triage tables above. Download the artifact to see which assertion moved.
+
+**Operator setup — three repo secrets** (the workflow references them; they are not in the repo):
+
+```bash
+gh secret set BENCHMARK_NTFY_URL   # full topic URL, e.g. http://100.113.204.41:8090/plant-genomics-bench
+gh secret set TS_OAUTH_CLIENT_ID   # Tailscale OAuth client id, tagged tag:ci
+gh secret set TS_OAUTH_SECRET      # Tailscale OAuth client secret
+```
+
+The Tailscale OAuth client needs the `tag:ci` ACL tag so the ephemeral runner node is authorized. After merge, trigger one manual run (`gh workflow run benchmark.yml` or the Actions tab) to validate end-to-end — the schedule alone won't fire until its next slot.
+
 ## Files
 
-| Path                                          | Purpose                                                                   |
-| --------------------------------------------- | ------------------------------------------------------------------------- |
-| `scripts/benchmark_annotations.py`            | Driver                                                                    |
-| `scripts/benchmark_annotations.expected.json` | Frozen baseline (committed, hand-curated stable + auto-captured variable) |
-| `scripts/benchmark_annotations.last_run.json` | Most-recent output (committed for diff visibility)                        |
+| Path                                          | Purpose                                                                        |
+| --------------------------------------------- | ------------------------------------------------------------------------------ |
+| `scripts/benchmark_annotations.py`            | Driver                                                                         |
+| `scripts/benchmark_annotations.expected.json` | Frozen baseline (committed, hand-curated stable + auto-captured variable)      |
+| `scripts/benchmark_annotations.last_run.json` | Most-recent output (committed for diff visibility)                             |
+| `scripts/benchmark_failing_loci.py`           | Classifier: failing `locus_id`s from a sidecar (monitoring two-strikes re-run) |
+| `.github/workflows/benchmark.yml`             | Weekly + manual scheduled monitor (see Continuous monitoring)                  |
 
 ## Corpus shape (v1.7 baseline)
 
@@ -169,9 +190,8 @@ Estimated effort: ~1 hour per organism.
 
 ## Out of scope (v1.7+ candidates)
 
-- Continuous monitoring (cron, GH Actions weekly).
 - MCP-server-layer dispatch testing.
 - Annotation-quality scoring.
 - More cross-source invariants (e.g. INV-3 organism-echo agreement; the Ensembl-xref-UniProt-acc invariant is deliberately excluded as flaky).
 
-**Done in v1.7:** KEGG happy-path coverage (7 loci) · cross-source consistency invariants (`kegg_entrez_in_ensembl_xrefs`, `kegg_orgcode_matches_resolver`) · Phytozome namespace diagnosis + 2 native-ID happy-path loci (rice/soybean drift was a namespace mismatch, not data drift).
+**Done in v1.7:** KEGG happy-path coverage (7 loci) · cross-source consistency invariants (`kegg_entrez_in_ensembl_xrefs`, `kegg_orgcode_matches_resolver`) · Phytozome namespace diagnosis + 2 native-ID happy-path loci (rice/soybean drift was a namespace mismatch, not data drift) · continuous monitoring (weekly scheduled GH Actions workflow, two-strikes ntfy paging).

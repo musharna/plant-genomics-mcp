@@ -102,6 +102,15 @@ class Verdict(str, Enum):
     SKIPPED = "SKIPPED"
 
 
+# The verdicts that drive a non-zero process exit. ``BenchmarkSummary.exit_code``
+# mirrors this set via its per-verdict counters; keep the two in sync. Consumed
+# by ``scripts/benchmark_failing_loci.py`` so the monitoring re-run classifies a
+# "failing" locus exactly as the exit code does.
+EXIT_TRIGGERING_VERDICTS: frozenset[Verdict] = frozenset(
+    {Verdict.FAIL, Verdict.EXCEPTION_BAD, Verdict.EXCEPTION_DIFFERENT, Verdict.TIMEOUT}
+)
+
+
 @dataclass
 class AssertionResult:
     """Outcome of one (locus, tool, key) assertion."""

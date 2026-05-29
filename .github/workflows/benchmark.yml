@@ -1,0 +1,106 @@
+name: benchmark
+
+# Scheduled scientific-validation / drift monitor for the live backends.
+# Runs scripts/benchmark_annotations.py weekly against the ~11 upstream APIs.
+# Two-strikes: on a non-zero run we re-run ONLY the failing loci and page
+# (ntfy + red x) only if the same loci fail twice — so transient network blips
+# (Europe PMC / ATTED) don't wake anyone. NOT run on push/PR (that CI is
+# mocked + offline); schedule + manual only.
+#
+# Operator secrets (set via `gh secret set <NAME>`):
+#   BENCHMARK_NTFY_URL  full topic URL, e.g. http://100.113.204.41:8090/plant-genomics-bench
+#   TS_OAUTH_CLIENT_ID  Tailscale OAuth client id (tagged tag:ci) — runner joins the tailnet to reach the homelab ntfy
+#   TS_OAUTH_SECRET     Tailscale OAuth client secret
+
+on:
+  schedule:
+    - cron: "0 11 * * 1" # Mon 11:00 UTC (~6-7am ET)
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e '.[dev]'
+
+      - name: Run benchmark (strike 1)
+        id: run1
+        run: |
+          set +e
+          python scripts/benchmark_annotations.py --output-json last_run.ci.json
+          code=$?
+          set -e
+          echo "exit=$code" >> "$GITHUB_OUTPUT"
+
+      - name: Re-run failing loci (strike 2)
+        id: run2
+        if: steps.run1.outputs.exit != '0'
+        run: |
+          set +e
+          FAILED=$(python scripts/benchmark_failing_loci.py last_run.ci.json)
+          echo "failed_loci=$FAILED" >> "$GITHUB_OUTPUT"
+          if [ -z "$FAILED" ]; then
+            # Non-zero exit but no per-locus failing verdict => script-level
+            # problem, not a flaky locus. Don't swallow it — treat as confirmed.
+            echo "exit=1" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          python scripts/benchmark_annotations.py --loci "$FAILED" --output-json rerun.ci.json
+          code=$?
+          set -e
+          echo "exit=$code" >> "$GITHUB_OUTPUT"
+
+      - name: Determine confirmed failure
+        id: verdict
+        run: |
+          R1='${{ steps.run1.outputs.exit }}'
+          R2='${{ steps.run2.outputs.exit }}'
+          if [ "$R1" != '0' ] && [ "$R2" != '0' ]; then
+            echo "confirmed=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "confirmed=0" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Join tailnet (reach homelab ntfy)
+        if: steps.verdict.outputs.confirmed == '1'
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
+      - name: Page ntfy
+        if: steps.verdict.outputs.confirmed == '1'
+        run: |
+          FAILED='${{ steps.run2.outputs.failed_loci }}'
+          curl -fsS --max-time 20 \
+            -H 'Title: plant-genomics benchmark FAIL' \
+            -H 'Priority: high' \
+            -H 'Tags: warning,dna' \
+            -d "Benchmark confirmed FAIL (2 strikes). Failing loci: ${FAILED:-<script-level>}. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            "${{ secrets.BENCHMARK_NTFY_URL }}"
+
+      - name: Upload sidecars
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-sidecars
+          path: |
+            last_run.ci.json
+            rerun.ci.json
+          if-no-files-found: warn
+
+      - name: Fail job on confirmed failure
+        if: steps.verdict.outputs.confirmed == '1'
+        run: exit 1
