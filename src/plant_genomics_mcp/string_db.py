@@ -23,7 +23,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import _http, cache, organisms
+from plant_genomics_mcp import _http, cache, organisms, validators
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
@@ -100,6 +100,12 @@ async def lookup_partners(
     the bare accession as ``accession`` on the result. ``organism`` accepts
     any form the resolver supports (slug, scientific/common name, taxid).
     """
+    # Validate before the value reaches cache.make_key / the wire — STRING is
+    # the lone locus-accepting backend that previously skipped this, so a
+    # caller identifier containing cache-key separators ('&', '=', '|') could
+    # slip through (audit P6). UniProt accessions and loci both match the
+    # [A-Za-z0-9._-] class, so this rejects only genuinely malformed input.
+    validators.assert_valid_locus(locus_or_accession, backend="STRING")
     limit = max(1, min(limit, MAX_LIMIT))
     record = organisms.resolve(organism)
     taxid = organisms.string_taxid_for(organism)

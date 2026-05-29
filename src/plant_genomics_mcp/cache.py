@@ -27,6 +27,7 @@ backing store. Restart the MCP server to drop all entries.
 
 from __future__ import annotations
 
+import copy
 import json
 import os
 import time
@@ -97,14 +98,23 @@ class TTLCache:
             return None
         self._store.move_to_end(key)
         self.hits += 1
-        return entry.value
+        # Return an isolated copy so a consumer that mutates the result (or
+        # aliases it into tool output) can never corrupt the shared cache entry
+        # for the next concurrent reader. Paired with the copy-on-store in
+        # ``set`` below, this makes the read-only-cached-value contract uniform
+        # across all backends (audit P5) instead of relying on each ``_get``
+        # helper to copy defensively.
+        return copy.deepcopy(entry.value)
 
     def set(self, key: str, value: Any, ttl: float | None = None) -> None:
         """Store ``value`` under ``key`` with the given TTL (default = ctor TTL)."""
         if _disabled():
             return
         ttl_s = self._ttl if ttl is None else ttl
-        self._store[key] = _Entry(value=value, expires_at=time.monotonic() + ttl_s)
+        # Store an isolated copy so the caller mutating the object it just
+        # cached (e.g. the miss-path ``result`` it also returns) can't reach
+        # back into the cache. See the copy-on-read note in ``get``.
+        self._store[key] = _Entry(value=copy.deepcopy(value), expires_at=time.monotonic() + ttl_s)
         self._store.move_to_end(key)
         while len(self._store) > self._max:
             # LRU eviction — drop oldest.
@@ -136,8 +146,13 @@ def make_key(
     """
     parts: list[str] = [method, base_url, path]
     if params:
+        # JSON-serialize the sorted (k, v) pairs rather than hand-joining with
+        # literal '&'/'=' — a param value containing those separators (e.g. an
+        # unvalidated STRING identifier) would otherwise be able to collide with
+        # a different param set (audit P6). json.dumps quotes/escapes each token,
+        # so the encoding is unambiguous. Stays order-invariant via the sort.
         items = sorted((str(k), str(v)) for k, v in params.items())
-        parts.append("&".join(f"{k}={v}" for k, v in items))
+        parts.append(json.dumps(items))
     if body is not None:
         parts.append(json.dumps(body, sort_keys=True))
     return "|".join(parts)

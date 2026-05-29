@@ -86,8 +86,14 @@ async def lookup_locus(
     slug = organisms.ensembl_slug_for(organism)
     params: dict[str, Any] = {"species": slug, "expand": 0}
     raw = await _get(client, f"/lookup/id/{locus}", params=params)
+    # Build a fresh dict rather than mutating ``raw`` in place: the cache now
+    # hands back an isolated copy (cache.get), but constructing a new object
+    # keeps the no-shared-mutation intent local and survives any future cache
+    # change (audit P5).
     if isinstance(raw, dict) and "species" in raw:
-        raw["organism"] = raw.pop("species")
+        out = {**raw}
+        out["organism"] = out.pop("species")
+        return out
     return raw
 
 

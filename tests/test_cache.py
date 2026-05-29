@@ -116,6 +116,34 @@ def test_make_key_distinguishes_method_and_body() -> None:
     assert k_b1 == k_b2
 
 
+def test_make_key_param_value_with_separators_no_collision() -> None:
+    """audit P6: a param value containing the old hand-join separators must not
+    alias a different param set. ``{"x": "1&y=2"}`` and ``{"x": "1", "y": "2"}``
+    both serialized to ``x=1&y=2`` under the previous '&'/'=' join."""
+    k_one = cache.make_key("GET", "https://x", "/p", params={"x": "1&y=2"})
+    k_two = cache.make_key("GET", "https://x", "/p", params={"x": "1", "y": "2"})
+    assert k_one != k_two
+
+
+def test_get_returns_isolated_copy_not_shared_reference() -> None:
+    """audit P5: mutating a value returned by get (or the value passed to set)
+    must not corrupt the cached entry for the next reader."""
+    c = cache.TTLCache()
+    original = {"nested": {"k": "v"}, "items": [1, 2]}
+    c.set("key", original)
+
+    # Mutating the object we handed to set must not reach into the cache.
+    original["nested"]["k"] = "MUTATED"
+    original["items"].append(99)
+    assert c.get("key") == {"nested": {"k": "v"}, "items": [1, 2]}
+
+    # Mutating a returned value must not affect a subsequent get.
+    first = c.get("key")
+    first["nested"]["k"] = "ALSO_MUTATED"
+    first["items"].append(7)
+    assert c.get("key") == {"nested": {"k": "v"}, "items": [1, 2]}
+
+
 # ---------- backend integration: cache actually short-circuits HTTP ----------
 
 
