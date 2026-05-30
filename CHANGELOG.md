@@ -1,5 +1,28 @@
 # Changelog
 
+## v1.8.0 — 2026-05-29
+
+Hardens the scientific-validation benchmark (shipped in v1.6.0) into a continuously-monitored drift detector, and resolves the long-standing Phytozome rice/soybean "data drift" caveat. **No runtime change to the MCP server** — no new tools, output fields, schemas, or dependencies; the published package behaves identically. Everything added is developer/operator tooling, CI, tests, docs, and the benchmark corpus. Minor (not patch) because it lands a substantial new validation + monitoring capability and a 3×-expanded corpus, consistent with versioning repo milestones in this changelog. These are the four v1.7+ benchmark seeds carried from `workflow_audit_2026-05-29` / the v1.7.0 deploy memo, plus two roll-ins. Detail: project memory `v1_7_seeds_2026-05-29.md`.
+
+**Added**
+
+- **KEGG happy-path benchmark coverage (seed 1)** — `scripts/probe_kegg_happy_path.py` discovers one pathway-annotated locus per KEGG organism (chr1-window scan → bridge → confirm through production `kegg.lookup_pathways`); 7 happy-path loci added to the corpus (Arabidopsis + the 6 bridge organisms), asserting the KEGG _success_ path that the original corpus — all `expects_exception` for non-Arabidopsis — never exercised.
+- **Cross-source consistency invariants (seed 2)** — a new assertion class in `scripts/benchmark_annotations.py` (`INVARIANTS` registry) checking agreement _across_ backends for one locus: `kegg_entrez_in_ensembl_xrefs` (the Entrez id KEGG's bridge resolved to must be one Ensembl `/xrefs` attests — guards the v1.4 bridge against phantom resolutions) and `kegg_orgcode_matches_resolver` (KEGG gene-id org-code prefix == resolver `kegg_org_code`). Rendered in a CROSS-SOURCE INVARIANTS report block + per-locus sidecar key; verdicts fold into the exit code.
+- **Phytozome happy-path coverage for all 12 organisms (seed 3 + roll-in)** — the rice/soybean Phytozome `NotFoundError` was diagnosed (via the new `scripts/probe_phytozome_namespace.py`, sweeping all 12 proteomes) as an **ID-namespace mismatch, not data drift**: Phytozome's `gene_name_filter` indexes each genome's native ids (rice MSU `LOC_Os…`, soybean `Glyma.…`), not the Ensembl-style ids the corpus used. Native ids round-trip-confirmed live and rolled into the corpus as happy-path loci for every supported organism (was rice/maize/soybean only; wheat + tomato gain their first happy-path assertions). The `organism_name` echo is asserted via a `startswith` prefix so a Phytozome assembly-version bump doesn't FAIL.
+- **Scheduled drift monitoring (seed 4)** — `.github/workflows/benchmark.yml` runs the benchmark weekly (Mon ~6–7am ET) + on manual dispatch. Two-strikes anti-flake: on a non-zero run it re-runs only the failing loci (via the new `scripts/benchmark_failing_loci.py` classifier) and pages an ntfy push (over a Tailscale-join step) + red ✗ only if the same loci fail twice. Every run uploads the sidecar(s) as an artifact. Not run on push/PR — that CI stays mocked/offline.
+- **Offline corpus-integrity test** — `tests/test_benchmark_corpus.py` validates the committed `expected.json` (27 loci) against the live `_TOOLS` registry + organism resolver + fact-shape schema in normal PR CI, so a malformed corpus edit fails the PR instead of only the weekly live run. Plus unit tests for the invariants, the failing-loci classifier, and the Phytozome TSV parser (+31 tests; suite 432 → 463).
+
+**Changed**
+
+- **Benchmark corpus grew 9 → 27 loci** — original 9 + 7 KEGG happy-path + 11 Phytozome native-id happy-path (one per organism). Latest full sweep: 250 assertions, 0 DRIFT / 0 FAIL / 11 EXCEPTION_OK, exit 0. The originally-flagged rice/soybean Phytozome `expects_exception` entries are **kept** as namespace-mismatch regression guards.
+- **`README.md`** — tool-matrix row 9 (`kegg_pathways`) corrected from 4 to the actual 7 KEGG-supported organisms (adds barley/poplar/brachypodium, the v1.5 bridge extension); new "Scientific validation / drift detection" note in the Development section pointing to the benchmark, the monitoring workflow, and `docs/benchmarking.md`.
+- **`docs/benchmarking.md`** extended with Cross-source invariants, KEGG/Phytozome happy-path, and Continuous-monitoring sections (incl. the three operator secrets the workflow needs).
+
+**Operational**
+
+- **New operator setup for monitoring to page:** add repo secrets `BENCHMARK_NTFY_URL`, `TS_OAUTH_CLIENT_ID`, `TS_OAUTH_SECRET` (OAuth client tagged `tag:ci`), then trigger one manual `gh workflow run benchmark.yml` to validate end-to-end — PR CI cannot exercise it (live calls + secrets) and the cron won't fire until its next slot.
+- No new MCP tools/resources/prompts, no new dependencies, no HTTP-transport/auth/registry change.
+
 ## v1.7.0 — 2026-05-29
 
 Remediates all 13 findings from the first multi-agent `/workflows` code audit of v1.6.0 (0 blockers / 4 important / 9 polish, each adversarially verified against live source). No release-blocker was found; this release closes contract inconsistencies, backfills the dispatch/batch/progress/consensus test gaps that let the v0.9 wrong-arg-key class ship undetected, and makes the cache + locus-validation contracts uniform across all backends. Happy-path behavior is unchanged. Minor (not patch) for the new `KeggPathways.organism` output field + the surface-wide input-validation tightening; not major (nothing removed; only undocumented extra args are now rejected). Audit + per-finding rationale: project memory `workflow_audit_2026-05-29.md`.
