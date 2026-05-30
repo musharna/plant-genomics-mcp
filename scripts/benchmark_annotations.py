@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""v1.6 benchmark — scientific validation + drift detector for plant-genomics-mcp.
+"""Benchmark — scientific validation + drift detector for plant-genomics-mcp.
 
 Drives ~12 curated canonical loci through all 9 backend modules + 5 synthesis
 pipelines, compares results to scripts/benchmark_annotations.expected.json,
@@ -40,7 +40,7 @@ import signal
 import sys
 import time
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Any
@@ -100,6 +100,15 @@ class Verdict(str, Enum):
     EXCEPTION_DIFFERENT = "EXCEPTION_DIFFERENT"
     TIMEOUT = "TIMEOUT"
     SKIPPED = "SKIPPED"
+
+
+# The verdicts that drive a non-zero process exit. ``BenchmarkSummary.exit_code``
+# mirrors this set via its per-verdict counters; keep the two in sync. Consumed
+# by ``scripts/benchmark_failing_loci.py`` so the monitoring re-run classifies a
+# "failing" locus exactly as the exit code does.
+EXIT_TRIGGERING_VERDICTS: frozenset[Verdict] = frozenset(
+    {Verdict.FAIL, Verdict.EXCEPTION_BAD, Verdict.EXCEPTION_DIFFERENT, Verdict.TIMEOUT}
+)
 
 
 @dataclass
@@ -405,6 +414,94 @@ def _apply_assertion(
     )
 
 
+# ---- cross-source consistency invariants (v1.7 seed 2) ---------------------
+# Assertions that check agreement ACROSS backends for one locus, beyond the
+# per-tool stable/variable facts. Reuse-only: they read the tool responses the
+# benchmark already collected in this run (no new fetching). Each invariant
+# gates itself via applies(); a non-applicable invariant is SKIPPED, not FAIL.
+# Design: docs/superpowers/specs/2026-05-29-cross-source-invariants-design.md
+
+
+@dataclass(frozen=True)
+class Invariant:
+    name: str
+    applies: Callable[[dict[str, Any], dict[str, Any]], bool]
+    check: Callable[[dict[str, Any]], tuple[bool, str]]
+
+
+def _inv_kegg_entrez_in_ensembl_xrefs_applies(
+    record: dict[str, Any], responses: dict[str, Any]
+) -> bool:
+    # Bridge organisms only — Arabidopsis uses the native ath: path (no Entrez).
+    if record.get("organism") == "arabidopsis_thaliana":
+        return False
+    kegg = responses.get("kegg.lookup_pathways")
+    xrefs = responses.get("ensembl_plants.lookup_xrefs")
+    return bool(kegg) and kegg.get("entrez_gene_id") is not None and bool(xrefs)
+
+
+def _inv_kegg_entrez_in_ensembl_xrefs_check(responses: dict[str, Any]) -> tuple[bool, str]:
+    entrez = str(responses["kegg.lookup_pathways"]["entrez_gene_id"])
+    attested = [
+        str(x)
+        for x in responses["ensembl_plants.lookup_xrefs"].get("by_db", {}).get("EntrezGene", [])
+    ]
+    ok = entrez in attested
+    rel = "in" if ok else "NOT in"
+    return ok, f"KEGG bridge Entrez {entrez!r} {rel} Ensembl /xrefs EntrezGene {attested!r}"
+
+
+def _inv_kegg_orgcode_matches_resolver_applies(
+    record: dict[str, Any], responses: dict[str, Any]
+) -> bool:
+    return "kegg.lookup_pathways" in responses and "organisms.resolve" in responses
+
+
+def _inv_kegg_orgcode_matches_resolver_check(responses: dict[str, Any]) -> tuple[bool, str]:
+    prefix = str(responses["kegg.lookup_pathways"].get("kegg_gene_id", "")).split(":", 1)[0]
+    code = responses["organisms.resolve"].get("kegg_org_code")
+    ok = prefix == code
+    rel = "==" if ok else "!="
+    return ok, f"kegg_gene_id org-code prefix {prefix!r} {rel} resolver kegg_org_code {code!r}"
+
+
+INVARIANTS: list[Invariant] = [
+    Invariant(
+        "kegg_entrez_in_ensembl_xrefs",
+        _inv_kegg_entrez_in_ensembl_xrefs_applies,
+        _inv_kegg_entrez_in_ensembl_xrefs_check,
+    ),
+    Invariant(
+        "kegg_orgcode_matches_resolver",
+        _inv_kegg_orgcode_matches_resolver_applies,
+        _inv_kegg_orgcode_matches_resolver_check,
+    ),
+]
+
+
+def _check_invariants(
+    locus_record: dict[str, Any], responses: dict[str, Any]
+) -> dict[str, AssertionResult]:
+    """Run every cross-source invariant over one locus's collected responses.
+
+    SKIPPED when an invariant doesn't apply (missing/exception tool, or organism
+    out of scope); PASS/FAIL otherwise. ``responses`` is {tool_name: response}
+    for the tools that returned successfully for this locus.
+    """
+    out: dict[str, AssertionResult] = {}
+    for inv in INVARIANTS:
+        if not inv.applies(locus_record, responses):
+            out[inv.name] = AssertionResult(
+                Verdict.SKIPPED, None, None, note="not applicable for this locus"
+            )
+            continue
+        ok, detail = inv.check(responses)
+        out[inv.name] = AssertionResult(
+            Verdict.PASS if ok else Verdict.FAIL, detail, None, note=detail
+        )
+    return out
+
+
 @dataclass
 class LocusResult:
     """Aggregated results for one locus across all probed tools."""
@@ -414,6 +511,9 @@ class LocusResult:
     rationale: str
     tools: dict[str, dict[str, AssertionResult]]  # tool_name → {dotted_key → AssertionResult}
     probe_exceptions: dict[str, ToolProbe]  # tool_name → ToolProbe (for tools that raised)
+    invariants: dict[str, AssertionResult] = field(
+        default_factory=dict
+    )  # cross-source invariant name → result
 
 
 @dataclass
@@ -569,6 +669,25 @@ def _render_markdown(
         lines.append(f"  - {summary.skipped:3d} SKIPPED")
     lines.append("")
 
+    # Cross-source invariants (v1.7 seed 2). Show every applied (PASS/FAIL)
+    # invariant; SKIPPED (not-applicable) ones are counted but not listed.
+    applied = [
+        (r.locus_id, name, ar)
+        for r in results
+        for name, ar in r.invariants.items()
+        if ar.verdict != Verdict.SKIPPED
+    ]
+    n_skipped_inv = sum(
+        1 for r in results for ar in r.invariants.values() if ar.verdict == Verdict.SKIPPED
+    )
+    if applied or n_skipped_inv:
+        lines.append(
+            f"CROSS-SOURCE INVARIANTS ({len(applied)} checked, {n_skipped_inv} skipped as N/A):"
+        )
+        for locus_id, name, ar in sorted(applied):
+            lines.append(f"  {_VERDICT_GLYPH[ar.verdict]} {locus_id}  {name}: {ar.note}")
+        lines.append("")
+
     # Worst offenders (DRIFT)
     drift_offenders = []
     fail_offenders = []
@@ -644,6 +763,10 @@ def _write_sidecar(
                         "elapsed_s": probe.elapsed_s,
                     }
                     for tool_name, probe in r.probe_exceptions.items()
+                },
+                "invariants": {
+                    name: {"verdict": ar.verdict.value, "detail": ar.note}
+                    for name, ar in r.invariants.items()
                 },
             }
             for r in results
@@ -784,6 +907,9 @@ async def _process_locus(
         tools={},
         probe_exceptions={},
     )
+    # Successful tool responses, collected for the cross-source invariant
+    # post-pass (reuse-only — no extra fetching). {tool_name: raw response}.
+    responses: dict[str, Any] = {}
 
     for tool_name, tool_assertions in tools_spec.items():
         # Tool filtering by backend module name
@@ -856,6 +982,10 @@ async def _process_locus(
             summary.increment(Verdict.EXCEPTION_BAD)
             continue
 
+        # Tool returned successfully — retain its response for the cross-source
+        # invariant post-pass below.
+        responses[tool_name] = probe.response
+
         # Apply each assertion
         tool_result: dict[str, AssertionResult] = {}
         for facts_kind, is_var in [("stable_facts", False), ("variable_facts", True)]:
@@ -902,6 +1032,11 @@ async def _process_locus(
                 tool_result[dotted_path] = ar
                 summary.increment(ar.verdict)
         result.tools[tool_name] = tool_result
+
+    # Cross-source invariant post-pass over the responses collected above.
+    result.invariants = _check_invariants(locus_record, responses)
+    for ar in result.invariants.values():
+        summary.increment(ar.verdict)
 
     return result
 
@@ -963,7 +1098,7 @@ async def _run_benchmark(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="plant-genomics-mcp v1.6 benchmark — scientific validation + drift detector"
+        description="plant-genomics-mcp benchmark — scientific validation + drift detector"
     )
     parser.add_argument(
         "--loci",

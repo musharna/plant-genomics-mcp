@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-05-26T04:09:29.893953+00:00",
+  "generated_at": "2026-05-29T17:00:20.615976+00:00",
   "baseline_ref": "2026-05-26T04:03:43.977490+00:00",
   "summary": {
-    "total_assertions": 92,
-    "passed": 81,
+    "total_assertions": 250,
+    "passed": 198,
     "drifted": 0,
     "failed": 0,
     "exception_ok": 11,
     "exception_bad": 0,
     "exception_different": 0,
     "timed_out": 0,
-    "skipped": 0,
+    "skipped": 41,
     "exit_code": 0
   },
   "loci": [
@@ -189,7 +189,17 @@
           }
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
     },
     {
       "locus_id": "Os01g0100100",
@@ -306,7 +316,73 @@
           }
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
+    },
+    {
+      "locus_id": "LOC_Os01g01307",
+      "organism": "oryza_sativa",
+      "rationale": "v1.7 seed 3: Phytozome happy-path via the genome's NATIVE gene id. The Ensembl-style Os01g0100100 raises NotFoundError (kept as a namespace-mismatch guard) \u2014 not data drift. Native id + organism_name echo confirmed live via scripts/probe_phytozome_namespace.json.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "oryza_sativa",
+              "expected": "oryza_sativa",
+              "note": ""
+            },
+            "ncbi_taxid": {
+              "verdict": "PASS",
+              "actual": 39947,
+              "expected": 39947,
+              "note": ""
+            },
+            "kegg_org_code": {
+              "verdict": "PASS",
+              "actual": "osa",
+              "expected": "osa",
+              "note": ""
+            }
+          }
+        },
+        "phytozome.lookup_locus": {
+          "assertions": {
+            "gene_name": {
+              "verdict": "PASS",
+              "actual": "LOC_Os01g01307",
+              "expected": "LOC_Os01g01307",
+              "note": ""
+            },
+            "organism_name.startswith.Osativa": {
+              "verdict": "PASS",
+              "actual": true,
+              "expected": true,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
     },
     {
       "locus_id": "Zm00001eb000010",
@@ -383,7 +459,17 @@
           "assertions": {}
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
     },
     {
       "locus_id": "GLYMA_01G001700",
@@ -473,7 +559,67 @@
           }
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
+    },
+    {
+      "locus_id": "Glyma.02G140400",
+      "organism": "glycine_max",
+      "rationale": "v1.7 seed 3: Phytozome happy-path via the genome's NATIVE gene id. The Ensembl-style GLYMA_01G001700 raises NotFoundError (kept as a namespace-mismatch guard) \u2014 not data drift. Native id + organism_name echo confirmed live via scripts/probe_phytozome_namespace.json.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "glycine_max",
+              "expected": "glycine_max",
+              "note": ""
+            },
+            "kegg_org_code": {
+              "verdict": "PASS",
+              "actual": "gmx",
+              "expected": "gmx",
+              "note": ""
+            }
+          }
+        },
+        "phytozome.lookup_locus": {
+          "assertions": {
+            "gene_name": {
+              "verdict": "PASS",
+              "actual": "Glyma.02G140400",
+              "expected": "Glyma.02G140400",
+              "note": ""
+            },
+            "organism_name.startswith.Gmax": {
+              "verdict": "PASS",
+              "actual": true,
+              "expected": true,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
     },
     {
       "locus_id": "HORVU.MOREX.r3.1HG0000090",
@@ -541,7 +687,17 @@
           }
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
     },
     {
       "locus_id": "Potri.001G006600.v4.1",
@@ -609,7 +765,17 @@
           }
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
     },
     {
       "locus_id": "BRADI_1g00485v3",
@@ -677,7 +843,17 @@
           }
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
     },
     {
       "locus_id": "TraesCS1A02G000300",
@@ -739,7 +915,17 @@
           }
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
     },
     {
       "locus_id": "Solyc01g005610.3",
@@ -799,7 +985,1027 @@
           }
         }
       },
-      "probe_exceptions": {}
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
+    },
+    {
+      "locus_id": "AT1G01050",
+      "organism": "arabidopsis_thaliana",
+      "rationale": "KEGG happy-path coverage (v1.7) \u2014 ath:AT1G01050 carries 1 KEGG pathway membership(s); validates the bridge SUCCESS path (vs the chr1-first-gene 0-pathway expects_exception entry for this organism). Discovered via scripts/probe_kegg_happy_path.py.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "arabidopsis_thaliana",
+              "expected": "arabidopsis_thaliana",
+              "note": ""
+            },
+            "ncbi_taxid": {
+              "verdict": "PASS",
+              "actual": 3702,
+              "expected": 3702,
+              "note": ""
+            },
+            "kegg_org_code": {
+              "verdict": "PASS",
+              "actual": "ath",
+              "expected": "ath",
+              "note": ""
+            },
+            "ensembl_slug": {
+              "verdict": "PASS",
+              "actual": "arabidopsis_thaliana",
+              "expected": "arabidopsis_thaliana",
+              "note": ""
+            }
+          }
+        },
+        "kegg.lookup_pathways": {
+          "assertions": {
+            "kegg_gene_id": {
+              "verdict": "PASS",
+              "actual": "ath:AT1G01050",
+              "expected": "ath:AT1G01050",
+              "note": ""
+            },
+            "organism": {
+              "verdict": "PASS",
+              "actual": "arabidopsis_thaliana",
+              "expected": "arabidopsis_thaliana",
+              "note": ""
+            },
+            "pathways.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "PASS",
+          "detail": "kegg_gene_id org-code prefix 'ath' == resolver kegg_org_code 'ath'"
+        }
+      }
+    },
+    {
+      "locus_id": "Os01g0100700",
+      "organism": "oryza_sativa",
+      "rationale": "KEGG happy-path coverage (v1.7) \u2014 osa:4326457 carries 1 KEGG pathway membership(s); validates the bridge SUCCESS path (vs the chr1-first-gene 0-pathway expects_exception entry for this organism). Discovered via scripts/probe_kegg_happy_path.py.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "oryza_sativa",
+              "expected": "oryza_sativa",
+              "note": ""
+            },
+            "ncbi_taxid": {
+              "verdict": "PASS",
+              "actual": 39947,
+              "expected": 39947,
+              "note": ""
+            },
+            "kegg_org_code": {
+              "verdict": "PASS",
+              "actual": "osa",
+              "expected": "osa",
+              "note": ""
+            },
+            "ensembl_slug": {
+              "verdict": "PASS",
+              "actual": "oryza_sativa",
+              "expected": "oryza_sativa",
+              "note": ""
+            }
+          }
+        },
+        "kegg.lookup_pathways": {
+          "assertions": {
+            "kegg_gene_id": {
+              "verdict": "PASS",
+              "actual": "osa:4326457",
+              "expected": "osa:4326457",
+              "note": ""
+            },
+            "organism": {
+              "verdict": "PASS",
+              "actual": "oryza_sativa",
+              "expected": "oryza_sativa",
+              "note": ""
+            },
+            "pathways.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "assertions": {
+            "by_db.EntrezGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "PASS",
+          "detail": "KEGG bridge Entrez '4326457' in Ensembl /xrefs EntrezGene ['4326457']"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "PASS",
+          "detail": "kegg_gene_id org-code prefix 'osa' == resolver kegg_org_code 'osa'"
+        }
+      }
+    },
+    {
+      "locus_id": "Zm00001eb000210",
+      "organism": "zea_mays",
+      "rationale": "KEGG happy-path coverage (v1.7) \u2014 zma:100383860 carries 3 KEGG pathway membership(s); validates the bridge SUCCESS path (vs the chr1-first-gene 0-pathway expects_exception entry for this organism). Discovered via scripts/probe_kegg_happy_path.py.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "zea_mays",
+              "expected": "zea_mays",
+              "note": ""
+            },
+            "ncbi_taxid": {
+              "verdict": "PASS",
+              "actual": 4577,
+              "expected": 4577,
+              "note": ""
+            },
+            "kegg_org_code": {
+              "verdict": "PASS",
+              "actual": "zma",
+              "expected": "zma",
+              "note": ""
+            },
+            "ensembl_slug": {
+              "verdict": "PASS",
+              "actual": "zea_mays",
+              "expected": "zea_mays",
+              "note": ""
+            }
+          }
+        },
+        "kegg.lookup_pathways": {
+          "assertions": {
+            "kegg_gene_id": {
+              "verdict": "PASS",
+              "actual": "zma:100383860",
+              "expected": "zma:100383860",
+              "note": ""
+            },
+            "organism": {
+              "verdict": "PASS",
+              "actual": "zea_mays",
+              "expected": "zea_mays",
+              "note": ""
+            },
+            "pathways.len": {
+              "verdict": "PASS",
+              "actual": 3,
+              "expected": 3,
+              "note": ""
+            }
+          }
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "assertions": {
+            "by_db.EntrezGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "PASS",
+          "detail": "KEGG bridge Entrez '100383860' in Ensembl /xrefs EntrezGene ['100383860']"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "PASS",
+          "detail": "kegg_gene_id org-code prefix 'zma' == resolver kegg_org_code 'zma'"
+        }
+      }
+    },
+    {
+      "locus_id": "GLYMA_01G001300",
+      "organism": "glycine_max",
+      "rationale": "KEGG happy-path coverage (v1.7) \u2014 gmx:548054 carries 3 KEGG pathway membership(s); validates the bridge SUCCESS path (vs the chr1-first-gene 0-pathway expects_exception entry for this organism). Discovered via scripts/probe_kegg_happy_path.py.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "glycine_max",
+              "expected": "glycine_max",
+              "note": ""
+            },
+            "ncbi_taxid": {
+              "verdict": "PASS",
+              "actual": 3847,
+              "expected": 3847,
+              "note": ""
+            },
+            "kegg_org_code": {
+              "verdict": "PASS",
+              "actual": "gmx",
+              "expected": "gmx",
+              "note": ""
+            },
+            "ensembl_slug": {
+              "verdict": "PASS",
+              "actual": "glycine_max",
+              "expected": "glycine_max",
+              "note": ""
+            }
+          }
+        },
+        "kegg.lookup_pathways": {
+          "assertions": {
+            "kegg_gene_id": {
+              "verdict": "PASS",
+              "actual": "gmx:548054",
+              "expected": "gmx:548054",
+              "note": ""
+            },
+            "organism": {
+              "verdict": "PASS",
+              "actual": "glycine_max",
+              "expected": "glycine_max",
+              "note": ""
+            },
+            "pathways.len": {
+              "verdict": "PASS",
+              "actual": 3,
+              "expected": 3,
+              "note": ""
+            }
+          }
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "assertions": {
+            "by_db.EntrezGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "PASS",
+          "detail": "KEGG bridge Entrez '548054' in Ensembl /xrefs EntrezGene ['548054']"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "PASS",
+          "detail": "kegg_gene_id org-code prefix 'gmx' == resolver kegg_org_code 'gmx'"
+        }
+      }
+    },
+    {
+      "locus_id": "HORVU.MOREX.r3.1HG0000040",
+      "organism": "hordeum_vulgare",
+      "rationale": "KEGG happy-path coverage (v1.7) \u2014 hvg:123394901 carries 2 KEGG pathway membership(s); validates the bridge SUCCESS path (vs the chr1-first-gene 0-pathway expects_exception entry for this organism). Discovered via scripts/probe_kegg_happy_path.py.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "hordeum_vulgare",
+              "expected": "hordeum_vulgare",
+              "note": ""
+            },
+            "ncbi_taxid": {
+              "verdict": "PASS",
+              "actual": 4513,
+              "expected": 4513,
+              "note": ""
+            },
+            "kegg_org_code": {
+              "verdict": "PASS",
+              "actual": "hvg",
+              "expected": "hvg",
+              "note": ""
+            },
+            "ensembl_slug": {
+              "verdict": "PASS",
+              "actual": "hordeum_vulgare",
+              "expected": "hordeum_vulgare",
+              "note": ""
+            }
+          }
+        },
+        "kegg.lookup_pathways": {
+          "assertions": {
+            "kegg_gene_id": {
+              "verdict": "PASS",
+              "actual": "hvg:123394901",
+              "expected": "hvg:123394901",
+              "note": ""
+            },
+            "organism": {
+              "verdict": "PASS",
+              "actual": "hordeum_vulgare",
+              "expected": "hordeum_vulgare",
+              "note": ""
+            },
+            "pathways.len": {
+              "verdict": "PASS",
+              "actual": 2,
+              "expected": 2,
+              "note": ""
+            }
+          }
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "assertions": {
+            "by_db.EntrezGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "PASS",
+          "detail": "KEGG bridge Entrez '123394901' in Ensembl /xrefs EntrezGene ['123394901']"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "PASS",
+          "detail": "kegg_gene_id org-code prefix 'hvg' == resolver kegg_org_code 'hvg'"
+        }
+      }
+    },
+    {
+      "locus_id": "Potri.001G000500.v4.1",
+      "organism": "populus_trichocarpa",
+      "rationale": "KEGG happy-path coverage (v1.7) \u2014 pop:7483226 carries 2 KEGG pathway membership(s); validates the bridge SUCCESS path (vs the chr1-first-gene 0-pathway expects_exception entry for this organism). Discovered via scripts/probe_kegg_happy_path.py.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "populus_trichocarpa",
+              "expected": "populus_trichocarpa",
+              "note": ""
+            },
+            "ncbi_taxid": {
+              "verdict": "PASS",
+              "actual": 3694,
+              "expected": 3694,
+              "note": ""
+            },
+            "kegg_org_code": {
+              "verdict": "PASS",
+              "actual": "pop",
+              "expected": "pop",
+              "note": ""
+            },
+            "ensembl_slug": {
+              "verdict": "PASS",
+              "actual": "populus_trichocarpa",
+              "expected": "populus_trichocarpa",
+              "note": ""
+            }
+          }
+        },
+        "kegg.lookup_pathways": {
+          "assertions": {
+            "kegg_gene_id": {
+              "verdict": "PASS",
+              "actual": "pop:7483226",
+              "expected": "pop:7483226",
+              "note": ""
+            },
+            "organism": {
+              "verdict": "PASS",
+              "actual": "populus_trichocarpa",
+              "expected": "populus_trichocarpa",
+              "note": ""
+            },
+            "pathways.len": {
+              "verdict": "PASS",
+              "actual": 2,
+              "expected": 2,
+              "note": ""
+            }
+          }
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "assertions": {
+            "by_db.EntrezGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "PASS",
+          "detail": "KEGG bridge Entrez '7483226' in Ensembl /xrefs EntrezGene ['7483226']"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "PASS",
+          "detail": "kegg_gene_id org-code prefix 'pop' == resolver kegg_org_code 'pop'"
+        }
+      }
+    },
+    {
+      "locus_id": "BRADI_1g00460v3",
+      "organism": "brachypodium_distachyon",
+      "rationale": "KEGG happy-path coverage (v1.7) \u2014 bdi:100836389 carries 1 KEGG pathway membership(s); validates the bridge SUCCESS path (vs the chr1-first-gene 0-pathway expects_exception entry for this organism). Discovered via scripts/probe_kegg_happy_path.py.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "brachypodium_distachyon",
+              "expected": "brachypodium_distachyon",
+              "note": ""
+            },
+            "ncbi_taxid": {
+              "verdict": "PASS",
+              "actual": 15368,
+              "expected": 15368,
+              "note": ""
+            },
+            "kegg_org_code": {
+              "verdict": "PASS",
+              "actual": "bdi",
+              "expected": "bdi",
+              "note": ""
+            },
+            "ensembl_slug": {
+              "verdict": "PASS",
+              "actual": "brachypodium_distachyon",
+              "expected": "brachypodium_distachyon",
+              "note": ""
+            }
+          }
+        },
+        "kegg.lookup_pathways": {
+          "assertions": {
+            "kegg_gene_id": {
+              "verdict": "PASS",
+              "actual": "bdi:100836389",
+              "expected": "bdi:100836389",
+              "note": ""
+            },
+            "organism": {
+              "verdict": "PASS",
+              "actual": "brachypodium_distachyon",
+              "expected": "brachypodium_distachyon",
+              "note": ""
+            },
+            "pathways.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
+        },
+        "ensembl_plants.lookup_xrefs": {
+          "assertions": {
+            "by_db.EntrezGene.len": {
+              "verdict": "PASS",
+              "actual": 1,
+              "expected": 1,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "PASS",
+          "detail": "KEGG bridge Entrez '100836389' in Ensembl /xrefs EntrezGene ['100836389']"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "PASS",
+          "detail": "kegg_gene_id org-code prefix 'bdi' == resolver kegg_org_code 'bdi'"
+        }
+      }
+    },
+    {
+      "locus_id": "AT1G07270",
+      "organism": "arabidopsis_thaliana",
+      "rationale": "v1.8 Phytozome happy-path: native gene id round-trip-confirmed live (scripts/probe_phytozome_namespace.json). Broadens Phytozome coverage to all 12 supported organisms; organism_name asserted via startswith prefix so an assembly-version bump does not FAIL.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "arabidopsis_thaliana",
+              "expected": "arabidopsis_thaliana",
+              "note": ""
+            },
+            "ncbi_taxid": {
+              "verdict": "PASS",
+              "actual": 3702,
+              "expected": 3702,
+              "note": ""
+            },
+            "kegg_org_code": {
+              "verdict": "PASS",
+              "actual": "ath",
+              "expected": "ath",
+              "note": ""
+            }
+          }
+        },
+        "phytozome.lookup_locus": {
+          "assertions": {
+            "gene_name": {
+              "verdict": "PASS",
+              "actual": "AT1G07270",
+              "expected": "AT1G07270",
+              "note": ""
+            },
+            "organism_name.startswith.Athaliana": {
+              "verdict": "PASS",
+              "actual": true,
+              "expected": true,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
+    },
+    {
+      "locus_id": "TraesCS5A03G0137600",
+      "organism": "triticum_aestivum",
+      "rationale": "v1.8 Phytozome happy-path: native gene id round-trip-confirmed live (scripts/probe_phytozome_namespace.json). Broadens Phytozome coverage to all 12 supported organisms; organism_name asserted via startswith prefix so an assembly-version bump does not FAIL.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "triticum_aestivum",
+              "expected": "triticum_aestivum",
+              "note": ""
+            },
+            "ncbi_taxid": {
+              "verdict": "PASS",
+              "actual": 4565,
+              "expected": 4565,
+              "note": ""
+            }
+          }
+        },
+        "phytozome.lookup_locus": {
+          "assertions": {
+            "gene_name": {
+              "verdict": "PASS",
+              "actual": "TraesCS5A03G0137600",
+              "expected": "TraesCS5A03G0137600",
+              "note": ""
+            },
+            "organism_name.startswith.Taestivum": {
+              "verdict": "PASS",
+              "actual": true,
+              "expected": true,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
+    },
+    {
+      "locus_id": "Solyc01g080240",
+      "organism": "solanum_lycopersicum",
+      "rationale": "v1.8 Phytozome happy-path: native gene id round-trip-confirmed live (scripts/probe_phytozome_namespace.json). Broadens Phytozome coverage to all 12 supported organisms; organism_name asserted via startswith prefix so an assembly-version bump does not FAIL.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "solanum_lycopersicum",
+              "expected": "solanum_lycopersicum",
+              "note": ""
+            },
+            "ncbi_taxid": {
+              "verdict": "PASS",
+              "actual": 4081,
+              "expected": 4081,
+              "note": ""
+            }
+          }
+        },
+        "phytozome.lookup_locus": {
+          "assertions": {
+            "gene_name": {
+              "verdict": "PASS",
+              "actual": "Solyc01g080240",
+              "expected": "Solyc01g080240",
+              "note": ""
+            },
+            "organism_name.startswith.Slycopersicum": {
+              "verdict": "PASS",
+              "actual": true,
+              "expected": true,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
+    },
+    {
+      "locus_id": "Sobic.003G000100",
+      "organism": "sorghum_bicolor",
+      "rationale": "v1.8 Phytozome happy-path: native gene id round-trip-confirmed live (scripts/probe_phytozome_namespace.json). Broadens Phytozome coverage to all 12 supported organisms; organism_name asserted via startswith prefix so an assembly-version bump does not FAIL.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "sorghum_bicolor",
+              "expected": "sorghum_bicolor",
+              "note": ""
+            },
+            "ncbi_taxid": {
+              "verdict": "PASS",
+              "actual": 4558,
+              "expected": 4558,
+              "note": ""
+            }
+          }
+        },
+        "phytozome.lookup_locus": {
+          "assertions": {
+            "gene_name": {
+              "verdict": "PASS",
+              "actual": "Sobic.003G000100",
+              "expected": "Sobic.003G000100",
+              "note": ""
+            },
+            "organism_name.startswith.Sbicolor": {
+              "verdict": "PASS",
+              "actual": true,
+              "expected": true,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
+    },
+    {
+      "locus_id": "HORVU.MOREX.r3.UnG0785490",
+      "organism": "hordeum_vulgare",
+      "rationale": "v1.8 Phytozome happy-path: native gene id round-trip-confirmed live (scripts/probe_phytozome_namespace.json). Broadens Phytozome coverage to all 12 supported organisms; organism_name asserted via startswith prefix so an assembly-version bump does not FAIL.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "hordeum_vulgare",
+              "expected": "hordeum_vulgare",
+              "note": ""
+            },
+            "ncbi_taxid": {
+              "verdict": "PASS",
+              "actual": 4513,
+              "expected": 4513,
+              "note": ""
+            },
+            "kegg_org_code": {
+              "verdict": "PASS",
+              "actual": "hvg",
+              "expected": "hvg",
+              "note": ""
+            }
+          }
+        },
+        "phytozome.lookup_locus": {
+          "assertions": {
+            "gene_name": {
+              "verdict": "PASS",
+              "actual": "HORVU.MOREX.r3.UnG0785490",
+              "expected": "HORVU.MOREX.r3.UnG0785490",
+              "note": ""
+            },
+            "organism_name.startswith.Hvulgare": {
+              "verdict": "PASS",
+              "actual": true,
+              "expected": true,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
+    },
+    {
+      "locus_id": "VIT_201s0010g00130",
+      "organism": "vitis_vinifera",
+      "rationale": "v1.8 Phytozome happy-path: native gene id round-trip-confirmed live (scripts/probe_phytozome_namespace.json). Broadens Phytozome coverage to all 12 supported organisms; organism_name asserted via startswith prefix so an assembly-version bump does not FAIL.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "vitis_vinifera",
+              "expected": "vitis_vinifera",
+              "note": ""
+            },
+            "ncbi_taxid": {
+              "verdict": "PASS",
+              "actual": 29760,
+              "expected": 29760,
+              "note": ""
+            }
+          }
+        },
+        "phytozome.lookup_locus": {
+          "assertions": {
+            "gene_name": {
+              "verdict": "PASS",
+              "actual": "VIT_201s0010g00130",
+              "expected": "VIT_201s0010g00130",
+              "note": ""
+            },
+            "organism_name.startswith.Vvinifera": {
+              "verdict": "PASS",
+              "actual": true,
+              "expected": true,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
+    },
+    {
+      "locus_id": "Potri.001G226000",
+      "organism": "populus_trichocarpa",
+      "rationale": "v1.8 Phytozome happy-path: native gene id round-trip-confirmed live (scripts/probe_phytozome_namespace.json). Broadens Phytozome coverage to all 12 supported organisms; organism_name asserted via startswith prefix so an assembly-version bump does not FAIL.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "populus_trichocarpa",
+              "expected": "populus_trichocarpa",
+              "note": ""
+            },
+            "ncbi_taxid": {
+              "verdict": "PASS",
+              "actual": 3694,
+              "expected": 3694,
+              "note": ""
+            },
+            "kegg_org_code": {
+              "verdict": "PASS",
+              "actual": "pop",
+              "expected": "pop",
+              "note": ""
+            }
+          }
+        },
+        "phytozome.lookup_locus": {
+          "assertions": {
+            "gene_name": {
+              "verdict": "PASS",
+              "actual": "Potri.001G226000",
+              "expected": "Potri.001G226000",
+              "note": ""
+            },
+            "organism_name.startswith.Ptrichocarpa": {
+              "verdict": "PASS",
+              "actual": true,
+              "expected": true,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
+    },
+    {
+      "locus_id": "Medtr1g014230",
+      "organism": "medicago_truncatula",
+      "rationale": "v1.8 Phytozome happy-path: native gene id round-trip-confirmed live (scripts/probe_phytozome_namespace.json). Broadens Phytozome coverage to all 12 supported organisms; organism_name asserted via startswith prefix so an assembly-version bump does not FAIL.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "medicago_truncatula",
+              "expected": "medicago_truncatula",
+              "note": ""
+            },
+            "ncbi_taxid": {
+              "verdict": "PASS",
+              "actual": 3880,
+              "expected": 3880,
+              "note": ""
+            }
+          }
+        },
+        "phytozome.lookup_locus": {
+          "assertions": {
+            "gene_name": {
+              "verdict": "PASS",
+              "actual": "Medtr1g014230",
+              "expected": "Medtr1g014230",
+              "note": ""
+            },
+            "organism_name.startswith.Mtruncatula": {
+              "verdict": "PASS",
+              "actual": true,
+              "expected": true,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
+    },
+    {
+      "locus_id": "Bradi1g72735",
+      "organism": "brachypodium_distachyon",
+      "rationale": "v1.8 Phytozome happy-path: native gene id round-trip-confirmed live (scripts/probe_phytozome_namespace.json). Broadens Phytozome coverage to all 12 supported organisms; organism_name asserted via startswith prefix so an assembly-version bump does not FAIL.",
+      "tools": {
+        "organisms.resolve": {
+          "assertions": {
+            "canonical": {
+              "verdict": "PASS",
+              "actual": "brachypodium_distachyon",
+              "expected": "brachypodium_distachyon",
+              "note": ""
+            },
+            "ncbi_taxid": {
+              "verdict": "PASS",
+              "actual": 15368,
+              "expected": 15368,
+              "note": ""
+            },
+            "kegg_org_code": {
+              "verdict": "PASS",
+              "actual": "bdi",
+              "expected": "bdi",
+              "note": ""
+            }
+          }
+        },
+        "phytozome.lookup_locus": {
+          "assertions": {
+            "gene_name": {
+              "verdict": "PASS",
+              "actual": "Bradi1g72735",
+              "expected": "Bradi1g72735",
+              "note": ""
+            },
+            "organism_name.startswith.Bdistachyon": {
+              "verdict": "PASS",
+              "actual": true,
+              "expected": true,
+              "note": ""
+            }
+          }
+        }
+      },
+      "probe_exceptions": {},
+      "invariants": {
+        "kegg_entrez_in_ensembl_xrefs": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        },
+        "kegg_orgcode_matches_resolver": {
+          "verdict": "SKIPPED",
+          "detail": "not applicable for this locus"
+        }
+      }
     }
   ]
 }
