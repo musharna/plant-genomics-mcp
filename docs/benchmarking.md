@@ -109,18 +109,18 @@ If FAIL count > 0 at this point, decide before tagging: re-baseline + ship, or i
 
 - **When:** weekly, `cron: '0 11 * * 1'` (Mon 11:00 UTC ≈ 6–7am ET) + manual `workflow_dispatch`. NOT run on push/PR — that CI (`test.yml`) is mocked and offline; this is the only live-calling workflow.
 - **Two-strikes (anti-flake):** run 1 writes `last_run.ci.json`. On a non-zero exit, `scripts/benchmark_failing_loci.py` extracts just the failing `locus_id`s (classified by `benchmark_annotations.EXIT_TRIGGERING_VERDICTS` — the same set the exit code uses) and the workflow re-runs only those (`--loci`). It pages **only if the same loci fail twice**, so a transient ATTED / Europe PMC blip self-heals on the retry. A non-zero exit with _no_ failing locus (a script-level crash) is treated as a confirmed failure — never swallowed.
-- **Surfacing:** on a confirmed failure the runner joins the tailnet (`tailscale/github-action`) and `curl`s an ntfy push (priority high) with the failing loci + run URL; GitHub's red ✗ and scheduled-failure email fire too. Every run uploads `last_run.ci.json` (+ `rerun.ci.json` if a retry happened) as the `benchmark-sidecars` artifact for diffing.
+- **Surfacing:** on a confirmed failure the workflow pages **Telegram** (`api.telegram.org` `sendMessage`) **and** a **public ntfy topic** (priority high) with the failing loci + run URL, then exits non-zero so GitHub's red ✗ and scheduled-failure email fire too. This mirrors the homelab `notify.sh` fan-out (Telegram bot + unified ntfy topic) but hits both public endpoints directly, so the runner needs no tailnet access. Each notification step is best-effort: a missing/empty secret emits a workflow `::warning::` and is skipped rather than failing the job. Every run uploads `last_run.ci.json` (+ `rerun.ci.json` if a retry happened) as the `benchmark-sidecars` artifact for diffing.
 - **Triage:** a page means run the FAIL/DRIFT triage tables above. Download the artifact to see which assertion moved.
 
 **Operator setup — three repo secrets** (the workflow references them; they are not in the repo):
 
 ```bash
-gh secret set BENCHMARK_NTFY_URL   # full topic URL, e.g. http://100.113.204.41:8090/plant-genomics-bench
-gh secret set TS_OAUTH_CLIENT_ID   # Tailscale OAuth client id, tagged tag:ci
-gh secret set TS_OAUTH_SECRET      # Tailscale OAuth client secret
+gh secret set TELEGRAM_BOT_TOKEN   # BotFather token for the homelab bot (api.telegram.org)
+gh secret set TELEGRAM_CHAT_ID     # destination chat id for that bot
+gh secret set BENCHMARK_NTFY_URL   # full topic URL, e.g. https://ntfy.sh/mjarnold-homelab-<id>
 ```
 
-The Tailscale OAuth client needs the `tag:ci` ACL tag so the ephemeral runner node is authorized. After merge, trigger one manual run (`gh workflow run benchmark.yml` or the Actions tab) to validate end-to-end — the schedule alone won't fire until its next slot.
+After merge, trigger one manual run (`gh workflow run benchmark.yml` or the Actions tab) to validate end-to-end — the schedule alone won't fire until its next slot. A healthy run is green and pages nothing; the notification path only fires on a confirmed two-strikes failure.
 
 ## Files
 
@@ -204,4 +204,4 @@ Estimated effort: ~1 hour per organism.
 - Annotation-quality scoring.
 - More cross-source invariants (e.g. INV-3 organism-echo agreement; the Ensembl-xref-UniProt-acc invariant is deliberately excluded as flaky).
 
-**Done (v1.7 diagnosis → v1.8 release):** KEGG happy-path coverage (7 loci) · cross-source consistency invariants (`kegg_entrez_in_ensembl_xrefs`, `kegg_orgcode_matches_resolver`) · Phytozome namespace diagnosis (rice/soybean drift was a namespace mismatch, not data drift) + native-ID happy-path for **all 12** organisms · continuous monitoring (weekly scheduled GH Actions workflow, two-strikes ntfy paging).
+**Done (v1.7 diagnosis → v1.8 release):** KEGG happy-path coverage (7 loci) · cross-source consistency invariants (`kegg_entrez_in_ensembl_xrefs`, `kegg_orgcode_matches_resolver`) · Phytozome namespace diagnosis (rice/soybean drift was a namespace mismatch, not data drift) + native-ID happy-path for **all 12** organisms · continuous monitoring (weekly scheduled GH Actions workflow, two-strikes Telegram + ntfy paging).
