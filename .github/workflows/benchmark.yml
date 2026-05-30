@@ -3,14 +3,18 @@ name: benchmark
 # Scheduled scientific-validation / drift monitor for the live backends.
 # Runs scripts/benchmark_annotations.py weekly against the ~11 upstream APIs.
 # Two-strikes: on a non-zero run we re-run ONLY the failing loci and page
-# (ntfy + red x) only if the same loci fail twice — so transient network blips
-# (Europe PMC / ATTED) don't wake anyone. NOT run on push/PR (that CI is
-# mocked + offline); schedule + manual only.
+# (Telegram + ntfy + red x) only if the same loci fail twice — so transient
+# network blips (Europe PMC / ATTED) don't wake anyone. NOT run on push/PR
+# (that CI is mocked + offline); schedule + manual only.
+#
+# Notifications mirror the homelab notify.sh fan-out (Telegram bot + the unified
+# self-hosted ntfy topic), but hit both PUBLIC endpoints directly so the runner
+# needs no tailnet access. See followup-ntfy-consolidation memo for notify.sh.
 #
 # Operator secrets (set via `gh secret set <NAME>`):
-#   BENCHMARK_NTFY_URL  full topic URL, e.g. http://100.113.204.41:8090/plant-genomics-bench
-#   TS_OAUTH_CLIENT_ID  Tailscale OAuth client id (tagged tag:ci) — runner joins the tailnet to reach the homelab ntfy
-#   TS_OAUTH_SECRET     Tailscale OAuth client secret
+#   TELEGRAM_BOT_TOKEN  BotFather token for the homelab bot (api.telegram.org)
+#   TELEGRAM_CHAT_ID    destination chat id (homelab bot's chat)
+#   BENCHMARK_NTFY_URL  full topic URL, e.g. https://ntfy.sh/mjarnold-homelab-<id>
 
 on:
   schedule:
@@ -73,24 +77,39 @@ jobs:
             echo "confirmed=0" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Join tailnet (reach homelab ntfy)
+      - name: Page Telegram
         if: steps.verdict.outputs.confirmed == '1'
-        uses: tailscale/github-action@v4
-        with:
-          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
-          tags: tag:ci
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          FAILED='${{ steps.run2.outputs.failed_loci }}'
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          MSG="🚨 [ALERT] plant-genomics benchmark FAIL (2 strikes). Failing loci: ${FAILED:-<script-level>}. Run: ${RUN_URL}"
+          if [ -z "$TG_TOKEN" ] || [ -z "$TG_CHAT" ]; then
+            echo "::warning::TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID unset — skipping Telegram page"
+          else
+            curl -fsS --max-time 20 \
+              "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+              --data-urlencode "chat_id=${TG_CHAT}" \
+              --data-urlencode "text=${MSG}"
+          fi
 
-      - name: Page ntfy
+      - name: Page ntfy (unified topic)
         if: steps.verdict.outputs.confirmed == '1'
         run: |
           FAILED='${{ steps.run2.outputs.failed_loci }}'
-          curl -fsS --max-time 20 \
-            -H 'Title: plant-genomics benchmark FAIL' \
-            -H 'Priority: high' \
-            -H 'Tags: warning,dna' \
-            -d "Benchmark confirmed FAIL (2 strikes). Failing loci: ${FAILED:-<script-level>}. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
-            "${{ secrets.BENCHMARK_NTFY_URL }}"
+          URL='${{ secrets.BENCHMARK_NTFY_URL }}'
+          if [ -z "$URL" ]; then
+            echo "::warning::BENCHMARK_NTFY_URL unset — skipping ntfy page"
+          else
+            curl -fsS --max-time 20 \
+              -H 'Title: [ALERT] plant-genomics benchmark FAIL' \
+              -H 'Priority: high' \
+              -H 'Tags: warning,dna' \
+              -d "Benchmark confirmed FAIL (2 strikes). Failing loci: ${FAILED:-<script-level>}. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+              "$URL"
+          fi
 
       - name: Upload sidecars
         if: always()
