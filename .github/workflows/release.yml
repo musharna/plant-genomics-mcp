@@ -1,0 +1,72 @@
+name: Release
+
+# Tag-driven release: push a `vX.Y.Z` tag and this builds, publishes to PyPI
+# via Trusted Publishing (OIDC — no API token stored anywhere), and cuts a
+# GitHub release with the artifacts attached.
+#
+#   git tag v1.9.0 && git push origin v1.9.0
+#
+# Runs alongside docker.yml (which builds the GHCR image on the same tag) —
+# this job owns PyPI + the GitHub release, so the manual `gh release create`
+# noted in docker.yml is no longer needed once trusted publishing is set up.
+#
+# One-time setup required on PyPI: project `plant-genomics-mcp` → Settings →
+# Publishing → add a GitHub Actions trusted publisher (owner=musharna,
+# repo=plant-genomics-mcp, workflow=release.yml, environment=pypi). And create
+# a GitHub environment named `pypi` (Settings → Environments).
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build:
+    name: Build distributions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+      - name: Build sdist + wheel
+        run: uv build
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+
+  pypi:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write # OIDC token for Trusted Publishing; no password/token needed
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+      - name: Publish to PyPI (trusted publishing)
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  github-release:
+    name: Create GitHub release
+    needs: pypi
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the release + upload assets
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+      - name: Create release with artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "${GITHUB_REF_NAME}" \
+            --generate-notes \
+            dist/*
