@@ -12,7 +12,7 @@
 [![codecov](https://codecov.io/gh/musharna/plant-genomics-mcp/branch/main/graph/badge.svg)](https://codecov.io/gh/musharna/plant-genomics-mcp)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
-[![Glama](https://glama.ai/mcp/servers/musharna/plant-genomics-mcp/badge)](https://glama.ai/mcp/servers/musharna/plant-genomics-mcp)
+<a href="https://glama.ai/mcp/servers/musharna/plant-genomics-mcp"><img height="20" alt="Glama" src="https://glama.ai/mcp/servers/musharna/plant-genomics-mcp/badge"></a>
 
 <p align="center">
   <img src="examples/assets/demo.svg" alt="plant-genomics-mcp stdio demo — initialize, tools/list (32), and a coverage-matrix resource read" width="780">
