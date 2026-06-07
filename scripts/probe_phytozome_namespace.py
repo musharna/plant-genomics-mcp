@@ -111,7 +111,7 @@ def _parse_discovery_rows(tsv_text: str, cap: int) -> list[dict[str, str]]:
         values = ln.split("\t")
         if len(values) != len(_DISCOVERY_FIELDS):
             continue
-        rows.append(dict(zip(_DISCOVERY_FIELDS, values)))
+        rows.append(dict(zip(_DISCOVERY_FIELDS, values, strict=True)))
         if len(rows) >= cap:
             break
     return rows

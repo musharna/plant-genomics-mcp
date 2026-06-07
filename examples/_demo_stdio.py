@@ -14,7 +14,6 @@ import json
 import sys
 import time
 
-
 C_DIM = "\033[2m"
 C_RST = "\033[0m"
 C_GRN = "\033[32m"

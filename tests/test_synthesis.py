@@ -6,7 +6,6 @@ Mocked-HTTP unit tests run by default. Live tests are gated by
 
 from __future__ import annotations
 
-
 import pytest
 from pydantic import ValidationError
 

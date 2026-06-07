@@ -305,7 +305,7 @@ async def get_prompt(name: str, arguments: dict[str, str] | None) -> types.GetPr
             except ValueError:
                 raise NotFoundError(
                     f"prompt {name!r}: top_n {top_n_raw!r} must be parseable as int"
-                )
+                ) from None
         text = _render_biological_context(locus, organism, top_n)
         description = f"Biological-context profile for {locus} ({record.canonical}, top_n={top_n})"
     else:

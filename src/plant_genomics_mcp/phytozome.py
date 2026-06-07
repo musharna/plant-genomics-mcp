@@ -150,4 +150,4 @@ async def lookup_locus(
         raise PlantGenomicsError(
             f"Phytozome: unexpected column count {len(values)} (expected {len(_FIELDS)}): {lines[1]!r}"
         )
-    return dict(zip(_FIELDS, values))
+    return dict(zip(_FIELDS, values, strict=True))

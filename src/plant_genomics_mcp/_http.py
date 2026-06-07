@@ -12,7 +12,8 @@ returning ``Retry-After: 3600`` cannot pin the agent for an hour.
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 import httpx
 

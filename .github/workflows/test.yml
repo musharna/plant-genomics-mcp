@@ -27,6 +27,8 @@ jobs:
           pip install -e '.[dev]'
       - name: Lint
         run: ruff check .
+      - name: Format check
+        run: ruff format --check .
       - name: Test (mocked + stdio smoke; live network gated by PLANT_GENOMICS_MCP_LIVE=1)
         env:
           PLANT_GENOMICS_MCP_STDIO_SMOKE: "1"
