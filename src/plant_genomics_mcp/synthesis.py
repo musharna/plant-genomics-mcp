@@ -147,6 +147,25 @@ def _skipped(step: int, tool: str, reason: str) -> StepRow:
     return StepRow(step=step, tool=tool, status="skipped", elapsed_s=None, error=reason)
 
 
+def _result_dict(row: StepRow) -> dict[str, Any]:
+    """Narrow an ``ok`` StepRow's ``result`` to the dict the backend contracts.
+
+    ``StepRow.result`` is typed ``dict | list | None`` to cover every backend
+    (some return bare lists, e.g. literature). The synthesis consumers below
+    only ever index ok rows from dict-returning backends (ensembl/uniprot/blast/
+    batch/gramene records). This both narrows the type for mypy and fails loud
+    if a backend ever violates that contract, instead of silently doing
+    ``.get`` on a list (AttributeError) or None deep in reconciliation.
+    """
+    payload = row.result
+    if not isinstance(payload, dict):
+        raise PlantGenomicsError(
+            f"synthesis: step {row.step} ({row.tool}) returned "
+            f"{type(payload).__name__}, expected a dict-shaped record"
+        )
+    return payload
+
+
 async def _gather_phase2(
     items: list[tuple[int, str, Any]],
 ) -> list[StepRow]:
@@ -256,7 +275,7 @@ async def analyze_locus_synth(
         (4, "locus_literature", europe_pmc.lookup_locus(client, locus, organism=organism)),
     ]
     if uniprot_row.status == "ok":
-        acc = uniprot_row.result["primaryAccession"]
+        acc = _result_dict(uniprot_row)["primaryAccession"]
         phase2_items.append(
             (5, "locus_go_annotations", quickgo.lookup_by_uniprot(client, acc)),
         )
@@ -278,7 +297,7 @@ async def analyze_locus_synth(
     def _ok(row: StepRow) -> Any:
         return row.result if row.status == "ok" else None
 
-    ensembl_record = root.result
+    ensembl_record = _result_dict(root)
     reconciled = _reconcile_analyze(
         ensembl_record=ensembl_record,
         uniprot_record=_ok(uniprot_row),
@@ -388,7 +407,7 @@ async def find_homologs_synth(
             result=None,
         )
 
-    blast_payload = root.result
+    blast_payload = _result_dict(root)
     hits = list(blast_payload.get("hits") or [])[:top_n]
 
     # Phase 2 — extract UniProt-shaped accessions per hit (single pass), dedupe,
@@ -429,12 +448,12 @@ async def find_homologs_synth(
 
     by_acc: dict[str, dict] = {}
     if lookup_step.status == "ok":
-        by_acc = dict((lookup_step.result or {}).get("results", {}))
+        by_acc = dict(_result_dict(lookup_step).get("results", {}))
 
     ranked = []
     for rank, (hit, raw_acc) in enumerate(zip(hits, hit_accessions, strict=True), start=1):
-        canonical = raw_acc.split(".", 1)[0] if raw_acc else None
-        record = by_acc.get(canonical) if canonical else None
+        canonical_acc = raw_acc.split(".", 1)[0] if raw_acc else None
+        record = by_acc.get(canonical_acc) if canonical_acc else None
         ranked.append(
             {
                 "rank": rank,
@@ -575,7 +594,7 @@ async def biological_context_synth(
             result=None,
         )
 
-    uniprot_acc = root.result["primaryAccession"]  # surfaced in the envelope result
+    uniprot_acc = _result_dict(root)["primaryAccession"]  # surfaced in the envelope result
 
     p2 = await _gather_phase2(
         [
@@ -793,7 +812,7 @@ async def consensus_homologs(
     # Time it inline and put metadata (accession + length) in the envelope —
     # the raw 400+ residue protein sequence doesn't belong in an envelope JSON
     # blob, and we need the bare string for the phase-2 BLAST call anyway.
-    acc = step1.result["primaryAccession"]
+    acc = _result_dict(step1)["primaryAccession"]
     t_step2 = time.perf_counter()
     try:
         sequence = await uniprot.fetch_sequence(client, acc)
@@ -880,9 +899,10 @@ async def consensus_homologs(
     # (e.g. Q5VMS9.1) — there's no overlap to join on.
     xref_map: dict[str, dict[str, str | None]] = {}
     if gramene_row.status == "ok" and gramene_row.result:
+        gramene_payload = _result_dict(gramene_row)
         loci = [
             h.get("target_locus")
-            for h in (gramene_row.result.get("homologs") or [])
+            for h in (gramene_payload.get("homologs") or [])
             if isinstance(h.get("target_locus"), str) and h.get("target_locus")
         ]
         if loci:
@@ -907,8 +927,8 @@ async def consensus_homologs(
         )
 
     consensus = _consensus_homologs_compose(
-        gramene_payload=gramene_row.result if gramene_row.status == "ok" else None,
-        blast_payload=blast_row.result if blast_row.status == "ok" else None,
+        gramene_payload=_result_dict(gramene_row) if gramene_row.status == "ok" else None,
+        blast_payload=_result_dict(blast_row) if blast_row.status == "ok" else None,
         xref_map=xref_map,
         top_n=top_n,
     )

@@ -52,11 +52,13 @@ single-locus tools. Capped at ``batch.MAX_BATCH = 50`` loci per call.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 from typing import Any
 
 import httpx
 from mcp import types
 from mcp.server import Server
+from mcp.server.lowlevel.helper_types import ReadResourceContents
 from mcp.server.stdio import stdio_server
 from pydantic import AnyUrl
 
@@ -1201,7 +1203,7 @@ async def _list_resources() -> list[types.Resource]:
 
 
 @server.read_resource()
-async def _read_resource(uri: AnyUrl):  # type: ignore[no-untyped-def]
+async def _read_resource(uri: AnyUrl) -> Iterable[ReadResourceContents]:
     return await resources.read_resource(uri)
 
 
