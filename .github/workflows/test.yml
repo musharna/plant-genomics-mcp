@@ -27,12 +27,4 @@ jobs:
       - name: Test (mocked + stdio smoke; live network gated by PLANT_GENOMICS_MCP_LIVE=1)
         env:
           PLANT_GENOMICS_MCP_STDIO_SMOKE: "1"
-        run: pytest -q --cov=src --cov-report=xml --cov-report=term
-      - name: Upload coverage to Codecov
-        if: matrix.python-version == '3.12'
-        uses: codecov/codecov-action@v6
-        with:
-          files: ./coverage.xml
-          fail_ci_if_error: false
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: pytest -q --cov=src --cov-report=term
