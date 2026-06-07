@@ -29,6 +29,8 @@ jobs:
         run: ruff check .
       - name: Format check
         run: ruff format --check .
+      - name: Types (mypy)
+        run: mypy src/plant_genomics_mcp
       - name: Test (mocked + stdio smoke; live network gated by PLANT_GENOMICS_MCP_LIVE=1)
         env:
           PLANT_GENOMICS_MCP_STDIO_SMOKE: "1"

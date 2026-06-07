@@ -113,6 +113,23 @@ _GI_CURATOR = 7
 _GI_TAIR_SHORT = 8
 
 
+async def _gather_envelopes(
+    client: httpx.AsyncClient,
+    locus: str,
+) -> tuple[Any | BaseException, Any | BaseException]:
+    """Fetch thalemine + gaia envelopes concurrently, never raising.
+
+    Wraps ``asyncio.gather(..., return_exceptions=True)`` so callers get an
+    explicitly-typed 2-tuple; inlining the gather makes mypy unable to
+    determine the unpacked element types ([has-type]).
+    """
+    return await asyncio.gather(
+        _get(client, f"/thalemine/gene_information/{locus}"),
+        _get(client, f"/gaia/aliases/{locus}"),
+        return_exceptions=True,
+    )
+
+
 async def gene_summary(
     client: httpx.AsyncClient,
     locus: str,
@@ -136,11 +153,7 @@ async def gene_summary(
     None`` and ``aliases: []`` in that case.
     """
     validators.assert_valid_locus(locus, backend="BAR")
-    gi_env, aliases_env = await asyncio.gather(
-        _get(client, f"/thalemine/gene_information/{locus}"),
-        _get(client, f"/gaia/aliases/{locus}"),
-        return_exceptions=True,
-    )
+    gi_env, aliases_env = await _gather_envelopes(client, locus)
     if isinstance(gi_env, BaseException):
         raise gi_env
     if not isinstance(gi_env, dict) or not gi_env.get("wasSuccessful"):
@@ -355,7 +368,7 @@ def _aiv_rice_envelope(locus: str, data: list[Any]) -> dict[str, Any]:
 async def aiv_interactions(
     client: httpx.AsyncClient,
     locus: str,
-    organism: str = "arabidopsis_thaliana",
+    organism: str | int = "arabidopsis_thaliana",
 ) -> dict[str, Any]:
     """Fetch BAR AIV interactions for an Arabidopsis or rice locus.
 
