@@ -26,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
       - name: Build sdist + wheel
         run: uv build
       - name: Upload artifacts
@@ -48,7 +48,7 @@ jobs:
           name: dist
           path: dist/
       - name: Publish to PyPI (trusted publishing)
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
 
   github-release:
     name: Create GitHub release
@@ -57,6 +57,7 @@ jobs:
     permissions:
       contents: write # create the release + upload assets
     steps:
+      - uses: actions/checkout@v6 # for CHANGELOG.md
       - uses: actions/download-artifact@v8
         with:
           name: dist
@@ -65,8 +66,23 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${GITHUB_REF_NAME}" \
-            --repo "${GITHUB_REPOSITORY}" \
-            --title "${GITHUB_REF_NAME}" \
-            --generate-notes \
-            dist/*
+          # Prefer the matching CHANGELOG.md section as release notes; fall back
+          # to GitHub's auto-generated notes if the version has no section.
+          awk -v h="## ${GITHUB_REF_NAME} " '
+            index($0, h) == 1 { grab = 1; next }
+            grab && index($0, "## ") == 1 { exit }
+            grab { print }
+          ' CHANGELOG.md > release-notes.md
+          if grep -q '[^[:space:]]' release-notes.md; then
+            gh release create "${GITHUB_REF_NAME}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --title "${GITHUB_REF_NAME}" \
+              --notes-file release-notes.md \
+              dist/*
+          else
+            gh release create "${GITHUB_REF_NAME}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --title "${GITHUB_REF_NAME}" \
+              --generate-notes \
+              dist/*
+          fi
