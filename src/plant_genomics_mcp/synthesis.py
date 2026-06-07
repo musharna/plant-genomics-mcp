@@ -21,7 +21,7 @@ from __future__ import annotations
 import asyncio
 import re
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -48,7 +48,7 @@ MAX_TOP_N = 50  # matches batch.MAX_BATCH convention
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
 def _bound_top_n(top_n: int) -> int:
@@ -432,7 +432,7 @@ async def find_homologs_synth(
         by_acc = dict((lookup_step.result or {}).get("results", {}))
 
     ranked = []
-    for rank, (hit, raw_acc) in enumerate(zip(hits, hit_accessions), start=1):
+    for rank, (hit, raw_acc) in enumerate(zip(hits, hit_accessions, strict=True), start=1):
         canonical = raw_acc.split(".", 1)[0] if raw_acc else None
         record = by_acc.get(canonical) if canonical else None
         ranked.append(

@@ -28,7 +28,6 @@ from typing import Any
 
 from plant_genomics_mcp.errors import NotFoundError
 
-
 # Identifier whitelist — same shape as tair/phytozome guards. Reject
 # obviously-bogus input up front so callers fail loud rather than receive a
 # misleading "valid-looking" redirect record.

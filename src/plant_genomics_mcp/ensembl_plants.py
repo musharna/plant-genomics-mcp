@@ -24,7 +24,6 @@ from plant_genomics_mcp.errors import (
     UpstreamUnavailableError,
 )
 
-
 BASE_URL = "https://rest.ensembl.org"
 DEFAULT_TIMEOUT = 30.0
 MAX_RETRIES = 3

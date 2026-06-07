@@ -181,7 +181,7 @@ async def test_http_tools_list_via_real_uvicorn() -> None:
         uv_server.should_exit = True
         try:
             await asyncio.wait_for(serve_task, timeout=5.0)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             serve_task.cancel()
 
 
@@ -552,7 +552,7 @@ async def test_auth_plus_body_cap_via_real_uvicorn(
         uv_server.should_exit = True
         try:
             await asyncio.wait_for(serve_task, timeout=5.0)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             serve_task.cancel()
 
 
@@ -612,5 +612,5 @@ async def test_bearer_auth_via_real_uvicorn(monkeypatch: pytest.MonkeyPatch) -> 
         uv_server.should_exit = True
         try:
             await asyncio.wait_for(serve_task, timeout=5.0)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             serve_task.cancel()

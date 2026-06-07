@@ -65,3 +65,15 @@ show_missing = true
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+
+[tool.ruff.lint]
+# E/F (default) plus import-sorting, bugbear, pyupgrade, and simplify.
+# E501 (line-too-long) is intentionally left to the formatter — `ruff format`
+# owns line-length, and a lint error on top of it is noise.
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# Nested `async with` (stdio_client + ClientSession) reads clearer than a
+# combined context manager in the MCP stdio integration tests.
+"tests/**" = ["SIM117"]

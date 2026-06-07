@@ -21,12 +21,12 @@ is omitted unless the caller knows the bound.
 from __future__ import annotations
 
 import contextvars
-from typing import Awaitable, Callable, Optional
+from collections.abc import Awaitable, Callable
 
 # Async callable: (progress, total, message) -> awaitable.
 # Matches the signature of mcp.server.session.ServerSession.send_progress_notification
 # after the progressToken is partial-applied.
-SendFn = Callable[[float, Optional[float], Optional[str]], Awaitable[None]]
+SendFn = Callable[[float, float | None, str | None], Awaitable[None]]
 
 
 class Reporter:
@@ -50,7 +50,7 @@ class Reporter:
         await self._send(self._progress, self._total, message)
 
 
-_current: contextvars.ContextVar[Optional[Reporter]] = contextvars.ContextVar(
+_current: contextvars.ContextVar[Reporter | None] = contextvars.ContextVar(
     "plant_genomics_mcp_progress",
     default=None,
 )

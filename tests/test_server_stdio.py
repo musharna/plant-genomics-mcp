@@ -32,7 +32,6 @@ import pytest
 from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
-
 # Opt-in: the smoke test spawns a subprocess, costs ~500ms, and we don't
 # want it in the default `pytest -q` run.
 pytestmark = pytest.mark.skipif(

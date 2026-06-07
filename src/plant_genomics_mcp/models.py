@@ -700,14 +700,14 @@ class StepRow(BaseModel):
     )
 
     @model_validator(mode="after")
-    def _check_status_coherence(self) -> "StepRow":
+    def _check_status_coherence(self) -> StepRow:
         if self.status == "ok":
             if self.result is None or self.error is not None:
                 raise ValueError("status='ok' requires result is not None and error is None")
         elif self.status == "error":
             if self.error is None or self.result is not None:
                 raise ValueError("status='error' requires error is not None and result is None")
-        elif self.status == "skipped":
+        elif self.status == "skipped":  # noqa: SIM102 — parallel guard-clause branches
             if self.error is None or self.result is not None:
                 raise ValueError("status='skipped' requires error is not None and result is None")
         return self

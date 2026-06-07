@@ -41,7 +41,7 @@ import sys
 import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
@@ -91,7 +91,7 @@ _ASYNCIO_REF = asyncio
 _TIME_REF = time
 
 
-class Verdict(str, Enum):
+class Verdict(StrEnum):
     PASS = "PASS"
     DRIFT = "DRIFT"
     FAIL = "FAIL"
@@ -602,8 +602,8 @@ def _render_markdown(
     """Render the per-locus × per-tool pivot table + summary."""
     # Collect the tool axis: every tool that appeared in any locus's probe set.
     tool_axis: list[str] = sorted(
-        {tool for r in results for tool in r.tools.keys()}
-        | {tool for r in results for tool in r.probe_exceptions.keys()}
+        {tool for r in results for tool in r.tools}
+        | {tool for r in results for tool in r.probe_exceptions}
     )
 
     lines: list[str] = []
@@ -723,7 +723,7 @@ def _write_sidecar(
     """Write the per-(locus, tool, key) JSON record to disk."""
     payload = {
         "schema_version": 1,
-        "generated_at": _dt.datetime.now(_dt.timezone.utc).isoformat(),
+        "generated_at": _dt.datetime.now(_dt.UTC).isoformat(),
         "baseline_ref": expected_baseline_generated_at,
         "summary": {
             "total_assertions": summary.total_assertions,
@@ -803,7 +803,7 @@ def _stable_key_paths_for_response(response: Any) -> dict[str, int]:
 async def _capture_baseline(expected: dict[str, Any], args: argparse.Namespace) -> dict[str, Any]:
     """Walk every locus × tool in expected.json, probe live, capture variable_facts."""
     new_expected = json.loads(json.dumps(expected))  # deep copy
-    new_expected["generated_at"] = _dt.datetime.now(_dt.timezone.utc).isoformat()
+    new_expected["generated_at"] = _dt.datetime.now(_dt.UTC).isoformat()
     signal.signal(signal.SIGALRM, _alarm_handler)
     async with httpx.AsyncClient(timeout=60) as client:
         for locus_record in new_expected["loci"]:
@@ -883,7 +883,7 @@ async def _capture_baseline_one(
                 "floor": max(0, int(actual * 0.25)) if isinstance(actual, (int, float)) else None,
             }
         break
-    new_expected["generated_at"] = _dt.datetime.now(_dt.timezone.utc).isoformat()
+    new_expected["generated_at"] = _dt.datetime.now(_dt.UTC).isoformat()
     return new_expected
 
 

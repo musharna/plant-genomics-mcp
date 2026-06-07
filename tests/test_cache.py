@@ -23,7 +23,6 @@ from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import cache, ensembl_plants, europe_pmc, quickgo
 
-
 # ---------- TTLCache unit tests ----------
 
 

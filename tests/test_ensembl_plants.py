@@ -221,6 +221,7 @@ def test_lookup_locus_accepts_organism_alias(httpx_mock: HTTPXMock) -> None:
         json={"id": "AT1G01010", "biotype": "protein_coding"},
     )
     import asyncio
+
     import httpx as _httpx
 
     async def run():
@@ -232,9 +233,11 @@ def test_lookup_locus_accepts_organism_alias(httpx_mock: HTTPXMock) -> None:
 
 
 def test_lookup_locus_rejects_unknown_organism() -> None:
-    from plant_genomics_mcp.errors import OrganismNotFound
     import asyncio
+
     import httpx as _httpx
+
+    from plant_genomics_mcp.errors import OrganismNotFound
 
     async def run():
         async with _httpx.AsyncClient() as client:
