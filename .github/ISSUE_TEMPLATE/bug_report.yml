@@ -1,0 +1,66 @@
+name: Bug report
+description: Report a bug in plant-genomics-mcp
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. Please do **not** report security vulnerabilities here —
+        see [SECURITY.md](../SECURITY.md) for private disclosure.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected instead.
+    validations:
+      required: true
+  - type: input
+    id: tool
+    attributes:
+      label: Which tool / backend?
+      description: The tool name and, if known, the backend (Ensembl Plants, Phytozome, UniProtKB, Europe PMC, QuickGO, NCBI BLAST, Gramene, KEGG, STRING-DB, ATTED-II, BAR).
+      placeholder: "get_gene / Ensembl Plants"
+    validations:
+      required: true
+  - type: input
+    id: organism
+    attributes:
+      label: Organism / gene
+      description: The species and gene/identifier involved, if applicable.
+      placeholder: "Arabidopsis thaliana, AT1G01010"
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `pip show plant-genomics-mcp` (or the version `pipx`/`uvx` pulled).
+      placeholder: "1.8.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: transport
+    attributes:
+      label: Transport
+      options:
+        - stdio (default)
+        - HTTP (plant-genomics-mcp-http)
+        - not sure
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: The exact tool call and arguments.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error output
+      description: Paste the error or traceback. Redact any tokens.
+      render: shell
+    validations:
+      required: false
