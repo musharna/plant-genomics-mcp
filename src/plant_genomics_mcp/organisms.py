@@ -39,6 +39,12 @@ class OrganismRecord:
     # still leave this ``None`` did not pass the probe; line comments per
     # entry record the probe-dated falsification reason.
     atted_release: str | None = None  # e.g. "Ath-u.c4-0" — ATTED-II release id
+    ensembl_id_prefix: str | None = None
+    # Wire-only stable-id prefix prepended to the locus when querying Ensembl
+    # ``/lookup/id`` and ``/xrefs/id`` — NOT part of the user-facing locus.
+    # Needed for assemblies imported from an NCBI GFF, whose Ensembl stable
+    # IDs carry a ``gene-`` prefix (e.g. tomato SL4.0 → ``gene-Solyc...``).
+    # ``None``/"" means pass the locus through unchanged.
     aliases: tuple[str, ...] = field(default_factory=tuple)
 
 
@@ -106,15 +112,23 @@ ORGANISMS: dict[str, OrganismRecord] = {
         scientific="Solanum lycopersicum",
         common=("tomato",),
         ncbi_taxid=4081,
-        ensembl_slug="solanum_lycopersicum",
+        # Ensembl Plants dropped the bare ``solanum_lycopersicum`` slug; tomato
+        # is now the assembly-qualified SL4.0 genome (GCA_000188115.5) whose
+        # stable IDs carry a ``gene-`` prefix (e.g. ``gene-Solyc01g005610.4``).
+        # The bare slug + unprefixed id now 400 ("Genome not found" / "ID not
+        # found") — re-pointed here so the shipped ensembl_plants tool works
+        # for tomato again (upstream drift caught by the weekly benchmark,
+        # 2026-06-22).
+        ensembl_slug="solanum_lycopersicum_gca000188115v5cm",
+        ensembl_id_prefix="gene-",
         phytozome_int=691,
         string_taxid=4081,
         europe_pmc_slug="tomato",
-        # v1.5 probe: Ensembl /xrefs returned no EntrezGene xref for chr1
-        # locus Solyc01g005610.3 (observed dbs: ArrayExpress); v1.4.0
-        # bridge mechanism falsified. KEGG sly indexes NCBI Entrez Gene
-        # IDs and would need a UniProt → Entrez two-hop fallback
-        # (probed 2026-05-25, deferred to v1.6+).
+        # KEGG left disabled: the v1.5 probe falsified the bridge on the old
+        # assembly (only ArrayExpress, no EntrezGene). The SL4.0 re-release DOES
+        # now expose an EntrezGene xref (LOC101244801), so ``sly`` re-enablement
+        # is a viable future follow-up — deferred to its own probe + PR to keep
+        # this regression fix tight.
         kegg_org_code=None,
         atted_release="Sly-u.c1-0",
         aliases=("s. lycopersicum",),
@@ -318,6 +332,15 @@ def ensembl_slug_for(query: str | int) -> str:
             supported=_supported_for("ensembl_slug"),
         )
     return record.ensembl_slug
+
+
+def ensembl_id_prefix_for(query: str | int) -> str:
+    """Return the wire-only Ensembl stable-id prefix for this organism.
+
+    Empty string when the organism needs no prefix (the common case). See
+    ``OrganismRecord.ensembl_id_prefix`` for why a prefix is ever needed.
+    """
+    return resolve(query).ensembl_id_prefix or ""
 
 
 def phytozome_int_for(query: str | int) -> int:

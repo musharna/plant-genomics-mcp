@@ -569,9 +569,9 @@
       }
     },
     {
-      "locus_id": "Solyc01g005610.3",
+      "locus_id": "Solyc01g005610.4",
       "organism": "solanum_lycopersicum",
-      "rationale": "Tomato v1.5 re-falsified: KEGG raises OrganismNotSupported; positive for Ensembl/Phytozome/Europe PMC",
+      "rationale": "Tomato (2026-06-22): Ensembl re-pointed to assembly-qualified SL4.0 slug + gene- id prefix; locus bumped .3->.4. KEGG still OrganismNotSupported; positive for Ensembl/Phytozome/Europe PMC",
       "tools": {
         "organisms.resolve": {
           "stable_facts": {
@@ -586,12 +586,12 @@
           "stable_facts": {},
           "variable_facts": {
             "xrefs.len": {
-              "baseline": 1,
+              "baseline": 3,
               "tolerance_pct": 25,
               "floor": 0
             },
             "by_db.keys.len": {
-              "baseline": 1,
+              "baseline": 3,
               "tolerance_pct": 25,
               "floor": 0
             },

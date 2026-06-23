@@ -83,8 +83,9 @@ async def lookup_locus(
     """
     validators.assert_valid_locus(locus, backend="Ensembl Plants")
     slug = organisms.ensembl_slug_for(organism)
+    wire_id = organisms.ensembl_id_prefix_for(organism) + locus
     params: dict[str, Any] = {"species": slug, "expand": 0}
-    raw = await _get(client, f"/lookup/id/{locus}", params=params)
+    raw = await _get(client, f"/lookup/id/{wire_id}", params=params)
     # Build a fresh dict rather than mutating ``raw`` in place: the cache now
     # hands back an isolated copy (cache.get), but constructing a new object
     # keeps the no-shared-mutation intent local and survives any future cache
@@ -113,8 +114,9 @@ async def lookup_xrefs(
     """
     validators.assert_valid_locus(locus, backend="Ensembl Plants")
     slug = organisms.ensembl_slug_for(organism)
+    wire_id = organisms.ensembl_id_prefix_for(organism) + locus
     params: dict[str, Any] = {"species": slug}
-    raw = await _get(client, f"/xrefs/id/{locus}", params=params)
+    raw = await _get(client, f"/xrefs/id/{wire_id}", params=params)
     if not isinstance(raw, list):
         raise PlantGenomicsError(
             f"Ensembl /xrefs/id/{locus} returned non-list payload: {type(raw).__name__}"
