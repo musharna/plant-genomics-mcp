@@ -237,20 +237,25 @@ async def test_resolve_locus_to_entrez_id_multi_entrez_picks_first(httpx_mock: H
 
 @pytest.mark.asyncio
 async def test_resolve_locus_to_entrez_id_no_entrez_xref_raises(httpx_mock: HTTPXMock):
-    """Ensembl returned cross-refs but none from EntrezGene (the tomato
-    case observed in the pre-impl probe — only ArrayExpress shows up).
-    Bridge must raise loud — no silent empty pathway list.
+    """Ensembl returned cross-refs but none from EntrezGene.
+
+    Synthetic response forces the no-EntrezGene branch. (Historically this
+    was the *real* tomato case — only ArrayExpress — but the SL4.0 re-release
+    now exposes an EntrezGene xref, so the response below is hand-built rather
+    than observed. Note the wire form: tomato is the assembly-qualified
+    species with a ``gene-`` stable-id prefix.) Bridge must raise loud — no
+    silent empty pathway list.
     """
     httpx_mock.add_response(
-        url="https://rest.ensembl.org/xrefs/id/Solyc01g005610.3?species=solanum_lycopersicum",
+        url="https://rest.ensembl.org/xrefs/id/gene-Solyc01g005610.4?species=solanum_lycopersicum_gca000188115v5cm",
         json=[
-            {"dbname": "ArrayExpress", "primary_id": "Solyc01g005610", "display_id": "x"},
+            {"dbname": "ArrayExpress", "primary_id": "gene-Solyc01g005610.4", "display_id": "x"},
         ],
     )
     async with httpx.AsyncClient() as client:
         with pytest.raises(NotFoundError, match="none from EntrezGene"):
             await kegg._resolve_locus_to_entrez_id(
-                client, "Solyc01g005610.3", organism="solanum_lycopersicum"
+                client, "Solyc01g005610.4", organism="solanum_lycopersicum"
             )
 
 
