@@ -261,10 +261,22 @@ async def test_timed_step_network_error_becomes_error_steprow():
 
 
 @pytest.mark.asyncio
-async def test_analyze_locus_synth_network_error_records_error_row_not_crash(httpx_mock):
-    """A raw httpx network error on one phase-2 backend (xrefs) must record
-    a status="error" StepRow with the [ClassName] prefix, while the rest of
-    the envelope still composes from the other successful rows."""
+async def test_analyze_locus_synth_network_error_records_error_row_not_crash(
+    httpx_mock, monkeypatch
+):
+    """A persistent transport error on one phase-2 backend (xrefs) must record
+    a status="error" StepRow while the rest of the envelope still composes from
+    the other successful rows. ``_http.request_with_retry`` now retries transport
+    errors and, once the budget is exhausted, surfaces a typed
+    ``UpstreamUnavailableError`` whose message preserves the original exception
+    class — so the row prefix is ``[UpstreamUnavailableError]`` and the body
+    still names the underlying ``ReadTimeout``."""
+
+    async def _noop_sleep(_: float) -> None:
+        return None
+
+    # Skip the retry backoff so the test doesn't sleep through the schedule.
+    monkeypatch.setattr("plant_genomics_mcp._http.asyncio.sleep", _noop_sleep)
     httpx_mock.add_response(
         url="https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0",
         json={
@@ -273,11 +285,13 @@ async def test_analyze_locus_synth_network_error_records_error_row_not_crash(htt
             "display_name": "NAC001",
         },
     )
-    # xrefs raises a raw httpx network error (not a PlantGenomicsError)
-    httpx_mock.add_exception(
-        httpx.ReadTimeout("read timed out"),
-        url="https://rest.ensembl.org/xrefs/id/AT1G01010?species=arabidopsis_thaliana",
-    )
+    # xrefs hits a transport error on every attempt; request_with_retry retries
+    # the default 3 times before raising the typed UpstreamUnavailableError.
+    for _ in range(3):
+        httpx_mock.add_exception(
+            httpx.ReadTimeout("read timed out"),
+            url="https://rest.ensembl.org/xrefs/id/AT1G01010?species=arabidopsis_thaliana",
+        )
     httpx_mock.add_response(
         url=re.compile(r"^https://rest\.uniprot\.org/uniprotkb/search.*"),
         json={
@@ -315,7 +329,9 @@ async def test_analyze_locus_synth_network_error_records_error_row_not_crash(htt
     xrefs_row = xrefs_rows[0]
     assert xrefs_row.status == "error"
     assert xrefs_row.error is not None
-    assert xrefs_row.error.startswith("[ReadTimeout]")
+    assert xrefs_row.error.startswith("[UpstreamUnavailableError]")
+    # The original transport-error class is preserved in the message body.
+    assert "ReadTimeout" in xrefs_row.error
 
 
 @pytest.mark.asyncio

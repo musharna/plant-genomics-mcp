@@ -53,15 +53,37 @@ async def request_with_retry(
     """
     delay = 1.0
     last_status: int | None = None
+    last_exc: httpx.TransportError | None = None
     for attempt in range(max_retries):
-        resp = await client.request(
-            method,
-            url,
-            params=params,
-            data=data,
-            headers=headers,
-            timeout=timeout,
-        )
+        try:
+            resp = await client.request(
+                method,
+                url,
+                params=params,
+                data=data,
+                headers=headers,
+                timeout=timeout,
+            )
+        except httpx.TransportError as exc:
+            # Connection-level failures (ConnectTimeout / ConnectError /
+            # ReadTimeout / …) are raised before any HTTP status exists, so
+            # the status-code branches below never see them. Without this
+            # they propagate on the first attempt with zero retries — a
+            # single transient blip reaching any backend then hard-fails.
+            # Retry them on the same backoff schedule as 429/5xx.
+            last_exc = exc
+            last_status = None
+            if attempt < max_retries - 1:
+                retry_after = min(delay, _RETRY_AFTER_CAP)
+                await progress.notify(
+                    f"{service}: {type(exc).__name__}, retrying in "
+                    f"{retry_after:.1f}s (attempt {attempt + 2}/{max_retries})"
+                )
+                await asyncio.sleep(retry_after)
+                delay *= 2
+                continue
+            break
+        last_exc = None
         last_status = resp.status_code
 
         if resp.status_code == 200:
@@ -100,6 +122,10 @@ async def request_with_retry(
             )
         raise PlantGenomicsError(f"{service} → HTTP {resp.status_code}: {resp.text[:200]}")
 
+    if last_exc is not None:
+        raise UpstreamUnavailableError(
+            f"{service} exhausted {max_retries} retries ({type(last_exc).__name__}: {last_exc})"
+        ) from last_exc
     if last_status == 429:
         raise RateLimitError(f"{service} exhausted {max_retries} retries (HTTP 429)")
     raise UpstreamUnavailableError(
