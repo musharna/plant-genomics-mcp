@@ -161,6 +161,82 @@ async def test_raises_plant_genomics_error_on_non_retryable_4xx(
 
 
 @pytest.mark.asyncio
+async def test_retries_on_connect_timeout_then_succeeds(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A transient ConnectTimeout (the failure that reddened the 2026-06-29
+    benchmark when bar.utoronto.ca was briefly unreachable from the CI
+    runner) must be retried, not surfaced on the first attempt. Transport
+    exceptions are raised before any HTTP status exists, so the original
+    status-only retry loop let them propagate immediately with zero retries.
+    """
+    sleeps: list[float] = []
+
+    async def _record(seconds: float) -> None:
+        sleeps.append(seconds)
+
+    monkeypatch.setattr(_http.asyncio, "sleep", _record)
+
+    httpx_mock.add_exception(
+        httpx.ConnectTimeout("connect timed out"), url="https://example.test/t"
+    )
+    httpx_mock.add_response(url="https://example.test/t", json={"ok": True})
+    async with httpx.AsyncClient() as client:
+        resp = await _http.request_with_retry(
+            client, "GET", "https://example.test/t", service="example"
+        )
+    assert resp.json() == {"ok": True}
+    assert sleeps, "transport-error retry path never slept"
+
+
+@pytest.mark.asyncio
+async def test_transport_retry_sleep_capped_at_60s(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The transport-error backoff reuses the same 60s ceiling as the
+    status-code path, so a long exhausted retry chain can't pin the agent."""
+    sleeps: list[float] = []
+
+    async def _record(seconds: float) -> None:
+        sleeps.append(seconds)
+
+    monkeypatch.setattr(_http.asyncio, "sleep", _record)
+
+    httpx_mock.add_exception(httpx.ConnectError("refused"), url="https://example.test/cap2")
+    httpx_mock.add_response(url="https://example.test/cap2", json={"ok": True})
+    async with httpx.AsyncClient() as client:
+        await _http.request_with_retry(
+            client, "GET", "https://example.test/cap2", service="example"
+        )
+    assert sleeps, "retry path never slept"
+    assert max(sleeps) <= 60.0, f"sleep {max(sleeps)} exceeded 60s cap"
+
+
+@pytest.mark.asyncio
+async def test_raises_upstream_unavailable_on_exhausted_transport_errors(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """When every attempt hits a transport exception, the helper raises the
+    typed UpstreamUnavailableError naming the underlying exception class —
+    not a bare httpx error and not a misleading 'last HTTP None'."""
+
+    async def _noop(_: float) -> None:
+        return None
+
+    monkeypatch.setattr(_http.asyncio, "sleep", _noop)
+
+    for _ in range(3):
+        httpx_mock.add_exception(
+            httpx.ConnectTimeout("connect timed out"), url="https://example.test/dead2"
+        )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError, match="exhausted.*ConnectTimeout"):
+            await _http.request_with_retry(
+                client, "GET", "https://example.test/dead2", service="example"
+            )
+
+
+@pytest.mark.asyncio
 async def test_supports_post_with_form_data(httpx_mock: HTTPXMock) -> None:
     """Phytozome BioMart POSTs form-encoded XML."""
     httpx_mock.add_response(url="https://example.test/biomart", method="POST", text="row1\trow2\n")
