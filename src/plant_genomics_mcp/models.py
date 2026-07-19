@@ -283,6 +283,52 @@ class LocusGoAnnotations(BaseModel):
     )
 
 
+class GoEnrichmentTerm(BaseModel):
+    """One enriched term from g:Profiler g:GOSt over a gene set.
+
+    ``extra="allow"`` keeps any additional g:Profiler statistic (e.g.
+    ``goshv``, ``effective_domain_size``) from raising on output validation.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    source: str | None = Field(default=None, description="GO:BP | GO:MF | GO:CC | KEGG")
+    term_id: str | None = Field(default=None, description="Term accession, e.g. GO:0007623")
+    name: str | None = Field(default=None, description="Human-readable term name")
+    description: str | None = Field(default=None)
+    p_value: float | None = Field(default=None, description="g:SCS-corrected significance")
+    significant: bool | None = Field(default=None)
+    term_size: int | None = Field(default=None, description="Genes annotated to the term")
+    query_size: int | None = Field(default=None, description="Mapped genes in the query domain")
+    intersection_size: int | None = Field(
+        default=None, description="Query genes annotated to the term"
+    )
+    precision: float | None = Field(default=None)
+    recall: float | None = Field(default=None)
+
+
+class GoEnrichmentResult(BaseModel):
+    """g:Profiler g:GOSt over-representation wrapper for a gene list.
+
+    ``enriched`` is capped at ``top_n`` (sorted by p-value); ``total_terms``
+    is the pre-cap count. ``unmapped`` lists query loci g:Profiler could not
+    recognize — surfaced rather than silently dropped so a locus-namespace
+    mismatch is visible.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    organism: str = Field(description="Canonical organism slug")
+    gprofiler_id: str = Field(description="g:Profiler organism ID used, e.g. athaliana")
+    sources: list[str] = Field(description="Annotation sources queried")
+    query_size: int = Field(description="Number of loci submitted")
+    mapped: int = Field(description="Loci g:Profiler recognized")
+    unmapped: list[str] = Field(description="Loci g:Profiler could not map")
+    total_terms: int = Field(description="Significant terms before the top_n cap")
+    returned: int = Field(description="Terms in enriched[] after the top_n cap")
+    enriched: list[GoEnrichmentTerm]
+
+
 class BlastHit(BaseModel):
     """One row from the BLAST text-report "significant alignments" table.
 

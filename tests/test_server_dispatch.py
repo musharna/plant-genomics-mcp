@@ -30,6 +30,7 @@ from plant_genomics_mcp import (
     blast,
     ensembl_plants,
     europe_pmc,
+    gprofiler,
     gramene,
     kegg,
     phytozome,
@@ -84,6 +85,7 @@ DISPATCH_SPECS: list[Spec] = [
         L,
         _DEFAULT_ORG,
     ),
+    Spec("go_enrichment", gprofiler, "go_enrichment", {"loci": LOCI}, LOCI, _DEFAULT_ORG),
     Spec("tair_locus_info", tair, "lookup_locus", {"locus": L}, L, None),
     Spec("plantcyc_locus_info", plantcyc, "lookup_locus", {"locus": L}, L, None, sync=True),
     Spec(

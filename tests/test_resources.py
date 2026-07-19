@@ -40,6 +40,7 @@ async def test_read_cache_stats_returns_per_backend_rollup() -> None:
         "bar",
         "ensembl_plants",
         "europe_pmc",
+        "gprofiler",
         "gramene",
         "kegg",
         "phytozome",
@@ -97,11 +98,13 @@ async def test_read_coverage_matrix_lists_all_organisms() -> None:
     # v1.1.0 T4: kegg + atted columns surface the new per-backend slots.
     assert "kegg" in body
     assert "atted" in body
-    # Header row has 9 named columns (canonical, scientific, ncbi_taxid,
-    # ensembl, phytozome, string, europe_pmc, kegg, atted) — surrounding pipes
-    # produce 10 segments when split on "|".
+    # v1.11.0: gprofiler column (g:Profiler org IDs for go_enrichment).
+    assert "gprofiler" in body
+    # Header row has 10 named columns (canonical, scientific, ncbi_taxid,
+    # ensembl, phytozome, string, europe_pmc, kegg, atted, gprofiler) —
+    # surrounding pipes produce 11 segments when split on "|".
     header_line = next(line for line in body.splitlines() if line.startswith("| canonical "))
-    assert header_line.count("|") == 10
+    assert header_line.count("|") == 11
     # Spot-check Arabidopsis row carries the new slots end-to-end.
     arab_row = next(
         line for line in body.splitlines() if line.startswith("| arabidopsis_thaliana ")
@@ -151,6 +154,7 @@ async def test_read_backends_status_lists_live_and_stub_backends() -> None:
         "uniprot",
         "europe_pmc",
         "quickgo",
+        "gprofiler",
         "gramene",
         "kegg",
         "string_db",

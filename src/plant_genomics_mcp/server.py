@@ -1,9 +1,10 @@
 """MCP server entry point — exposes plant genomics tools over stdio.
 
-This dispatch ships thirty-five tools — sixteen single-locus, one
-genomic-region query, one BLAST sequence-similarity search, twelve batch
-variants that fan out per-locus calls in parallel, and five cross-source
-synthesis tools that compose the live backends:
+This dispatch ships thirty-six tools — sixteen single-locus, one
+genomic-region query, one gene-set enrichment, one BLAST
+sequence-similarity search, twelve batch variants that fan out per-locus
+calls in parallel, and five cross-source synthesis tools that compose the
+live backends:
 
   - ``ensembl_plants_lookup_locus``       — Ensembl Plants REST (live)
   - ``get_gene_xrefs``                    — Ensembl Plants xrefs (live)
@@ -11,6 +12,7 @@ synthesis tools that compose the live backends:
   - ``resolve_locus_to_uniprot``          — UniProt KB search (live)
   - ``locus_literature``                  — Europe PMC search (live)
   - ``locus_go_annotations``              — QuickGO GO annotations (live, locus→UniProt→QuickGO)
+  - ``go_enrichment``                     — g:Profiler GO+KEGG over-representation over a gene LIST (live)
   - ``blast_sequence``                    — NCBI BLAST URLAPI (live, async Put/Get polling)
   - ``gramene_homologs``                  — Gramene v69 homology (live, ortholog/paralog + gene_tree_id)
   - ``kegg_pathways``                     — KEGG pathway memberships (live, multi-organism via ``organism=``)
@@ -69,6 +71,7 @@ from plant_genomics_mcp import (
     blast,
     ensembl_plants,
     europe_pmc,
+    gprofiler,
     gramene,
     kegg,
     phytozome,
@@ -93,6 +96,7 @@ from plant_genomics_mcp.models import (
     EnsemblRegionFeatures,
     EnsemblSequence,
     GeneXrefs,
+    GoEnrichmentResult,
     GrameneHomologs,
     KeggPathways,
     LocusGoAnnotations,
@@ -473,6 +477,67 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=LocusGoAnnotations.model_json_schema(),
+        _meta=_EDAM_GO,
+    ),
+    types.Tool(
+        name="go_enrichment",
+        description=(
+            "GO + KEGG over-representation analysis for a gene LIST via g:Profiler "
+            "g:GOSt (biit.cs.ut.ee/gprofiler; free, no API key). Unlike "
+            "locus_go_annotations (one locus → its terms), this answers 'what is my "
+            "gene SET enriched for?' — the dominant question for a differential-"
+            "expression or co-expression cluster. loci is the query gene list (e.g. "
+            "AT-codes for Arabidopsis, RAP-DB IDs for rice). sources defaults to "
+            "GO:BP/GO:MF/GO:CC + KEGG; user_threshold is the g:SCS-corrected "
+            "significance cutoff (default 0.05). Optional background sets a custom "
+            "statistical domain (default: all annotated genes). Returns enriched[] "
+            "(term_id/name/p_value/intersection_size/…, capped at top_n by p-value) "
+            "plus unmapped[] — query loci g:Profiler could not recognize, surfaced "
+            "so a locus-namespace mismatch is visible. Defaults to "
+            "arabidopsis_thaliana; pass organism= for any of the 12 species."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "loci": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Query gene set, e.g. ['AT2G46830', 'AT1G01060', ...]",
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
+                },
+                "sources": {
+                    "type": "array",
+                    "items": {"type": "string", "enum": ["GO:BP", "GO:MF", "GO:CC", "KEGG"]},
+                    "description": "Annotation sources to test (default: all four)",
+                },
+                "background": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Optional custom statistical background gene set",
+                },
+                "user_threshold": {
+                    "type": "number",
+                    "description": "Significance cutoff, g:SCS-corrected (default 0.05)",
+                    "default": gprofiler.DEFAULT_THRESHOLD,
+                    "exclusiveMinimum": 0,
+                    "maximum": 1,
+                },
+                "top_n": {
+                    "type": "integer",
+                    "description": "Max terms returned, sorted by p-value (1–200, default 50)",
+                    "default": gprofiler.DEFAULT_TOP_N,
+                    "minimum": 1,
+                    "maximum": gprofiler.MAX_TOP_N,
+                },
+            },
+            "required": ["loci"],
+            "additionalProperties": False,
+        },
+        outputSchema=GoEnrichmentResult.model_json_schema(),
         _meta=_EDAM_GO,
     ),
     types.Tool(
@@ -1390,6 +1455,16 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     args["end"],
                     organism=args.get("organism", "arabidopsis_thaliana"),
                     feature=args.get("feature", "gene"),
+                )
+            case "go_enrichment":
+                return await gprofiler.go_enrichment(
+                    client,
+                    args["loci"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                    sources=args.get("sources"),
+                    background=args.get("background"),
+                    user_threshold=args.get("user_threshold", gprofiler.DEFAULT_THRESHOLD),
+                    top_n=args.get("top_n", gprofiler.DEFAULT_TOP_N),
                 )
             case "phytozome_lookup_locus":
                 return await phytozome.lookup_locus(
