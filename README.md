@@ -14,7 +14,7 @@
 [![Glama](https://glama.ai/mcp/servers/musharna/plant-genomics-mcp/badges/score.svg)](https://glama.ai/mcp/servers/musharna/plant-genomics-mcp)
 
 <p align="center">
-  <img src="examples/assets/demo.svg" alt="plant-genomics-mcp stdio demo — initialize, tools/list (32), and a coverage-matrix resource read" width="780">
+  <img src="examples/assets/cc-demo.gif" alt="Claude Code answering a plant-genomics question live — calling plant-genomics-mcp across Ensembl Plants, UniProt, and Europe PMC and synthesizing the AT1G01010 / NAC1_ARATH gene profile in a single turn" width="780">
 </p>
 
 ## 📦 Install
@@ -41,6 +41,21 @@ claude mcp add plant-genomics --scope local -- "$(pwd)/.venv/bin/plant-genomics-
 ```
 
 </details>
+
+## 💬 Try it
+
+Once connected, ask Claude a plain-language question — you don't have to
+name any tool or remember the chain:
+
+> **"Tell me everything about the Arabidopsis gene AT1G01010 — its
+> function, GO terms, KEGG pathways, protein-interaction partners, and
+> recent papers."**
+
+Claude fans out across Ensembl Plants, UniProt, QuickGO, KEGG, STRING-DB,
+and Europe PMC in a single turn and hands back one synthesized answer.
+Swap in any locus and pass `organism=` for cross-species — e.g. rice
+`Os01g0100100` (`oryza_sativa`) — and it routes to the right backends
+automatically.
 
 ## 🛠️ Tools
 
