@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.11.0 — 2026-07-19
+
+Adds **`go_enrichment`** — GO + KEGG over-representation analysis for a gene **list** — over a new **g:Profiler g:GOSt** backend (free, no API key). This closes the last P1 backlog item: `locus_go_annotations` answers "what terms does _this locus_ have?", while `go_enrichment` answers the dominant downstream question — "what is my differential-expression / co-expression _set_ enriched for?". First new live backend since v1.x; backend count 11 → 12, tool count 35 → 36. Minor: one new tool + one new backend, no breaking changes, no new dependencies.
+
+**Added**
+
+- **`go_enrichment`** (`gprofiler.go_enrichment`) — POSTs a query gene list to g:Profiler's `/api/gost/profile/`. Inputs: `loci` (the gene set), `organism` (any of the 12, resolved to a g:Profiler org ID), `sources` (default `GO:BP`/`GO:MF`/`GO:CC`/`KEGG`), optional `background` (custom statistical domain → `domain_scope=custom`), `user_threshold` (default 0.05, g:SCS-corrected), `top_n` (default 50, capped at 200). Returns `enriched[]` (term_id / name / p_value / intersection_size / precision / recall, sorted by p-value) plus **`unmapped[]`** — query loci g:Profiler could not recognize, surfaced rather than silently dropped so a locus-namespace mismatch is visible. New `GoEnrichmentTerm` + `GoEnrichmentResult` output models.
+- **g:Profiler backend** (`gprofiler.py`) — new live backend on the standard template (TTLCache, shared retry, typed errors). All 12 organisms covered; the `gprofiler_id` slot on `OrganismRecord` maps each to its g:Profiler org ID (verified against `/api/util/organisms_list/` 2026-07-19 — _not_ derivable from taxid: barley → `hvulgare`, wheat → the Lancer cultivar). A `json=` passthrough was added to `_http.request_with_retry` for POST-with-JSON backends.
+- **Resources** — g:Profiler now appears in `pgmcp://cache/stats` and `pgmcp://backends/status`; `pgmcp://organisms/coverage` gains a `gprofiler` column (12-organism × 6-backend matrix).
+- **Tests** — 14 mocked unit tests (happy path, p-value sort + top_n cap, unmapped surfacing, default/subset/empty sources, custom background payload, bad-source / empty-loci / non-list / oversized-query / bad-threshold validation, non-dict + result-not-list payload guards) + 2 `PLANT_GENOMICS_MCP_LIVE=1` real-execution tests (Arabidopsis clock genes enrich for circadian rhythm `GO:0007623`; rice resolves to `osativa`). Dispatch-coverage spec + stdio-smoke name/organism sets + resource assertions updated. `gprofiler.py` at 100% line coverage.
+
+**Changed**
+
+- **`README.md`** — tool count 35 → 36, backends 11 → 12, new `go_enrichment` matrix row.
+- **`server.py` / `pyproject.toml` / `__init__.py`** — module docstring and package description tool counts updated to 36.
+
 ## v1.10.0 — 2026-07-19
 
 Adds two Ensembl Plants query tools — **`get_sequence`** and **`ensembl_region_query`** — both new query modes on the existing Ensembl REST client (no new backend, no new dependencies). Tool count 33 → 35. Minor: two new tools, no breaking changes.
