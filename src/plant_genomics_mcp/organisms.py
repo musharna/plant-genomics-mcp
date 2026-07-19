@@ -45,6 +45,13 @@ class OrganismRecord:
     # Needed for assemblies imported from an NCBI GFF, whose Ensembl stable
     # IDs carry a ``gene-`` prefix (e.g. tomato SL4.0 → ``gene-Solyc...``).
     # ``None``/"" means pass the locus through unchanged.
+    gprofiler_id: str | None = None
+    # g:Profiler organism ID (e.g. "athaliana") used by ``gprofiler.py`` for
+    # GO/KEGG over-representation. NOT derivable from the NCBI taxid: g:Profiler
+    # indexes specific assemblies/cultivars, so barley → ``hvulgare`` (its taxid
+    # 112509) and wheat → ``talancer`` (Lancer cultivar), neither matching the
+    # species-level taxid on this record. IDs verified against
+    # /api/util/organisms_list/ (probed 2026-07-19). ``None`` = not covered.
     aliases: tuple[str, ...] = field(default_factory=tuple)
 
 
@@ -60,6 +67,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         europe_pmc_slug=None,
         kegg_org_code="ath",
         atted_release="Ath-u.c4-0",
+        gprofiler_id="athaliana",
         aliases=("a. thaliana", "at", "arabidopsis"),
     ),
     "oryza_sativa": OrganismRecord(
@@ -73,6 +81,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         europe_pmc_slug="rice",
         kegg_org_code="osa",  # v1.4.0: bridge via Ensembl /xrefs EntrezGene resolves RAP-DB loci → Entrez Gene IDs
         atted_release="Osa-u.c1-0",
+        gprofiler_id="osativa",
         aliases=("o. sativa",),
     ),
     "zea_mays": OrganismRecord(
@@ -86,6 +95,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         europe_pmc_slug="maize",
         kegg_org_code="zma",  # v1.4.0: bridge via Ensembl /xrefs EntrezGene resolves MaizeGDB loci → Entrez Gene IDs
         atted_release="Zma-u.c1-0",
+        gprofiler_id="zmays",
         aliases=("z. mays",),
     ),
     "triticum_aestivum": OrganismRecord(
@@ -105,6 +115,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         # deferred to v1.6+).
         kegg_org_code=None,
         atted_release=None,  # ATTED-II has no Tae-u release (probed 2026-05-24)
+        gprofiler_id="talancer",  # g:Profiler indexes the Lancer cultivar (taxid 4565002); species taxid 4565 is not a g:Profiler org
         aliases=("t. aestivum",),
     ),
     "solanum_lycopersicum": OrganismRecord(
@@ -131,6 +142,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         # this regression fix tight.
         kegg_org_code=None,
         atted_release="Sly-u.c1-0",
+        gprofiler_id="slycopersicum",
         aliases=("s. lycopersicum",),
     ),
     "glycine_max": OrganismRecord(
@@ -144,6 +156,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         europe_pmc_slug="soybean",
         kegg_org_code="gmx",  # v1.4.0: bridge via Ensembl /xrefs EntrezGene; SoyBase ``Glyma.`` form normalized to Ensembl ``GLYMA_`` on the wire
         atted_release="Gma-u.c1-0",
+        gprofiler_id="gmax",
         aliases=("g. max",),
     ),
     "sorghum_bicolor": OrganismRecord(
@@ -162,6 +175,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         # (probed 2026-05-25, deferred to v1.6+).
         kegg_org_code=None,
         atted_release=None,  # ATTED-II has no Sbi-u release (probed 2026-05-24)
+        gprofiler_id="sbicolor",
         aliases=("s. bicolor",),
     ),
     "hordeum_vulgare": OrganismRecord(
@@ -175,6 +189,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         europe_pmc_slug="barley",
         kegg_org_code="hvg",  # v1.5: bridge probed pass — Ensembl /xrefs returns EntrezGene for chr1 locus HORVU.MOREX.r3.1HG0000090 (probed 2026-05-25, scripts/probe_kegg_bridge_candidates.json)
         atted_release=None,  # ATTED-II has no Hvg-u release (probed 2026-05-24)
+        gprofiler_id="hvulgare",  # g:Profiler taxid 112509; species taxid 4513 is not a g:Profiler org
         aliases=("h. vulgare",),
     ),
     "vitis_vinifera": OrganismRecord(
@@ -193,6 +208,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         # (probed 2026-05-25, deferred to v1.6+).
         kegg_org_code=None,
         atted_release="Vvi-u.c1-0",
+        gprofiler_id="vvinifera",
         aliases=("v. vinifera",),
     ),
     "populus_trichocarpa": OrganismRecord(
@@ -206,6 +222,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         europe_pmc_slug=None,
         kegg_org_code="pop",  # v1.5: bridge probed pass — Ensembl /xrefs returns EntrezGene for chr1 locus Potri.001G006600.v4.1 (probed 2026-05-25, scripts/probe_kegg_bridge_candidates.json)
         atted_release=None,  # ATTED-II Pop-u/Ptr-u return invalid-db (probed 2026-05-24)
+        gprofiler_id="ptrichocarpa",
         aliases=("p. trichocarpa",),
     ),
     "medicago_truncatula": OrganismRecord(
@@ -224,6 +241,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         # 2026-05-25, deferred to v1.6+).
         kegg_org_code=None,
         atted_release="Mtr-u.c1-0",
+        gprofiler_id="mtruncatula",
         aliases=("m. truncatula",),
     ),
     "brachypodium_distachyon": OrganismRecord(
@@ -237,6 +255,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         europe_pmc_slug="Brachypodium",
         kegg_org_code="bdi",  # v1.5: bridge probed pass — Ensembl /xrefs returns EntrezGene for chr1 locus BRADI_1g00485v3 (probed 2026-05-25, scripts/probe_kegg_bridge_candidates.json)
         atted_release=None,  # ATTED-II has no Bdi-u release (probed 2026-05-24)
+        gprofiler_id="bdistachyon",
         aliases=("b. distachyon",),
     ),
 }
@@ -374,6 +393,17 @@ def atted_release_for(query: str | int) -> str:
             supported=_supported_for("atted_release"),
         )
     return record.atted_release
+
+
+def gprofiler_id_for(query: str | int) -> str:
+    record = resolve(query)
+    if record.gprofiler_id is None:
+        raise OrganismNotSupported(
+            backend="gprofiler",
+            organism=record.canonical,
+            supported=_supported_for("gprofiler_id"),
+        )
+    return record.gprofiler_id
 
 
 def ncbi_taxid_for(query: str | int) -> int:

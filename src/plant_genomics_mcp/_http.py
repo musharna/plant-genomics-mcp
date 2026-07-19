@@ -38,6 +38,7 @@ async def request_with_retry(
     service: str,
     params: Mapping[str, Any] | None = None,
     data: Any = None,
+    json: Any = None,
     headers: Mapping[str, str] | None = None,
     timeout: float = 30.0,
     max_retries: int = 3,
@@ -61,6 +62,7 @@ async def request_with_retry(
                 url,
                 params=params,
                 data=data,
+                json=json,
                 headers=headers,
                 timeout=timeout,
             )

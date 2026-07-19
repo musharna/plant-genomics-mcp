@@ -17,7 +17,7 @@ Four resources, all derived from in-process state:
                                       the catalog in ``server.py``'s module
                                       docstring but in a parseable form.
   * ``pgmcp://organisms/coverage``  — markdown table of the full 12-organism
-                                      × 5-backend coverage matrix. Lets a
+                                      × 6-backend coverage matrix. Lets a
                                       client introspect supported coverage
                                       in one read instead of probing
                                       ``resolve_organism`` per organism.
@@ -46,6 +46,7 @@ from plant_genomics_mcp import (
     blast,
     ensembl_plants,
     europe_pmc,
+    gprofiler,
     gramene,
     kegg,
     organisms,
@@ -124,6 +125,7 @@ def _cache_stats_payload() -> dict[str, dict[str, int]]:
         "bar": bar._CACHE.stats(),
         "ensembl_plants": ensembl_plants._CACHE.stats(),
         "europe_pmc": europe_pmc._CACHE.stats(),
+        "gprofiler": gprofiler._CACHE.stats(),
         "gramene": gramene._CACHE.stats(),
         "kegg": kegg._CACHE.stats(),
         "phytozome": phytozome._CACHE.stats(),
@@ -180,6 +182,12 @@ def _backends_status_payload() -> list[dict[str, object]]:
         {
             "name": "quickgo",
             "base_url": quickgo.BASE_URL,
+            "kind": "live",
+            "subscription_gated": False,
+        },
+        {
+            "name": "gprofiler",
+            "base_url": gprofiler.BASE_URL,
             "kind": "live",
             "subscription_gated": False,
         },
@@ -244,8 +252,8 @@ def _coverage_matrix_payload() -> str:
     lines = [
         "# Organism Coverage Matrix",
         "",
-        "| canonical | scientific | ncbi_taxid | ensembl | phytozome | string | europe_pmc | kegg | atted |",
-        "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+        "| canonical | scientific | ncbi_taxid | ensembl | phytozome | string | europe_pmc | kegg | atted | gprofiler |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for canonical, r in organisms.ORGANISMS.items():
         ensembl = r.ensembl_slug or "—"
@@ -254,9 +262,10 @@ def _coverage_matrix_payload() -> str:
         epmc = r.europe_pmc_slug if r.europe_pmc_slug is not None else "None (no strip)"
         kegg = r.kegg_org_code or "—"
         atted = r.atted_release or "—"
+        gprof = r.gprofiler_id or "—"
         lines.append(
             f"| {canonical} | {r.scientific} | {r.ncbi_taxid} | "
-            f"{ensembl} | {phyto} | {string} | {epmc} | {kegg} | {atted} |"
+            f"{ensembl} | {phyto} | {string} | {epmc} | {kegg} | {atted} | {gprof} |"
         )
     return "\n".join(lines) + "\n"
 
