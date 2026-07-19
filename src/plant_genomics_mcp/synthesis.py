@@ -723,6 +723,346 @@ def _consensus_partners(
 
 
 # ---------------------------------------------------------------------------
+# 4.3b gene_report — one-shot Markdown gene dossier
+# ---------------------------------------------------------------------------
+
+
+_GENE_REPORT_STEPS = [
+    "ensembl_plants_lookup_locus",
+    "resolve_locus_to_uniprot",
+    "get_gene_xrefs",
+    "kegg_pathways",
+    "string_interactions",
+    "locus_literature",
+    "locus_go_annotations",
+]
+
+
+async def gene_report(
+    client: httpx.AsyncClient,
+    locus: str,
+    organism: str | int = DEFAULT_ORGANISM,
+    top_n: int = DEFAULT_TOP_N,
+) -> SynthesisEnvelope:
+    """One-shot "tell me about this gene" dossier.
+
+    Unions the analyze_locus chain (annotation, cross-refs, protein, GO,
+    literature) with the biological_context pathway + interaction backends into
+    a single :class:`SynthesisEnvelope` whose ``result["markdown"]`` is a
+    rendered Markdown gene dossier — the headline deliverable — alongside a
+    structured ``result["sections"]`` mirror.
+
+    Phase 1 (parallel): ``ensembl_plants.lookup_locus`` (root) +
+      ``uniprot.lookup_locus`` (sequenced here because QuickGO needs the
+      resolved primaryAccession).
+    Phase 2 (gather): ``get_gene_xrefs``, ``kegg_pathways``,
+      ``string_interactions``, ``locus_literature``, and ``locus_go_annotations``
+      (only when UniProt resolved).
+
+    Ensembl is the root: if it fails the envelope returns ``result=None`` with
+    every downstream row ``skipped``. Any individual phase-2 failure degrades
+    that one section to an "Unavailable" note in the Markdown (and ``None`` in
+    the structured mirror); the rest of the dossier still renders.
+    """
+    top_n = _bound_top_n(top_n)
+    started_at = _now_iso()
+    t0 = time.perf_counter()
+    input_args = {"locus": locus, "organism": organism, "top_n": top_n}
+
+    # Phase 0 — resolve organism alias; root-fail on unknown so nothing fires
+    # with a bogus slug.
+    try:
+        resolved = organisms.resolve(organism)
+    except OrganismNotFound as exc:
+        return SynthesisEnvelope(
+            tool="gene_report",
+            input=input_args,
+            started_at=started_at,
+            elapsed_s=time.perf_counter() - t0,
+            steps=[
+                StepRow(
+                    step=1,
+                    tool=_GENE_REPORT_STEPS[0],
+                    status="error",
+                    elapsed_s=None,
+                    error=str(exc),
+                ),
+                *[
+                    _skipped(i + 1, _GENE_REPORT_STEPS[i], "phase 1 failed; skipped")
+                    for i in range(1, 7)
+                ],
+            ],
+            result=None,
+        )
+
+    # Phase 1 — ensembl (root) + uniprot in parallel; latency = max(ensembl, uniprot).
+    phase1 = await _gather_phase2(
+        [
+            (
+                1,
+                _GENE_REPORT_STEPS[0],
+                ensembl_plants.lookup_locus(client, locus, organism=organism),
+            ),
+            (2, _GENE_REPORT_STEPS[1], uniprot.lookup_locus(client, locus, organism=organism)),
+        ]
+    )
+    root, uniprot_row = phase1
+
+    if root.status != "ok":
+        # Ensembl is the entry point; without it the dossier can't anchor.
+        skipped = [
+            _skipped(i + 1, _GENE_REPORT_STEPS[i], "phase-1 ensembl lookup failed; skipped")
+            for i in range(2, 7)
+        ]
+        return SynthesisEnvelope(
+            tool="gene_report",
+            input=input_args,
+            started_at=started_at,
+            elapsed_s=time.perf_counter() - t0,
+            steps=[root, uniprot_row, *skipped],
+            result=None,
+        )
+
+    # Phase 2 — fan out the rest; quickgo only when uniprot resolved.
+    phase2_items: list[tuple[int, str, Any]] = [
+        (3, _GENE_REPORT_STEPS[2], ensembl_plants.lookup_xrefs(client, locus, organism=organism)),
+        (4, _GENE_REPORT_STEPS[3], kegg.lookup_pathways(client, locus, organism=organism)),
+        (
+            5,
+            _GENE_REPORT_STEPS[4],
+            string_db.lookup_partners(client, locus, limit=top_n, organism=organism),
+        ),
+        (6, _GENE_REPORT_STEPS[5], europe_pmc.lookup_locus(client, locus, organism=organism)),
+    ]
+    if uniprot_row.status == "ok":
+        acc = _result_dict(uniprot_row)["primaryAccession"]
+        phase2_items.append((7, _GENE_REPORT_STEPS[6], quickgo.lookup_by_uniprot(client, acc)))
+
+    p2 = await _gather_phase2(phase2_items)
+
+    if uniprot_row.status != "ok":
+        p2.append(
+            _skipped(
+                7,
+                _GENE_REPORT_STEPS[6],
+                "phase-1 UniProt resolution failed; quickgo skipped",
+            )
+        )
+
+    xrefs_row, kegg_row, string_row, lit_row, go_row = p2[0], p2[1], p2[2], p2[3], p2[4]
+
+    def _ok(row: StepRow) -> Any:
+        return row.result if row.status == "ok" else None
+
+    ensembl_record = _result_dict(root)
+    uniprot_record = _ok(uniprot_row)
+
+    canonical_gene_name = ensembl_record.get("display_name")
+    if not canonical_gene_name and uniprot_record:
+        names = uniprot_record.get("geneNames") or []
+        canonical_gene_name = names[0] if names else None
+
+    uniprot_accession = (uniprot_record or {}).get("primaryAccession")
+
+    rows = {
+        "annotation": root,
+        "protein": uniprot_row,
+        "xrefs": xrefs_row,
+        "pathways": kegg_row,
+        "interactions": string_row,
+        "literature": lit_row,
+        "go_annotations": go_row,
+    }
+    markdown = _render_gene_report_md(
+        locus=locus,
+        organism_display=resolved.scientific,
+        canonical_gene_name=canonical_gene_name,
+        rows=rows,
+        top_n=top_n,
+    )
+
+    return SynthesisEnvelope(
+        tool="gene_report",
+        input=input_args,
+        started_at=started_at,
+        elapsed_s=time.perf_counter() - t0,
+        steps=[root, uniprot_row, *p2],
+        result={
+            "locus": locus,
+            "organism": resolved.canonical,
+            "canonical_gene_name": canonical_gene_name,
+            "uniprot_accession": uniprot_accession,
+            "markdown": markdown,
+            "sections": {name: _ok(row) for name, row in rows.items()},
+        },
+    )
+
+
+def _section_note(row: StepRow) -> str | None:
+    """Italic 'Unavailable — <reason>' line for a non-ok section, else None."""
+    if row.status == "ok":
+        return None
+    return f"_Unavailable — {row.error or 'no data'}_"
+
+
+def _render_gene_report_md(
+    locus: str,
+    organism_display: str,
+    canonical_gene_name: str | None,
+    rows: dict[str, StepRow],
+    top_n: int,
+) -> str:
+    """Render the composed backend rows into a single Markdown gene dossier.
+
+    Each section renders from its ok row, or falls back to the row's
+    error/skip message so a partial dossier stays legible and self-explaining.
+    """
+
+    def _ok(name: str) -> Any:
+        row = rows[name]
+        return row.result if row.status == "ok" else None
+
+    title = canonical_gene_name or locus
+    lines: list[str] = [f"# {title} — `{locus}`", ""]
+
+    # Header — organism · biotype · location · assembly
+    ann = _ok("annotation") or {}
+    header_bits: list[str] = [f"*{organism_display}*"]
+    if ann.get("biotype"):
+        header_bits.append(str(ann["biotype"]))
+    if ann.get("seq_region_name") and ann.get("start") and ann.get("end"):
+        strand = "+" if ann.get("strand", 1) >= 0 else "-"
+        header_bits.append(f"{ann['seq_region_name']}:{ann['start']:,}–{ann['end']:,} ({strand})")
+    if ann.get("assembly_name"):
+        header_bits.append(str(ann["assembly_name"]))
+    lines.append(" · ".join(header_bits))
+    if ann.get("description"):
+        lines += ["", str(ann["description"])]
+
+    # Protein
+    lines += ["", "## Protein"]
+    prot = _ok("protein")
+    note = _section_note(rows["protein"])
+    if prot:
+        acc = prot.get("primaryAccession", "")
+        lines.append(f"**{prot.get('recommendedName') or prot.get('uniProtkbId') or acc}**")
+        meta_bits = [
+            str(b)
+            for b in (
+                prot.get("uniProtkbId"),
+                prot.get("entryType"),
+                f"{prot['sequenceLength']} aa" if prot.get("sequenceLength") else None,
+            )
+            if b
+        ]
+        if meta_bits:
+            lines.append(" · ".join(meta_bits))
+        if prot.get("web_url"):
+            lines.append(f"UniProt: [{acc}]({prot['web_url']})")
+    elif note:
+        lines.append(note)
+    else:
+        lines.append("_No UniProt record found._")
+
+    # GO annotations, grouped by aspect
+    lines += ["", "## GO annotations"]
+    go = _ok("go_annotations")
+    note = _section_note(rows["go_annotations"])
+    if go and go.get("annotations"):
+        by_aspect: dict[str, list[str]] = {}
+        for a in go["annotations"]:
+            label = f"[{a.get('goId')}] {a.get('goName')}"
+            if a.get("goEvidence"):
+                label += f" ({a['goEvidence']})"
+            by_aspect.setdefault(a.get("goAspect", "other"), []).append(label)
+        for aspect in ("molecular_function", "biological_process", "cellular_component"):
+            if by_aspect.get(aspect):
+                lines.append(f"**{aspect.replace('_', ' ').title()}**")
+                lines += [f"- {x}" for x in by_aspect[aspect][:top_n]]
+    elif note:
+        lines.append(note)
+    else:
+        lines.append("_No GO annotations found._")
+
+    # KEGG pathways
+    lines += ["", "## Pathways (KEGG)"]
+    kegg_p = _ok("pathways")
+    note = _section_note(rows["pathways"])
+    if kegg_p and kegg_p.get("pathways"):
+        for p in kegg_p["pathways"][:top_n]:
+            cls = f" — {p['pathway_class']}" if p.get("pathway_class") else ""
+            lines.append(f"- `{p.get('id')}` {p.get('name')}{cls}")
+    elif note:
+        lines.append(note)
+    else:
+        lines.append("_No KEGG pathway memberships found._")
+
+    # STRING interaction partners
+    lines += ["", f"## Interaction partners (STRING, top {top_n})"]
+    string_p = _ok("interactions")
+    note = _section_note(rows["interactions"])
+    if string_p and string_p.get("partners"):
+        lines += ["| Partner | Score |", "| --- | --- |"]
+        for pt in string_p["partners"][:top_n]:
+            name = pt.get("preferred_name") or pt.get("string_id") or "?"
+            lines.append(f"| {name} | {pt.get('score', '')} |")
+    elif note:
+        lines.append(note)
+    else:
+        lines.append("_No STRING interaction partners found._")
+
+    # Cross-references (deduped, capped)
+    lines += ["", "## Cross-references"]
+    xrefs = _ok("xrefs")
+    note = _section_note(rows["xrefs"])
+    if xrefs and xrefs.get("xrefs"):
+        seen: set[str] = set()
+        for x in xrefs["xrefs"]:
+            db = x.get("db_display_name") or x.get("dbname") or "?"
+            pid = x.get("primary_id") or x.get("display_id") or "?"
+            key = f"{db}:{pid}"
+            if key in seen:
+                continue
+            seen.add(key)
+            lines.append(f"- {db}: {pid}")
+            if len(seen) >= top_n:
+                break
+    elif note:
+        lines.append(note)
+    else:
+        lines.append("_No cross-references found._")
+
+    # Literature
+    lines += ["", "## Literature"]
+    lit = _ok("literature")
+    note = _section_note(rows["literature"])
+    if lit and lit.get("hits"):
+        if lit.get("hitCount"):
+            lines.append(
+                f"{lit['hitCount']} hits total; showing top {min(top_n, len(lit['hits']))}."
+            )
+        for h in lit["hits"][:top_n]:
+            title_txt = (h.get("title") or "").rstrip(".")
+            ref_bits = [
+                b
+                for b in (
+                    f"PMID:{h['pmid']}" if h.get("pmid") else None,
+                    f"doi:{h['doi']}" if h.get("doi") else None,
+                )
+                if b
+            ]
+            ref = f" ({'; '.join(ref_bits)})" if ref_bits else ""
+            lines.append(f"- **{title_txt}** — {h.get('authorString', '')}{ref}")
+    elif note:
+        lines.append(note)
+    else:
+        lines.append("_No literature found._")
+
+    lines.append("")
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
 # 4.4 consensus_homologs
 # ---------------------------------------------------------------------------
 

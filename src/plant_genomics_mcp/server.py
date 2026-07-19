@@ -1,8 +1,8 @@
 """MCP server entry point — exposes plant genomics tools over stdio.
 
-This dispatch ships thirty-two tools — fifteen single-locus, one BLAST
+This dispatch ships thirty-three tools — fifteen single-locus, one BLAST
 sequence-similarity search, twelve batch variants that fan out per-locus
-calls in parallel, and four cross-source synthesis tools that compose
+calls in parallel, and five cross-source synthesis tools that compose
 the live backends:
 
   - ``ensembl_plants_lookup_locus``       — Ensembl Plants REST (live)
@@ -1184,6 +1184,41 @@ TOOLS: list[types.Tool] = [
         outputSchema=SynthesisEnvelope.model_json_schema(),
         _meta=_EDAM_SYNTHESIS,
     ),
+    types.Tool(
+        name="gene_report",
+        description=(
+            "Synthesis: one-shot 'tell me about this gene' dossier. Resolves a "
+            "locus through Ensembl Plants + UniProt, then fans out to "
+            "cross-references, KEGG pathways, STRING interactors, Europe PMC "
+            "literature, and QuickGO GO terms. Returns a SynthesisEnvelope whose "
+            "result.markdown is a rendered Markdown gene dossier (the headline "
+            "output) alongside a structured result.sections mirror. Any single "
+            "backend failure degrades that section to an 'Unavailable' note; the "
+            "rest of the dossier still renders."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {"type": "string", "description": "Locus name, e.g. AT1G01010"},
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
+                },
+                "top_n": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 50,
+                    "default": 10,
+                    "description": "Caps GO terms, pathways, interactors, xrefs, and papers per section",
+                },
+            },
+            "required": ["locus"],
+            "additionalProperties": False,
+        },
+        outputSchema=SynthesisEnvelope.model_json_schema(),
+        _meta=_EDAM_SYNTHESIS,
+    ),
 ]
 
 
@@ -1445,6 +1480,14 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                 return env.model_dump()
             case "consensus_homologs":
                 env = await synthesis.consensus_homologs(
+                    client,
+                    args["locus"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                    top_n=args.get("top_n", 10),
+                )
+                return env.model_dump()
+            case "gene_report":
+                env = await synthesis.gene_report(
                     client,
                     args["locus"],
                     organism=args.get("organism", "arabidopsis_thaliana"),

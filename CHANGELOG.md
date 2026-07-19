@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.9.0 — 2026-07-19
+
+Adds `gene_report`, a **5th cross-source synthesis tool** — the one-shot "tell me about this gene" dossier. A single call fans out across seven live backends (Ensembl Plants annotation, UniProt, Ensembl xrefs, KEGG pathways, STRING interactors, Europe PMC literature, QuickGO GO terms) and returns a `SynthesisEnvelope` whose `result.markdown` is a rendered Markdown gene dossier — the headline, screenshot-worthy output — alongside a structured `result.sections` mirror. Minor: one new tool, no breaking changes, no new dependencies. Tool count 32 → 33; synthesis tools 4 → 5.
+
+**Added**
+
+- **`gene_report` synthesis tool** (`synthesis.gene_report` + `_render_gene_report_md`) — unions the `analyze_locus` chain (annotation, cross-refs, protein, GO, literature) with the `biological_context` pathway + interaction backends. Phase 1 runs Ensembl (root) + UniProt in parallel; phase 2 fans out xrefs / KEGG / STRING / literature, plus QuickGO GO when UniProt resolved. Ensembl is the root — its failure returns `result=None` with every downstream row `skipped`; any individual phase-2 failure degrades **only** that section to an "Unavailable — <reason>" note in the Markdown (and `null` in the structured mirror) so the rest of the dossier still renders. Reuses the existing `SynthesisEnvelope` `outputSchema` and `_EDAM_SYNTHESIS` tags; no new Pydantic model.
+- **Tests** — 4 mocked orchestrator tests (all-backends-succeed dossier, phase-1 ensembl-failure skips rest, UniProt-failure skips GO but composes, unknown-organism root-fail) + 1 `PLANT_GENOMICS_MCP_LIVE=1` real-execution test that drives the tool against every live upstream. Dispatch-coverage spec + stdio smoke tool count updated. Suite 467 → 471 mocked.
+- **Example walkthrough** — [`examples/gene_report_AT1G01010.md`](examples/gene_report_AT1G01010.md), a real-execution transcript for NAC001 (`AT1G01010`) showing the composed dossier and the graceful KEGG degradation (this locus has no KEGG pathway membership).
+
+**Changed**
+
+- **`README.md`** — tool count 32 → 33, synthesis 4 → 5, new `gene_report` matrix row + examples-table entry.
+- **`server.py` / `pyproject.toml`** — module docstring and package description tool counts updated to 33.
+
 ## v1.8.0 — 2026-05-29
 
 Hardens the scientific-validation benchmark (shipped in v1.6.0) into a continuously-monitored drift detector, and resolves the long-standing Phytozome rice/soybean "data drift" caveat. **No runtime change to the MCP server** — no new tools, output fields, schemas, or dependencies; the published package behaves identically. Everything added is developer/operator tooling, CI, tests, docs, and the benchmark corpus. Minor (not patch) because it lands a substantial new validation + monitoring capability and a 3×-expanded corpus, consistent with versioning repo milestones in this changelog. These are the four v1.7+ benchmark seeds carried from `workflow_audit_2026-05-29` / the v1.7.0 deploy memo, plus two roll-ins. Detail: project memory `v1_7_seeds_2026-05-29.md`.
