@@ -5,7 +5,7 @@ instructions a client can offer the user as one-click workflows. Each
 prompt renders to a single ``user`` ``PromptMessage`` whose text walks
 the chat model through a deterministic chain of this server's tools.
 
-Two prompts ship in P2.18:
+Three prompts ship:
 
   * ``analyze_locus``  — args: ``locus`` (required), ``organism`` (opt,
     default ``arabidopsis_thaliana``). Drives the canonical
@@ -15,6 +15,11 @@ Two prompts ship in P2.18:
     default ``blastp``). Drives a BLAST → top-hit-resolution chain
     using ``blast_sequence`` followed by Ensembl / UniProt lookups on
     the hit accessions.
+  * ``biological_context``  — args: ``locus`` (required), ``organism``
+    (opt), ``top_n`` (opt, default 10). Chains homology (Gramene) →
+    pathways (KEGG) → interactions (STRING) → coexpression (ATTED-II);
+    KEGG + ATTED steps are skipped automatically for non-Arabidopsis
+    organisms.
 
 Why prompts (vs. just describing the chain in a tool docstring):
 prompts/list is the discoverable surface clients use to populate a
