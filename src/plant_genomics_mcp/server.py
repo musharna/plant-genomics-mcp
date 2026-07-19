@@ -1,9 +1,9 @@
 """MCP server entry point — exposes plant genomics tools over stdio.
 
-This dispatch ships thirty-three tools — fifteen single-locus, one BLAST
-sequence-similarity search, twelve batch variants that fan out per-locus
-calls in parallel, and five cross-source synthesis tools that compose
-the live backends:
+This dispatch ships thirty-five tools — sixteen single-locus, one
+genomic-region query, one BLAST sequence-similarity search, twelve batch
+variants that fan out per-locus calls in parallel, and five cross-source
+synthesis tools that compose the live backends:
 
   - ``ensembl_plants_lookup_locus``       — Ensembl Plants REST (live)
   - ``get_gene_xrefs``                    — Ensembl Plants xrefs (live)
@@ -90,6 +90,8 @@ from plant_genomics_mcp.models import (
     BatchEnvelope,
     BlastResult,
     EnsemblPlantsLocus,
+    EnsemblRegionFeatures,
+    EnsemblSequence,
     GeneXrefs,
     GrameneHomologs,
     KeggPathways,
@@ -259,6 +261,79 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=GeneXrefs.model_json_schema(),
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="get_sequence",
+        description=(
+            "Fetch a locus's sequence from Ensembl Plants. seq_type is one of "
+            "genomic / cds / cdna / protein (default protein — the "
+            "canonical-transcript product). Closes the lookup → fetch → BLAST "
+            "loop: feed the returned `sequence` straight to blast_sequence "
+            "(protein for blastp, cds/cdna for blastn). Defaults to "
+            "arabidopsis_thaliana; pass organism= for other plant species."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "e.g. AT1G01010 (Arabidopsis), Os01g0100100 (rice)",
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
+                },
+                "seq_type": {
+                    "type": "string",
+                    "enum": ["genomic", "cds", "cdna", "protein"],
+                    "default": "protein",
+                    "description": "Sequence type to fetch",
+                },
+            },
+            "required": ["locus"],
+            "additionalProperties": False,
+        },
+        outputSchema=EnsemblSequence.model_json_schema(),
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="ensembl_region_query",
+        description=(
+            "List features overlapping a genomic interval via Ensembl Plants "
+            "/overlap/region. region is the seq-region name (chromosome / "
+            "contig, e.g. '1'); start and end are 1-based inclusive. feature is "
+            "one of gene / transcript / cds / exon (default gene). Answers "
+            "'what genes are in this QTL interval / assembly window' without a "
+            "per-locus lookup. Ensembl caps the span — oversized regions error. "
+            "Defaults to arabidopsis_thaliana; pass organism= for other species."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "region": {
+                    "type": "string",
+                    "description": "seq-region name (chromosome / contig), e.g. '1' or 'Chr1'",
+                },
+                "start": {"type": "integer", "minimum": 1, "description": "1-based start"},
+                "end": {"type": "integer", "minimum": 1, "description": "1-based inclusive end"},
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
+                },
+                "feature": {
+                    "type": "string",
+                    "enum": ["gene", "transcript", "cds", "exon"],
+                    "default": "gene",
+                    "description": "Feature type to return",
+                },
+            },
+            "required": ["region", "start", "end"],
+            "additionalProperties": False,
+        },
+        outputSchema=EnsemblRegionFeatures.model_json_schema(),
         _meta=_EDAM,
     ),
     types.Tool(
@@ -1299,6 +1374,22 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     client,
                     args["locus"],
                     organism=args.get("organism", "arabidopsis_thaliana"),
+                )
+            case "get_sequence":
+                return await ensembl_plants.get_sequence(
+                    client,
+                    args["locus"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                    seq_type=args.get("seq_type", "protein"),
+                )
+            case "ensembl_region_query":
+                return await ensembl_plants.region_query(
+                    client,
+                    args["region"],
+                    args["start"],
+                    args["end"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                    feature=args.get("feature", "gene"),
                 )
             case "phytozome_lookup_locus":
                 return await phytozome.lookup_locus(

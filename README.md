@@ -1,7 +1,7 @@
 # 🌱 plant-genomics-mcp
 
-> **33 tools** for plant-genomics locus lookup over the Model Context Protocol —
-> 16 single-locus + 12 parallel-batch + 5 cross-source synthesis variants.
+> **35 tools** for plant-genomics locus lookup over the Model Context Protocol —
+> 17 single-locus + 1 region query + 12 parallel-batch + 5 cross-source synthesis variants.
 > Free, public sources: Ensembl Plants, Phytozome BioMart, UniProtKB,
 > Europe PMC, QuickGO, NCBI BLAST, Gramene, KEGG, STRING-DB, ATTED-II,
 > and BAR (Bio-Analytic Resource for Plant Biology).
@@ -59,10 +59,10 @@ automatically.
 
 ## 🛠️ Tools
 
-**33 tools across 11 backends** — Ensembl Plants, Phytozome BioMart,
+**35 tools across 11 backends** — Ensembl Plants, Phytozome BioMart,
 UniProtKB, Europe PMC, QuickGO, NCBI BLAST, Gramene, KEGG, STRING-DB,
-ATTED-II, BAR. 16 single-locus + 12 parallel-batch + 5 cross-source
-synthesis. All take a TAIR-style locus (e.g. `AT1G01010`) plus
+ATTED-II, BAR. 17 single-locus + 1 region query + 12 parallel-batch + 5
+cross-source synthesis. All take a TAIR-style locus (e.g. `AT1G01010`) plus
 optional `organism=` (slug / scientific name / common name / NCBI taxid
 — 12-plant curated coverage matrix at the `pgmcp://organisms/coverage`
 MCP resource). All publish JSON `outputSchema` and EDAM ontology tags.
@@ -88,9 +88,11 @@ MCP resource). All publish JSON `outputSchema` and EDAM ontology tags.
 | 14  | Interactions (live)     | `bar_aiv_interactions`                  | Fetches BAR AIV interaction partners (Arabidopsis + rice) with confidence + papers.                                                                                                                                          |
 | 15  | Curator summary (live)  | `tair_locus_info`                       | Silent upgrade — alias of `bar_gene_summary`. MCP tool name preserved for clients.                                                                                                                                           |
 | 16  | Subscription redirect   | `plantcyc_locus_info`                   | Returns subscription notice + redirect to live backends. No upstream call.                                                                                                                                                   |
-| 17  | Batch (live)            | `batch_*` (twelve variants)             | Parallel per-locus fanout for tools 1–6, 8–12, 14. Up to 50 loci per call.                                                                                                                                                   |
-| 18  | Synthesis (live)        | `*_synth` / `consensus_homologs` (four) | Compose 2–5 backends in parallel, return a `SynthesisEnvelope` with per-step status.                                                                                                                                         |
-| 19  | Synthesis (live)        | `gene_report`                           | One-shot "tell me about this gene" dossier — annotation + xrefs + protein + GO + KEGG + STRING + literature composed into a rendered Markdown `result.markdown` (+ structured `result.sections`).                            |
+| 17  | Sequence (live)         | `get_sequence`                          | Fetches a locus's sequence (genomic / cds / cdna / protein) from Ensembl `/sequence/id` — the fetch half of lookup → fetch → BLAST; feed `sequence` to `blast_sequence`.                                                     |
+| 18  | Region query (live)     | `ensembl_region_query`                  | Lists gene/transcript/cds/exon features overlapping a genomic interval (chr:start-end) via Ensembl `/overlap/region` — "what's in this QTL interval" without a per-locus lookup.                                             |
+| 19  | Batch (live)            | `batch_*` (twelve variants)             | Parallel per-locus fanout for tools 1–6, 8–12, 14. Up to 50 loci per call.                                                                                                                                                   |
+| 20  | Synthesis (live)        | `*_synth` / `consensus_homologs` (four) | Compose 2–5 backends in parallel, return a `SynthesisEnvelope` with per-step status.                                                                                                                                         |
+| 21  | Synthesis (live)        | `gene_report`                           | One-shot "tell me about this gene" dossier — annotation + xrefs + protein + GO + KEGG + STRING + literature composed into a rendered Markdown `result.markdown` (+ structured `result.sections`).                            |
 
 </details>
 

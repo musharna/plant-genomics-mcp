@@ -64,6 +64,15 @@ DISPATCH_SPECS: list[Spec] = [
         "ensembl_plants_lookup_locus", ensembl_plants, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG
     ),
     Spec("get_gene_xrefs", ensembl_plants, "lookup_xrefs", {"locus": L}, L, _DEFAULT_ORG),
+    Spec("get_sequence", ensembl_plants, "get_sequence", {"locus": L}, L, _DEFAULT_ORG),
+    Spec(
+        "ensembl_region_query",
+        ensembl_plants,
+        "region_query",
+        {"region": "1", "start": 3000, "end": 10000},
+        "1",
+        _DEFAULT_ORG,
+    ),
     Spec("phytozome_lookup_locus", phytozome, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec("resolve_locus_to_uniprot", uniprot, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec("locus_literature", europe_pmc, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
