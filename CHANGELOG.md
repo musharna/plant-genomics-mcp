@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.12.0 — 2026-07-19
+
+Adds **`locus_plant_ontology`** — Plant Ontology (PO) + Trait Ontology (TO) + experimental-condition (PECO) annotations for a locus — over a new **Planteome** backend (browser.planteome.org, AmiGO2/GOlr Solr; free, no API key). Complements `locus_go_annotations`: QuickGO serves GO (species-agnostic), Planteome serves the plant-specific ontologies GO doesn't cover. Backend count 12 → 13, tool count 36 → 37. Minor: one new tool + one new backend, no breaking changes, no new dependencies.
+
+**Added**
+
+- **`locus_plant_ontology`** (`planteome.lookup_locus`) — queries Planteome's open Solr `/select` endpoint (edismax across searchable bioentity fields) and filters by the organism's **NCBI taxon**, so a locus that exists in multiple species resolves to the requested organism. Returns `annotations[]` (`term_id` / `term_name` / `ontology` / `aspect` / `evidence` / `reference` / `assigned_by`) + a `by_ontology` rollup (`{PO: [{term_id, term_name}], TO: […], PECO: […]}`, deduped on term_id — mirrors QuickGO's `by_aspect`). New `PlantOntologyAnnotation` + `LocusPlantOntology` output models.
+- **Planteome backend** (`planteome.py`) — new live backend on the standard template (TTLCache, shared retry, typed errors). Organism handling uses the universal NCBI taxid (every organism has one), so there is **no coverage-slot gating and no coverage-matrix column**: organisms Planteome doesn't curate return an **empty** annotation list rather than an error. Coverage is strong for arabidopsis, rice, maize, grape, soybean, tomato (probed live 2026-07-19); thinner elsewhere — documented honestly in the tool description.
+- **Resources** — Planteome now appears in `pgmcp://cache/stats` and `pgmcp://backends/status` (the coverage matrix is unchanged — Planteome keys on taxon, not a per-backend ID slot).
+- **Tests** — 10 mocked unit tests (happy path, PO/TO namespace rollup + term_id dedup, empty-is-graceful, taxon-filter-tracks-organism, limit clamp, malformed-term-id skip, empty-locus / non-dict / missing-`response` / docs-not-list guards) + 2 `PLANT_GENOMICS_MCP_LIVE=1` real-execution tests (NAC001 → PO terms incl. "guard cell"; a thin-coverage organism returns empty, not an error). Dispatch-coverage spec, stdio-smoke name/organism sets, and resource assertions updated. `planteome.py` at 98% line coverage.
+
+**Changed**
+
+- **`README.md`** — tool count 36 → 37, backends 12 → 13, new `locus_plant_ontology` matrix row.
+- **`server.py` / `pyproject.toml` / `__init__.py`** — module docstring and package description tool counts updated to 37.
+
 ## v1.11.0 — 2026-07-19
 
 Adds **`go_enrichment`** — GO + KEGG over-representation analysis for a gene **list** — over a new **g:Profiler g:GOSt** backend (free, no API key). This closes the last P1 backlog item: `locus_go_annotations` answers "what terms does _this locus_ have?", while `go_enrichment` answers the dominant downstream question — "what is my differential-expression / co-expression _set_ enriched for?". First new live backend since v1.x; backend count 11 → 12, tool count 35 → 36. Minor: one new tool + one new backend, no breaking changes, no new dependencies.

@@ -1,10 +1,11 @@
 """Plant genomics MCP server.
 
-Thirty-six MCP tools across 12 backends for plant gene-record lookup,
+Thirty-seven MCP tools across 13 backends for plant gene-record lookup,
 biological-context analysis, and cross-source synthesis. Live backends
 include Ensembl Plants, Phytozome BioMart, UniProtKB, Europe PMC, QuickGO,
-g:Profiler (GO/KEGG enrichment), NCBI BLAST, Gramene homology, KEGG
-pathways, STRING-DB interactions, ATTED-II coexpression, and BAR
+Planteome (PO/TO ontology), g:Profiler (GO/KEGG enrichment), NCBI BLAST,
+Gramene homology, KEGG pathways, STRING-DB interactions, ATTED-II
+coexpression, and BAR
 (Bio-Analytic Resource for Plant Biology, U Toronto — Global Core Biodata
 Resource 2023). PlantCyc ships as an
 informational-redirect stub (BioCyc PLANT orgid is paid-only,
@@ -16,4 +17,4 @@ Bioinformatics paid subscription). See ``server.py`` for the full tool
 catalog.
 """
 
-__version__ = "1.11.0"
+__version__ = "1.12.0"
