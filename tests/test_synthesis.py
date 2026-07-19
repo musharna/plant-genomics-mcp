@@ -1341,6 +1341,275 @@ def test_biological_context_synth_unknown_organism_root_fails():
 
 
 # ---------------------------------------------------------------------------
+# gene_report — 5th synthesis tool (one-shot Markdown gene dossier)
+# ---------------------------------------------------------------------------
+
+
+def _gene_report_success_mocks(httpx_mock):
+    """Register happy-path mocks for all seven gene_report backends."""
+    # Phase 1a — Ensembl lookup (root)
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0",
+        json={
+            "id": "AT1G01010",
+            "species": "arabidopsis_thaliana",
+            "biotype": "protein_coding",
+            "display_name": "NAC001",
+            "description": "NAC domain containing protein 1 [Source:NCBI gene;Acc:839580]",
+            "seq_region_name": "1",
+            "start": 3631,
+            "end": 5899,
+            "strand": 1,
+            "assembly_name": "TAIR10",
+        },
+    )
+    # Phase 1b — UniProt (needed for GO accession)
+    httpx_mock.add_response(
+        url=re.compile(r"^https://rest\.uniprot\.org/uniprotkb/search.*"),
+        json={
+            "results": [
+                {
+                    "primaryAccession": "Q0WV96",
+                    "uniProtkbId": "NAC1_ARATH",
+                    "entryType": "UniProtKB reviewed (Swiss-Prot)",
+                    "proteinDescription": {
+                        "recommendedName": {
+                            "fullName": {"value": "NAC domain-containing protein 1"}
+                        }
+                    },
+                    "genes": [{"geneName": {"value": "NAC001"}}],
+                    "organism": {"scientificName": "Arabidopsis thaliana", "taxonId": 3702},
+                    "sequence": {"length": 429},
+                }
+            ]
+        },
+    )
+    # Phase 2 — xrefs
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/xrefs/id/AT1G01010?species=arabidopsis_thaliana",
+        json=[
+            {"dbname": "Uniprot_gn", "primary_id": "Q0WV96", "display_id": "NAC001"},
+            {"dbname": "TAIR_LOCUS", "primary_id": "AT1G01010", "display_id": "AT1G01010"},
+        ],
+    )
+    # Phase 2 — KEGG (link + per-pathway get)
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/link/pathway/ath:AT1G01010",
+        text="ath:AT1G01010\tpath:ath00010\n",
+    )
+    httpx_mock.add_response(
+        url=re.compile(r"^https://rest\.kegg\.jp/get/path:ath.*"),
+        text=(
+            "ENTRY       ath00010                    Pathway\n"
+            "NAME        Glycolysis / Gluconeogenesis - Arabidopsis thaliana\n"
+            "CLASS       Metabolism; Carbohydrate metabolism\n"
+        ),
+        is_reusable=True,
+    )
+    # Phase 2 — STRING
+    httpx_mock.add_response(
+        url=re.compile(r"^https://string-db\.org/api/json/interaction_partners.*"),
+        json=[
+            {
+                "stringId_A": "3702.AT1G01010.1",
+                "stringId_B": "3702.AT3G15500.1",
+                "preferredName_A": "NAC001",
+                "preferredName_B": "NAC3",
+                "score": 0.85,
+                "escore": 0.4,
+                "dscore": 0.0,
+                "tscore": 0.2,
+                "pscore": 0.1,
+            }
+        ],
+    )
+    # Phase 2 — Europe PMC literature
+    httpx_mock.add_response(
+        url=re.compile(r"^https://www\.ebi\.ac\.uk/europepmc/webservices/rest/search.*"),
+        json={
+            "hitCount": 40,
+            "resultList": {
+                "result": [
+                    {
+                        "pmid": "41152268",
+                        "doi": "10.1038/s41526-025-00525-5",
+                        "title": "Spaceflight transcriptome patterns in Arabidopsis.",
+                        "authorString": "Seo D, Paul AL, Ferl RJ.",
+                    }
+                ]
+            },
+        },
+    )
+    # Phase 2 — QuickGO (keyed on the resolved UniProt accession)
+    httpx_mock.add_response(
+        url=re.compile(r"^https://www\.ebi\.ac\.uk/QuickGO/services/annotation/search.*"),
+        json={
+            "numberOfHits": 1,
+            "results": [
+                {
+                    "goId": "GO:0006355",
+                    "goName": "regulation of DNA-templated transcription",
+                    "goAspect": "biological_process",
+                    "goEvidence": "IEA",
+                    "qualifier": "involved_in",
+                }
+            ],
+        },
+    )
+
+
+@pytest.mark.asyncio
+async def test_gene_report_all_backends_succeed_returns_dossier(httpx_mock):
+    _gene_report_success_mocks(httpx_mock)
+
+    from plant_genomics_mcp.synthesis import gene_report
+
+    async with httpx.AsyncClient() as client:
+        env = await gene_report(client, "AT1G01010", organism="arabidopsis_thaliana")
+
+    assert env.tool == "gene_report"
+    assert env.input == {"locus": "AT1G01010", "organism": "arabidopsis_thaliana", "top_n": 10}
+    assert [s.tool for s in env.steps] == [
+        "ensembl_plants_lookup_locus",
+        "resolve_locus_to_uniprot",
+        "get_gene_xrefs",
+        "kegg_pathways",
+        "string_interactions",
+        "locus_literature",
+        "locus_go_annotations",
+    ]
+    assert [s.status for s in env.steps] == ["ok"] * 7
+    assert env.result is not None
+    assert env.result["locus"] == "AT1G01010"
+    assert env.result["uniprot_accession"] == "Q0WV96"
+    assert env.result["canonical_gene_name"] == "NAC001"
+
+    # The headline deliverable: a rendered Markdown dossier that stitches
+    # every section together.
+    md = env.result["markdown"]
+    assert isinstance(md, str)
+    assert "NAC001" in md and "AT1G01010" in md  # header
+    assert "Q0WV96" in md  # protein section
+    assert "regulation of DNA-templated transcription" in md  # GO
+    assert "Glycolysis" in md  # KEGG pathway
+    assert "NAC3" in md  # STRING partner
+    assert "Spaceflight transcriptome" in md  # literature
+
+    # Structured mirror alongside the prose.
+    sections = env.result["sections"]
+    assert set(sections) >= {
+        "annotation",
+        "protein",
+        "xrefs",
+        "pathways",
+        "interactions",
+        "literature",
+        "go_annotations",
+    }
+    assert sections["annotation"]["id"] == "AT1G01010"
+
+
+@pytest.mark.asyncio
+async def test_gene_report_phase1_ensembl_failure_skips_rest(httpx_mock):
+    # Ensembl root 404 → whole dossier root-fails.
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0",
+        status_code=404,
+    )
+    # UniProt runs concurrently in phase 1; give it a response so only the
+    # root (ensembl) drives the failure path. Empty results → lookup_locus
+    # makes two search passes (reviewed → TrEMBL), so the mock is reusable.
+    httpx_mock.add_response(
+        url=re.compile(r"^https://rest\.uniprot\.org/uniprotkb/search.*"),
+        json={"results": []},
+        is_reusable=True,
+    )
+
+    from plant_genomics_mcp.synthesis import gene_report
+
+    async with httpx.AsyncClient() as client:
+        env = await gene_report(client, "AT1G01010", organism="arabidopsis_thaliana")
+
+    assert env.result is None
+    assert env.steps[0].tool == "ensembl_plants_lookup_locus"
+    assert env.steps[0].status == "error"
+    downstream = {s.tool: s for s in env.steps[2:]}
+    for tool in (
+        "get_gene_xrefs",
+        "kegg_pathways",
+        "string_interactions",
+        "locus_literature",
+        "locus_go_annotations",
+    ):
+        assert downstream[tool].status == "skipped"
+
+
+@pytest.mark.asyncio
+async def test_gene_report_uniprot_failure_skips_go_but_composes(httpx_mock):
+    # Ensembl ok; UniProt returns no hits → NotFoundError. GO depends on the
+    # UniProt accession, so it must be skipped, but the dossier still composes
+    # from the remaining backends.
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0",
+        json={"id": "AT1G01010", "species": "arabidopsis_thaliana", "display_name": "NAC001"},
+    )
+    httpx_mock.add_response(
+        url=re.compile(r"^https://rest\.uniprot\.org/uniprotkb/search.*"),
+        json={"results": []},
+        is_reusable=True,
+    )
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/xrefs/id/AT1G01010?species=arabidopsis_thaliana",
+        json=[],
+    )
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/link/pathway/ath:AT1G01010",
+        text="",
+    )
+    httpx_mock.add_response(
+        url=re.compile(r"^https://string-db\.org/api/json/interaction_partners.*"),
+        json=[],
+    )
+    httpx_mock.add_response(
+        url=re.compile(r"^https://www\.ebi\.ac\.uk/europepmc/webservices/rest/search.*"),
+        json={"hitCount": 0, "resultList": {"result": []}},
+    )
+
+    from plant_genomics_mcp.synthesis import gene_report
+
+    async with httpx.AsyncClient() as client:
+        env = await gene_report(client, "AT1G01010", organism="arabidopsis_thaliana")
+
+    assert env.result is not None  # composes despite UniProt failure
+    by_tool = {s.tool: s for s in env.steps}
+    assert by_tool["resolve_locus_to_uniprot"].status == "error"
+    assert by_tool["locus_go_annotations"].status == "skipped"
+    # The Markdown still renders, noting the unavailable sections.
+    md = env.result["markdown"]
+    assert "AT1G01010" in md
+    assert env.result["uniprot_accession"] is None
+
+
+def test_gene_report_unknown_organism_root_fails():
+    import asyncio
+
+    import httpx as _httpx
+
+    async def run():
+        async with _httpx.AsyncClient() as client:
+            from plant_genomics_mcp.synthesis import gene_report
+
+            return await gene_report(client, "AT1G01010", organism="zucchini")
+
+    envelope = asyncio.run(run())
+    assert envelope.result is None
+    assert envelope.steps[0].status == "error"
+    assert "[OrganismNotFound]" in (envelope.steps[0].error or "")
+    for step in envelope.steps[1:]:
+        assert step.status == "skipped"
+
+
+# ---------------------------------------------------------------------------
 # Live tests — gated by PLANT_GENOMICS_MCP_LIVE=1
 #
 # Real-execution checks per feedback_real_execution_testing.md. These hit
@@ -1449,3 +1718,29 @@ async def test_analyze_locus_synth_live_rice_os01g0100100():
         ensembl_record.get("organism") == "oryza_sativa"
         or ensembl_record.get("species") == "oryza_sativa"
     ), f"expected oryza_sativa in ensembl_record, got {ensembl_record}"
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_gene_report_live_at1g01010():
+    """Real-execution check: drive gene_report against every live upstream
+    (Ensembl Plants, UniProt, Ensembl xrefs, KEGG, STRING, Europe PMC, QuickGO)
+    and confirm the Markdown dossier composes end-to-end for the canonical NAC001
+    locus. Individual phase-2 backends may occasionally degrade to an
+    "Unavailable" note; we only require the root to resolve and the dossier to
+    render with the gene identity present.
+    """
+    from plant_genomics_mcp.synthesis import gene_report
+
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        env = await gene_report(client, "AT1G01010", top_n=5)
+
+    assert env.tool == "gene_report"
+    assert env.steps[0].status == "ok", f"phase-1 ensembl lookup failed: {env.steps[0].error}"
+    assert env.result is not None
+    assert env.result["locus"] == "AT1G01010"
+    assert env.result["uniprot_accession"] == "Q0WV96"
+    md = env.result["markdown"]
+    assert isinstance(md, str) and md
+    assert "AT1G01010" in md
+    assert "## Protein" in md and "## Literature" in md

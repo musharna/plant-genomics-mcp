@@ -196,6 +196,15 @@ DISPATCH_SPECS: list[Spec] = [
         _DEFAULT_ORG,
         synth=True,
     ),
+    Spec(
+        "gene_report",
+        synthesis,
+        "gene_report",
+        {"locus": L},
+        L,
+        _DEFAULT_ORG,
+        synth=True,
+    ),
 ]
 
 

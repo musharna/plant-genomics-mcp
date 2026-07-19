@@ -1,7 +1,7 @@
 # 🌱 plant-genomics-mcp
 
-> **32 tools** for plant-genomics locus lookup over the Model Context Protocol —
-> 16 single-locus + 12 parallel-batch + 4 cross-source synthesis variants.
+> **33 tools** for plant-genomics locus lookup over the Model Context Protocol —
+> 16 single-locus + 12 parallel-batch + 5 cross-source synthesis variants.
 > Free, public sources: Ensembl Plants, Phytozome BioMart, UniProtKB,
 > Europe PMC, QuickGO, NCBI BLAST, Gramene, KEGG, STRING-DB, ATTED-II,
 > and BAR (Bio-Analytic Resource for Plant Biology).
@@ -59,9 +59,9 @@ automatically.
 
 ## 🛠️ Tools
 
-**32 tools across 11 backends** — Ensembl Plants, Phytozome BioMart,
+**33 tools across 11 backends** — Ensembl Plants, Phytozome BioMart,
 UniProtKB, Europe PMC, QuickGO, NCBI BLAST, Gramene, KEGG, STRING-DB,
-ATTED-II, BAR. 16 single-locus + 12 parallel-batch + 4 cross-source
+ATTED-II, BAR. 16 single-locus + 12 parallel-batch + 5 cross-source
 synthesis. All take a TAIR-style locus (e.g. `AT1G01010`) plus
 optional `organism=` (slug / scientific name / common name / NCBI taxid
 — 12-plant curated coverage matrix at the `pgmcp://organisms/coverage`
@@ -90,6 +90,7 @@ MCP resource). All publish JSON `outputSchema` and EDAM ontology tags.
 | 16  | Subscription redirect   | `plantcyc_locus_info`                   | Returns subscription notice + redirect to live backends. No upstream call.                                                                                                                                                   |
 | 17  | Batch (live)            | `batch_*` (twelve variants)             | Parallel per-locus fanout for tools 1–6, 8–12, 14. Up to 50 loci per call.                                                                                                                                                   |
 | 18  | Synthesis (live)        | `*_synth` / `consensus_homologs` (four) | Compose 2–5 backends in parallel, return a `SynthesisEnvelope` with per-step status.                                                                                                                                         |
+| 19  | Synthesis (live)        | `gene_report`                           | One-shot "tell me about this gene" dossier — annotation + xrefs + protein + GO + KEGG + STRING + literature composed into a rendered Markdown `result.markdown` (+ structured `result.sections`).                            |
 
 </details>
 
@@ -135,6 +136,7 @@ Full per-tool walkthroughs (with real upstream-API transcripts) live in
 
 | Walkthrough                                                                               | Coverage                                                                                |
 | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [`gene_report_AT1G01010.md`](examples/gene_report_AT1G01010.md)                           | One-shot Markdown gene dossier — 7 backends composed, with graceful KEGG degradation.   |
 | [`analyze_locus_AT1G01010.md`](examples/analyze_locus_AT1G01010.md)                       | Ensembl → xrefs → UniProt → Europe PMC → QuickGO chain (5 tools).                       |
 | [`find_homologs_AT1G01010_NAC_domain.md`](examples/find_homologs_AT1G01010_NAC_domain.md) | BLAST + per-hit UniProt enrichment.                                                     |
 | [`biological_context_AT1G01010.md`](examples/biological_context_AT1G01010.md)             | Gramene + KEGG + UniProt + STRING + ATTED-II (5 tools).                                 |
