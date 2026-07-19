@@ -1,7 +1,7 @@
 # 🌱 plant-genomics-mcp
 
-> **36 tools** for plant-genomics locus lookup over the Model Context Protocol —
-> 17 single-locus + 1 region query + 1 gene-set enrichment + 12 parallel-batch + 5 cross-source synthesis variants.
+> **37 tools** for plant-genomics locus lookup over the Model Context Protocol —
+> 18 single-locus + 1 region query + 1 gene-set enrichment + 12 parallel-batch + 5 cross-source synthesis variants.
 > Free, public sources: Ensembl Plants, Phytozome BioMart, UniProtKB,
 > Europe PMC, QuickGO, g:Profiler, NCBI BLAST, Gramene, KEGG, STRING-DB,
 > ATTED-II, and BAR (Bio-Analytic Resource for Plant Biology).
@@ -59,9 +59,9 @@ automatically.
 
 ## 🛠️ Tools
 
-**36 tools across 12 backends** — Ensembl Plants, Phytozome BioMart,
-UniProtKB, Europe PMC, QuickGO, g:Profiler, NCBI BLAST, Gramene, KEGG,
-STRING-DB, ATTED-II, BAR. 17 single-locus + 1 region query + 1 gene-set
+**37 tools across 13 backends** — Ensembl Plants, Phytozome BioMart,
+UniProtKB, Europe PMC, QuickGO, Planteome, g:Profiler, NCBI BLAST, Gramene,
+KEGG, STRING-DB, ATTED-II, BAR. 18 single-locus + 1 region query + 1 gene-set
 enrichment + 12 parallel-batch + 5 cross-source synthesis. Most take a
 TAIR-style locus (e.g. `AT1G01010`) plus
 optional `organism=` (slug / scientific name / common name / NCBI taxid
@@ -92,9 +92,10 @@ MCP resource). All publish JSON `outputSchema` and EDAM ontology tags.
 | 17  | Sequence (live)         | `get_sequence`                          | Fetches a locus's sequence (genomic / cds / cdna / protein) from Ensembl `/sequence/id` — the fetch half of lookup → fetch → BLAST; feed `sequence` to `blast_sequence`.                                                     |
 | 18  | Region query (live)     | `ensembl_region_query`                  | Lists gene/transcript/cds/exon features overlapping a genomic interval (chr:start-end) via Ensembl `/overlap/region` — "what's in this QTL interval" without a per-locus lookup.                                             |
 | 19  | Enrichment (live)       | `go_enrichment`                         | GO + KEGG over-representation for a gene **list** via g:Profiler g:GOSt — "what is my DE / co-expression set enriched for?" Reports unmapped loci; optional custom background. All 12 organisms.                             |
-| 20  | Batch (live)            | `batch_*` (twelve variants)             | Parallel per-locus fanout for tools 1–6, 8–12, 14. Up to 50 loci per call.                                                                                                                                                   |
-| 21  | Synthesis (live)        | `*_synth` / `consensus_homologs` (four) | Compose 2–5 backends in parallel, return a `SynthesisEnvelope` with per-step status.                                                                                                                                         |
-| 22  | Synthesis (live)        | `gene_report`                           | One-shot "tell me about this gene" dossier — annotation + xrefs + protein + GO + KEGG + STRING + literature composed into a rendered Markdown `result.markdown` (+ structured `result.sections`).                            |
+| 20  | Plant ontology (live)   | `locus_plant_ontology`                  | Plant Ontology (anatomy / dev-stage) + Trait Ontology annotations for a locus via Planteome (Solr) — the plant-specific ontologies GO doesn't cover. by_ontology rollup; taxon-filtered. Strong for 6 species.               |
+| 21  | Batch (live)            | `batch_*` (twelve variants)             | Parallel per-locus fanout for tools 1–6, 8–12, 14. Up to 50 loci per call.                                                                                                                                                   |
+| 22  | Synthesis (live)        | `*_synth` / `consensus_homologs` (four) | Compose 2–5 backends in parallel, return a `SynthesisEnvelope` with per-step status.                                                                                                                                         |
+| 23  | Synthesis (live)        | `gene_report`                           | One-shot "tell me about this gene" dossier — annotation + xrefs + protein + GO + KEGG + STRING + literature composed into a rendered Markdown `result.markdown` (+ structured `result.sections`).                            |
 
 </details>
 

@@ -283,6 +283,51 @@ class LocusGoAnnotations(BaseModel):
     )
 
 
+class PlantOntologyAnnotation(BaseModel):
+    """One Planteome GOlr annotation row, projected to a fixed field set.
+
+    ``extra="allow"`` keeps any additional GOlr field from raising on
+    validation (the upstream doc carries ~50 fields; we keep the core).
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    term_id: str | None = Field(default=None, description="Annotation class id, e.g. PO:0009005")
+    term_name: str | None = Field(default=None, description="Human-readable term name")
+    ontology: str | None = Field(default=None, description="Namespace: PO | TO | PECO | GO")
+    aspect: str | None = Field(default=None, description="Ontology aspect code, e.g. A / G")
+    evidence: str | None = Field(default=None, description="Evidence code, e.g. IEP, IDA")
+    taxon: str | None = Field(default=None, description="e.g. NCBITaxon:3702")
+    taxon_label: str | None = Field(default=None, description="Scientific name")
+    reference: list[str] | str | None = Field(default=None, description="Supporting reference(s)")
+    assigned_by: str | None = Field(default=None, description="Curating source, e.g. TAIR, Gramene")
+    bioentity_label: str | None = Field(default=None, description="Gene symbol / label")
+
+
+class LocusPlantOntology(BaseModel):
+    """Planteome PO/TO annotation wrapper for a plant locus.
+
+    The locus is matched across Planteome's searchable bioentity fields and
+    filtered to the organism's NCBI taxon. ``by_ontology`` groups annotations
+    by namespace (PO / TO / PECO / GO) with term_id-level dedup so a client
+    can see the term set per ontology without per-evidence repetition. GO
+    terms may appear here too, but ``locus_go_annotations`` is the dedicated
+    GO tool; this one's value is the plant-specific PO / TO / PECO namespaces.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str
+    organism: str = Field(description="Canonical organism slug")
+    taxon: str = Field(description="NCBI taxon filter applied, e.g. NCBITaxon:3702")
+    numberOfHits: int = Field(description="Total annotations available upstream")
+    returned: int = Field(description="Number of annotations in annotations[]")
+    annotations: list[PlantOntologyAnnotation]
+    by_ontology: dict[str, list[dict[str, str]]] = Field(
+        description="namespace → [{term_id, term_name}, ...], deduped on term_id",
+    )
+
+
 class GoEnrichmentTerm(BaseModel):
     """One enriched term from g:Profiler g:GOSt over a gene set.
 
