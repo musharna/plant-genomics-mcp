@@ -136,3 +136,90 @@ async def lookup_xrefs(
         "xrefs": raw,
         "by_db": by_db,
     }
+
+
+SEQUENCE_TYPES = ("genomic", "cds", "cdna", "protein")
+
+
+async def get_sequence(
+    client: httpx.AsyncClient,
+    locus: str,
+    organism: str | int = organisms.DEFAULT_ORGANISM,
+    seq_type: str = "protein",
+) -> dict[str, Any]:
+    """Fetch a locus's sequence from Ensembl ``/sequence/id/{locus}``.
+
+    ``seq_type`` is one of ``genomic`` / ``cds`` / ``cdna`` / ``protein``.
+    ``protein`` / ``cds`` / ``cdna`` return the gene's canonical-transcript
+    product; ``genomic`` returns the gene's genomic span. This is the fetch
+    half of the ``lookup → fetch → BLAST`` loop — feed the returned
+    ``sequence`` straight to ``blast_sequence`` (use ``protein`` for
+    ``blastp``, ``cds``/``cdna`` for ``blastn``). ``organism=`` accepts any
+    alias or NCBI taxid the resolver understands.
+    """
+    validators.assert_valid_locus(locus, backend="Ensembl Plants")
+    if seq_type not in SEQUENCE_TYPES:
+        raise ValueError(f"seq_type {seq_type!r} not in {list(SEQUENCE_TYPES)}")
+    slug = organisms.ensembl_slug_for(organism)
+    wire_id = organisms.ensembl_id_prefix_for(organism) + locus
+    params: dict[str, Any] = {"species": slug, "type": seq_type}
+    raw = await _get(client, f"/sequence/id/{wire_id}", params=params)
+    if not isinstance(raw, dict) or "seq" not in raw:
+        raise PlantGenomicsError(
+            f"Ensembl /sequence/id/{locus} (type={seq_type}) returned unexpected payload: "
+            f"{type(raw).__name__}"
+        )
+    seq = raw.get("seq") or ""
+    return {
+        "locus": locus,
+        "organism": slug,
+        "type": seq_type,
+        "molecule": raw.get("molecule"),
+        "ensembl_id": raw.get("id"),
+        "description": raw.get("desc"),
+        "version": raw.get("version"),
+        "length": len(seq),
+        "sequence": seq,
+    }
+
+
+REGION_FEATURES = ("gene", "transcript", "cds", "exon")
+
+
+async def region_query(
+    client: httpx.AsyncClient,
+    region: str,
+    start: int,
+    end: int,
+    organism: str | int = organisms.DEFAULT_ORGANISM,
+    feature: str = "gene",
+) -> dict[str, Any]:
+    """List features overlapping a genomic interval via ``/overlap/region``.
+
+    ``region`` is the seq-region name (chromosome / contig, e.g. ``"1"``);
+    ``start`` / ``end`` are 1-based inclusive coordinates. ``feature`` is one
+    of ``gene`` / ``transcript`` / ``cds`` / ``exon``. Answers "what genes are
+    in this QTL interval / assembly window" without a per-locus lookup. Ensembl
+    caps the span (oversized regions 400 → ``PlantGenomicsError``). ``organism=``
+    accepts any alias or NCBI taxid the resolver understands.
+    """
+    if feature not in REGION_FEATURES:
+        raise ValueError(f"feature {feature!r} not in {list(REGION_FEATURES)}")
+    if start < 1:
+        raise ValueError(f"start must be >=1, got {start}")
+    if end < start:
+        raise ValueError(f"end {end} must be >= start {start}")
+    slug = organisms.ensembl_slug_for(organism)
+    region_str = f"{region}:{start}-{end}"
+    raw = await _get(client, f"/overlap/region/{slug}/{region_str}", params={"feature": feature})
+    if not isinstance(raw, list):
+        raise PlantGenomicsError(
+            f"Ensembl /overlap/region/{region_str} returned non-list payload: {type(raw).__name__}"
+        )
+    return {
+        "organism": slug,
+        "region": region_str,
+        "feature": feature,
+        "count": len(raw),
+        "features": raw,
+    }

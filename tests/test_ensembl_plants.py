@@ -302,3 +302,169 @@ async def test_live_lookup_rice_locus() -> None:
     assert result["id"] == "Os01g0100100"
     # Translated species → organism via T8 wire-format adapter.
     assert result.get("organism") == "oryza_sativa" or result.get("species") == "oryza_sativa"
+
+
+# ---------- get_sequence unit tests ----------
+
+
+@pytest.mark.asyncio
+async def test_get_sequence_default_type_is_protein(httpx_mock: HTTPXMock) -> None:
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/sequence/id/AT1G01010?species=arabidopsis_thaliana&type=protein",
+        json={
+            "id": "AT1G01010",
+            "query": "AT1G01010",
+            "molecule": "protein",
+            "seq": "MEDQVGFGFRPNDEELVGHYL",
+            "version": 1,
+            "desc": None,
+        },
+    )
+    async with httpx.AsyncClient() as client:
+        result = await ensembl_plants.get_sequence(client, "AT1G01010")
+    assert result["locus"] == "AT1G01010"
+    assert result["organism"] == "arabidopsis_thaliana"
+    assert result["type"] == "protein"
+    assert result["molecule"] == "protein"
+    assert result["sequence"].startswith("MEDQ")
+    assert result["length"] == len("MEDQVGFGFRPNDEELVGHYL")
+    assert result["ensembl_id"] == "AT1G01010"
+
+
+@pytest.mark.asyncio
+async def test_get_sequence_genomic_type_routes_type_param(httpx_mock: HTTPXMock) -> None:
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/sequence/id/AT1G01010?species=arabidopsis_thaliana&type=genomic",
+        json={"id": "AT1G01010", "molecule": "dna", "seq": "ACGTACGTAC", "query": "AT1G01010"},
+    )
+    async with httpx.AsyncClient() as client:
+        result = await ensembl_plants.get_sequence(client, "AT1G01010", seq_type="genomic")
+    assert result["type"] == "genomic"
+    assert result["molecule"] == "dna"
+    assert result["length"] == 10
+
+
+@pytest.mark.asyncio
+async def test_get_sequence_rejects_invalid_seq_type() -> None:
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(ValueError, match="seq_type"):
+            await ensembl_plants.get_sequence(client, "AT1G01010", seq_type="bogus")
+
+
+@pytest.mark.asyncio
+async def test_get_sequence_raises_on_unexpected_payload(httpx_mock: HTTPXMock) -> None:
+    from plant_genomics_mcp.errors import PlantGenomicsError
+
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/sequence/id/AT1G01010?species=arabidopsis_thaliana&type=protein",
+        json=[{"seq": "X"}],  # Ensembl should hand back a dict, not a list.
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(PlantGenomicsError, match="unexpected payload"):
+            await ensembl_plants.get_sequence(client, "AT1G01010")
+
+
+@pytest.mark.asyncio
+async def test_get_sequence_rejects_malformed_locus_before_http() -> None:
+    from plant_genomics_mcp.errors import NotFoundError
+
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="invalid locus"):
+            await ensembl_plants.get_sequence(client, "AT1G01010/extra")
+
+
+# ---------- region_query unit tests ----------
+
+
+@pytest.mark.asyncio
+async def test_region_query_returns_overlapping_genes(httpx_mock: HTTPXMock) -> None:
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/overlap/region/arabidopsis_thaliana/1:3000-10000?feature=gene",
+        json=[
+            {
+                "id": "AT1G01020",
+                "feature_type": "gene",
+                "external_name": "ARV1",
+                "biotype": "protein_coding",
+                "seq_region_name": "1",
+                "start": 6788,
+                "end": 9130,
+                "strand": -1,
+            }
+        ],
+    )
+    async with httpx.AsyncClient() as client:
+        result = await ensembl_plants.region_query(client, "1", 3000, 10000)
+    assert result["organism"] == "arabidopsis_thaliana"
+    assert result["region"] == "1:3000-10000"
+    assert result["feature"] == "gene"
+    assert result["count"] == 1
+    assert result["features"][0]["id"] == "AT1G01020"
+    assert result["features"][0]["external_name"] == "ARV1"
+
+
+@pytest.mark.asyncio
+async def test_region_query_empty_region_returns_zero(httpx_mock: HTTPXMock) -> None:
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/overlap/region/arabidopsis_thaliana/2:1-2?feature=gene",
+        json=[],
+    )
+    async with httpx.AsyncClient() as client:
+        result = await ensembl_plants.region_query(client, "2", 1, 2)
+    assert result["count"] == 0
+    assert result["features"] == []
+
+
+@pytest.mark.asyncio
+async def test_region_query_rejects_invalid_feature() -> None:
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(ValueError, match="feature"):
+            await ensembl_plants.region_query(client, "1", 3000, 10000, feature="banana")
+
+
+@pytest.mark.asyncio
+async def test_region_query_rejects_start_below_one() -> None:
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(ValueError, match="start"):
+            await ensembl_plants.region_query(client, "1", 0, 100)
+
+
+@pytest.mark.asyncio
+async def test_region_query_rejects_end_before_start() -> None:
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(ValueError, match="end"):
+            await ensembl_plants.region_query(client, "1", 100, 50)
+
+
+@pytest.mark.asyncio
+async def test_region_query_raises_on_non_list_payload(httpx_mock: HTTPXMock) -> None:
+    from plant_genomics_mcp.errors import PlantGenomicsError
+
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/overlap/region/arabidopsis_thaliana/1:3000-10000?feature=gene",
+        json={"error": "something"},  # Ensembl overlap returns an array on success.
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(PlantGenomicsError, match="non-list payload"):
+            await ensembl_plants.region_query(client, "1", 3000, 10000)
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_get_sequence_at1g01010_protein() -> None:
+    """Real /sequence/id call — NAC001 protein is 429 aa."""
+    async with httpx.AsyncClient() as client:
+        result = await ensembl_plants.get_sequence(client, "AT1G01010", seq_type="protein")
+    assert result["molecule"] == "protein"
+    assert result["length"] == 429
+    assert result["sequence"].startswith("M")
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_region_query_arabidopsis_chr1_finds_arv1() -> None:
+    """Real /overlap/region call — AT1G01020 (ARV1) overlaps 1:3000-10000."""
+    async with httpx.AsyncClient() as client:
+        result = await ensembl_plants.region_query(client, "1", 3000, 10000, feature="gene")
+    ids = {f.get("id") for f in result["features"]}
+    assert "AT1G01020" in ids, f"expected AT1G01020 in region, got {ids}"

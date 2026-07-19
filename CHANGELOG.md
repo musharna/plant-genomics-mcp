@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.10.0 — 2026-07-19
+
+Adds two Ensembl Plants query tools — **`get_sequence`** and **`ensembl_region_query`** — both new query modes on the existing Ensembl REST client (no new backend, no new dependencies). Tool count 33 → 35. Minor: two new tools, no breaking changes.
+
+**Added**
+
+- **`get_sequence`** (`ensembl_plants.get_sequence`) — fetches a locus's sequence from Ensembl `/sequence/id`, `seq_type` ∈ `genomic` / `cds` / `cdna` / `protein` (default `protein` — the canonical-transcript product). Closes the **lookup → fetch → BLAST** loop: the returned `sequence` feeds straight into `blast_sequence` (protein for `blastp`, cds/cdna for `blastn`). Previously a user had to bring their own sequence to `blast_sequence`; now the server can produce one from a locus. New `EnsemblSequence` output model.
+- **`ensembl_region_query`** (`ensembl_plants.region_query`) — lists features overlapping a genomic interval via Ensembl `/overlap/region`. Inputs: `region` (seq-region name, e.g. `"1"`), `start`, `end` (1-based inclusive), `feature` ∈ `gene` / `transcript` / `cds` / `exon` (default `gene`). Answers "what genes are in this QTL interval / assembly window" without a per-locus lookup. New `EnsemblRegionFeatures` + `RegionFeature` output models. Ensembl caps the span; oversized regions surface as `PlantGenomicsError`.
+- **Tests** — 11 mocked unit tests (success paths, `seq_type`/`feature`/coordinate validation, malformed-locus-before-HTTP, non-dict/non-list payload guards, empty region) + 2 `PLANT_GENOMICS_MCP_LIVE=1` real-execution tests (protein length 429 for NAC001; AT1G01020/ARV1 found in `1:3000-10000`). Dispatch-coverage specs + stdio-smoke name/organism sets updated. Suite 471 → 492 mocked.
+
+**Changed**
+
+- **`README.md`** — tool count 33 → 35, two new matrix rows.
+- **`server.py` / `pyproject.toml`** — module docstring and package description tool counts updated to 35.
+
 ## v1.9.0 — 2026-07-19
 
 Adds `gene_report`, a **5th cross-source synthesis tool** — the one-shot "tell me about this gene" dossier. A single call fans out across seven live backends (Ensembl Plants annotation, UniProt, Ensembl xrefs, KEGG pathways, STRING interactors, Europe PMC literature, QuickGO GO terms) and returns a `SynthesisEnvelope` whose `result.markdown` is a rendered Markdown gene dossier — the headline, screenshot-worthy output — alongside a structured `result.sections` mirror. Minor: one new tool, no breaking changes, no new dependencies. Tool count 32 → 33; synthesis tools 4 → 5.

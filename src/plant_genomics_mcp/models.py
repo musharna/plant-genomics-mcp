@@ -88,6 +88,66 @@ class GeneXrefs(BaseModel):
     )
 
 
+class EnsemblSequence(BaseModel):
+    """Ensembl ``/sequence/id/{locus}`` response — a fetched sequence.
+
+    The fetch half of the lookup → fetch → BLAST loop: ``sequence`` feeds
+    straight into ``blast_sequence``.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str
+    organism: str = Field(description="Resolved canonical organism slug")
+    type: Literal["genomic", "cds", "cdna", "protein"] = Field(
+        description="Sequence type requested"
+    )
+    length: int = Field(description="Sequence length (residues for protein, bases otherwise)")
+    sequence: str = Field(description="The sequence string; feed to blast_sequence")
+    molecule: str | None = Field(default=None, description='"dna" or "protein"')
+    ensembl_id: str | None = Field(default=None, description="Resolved Ensembl stable id")
+    description: str | None = Field(default=None)
+    version: int | None = Field(default=None, description="Ensembl sequence version")
+
+
+class RegionFeature(BaseModel):
+    """One feature from Ensembl ``/overlap/region``.
+
+    ``extra="allow"`` keeps assembly-specific fields (e.g. ``gene_id``,
+    ``canonical_transcript``) from raising on output validation.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    id: str | None = Field(default=None, description="Feature stable id, e.g. AT1G01020")
+    feature_type: str | None = Field(default=None, description="gene, transcript, cds, exon")
+    biotype: str | None = Field(default=None)
+    external_name: str | None = Field(default=None, description="Gene symbol, e.g. ARV1")
+    description: str | None = Field(default=None)
+    seq_region_name: str | None = Field(default=None)
+    start: int | None = Field(default=None)
+    end: int | None = Field(default=None)
+    strand: int | None = Field(default=None, description="1 forward, -1 reverse")
+    source: str | None = Field(default=None)
+    assembly_name: str | None = Field(default=None)
+
+
+class EnsemblRegionFeatures(BaseModel):
+    """Ensembl ``/overlap/region/{species}/{region}`` wrapper.
+
+    Ensembl returns a top-level array; we wrap it with query metadata + a
+    count so the MCP outputSchema stays ``type=object``.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    organism: str
+    region: str = Field(description="seq_region:start-end, e.g. 1:3000-10000")
+    feature: str = Field(description="Feature type queried")
+    count: int = Field(description="Number of overlapping features returned")
+    features: list[RegionFeature] = Field(description="Raw Ensembl overlap records")
+
+
 class UniProtLocus(BaseModel):
     """Normalized UniProtKB record for a single locus.
 
