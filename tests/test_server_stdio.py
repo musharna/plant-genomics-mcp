@@ -81,6 +81,7 @@ async def test_initialize_and_list_tools(server_params: StdioServerParameters) -
                 "consensus_homologs",
                 "ensembl_plants_lookup_locus",
                 "find_homologs_synth",
+                "gene_report",
                 "get_gene_xrefs",
                 "gramene_homologs",
                 "kegg_pathways",
@@ -267,6 +268,7 @@ async def test_tool_schemas_use_organism_param(server_params: StdioServerParamet
         "analyze_locus_synth",
         "biological_context_synth",
         "consensus_homologs",
+        "gene_report",
     }
     async with stdio_client(server_params) as (read, write):
         async with ClientSession(read, write) as session:
