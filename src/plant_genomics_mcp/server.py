@@ -1,6 +1,6 @@
 """MCP server entry point — exposes plant genomics tools over stdio.
 
-This dispatch ships thirty-six tools — sixteen single-locus, one
+This dispatch ships thirty-seven tools — seventeen single-locus, one
 genomic-region query, one gene-set enrichment, one BLAST
 sequence-similarity search, twelve batch variants that fan out per-locus
 calls in parallel, and five cross-source synthesis tools that compose the
@@ -12,6 +12,7 @@ live backends:
   - ``resolve_locus_to_uniprot``          — UniProt KB search (live)
   - ``locus_literature``                  — Europe PMC search (live)
   - ``locus_go_annotations``              — QuickGO GO annotations (live, locus→UniProt→QuickGO)
+  - ``locus_plant_ontology``              — Planteome PO/TO/PECO annotations (live, per-locus by taxon)
   - ``go_enrichment``                     — g:Profiler GO+KEGG over-representation over a gene LIST (live)
   - ``blast_sequence``                    — NCBI BLAST URLAPI (live, async Put/Get polling)
   - ``gramene_homologs``                  — Gramene v69 homology (live, ortholog/paralog + gene_tree_id)
@@ -76,6 +77,7 @@ from plant_genomics_mcp import (
     kegg,
     phytozome,
     plantcyc,
+    planteome,
     progress,
     prompts,
     quickgo,
@@ -101,6 +103,7 @@ from plant_genomics_mcp.models import (
     KeggPathways,
     LocusGoAnnotations,
     LocusLiterature,
+    LocusPlantOntology,
     PhytozomeLocus,
     PlantCycLocusInfo,
     StringInteractions,
@@ -477,6 +480,49 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=LocusGoAnnotations.model_json_schema(),
+        _meta=_EDAM_GO,
+    ),
+    types.Tool(
+        name="locus_plant_ontology",
+        description=(
+            "Fetch Plant Ontology (PO) + Trait Ontology (TO) + experimental-"
+            "condition (PECO) annotations for a plant locus from Planteome "
+            "(browser.planteome.org, AmiGO2/GOlr; free, no API key). "
+            "Complements locus_go_annotations: QuickGO serves GO (species-"
+            "agnostic), Planteome serves the plant-specific ontologies — PO "
+            "(anatomy + developmental stage), TO (traits). The locus is matched "
+            "across Planteome's searchable bioentity fields and filtered by the "
+            "organism's NCBI taxon. Returns annotations[] (term_id / term_name / "
+            "ontology / aspect / evidence / reference) + a by_ontology rollup "
+            "({PO: [{term_id, term_name}, ...], TO: [...], PECO: [...]}) deduped "
+            "on term_id. Coverage is strong for arabidopsis, rice, maize, grape, "
+            "soybean, tomato; other organisms return an empty list, not an error. "
+            "Defaults to arabidopsis_thaliana; pass organism= for other species."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "e.g. AT1G01010 (Arabidopsis), Os01g0100100 (rice)",
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Max annotations from Planteome (1–200, default 100)",
+                    "default": planteome.DEFAULT_LIMIT,
+                    "minimum": 1,
+                    "maximum": planteome.MAX_LIMIT,
+                },
+            },
+            "required": ["locus"],
+            "additionalProperties": False,
+        },
+        outputSchema=LocusPlantOntology.model_json_schema(),
         _meta=_EDAM_GO,
     ),
     types.Tool(
@@ -1491,6 +1537,13 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     args["locus"],
                     organism=args.get("organism", "arabidopsis_thaliana"),
                     limit=args.get("limit", quickgo.DEFAULT_LIMIT),
+                )
+            case "locus_plant_ontology":
+                return await planteome.lookup_locus(
+                    client,
+                    args["locus"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                    limit=args.get("limit", planteome.DEFAULT_LIMIT),
                 )
             case "tair_locus_info":
                 # Silent upgrade (Wave A.6.8): delegates to bar.gene_summary.

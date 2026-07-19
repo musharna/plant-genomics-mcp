@@ -35,6 +35,7 @@ from plant_genomics_mcp import (
     kegg,
     phytozome,
     plantcyc,
+    planteome,
     server,
     string_db,
     synthesis,
@@ -86,6 +87,7 @@ DISPATCH_SPECS: list[Spec] = [
         _DEFAULT_ORG,
     ),
     Spec("go_enrichment", gprofiler, "go_enrichment", {"loci": LOCI}, LOCI, _DEFAULT_ORG),
+    Spec("locus_plant_ontology", planteome, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec("tair_locus_info", tair, "lookup_locus", {"locus": L}, L, None),
     Spec("plantcyc_locus_info", plantcyc, "lookup_locus", {"locus": L}, L, None, sync=True),
     Spec(
