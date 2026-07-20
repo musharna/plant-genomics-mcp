@@ -3,8 +3,9 @@
 > **37 tools** for plant-genomics locus lookup over the Model Context Protocol —
 > 18 single-locus + 1 region query + 1 gene-set enrichment + 12 parallel-batch + 5 cross-source synthesis variants.
 > Free, public sources: Ensembl Plants, Phytozome BioMart, UniProtKB,
-> Europe PMC, QuickGO, g:Profiler, NCBI BLAST, Gramene, KEGG, STRING-DB,
-> ATTED-II, and BAR (Bio-Analytic Resource for Plant Biology).
+> Europe PMC, QuickGO, Planteome, PlantCyc/PMN, g:Profiler, NCBI BLAST,
+> Gramene, KEGG, STRING-DB, ATTED-II, and BAR (Bio-Analytic Resource for
+> Plant Biology).
 
 [![PyPI](https://img.shields.io/pypi/v/plant-genomics-mcp)](https://pypi.org/project/plant-genomics-mcp/)
 [![CI](https://github.com/musharna/plant-genomics-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/musharna/plant-genomics-mcp/actions/workflows/test.yml)
@@ -59,9 +60,9 @@ automatically.
 
 ## 🛠️ Tools
 
-**37 tools across 13 backends** — Ensembl Plants, Phytozome BioMart,
-UniProtKB, Europe PMC, QuickGO, Planteome, g:Profiler, NCBI BLAST, Gramene,
-KEGG, STRING-DB, ATTED-II, BAR. 18 single-locus + 1 region query + 1 gene-set
+**37 tools across 14 backends** — Ensembl Plants, Phytozome BioMart,
+UniProtKB, Europe PMC, QuickGO, Planteome, PlantCyc/PMN, g:Profiler, NCBI
+BLAST, Gramene, KEGG, STRING-DB, ATTED-II, BAR. 18 single-locus + 1 region query + 1 gene-set
 enrichment + 12 parallel-batch + 5 cross-source synthesis. Most take a
 TAIR-style locus (e.g. `AT1G01010`) plus
 optional `organism=` (slug / scientific name / common name / NCBI taxid
@@ -88,7 +89,7 @@ MCP resource). All publish JSON `outputSchema` and EDAM ontology tags.
 | 13  | Expression (live)       | `bar_efp_expression`                    | Fetches BAR eFP-Browser expression profile (mean ± SD per tissue) for a locus.                                                                                                                                               |
 | 14  | Interactions (live)     | `bar_aiv_interactions`                  | Fetches BAR AIV interaction partners (Arabidopsis + rice) with confidence + papers.                                                                                                                                          |
 | 15  | Curator summary (live)  | `tair_locus_info`                       | Silent upgrade — alias of `bar_gene_summary`. MCP tool name preserved for clients.                                                                                                                                           |
-| 16  | Subscription redirect   | `plantcyc_locus_info`                   | Returns subscription notice + redirect to live backends. No upstream call.                                                                                                                                                   |
+| 16  | Metabolism (live)       | `plantcyc_locus_info`                   | Walks gene → enzyme → reactions → PlantCyc/PMN pathways (free BioCyc web-services API). The metabolic-pathway view KEGG/GO lack; found=false for non-enzymatic genes. 11 species have a PGDB.                                |
 | 17  | Sequence (live)         | `get_sequence`                          | Fetches a locus's sequence (genomic / cds / cdna / protein) from Ensembl `/sequence/id` — the fetch half of lookup → fetch → BLAST; feed `sequence` to `blast_sequence`.                                                     |
 | 18  | Region query (live)     | `ensembl_region_query`                  | Lists gene/transcript/cds/exon features overlapping a genomic interval (chr:start-end) via Ensembl `/overlap/region` — "what's in this QTL interval" without a per-locus lookup.                                             |
 | 19  | Enrichment (live)       | `go_enrichment`                         | GO + KEGG over-representation for a gene **list** via g:Profiler g:GOSt — "what is my DE / co-expression set enriched for?" Reports unmapped loci; optional custom background. All 12 organisms.                             |

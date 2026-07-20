@@ -23,7 +23,7 @@ live backends:
   - ``bar_efp_expression``                — BAR world-eFP natural-variation expression (live, ~36 Arabidopsis ecotypes)
   - ``bar_aiv_interactions``              — BAR AIV interactions (live, Arabidopsis GRN paper refs / Rice predicted PPI pairs)
   - ``tair_locus_info``                   — alias of ``bar_gene_summary`` (TAIR REST is subscription-gated; BAR mirrors the curator data)
-  - ``plantcyc_locus_info``               — informational stub (subscription-gated)
+  - ``plantcyc_locus_info``               — PlantCyc/PMN metabolism (live, gene→enzyme→reactions→pathways)
   - ``batch_ensembl_plants_lookup_locus`` — Ensembl Plants POST /lookup/id (one round-trip)
   - ``batch_get_gene_xrefs``              — gather over get_gene_xrefs
   - ``batch_phytozome_lookup_locus``      — gather over phytozome_lookup_locus
@@ -41,11 +41,11 @@ live backends:
   - ``biological_context_synth``          — v0.8 synthesis: GO + literature + KEGG + STRING + ATTED + consensus_partners
   - ``consensus_homologs``                — v0.8 synthesis: cross-source ranking (Gramene + BLAST agreement)
 
-The TAIR and PlantCyc stubs are pure-data — both backends gate their free
-per-locus REST APIs behind paid subscriptions (Phoenix Bioinformatics for
-TAIR; SRI/Phoenix for the BioCyc PLANT orgid; probed 2026-05-21). Those
-tools return structured redirects to the free Ensembl / Phytozome / UniProt
-backends, which cover the same Arabidopsis annotation.
+``tair_locus_info`` is a silent alias of ``bar_gene_summary`` — the TAIR REST
+API is subscription-gated (Phoenix Bioinformatics), but BAR ThaleMine mirrors
+the same curator data for free. ``plantcyc_locus_info`` is a live PlantCyc/PMN
+metabolism client (v1.13): the earlier "subscription-gated" stub was a
+misclassification — the BioCyc web-services API is free (re-probed 2026-07-19).
 
 Batch tools share an envelope shape ``{tool, count, results, errors}`` so a
 chain consumer can route by typed prefix the same way it does for the
@@ -807,20 +807,31 @@ TOOLS: list[types.Tool] = [
     types.Tool(
         name="plantcyc_locus_info",
         description=(
-            "Returns subscription-access info and alternatives for a "
-            "PlantCyc locus. Does NOT fetch annotation or pathway data — "
-            "PlantCyc requires paid SRI/Phoenix subscription. Use "
-            "ensembl_plants_lookup_locus or phytozome_lookup_locus for "
-            "canonical gene annotation; PlantCyc's pathway-membership "
-            "value-add is not currently substituted. Returns structured "
-            "redirect with rationale and probed_at date."
+            "Fetch metabolic annotation for a locus from PlantCyc / the Plant "
+            "Metabolic Network (pmn.plantcyc.org; free BioCyc web-services API, "
+            "no key). Walks gene → enzyme → catalyzed reactions → PlantCyc "
+            "pathways in the organism's PGDB, returning enzymes[] + reactions[] "
+            "(id/name) + pathways[] (id/name) — the metabolic-pathway view KEGG "
+            "and GO don't provide. A non-enzymatic gene (e.g. a transcription "
+            "factor) returns found=false with empty lists, not an error. "
+            "reaction_count / pathway_count report true totals even when the "
+            "lists are capped. 11 organisms have a PGDB (arabidopsis, rice, "
+            "maize, soybean, grape, poplar, tomato, barley, sorghum, medicago, "
+            "brachypodium); wheat is not yet mapped. Defaults to "
+            "arabidopsis_thaliana (AraCyc, the best-curated); pass organism= "
+            "for other species."
         ),
         inputSchema={
             "type": "object",
             "properties": {
                 "locus": {
                     "type": "string",
-                    "description": "TAIR-canonical locus, e.g. AT1G01010",
+                    "description": "e.g. AT3G51240 (Arabidopsis), Os11g0530600 (rice RAP-DB)",
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
                 },
             },
             "required": ["locus"],
@@ -1551,9 +1562,13 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                 # curator summary instead of a subscription_required stub.
                 return await tair.lookup_locus(client, args["locus"])
             case "plantcyc_locus_info":
-                # Pure-data sync call — no client, no await. Returns a
-                # structured redirect; see plant_genomics_mcp.plantcyc docstring.
-                return plantcyc.lookup_locus(args["locus"])
+                # v1.13: real PMN metabolic annotation (was a subscription-gated
+                # stub; the API is free — see plant_genomics_mcp.plantcyc docstring).
+                return await plantcyc.lookup_locus(
+                    client,
+                    args["locus"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                )
             case "batch_ensembl_plants_lookup_locus":
                 return await batch.batch_ensembl_plants_lookup_locus(
                     client,
