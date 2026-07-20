@@ -8,12 +8,10 @@ This is a real-execution check, not a unit test. It verifies that the
      descriptions and a non-empty ``outputSchema``.
   3. Advertises 3 prompts via ``list_prompts`` with required-arg flags
      preserved on the wire.
-  3. Returns BOTH ``content`` (text) and ``structuredContent`` (dict) for
-     a real call to ``plantcyc_locus_info`` (the offline stub — doesn't need
-     network, keeps CI deterministic).
-  4. Surfaces our differentiated exception type info — invalid input
-     produces an error result whose text contains the ``[NotFoundError]``
-     prefix from ``PlantGenomicsError.__str__``.
+  4. Surfaces our differentiated exception type info — invalid input to
+     ``plantcyc_locus_info`` produces an error result whose text contains the
+     ``[NotFoundError]`` prefix from ``PlantGenomicsError.__str__`` (raised
+     before any network call, so this stays network-free / deterministic).
 
 We gate on ``PLANT_GENOMICS_MCP_STDIO_SMOKE=1`` for opt-in. The default
 test run skips it (the unit-test layer covers the dispatch logic).
@@ -24,7 +22,6 @@ To run:
 
 from __future__ import annotations
 
-import json
 import os
 import sys
 
@@ -105,31 +102,6 @@ async def test_initialize_and_list_tools(server_params: StdioServerParameters) -
                 assert tool.outputSchema.get("type") == "object", (
                     f"{tool.name} outputSchema not an object: {tool.outputSchema}"
                 )
-
-
-@pytest.mark.asyncio
-async def test_offline_stub_call_returns_structured_content(
-    server_params: StdioServerParameters,
-) -> None:
-    async with stdio_client(server_params) as (read, write):
-        async with ClientSession(read, write) as session:
-            await session.initialize()
-            result = await session.call_tool(
-                "plantcyc_locus_info", arguments={"locus": "AT1G01010"}
-            )
-
-            # SDK builds BOTH unstructured (TextContent of JSON) and structured.
-            assert result.structuredContent is not None
-            assert result.structuredContent["locus"] == "AT1G01010"
-            assert result.structuredContent["status"] == "subscription_required"
-            assert "ensembl_plants_lookup_locus" in result.structuredContent["alternatives"]
-
-            # Content TextContent should be the same data, JSON-stringified.
-            assert result.content
-            text_block = result.content[0]
-            assert text_block.type == "text"
-            parsed = json.loads(text_block.text)
-            assert parsed == result.structuredContent
 
 
 @pytest.mark.asyncio
@@ -256,6 +228,7 @@ async def test_tool_schemas_use_organism_param(server_params: StdioServerParamet
         "locus_literature",
         "locus_go_annotations",
         "locus_plant_ontology",
+        "plantcyc_locus_info",
         "string_interactions",
         "bar_aiv_interactions",
         "kegg_pathways",

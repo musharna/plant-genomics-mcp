@@ -7,7 +7,7 @@ import json
 import pytest
 from pydantic import AnyUrl
 
-from plant_genomics_mcp import organisms, plantcyc, resources
+from plant_genomics_mcp import organisms, resources
 
 
 def test_resources_catalog_has_four_entries() -> None:
@@ -44,6 +44,7 @@ async def test_read_cache_stats_returns_per_backend_rollup() -> None:
         "gramene",
         "kegg",
         "phytozome",
+        "plantcyc",
         "planteome",
         "quickgo",
         "string_db",
@@ -101,11 +102,13 @@ async def test_read_coverage_matrix_lists_all_organisms() -> None:
     assert "atted" in body
     # v1.11.0: gprofiler column (g:Profiler org IDs for go_enrichment).
     assert "gprofiler" in body
-    # Header row has 10 named columns (canonical, scientific, ncbi_taxid,
-    # ensembl, phytozome, string, europe_pmc, kegg, atted, gprofiler) —
-    # surrounding pipes produce 11 segments when split on "|".
+    # v1.13.0: plantcyc column (PlantCyc/PMN PGDB org ids).
+    assert "plantcyc" in body
+    # Header row has 11 named columns (canonical, scientific, ncbi_taxid,
+    # ensembl, phytozome, string, europe_pmc, kegg, atted, gprofiler, plantcyc)
+    # — surrounding pipes produce 12 segments when split on "|".
     header_line = next(line for line in body.splitlines() if line.startswith("| canonical "))
-    assert header_line.count("|") == 11
+    assert header_line.count("|") == 12
     # Spot-check Arabidopsis row carries the new slots end-to-end.
     arab_row = next(
         line for line in body.splitlines() if line.startswith("| arabidopsis_thaliana ")
@@ -156,6 +159,7 @@ async def test_read_backends_status_lists_live_and_stub_backends() -> None:
         "europe_pmc",
         "quickgo",
         "planteome",
+        "plantcyc",
         "gprofiler",
         "gramene",
         "kegg",
@@ -171,14 +175,12 @@ async def test_read_backends_status_lists_live_and_stub_backends() -> None:
     from plant_genomics_mcp import blast as blast_mod
 
     assert by_name["blast"]["concurrency_cap"] == blast_mod.MAX_CONCURRENT_BLAST
-    # PlantCyc remains a subscription_required stub; TAIR was promoted to
-    # an alias of bar_gene_summary in Wave A.6.8 (no longer listed as a
-    # standalone backend — BAR carries the curator data).
+    # v1.13.0: PlantCyc is now a LIVE metabolism backend (its API is free; the
+    # old subscription stub was a misclassification) — asserted in the live loop
+    # above. TAIR was promoted to an alias of bar_gene_summary in Wave A.6.8, so
+    # it is not listed as a standalone backend (BAR carries the curator data).
     assert "tair" not in by_name
-    e = by_name["plantcyc"]
-    assert e["kind"] == "stub"
-    assert e["subscription_gated"] is True
-    assert e["probed_at"] == plantcyc._PROBED_AT
+    assert "plantcyc" in by_name
 
 
 @pytest.mark.asyncio

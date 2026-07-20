@@ -57,7 +57,7 @@ class Spec:
     args: dict[str, Any]
     expected_id: Any
     expected_org: str | None  # None => tool must not forward organism=
-    sync: bool = False  # plantcyc is a pure-sync call (no client, no await)
+    sync: bool = False  # a pure-sync dispatch arm (no client, no await); none currently
     synth: bool = False  # synthesis arms call env.model_dump() on the return
 
 
@@ -89,7 +89,7 @@ DISPATCH_SPECS: list[Spec] = [
     Spec("go_enrichment", gprofiler, "go_enrichment", {"loci": LOCI}, LOCI, _DEFAULT_ORG),
     Spec("locus_plant_ontology", planteome, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec("tair_locus_info", tair, "lookup_locus", {"locus": L}, L, None),
-    Spec("plantcyc_locus_info", plantcyc, "lookup_locus", {"locus": L}, L, None, sync=True),
+    Spec("plantcyc_locus_info", plantcyc, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec(
         "batch_ensembl_plants_lookup_locus",
         batch,
