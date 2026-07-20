@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.13.0 — 2026-07-19
+
+Turns **`plantcyc_locus_info`** from a subscription-gated stub into a **live PlantCyc / Plant Metabolic Network (PMN) metabolism backend**. The earlier stub's "subscription_required" was a **misclassification** — the BioCyc web-services API (`getxml` / `xmlquery`) is free and open, re-probed 2026-07-19. The tool now returns real metabolic annotation: the enzymes, reactions, and PlantCyc pathways a locus participates in — the metabolic-pathway view that KEGG and GO don't provide. Tool count unchanged at 37 (in-place upgrade); live backend count 13 → 14. Minor: no new tool, no breaking dependency; the `plantcyc_locus_info` output schema changes from a redirect record to metabolic annotation.
+
+**Added / Changed**
+
+- **`plantcyc_locus_info` is now live** (`plantcyc.lookup_locus`, async, organism-aware). Walks the BioCyc data model — locus → (BioVelo `accession-1` resolution) gene frame → product enzyme(s) → catalyzed reactions → `in-pathway` pathways — with bounded, cached, concurrency-limited `getxml` hops (`MAX_REACTIONS`=25, `MAX_PATHWAYS`=40, 6-way concurrency). Returns `enzymes[]` + `reactions[]` (id/name) + `pathways[]` (id/name) + `reaction_count` / `pathway_count` (true totals even when capped). A non-enzymatic gene (e.g. a transcription factor) returns `found=false` with empty lists — a normal result, not an error. New `PlantCycReaction` / `PlantCycPathway` / `PlantCycLocusInfo` models replace the retired `SubscriptionGatedRedirect`.
+- **`plantcyc_orgid` slot on `OrganismRecord`** (+ `plantcyc_orgid_for` accessor + coverage-matrix column) — maps each organism to its PMN PGDB org id (AraCyc=`ARA`, OryzaCyc=`ORYZA`, CornCyc=`CORN`, …). 11 of 12 mapped and verified via `getxml?<ORGID>:PWY-101` (2026-07-19); wheat's PGDB (wheatCyc) exists but its orgid was not resolved — left gated.
+- **Resources** — PlantCyc flips from `kind=stub` to `kind=live` in `pgmcp://backends/status`, joins `pgmcp://cache/stats`, and gains a `plantcyc` column in `pgmcp://organisms/coverage`.
+- **Tests** — `test_plantcyc.py` fully rewritten from the stub: 8 mocked tests driving the multi-hop traversal via a frame-routing callback (full traversal, unresolved→graceful, gene-without-enzyme, BioVelo unquoted-slot guard, malformed-XML, bad-locus typed error, unsupported-organism, 11-PGDB registry check) + 3 `PLANT_GENOMICS_MCP_LIVE=1` real-execution tests (F3H → flavonoid pathway; a TF → empty; rice cross-species via OryzaCyc). Dispatch spec (now async + organism), stdio-smoke organism set, and resource assertions updated. `plantcyc.py` at 94% coverage; suite 513 → 520.
+
+**Changed**
+
+- **`README.md`** — backends 13 → 14, `plantcyc_locus_info` matrix row (subscription redirect → live metabolism).
+- **`server.py` / `pyproject.toml` / `__init__.py`** — docstrings + description updated (PlantCyc now live; 14 backends).
+
 ## v1.12.0 — 2026-07-19
 
 Adds **`locus_plant_ontology`** — Plant Ontology (PO) + Trait Ontology (TO) + experimental-condition (PECO) annotations for a locus — over a new **Planteome** backend (browser.planteome.org, AmiGO2/GOlr Solr; free, no API key). Complements `locus_go_annotations`: QuickGO serves GO (species-agnostic), Planteome serves the plant-specific ontologies GO doesn't cover. Backend count 12 → 13, tool count 36 → 37. Minor: one new tool + one new backend, no breaking changes, no new dependencies.

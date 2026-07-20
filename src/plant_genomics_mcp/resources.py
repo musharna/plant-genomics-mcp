@@ -130,6 +130,7 @@ def _cache_stats_payload() -> dict[str, dict[str, int]]:
         "gramene": gramene._CACHE.stats(),
         "kegg": kegg._CACHE.stats(),
         "phytozome": phytozome._CACHE.stats(),
+        "plantcyc": plantcyc._CACHE.stats(),
         "planteome": planteome._CACHE.stats(),
         "quickgo": quickgo._CACHE.stats(),
         "string_db": string_db._CACHE.stats(),
@@ -228,10 +229,9 @@ def _backends_status_payload() -> list[dict[str, object]]:
         },
         {
             "name": "plantcyc",
-            "base_url": "https://pmn.plantcyc.org/",
-            "kind": "stub",
-            "subscription_gated": True,
-            "probed_at": plantcyc._PROBED_AT,
+            "base_url": plantcyc.BASE_URL,
+            "kind": "live",
+            "subscription_gated": False,
         },
     ]
 
@@ -260,8 +260,8 @@ def _coverage_matrix_payload() -> str:
     lines = [
         "# Organism Coverage Matrix",
         "",
-        "| canonical | scientific | ncbi_taxid | ensembl | phytozome | string | europe_pmc | kegg | atted | gprofiler |",
-        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+        "| canonical | scientific | ncbi_taxid | ensembl | phytozome | string | europe_pmc | kegg | atted | gprofiler | plantcyc |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for canonical, r in organisms.ORGANISMS.items():
         ensembl = r.ensembl_slug or "—"
@@ -271,9 +271,10 @@ def _coverage_matrix_payload() -> str:
         kegg = r.kegg_org_code or "—"
         atted = r.atted_release or "—"
         gprof = r.gprofiler_id or "—"
+        pcyc = r.plantcyc_orgid or "—"
         lines.append(
             f"| {canonical} | {r.scientific} | {r.ncbi_taxid} | "
-            f"{ensembl} | {phyto} | {string} | {epmc} | {kegg} | {atted} | {gprof} |"
+            f"{ensembl} | {phyto} | {string} | {epmc} | {kegg} | {atted} | {gprof} | {pcyc} |"
         )
     return "\n".join(lines) + "\n"
 

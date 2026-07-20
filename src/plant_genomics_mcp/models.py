@@ -448,30 +448,50 @@ class BatchEnvelope(BaseModel):
     )
 
 
-class SubscriptionGatedRedirect(BaseModel):
-    """Shared shape for the TAIR and PlantCyc informational stubs.
+class PlantCycReaction(BaseModel):
+    """One reaction catalyzed by a locus's gene product (PlantCyc/PMN)."""
 
-    Neither tool calls upstream — both return a structured redirect to
-    free alternatives. The shape is intentionally identical so a single
-    client-side handler can render either tool's response.
+    model_config = ConfigDict(extra="allow")
+
+    id: str | None = Field(default=None, description="Reaction frame id, e.g. RXN-7775")
+    name: str | None = Field(default=None, description="Reaction common name, if the frame has one")
+
+
+class PlantCycPathway(BaseModel):
+    """One PlantCyc/PMN pathway the locus participates in."""
+
+    model_config = ConfigDict(extra="allow")
+
+    id: str | None = Field(default=None, description="Pathway frame id, e.g. PWY-6787")
+    name: str | None = Field(
+        default=None, description="Pathway common name, e.g. flavonoid biosynthesis"
+    )
+
+
+class PlantCycLocusInfo(BaseModel):
+    """PlantCyc / PMN metabolic annotation for a locus.
+
+    Walks gene → enzyme → reactions → pathways in the organism's PGDB via the
+    free BioCyc web-services API. ``found=False`` with empty lists when the
+    locus has no metabolic annotation (e.g. a non-enzymatic gene like a
+    transcription factor) — this is a normal result, not an error.
+    ``reaction_count`` / ``pathway_count`` are the true totals even when the
+    returned lists are capped (see ``plantcyc.MAX_REACTIONS`` / ``MAX_PATHWAYS``).
     """
 
     model_config = ConfigDict(extra="forbid")
 
     locus: str
-    status: str = Field(
-        description='Always "subscription_required" — upstream REST is paid-only.',
-    )
-    probed_at: str = Field(description="ISO date of the last live access probe (YYYY-MM-DD)")
-    rationale: str = Field(description="Why this backend is gated")
-    alternatives: list[str] = Field(description="Tool names users should call instead")
-    alternatives_note: str = Field(description="What the alternatives do and do NOT cover")
-
-
-class PlantCycLocusInfo(SubscriptionGatedRedirect):
-    """PlantCyc stub response — adds ``plantcyc_web_url`` to the shared shape."""
-
-    plantcyc_web_url: str = Field(description="Browser URL for the PlantCyc gene page")
+    organism: str = Field(description="Canonical organism slug")
+    orgid: str = Field(description="PlantCyc PGDB org id, e.g. ARA (AraCyc)")
+    found: bool = Field(description="True if the locus resolved to a metabolic gene")
+    gene_frame: str | None = Field(default=None, description="Resolved PGDB gene frame id")
+    gene_common_name: str | None = Field(default=None, description="Gene common name in the PGDB")
+    enzymes: list[str] = Field(description="Product monomer (enzyme) frame ids")
+    reactions: list[PlantCycReaction]
+    pathways: list[PlantCycPathway]
+    reaction_count: int = Field(description="Total distinct reactions (pre-cap)")
+    pathway_count: int = Field(description="Total distinct pathways (pre-cap)")
 
 
 class GrameneHomolog(BaseModel):
