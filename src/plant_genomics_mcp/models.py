@@ -494,6 +494,82 @@ class PlantCycLocusInfo(BaseModel):
     pathway_count: int = Field(description="Total distinct pathways (pre-cap)")
 
 
+class AlphaFoldStructure(BaseModel):
+    """AlphaFold DB predicted-structure summary for a locus (via UniProt).
+
+    The locus is resolved to a UniProt accession, then AlphaFold's prediction
+    API is queried. ``found=False`` (with null fields) means the accession has
+    no deposited model — a normal outcome, not an error. The full model
+    coordinates are not inlined; ``cif_url`` / ``pdb_url`` link to them.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str
+    accession: str = Field(description="Resolved UniProt accession")
+    found: bool = Field(description="True if a predicted model exists")
+    model_entity_id: str | None = Field(default=None, description="e.g. AF-Q9SZ92-F1")
+    mean_plddt: float | None = Field(
+        default=None, description="Global mean pLDDT confidence (0–100)"
+    )
+    plddt_bands: dict[str, float | None] | None = Field(
+        default=None, description="Fraction of residues per confidence band"
+    )
+    latest_version: int | None = Field(default=None, description="Latest AlphaFold model version")
+    model_created: str | None = Field(default=None, description="Model creation date (ISO 8601)")
+    residue_range: dict[str, int | None] | None = Field(
+        default=None, description="Modelled residue span {start, end}"
+    )
+    organism: str | None = Field(default=None, description="Organism scientific name")
+    gene: str | None = Field(default=None, description="Gene name from UniProt")
+    description: str | None = Field(default=None, description="UniProt protein description")
+    cif_url: str | None = Field(default=None, description="mmCIF model download URL")
+    pdb_url: str | None = Field(default=None, description="PDB model download URL")
+    pae_image_url: str | None = Field(default=None, description="Predicted-aligned-error image URL")
+
+
+class InterProDomain(BaseModel):
+    """One InterPro entry (domain / family / signature) on a protein."""
+
+    model_config = ConfigDict(extra="allow")
+
+    accession: str | None = Field(default=None, description="Member/InterPro accession")
+    name: str | None = Field(default=None, description="Entry name")
+    type: str | None = Field(
+        default=None, description="domain / family / homologous_superfamily / …"
+    )
+    source_database: str | None = Field(default=None, description="pfam / cdd / panther / …")
+    interpro: str | None = Field(
+        default=None, description="Integrated InterPro accession, if any (else null)"
+    )
+    go_terms: list[dict[str, Any]] | None = Field(
+        default=None, description="Associated GO terms, if the entry carries any"
+    )
+    locations: list[dict[str, int]] = Field(
+        default_factory=list, description="Residue spans [{start, end}]"
+    )
+
+
+class InterProDomains(BaseModel):
+    """InterPro domain / family architecture for a locus (via UniProt).
+
+    The locus is resolved to a UniProt accession, then InterPro's per-protein
+    entries are fetched (Pfam appears as ``source_database == "pfam"`` among the
+    rows). ``found=True`` with an empty ``domains`` list means the protein has
+    no annotated entries — distinct from an unresolvable locus, which errors.
+    ``domain_count`` is the true total even when the row list is page-capped.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str
+    accession: str = Field(description="Resolved UniProt accession")
+    found: bool = Field(description="True once the locus resolved to a UniProt entry")
+    domain_count: int = Field(description="Total InterPro entries (pre-cap)")
+    domains: list[InterProDomain]
+    count_by_type: dict[str, int] = Field(description="Rollup of entry count by type")
+
+
 class GrameneHomolog(BaseModel):
     """One ortholog/paralog entry from Gramene compara.
 

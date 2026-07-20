@@ -41,6 +41,7 @@ from mcp.server.lowlevel.helper_types import ReadResourceContents
 from pydantic import AnyUrl
 
 from plant_genomics_mcp import (
+    alphafold,
     atted,
     bar,
     blast,
@@ -48,6 +49,7 @@ from plant_genomics_mcp import (
     europe_pmc,
     gprofiler,
     gramene,
+    interpro,
     kegg,
     organisms,
     phytozome,
@@ -122,12 +124,14 @@ def _cache_stats_payload() -> dict[str, dict[str, int]]:
     BLAST.
     """
     return {
+        "alphafold": alphafold._CACHE.stats(),
         "atted": atted._CACHE.stats(),
         "bar": bar._CACHE.stats(),
         "ensembl_plants": ensembl_plants._CACHE.stats(),
         "europe_pmc": europe_pmc._CACHE.stats(),
         "gprofiler": gprofiler._CACHE.stats(),
         "gramene": gramene._CACHE.stats(),
+        "interpro": interpro._CACHE.stats(),
         "kegg": kegg._CACHE.stats(),
         "phytozome": phytozome._CACHE.stats(),
         "plantcyc": plantcyc._CACHE.stats(),
@@ -230,6 +234,18 @@ def _backends_status_payload() -> list[dict[str, object]]:
         {
             "name": "plantcyc",
             "base_url": plantcyc.BASE_URL,
+            "kind": "live",
+            "subscription_gated": False,
+        },
+        {
+            "name": "alphafold",
+            "base_url": alphafold.BASE_URL,
+            "kind": "live",
+            "subscription_gated": False,
+        },
+        {
+            "name": "interpro",
+            "base_url": interpro.BASE_URL,
             "kind": "live",
             "subscription_gated": False,
         },

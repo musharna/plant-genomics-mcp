@@ -1,6 +1,6 @@
 """MCP server entry point — exposes plant genomics tools over stdio.
 
-This dispatch ships thirty-seven tools — seventeen single-locus, one
+This dispatch ships thirty-nine tools — nineteen single-locus, one
 genomic-region query, one gene-set enrichment, one BLAST
 sequence-similarity search, twelve batch variants that fan out per-locus
 calls in parallel, and five cross-source synthesis tools that compose the
@@ -24,6 +24,8 @@ live backends:
   - ``bar_aiv_interactions``              — BAR AIV interactions (live, Arabidopsis GRN paper refs / Rice predicted PPI pairs)
   - ``tair_locus_info``                   — alias of ``bar_gene_summary`` (TAIR REST is subscription-gated; BAR mirrors the curator data)
   - ``plantcyc_locus_info``               — PlantCyc/PMN metabolism (live, gene→enzyme→reactions→pathways)
+  - ``alphafold_structure``               — AlphaFold DB predicted structure (live, locus→UniProt→model + pLDDT)
+  - ``interpro_domains``                  — InterPro domain/family architecture (live, locus→UniProt→domains; Pfam incl.)
   - ``batch_ensembl_plants_lookup_locus`` — Ensembl Plants POST /lookup/id (one round-trip)
   - ``batch_get_gene_xrefs``              — gather over get_gene_xrefs
   - ``batch_phytozome_lookup_locus``      — gather over phytozome_lookup_locus
@@ -66,6 +68,7 @@ from mcp.server.stdio import stdio_server
 from pydantic import AnyUrl
 
 from plant_genomics_mcp import (
+    alphafold,
     atted,
     bar,
     batch,
@@ -74,6 +77,7 @@ from plant_genomics_mcp import (
     europe_pmc,
     gprofiler,
     gramene,
+    interpro,
     kegg,
     phytozome,
     plantcyc,
@@ -88,6 +92,7 @@ from plant_genomics_mcp import (
     uniprot,
 )
 from plant_genomics_mcp.models import (
+    AlphaFoldStructure,
     AttedCoexpression,
     BarAIVInteractions,
     BarEfpExpression,
@@ -100,6 +105,7 @@ from plant_genomics_mcp.models import (
     GeneXrefs,
     GoEnrichmentResult,
     GrameneHomologs,
+    InterProDomains,
     KeggPathways,
     LocusGoAnnotations,
     LocusLiterature,
@@ -841,6 +847,75 @@ TOOLS: list[types.Tool] = [
         _meta=_EDAM,
     ),
     types.Tool(
+        name="alphafold_structure",
+        description=(
+            "Fetch the AlphaFold DB predicted-structure summary for a locus "
+            "(alphafold.ebi.ac.uk; free, no key). Resolves the locus → UniProt "
+            "accession, then returns the predicted model's global mean pLDDT "
+            "confidence, the per-band pLDDT distribution, modelled residue span, "
+            "latest model version, and mmCIF / PDB / PAE download URLs. A valid "
+            "protein with no deposited model returns found=false (a normal "
+            "outcome, not an error); a locus with no UniProt entry raises a "
+            "typed NotFoundError. Works for all 12 organisms (UniProt-keyed). "
+            "Complements resolve_locus_to_uniprot (sequence-level) with the "
+            "structure-level view. Defaults to arabidopsis_thaliana; pass "
+            "organism= for other species."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "e.g. AT4G09760 (Arabidopsis), Os01g0100100 (rice RAP-DB)",
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
+                },
+            },
+            "required": ["locus"],
+            "additionalProperties": False,
+        },
+        outputSchema=AlphaFoldStructure.model_json_schema(),
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="interpro_domains",
+        description=(
+            "Fetch the InterPro domain / family architecture for a locus "
+            "(www.ebi.ac.uk/interpro; free, no key). Resolves the locus → "
+            "UniProt accession, then returns the protein's InterPro entries — "
+            "each with accession, name, type (domain / family / "
+            "homologous_superfamily / …), source_database (Pfam appears here as "
+            "source_database='pfam', not a separate tool), the integrated "
+            "InterPro accession, and residue spans — plus a count_by_type "
+            "rollup. A protein with no annotated domains returns found=true with "
+            "an empty list; a locus with no UniProt entry raises a typed "
+            "NotFoundError. domain_count is the true total even when the row "
+            "list is page-capped. Works for all 12 organisms (UniProt-keyed). "
+            "Defaults to arabidopsis_thaliana; pass organism= for other species."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "e.g. AT4G09760 (Arabidopsis), Os01g0100100 (rice RAP-DB)",
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
+                },
+            },
+            "required": ["locus"],
+            "additionalProperties": False,
+        },
+        outputSchema=InterProDomains.model_json_schema(),
+        _meta=_EDAM,
+    ),
+    types.Tool(
         name="batch_ensembl_plants_lookup_locus",
         description=(
             "Batch variant of ensembl_plants_lookup_locus. Uses Ensembl's "
@@ -1565,6 +1640,18 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                 # v1.13: real PMN metabolic annotation (was a subscription-gated
                 # stub; the API is free — see plant_genomics_mcp.plantcyc docstring).
                 return await plantcyc.lookup_locus(
+                    client,
+                    args["locus"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                )
+            case "alphafold_structure":
+                return await alphafold.lookup_locus(
+                    client,
+                    args["locus"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                )
+            case "interpro_domains":
+                return await interpro.lookup_locus(
                     client,
                     args["locus"],
                     organism=args.get("organism", "arabidopsis_thaliana"),

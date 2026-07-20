@@ -1456,6 +1456,30 @@ def _gene_report_success_mocks(httpx_mock):
             ],
         },
     )
+    # Phase 2 — InterPro domains (keyed on the resolved UniProt accession)
+    httpx_mock.add_response(
+        url=re.compile(r"^https://www\.ebi\.ac\.uk/interpro/api/entry/all/protein/uniprot/.*"),
+        json={
+            "count": 1,
+            "next": None,
+            "previous": None,
+            "results": [
+                {
+                    "metadata": {
+                        "accession": "PF02365",
+                        "name": "No apical meristem (NAM) protein",
+                        "source_database": "pfam",
+                        "type": "domain",
+                        "integrated": "IPR003441",
+                        "go_terms": None,
+                    },
+                    "proteins": [
+                        {"entry_protein_locations": [{"fragments": [{"start": 8, "end": 140}]}]}
+                    ],
+                }
+            ],
+        },
+    )
 
 
 @pytest.mark.asyncio
@@ -1477,8 +1501,9 @@ async def test_gene_report_all_backends_succeed_returns_dossier(httpx_mock):
         "string_interactions",
         "locus_literature",
         "locus_go_annotations",
+        "interpro_domains",
     ]
-    assert [s.status for s in env.steps] == ["ok"] * 7
+    assert [s.status for s in env.steps] == ["ok"] * 8
     assert env.result is not None
     assert env.result["locus"] == "AT1G01010"
     assert env.result["uniprot_accession"] == "Q0WV96"
@@ -1494,6 +1519,7 @@ async def test_gene_report_all_backends_succeed_returns_dossier(httpx_mock):
     assert "Glycolysis" in md  # KEGG pathway
     assert "NAC3" in md  # STRING partner
     assert "Spaceflight transcriptome" in md  # literature
+    assert "No apical meristem (NAM) protein" in md  # InterPro domain
 
     # Structured mirror alongside the prose.
     sections = env.result["sections"]
@@ -1505,6 +1531,7 @@ async def test_gene_report_all_backends_succeed_returns_dossier(httpx_mock):
         "interactions",
         "literature",
         "go_annotations",
+        "domains",
     }
     assert sections["annotation"]["id"] == "AT1G01010"
 
