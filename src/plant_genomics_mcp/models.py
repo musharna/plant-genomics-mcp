@@ -571,6 +571,29 @@ class InterProDomains(BaseModel):
     count_by_type: dict[str, int] = Field(description="Rollup of entry count by type")
 
 
+class ExperimentalStructures(BaseModel):
+    """PDBe experimentally-solved structures for a locus (via UniProt).
+
+    The locus is resolved to a UniProt accession, then PDBe's ``best_structures``
+    mapping is queried (ranked best-first). ``found=False`` (empty list) means no
+    deposited structure — the common plant case (a 404), not an error.
+    Complements ``AlphaFoldStructure`` (the predicted view). ``structure_count``
+    is the true total even when the list is capped.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str
+    accession: str = Field(description="Resolved UniProt accession")
+    found: bool = Field(description="True if any experimental structure is deposited")
+    structure_count: int = Field(description="Total deposited structures (pre-cap)")
+    truncated: bool = Field(description="True if the structure list was capped")
+    structures: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Best-first {pdb_id, chain_id, experimental_method, resolution, coverage, …}",
+    )
+
+
 class LocusVariants(BaseModel):
     """Natural variants overlapping a locus's genomic span (Ensembl /overlap).
 
