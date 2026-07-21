@@ -57,6 +57,7 @@ from plant_genomics_mcp import (
     organisms,
     orthodb,
     panther,
+    pdbe,
     phytozome,
     plantcyc,
     planteome,
@@ -144,6 +145,7 @@ def _cache_stats_payload() -> dict[str, dict[str, int]]:
         "onekg": onekg._CACHE.stats(),
         "orthodb": orthodb._CACHE.stats(),
         "panther": panther._CACHE.stats(),
+        "pdbe": pdbe._CACHE.stats(),
         "phytozome": phytozome._CACHE.stats(),
         "plantcyc": plantcyc._CACHE.stats(),
         "planteome": planteome._CACHE.stats(),
@@ -250,6 +252,12 @@ def _backends_status_payload() -> list[dict[str, object]]:
         {
             "name": "alphafold",
             "base_url": alphafold.BASE_URL,
+            "kind": "live",
+            "subscription_gated": False,
+        },
+        {
+            "name": "pdbe",
+            "base_url": pdbe.BASE_URL,
             "kind": "live",
             "subscription_gated": False,
         },

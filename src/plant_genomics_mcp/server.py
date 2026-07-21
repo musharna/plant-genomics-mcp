@@ -1,6 +1,6 @@
 """MCP server entry point — exposes plant genomics tools over stdio.
 
-This dispatch ships forty-five tools — twenty-four single-locus, one
+This dispatch ships forty-six tools — twenty-five single-locus, one
 genomic-region query, one variant-consequence (VEP) annotator, one
 gene-set enrichment, one BLAST sequence-similarity search, twelve batch
 variants that fan out per-locus calls in parallel, and five cross-source
@@ -25,6 +25,7 @@ synthesis tools that compose the live backends:
   - ``tair_locus_info``                   — alias of ``bar_gene_summary`` (TAIR REST is subscription-gated; BAR mirrors the curator data)
   - ``plantcyc_locus_info``               — PlantCyc/PMN metabolism (live, gene→enzyme→reactions→pathways)
   - ``alphafold_structure``               — AlphaFold DB predicted structure (live, locus→UniProt→model + pLDDT)
+  - ``experimental_structures``           — PDBe experimentally-solved structures (live, locus→UniProt→best PDB entries)
   - ``interpro_domains``                  — InterPro domain/family architecture (live, locus→UniProt→domains; Pfam incl.)
   - ``locus_variants``                    — Ensembl natural variants overlapping a locus (live, EVA/dbSNP; 12 organisms)
   - ``vep_annotate``                      — Ensembl VEP variant-consequence prediction (live, region+allele; SIFT/PolyPhen)
@@ -93,6 +94,7 @@ from plant_genomics_mcp import (
     onekg,
     orthodb,
     panther,
+    pdbe,
     phytozome,
     plantcyc,
     planteome,
@@ -118,6 +120,7 @@ from plant_genomics_mcp.models import (
     EnsemblPlantsLocus,
     EnsemblRegionFeatures,
     EnsemblSequence,
+    ExperimentalStructures,
     GeneXrefs,
     GoEnrichmentResult,
     GrameneHomologs,
@@ -898,6 +901,41 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=AlphaFoldStructure.model_json_schema(),
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="experimental_structures",
+        description=(
+            "Fetch experimentally-solved (X-ray / cryo-EM / NMR) protein "
+            "structures for a locus from PDBe (www.ebi.ac.uk/pdbe; free, no key). "
+            "Resolves the locus → UniProt accession, then returns PDBe's "
+            "best_structures mapping ranked best-first: per entry the PDB id, "
+            "chain, experimental method, resolution, coverage, and modelled "
+            "residue span. Most plant proteins have NO deposited structure — that "
+            "returns found=false (a normal outcome, not an error); a locus with no "
+            "UniProt entry raises a typed NotFoundError. structure_count is the "
+            "true total even when the list is capped. Complements "
+            "alphafold_structure (the predicted view). Works for all 12 organisms "
+            "(UniProt-keyed). Defaults to arabidopsis_thaliana; pass organism= for "
+            "other species."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "e.g. AT4G09760 (Arabidopsis), Os01g0100100 (rice RAP-DB)",
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
+                },
+            },
+            "required": ["locus"],
+            "additionalProperties": False,
+        },
+        outputSchema=ExperimentalStructures.model_json_schema(),
         _meta=_EDAM,
     ),
     types.Tool(
@@ -1858,6 +1896,12 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                 )
             case "alphafold_structure":
                 return await alphafold.lookup_locus(
+                    client,
+                    args["locus"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                )
+            case "experimental_structures":
+                return await pdbe.lookup_locus(
                     client,
                     args["locus"],
                     organism=args.get("organism", "arabidopsis_thaliana"),

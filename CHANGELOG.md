@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.16.0 — 2026-07-21
+
+Adds **`experimental_structures`** — PDBe experimentally-solved (X-ray / cryo-EM / NMR) protein structures per locus, the experimentally-_solved_ companion to `alphafold_structure`'s _predicted_ view. The last wholly-uncovered slice of the protein-structure axis from the 2026-07-20 competitor/gap audit. Like AlphaFold/InterPro it is **UniProt-keyed** — reuses the `locus → UniProt` resolution the server already performs, so no new organism-ID mapping and **all 12 organisms** work. Tool count 45 → 46; backend count 20 → 21. Minor: one new tool + one new backend, no breaking changes, no new dependencies.
+
+**Added**
+
+- **`experimental_structures`** (`pdbe.lookup_locus`, async, organism-aware) — resolves the locus → UniProt accession, then fetches PDBe's `best_structures` mapping (ranked best-first). Returns per entry the `pdb_id`, `chain_id`, `experimental_method`, `resolution`, `coverage`, and modelled `residue_range`; `structure_count` is the true total (capped at `MAX_STRUCTURES`=25, `truncated` flagged). Most plant proteins have **no deposited structure** — PDBe answers HTTP 404, surfaced as `found=false` (a normal outcome); a locus with no UniProt entry raises a typed `NotFoundError`. Includes the `validators.assert_valid_locus` boundary guard (the convention hardened in the 2026-07-21 audit). New `ExperimentalStructures` output model.
+- **New backend** `pdbe.py` (www.ebi.ac.uk/pdbe) on the standard template (per-module `TTLCache`, shared retry, typed errors). UniProt-keyed like alphafold/interpro — no coverage-slot gating, no coverage-matrix column.
+- **Resources** — PDBe appears in `pgmcp://cache/stats` and `pgmcp://backends/status` (`kind=live`, not gated).
+- **Tests** — `test_pdbe.py` (9 mocked + 2 live, incl. 404-graceful, empty-mapping, truncation, residue-None, before-network validation) drives `pdbe.py` to **100%** coverage. Dispatch spec, stdio-smoke name + organism sets, and resource assertions updated. Suite 599 → 609; total coverage 95%.
+
+**Changed**
+
+- **`README.md`** — 45 → 46 tools, 20 → 21 backends; new `experimental_structures` matrix row (Structure); backend list + hero counts.
+- **`server.py` / `pyproject.toml` / `__init__.py` / `server.json`** — docstrings + description updated (46 tools / 21 backends; PDBe experimental structures).
+
 ## v1.15.0 — 2026-07-20
 
 Adds the **build-now follow-on tier** from the 2026-07-20 competitor/gap audit — three new data axes in one release: **variation**, **orthology**, and **Arabidopsis diversity**. Six new tools: **`locus_variants`** + **`vep_annotate`** (Ensembl variation / VEP), **`panther_family`** (PANTHER protein families), **`orthodb_orthologs`** (OrthoDB orthology), **`aragwas_associations`** (AraGWAS GWAS hits), and **`arabidopsis_natural_variation`** (1001 Genomes). Ensembl variation/VEP ride the REST wrapper the server already owns; PANTHER + OrthoDB are keyed on native gene ids (no UniProt hop) and cover **all 12 organisms**; AraGWAS + 1001 Genomes are **Arabidopsis-only** by construction. Tool count 39 → 45; backend count 16 → 20 (four new data sources: PANTHER, OrthoDB, AraGWAS, 1001 Genomes). Every upstream shape was re-probed live before build (the audit's prior-session field lists were treated as hypotheses). Minor: six new tools, no breaking changes, no new dependencies.

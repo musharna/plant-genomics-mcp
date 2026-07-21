@@ -1,16 +1,19 @@
 """Plant genomics MCP server.
 
-Forty-five MCP tools across 20 backends for plant gene-record lookup,
+Forty-six MCP tools across 21 backends for plant gene-record lookup,
 biological-context analysis, and cross-source synthesis. Live backends
 include Ensembl Plants, Phytozome BioMart, UniProtKB, Europe PMC, QuickGO,
 Planteome (PO/TO ontology), PlantCyc/PMN (metabolic pathways), g:Profiler
-(GO/KEGG enrichment), AlphaFold DB (predicted structure), InterPro (protein
+(GO/KEGG enrichment), AlphaFold DB (predicted structure), PDBe (experimental
+structures), InterPro (protein
 domains), PANTHER (protein families), OrthoDB (orthology), AraGWAS
 (Arabidopsis GWAS), 1001 Genomes (Arabidopsis natural variation), NCBI BLAST,
 Gramene homology, KEGG pathways, STRING-DB
 interactions, ATTED-II coexpression, and BAR
 (Bio-Analytic Resource for Plant Biology, U Toronto — Global Core Biodata
-Resource 2023). v1.15 adds the variation, orthology, and Arabidopsis-diversity
+Resource 2023). v1.16 adds ``experimental_structures`` — PDBe deposited
+X-ray/cryo-EM/NMR structures per locus (the experimentally-solved companion to
+``alphafold_structure``), UniProt-keyed. v1.15 adds the variation, orthology, and Arabidopsis-diversity
 tier: ``locus_variants`` + ``vep_annotate`` (Ensembl variation/VEP),
 ``panther_family``, ``orthodb_orthologs``, ``aragwas_associations``, and
 ``arabidopsis_natural_variation``. v1.14 adds ``alphafold_structure`` + ``interpro_domains`` —
@@ -27,4 +30,4 @@ Bioinformatics paid subscription). See ``server.py`` for the full tool
 catalog.
 """
 
-__version__ = "1.15.0"
+__version__ = "1.16.0"
