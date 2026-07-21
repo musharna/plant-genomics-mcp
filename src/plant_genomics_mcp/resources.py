@@ -52,6 +52,7 @@ from plant_genomics_mcp import (
     gprofiler,
     gramene,
     interpro,
+    jaspar,
     kegg,
     onekg,
     organisms,
@@ -146,6 +147,7 @@ def _cache_stats_payload() -> dict[str, dict[str, int]]:
         "orthodb": orthodb._CACHE.stats(),
         "panther": panther._CACHE.stats(),
         "pdbe": pdbe._CACHE.stats(),
+        "jaspar": jaspar._CACHE.stats(),
         "phytozome": phytozome._CACHE.stats(),
         "plantcyc": plantcyc._CACHE.stats(),
         "planteome": planteome._CACHE.stats(),
@@ -264,6 +266,12 @@ def _backends_status_payload() -> list[dict[str, object]]:
         {
             "name": "interpro",
             "base_url": interpro.BASE_URL,
+            "kind": "live",
+            "subscription_gated": False,
+        },
+        {
+            "name": "jaspar",
+            "base_url": jaspar.BASE_URL,
             "kind": "live",
             "subscription_gated": False,
         },

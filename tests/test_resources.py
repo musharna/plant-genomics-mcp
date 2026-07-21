@@ -46,6 +46,7 @@ async def test_read_cache_stats_returns_per_backend_rollup() -> None:
         "gprofiler",
         "gramene",
         "interpro",
+        "jaspar",
         "kegg",
         "onekg",
         "orthodb",
@@ -180,6 +181,7 @@ async def test_read_backends_status_lists_live_and_stub_backends() -> None:
         "aragwas",
         "onekg",
         "pdbe",
+        "jaspar",
     ):
         e = by_name[name]
         assert e["kind"] == "live"

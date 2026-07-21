@@ -36,6 +36,7 @@ from plant_genomics_mcp import (
     gprofiler,
     gramene,
     interpro,
+    jaspar,
     kegg,
     onekg,
     orthodb,
@@ -101,6 +102,9 @@ DISPATCH_SPECS: list[Spec] = [
     Spec("alphafold_structure", alphafold, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec("experimental_structures", pdbe, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec("interpro_domains", interpro, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
+    Spec("tf_binding_motifs", jaspar, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
+    # matrix_id-keyed, not locus-keyed → must not forward organism=
+    Spec("jaspar_motif", jaspar, "lookup_matrix", {"matrix_id": "MA0570.1"}, "MA0570.1", None),
     Spec("locus_variants", ensembl_variation, "locus_variants", {"locus": L}, L, _DEFAULT_ORG),
     Spec(
         "vep_annotate",
