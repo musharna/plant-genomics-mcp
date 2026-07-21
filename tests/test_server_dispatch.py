@@ -40,6 +40,7 @@ from plant_genomics_mcp import (
     onekg,
     orthodb,
     panther,
+    pdbe,
     phytozome,
     plantcyc,
     planteome,
@@ -98,6 +99,7 @@ DISPATCH_SPECS: list[Spec] = [
     Spec("tair_locus_info", tair, "lookup_locus", {"locus": L}, L, None),
     Spec("plantcyc_locus_info", plantcyc, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec("alphafold_structure", alphafold, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
+    Spec("experimental_structures", pdbe, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec("interpro_domains", interpro, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec("locus_variants", ensembl_variation, "locus_variants", {"locus": L}, L, _DEFAULT_ORG),
     Spec(

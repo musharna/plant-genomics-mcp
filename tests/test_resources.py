@@ -50,6 +50,7 @@ async def test_read_cache_stats_returns_per_backend_rollup() -> None:
         "onekg",
         "orthodb",
         "panther",
+        "pdbe",
         "phytozome",
         "plantcyc",
         "planteome",
@@ -178,6 +179,7 @@ async def test_read_backends_status_lists_live_and_stub_backends() -> None:
         "orthodb",
         "aragwas",
         "onekg",
+        "pdbe",
     ):
         e = by_name[name]
         assert e["kind"] == "live"
