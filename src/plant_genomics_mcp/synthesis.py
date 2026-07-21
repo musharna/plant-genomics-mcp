@@ -33,6 +33,7 @@ from plant_genomics_mcp import (
     ensembl_plants,
     europe_pmc,
     gramene,
+    interpro,
     kegg,
     organisms,
     quickgo,
@@ -735,6 +736,7 @@ _GENE_REPORT_STEPS = [
     "string_interactions",
     "locus_literature",
     "locus_go_annotations",
+    "interpro_domains",
 ]
 
 
@@ -789,7 +791,7 @@ async def gene_report(
                 ),
                 *[
                     _skipped(i + 1, _GENE_REPORT_STEPS[i], "phase 1 failed; skipped")
-                    for i in range(1, 7)
+                    for i in range(1, 8)
                 ],
             ],
             result=None,
@@ -812,7 +814,7 @@ async def gene_report(
         # Ensembl is the entry point; without it the dossier can't anchor.
         skipped = [
             _skipped(i + 1, _GENE_REPORT_STEPS[i], "phase-1 ensembl lookup failed; skipped")
-            for i in range(2, 7)
+            for i in range(2, 8)
         ]
         return SynthesisEnvelope(
             tool="gene_report",
@@ -837,6 +839,7 @@ async def gene_report(
     if uniprot_row.status == "ok":
         acc = _result_dict(uniprot_row)["primaryAccession"]
         phase2_items.append((7, _GENE_REPORT_STEPS[6], quickgo.lookup_by_uniprot(client, acc)))
+        phase2_items.append((8, _GENE_REPORT_STEPS[7], interpro.lookup_by_uniprot(client, acc)))
 
     p2 = await _gather_phase2(phase2_items)
 
@@ -848,8 +851,22 @@ async def gene_report(
                 "phase-1 UniProt resolution failed; quickgo skipped",
             )
         )
+        p2.append(
+            _skipped(
+                8,
+                _GENE_REPORT_STEPS[7],
+                "phase-1 UniProt resolution failed; interpro skipped",
+            )
+        )
 
-    xrefs_row, kegg_row, string_row, lit_row, go_row = p2[0], p2[1], p2[2], p2[3], p2[4]
+    xrefs_row, kegg_row, string_row, lit_row, go_row, domains_row = (
+        p2[0],
+        p2[1],
+        p2[2],
+        p2[3],
+        p2[4],
+        p2[5],
+    )
 
     def _ok(row: StepRow) -> Any:
         return row.result if row.status == "ok" else None
@@ -872,6 +889,7 @@ async def gene_report(
         "interactions": string_row,
         "literature": lit_row,
         "go_annotations": go_row,
+        "domains": domains_row,
     }
     markdown = _render_gene_report_md(
         locus=locus,
@@ -963,6 +981,23 @@ def _render_gene_report_md(
         lines.append(note)
     else:
         lines.append("_No UniProt record found._")
+
+    # Protein domains (InterPro)
+    lines += ["", "## Protein domains"]
+    dom = _ok("domains")
+    note = _section_note(rows["domains"])
+    if dom and dom.get("domains"):
+        for d in dom["domains"][:top_n]:
+            label = d.get("name") or d.get("accession") or "?"
+            bits = [b for b in (d.get("type"), d.get("source_database")) if b]
+            suffix = f" ({', '.join(bits)})" if bits else ""
+            spans = ", ".join(f"{loc['start']}–{loc['end']}" for loc in d.get("locations") or [])
+            span_txt = f" [{spans}]" if spans else ""
+            lines.append(f"- **{label}**{suffix}{span_txt}")
+    elif note:
+        lines.append(note)
+    else:
+        lines.append("_No annotated protein domains found._")
 
     # GO annotations, grouped by aspect
     lines += ["", "## GO annotations"]

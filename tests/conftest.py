@@ -18,11 +18,13 @@ from __future__ import annotations
 import pytest
 
 from plant_genomics_mcp import (
+    alphafold,
     atted,
     ensembl_plants,
     europe_pmc,
     gprofiler,
     gramene,
+    interpro,
     kegg,
     phytozome,
     plantcyc,
@@ -36,11 +38,13 @@ from plant_genomics_mcp import (
 @pytest.fixture(autouse=True)
 def _clear_module_caches() -> None:
     for mod in (
+        alphafold,
         atted,
         ensembl_plants,
         europe_pmc,
         gramene,
         gprofiler,
+        interpro,
         kegg,
         phytozome,
         plantcyc,

@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.14.0 — 2026-07-20
+
+Adds the **protein structure + domain-architecture** view — the largest wholly-uncovered biological category per the 2026-07-20 competitor/gap audit, and the category every general-bio MCP competitor already ships. Two new tools over two new backends: **`alphafold_structure`** (AlphaFold DB predicted model) and **`interpro_domains`** (InterPro domain / family architecture, Pfam included). Both are **UniProt-keyed** — they reuse the `locus → UniProt` resolution the server already performs, so no new organism-ID mapping is needed and **all 12 organisms** work. InterPro domains also feed the `gene_report` dossier. Tool count 37 → 39; backend count 14 → 16. Minor: two new tools + two new backends, no breaking changes, no new dependencies.
+
+**Added**
+
+- **`alphafold_structure`** (`alphafold.lookup_locus`, async, organism-aware) — resolves the locus → UniProt accession, then fetches AlphaFold DB's `/api/prediction/{acc}`. Returns the predicted model's global mean pLDDT (`mean_plddt`), the per-band confidence distribution (`plddt_bands`), modelled residue span, latest model version, and mmCIF / PDB / PAE download URLs. A valid protein with **no deposited model** returns `found=false` (a normal outcome); a locus with no UniProt entry raises a typed `NotFoundError`. New `AlphaFoldStructure` output model.
+- **`interpro_domains`** (`interpro.lookup_locus`, async, organism-aware) — resolves the locus → UniProt accession, then fetches InterPro's per-protein entries (paginated, capped at `MAX_PAGES`=5). Each row: `accession`, `name`, `type` (domain / family / homologous_superfamily / …), `source_database` (**Pfam appears here** as `source_database="pfam"`, not a separate tool), integrated InterPro `interpro` accession, and residue `locations` — plus a `count_by_type` rollup. A protein with no annotated domains returns `found=true` with an empty list; `domain_count` is the true total even when page-capped. New `InterProDomain` + `InterProDomains` output models.
+- **Two new backends** (`alphafold.py`, `interpro.py`) on the standard template (per-module `TTLCache`, shared retry, typed errors). Both key on the universal `locus → UniProt` seam (mirrors quickgo), so there is **no coverage-slot gating and no coverage-matrix column** — organisms resolve via UniProt.
+- **`gene_report` gains a `## Protein domains` section** — a phase-2 `interpro.lookup_by_uniprot` call keyed on the accession already resolved in phase 1 (step 8), rendered with the same graceful-degradation pattern as the other sections; `result.sections` gains a `domains` key.
+- **Resources** — both backends appear in `pgmcp://cache/stats` and `pgmcp://backends/status` (`kind=live`, not gated).
+- **Tests** — `test_alphafold.py` (6 mocked + 1 live) and `test_interpro.py` (6 mocked + 1 live, incl. pagination follow + cap) drive the two modules to **100% line coverage**; `gene_report` dossier test extended for the domains section. Dispatch specs, stdio-smoke name + organism sets, and resource assertions updated. Suite 520 → 527; total coverage 95%.
+
+**Changed**
+
+- **`README.md`** — 37 → 39 tools, 14 → 16 backends; new `alphafold_structure` + `interpro_domains` matrix rows; `gene_report` row notes the domains section.
+- **`server.py` / `pyproject.toml` / `__init__.py`** — docstrings + description updated (structure + domains; 39 tools / 16 backends).
+
 ## v1.13.0 — 2026-07-19
 
 Turns **`plantcyc_locus_info`** from a subscription-gated stub into a **live PlantCyc / Plant Metabolic Network (PMN) metabolism backend**. The earlier stub's "subscription_required" was a **misclassification** — the BioCyc web-services API (`getxml` / `xmlquery`) is free and open, re-probed 2026-07-19. The tool now returns real metabolic annotation: the enzymes, reactions, and PlantCyc pathways a locus participates in — the metabolic-pathway view that KEGG and GO don't provide. Tool count unchanged at 37 (in-place upgrade); live backend count 13 → 14. Minor: no new tool, no breaking dependency; the `plantcyc_locus_info` output schema changes from a redirect record to metabolic annotation.
