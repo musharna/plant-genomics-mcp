@@ -59,6 +59,13 @@ class OrganismRecord:
     # rice → ``ORYZA``, sorghum → ``SORGHUMBICOLOR``). Verified via
     # ``getxml?<ORGID>:PWY-101`` → 200 (probed 2026-07-19). Wheat's PGDB
     # (wheatCyc) exists but its orgid was not resolved — left ``None`` (gated).
+    panther_taxid: int | None = None
+    # PANTHER ``organism=`` query taxid used by ``panther.py`` for protein-family
+    # classification. Usually equals ``ncbi_taxid`` — but NOT always: PANTHER
+    # indexes barley under the subspecies taxid 112509 (Hordeum vulgare subsp.
+    # vulgare), not the species taxid 4513. Populated explicitly for all 12
+    # (``None`` = organism absent from PANTHER supportedgenomes, so gated).
+    # Verified against .../pantherdb/supportedgenomes (probed 2026-07-20).
     aliases: tuple[str, ...] = field(default_factory=tuple)
 
 
@@ -76,6 +83,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         atted_release="Ath-u.c4-0",
         gprofiler_id="athaliana",
         plantcyc_orgid="ARA",
+        panther_taxid=3702,
         aliases=("a. thaliana", "at", "arabidopsis"),
     ),
     "oryza_sativa": OrganismRecord(
@@ -91,6 +99,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         atted_release="Osa-u.c1-0",
         gprofiler_id="osativa",
         plantcyc_orgid="ORYZA",
+        panther_taxid=39947,
         aliases=("o. sativa",),
     ),
     "zea_mays": OrganismRecord(
@@ -106,6 +115,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         atted_release="Zma-u.c1-0",
         gprofiler_id="zmays",
         plantcyc_orgid="CORN",
+        panther_taxid=4577,
         aliases=("z. mays",),
     ),
     "triticum_aestivum": OrganismRecord(
@@ -127,6 +137,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         atted_release=None,  # ATTED-II has no Tae-u release (probed 2026-05-24)
         gprofiler_id="talancer",  # g:Profiler indexes the Lancer cultivar (taxid 4565002); species taxid 4565 is not a g:Profiler org
         plantcyc_orgid=None,  # wheatCyc PGDB exists but orgid unresolved (probed 2026-07-19); re-probe from org-summary
+        panther_taxid=4565,
         aliases=("t. aestivum",),
     ),
     "solanum_lycopersicum": OrganismRecord(
@@ -155,6 +166,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         atted_release="Sly-u.c1-0",
         gprofiler_id="slycopersicum",
         plantcyc_orgid="TOMATO",
+        panther_taxid=4081,
         aliases=("s. lycopersicum",),
     ),
     "glycine_max": OrganismRecord(
@@ -170,6 +182,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         atted_release="Gma-u.c1-0",
         gprofiler_id="gmax",
         plantcyc_orgid="SOY",
+        panther_taxid=3847,
         aliases=("g. max",),
     ),
     "sorghum_bicolor": OrganismRecord(
@@ -190,6 +203,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         atted_release=None,  # ATTED-II has no Sbi-u release (probed 2026-05-24)
         gprofiler_id="sbicolor",
         plantcyc_orgid="SORGHUMBICOLOR",
+        panther_taxid=4558,
         aliases=("s. bicolor",),
     ),
     "hordeum_vulgare": OrganismRecord(
@@ -205,6 +219,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         atted_release=None,  # ATTED-II has no Hvg-u release (probed 2026-05-24)
         gprofiler_id="hvulgare",  # g:Profiler taxid 112509; species taxid 4513 is not a g:Profiler org
         plantcyc_orgid="BARLEY",
+        panther_taxid=112509,  # subspecies taxid — barley absent under species 4513
         aliases=("h. vulgare",),
     ),
     "vitis_vinifera": OrganismRecord(
@@ -225,6 +240,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         atted_release="Vvi-u.c1-0",
         gprofiler_id="vvinifera",
         plantcyc_orgid="GRAPE",
+        panther_taxid=29760,
         aliases=("v. vinifera",),
     ),
     "populus_trichocarpa": OrganismRecord(
@@ -240,6 +256,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         atted_release=None,  # ATTED-II Pop-u/Ptr-u return invalid-db (probed 2026-05-24)
         gprofiler_id="ptrichocarpa",
         plantcyc_orgid="POPLAR",
+        panther_taxid=3694,
         aliases=("p. trichocarpa",),
     ),
     "medicago_truncatula": OrganismRecord(
@@ -260,6 +277,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         atted_release="Mtr-u.c1-0",
         gprofiler_id="mtruncatula",
         plantcyc_orgid="MTRUNCATULA",
+        panther_taxid=3880,
         aliases=("m. truncatula",),
     ),
     "brachypodium_distachyon": OrganismRecord(
@@ -275,6 +293,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         atted_release=None,  # ATTED-II has no Bdi-u release (probed 2026-05-24)
         gprofiler_id="bdistachyon",
         plantcyc_orgid="BRACHYPODIUM",
+        panther_taxid=15368,
         aliases=("b. distachyon",),
     ),
 }
@@ -439,6 +458,17 @@ def plantcyc_orgid_for(query: str | int) -> str:
 def ncbi_taxid_for(query: str | int) -> int:
     # NCBI taxid is always populated on every record — no support gap.
     return resolve(query).ncbi_taxid
+
+
+def panther_taxid_for(query: str | int) -> int:
+    record = resolve(query)
+    if record.panther_taxid is None:
+        raise OrganismNotSupported(
+            backend="panther",
+            organism=record.canonical,
+            supported=_supported_for("panther_taxid"),
+        )
+    return record.panther_taxid
 
 
 def string_taxid_for(query: str | int) -> int:
