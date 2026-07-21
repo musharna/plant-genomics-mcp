@@ -57,6 +57,7 @@ async def test_read_cache_stats_returns_per_backend_rollup() -> None:
         "planteome",
         "quickgo",
         "string_db",
+        "thalemine",
         "uniprot",
     }
     # Each per-backend block carries the canonical TTLCache stats shape.
@@ -182,6 +183,7 @@ async def test_read_backends_status_lists_live_and_stub_backends() -> None:
         "onekg",
         "pdbe",
         "jaspar",
+        "thalemine",
     ):
         e = by_name[name]
         assert e["kind"] == "live"
