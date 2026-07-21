@@ -98,6 +98,18 @@ async def _timed_step(step: int, tool: str, coro) -> StepRow:
             elapsed_s=time.perf_counter() - started,
             error=f"[{type(e).__name__}] {e}",
         )
+    except Exception as e:
+        # Unexpected error (e.g. a projection KeyError/TypeError in one backend)
+        # — degrade this step rather than crash the whole envelope (audit L6).
+        # CancelledError/KeyboardInterrupt/SystemExit are BaseException, not
+        # Exception, so they still propagate.
+        return StepRow(
+            step=step,
+            tool=tool,
+            status="error",
+            elapsed_s=time.perf_counter() - started,
+            error=f"[{type(e).__name__}] {e}",
+        )
     return StepRow(
         step=step,
         tool=tool,
@@ -136,8 +148,18 @@ def _gather_step(step: int, tool: str, outcome: Any, elapsed_s: float | None) ->
             elapsed_s=elapsed_s,
             error=f"[{type(outcome).__name__}] {outcome}",
         )
+    if isinstance(outcome, Exception):
+        # Unexpected error (projection bug etc.) — degrade this step, don't crash
+        # the whole envelope (audit L6).
+        return StepRow(
+            step=step,
+            tool=tool,
+            status="error",
+            elapsed_s=elapsed_s,
+            error=f"[{type(outcome).__name__}] {outcome}",
+        )
     if isinstance(outcome, BaseException):
-        raise outcome
+        raise outcome  # CancelledError / KeyboardInterrupt / SystemExit only
     return StepRow(step=step, tool=tool, status="ok", elapsed_s=elapsed_s, result=outcome)
 
 

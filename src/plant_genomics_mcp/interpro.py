@@ -112,6 +112,7 @@ async def lookup_by_uniprot(client: httpx.AsyncClient, accession: str) -> dict[s
         "accession": accession,
         "found": True,
         "domain_count": total,
+        "truncated": total > len(domains),
         "domains": domains,
         "count_by_type": dict(by_type),
     }
