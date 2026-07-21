@@ -33,6 +33,12 @@ LOCUS_RE: re.Pattern[str] = re.compile(r"^[A-Za-z0-9._-]+\Z")
 # instead of a clean not-found — see the 2026-07-21 audit (M6).
 AGI_RE: re.Pattern[str] = re.compile(r"^AT[1-5CM]G\d{5}(\.\d+)?\Z", re.IGNORECASE)
 
+# JASPAR matrix (profile) identifier: a 2-4 letter collection prefix, digits,
+# and an optional ``.N`` release version — e.g. ``MA0570.1`` (CORE), ``PB0001.1``
+# (PBM), ``UN0123.1`` (unvalidated). Templated straight into the API path, so it
+# gets a dedicated shape check rather than the permissive ``LOCUS_RE``.
+JASPAR_MATRIX_RE: re.Pattern[str] = re.compile(r"^[A-Za-z]{2,4}\d{3,7}(\.\d+)?\Z")
+
 # Characters that would break out of the URL path/query segment a value is
 # templated into (path traversal, extra query params, fragment). Applied to
 # the variant ``region``/``allele`` strings that VEP splices into its path —
@@ -66,6 +72,17 @@ def assert_valid_agi(locus: str, *, backend: str) -> None:
         raise NotFoundError(
             f"{backend}: {locus!r} is not a valid Arabidopsis AGI locus (e.g. AT1G01060)"
         )
+
+
+def assert_valid_jaspar_matrix_id(matrix_id: str, *, backend: str) -> None:
+    """Raise ``NotFoundError`` if ``matrix_id`` is not a well-formed JASPAR profile id.
+
+    JASPAR splices the id directly into its REST path, and an unknown-but-clean
+    id already yields a clean 404 — this rejects the *malformed* shapes (path
+    separators, empty strings) before they reach the wire.
+    """
+    if not JASPAR_MATRIX_RE.match(matrix_id):
+        raise NotFoundError(f"{backend}: invalid matrix id {matrix_id!r} (expected e.g. MA0570.1)")
 
 
 def assert_no_path_metachars(value: str, *, field: str, backend: str) -> None:

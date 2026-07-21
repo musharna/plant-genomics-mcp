@@ -1,10 +1,10 @@
 # 🌱 plant-genomics-mcp
 
-> **46 tools** for plant-genomics locus lookup over the Model Context Protocol —
-> 25 single-locus + 1 region query + 1 variant annotator + 1 gene-set enrichment + 1 BLAST search + 12 parallel-batch + 5 cross-source synthesis variants.
+> **48 tools** for plant-genomics locus lookup over the Model Context Protocol —
+> 26 single-locus + 1 motif lookup + 1 region query + 1 variant annotator + 1 gene-set enrichment + 1 BLAST search + 12 parallel-batch + 5 cross-source synthesis variants.
 > Free, public sources: Ensembl Plants, Phytozome BioMart, UniProtKB,
 > Europe PMC, QuickGO, Planteome, PlantCyc/PMN, g:Profiler, NCBI BLAST,
-> Gramene, KEGG, STRING-DB, ATTED-II, and BAR (Bio-Analytic Resource for
+> Gramene, JASPAR, KEGG, STRING-DB, ATTED-II, and BAR (Bio-Analytic Resource for
 > Plant Biology).
 
 [![PyPI](https://img.shields.io/pypi/v/plant-genomics-mcp)](https://pypi.org/project/plant-genomics-mcp/)
@@ -60,11 +60,11 @@ automatically.
 
 ## 🛠️ Tools
 
-**46 tools across 21 backends** — Ensembl Plants, Phytozome BioMart,
+**48 tools across 22 backends** — Ensembl Plants, Phytozome BioMart,
 UniProtKB, Europe PMC, QuickGO, Planteome, PlantCyc/PMN, g:Profiler,
-AlphaFold DB, PDBe, InterPro, PANTHER, OrthoDB, AraGWAS, 1001 Genomes, NCBI BLAST,
+AlphaFold DB, PDBe, InterPro, JASPAR, PANTHER, OrthoDB, AraGWAS, 1001 Genomes, NCBI BLAST,
 Gramene, KEGG, STRING-DB, ATTED-II, BAR.
-25 single-locus + 1 region query + 1 variant annotator + 1 gene-set
+26 single-locus + 1 motif lookup + 1 region query + 1 variant annotator + 1 gene-set
 enrichment + 1 BLAST search + 12 parallel-batch + 5 cross-source synthesis. Most take a
 TAIR-style locus (e.g. `AT1G01010`) plus
 optional `organism=` (slug / scientific name / common name / NCBI taxid
@@ -99,15 +99,17 @@ MCP resource). All publish JSON `outputSchema` and EDAM ontology tags.
 | 21  | Structure (live)        | `alphafold_structure`                   | AlphaFold DB predicted 3D model for a locus (locus → UniProt → model): global mean pLDDT, per-band confidence, modelled span, and mmCIF / PDB / PAE URLs. found=false when no model is deposited. All 12 organisms.                       |
 | 22  | Structure (live)        | `experimental_structures`               | PDBe experimentally-solved (X-ray / cryo-EM / NMR) structures for a locus (locus → UniProt): best-first PDB id, chain, method, resolution, coverage, residue span. found=false when none deposited (common for plants). All 12 organisms. |
 | 23  | Domains (live)          | `interpro_domains`                      | InterPro domain / family architecture (locus → UniProt): each entry's accession, name, type, source_database (Pfam included), integrated InterPro id, and residue spans, plus a count_by_type rollup. All 12 organisms.                   |
-| 24  | Variation (live)        | `locus_variants`                        | Natural (EVA/dbSNP) variants overlapping a locus's genomic span via Ensembl `/overlap/region` — id, source, consequence class, alleles, clinical significance. variant_count + truncated. All 12 organisms.                               |
-| 25  | Variation (live)        | `vep_annotate`                          | Ensembl VEP consequence prediction for a variant (region + allele, not locus) — most-severe consequence + per-transcript SO terms, IMPACT, SIFT/PolyPhen. All 12 organisms.                                                               |
-| 26  | Orthology (live)        | `panther_family`                        | PANTHER protein family + subfamily (id + name), GO terms by aspect, protein class, and pathways. found=false when unclassified. All 12 organisms.                                                                                         |
-| 27  | Orthology (live)        | `orthodb_orthologs`                     | OrthoDB ortholog group (name, evolutionary rate) + cross-species member genes at the Viridiplantae level. organism_count + truncated. All 12 organisms.                                                                                   |
-| 28  | Diversity (live)        | `aragwas_associations`                  | AraGWAS genome-wide association hits per locus — score, MAF, SNP effect, phenotype/study. Arabidopsis-only.                                                                                                                               |
-| 29  | Diversity (live)        | `arabidopsis_natural_variation`         | 1001 Genomes natural-variation SNP effects across 1135 accessions — chr, position, effect, impact, amino-acid change, transcript + gene span. Arabidopsis-only.                                                                           |
-| 30  | Batch (live)            | `batch_*` (twelve variants)             | Parallel per-locus fanout for tools 1–6, 8–12, 14. Up to 50 loci per call.                                                                                                                                                                |
-| 31  | Synthesis (live)        | `*_synth` / `consensus_homologs` (four) | Compose 2–5 backends in parallel, return a `SynthesisEnvelope` with per-step status.                                                                                                                                                      |
-| 32  | Synthesis (live)        | `gene_report`                           | One-shot "tell me about this gene" dossier — annotation + xrefs + protein + domains + GO + KEGG + STRING + literature composed into a rendered Markdown `result.markdown` (+ structured `result.sections`).                               |
+| 24  | TF motifs (live)        | `tf_binding_motifs`                     | JASPAR curated TF DNA-binding profiles for a locus (locus → UniProt → symbol search, then UniProt-confirmed): matrix id, TF class/family, assay type (SELEX / ChIP-seq / PBM / DAP-seq), IUPAC consensus, PubMed refs, logo URL. Fuzzy name hits for *other* genes are quarantined in `name_only_matches`. Arabidopsis-heavy coverage. |
+| 25  | TF motifs (live)        | `jaspar_motif`                          | One JASPAR profile by matrix id (e.g. `MA0570.1`, or `MA0570` for the newest version) including the raw position-frequency matrix — the drill-down companion to `tf_binding_motifs`.                                                                                                                                                     |
+| 26  | Variation (live)        | `locus_variants`                        | Natural (EVA/dbSNP) variants overlapping a locus's genomic span via Ensembl `/overlap/region` — id, source, consequence class, alleles, clinical significance. variant_count + truncated. All 12 organisms.                               |
+| 27  | Variation (live)        | `vep_annotate`                          | Ensembl VEP consequence prediction for a variant (region + allele, not locus) — most-severe consequence + per-transcript SO terms, IMPACT, SIFT/PolyPhen. All 12 organisms.                                                               |
+| 28  | Orthology (live)        | `panther_family`                        | PANTHER protein family + subfamily (id + name), GO terms by aspect, protein class, and pathways. found=false when unclassified. All 12 organisms.                                                                                         |
+| 29  | Orthology (live)        | `orthodb_orthologs`                     | OrthoDB ortholog group (name, evolutionary rate) + cross-species member genes at the Viridiplantae level. organism_count + truncated. All 12 organisms.                                                                                   |
+| 30  | Diversity (live)        | `aragwas_associations`                  | AraGWAS genome-wide association hits per locus — score, MAF, SNP effect, phenotype/study. Arabidopsis-only.                                                                                                                               |
+| 31  | Diversity (live)        | `arabidopsis_natural_variation`         | 1001 Genomes natural-variation SNP effects across 1135 accessions — chr, position, effect, impact, amino-acid change, transcript + gene span. Arabidopsis-only.                                                                           |
+| 32  | Batch (live)            | `batch_*` (twelve variants)             | Parallel per-locus fanout for tools 1–6, 8–12, 14. Up to 50 loci per call.                                                                                                                                                                |
+| 33  | Synthesis (live)        | `*_synth` / `consensus_homologs` (four) | Compose 2–5 backends in parallel, return a `SynthesisEnvelope` with per-step status.                                                                                                                                                      |
+| 34  | Synthesis (live)        | `gene_report`                           | One-shot "tell me about this gene" dossier — annotation + xrefs + protein + domains + GO + KEGG + STRING + literature composed into a rendered Markdown `result.markdown` (+ structured `result.sections`).                               |
 
 </details>
 

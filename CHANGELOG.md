@@ -1,5 +1,33 @@
 # Changelog
 
+## v1.17.0 — 2026-07-21
+
+Opens a wholly **new biological axis: cis-regulatory / TF binding**. Adds **`tf_binding_motifs`** and **`jaspar_motif`**, wrapping [JASPAR](https://jaspar.elixir.no) — the reference open database of curated, non-redundant transcription-factor binding profiles (1745 plant matrices from SELEX / ChIP-seq / PBM / DAP-seq). Top pick of the 2026-07-21 competitor/gap audit refresh: no competitor exposes JASPAR for plants, and it is UniProt-keyed, so it reuses the `locus → UniProt` resolution the server already performs. Tool count 46 → 48; backend count 21 → 22. Minor: two new tools + one new backend, no breaking changes, no new dependencies.
+
+**Added**
+
+- **`tf_binding_motifs`** (`jaspar.lookup_locus`, async, organism-aware) — resolves the locus → UniProt accession + gene symbol, searches JASPAR by symbol scoped to the organism's NCBI taxid, then **confirms each candidate by matching the accession against the profile's `uniprot_ids`**. Returns per motif the `matrix_id`, `tf_class`, `tf_family`, `data_type` (assay), an **IUPAC `consensus` derived from the position-frequency matrix**, `length`, `pubmed_ids`, and the SVG `sequence_logo` URL. `found=false` when the gene has no curated profile (not a TF, or an unprofiled family) — a normal outcome, not an error.
+  - **The confirmation step is load-bearing, not decorative.** JASPAR's `?search=` is fuzzy: `?search=CCA1&tax_id=3702` returns seven matrices, one of which (`MA1187.1`) is **RVE4 — a different gene**. Reporting it as CCA1's motif would be a false scientific attribution. Name-similarity hits belonging to another gene are therefore quarantined in a separate **`name_only_matches`** list rather than flagged with a boolean a consumer could ignore.
+- **`jaspar_motif`** (`jaspar.lookup_matrix`) — one profile by matrix id including the **raw PFM** counts, plus source species. The drill-down companion to `tf_binding_motifs`, which carries the derived consensus but not the matrix. Accepts a versioned id (`MA0570.1`) or a bare base id (`MA0570` → newest version).
+- **New backend** `jaspar.py` on the standard template (per-module `TTLCache`, shared retry, typed errors, `MAX_MOTIFS`/`MAX_CANDIDATES` caps with `truncated`, bounded concurrent detail fan-out). UniProt-keyed — no new organism-registry slot: JASPAR filters on plain NCBI taxid, which the registry already carries.
+- **`validators.assert_valid_jaspar_matrix_id`** + `JASPAR_MATRIX_RE` — the matrix id is templated into the REST path, so it gets a dedicated shape check (path-traversal input is rejected before the wire).
+- **Resources** — JASPAR appears in `pgmcp://cache/stats` and `pgmcp://backends/status` (`kind=live`, not gated).
+- **Tests** — `test_jaspar.py` (38 mocked + 4 live) drives `jaspar.py` to **100%** coverage, including a regression guard that a fuzzy hit for another gene never reaches `motifs`, and live assertions that ABF1 yields a `CACGTG`-containing consensus (the G-box / ABRE core) and CCA1 yields `AAATATCT` (the Evening Element). Dispatch spec, stdio-smoke name + organism sets, and resource assertions updated. Suite 609 → 649; total coverage 95.64%.
+
+**Fixed**
+
+- **Routed around a JASPAR upstream defect:** `/matrix/{base_id}/` answers **HTTP 500 — not 404** — when an _unversioned_ base id is unknown (probed 2026-07-21: `MA1234` → 200, `MA9999` → 500, while the versioned `MA9999.9` → 404). A typo'd id would therefore have burned the retry budget and surfaced as `UpstreamUnavailableError` ("JASPAR is down"). `jaspar_motif` now resolves unversioned ids through `/matrix/{base_id}/versions/`, which has no such defect (200 with `count: 0`), so only _versioned_ detail paths are ever fetched and an unknown id is a clean `NotFoundError` on the first call.
+
+**Notes**
+
+- **Do not use JASPAR's `?uniprot_id=` parameter** — it looks like a filter and is silently ignored, returning the full 5935-matrix set (identical to a nonsense parameter). Only `search` and `tax_id` actually filter; `search` is empirically case-_insensitive_ despite the API docs stating otherwise.
+- **Coverage is Arabidopsis-heavy and thin elsewhere** (probed 2026-07-21): Arabidopsis 1236 profiles, maize 131, soybean 91, wheat 58, tomato 51, rice 10, Medicago 4, barley / grape / poplar 2, Brachypodium and sorghum 0. No organism is gated — a species with no profiles simply yields `found=false`.
+
+**Changed**
+
+- **`README.md`** — 46 → 48 tools, 21 → 22 backends; two new matrix rows (TF motifs); backend list + hero counts.
+- **`server.py` / `pyproject.toml` / `__init__.py` / `server.json`** — docstrings + description updated (48 tools / 22 backends; JASPAR TF binding motifs). `server.json` bumped to 1.17.0 in the feature PR, per the v1.15.0 release lesson.
+
 ## v1.16.0 — 2026-07-21
 
 Adds **`experimental_structures`** — PDBe experimentally-solved (X-ray / cryo-EM / NMR) protein structures per locus, the experimentally-_solved_ companion to `alphafold_structure`'s _predicted_ view. The last wholly-uncovered slice of the protein-structure axis from the 2026-07-20 competitor/gap audit. Like AlphaFold/InterPro it is **UniProt-keyed** — reuses the `locus → UniProt` resolution the server already performs, so no new organism-ID mapping and **all 12 organisms** work. Tool count 45 → 46; backend count 20 → 21. Minor: one new tool + one new backend, no breaking changes, no new dependencies.

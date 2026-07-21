@@ -89,6 +89,7 @@ async def test_initialize_and_list_tools(server_params: StdioServerParameters) -
                 "go_enrichment",
                 "gramene_homologs",
                 "interpro_domains",
+                "jaspar_motif",
                 "kegg_pathways",
                 "locus_go_annotations",
                 "locus_literature",
@@ -101,6 +102,7 @@ async def test_initialize_and_list_tools(server_params: StdioServerParameters) -
                 "resolve_locus_to_uniprot",
                 "string_interactions",
                 "tair_locus_info",
+                "tf_binding_motifs",
                 "vep_annotate",
             }, f"got {names}"
 
@@ -241,6 +243,8 @@ async def test_tool_schemas_use_organism_param(server_params: StdioServerParamet
         "alphafold_structure",
         "experimental_structures",
         "interpro_domains",
+        # jaspar_motif is matrix_id-keyed, not locus-keyed → deliberately absent
+        "tf_binding_motifs",
         "locus_variants",
         "vep_annotate",
         "panther_family",
