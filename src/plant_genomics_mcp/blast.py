@@ -45,7 +45,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import progress
+from plant_genomics_mcp import _http, progress
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
@@ -54,6 +54,10 @@ from plant_genomics_mcp.errors import (
 
 BASE_URL = "https://blast.ncbi.nlm.nih.gov/Blast.cgi"
 DEFAULT_TIMEOUT = 60.0
+# Retry budget for each raw BLAST HTTP call (Put / Get). Routed through the
+# shared _http.request_with_retry so a transient 429/5xx/transport blip on
+# submit/poll/fetch doesn't hard-fail a multi-minute search (audit M2).
+MAX_RETRIES = 3
 TOOL_ID = "plant-genomics-mcp"
 
 # Per-RID poll floor — NCBI asks for no more than one poll per minute per
@@ -245,9 +249,15 @@ async def submit(
     }
     if megablast and program == "blastn":
         data["MEGABLAST"] = "on"
-    resp = await client.post(BASE_URL, data=data, timeout=DEFAULT_TIMEOUT)
-    if resp.status_code != 200:
-        raise UpstreamUnavailableError(f"BLAST Put → HTTP {resp.status_code}: {resp.text[:200]}")
+    resp = await _http.request_with_retry(
+        client,
+        "POST",
+        BASE_URL,
+        service="BLAST Put",
+        data=data,
+        timeout=DEFAULT_TIMEOUT,
+        max_retries=MAX_RETRIES,
+    )
     rid, rtoe = _parse_put_response(resp.text)
     await progress.notify(
         f"BLAST submitted — RID={rid}, RTOE={rtoe}s (program={program}, db={database})"
@@ -266,11 +276,15 @@ async def poll_status(client: httpx.AsyncClient, rid: str) -> str:
         "FORMAT_OBJECT": "SearchInfo",
         **_identity_params(),
     }
-    resp = await client.get(BASE_URL, params=params, timeout=DEFAULT_TIMEOUT)
-    if resp.status_code != 200:
-        raise UpstreamUnavailableError(
-            f"BLAST Get(SearchInfo) RID={rid} → HTTP {resp.status_code}: {resp.text[:200]}"
-        )
+    resp = await _http.request_with_retry(
+        client,
+        "GET",
+        BASE_URL,
+        service=f"BLAST Get(SearchInfo) RID={rid}",
+        params=params,
+        timeout=DEFAULT_TIMEOUT,
+        max_retries=MAX_RETRIES,
+    )
     return _parse_status(resp.text)
 
 
@@ -282,11 +296,15 @@ async def fetch_result(client: httpx.AsyncClient, rid: str) -> str:
         "FORMAT_TYPE": "Text",
         **_identity_params(),
     }
-    resp = await client.get(BASE_URL, params=params, timeout=DEFAULT_TIMEOUT)
-    if resp.status_code != 200:
-        raise UpstreamUnavailableError(
-            f"BLAST Get(Text) RID={rid} → HTTP {resp.status_code}: {resp.text[:200]}"
-        )
+    resp = await _http.request_with_retry(
+        client,
+        "GET",
+        BASE_URL,
+        service=f"BLAST Get(Text) RID={rid}",
+        params=params,
+        timeout=DEFAULT_TIMEOUT,
+        max_retries=MAX_RETRIES,
+    )
     return resp.text
 
 

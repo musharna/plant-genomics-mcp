@@ -566,6 +566,7 @@ class InterProDomains(BaseModel):
     accession: str = Field(description="Resolved UniProt accession")
     found: bool = Field(description="True once the locus resolved to a UniProt entry")
     domain_count: int = Field(description="Total InterPro entries (pre-cap)")
+    truncated: bool = Field(description="True if the row list was page-capped (< domain_count)")
     domains: list[InterProDomain]
     count_by_type: dict[str, int] = Field(description="Rollup of entry count by type")
 

@@ -28,6 +28,27 @@ LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
 
 
+@pytest.mark.asyncio
+async def test_gather_bounds_concurrency(monkeypatch: pytest.MonkeyPatch) -> None:
+    """_gather caps concurrent per-locus work at _CONCURRENCY (audit M3)."""
+    monkeypatch.setattr(batch, "_CONCURRENCY", 2)
+    in_flight = 0
+    max_seen = 0
+
+    async def fn(locus: str) -> dict[str, Any]:
+        nonlocal in_flight, max_seen
+        in_flight += 1
+        max_seen = max(max_seen, in_flight)
+        await asyncio.sleep(0.01)
+        in_flight -= 1
+        return {"locus": locus}
+
+    results, errors = await batch._gather([f"L{i}" for i in range(6)], fn)
+    assert len(results) == 6
+    assert not errors
+    assert max_seen <= 2  # never more than _CONCURRENCY concurrent
+
+
 # ---------- bounds ----------
 
 

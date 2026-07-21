@@ -20,7 +20,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import _http, cache, organisms
+from plant_genomics_mcp import _http, cache, organisms, validators
 from plant_genomics_mcp.errors import PlantGenomicsError
 
 BASE_URL = "https://data.orthodb.org"
@@ -123,6 +123,7 @@ async def lookup_locus(
     locus maps to no ortholog group.
     """
     canonical = organisms.resolve(organism).canonical
+    validators.assert_valid_locus(locus, backend="OrthoDB")
     search = await _get(client, "/current/search", {"query": locus, "level": LEVEL, "limit": 1})
     ids = search.get("data")
     if not isinstance(ids, list) or not ids:
