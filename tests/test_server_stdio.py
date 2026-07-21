@@ -4,7 +4,7 @@ This is a real-execution check, not a unit test. It verifies that the
 ``plant-genomics-mcp`` console script:
 
   1. Accepts the MCP ``initialize`` handshake over stdio.
-  2. Advertises all 39 tools via ``list_tools``, all with non-empty
+  2. Advertises all 45 tools via ``list_tools``, all with non-empty
      descriptions and a non-empty ``outputSchema``.
   3. Advertises 3 prompts via ``list_prompts`` with required-arg flags
      preserved on the wire.
@@ -58,6 +58,8 @@ async def test_initialize_and_list_tools(server_params: StdioServerParameters) -
             assert names == {
                 "alphafold_structure",
                 "analyze_locus_synth",
+                "arabidopsis_natural_variation",
+                "aragwas_associations",
                 "atted_coexpression",
                 "bar_aiv_interactions",
                 "bar_efp_expression",
@@ -90,11 +92,15 @@ async def test_initialize_and_list_tools(server_params: StdioServerParameters) -
                 "locus_go_annotations",
                 "locus_literature",
                 "locus_plant_ontology",
+                "locus_variants",
+                "orthodb_orthologs",
+                "panther_family",
                 "phytozome_lookup_locus",
                 "plantcyc_locus_info",
                 "resolve_locus_to_uniprot",
                 "string_interactions",
                 "tair_locus_info",
+                "vep_annotate",
             }, f"got {names}"
 
             # Every tool publishes an outputSchema (P0.1).
@@ -233,6 +239,12 @@ async def test_tool_schemas_use_organism_param(server_params: StdioServerParamet
         "plantcyc_locus_info",
         "alphafold_structure",
         "interpro_domains",
+        "locus_variants",
+        "vep_annotate",
+        "panther_family",
+        "orthodb_orthologs",
+        "aragwas_associations",
+        "arabidopsis_natural_variation",
         "string_interactions",
         "bar_aiv_interactions",
         "kegg_pathways",

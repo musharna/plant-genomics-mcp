@@ -570,6 +570,142 @@ class InterProDomains(BaseModel):
     count_by_type: dict[str, int] = Field(description="Rollup of entry count by type")
 
 
+class LocusVariants(BaseModel):
+    """Natural variants overlapping a locus's genomic span (Ensembl /overlap).
+
+    The locus is resolved to its coordinates, then EVA/dbSNP-sourced variants
+    overlapping the gene are listed. ``variant_count`` is the true overlap total;
+    ``variants`` is capped for payload size, with ``truncated`` set when capped.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str
+    organism: str = Field(description="Resolved Ensembl species slug")
+    region: str = Field(description="Queried gene span, e.g. '1:33666-37840'")
+    gene_start: int | None = Field(default=None, description="Gene span start (1-based)")
+    gene_end: int | None = Field(default=None, description="Gene span end (1-based)")
+    variant_count: int = Field(description="Total overlapping variants (pre-cap)")
+    truncated: bool = Field(description="True if the variant list was capped")
+    variants: list[dict[str, Any]] = Field(
+        default_factory=list, description="Per-variant {id, source, consequence_type, alleles, …}"
+    )
+
+
+class VepAnnotation(BaseModel):
+    """Ensembl VEP consequence prediction for a variant (region + allele).
+
+    Variant-first, not locus-first: the caller supplies the region and allele.
+    ``found=False`` when Ensembl reports no overlapping feature.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    organism: str = Field(description="Resolved Ensembl species slug")
+    region: str = Field(description="Ensembl region, e.g. '1:10000-10000:1'")
+    allele: str = Field(description="Alternate allele, e.g. 'C'")
+    found: bool = Field(description="True if VEP returned an overlapping feature")
+    input: str | None = Field(default=None, description="VEP echo of the parsed input")
+    most_severe_consequence: str | None = Field(default=None, description="Most severe SO term")
+    assembly_name: str | None = Field(default=None, description="Assembly the call is against")
+    seq_region_name: str | None = Field(default=None)
+    start: int | None = Field(default=None)
+    end: int | None = Field(default=None)
+    allele_string: str | None = Field(default=None)
+    transcript_consequences: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Per-transcript {gene_id, transcript_id, consequence_terms, impact, sift_*, …}",
+    )
+
+
+class PantherFamily(BaseModel):
+    """PANTHER protein-family classification for a locus.
+
+    ``found=False`` (with null/empty fields) means PANTHER could not classify the
+    locus into a family — a normal outcome, not an error.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str
+    found: bool = Field(description="True if PANTHER classified the locus")
+    accession: str | None = Field(default=None, description="PANTHER mapped accession")
+    family_id: str | None = Field(default=None, description="PANTHER family id, e.g. PTHR12802")
+    family_name: str | None = Field(default=None)
+    subfamily_id: str | None = Field(default=None, description="e.g. PTHR12802:SF176")
+    subfamily_name: str | None = Field(default=None)
+    go_molecular_function: list[dict[str, Any]] = Field(default_factory=list)
+    go_biological_process: list[dict[str, Any]] = Field(default_factory=list)
+    go_cellular_component: list[dict[str, Any]] = Field(default_factory=list)
+    protein_class: list[dict[str, Any]] = Field(default_factory=list)
+    pathways: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class OrthoDbOrthologs(BaseModel):
+    """OrthoDB ortholog group + cross-species member genes for a locus.
+
+    ``found=False`` means the locus maps to no Viridiplantae ortholog group.
+    ``organism_count`` is the true cluster total even when members are capped.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str
+    organism: str = Field(description="Resolved canonical organism")
+    found: bool = Field(description="True if the locus maps to an ortholog group")
+    group: dict[str, Any] | None = Field(
+        default=None, description="Group metadata {id, name, evolutionary_rate, level_name, …}"
+    )
+    organism_count: int = Field(description="Number of member organisms (clusters)")
+    member_count: int = Field(description="Member genes returned (post-cap)")
+    truncated: bool = Field(description="True if the member list was capped")
+    members: list[dict[str, Any]] = Field(
+        default_factory=list, description="Per-gene {organism, gene_id, xref, description}"
+    )
+
+
+class AraGwasAssociations(BaseModel):
+    """AraGWAS GWAS associations for an Arabidopsis locus.
+
+    Arabidopsis-only. ``association_count`` is the true total even when the row
+    list is page-capped.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str
+    organism: str = Field(description="Always arabidopsis_thaliana")
+    found: bool = Field(description="True once the associations endpoint returned 200")
+    association_count: int = Field(description="Total associations (pre-cap)")
+    returned: int = Field(description="Associations returned (post page-cap)")
+    truncated: bool = Field(description="True if pagination was capped")
+    associations: list[dict[str, Any]] = Field(
+        default_factory=list, description="Per-hit {score, maf, mac, snp{…}, study{…}}"
+    )
+
+
+class ArabidopsisNaturalVariation(BaseModel):
+    """1001 Genomes natural-variation SNP effects for an Arabidopsis locus.
+
+    Arabidopsis-only. ``variant_count`` is the true row total even when capped.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str
+    organism: str = Field(description="Always arabidopsis_thaliana")
+    found: bool = Field(description="True once the effects endpoint returned 200")
+    transcript: str = Field(description="Transcript-scoped gene id used (e.g. AT1G01060.1)")
+    region: str | None = Field(default=None, description="Genomic span, e.g. 'Chr1:33666..37840'")
+    variant_count: int = Field(description="Total effect rows (pre-cap)")
+    returned: int = Field(description="Effect rows returned (post-cap)")
+    truncated: bool = Field(description="True if the effect list was capped")
+    variants: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Per-effect {chr, position, accession_id, effect, impact, amino_acid_change, …}",
+    )
+
+
 class GrameneHomolog(BaseModel):
     """One ortholog/paralog entry from Gramene compara.
 

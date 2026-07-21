@@ -1,10 +1,10 @@
 """MCP server entry point — exposes plant genomics tools over stdio.
 
-This dispatch ships thirty-nine tools — nineteen single-locus, one
-genomic-region query, one gene-set enrichment, one BLAST
-sequence-similarity search, twelve batch variants that fan out per-locus
-calls in parallel, and five cross-source synthesis tools that compose the
-live backends:
+This dispatch ships forty-five tools — twenty-four single-locus, one
+genomic-region query, one variant-consequence (VEP) annotator, one
+gene-set enrichment, one BLAST sequence-similarity search, twelve batch
+variants that fan out per-locus calls in parallel, and five cross-source
+synthesis tools that compose the live backends:
 
   - ``ensembl_plants_lookup_locus``       — Ensembl Plants REST (live)
   - ``get_gene_xrefs``                    — Ensembl Plants xrefs (live)
@@ -26,6 +26,12 @@ live backends:
   - ``plantcyc_locus_info``               — PlantCyc/PMN metabolism (live, gene→enzyme→reactions→pathways)
   - ``alphafold_structure``               — AlphaFold DB predicted structure (live, locus→UniProt→model + pLDDT)
   - ``interpro_domains``                  — InterPro domain/family architecture (live, locus→UniProt→domains; Pfam incl.)
+  - ``locus_variants``                    — Ensembl natural variants overlapping a locus (live, EVA/dbSNP; 12 organisms)
+  - ``vep_annotate``                      — Ensembl VEP variant-consequence prediction (live, region+allele; SIFT/PolyPhen)
+  - ``panther_family``                    — PANTHER protein family/subfamily + GO + protein class (live, 12 organisms)
+  - ``orthodb_orthologs``                 — OrthoDB ortholog group + cross-species members (live, Viridiplantae; 12 organisms)
+  - ``aragwas_associations``              — AraGWAS GWAS hits per locus (live, Arabidopsis-only)
+  - ``arabidopsis_natural_variation``     — 1001 Genomes natural-variation SNP effects per locus (live, Arabidopsis-only)
   - ``batch_ensembl_plants_lookup_locus`` — Ensembl Plants POST /lookup/id (one round-trip)
   - ``batch_get_gene_xrefs``              — gather over get_gene_xrefs
   - ``batch_phytozome_lookup_locus``      — gather over phytozome_lookup_locus
@@ -69,16 +75,21 @@ from pydantic import AnyUrl
 
 from plant_genomics_mcp import (
     alphafold,
+    aragwas,
     atted,
     bar,
     batch,
     blast,
     ensembl_plants,
+    ensembl_variation,
     europe_pmc,
     gprofiler,
     gramene,
     interpro,
     kegg,
+    onekg,
+    orthodb,
+    panther,
     phytozome,
     plantcyc,
     planteome,
@@ -93,6 +104,8 @@ from plant_genomics_mcp import (
 )
 from plant_genomics_mcp.models import (
     AlphaFoldStructure,
+    ArabidopsisNaturalVariation,
+    AraGwasAssociations,
     AttedCoexpression,
     BarAIVInteractions,
     BarEfpExpression,
@@ -110,11 +123,15 @@ from plant_genomics_mcp.models import (
     LocusGoAnnotations,
     LocusLiterature,
     LocusPlantOntology,
+    LocusVariants,
+    OrthoDbOrthologs,
+    PantherFamily,
     PhytozomeLocus,
     PlantCycLocusInfo,
     StringInteractions,
     SynthesisEnvelope,
     UniProtLocus,
+    VepAnnotation,
 )
 
 server: Server = Server("plant-genomics-mcp")
@@ -916,6 +933,198 @@ TOOLS: list[types.Tool] = [
         _meta=_EDAM,
     ),
     types.Tool(
+        name="locus_variants",
+        description=(
+            "List natural (germline) variants overlapping a locus's genomic span "
+            "via Ensembl (rest.ensembl.org; free, no key). Resolves the locus → "
+            "gene coordinates, then returns EVA/dbSNP-sourced SNPs and indels with "
+            "id, source, consequence class, alleles, and clinical significance. "
+            "variant_count is the true overlap total; the variant list is capped "
+            "for payload size with truncated flagged. Opens the variation axis "
+            "(distinct from get_sequence / ensembl_region_query). Works for all 12 "
+            "organisms. Defaults to arabidopsis_thaliana; pass organism= for other "
+            "species."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "e.g. AT1G01010 (Arabidopsis), Os01g0100100 (rice RAP-DB)",
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
+                },
+            },
+            "required": ["locus"],
+            "additionalProperties": False,
+        },
+        outputSchema=LocusVariants.model_json_schema(),
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="vep_annotate",
+        description=(
+            "Predict a variant's molecular consequences with Ensembl VEP "
+            "(rest.ensembl.org; free, no key). Variant-first (not locus-first): "
+            "supply an Ensembl region (chr:start-end:strand, e.g. '1:10000-10000:1') "
+            "and an alternate allele (e.g. 'C'); returns the most-severe "
+            "consequence plus one row per overlapping transcript (consequence "
+            "terms, IMPACT, and SIFT/PolyPhen when the variant is coding-missense). "
+            "found=false when Ensembl reports no overlapping feature. Works for all "
+            "12 organisms. Defaults to arabidopsis_thaliana; pass organism= for "
+            "other species."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "region": {
+                    "type": "string",
+                    "description": "Ensembl region chr:start-end:strand, e.g. '1:10000-10000:1'",
+                },
+                "allele": {
+                    "type": "string",
+                    "description": "Alternate allele, e.g. 'C' (or 'A/C', an insertion, etc.)",
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
+                },
+            },
+            "required": ["region", "allele"],
+            "additionalProperties": False,
+        },
+        outputSchema=VepAnnotation.model_json_schema(),
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="panther_family",
+        description=(
+            "Fetch the PANTHER protein-family classification for a locus "
+            "(pantherdb.org; free, no key). Returns the PANTHER family and "
+            "subfamily (id + name) plus curated GO terms grouped by aspect "
+            "(molecular_function / biological_process / cellular_component), the "
+            "PANTHER protein class, and pathways. found=false when PANTHER cannot "
+            "classify the locus. Complements the sequence-homology tools "
+            "(gramene_homologs / consensus_homologs) with an evolutionary-family "
+            "view. Works for all 12 organisms. Defaults to arabidopsis_thaliana; "
+            "pass organism= for other species."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "e.g. AT1G01060 (Arabidopsis), Os01g0100100 (rice RAP-DB)",
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
+                },
+            },
+            "required": ["locus"],
+            "additionalProperties": False,
+        },
+        outputSchema=PantherFamily.model_json_schema(),
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="orthodb_orthologs",
+        description=(
+            "Resolve a locus to its OrthoDB ortholog group and cross-species "
+            "member genes (data.orthodb.org; free, no key). Searches at the "
+            "Viridiplantae level, then returns the group metadata (name, "
+            "evolutionary rate) and member genes grouped by organism (organism, "
+            "gene id, description). organism_count is the true cluster total; the "
+            "member list is capped with truncated flagged. found=false when the "
+            "locus maps to no ortholog group. Works for all 12 organisms. Defaults "
+            "to arabidopsis_thaliana; pass organism= for other species."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "e.g. AT1G01060 (Arabidopsis), Os01g0100100 (rice RAP-DB)",
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
+                },
+            },
+            "required": ["locus"],
+            "additionalProperties": False,
+        },
+        outputSchema=OrthoDbOrthologs.model_json_schema(),
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="aragwas_associations",
+        description=(
+            "Fetch AraGWAS genome-wide association study hits for an Arabidopsis "
+            "locus (aragwas.1001genomes.org; free, no key). Returns each "
+            "significant SNP association overlapping the gene with effect size "
+            "(score), minor-allele frequency, the SNP's predicted molecular effect "
+            "(impact, amino-acid change), and the phenotype/study it came from. "
+            "association_count is the true total even when page-capped. "
+            "ARABIDOPSIS-ONLY — any other organism raises OrganismNotSupported. "
+            "Defaults to arabidopsis_thaliana."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "Arabidopsis AGI locus, e.g. AT1G01060",
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Arabidopsis only (the 1001 Genomes panel is A. thaliana)",
+                    "default": "arabidopsis_thaliana",
+                },
+            },
+            "required": ["locus"],
+            "additionalProperties": False,
+        },
+        outputSchema=AraGwasAssociations.model_json_schema(),
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="arabidopsis_natural_variation",
+        description=(
+            "Fetch 1001 Genomes natural-variation SNP effects for an Arabidopsis "
+            "locus (tools.1001genomes.org; free, no key) — the variation observed "
+            "across 1135 resequenced natural accessions. Returns per-SNP effect "
+            "rows (chromosome, position, accession id, effect, impact, amino-acid "
+            "change, transcript) plus the gene's genomic span. variant_count is the "
+            "true row total even when capped. ARABIDOPSIS-ONLY — any other organism "
+            "raises OrganismNotSupported. Defaults to arabidopsis_thaliana."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "Arabidopsis AGI locus, e.g. AT1G01060 (a bare AGI is transcript-scoped to .1)",
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Arabidopsis only (the 1001 Genomes panel is A. thaliana)",
+                    "default": "arabidopsis_thaliana",
+                },
+            },
+            "required": ["locus"],
+            "additionalProperties": False,
+        },
+        outputSchema=ArabidopsisNaturalVariation.model_json_schema(),
+        _meta=_EDAM,
+    ),
+    types.Tool(
         name="batch_ensembl_plants_lookup_locus",
         description=(
             "Batch variant of ensembl_plants_lookup_locus. Uses Ensembl's "
@@ -1652,6 +1861,43 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                 )
             case "interpro_domains":
                 return await interpro.lookup_locus(
+                    client,
+                    args["locus"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                )
+            case "locus_variants":
+                return await ensembl_variation.locus_variants(
+                    client,
+                    args["locus"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                )
+            case "vep_annotate":
+                return await ensembl_variation.vep_annotate(
+                    client,
+                    args["region"],
+                    args["allele"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                )
+            case "panther_family":
+                return await panther.lookup_locus(
+                    client,
+                    args["locus"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                )
+            case "orthodb_orthologs":
+                return await orthodb.lookup_locus(
+                    client,
+                    args["locus"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                )
+            case "aragwas_associations":
+                return await aragwas.lookup_locus(
+                    client,
+                    args["locus"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                )
+            case "arabidopsis_natural_variation":
+                return await onekg.lookup_locus(
                     client,
                     args["locus"],
                     organism=args.get("organism", "arabidopsis_thaliana"),
