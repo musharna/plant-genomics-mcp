@@ -1,7 +1,7 @@
 # 🌱 plant-genomics-mcp
 
-> **39 tools** for plant-genomics locus lookup over the Model Context Protocol —
-> 20 single-locus + 1 region query + 1 gene-set enrichment + 12 parallel-batch + 5 cross-source synthesis variants.
+> **45 tools** for plant-genomics locus lookup over the Model Context Protocol —
+> 25 single-locus + 1 region query + 1 variant annotator + 1 gene-set enrichment + 12 parallel-batch + 5 cross-source synthesis variants.
 > Free, public sources: Ensembl Plants, Phytozome BioMart, UniProtKB,
 > Europe PMC, QuickGO, Planteome, PlantCyc/PMN, g:Profiler, NCBI BLAST,
 > Gramene, KEGG, STRING-DB, ATTED-II, and BAR (Bio-Analytic Resource for
@@ -60,10 +60,11 @@ automatically.
 
 ## 🛠️ Tools
 
-**39 tools across 16 backends** — Ensembl Plants, Phytozome BioMart,
+**45 tools across 20 backends** — Ensembl Plants, Phytozome BioMart,
 UniProtKB, Europe PMC, QuickGO, Planteome, PlantCyc/PMN, g:Profiler,
-AlphaFold DB, InterPro, NCBI BLAST, Gramene, KEGG, STRING-DB, ATTED-II, BAR.
-20 single-locus + 1 region query + 1 gene-set
+AlphaFold DB, InterPro, PANTHER, OrthoDB, AraGWAS, 1001 Genomes, NCBI BLAST,
+Gramene, KEGG, STRING-DB, ATTED-II, BAR.
+25 single-locus + 1 region query + 1 variant annotator + 1 gene-set
 enrichment + 12 parallel-batch + 5 cross-source synthesis. Most take a
 TAIR-style locus (e.g. `AT1G01010`) plus
 optional `organism=` (slug / scientific name / common name / NCBI taxid
@@ -97,9 +98,15 @@ MCP resource). All publish JSON `outputSchema` and EDAM ontology tags.
 | 20  | Plant ontology (live)   | `locus_plant_ontology`                  | Plant Ontology (anatomy / dev-stage) + Trait Ontology annotations for a locus via Planteome (Solr) — the plant-specific ontologies GO doesn't cover. by_ontology rollup; taxon-filtered. Strong for 6 species.               |
 | 21  | Structure (live)        | `alphafold_structure`                   | AlphaFold DB predicted 3D model for a locus (locus → UniProt → model): global mean pLDDT, per-band confidence, modelled span, and mmCIF / PDB / PAE URLs. found=false when no model is deposited. All 12 organisms.          |
 | 22  | Domains (live)          | `interpro_domains`                      | InterPro domain / family architecture (locus → UniProt): each entry's accession, name, type, source_database (Pfam included), integrated InterPro id, and residue spans, plus a count_by_type rollup. All 12 organisms.      |
-| 23  | Batch (live)            | `batch_*` (twelve variants)             | Parallel per-locus fanout for tools 1–6, 8–12, 14. Up to 50 loci per call.                                                                                                                                                   |
-| 24  | Synthesis (live)        | `*_synth` / `consensus_homologs` (four) | Compose 2–5 backends in parallel, return a `SynthesisEnvelope` with per-step status.                                                                                                                                         |
-| 25  | Synthesis (live)        | `gene_report`                           | One-shot "tell me about this gene" dossier — annotation + xrefs + protein + domains + GO + KEGG + STRING + literature composed into a rendered Markdown `result.markdown` (+ structured `result.sections`).                  |
+| 23  | Variation (live)        | `locus_variants`                        | Natural (EVA/dbSNP) variants overlapping a locus's genomic span via Ensembl `/overlap/region` — id, source, consequence class, alleles, clinical significance. variant_count + truncated. All 12 organisms.                  |
+| 24  | Variation (live)        | `vep_annotate`                          | Ensembl VEP consequence prediction for a variant (region + allele, not locus) — most-severe consequence + per-transcript SO terms, IMPACT, SIFT/PolyPhen. All 12 organisms.                                                  |
+| 25  | Orthology (live)        | `panther_family`                        | PANTHER protein family + subfamily (id + name), GO terms by aspect, protein class, and pathways. found=false when unclassified. All 12 organisms.                                                                            |
+| 26  | Orthology (live)        | `orthodb_orthologs`                     | OrthoDB ortholog group (name, evolutionary rate) + cross-species member genes at the Viridiplantae level. organism_count + truncated. All 12 organisms.                                                                      |
+| 27  | Diversity (live)        | `aragwas_associations`                  | AraGWAS genome-wide association hits per locus — score, MAF, SNP effect, phenotype/study. Arabidopsis-only.                                                                                                                  |
+| 28  | Diversity (live)        | `arabidopsis_natural_variation`         | 1001 Genomes natural-variation SNP effects across 1135 accessions — chr, position, effect, impact, amino-acid change, transcript + gene span. Arabidopsis-only.                                                              |
+| 29  | Batch (live)            | `batch_*` (twelve variants)             | Parallel per-locus fanout for tools 1–6, 8–12, 14. Up to 50 loci per call.                                                                                                                                                   |
+| 30  | Synthesis (live)        | `*_synth` / `consensus_homologs` (four) | Compose 2–5 backends in parallel, return a `SynthesisEnvelope` with per-step status.                                                                                                                                         |
+| 31  | Synthesis (live)        | `gene_report`                           | One-shot "tell me about this gene" dossier — annotation + xrefs + protein + domains + GO + KEGG + STRING + literature composed into a rendered Markdown `result.markdown` (+ structured `result.sections`).                  |
 
 </details>
 
