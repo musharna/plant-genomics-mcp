@@ -1,7 +1,7 @@
 # 🌱 plant-genomics-mcp
 
 > **45 tools** for plant-genomics locus lookup over the Model Context Protocol —
-> 25 single-locus + 1 region query + 1 variant annotator + 1 gene-set enrichment + 12 parallel-batch + 5 cross-source synthesis variants.
+> 24 single-locus + 1 region query + 1 variant annotator + 1 gene-set enrichment + 1 BLAST search + 12 parallel-batch + 5 cross-source synthesis variants.
 > Free, public sources: Ensembl Plants, Phytozome BioMart, UniProtKB,
 > Europe PMC, QuickGO, Planteome, PlantCyc/PMN, g:Profiler, NCBI BLAST,
 > Gramene, KEGG, STRING-DB, ATTED-II, and BAR (Bio-Analytic Resource for
@@ -64,8 +64,8 @@ automatically.
 UniProtKB, Europe PMC, QuickGO, Planteome, PlantCyc/PMN, g:Profiler,
 AlphaFold DB, InterPro, PANTHER, OrthoDB, AraGWAS, 1001 Genomes, NCBI BLAST,
 Gramene, KEGG, STRING-DB, ATTED-II, BAR.
-25 single-locus + 1 region query + 1 variant annotator + 1 gene-set
-enrichment + 12 parallel-batch + 5 cross-source synthesis. Most take a
+24 single-locus + 1 region query + 1 variant annotator + 1 gene-set
+enrichment + 1 BLAST search + 12 parallel-batch + 5 cross-source synthesis. Most take a
 TAIR-style locus (e.g. `AT1G01010`) plus
 optional `organism=` (slug / scientific name / common name / NCBI taxid
 — 12-plant curated coverage matrix at the `pgmcp://organisms/coverage`
@@ -168,12 +168,12 @@ Clients discover them via `resources/list` and `prompts/list`.
 
 **Resources** (`resources/read`):
 
-| URI                           | What                                                                                           |
-| ----------------------------- | ---------------------------------------------------------------------------------------------- |
-| `pgmcp://cache/stats`         | Per-backend `TTLCache` rollup — `{hits, misses, size}` for each live backend.                  |
-| `pgmcp://organisms/phytozome` | Slug → Phytozome `organism_id` map.                                                            |
-| `pgmcp://backends/status`     | Per-backend liveness rollup — `name`, `base_url`, `kind`, `subscription_gated`, `probed_at`.   |
-| `pgmcp://organisms/coverage`  | Markdown table of all 12 supported plants × 5 ID slots (ncbi_taxid / ensembl / phytozome / …). |
+| URI                           | What                                                                                                                                                   |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pgmcp://cache/stats`         | Per-backend `TTLCache` rollup — `{hits, misses, size}` for each live backend.                                                                          |
+| `pgmcp://organisms/phytozome` | Slug → Phytozome `organism_id` map.                                                                                                                    |
+| `pgmcp://backends/status`     | Per-backend liveness rollup — `name`, `base_url`, `kind`, `subscription_gated`.                                                                        |
+| `pgmcp://organisms/coverage`  | Markdown table of all 12 supported plants × 9 ID slots (ncbi_taxid / ensembl / phytozome / string / europe_pmc / kegg / atted / gprofiler / plantcyc). |
 
 **Prompts** (`prompts/get`):
 

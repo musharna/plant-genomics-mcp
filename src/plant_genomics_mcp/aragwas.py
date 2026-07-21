@@ -21,7 +21,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import _http, cache, organisms
+from plant_genomics_mcp import _http, cache, organisms, validators
 from plant_genomics_mcp.errors import OrganismNotSupported, PlantGenomicsError
 
 BASE_URL = "https://aragwas.1001genomes.org"
@@ -117,6 +117,7 @@ async def lookup_locus(
         raise OrganismNotSupported(
             backend="aragwas", organism=canonical, supported=["arabidopsis_thaliana"]
         )
+    validators.assert_valid_agi(locus, backend="AraGWAS")
     url: str | None = f"{BASE_URL}/api/genes/{locus}/associations/"
     associations: list[dict[str, Any]] = []
     total = 0
@@ -128,7 +129,10 @@ async def lookup_locus(
             if isinstance(assoc, dict):
                 associations.append(_project(assoc, locus))
         links = page.get("links") or {}
-        url = links.get("next")
+        # Only follow a same-host next link — the URL comes from the upstream
+        # body, so an off-host value would be an SSRF vector (audit L5).
+        next_url = links.get("next")
+        url = next_url if isinstance(next_url, str) and next_url.startswith(BASE_URL) else None
         pages += 1
     return {
         "locus": locus,
@@ -136,6 +140,8 @@ async def lookup_locus(
         "found": True,
         "association_count": total,
         "returned": len(associations),
-        "truncated": total > len(associations),
+        # total>returned covers the count-known case; a still-set next link
+        # covers a null/absent upstream count where more pages remain (audit L3).
+        "truncated": total > len(associations) or url is not None,
         "associations": associations,
     }

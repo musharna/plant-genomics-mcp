@@ -15,7 +15,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import onekg
-from plant_genomics_mcp.errors import OrganismNotSupported, PlantGenomicsError
+from plant_genomics_mcp.errors import NotFoundError, OrganismNotSupported, PlantGenomicsError
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
@@ -128,6 +128,14 @@ async def test_lookup_non_arabidopsis_raises() -> None:
     async with httpx.AsyncClient() as client:
         with pytest.raises(OrganismNotSupported):
             await onekg.lookup_locus(client, "Os01g0100100", "rice")
+
+
+@pytest.mark.asyncio
+async def test_lookup_bad_agi_raises_before_network() -> None:
+    """Malformed AGI raises NotFoundError before any HTTP call (no mock set)."""
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="AGI"):
+            await onekg.lookup_locus(client, "AT1G0106", "arabidopsis")
 
 
 @live_only

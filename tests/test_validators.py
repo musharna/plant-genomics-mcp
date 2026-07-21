@@ -72,3 +72,44 @@ def test_assert_valid_locus_includes_pattern_in_message() -> None:
         validators.assert_valid_locus("bad value", backend="kegg")
     assert "kegg" in str(exc_info.value).lower()
     assert validators.LOCUS_RE.pattern in str(exc_info.value)
+
+
+# ---- assert_valid_agi (Arabidopsis-only backends: AraGWAS, 1001 Genomes) ----
+
+
+@pytest.mark.parametrize(
+    "agi",
+    ["AT1G01060", "AT5G67640", "ATCG00010", "ATMG00010", "AT1G01060.1", "at1g01060"],
+)
+def test_assert_valid_agi_accepts_real_agis(agi: str) -> None:
+    assert validators.assert_valid_agi(agi, backend="AraGWAS") is None
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        "AT1G0106",  # 4 digits — the typo that used to hit the upstream 500
+        "AT6G01060",  # chromosome 6 doesn't exist
+        "Os01g0100100",  # rice locus, not an AGI
+        "AT1G01060/x",  # path metachar
+        "",  # empty
+        "AT1G01060\n",  # trailing newline (the \Z guard)
+    ],
+)
+def test_assert_valid_agi_rejects_non_agis(bad: str) -> None:
+    with pytest.raises(NotFoundError, match="AGI"):
+        validators.assert_valid_agi(bad, backend="AraGWAS")
+
+
+# ---- assert_no_path_metachars (VEP region / allele) ----
+
+
+@pytest.mark.parametrize("value", ["1:10000-10000:1", "C", "A", "MT:100-200:-1", "AT"])
+def test_assert_no_path_metachars_accepts_clean(value: str) -> None:
+    assert validators.assert_no_path_metachars(value, field="region", backend="VEP") is None
+
+
+@pytest.mark.parametrize("bad", ["1/2", "A C", "x?y", "a#b", "p&q", "%2F", ""])
+def test_assert_no_path_metachars_rejects_metachars(bad: str) -> None:
+    with pytest.raises(NotFoundError, match="region"):
+        validators.assert_no_path_metachars(bad, field="region", backend="VEP")

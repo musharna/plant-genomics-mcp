@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 from collections.abc import Awaitable, Callable
 from typing import Any
 
@@ -47,6 +48,14 @@ from plant_genomics_mcp.errors import PlantGenomicsError
 
 MAX_BATCH = 50  # bound the wire payload; matches Ensembl's documented limit
 
+# Cap concurrent per-locus fan-out (env-tunable). 8 keeps a full 50-locus
+# two-stage batch well under httpx's default 100-connection pool and polite to
+# upstreams, while still overlapping most of the latency.
+try:
+    _CONCURRENCY = int(os.environ.get("PLANT_GENOMICS_MCP_BATCH_CONCURRENCY", "8"))
+except ValueError:
+    _CONCURRENCY = 8
+
 
 def _bound(loci: list[str]) -> list[str]:
     if not loci:
@@ -65,8 +74,17 @@ async def _gather(
     PlantGenomicsError subclasses go to ``errors`` with the [ClassName]
     prefix from PlantGenomicsError.__str__; other exceptions re-raise.
     """
-    coros = [fn(locus) for locus in loci]
-    raw = await asyncio.gather(*coros, return_exceptions=True)
+    # Bound concurrent per-locus work: a 50-locus two-stage batch (e.g.
+    # UniProt-resolve → QuickGO per locus) would otherwise open ~100 sockets at
+    # once, at httpx's default pool cap and hammering two upstreams (audit M3).
+    # Fresh semaphore per call so it binds to the running loop (plantcyc pattern).
+    sem = asyncio.Semaphore(_CONCURRENCY)
+
+    async def _guarded(locus: str) -> dict[str, Any]:
+        async with sem:
+            return await fn(locus)
+
+    raw = await asyncio.gather(*(_guarded(locus) for locus in loci), return_exceptions=True)
     results: dict[str, dict[str, Any]] = {}
     errors: dict[str, str] = {}
     for locus, outcome in zip(loci, raw, strict=True):

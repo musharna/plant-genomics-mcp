@@ -117,6 +117,17 @@ async def test_lookup_by_uniprot_malformed_raises(httpx_mock: HTTPXMock) -> None
             await alphafold.lookup_by_uniprot(client, "Q9SZ92")
 
 
+@pytest.mark.asyncio
+async def test_lookup_by_uniprot_no_residue_range(httpx_mock: HTTPXMock) -> None:
+    """An entry without sequenceStart yields residue_range=None (L11)."""
+    entry = {k: v for k, v in _PREDICTION[0].items() if k != "sequenceStart"}
+    httpx_mock.add_response(url=_PRED_URL, json=[entry])
+    async with httpx.AsyncClient() as client:
+        r = await alphafold.lookup_by_uniprot(client, "Q9SZ92")
+    assert r["found"] is True
+    assert r["residue_range"] is None
+
+
 # ---------- mocked unit tests: lookup_locus (uniprot monkeypatched) ----------
 
 

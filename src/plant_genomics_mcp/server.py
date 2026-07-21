@@ -32,6 +32,8 @@ synthesis tools that compose the live backends:
   - ``orthodb_orthologs``                 — OrthoDB ortholog group + cross-species members (live, Viridiplantae; 12 organisms)
   - ``aragwas_associations``              — AraGWAS GWAS hits per locus (live, Arabidopsis-only)
   - ``arabidopsis_natural_variation``     — 1001 Genomes natural-variation SNP effects per locus (live, Arabidopsis-only)
+  - ``get_sequence``                      — Ensembl /sequence/id genomic/cds/cdna/protein FASTA (live; feeds blast_sequence)
+  - ``ensembl_region_query``              — genes/features overlapping a genomic interval via Ensembl /overlap/region (live)
   - ``batch_ensembl_plants_lookup_locus`` — Ensembl Plants POST /lookup/id (one round-trip)
   - ``batch_get_gene_xrefs``              — gather over get_gene_xrefs
   - ``batch_phytozome_lookup_locus``      — gather over phytozome_lookup_locus
@@ -48,6 +50,7 @@ synthesis tools that compose the live backends:
   - ``find_homologs_synth``               — v0.8 synthesis: BLAST + per-hit UniProt resolution
   - ``biological_context_synth``          — v0.8 synthesis: GO + literature + KEGG + STRING + ATTED + consensus_partners
   - ``consensus_homologs``                — v0.8 synthesis: cross-source ranking (Gramene + BLAST agreement)
+  - ``gene_report``                       — v0.9 synthesis: one-shot Markdown gene dossier (annotation+xrefs+protein+domains+GO+KEGG+STRING+literature)
 
 ``tair_locus_info`` is a silent alias of ``bar_gene_summary`` — the TAIR REST
 API is subscription-gated (Phoenix Bioinformatics), but BAR ThaleMine mirrors

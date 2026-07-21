@@ -26,14 +26,13 @@ Endpoint: https://pmn.plantcyc.org/getxml + /<orgid>/xmlquery (ptools-XML).
 from __future__ import annotations
 
 import asyncio
-import re
 from typing import Any
 from xml.etree import ElementTree as ET
 
 import httpx
 
-from plant_genomics_mcp import _http, cache, organisms
-from plant_genomics_mcp.errors import NotFoundError, PlantGenomicsError
+from plant_genomics_mcp import _http, cache, organisms, validators
+from plant_genomics_mcp.errors import PlantGenomicsError
 
 BASE_URL = "https://pmn.plantcyc.org"
 DEFAULT_TIMEOUT = 30.0
@@ -46,10 +45,6 @@ MAX_REACTIONS = 25
 MAX_PATHWAYS = 40
 # Politeness cap on concurrent getxml calls to a single PMN host (BLAST-style).
 _CONCURRENCY = 6
-
-# Identifier whitelist (same shape as the tair/phytozome guards) — reject
-# obviously-bogus input before building a BioVelo query string.
-_LOCUS_RE = re.compile(r"^[A-Za-z0-9._-]+$")
 
 # Per-module response cache. Frames (reactions, pathways) are heavily shared
 # across genes, so caching getxml by frame is a large win. See
@@ -169,10 +164,10 @@ async def lookup_locus(
     report the true totals even when the returned lists are capped.
     """
     locus = locus.strip()
-    if not _LOCUS_RE.match(locus):
-        # Typed (not plain ValueError) so the [ClassName] wire prefix lets an
-        # LLM client route on the failure — before any network call.
-        raise NotFoundError(f"invalid locus {locus!r} (must match {_LOCUS_RE.pattern})")
+    # Typed rejection (NotFoundError → [ClassName] wire prefix) before any network
+    # call; shared validator is ``\Z``-anchored, unlike the old local ``$`` regex
+    # which silently accepted a trailing newline (2026-07-21 audit L4).
+    validators.assert_valid_locus(locus, backend="PlantCyc")
     record = organisms.resolve(organism)
     orgid = organisms.plantcyc_orgid_for(organism)
 

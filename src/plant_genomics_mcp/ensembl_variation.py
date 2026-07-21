@@ -22,7 +22,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import _http, cache, ensembl_plants, organisms
+from plant_genomics_mcp import _http, cache, ensembl_plants, organisms, validators
 from plant_genomics_mcp.errors import PlantGenomicsError
 
 BASE_URL = "https://rest.ensembl.org"
@@ -150,6 +150,8 @@ async def vep_annotate(
     """
     if not region or not allele:
         raise ValueError("vep_annotate requires non-empty region and allele")
+    validators.assert_no_path_metachars(region, field="region", backend="Ensembl VEP")
+    validators.assert_no_path_metachars(allele, field="allele", backend="Ensembl VEP")
     slug = organisms.ensembl_slug_for(organism)
     raw = await _get(client, f"/vep/{slug}/region/{region}/{allele}")
     if not isinstance(raw, list):

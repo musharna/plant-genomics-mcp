@@ -12,12 +12,12 @@ Four resources, all derived from in-process state:
                                       phytozome_int). Replaces the v0.8-era
                                       ``phytozome.KNOWN_ORGANISMS`` module dict.
   * ``pgmcp://backends/status``     — per-backend liveness rollup
-                                      (name, base_url, kind=live|stub,
-                                      subscription_gated, probed_at). Mirrors
+                                      (name, base_url, kind=live,
+                                      subscription_gated). Mirrors
                                       the catalog in ``server.py``'s module
                                       docstring but in a parseable form.
   * ``pgmcp://organisms/coverage``  — markdown table of the full 12-organism
-                                      × 6-backend coverage matrix. Lets a
+                                      × 8-backend coverage matrix. Lets a
                                       client introspect supported coverage
                                       in one read instead of probing
                                       ``resolve_organism`` per organism.
@@ -96,9 +96,9 @@ RESOURCES: list[types.Resource] = [
         uri=AnyUrl(BACKENDS_STATUS_URI),
         name="Backend status",
         description=(
-            "Per-backend rollup (name, base_url, kind=live|stub, "
-            "subscription_gated, probed_at). Lets a client enumerate the "
-            "live and stubbed backends without parsing the server "
+            "Per-backend rollup (name, base_url, kind=live, "
+            "subscription_gated). Lets a client enumerate the "
+            "live backends without parsing the server "
             "docstring."
         ),
         mimeType="application/json",
@@ -107,8 +107,9 @@ RESOURCES: list[types.Resource] = [
         uri=AnyUrl(COVERAGE_MATRIX_URI),
         name="Organism coverage matrix",
         description=(
-            "Markdown table of all 12 supported plants × 7 ID slots "
-            "(ncbi_taxid, ensembl, phytozome, string, europe_pmc, kegg, atted). "
+            "Markdown table of all 12 supported plants × 9 ID slots "
+            "(ncbi_taxid, ensembl, phytozome, string, europe_pmc, kegg, atted, "
+            "gprofiler, plantcyc). "
             "Missing slots render as em-dash. Lets a client introspect "
             "coverage in one read instead of probing resolve_organism "
             "per organism."
@@ -155,9 +156,8 @@ def _cache_stats_payload() -> dict[str, dict[str, int]]:
 def _backends_status_payload() -> list[dict[str, object]]:
     """Per-backend liveness + subscription-gating rollup.
 
-    ``probed_at`` is included on stub entries — it's the last time the
-    controller verified the subscription gate, so a client can decide
-    whether to retry.
+    Each entry is ``{name, base_url, kind, subscription_gated}`` (BLAST also
+    carries ``concurrency_cap``). All backends are currently ``kind="live"``.
     """
     return [
         {

@@ -275,8 +275,12 @@ async def test_dispatch_routes_identifier_and_default_organism(spec: Spec, monke
     rec = _make_recorder(rv, sync=spec.sync)
     monkeypatch.setattr(spec.module, spec.attr, rec)
 
-    await server._dispatch(spec.tool, dict(spec.args))
+    result = await server._dispatch(spec.tool, dict(spec.args))
 
+    # The dispatcher returns the backend's result; synth arms call .model_dump()
+    # on the returned envelope (_Env.model_dump() → {"stub": True}), so every arm
+    # yields the same sentinel here — asserting it locks the return path (L10).
+    assert result == {"stub": True}, f"{spec.tool}: dispatcher returned {result!r}"
     assert rec.calls, f"{spec.tool}: backend stub was never called"
     a, k = rec.calls[0]
     assert spec.expected_id in a, (

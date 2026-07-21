@@ -261,6 +261,30 @@ async def test_timed_step_network_error_becomes_error_steprow():
 
 
 @pytest.mark.asyncio
+async def test_timed_step_unexpected_exception_becomes_error_steprow():
+    """An unexpected error (e.g. a projection KeyError) degrades to status="error"
+    rather than propagating out and crashing the envelope (audit L6)."""
+    from plant_genomics_mcp.synthesis import _timed_step
+
+    async def _raises_keyerror():
+        raise KeyError("primaryAccession")
+
+    row = await _timed_step(2, "fake", _raises_keyerror())
+    assert row.status == "error"
+    assert row.error is not None and row.error.startswith("[KeyError]")
+
+
+def test_gather_step_unexpected_exception_becomes_error_steprow():
+    """The gather-slot handler degrades an unexpected exception to status="error"
+    instead of re-raising it (audit L6)."""
+    from plant_genomics_mcp.synthesis import _gather_step
+
+    row = _gather_step(3, "fake", KeyError("boom"), None)
+    assert row.status == "error"
+    assert row.error is not None and row.error.startswith("[KeyError]")
+
+
+@pytest.mark.asyncio
 async def test_analyze_locus_synth_network_error_records_error_row_not_crash(
     httpx_mock, monkeypatch
 ):
@@ -1567,6 +1591,7 @@ async def test_gene_report_phase1_ensembl_failure_skips_rest(httpx_mock):
         "string_interactions",
         "locus_literature",
         "locus_go_annotations",
+        "interpro_domains",
     ):
         assert downstream[tool].status == "skipped"
 
@@ -1611,6 +1636,8 @@ async def test_gene_report_uniprot_failure_skips_go_but_composes(httpx_mock):
     by_tool = {s.tool: s for s in env.steps}
     assert by_tool["resolve_locus_to_uniprot"].status == "error"
     assert by_tool["locus_go_annotations"].status == "skipped"
+    # interpro_domains also depends on the resolved UniProt accession (step 8).
+    assert by_tool["interpro_domains"].status == "skipped"
     # The Markdown still renders, noting the unavailable sections.
     md = env.result["markdown"]
     assert "AT1G01010" in md

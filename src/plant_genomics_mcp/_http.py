@@ -12,6 +12,7 @@ returning ``Retry-After: 3600`` cannot pin the agent for an hour.
 from __future__ import annotations
 
 import asyncio
+import os
 from collections.abc import Mapping
 from typing import Any
 
@@ -28,6 +29,29 @@ from plant_genomics_mcp.errors import (
 _RAISE = object()
 _RETRY_AFTER_CAP = 60.0
 _RETRYABLE_STATUSES = (429, 500, 502, 503, 504)
+
+# Outbound response-size ceiling (env-tunable). A 200 body larger than this is
+# refused instead of parsed — bounds memory against a hostile or buggy upstream
+# (audit M4). When Content-Length is absent (chunked) the already-read body
+# length is used. Default 64 MiB comfortably fits the largest legitimate
+# payloads (BLAST reports, dense variant / coexpression sets).
+try:
+    _MAX_RESPONSE_BYTES = int(
+        os.environ.get("PLANT_GENOMICS_MCP_MAX_RESPONSE_BYTES", str(64 * 1024 * 1024))
+    )
+except ValueError:
+    _MAX_RESPONSE_BYTES = 64 * 1024 * 1024
+
+
+def _assert_response_size(resp: httpx.Response, service: str) -> None:
+    """Raise ``PlantGenomicsError`` if a 200 response exceeds the size ceiling."""
+    cl = resp.headers.get("content-length")
+    size = int(cl) if cl and cl.isdigit() else len(resp.content)
+    if size > _MAX_RESPONSE_BYTES:
+        raise PlantGenomicsError(
+            f"{service} response too large: {size} bytes exceeds cap "
+            f"{_MAX_RESPONSE_BYTES} (raise PLANT_GENOMICS_MCP_MAX_RESPONSE_BYTES to allow)"
+        )
 
 
 async def request_with_retry(
@@ -89,6 +113,7 @@ async def request_with_retry(
         last_status = resp.status_code
 
         if resp.status_code == 200:
+            _assert_response_size(resp, service)
             return resp
 
         if resp.status_code == 404 and not_found_returns is not _RAISE:

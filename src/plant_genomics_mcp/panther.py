@@ -23,7 +23,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import _http, cache, organisms
+from plant_genomics_mcp import _http, cache, organisms, validators
 from plant_genomics_mcp.errors import PlantGenomicsError
 
 BASE_URL = "https://pantherdb.org"
@@ -113,6 +113,7 @@ async def lookup_locus(
     for an organism absent from PANTHER). Returns ``found=False`` when PANTHER
     cannot map the locus to a family.
     """
+    validators.assert_valid_locus(locus, backend="PANTHER")
     taxid = organisms.panther_taxid_for(organism)
     path = "/services/oai/pantherdb/geneinfo"
     params = {"geneInputList": locus, "organism": taxid}
