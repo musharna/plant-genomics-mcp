@@ -24,6 +24,7 @@ from typing import Any
 import pytest
 
 from plant_genomics_mcp import (
+    alphafold,
     atted,
     bar,
     batch,
@@ -32,6 +33,7 @@ from plant_genomics_mcp import (
     europe_pmc,
     gprofiler,
     gramene,
+    interpro,
     kegg,
     phytozome,
     plantcyc,
@@ -90,6 +92,8 @@ DISPATCH_SPECS: list[Spec] = [
     Spec("locus_plant_ontology", planteome, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec("tair_locus_info", tair, "lookup_locus", {"locus": L}, L, None),
     Spec("plantcyc_locus_info", plantcyc, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
+    Spec("alphafold_structure", alphafold, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
+    Spec("interpro_domains", interpro, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec(
         "batch_ensembl_plants_lookup_locus",
         batch,
