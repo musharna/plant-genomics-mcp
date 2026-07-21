@@ -21,7 +21,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import _http, cache, organisms
+from plant_genomics_mcp import _http, cache, organisms, validators
 from plant_genomics_mcp.errors import OrganismNotSupported, PlantGenomicsError
 
 BASE_URL = "https://aragwas.1001genomes.org"
@@ -117,6 +117,7 @@ async def lookup_locus(
         raise OrganismNotSupported(
             backend="aragwas", organism=canonical, supported=["arabidopsis_thaliana"]
         )
+    validators.assert_valid_agi(locus, backend="AraGWAS")
     url: str | None = f"{BASE_URL}/api/genes/{locus}/associations/"
     associations: list[dict[str, Any]] = []
     total = 0

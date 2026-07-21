@@ -26,6 +26,20 @@ from plant_genomics_mcp.errors import NotFoundError
 # ``"AT1G01010\n"``. ``\Z`` is true end-of-string and rejects the newline.
 LOCUS_RE: re.Pattern[str] = re.compile(r"^[A-Za-z0-9._-]+\Z")
 
+# Arabidopsis AGI locus: AT<chr>G<5 digits>, chr ∈ 1-5 / C (chloroplast) / M
+# (mitochondrion), optional ``.N`` transcript suffix. Used by the
+# Arabidopsis-only backends (AraGWAS, 1001 Genomes) where a malformed AGI
+# otherwise reaches an upstream that answers HTTP 500 (misread as an outage)
+# instead of a clean not-found — see the 2026-07-21 audit (M6).
+AGI_RE: re.Pattern[str] = re.compile(r"^AT[1-5CM]G\d{5}(\.\d+)?\Z", re.IGNORECASE)
+
+# Characters that would break out of the URL path/query segment a value is
+# templated into (path traversal, extra query params, fragment). Applied to
+# the variant ``region``/``allele`` strings that VEP splices into its path —
+# those aren't loci, so they don't fit ``LOCUS_RE``, but they must still be
+# metachar-free (audit L2).
+_PATH_METACHARS = re.compile(r"[/\s?#&%]")
+
 
 def assert_valid_locus(locus: str, *, backend: str) -> None:
     """Raise ``NotFoundError`` if ``locus`` doesn't match ``LOCUS_RE``.
@@ -38,3 +52,30 @@ def assert_valid_locus(locus: str, *, backend: str) -> None:
     """
     if not LOCUS_RE.match(locus):
         raise NotFoundError(f"{backend}: invalid locus {locus!r} (must match {LOCUS_RE.pattern})")
+
+
+def assert_valid_agi(locus: str, *, backend: str) -> None:
+    """Raise ``NotFoundError`` if ``locus`` is not a well-formed Arabidopsis AGI.
+
+    Stricter than :func:`assert_valid_locus` — for the Arabidopsis-only backends
+    where a typo'd AGI (wrong length/prefix) hits an upstream 500 that the retry
+    layer surfaces as ``UpstreamUnavailableError`` ("service down"). Rejecting
+    malformed AGIs up front turns that common case into a clear not-found.
+    """
+    if not AGI_RE.match(locus):
+        raise NotFoundError(
+            f"{backend}: {locus!r} is not a valid Arabidopsis AGI locus (e.g. AT1G01060)"
+        )
+
+
+def assert_no_path_metachars(value: str, *, field: str, backend: str) -> None:
+    """Raise ``NotFoundError`` if ``value`` contains URL path/query metacharacters.
+
+    For non-locus caller inputs (e.g. VEP ``region``/``allele``) that are
+    templated into a URL path segment and so must not smuggle a ``/``, space,
+    ``?``, ``#``, ``&`` or ``%``.
+    """
+    if not value or _PATH_METACHARS.search(value):
+        raise NotFoundError(
+            f"{backend}: invalid {field} {value!r} (contains a path/query metacharacter)"
+        )

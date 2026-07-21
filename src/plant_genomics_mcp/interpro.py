@@ -23,7 +23,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import _http, cache, organisms, uniprot
+from plant_genomics_mcp import _http, cache, organisms, uniprot, validators
 from plant_genomics_mcp.errors import PlantGenomicsError
 
 BASE_URL = "https://www.ebi.ac.uk"
@@ -127,6 +127,7 @@ async def lookup_locus(
     Propagates ``NotFoundError`` when the locus has no UniProt entry, mirroring
     the locus→UniProt→QuickGO path.
     """
+    validators.assert_valid_locus(locus, backend="InterPro")
     up = await uniprot.lookup_locus(client, locus, organism=organism)
     accession = up["primaryAccession"]
     result = await lookup_by_uniprot(client, accession)

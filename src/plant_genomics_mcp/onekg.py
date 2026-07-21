@@ -23,7 +23,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import _http, cache, organisms
+from plant_genomics_mcp import _http, cache, organisms, validators
 from plant_genomics_mcp.errors import OrganismNotSupported, PlantGenomicsError
 
 BASE_URL = "https://tools.1001genomes.org"
@@ -104,6 +104,7 @@ async def lookup_locus(
         raise OrganismNotSupported(
             backend="1001genomes", organism=canonical, supported=["arabidopsis_thaliana"]
         )
+    validators.assert_valid_agi(locus, backend="1001genomes")
     tx = locus if "." in locus else f"{locus}.1"
 
     coords = await _get(client, f"{BASE_URL}/api/v2/gi2coords/{ANNOTATION}/{tx}")

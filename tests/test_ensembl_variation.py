@@ -194,6 +194,16 @@ async def test_vep_annotate_empty_args_raises() -> None:
             await ensembl_variation.vep_annotate(client, "", "C", "arabidopsis")
 
 
+@pytest.mark.asyncio
+async def test_vep_annotate_rejects_path_metachars() -> None:
+    """A region/allele carrying a URL path/query metachar raises before any HTTP call."""
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="region"):
+            await ensembl_variation.vep_annotate(client, "1/2:100-100:1", "C", "arabidopsis")
+        with pytest.raises(NotFoundError, match="allele"):
+            await ensembl_variation.vep_annotate(client, "1:100-100:1", "A/C", "arabidopsis")
+
+
 # ---------- live integration (real-execution check) ----------
 
 
