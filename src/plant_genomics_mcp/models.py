@@ -594,6 +594,87 @@ class ExperimentalStructures(BaseModel):
     )
 
 
+class TfBindingMotif(BaseModel):
+    """One JASPAR transcription-factor binding profile."""
+
+    model_config = ConfigDict(extra="allow")
+
+    matrix_id: str | None = Field(default=None, description="JASPAR profile id, e.g. MA0570.1")
+    name: str | None = Field(default=None, description="TF name as curated by JASPAR")
+    collection: str | None = Field(default=None, description="CORE / PBM / UNVALIDATED / …")
+    base_id: str | None = Field(default=None, description="Version-less profile id, e.g. MA0570")
+    version: int | None = Field(default=None, description="JASPAR release version of the profile")
+    tf_class: list[str] | None = Field(
+        default=None, description="Structural class, e.g. ['Basic leucine zipper factors (bZIP)']"
+    )
+    tf_family: list[str] | None = Field(default=None, description="TF family, e.g. ['MYB-related']")
+    data_type: str | None = Field(
+        default=None, description="Assay the profile derives from: SELEX / ChIP-seq / PBM / DAP-seq"
+    )
+    consensus: str | None = Field(
+        default=None,
+        description="IUPAC consensus derived from the PFM, e.g. 'AAATATCT' (the Evening Element)",
+    )
+    length: int | None = Field(default=None, description="Motif width in bases")
+    uniprot_ids: list[str] = Field(
+        default_factory=list, description="UniProt accessions JASPAR attributes the profile to"
+    )
+    pubmed_ids: list[str] = Field(default_factory=list, description="Supporting PubMed IDs")
+    sequence_logo: str | None = Field(default=None, description="URL of the SVG sequence logo")
+    web_url: str | None = Field(default=None, description="JASPAR profile page")
+
+
+class TfBindingMotifs(BaseModel):
+    """JASPAR TF binding motifs for a locus (via UniProt).
+
+    JASPAR is indexed by TF *name* and its search is fuzzy, so candidates are
+    retrieved by gene symbol and then identity-checked against the resolved
+    UniProt accession. Only confirmed profiles appear in ``motifs``; fuzzy hits
+    that belong to a *different* gene are quarantined in ``name_only_matches``
+    and must not be attributed to this locus. ``found=False`` means no curated
+    profile — the gene is not a TF, or its family is unprofiled for the species.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str
+    accession: str = Field(description="Resolved UniProt accession")
+    tax_id: int = Field(description="NCBI taxid the JASPAR search was scoped to")
+    gene_names_searched: list[str] = Field(
+        default_factory=list, description="Gene symbols used as JASPAR search keys"
+    )
+    found: bool = Field(description="True if any profile was UniProt-confirmed for this locus")
+    motif_count: int = Field(description="Total confirmed profiles (pre-cap)")
+    truncated: bool = Field(description="True if the motif list was capped")
+    motifs: list[TfBindingMotif] = Field(
+        default_factory=list, description="UniProt-confirmed binding profiles"
+    )
+    name_only_matches: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description=(
+            "Name-similarity hits belonging to a DIFFERENT gene "
+            "[{matrix_id, name, uniprot_ids}] — not this locus's motifs"
+        ),
+    )
+
+
+class JasparMotif(TfBindingMotif):
+    """A single JASPAR profile including its raw position-frequency matrix.
+
+    The drill-down companion to ``TfBindingMotifs``, which carries the derived
+    consensus but not the matrix itself.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    species: list[dict[str, Any]] = Field(
+        default_factory=list, description="Source species [{tax_id, name}]"
+    )
+    pfm: dict[str, list[float]] | None = Field(
+        default=None, description="Position-frequency matrix: per-base count vectors keyed A/C/G/T"
+    )
+
+
 class LocusVariants(BaseModel):
     """Natural variants overlapping a locus's genomic span (Ensembl /overlap).
 

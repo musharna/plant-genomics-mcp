@@ -27,6 +27,8 @@ synthesis tools that compose the live backends:
   - ``alphafold_structure``               — AlphaFold DB predicted structure (live, locus→UniProt→model + pLDDT)
   - ``experimental_structures``           — PDBe experimentally-solved structures (live, locus→UniProt→best PDB entries)
   - ``interpro_domains``                  — InterPro domain/family architecture (live, locus→UniProt→domains; Pfam incl.)
+  - ``tf_binding_motifs``                 — JASPAR TF binding motifs (live, locus→UniProt→UniProt-confirmed profiles + consensus)
+  - ``jaspar_motif``                      — one JASPAR profile by matrix id incl. the raw PFM (live)
   - ``locus_variants``                    — Ensembl natural variants overlapping a locus (live, EVA/dbSNP; 12 organisms)
   - ``vep_annotate``                      — Ensembl VEP variant-consequence prediction (live, region+allele; SIFT/PolyPhen)
   - ``panther_family``                    — PANTHER protein family/subfamily + GO + protein class (live, 12 organisms)
@@ -90,6 +92,7 @@ from plant_genomics_mcp import (
     gprofiler,
     gramene,
     interpro,
+    jaspar,
     kegg,
     onekg,
     orthodb,
@@ -125,6 +128,7 @@ from plant_genomics_mcp.models import (
     GoEnrichmentResult,
     GrameneHomologs,
     InterProDomains,
+    JasparMotif,
     KeggPathways,
     LocusGoAnnotations,
     LocusLiterature,
@@ -136,6 +140,7 @@ from plant_genomics_mcp.models import (
     PlantCycLocusInfo,
     StringInteractions,
     SynthesisEnvelope,
+    TfBindingMotifs,
     UniProtLocus,
     VepAnnotation,
 )
@@ -936,6 +941,75 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=ExperimentalStructures.model_json_schema(),
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="tf_binding_motifs",
+        description=(
+            "Fetch curated transcription-factor DNA binding motifs for a locus "
+            "from JASPAR (jaspar.elixir.no; free, no key) — the cis-regulatory "
+            "view. Resolves the locus → UniProt accession + gene symbol, "
+            "searches JASPAR by symbol scoped to the organism's taxid, then "
+            "CONFIRMS each candidate by matching the accession against the "
+            "profile's uniprot_ids. Returns per motif the JASPAR matrix id, TF "
+            "class/family, assay type (SELEX / ChIP-seq / PBM / DAP-seq), an "
+            "IUPAC consensus derived from the position-frequency matrix (e.g. "
+            "CACGTG, the G-box/ABRE core), motif length, PubMed refs, and an SVG "
+            "sequence-logo URL. IMPORTANT: JASPAR's name search is fuzzy, so "
+            "name-similarity hits belonging to a DIFFERENT gene are returned "
+            "separately in name_only_matches and must NOT be attributed to this "
+            "locus; only `motifs` is UniProt-confirmed. found=false means the "
+            "gene has no curated profile (not a TF, or its family is unprofiled "
+            "for that species) — a normal outcome, not an error. Use "
+            "jaspar_motif to retrieve the raw matrix for any matrix_id. "
+            "Coverage is Arabidopsis-heavy (1236 profiles) and thin elsewhere "
+            "(maize 131, soybean 91, wheat 58, tomato 51, rice 10; Brachypodium "
+            "and sorghum have none). Defaults to arabidopsis_thaliana; pass "
+            "organism= for other species."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "e.g. AT2G46830 (Arabidopsis CCA1), Os01g0100100 (rice RAP-DB)",
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
+                },
+            },
+            "required": ["locus"],
+            "additionalProperties": False,
+        },
+        outputSchema=TfBindingMotifs.model_json_schema(),
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="jaspar_motif",
+        description=(
+            "Fetch one JASPAR binding profile by matrix id, including its raw "
+            "position-frequency matrix (PFM: per-base count vectors keyed "
+            "A/C/G/T) plus TF class/family, assay type, source species, UniProt "
+            "accessions, PubMed refs, IUPAC consensus, and the sequence-logo "
+            "URL. The drill-down companion to tf_binding_motifs, which returns "
+            "the derived consensus but not the matrix. Accepts a versioned id "
+            "(MA0570.1) or a bare base id (MA0570, which resolves to the newest "
+            "version). Unknown ids raise a typed NotFoundError."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "matrix_id": {
+                    "type": "string",
+                    "description": "JASPAR profile id, e.g. MA0570.1 or MA0570 (latest version)",
+                },
+            },
+            "required": ["matrix_id"],
+            "additionalProperties": False,
+        },
+        outputSchema=JasparMotif.model_json_schema(),
         _meta=_EDAM,
     ),
     types.Tool(
@@ -1912,6 +1986,14 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     args["locus"],
                     organism=args.get("organism", "arabidopsis_thaliana"),
                 )
+            case "tf_binding_motifs":
+                return await jaspar.lookup_locus(
+                    client,
+                    args["locus"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                )
+            case "jaspar_motif":
+                return await jaspar.lookup_matrix(client, args["matrix_id"])
             case "locus_variants":
                 return await ensembl_variation.locus_variants(
                     client,
