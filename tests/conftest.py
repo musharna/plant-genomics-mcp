@@ -39,6 +39,7 @@ from plant_genomics_mcp import (
     planteome,
     quickgo,
     string_db,
+    thalemine,
     uniprot,
 )
 
@@ -67,6 +68,7 @@ def _clear_module_caches() -> None:
         planteome,
         quickgo,
         string_db,
+        thalemine,
         uniprot,
     ):
         mod._CACHE.clear()

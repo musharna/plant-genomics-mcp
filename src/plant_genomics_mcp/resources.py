@@ -64,6 +64,7 @@ from plant_genomics_mcp import (
     planteome,
     quickgo,
     string_db,
+    thalemine,
     uniprot,
 )
 
@@ -153,6 +154,7 @@ def _cache_stats_payload() -> dict[str, dict[str, int]]:
         "planteome": planteome._CACHE.stats(),
         "quickgo": quickgo._CACHE.stats(),
         "string_db": string_db._CACHE.stats(),
+        "thalemine": thalemine._CACHE.stats(),
         "uniprot": uniprot._CACHE.stats(),
     }
 
@@ -272,6 +274,12 @@ def _backends_status_payload() -> list[dict[str, object]]:
         {
             "name": "jaspar",
             "base_url": jaspar.BASE_URL,
+            "kind": "live",
+            "subscription_gated": False,
+        },
+        {
+            "name": "thalemine",
+            "base_url": thalemine.BASE_URL,
             "kind": "live",
             "subscription_gated": False,
         },
