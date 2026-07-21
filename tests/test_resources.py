@@ -37,14 +37,19 @@ async def test_read_cache_stats_returns_per_backend_rollup() -> None:
     payload = json.loads(item.content)
     assert set(payload) == {
         "alphafold",
+        "aragwas",
         "atted",
         "bar",
         "ensembl_plants",
+        "ensembl_variation",
         "europe_pmc",
         "gprofiler",
         "gramene",
         "interpro",
         "kegg",
+        "onekg",
+        "orthodb",
+        "panther",
         "phytozome",
         "plantcyc",
         "planteome",
@@ -168,6 +173,11 @@ async def test_read_backends_status_lists_live_and_stub_backends() -> None:
         "gramene",
         "kegg",
         "string_db",
+        "ensembl_variation",
+        "panther",
+        "orthodb",
+        "aragwas",
+        "onekg",
     ):
         e = by_name[name]
         assert e["kind"] == "live"
