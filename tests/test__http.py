@@ -33,6 +33,20 @@ async def test_returns_httpx_response_on_200(httpx_mock: HTTPXMock) -> None:
 
 
 @pytest.mark.asyncio
+async def test_rejects_oversized_response(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A 200 body larger than the size cap is refused, not parsed (audit M4)."""
+    monkeypatch.setattr(_http, "_MAX_RESPONSE_BYTES", 5)
+    httpx_mock.add_response(url="https://example.test/big", text="x" * 20)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(PlantGenomicsError, match="too large"):
+            await _http.request_with_retry(
+                client, "GET", "https://example.test/big", service="example"
+            )
+
+
+@pytest.mark.asyncio
 async def test_raises_not_found_on_404_by_default(httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(url="https://example.test/missing", status_code=404, text="gone")
     async with httpx.AsyncClient() as client:
