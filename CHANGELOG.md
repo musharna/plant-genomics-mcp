@@ -1,5 +1,34 @@
 # Changelog
 
+## v1.18.0 — 2026-07-21
+
+Adds **`experimental_interactions`** and **`locus_gene_rifs`**, wrapping [ThaleMine](https://bar.utoronto.ca/thalemine) — BAR's Arabidopsis InterMine instance, and the one the InterMine registry lists as canonical for _A. thaliana_. Fills the server's **experimental-evidence gap for protein interactions** (STRING is predicted / text-mined; BAR AIV returns GRN paper references, not partner pairs) and adds **curated GeneRIF functional statements**, a category no existing backend covered. Tool count 48 → 50; backend count 22 → 23. Minor: two new tools + one new backend, no breaking changes, no new dependencies.
+
+**Added**
+
+- **`experimental_interactions`** (`thalemine.lookup_interactions`, async, organism-aware) — curated experimental interaction partners for an Arabidopsis locus, sourced from **BioGRID + IntAct + PSI-MI**. Per partner: `detection_methods` (two hybrid, pull down, genetic interference, …), `relationship_types` (PSI-MI terms), `interaction_types` (physical vs genetic), `sources`, `pubmed_ids`, and an `evidence_count`. ThaleMine emits **one row per evidence record**, so the same partner recurs once per method / relationship / source; rows are aggregated to one entry per partner with the union of its evidence, ordered by evidence count then locus for a stable tie-break.
+  - This is the **experimental** counterpart to `string_interactions`, not a duplicate of it: STRING returns predicted / text-mined partners with channel sub-scores but carries no per-pair detection method or publication. Verified live on HY5 (`AT5G11260`), whose best-supported partner is **COP1** with 21 evidence records across 13 publications — the canonical photomorphogenesis interaction.
+- **`locus_gene_rifs`** (`thalemine.lookup_gene_rifs`) — curated **GeneRIF** statements: one-sentence, manually curated descriptions of what a gene does, each anchored to the PubMed ID of the publication that demonstrated it (HY5 has 114). Citable functional context that neither GO terms (`locus_go_annotations`) nor raw abstracts (`locus_literature`) provide directly. Upstream order is preserved because ThaleMine supplies no meaningful ranking — so `truncated` means later statements were cut, **not** that they were less relevant.
+- **New backend** `thalemine.py` on the standard template (per-module `TTLCache`, shared retry, typed errors, `MAX_PARTNERS`/`MAX_RIFS` caps with `truncated`). No new organism-registry slot — Arabidopsis-only, so non-Arabidopsis input raises `OrganismNotSupported`. Distinct from the narrow BAR proxy (`/api/thalemine/gene_information/{locus}`) that `bar.py` already uses for the gene summary; this talks to the full InterMine **query web service**.
+- **Resources** — ThaleMine appears in `pgmcp://cache/stats` and `pgmcp://backends/status` (`kind=live`, not gated).
+- **Tests** — `test_thalemine.py` (34 mocked + 7 live) drives `thalemine.py` to **100%** coverage, including live assertions that HY5–COP1 is the top partner with two-hybrid evidence from both BioGRID and IntAct, and a **guard test that ThaleMine's `Allele` / `Strain` classes are still empty** — if that ever fails, the data has landed and an allele tool becomes buildable. Dispatch spec, stdio-smoke name + organism sets, and resource assertions updated. Suite 649 → 685; total coverage 95.79%.
+
+**Fixed**
+
+- **`tests/test_server_stdio.py`** — the module docstring claimed "all 46 tools"; it had been stale since v1.17.0. Now 50.
+
+**Notes**
+
+- **ThaleMine has no 404.** An unknown locus and a real gene with no data _both_ answer `HTTP 200` with rows. Both tools disambiguate with an InterMine **`OUTER` join**, which makes an existing-but-empty gene emit one row of nulls (`AT1G01010` → `['AT1G01010','NAC001',None]`) versus no rows at all for a gene that does not exist — so one request settles both existence and emptiness. Unknown locus → `NotFoundError`; real gene with no data → `found=false`, which is a normal answer rather than an error.
+- **Its advertised alleles / phenotypes / germplasm do not exist.** The 2026-07-21 gap audit scoped this backend around them; live counts show `Allele`, `Strain` and `RegulatoryRegion` all hold **zero rows**, and the model has **no `Phenotype` class at all** (release `5.1.0-20250704`, web-service API v35). The claim came from reading the _generic_ InterMine model — **model-presence is not data-presence**. For any InterMine-family backend, `format=count` the class before scoping work against it. This also **subsumes the separate EBI IntAct candidate** from that audit: same IntAct data, keyed directly on AGI with no UniProt hop, plus BioGRID on top.
+- **`InteractionDetail.relationshipType` is a plain attribute, not a reference** — appending `.name` yields `HTTP 400 "Path … in view list is not in the model"`. Bad view paths fail loudly rather than silently returning empty columns, so typos surface in tests.
+- **Validation is a security boundary here.** The locus is interpolated into the query XML, so `assert_valid_locus` is load-bearing: its character class excludes `< > & " '` and therefore closes the XML-injection route into the query.
+
+**Changed**
+
+- **`README.md`** — 48 → 50 tools, 22 → 23 backends; two new matrix rows (Interactions, Function) with rows 26+ renumbered; backend list + hero counts.
+- **`server.py` / `pyproject.toml` / `__init__.py` / `server.json`** — docstrings + description updated (50 tools / 23 backends; ThaleMine). `server.json` bumped to 1.18.0 in the feature PR, per the v1.15.0 release lesson.
+
 ## v1.17.0 — 2026-07-21
 
 Opens a wholly **new biological axis: cis-regulatory / TF binding**. Adds **`tf_binding_motifs`** and **`jaspar_motif`**, wrapping [JASPAR](https://jaspar.elixir.no) — the reference open database of curated, non-redundant transcription-factor binding profiles (1745 plant matrices from SELEX / ChIP-seq / PBM / DAP-seq). Top pick of the 2026-07-21 competitor/gap audit refresh: no competitor exposes JASPAR for plants, and it is UniProt-keyed, so it reuses the `locus → UniProt` resolution the server already performs. Tool count 46 → 48; backend count 21 → 22. Minor: two new tools + one new backend, no breaking changes, no new dependencies.

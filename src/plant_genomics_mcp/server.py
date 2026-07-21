@@ -29,6 +29,8 @@ synthesis tools that compose the live backends:
   - ``interpro_domains``                  — InterPro domain/family architecture (live, locus→UniProt→domains; Pfam incl.)
   - ``tf_binding_motifs``                 — JASPAR TF binding motifs (live, locus→UniProt→UniProt-confirmed profiles + consensus)
   - ``jaspar_motif``                      — one JASPAR profile by matrix id incl. the raw PFM (live)
+  - ``experimental_interactions``         — ThaleMine curated PPI w/ detection method + PMID (live, BioGRID/IntAct; Arabidopsis-only)
+  - ``locus_gene_rifs``                   — ThaleMine curated GeneRIF functional statements (live, Arabidopsis-only)
   - ``locus_variants``                    — Ensembl natural variants overlapping a locus (live, EVA/dbSNP; 12 organisms)
   - ``vep_annotate``                      — Ensembl VEP variant-consequence prediction (live, region+allele; SIFT/PolyPhen)
   - ``panther_family``                    — PANTHER protein family/subfamily + GO + protein class (live, 12 organisms)
@@ -108,6 +110,7 @@ from plant_genomics_mcp import (
     string_db,
     synthesis,
     tair,
+    thalemine,
     uniprot,
 )
 from plant_genomics_mcp.models import (
@@ -123,7 +126,9 @@ from plant_genomics_mcp.models import (
     EnsemblPlantsLocus,
     EnsemblRegionFeatures,
     EnsemblSequence,
+    ExperimentalInteractions,
     ExperimentalStructures,
+    GeneRifs,
     GeneXrefs,
     GoEnrichmentResult,
     GrameneHomologs,
@@ -1010,6 +1015,79 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=JasparMotif.model_json_schema(),
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="experimental_interactions",
+        description=(
+            "Fetch CURATED EXPERIMENTAL protein/genetic interaction partners for "
+            "an Arabidopsis locus from ThaleMine (BAR's InterMine instance; free, "
+            "no key), sourced from BioGRID, IntAct and PSI-MI. Unlike "
+            "string_interactions (predicted / text-mined, scored) and "
+            "bar_aiv_interactions (which returns GRN *paper references* for "
+            "Arabidopsis, not partner pairs), every partner here carries the "
+            "actual experimental provenance: detection method (two hybrid, pull "
+            "down, genetic interference, ...), PSI-MI relationship type, physical "
+            "vs genetic class, source database, and the PubMed IDs that reported "
+            "it. ThaleMine emits one row per evidence record, so rows are "
+            "aggregated to one entry per partner with evidence_count as a crude "
+            "support signal; partners are ordered by that count. found=false "
+            "means the gene is real but has no curated interaction on record — a "
+            "normal outcome; an unknown locus raises a typed NotFoundError. "
+            "Arabidopsis only (ThaleMine carries genes for taxon 3702; other "
+            "organisms raise OrganismNotSupported)."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "AGI locus, e.g. AT5G11260 (HY5)",
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid. ThaleMine supports Arabidopsis only.",
+                    "default": "arabidopsis_thaliana",
+                },
+            },
+            "required": ["locus"],
+            "additionalProperties": False,
+        },
+        outputSchema=ExperimentalInteractions.model_json_schema(),
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="locus_gene_rifs",
+        description=(
+            "Fetch curated GeneRIF functional statements for an Arabidopsis locus "
+            "from ThaleMine (free, no key). A GeneRIF is a one-sentence, manually "
+            "curated statement of what the gene does, each anchored to the PubMed "
+            "ID of the publication that demonstrated it — dense, directly citable "
+            "functional context that GO terms (locus_go_annotations) and raw "
+            "abstracts (locus_literature) do not provide. Well-studied genes have "
+            "many: HY5 (AT5G11260) has 114. Upstream order is preserved because "
+            "ThaleMine supplies no meaningful ranking, so `truncated` means later "
+            "statements were cut, not that they were less relevant. found=false "
+            "means the gene exists but has no GeneRIF; an unknown locus raises a "
+            "typed NotFoundError. Arabidopsis only."
+        ),
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "AGI locus, e.g. AT5G11260 (HY5)",
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid. ThaleMine supports Arabidopsis only.",
+                    "default": "arabidopsis_thaliana",
+                },
+            },
+            "required": ["locus"],
+            "additionalProperties": False,
+        },
+        outputSchema=GeneRifs.model_json_schema(),
         _meta=_EDAM,
     ),
     types.Tool(
@@ -1994,6 +2072,18 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                 )
             case "jaspar_motif":
                 return await jaspar.lookup_matrix(client, args["matrix_id"])
+            case "experimental_interactions":
+                return await thalemine.lookup_interactions(
+                    client,
+                    args["locus"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                )
+            case "locus_gene_rifs":
+                return await thalemine.lookup_gene_rifs(
+                    client,
+                    args["locus"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                )
             case "locus_variants":
                 return await ensembl_variation.locus_variants(
                     client,

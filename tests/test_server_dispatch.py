@@ -49,6 +49,7 @@ from plant_genomics_mcp import (
     string_db,
     synthesis,
     tair,
+    thalemine,
     uniprot,
 )
 
@@ -105,6 +106,10 @@ DISPATCH_SPECS: list[Spec] = [
     Spec("tf_binding_motifs", jaspar, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     # matrix_id-keyed, not locus-keyed → must not forward organism=
     Spec("jaspar_motif", jaspar, "lookup_matrix", {"matrix_id": "MA0570.1"}, "MA0570.1", None),
+    Spec(
+        "experimental_interactions", thalemine, "lookup_interactions", {"locus": L}, L, _DEFAULT_ORG
+    ),
+    Spec("locus_gene_rifs", thalemine, "lookup_gene_rifs", {"locus": L}, L, _DEFAULT_ORG),
     Spec("locus_variants", ensembl_variation, "locus_variants", {"locus": L}, L, _DEFAULT_ORG),
     Spec(
         "vep_annotate",

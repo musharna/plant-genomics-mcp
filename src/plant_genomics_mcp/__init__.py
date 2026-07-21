@@ -1,6 +1,6 @@
 """Plant genomics MCP server.
 
-Forty-eight MCP tools across 22 backends for plant gene-record lookup,
+Fifty MCP tools across 23 backends for plant gene-record lookup,
 biological-context analysis, and cross-source synthesis. Live backends
 include Ensembl Plants, Phytozome BioMart, UniProtKB, Europe PMC, QuickGO,
 Planteome (PO/TO ontology), PlantCyc/PMN (metabolic pathways), g:Profiler
@@ -9,9 +9,13 @@ structures), InterPro (protein
 domains), JASPAR (TF binding motifs), PANTHER (protein families), OrthoDB (orthology), AraGWAS
 (Arabidopsis GWAS), 1001 Genomes (Arabidopsis natural variation), NCBI BLAST,
 Gramene homology, KEGG pathways, STRING-DB
-interactions, ATTED-II coexpression, and BAR
+interactions, ATTED-II coexpression, ThaleMine (curated interaction evidence +
+GeneRIFs), and BAR
 (Bio-Analytic Resource for Plant Biology, U Toronto — Global Core Biodata
-Resource 2023). v1.17 adds ``tf_binding_motifs`` + ``jaspar_motif`` — JASPAR
+Resource 2023). v1.18 adds ``experimental_interactions`` + ``locus_gene_rifs``
+— ThaleMine's curated BioGRID/IntAct interaction evidence (detection method and
+PubMed ID per partner, the experimental counterpart to STRING's predictions) and
+GeneRIF functional statements. v1.17 adds ``tf_binding_motifs`` + ``jaspar_motif`` — JASPAR
 curated transcription-factor DNA-binding profiles per locus, the cis-regulatory
 axis, UniProt-confirmed against JASPAR's fuzzy name search. v1.16 adds ``experimental_structures`` — PDBe deposited
 X-ray/cryo-EM/NMR structures per locus (the experimentally-solved companion to
@@ -32,4 +36,4 @@ Bioinformatics paid subscription). See ``server.py`` for the full tool
 catalog.
 """
 
-__version__ = "1.17.0"
+__version__ = "1.18.0"

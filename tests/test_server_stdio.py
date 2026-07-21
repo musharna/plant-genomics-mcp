@@ -4,7 +4,7 @@ This is a real-execution check, not a unit test. It verifies that the
 ``plant-genomics-mcp`` console script:
 
   1. Accepts the MCP ``initialize`` handshake over stdio.
-  2. Advertises all 46 tools via ``list_tools``, all with non-empty
+  2. Advertises all 50 tools via ``list_tools``, all with non-empty
      descriptions and a non-empty ``outputSchema``.
   3. Advertises 3 prompts via ``list_prompts`` with required-arg flags
      preserved on the wire.
@@ -82,6 +82,7 @@ async def test_initialize_and_list_tools(server_params: StdioServerParameters) -
                 "consensus_homologs",
                 "ensembl_plants_lookup_locus",
                 "ensembl_region_query",
+                "experimental_interactions",
                 "find_homologs_synth",
                 "gene_report",
                 "get_gene_xrefs",
@@ -91,6 +92,7 @@ async def test_initialize_and_list_tools(server_params: StdioServerParameters) -
                 "interpro_domains",
                 "jaspar_motif",
                 "kegg_pathways",
+                "locus_gene_rifs",
                 "locus_go_annotations",
                 "locus_literature",
                 "locus_plant_ontology",
@@ -245,6 +247,10 @@ async def test_tool_schemas_use_organism_param(server_params: StdioServerParamet
         "interpro_domains",
         # jaspar_motif is matrix_id-keyed, not locus-keyed → deliberately absent
         "tf_binding_motifs",
+        # ThaleMine is Arabidopsis-only, but still takes organism= so a caller
+        # passing another species gets a typed OrganismNotSupported, not silence.
+        "experimental_interactions",
+        "locus_gene_rifs",
         "locus_variants",
         "vep_annotate",
         "panther_family",

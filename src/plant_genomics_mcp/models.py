@@ -675,6 +675,94 @@ class JasparMotif(TfBindingMotif):
     )
 
 
+class InteractionPartner(BaseModel):
+    """One interaction partner with its aggregated experimental evidence."""
+
+    model_config = ConfigDict(extra="allow")
+
+    partner_locus: str = Field(description="AGI locus of the interacting gene")
+    partner_symbol: str | None = Field(default=None, description="Partner gene symbol, if named")
+    interaction_types: list[str] = Field(
+        default_factory=list, description="Interaction classes observed: physical and/or genetic"
+    )
+    relationship_types: list[str] = Field(
+        default_factory=list,
+        description="PSI-MI relationship terms, e.g. 'direct interaction', 'physical association'",
+    )
+    detection_methods: list[str] = Field(
+        default_factory=list,
+        description="Experimental methods, e.g. 'two hybrid', 'pull down', 'genetic interference'",
+    )
+    pubmed_ids: list[str] = Field(
+        default_factory=list, description="PubMed IDs of the publications reporting this pair"
+    )
+    sources: list[str] = Field(
+        default_factory=list, description="Source databases: BioGRID, IntAct, PSI-MI"
+    )
+    evidence_count: int = Field(
+        description="Number of distinct evidence records supporting this pair"
+    )
+
+
+class ExperimentalInteractions(BaseModel):
+    """Curated experimental interaction partners for a locus (ThaleMine).
+
+    Distinct from ``string_interactions`` (predicted / text-mined, scored) and
+    ``bar_aiv_interactions`` (GRN paper references for Arabidopsis): every
+    partner here is backed by a named detection method and a publication.
+    ThaleMine returns one row per evidence record, so rows are aggregated to one
+    entry per partner. ``found=False`` means the gene is real but has no curated
+    interaction on record — an unknown locus raises NotFoundError instead.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str
+    gene_symbol: str | None = Field(default=None, description="Gene symbol from ThaleMine")
+    organism: str = Field(description="Canonical organism slug (Arabidopsis only)")
+    found: bool = Field(description="True if any curated interaction exists for this locus")
+    partner_count: int = Field(description="Total distinct partners (pre-cap)")
+    evidence_count: int = Field(description="Total evidence records across all partners")
+    truncated: bool = Field(description="True if the partner list was capped")
+    partners: list[InteractionPartner] = Field(
+        default_factory=list, description="Partners ordered by evidence count, descending"
+    )
+    source_url: str = Field(description="ThaleMine gene report page")
+
+
+class GeneRif(BaseModel):
+    """One curated GeneRIF statement with its supporting publication."""
+
+    model_config = ConfigDict(extra="allow")
+
+    annotation: str = Field(description="One-sentence curated statement of gene function")
+    pubmed_id: str | None = Field(default=None, description="PubMed ID the statement is drawn from")
+    time_stamp: str | None = Field(default=None, description="Curation timestamp, if recorded")
+
+
+class GeneRifs(BaseModel):
+    """Curated GeneRIF functional statements for a locus (ThaleMine).
+
+    GeneRIFs are one-sentence, manually curated statements of what a gene does,
+    each anchored to the publication that demonstrated it — citable functional
+    context that GO terms and raw abstracts do not provide directly. Upstream
+    order is preserved because ThaleMine supplies no meaningful ranking.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str
+    gene_symbol: str | None = Field(default=None, description="Gene symbol from ThaleMine")
+    organism: str = Field(description="Canonical organism slug (Arabidopsis only)")
+    found: bool = Field(description="True if the gene has at least one GeneRIF")
+    rif_count: int = Field(description="Total GeneRIFs (pre-cap)")
+    truncated: bool = Field(description="True if the GeneRIF list was capped")
+    gene_rifs: list[GeneRif] = Field(
+        default_factory=list, description="Curated statements in upstream order"
+    )
+    source_url: str = Field(description="ThaleMine gene report page")
+
+
 class LocusVariants(BaseModel):
     """Natural variants overlapping a locus's genomic span (Ensembl /overlap).
 
