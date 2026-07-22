@@ -170,6 +170,8 @@ async def _get_json(client: httpx.AsyncClient, path: str, params: dict[str, str]
     """
     key = cache.make_key("GET", BASE_URL, path, params)
     cached = _CACHE.get(key)
+    if cached is cache.NEGATIVE:  # cached 404 — checked before the miss test
+        return None
     if cached is not None:
         return cached
     resp = await _http.request_with_retry(
@@ -184,6 +186,7 @@ async def _get_json(client: httpx.AsyncClient, path: str, params: dict[str, str]
         not_found_returns=None,
     )
     if resp is None:
+        _CACHE.set(key, cache.NEGATIVE)
         return None
     data = resp.json()
     _CACHE.set(key, data)
@@ -200,6 +203,21 @@ async def fetch_matrix(client: httpx.AsyncClient, matrix_id: str) -> dict[str, A
             f"JASPAR matrix/{matrix_id} returned unexpected payload: {type(data).__name__}"
         )
     return data
+
+
+def _version_key(row: dict[str, Any]) -> int:
+    """Numeric sort key for a ``versions/`` row.
+
+    JASPAR sends ``version`` as an int today, but coercing guards the case that
+    would otherwise be silent and wrong: a string payload compares
+    lexicographically, making ``"9"`` sort above ``"10"`` and resolving an
+    unversioned id to a stale matrix. Unparseable values sort lowest rather
+    than raising — a malformed row shouldn't sink the whole lookup.
+    """
+    try:
+        return int(row.get("version") or 0)
+    except (TypeError, ValueError):
+        return 0
 
 
 async def _resolve_latest_version(client: httpx.AsyncClient, base_id: str) -> str:
@@ -219,7 +237,7 @@ async def _resolve_latest_version(client: httpx.AsyncClient, base_id: str) -> st
     versions = [r for r in results if isinstance(r, dict)] if isinstance(results, list) else []
     if not versions:
         raise NotFoundError(f"JASPAR has no matrix with id={base_id!r}")
-    newest = max(versions, key=lambda r: r.get("version") or 0)
+    newest = max(versions, key=_version_key)
     resolved = newest.get("matrix_id")
     if not isinstance(resolved, str):
         raise PlantGenomicsError(f"JASPAR versions/{base_id} returned a row with no matrix_id")

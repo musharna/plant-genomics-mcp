@@ -12,9 +12,16 @@ Per-module instances also make tests easier — clearing one module's
 cache between cases doesn't perturb others.
 
 What is **not** cached:
-  - Non-200 responses (a 4xx/5xx is raised, not stored).
+  - Error responses (a 5xx, or a 4xx other than a suppressed 404, is
+    raised rather than stored).
   - The retry loop's intermediate failures.
   - Anything when the cache is disabled via env (see Knobs).
+
+A **suppressed 404 is** cached, as :data:`NEGATIVE`. Backends that pass
+``not_found_returns=`` treat "no such record" as a normal answer, and for
+several of them it is the *common* answer (most plant proteins have no
+deposited PDBe structure). Without a negative entry those lookups would
+re-hit the upstream on every call for the whole TTL window.
 
 Knobs (read once at import):
   ``PLANT_GENOMICS_MCP_CACHE_TTL``      seconds, default 600 (10 min)
@@ -53,6 +60,27 @@ DEFAULT_MAX_ENTRIES: int = _env_int("PLANT_GENOMICS_MCP_CACHE_SIZE", 256)
 def _disabled() -> bool:
     """Read the disabled flag each call so tests can flip it at runtime."""
     return bool(os.environ.get("PLANT_GENOMICS_MCP_CACHE_DISABLED"))
+
+
+class _Negative:
+    """Sentinel stored in place of a suppressed 404 (see :data:`NEGATIVE`)."""
+
+    __slots__ = ()
+
+    def __deepcopy__(self, _memo: dict[int, Any]) -> _Negative:
+        # ``TTLCache.get`` deep-copies on read, which would hand back a *different*
+        # object and break the ``is NEGATIVE`` identity test callers rely on.
+        # Returning self is safe precisely because the sentinel carries no state.
+        return self
+
+    def __repr__(self) -> str:  # pragma: no cover - debugging aid
+        return "<cache.NEGATIVE>"
+
+
+#: Cached in place of a suppressed 404. Distinguishable from a cache miss,
+#: which is a plain ``None`` — so callers must test ``is cache.NEGATIVE``
+#: *before* the ``is None`` miss check.
+NEGATIVE = _Negative()
 
 
 @dataclass

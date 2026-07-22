@@ -60,6 +60,8 @@ async def _getxml(client: httpx.AsyncClient, orgid: str, frame: str) -> ET.Eleme
     """
     key = cache.make_key("GET", BASE_URL, "/getxml", {"frame": f"{orgid}:{frame}"})
     cached = _CACHE.get(key)
+    if cached is cache.NEGATIVE:  # cached 404 — checked before the miss test
+        return None
     if cached is not None:
         return _parse(cached, orgid, frame)
     # getxml expects the raw ``?ORG:FRAME`` query, not a urlencoded key=value.
@@ -75,6 +77,9 @@ async def _getxml(client: httpx.AsyncClient, orgid: str, frame: str) -> ET.Eleme
         not_found_returns=None,
     )
     if resp is None:  # 404 sentinel
+        # "Not a metabolic gene" is a normal, frequent answer here, and
+        # ``lookup_locus`` fans out over several frames — so cache it.
+        _CACHE.set(key, cache.NEGATIVE)
         return None
     text = resp.text
     _CACHE.set(key, text)

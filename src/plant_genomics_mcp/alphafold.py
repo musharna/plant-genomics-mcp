@@ -87,6 +87,8 @@ async def lookup_by_uniprot(client: httpx.AsyncClient, accession: str) -> dict[s
     path = f"/api/prediction/{accession}"
     key = cache.make_key("GET", BASE_URL, path, None)
     cached = _CACHE.get(key)
+    if cached is cache.NEGATIVE:  # cached 404 — checked before the miss test
+        return _empty(accession)
     if cached is None:
         resp = await _http.request_with_retry(
             client,
@@ -99,6 +101,7 @@ async def lookup_by_uniprot(client: httpx.AsyncClient, accession: str) -> dict[s
             not_found_returns=None,
         )
         if resp is None:  # 404 sentinel — no deposited model
+            _CACHE.set(key, cache.NEGATIVE)
             return _empty(accession)
         cached = resp.json()
         _CACHE.set(key, cached)

@@ -167,3 +167,20 @@ async def test_live_arabidopsis_has_structure() -> None:
     assert r["model_entity_id"].startswith("AF-")
     assert isinstance(r["mean_plddt"], (int, float))
     assert r["cif_url"].startswith("https://alphafold.ebi.ac.uk/")
+
+
+# ---------- negative caching (audit 2026-07-22, M2) ----------
+
+
+@pytest.mark.asyncio
+async def test_404_is_cached_so_a_repeat_lookup_stays_off_the_wire(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """One mock, two calls: a second request would fail as unexpected."""
+    httpx_mock.add_response(url=_PRED_URL, status_code=404, text="Not found")
+    async with httpx.AsyncClient() as client:
+        first = await alphafold.lookup_by_uniprot(client, "Q9SZ92")
+        second = await alphafold.lookup_by_uniprot(client, "Q9SZ92")
+    assert first == second
+    assert second["found"] is False
+    assert len(httpx_mock.get_requests()) == 1
