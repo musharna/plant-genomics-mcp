@@ -207,3 +207,34 @@ async def test_disabled_cache_forces_second_http_call(
         await ensembl_plants.lookup_locus(client, "AT1G01010")
         await ensembl_plants.lookup_locus(client, "AT1G01010")
     # Both mocks consumed → pytest-httpx teardown would otherwise fail.
+
+
+# ---------- NEGATIVE sentinel (audit 2026-07-22, M2) ----------
+
+
+def test_negative_sentinel_survives_the_cache_round_trip() -> None:
+    """Identity must hold through ``set``/``get``, which deep-copy their values.
+
+    Backends distinguish a cached 404 from a cache miss with ``is NEGATIVE``.
+    A stateful object would be deep-copied into a *different* instance on read,
+    silently turning every cached negative back into a miss — the exact failure
+    the sentinel's ``__deepcopy__`` exists to prevent.
+    """
+    c = cache.TTLCache()
+    c.set("k", cache.NEGATIVE)
+    assert c.get("k") is cache.NEGATIVE
+
+
+def test_negative_sentinel_is_distinguishable_from_a_miss() -> None:
+    c = cache.TTLCache()
+    assert c.get("absent") is None
+    c.set("present", cache.NEGATIVE)
+    assert c.get("present") is cache.NEGATIVE
+
+
+def test_negative_sentinel_expires_like_any_other_entry() -> None:
+    """A cached 404 must not outlive its TTL — upstream data does get added."""
+    c = cache.TTLCache(default_ttl=0.01)
+    c.set("k", cache.NEGATIVE)
+    time.sleep(0.02)
+    assert c.get("k") is None

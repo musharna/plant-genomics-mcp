@@ -1,7 +1,7 @@
 # Contributing
 
-Thanks for helping improve `plant-genomics-mcp` — an MCP server exposing 32
-tools across 11 live plant-genomics backends. Contributions are welcome:
+Thanks for helping improve `plant-genomics-mcp` — an MCP server exposing 50
+tools across 23 live plant-genomics backends. Contributions are welcome:
 bug fixes, new backends, new tools, and additions to the organism coverage
 matrix.
 
@@ -17,7 +17,18 @@ python -m venv .venv
 ```
 
 The `[dev]` extra installs `pytest`, `pytest-asyncio`, `pytest-httpx`,
-`pytest-cov`, and `ruff`.
+`pytest-cov`, `ruff`, and `mypy`.
+
+If you prefer `uv`, the extra is **not** installed by default — and a bare
+`uv sync` will actively _remove_ `pytest` from an existing environment, after
+which `uv run pytest` silently falls through to whatever `pytest` is on your
+`PATH` and fails with `ModuleNotFoundError: plant_genomics_mcp`. Always ask
+for the extra:
+
+```bash
+uv sync --extra dev
+uv run pytest -q
+```
 
 ## Running tests
 
