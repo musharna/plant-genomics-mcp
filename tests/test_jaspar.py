@@ -466,3 +466,52 @@ async def test_live_unknown_base_id_is_not_found_not_outage() -> None:
     async with httpx.AsyncClient() as client:
         with pytest.raises(NotFoundError):
             await jaspar.lookup_matrix(client, "MA9999")
+
+
+# ---------- negative caching + version ordering (audit 2026-07-22, M2 / L2) ----------
+
+
+@pytest.mark.asyncio
+async def test_404_is_cached_so_a_repeat_fetch_stays_off_the_wire(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """One mock, two calls: a second request would fail as unexpected."""
+    httpx_mock.add_response(url=_detail_url("MA9999.9"), status_code=404, text="Not Found")
+    async with httpx.AsyncClient() as client:
+        assert await jaspar.fetch_matrix(client, "MA9999.9") is None
+        assert await jaspar.fetch_matrix(client, "MA9999.9") is None
+    assert len(httpx_mock.get_requests()) == 1
+
+
+@pytest.mark.asyncio
+async def test_unversioned_resolution_orders_versions_numerically(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """Version 10 must beat version 9 even when upstream sends them as strings.
+
+    A lexicographic compare would pick "9" and silently resolve the id to a
+    stale matrix — wrong data, no error.
+    """
+    httpx_mock.add_response(
+        url=_versions_url("MA0570"),
+        json={
+            "count": 2,
+            "results": [
+                {"matrix_id": "MA0570.10", "version": "10"},
+                {"matrix_id": "MA0570.9", "version": "9"},
+            ],
+        },
+    )
+    httpx_mock.add_response(
+        url=_detail_url("MA0570.10"), json={**_DETAIL, "matrix_id": "MA0570.10"}
+    )
+    async with httpx.AsyncClient() as client:
+        r = await jaspar.lookup_matrix(client, "MA0570")
+    assert r["matrix_id"] == "MA0570.10"
+
+
+def test_version_key_tolerates_unparseable_values() -> None:
+    """A malformed row sorts lowest instead of raising and sinking the lookup."""
+    assert jaspar._version_key({"version": "not-a-number"}) == 0
+    assert jaspar._version_key({}) == 0
+    assert jaspar._version_key({"version": 3}) == 3

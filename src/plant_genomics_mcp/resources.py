@@ -164,6 +164,13 @@ def _backends_status_payload() -> list[dict[str, object]]:
 
     Each entry is ``{name, base_url, kind, subscription_gated}`` (BLAST also
     carries ``concurrency_cap``). All backends are currently ``kind="live"``.
+
+    This list has **24** entries while the README and package docstring say
+    "23 backends". Both are correct and neither is drift: ``ensembl_plants``
+    and ``ensembl_variation`` are two client modules addressing one provider
+    (rest.ensembl.org). The prose counts distinct *data providers*; this list
+    enumerates *client modules*, which is what a caller wants when deciding
+    where a given tool's data came from.
     """
     return [
         {

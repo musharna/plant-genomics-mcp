@@ -73,6 +73,8 @@ async def lookup_by_uniprot(client: httpx.AsyncClient, accession: str) -> dict[s
     path = f"/pdbe/api/mappings/best_structures/{accession}"
     key = cache.make_key("GET", BASE_URL, path, None)
     cached = _CACHE.get(key)
+    if cached is cache.NEGATIVE:  # cached 404 — checked before the miss test
+        return _empty(accession)
     if cached is None:
         resp = await _http.request_with_retry(
             client,
@@ -85,6 +87,9 @@ async def lookup_by_uniprot(client: httpx.AsyncClient, accession: str) -> dict[s
             not_found_returns=None,
         )
         if resp is None:  # 404 — no deposited structure
+            # The overwhelmingly common answer for a plant protein, so caching
+            # it is what keeps a repeated lookup off the wire.
+            _CACHE.set(key, cache.NEGATIVE)
             return _empty(accession)
         cached = resp.json()
         _CACHE.set(key, cached)
@@ -93,10 +98,16 @@ async def lookup_by_uniprot(client: httpx.AsyncClient, accession: str) -> dict[s
             f"PDBe {path} returned unexpected payload: {type(cached).__name__}"
         )
     entries = cached.get(accession)
-    if not isinstance(entries, list) or not entries:
+    if not isinstance(entries, list):
         return _empty(accession)
-    total = len(entries)
-    structures = [_project(s) for s in entries[:MAX_STRUCTURES] if isinstance(s, dict)]
+    # Filter BEFORE counting: a non-dict row is not a structure, so letting it
+    # into ``total`` would report more structures than are actually returned
+    # and could flip ``truncated`` on a list that was never truncated.
+    valid = [s for s in entries if isinstance(s, dict)]
+    if not valid:
+        return _empty(accession)
+    total = len(valid)
+    structures = [_project(s) for s in valid[:MAX_STRUCTURES]]
     return {
         "accession": accession,
         "found": True,

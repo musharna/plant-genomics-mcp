@@ -206,3 +206,50 @@ async def test_live_rice_cross_species_resolves() -> None:
         result = await plantcyc.lookup_locus(client, "Os11g0530600", "rice")
     assert result["orgid"] == "ORYZA"
     assert result["found"] is True
+
+
+# ---------- negative caching (audit 2026-07-22, M2) ----------
+
+
+@pytest.mark.asyncio
+async def test_404_frame_is_cached_so_a_repeat_fetch_stays_off_the_wire(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """A missing frame is a normal, frequent answer — it must not re-hit PMN.
+
+    The router here is deliberately reusable (a second request would succeed
+    rather than fail the test), so this counts handler invocations instead:
+    two ``_getxml`` calls for the same absent frame must reach upstream once.
+    """
+    calls: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.url.query.decode())
+        return httpx.Response(404, text="<html>not found</html>")
+
+    httpx_mock.add_callback(handler, is_reusable=True)
+    async with httpx.AsyncClient() as client:
+        assert await plantcyc._getxml(client, "ARA", "NO-SUCH-FRAME") is None
+        assert await plantcyc._getxml(client, "ARA", "NO-SUCH-FRAME") is None
+    assert len(calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_a_cached_404_does_not_mask_a_different_frame(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """The negative is keyed per frame, not shared across them."""
+    calls: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        query = request.url.query.decode()
+        calls.append(query)
+        if query.endswith("MISSING"):
+            return httpx.Response(404, text="<html>not found</html>")
+        return httpx.Response(200, text=_GENE)
+
+    httpx_mock.add_callback(handler, is_reusable=True)
+    async with httpx.AsyncClient() as client:
+        assert await plantcyc._getxml(client, "ARA", "MISSING") is None
+        assert await plantcyc._getxml(client, "ARA", "AT3G51240") is not None
+    assert len(calls) == 2
