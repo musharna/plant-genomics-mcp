@@ -33,7 +33,13 @@ jobs:
       - name: Format check
         run: ruff format --check .
       - name: Types (mypy)
-        run: mypy src/plant_genomics_mcp
+        # Two invocations, not `mypy src tests`: passing the package dir and
+        # tests/ in one call trips mypy's duplicate-module resolution (every
+        # `from plant_genomics_mcp import X` reads as a missing attribute).
+        # Checked separately, tests resolve the package from the installed dist.
+        run: |
+          mypy src/plant_genomics_mcp
+          mypy tests
       - name: Test (mocked + stdio smoke; live network gated by PLANT_GENOMICS_MCP_LIVE=1)
         env:
           PLANT_GENOMICS_MCP_STDIO_SMOKE: "1"
