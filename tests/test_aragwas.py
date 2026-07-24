@@ -9,6 +9,7 @@ Two tiers:
 from __future__ import annotations
 
 import os
+from typing import Any
 
 import httpx
 import pytest
@@ -24,7 +25,7 @@ _URL = f"{aragwas.BASE_URL}/api/genes/AT1G01060/associations/"
 _NEXT = f"{_URL}?limit=25&offset=25"
 
 # Real-shaped association (key names verified live 2026-07-20, AT1G01060).
-_ASSOC = {
+_ASSOC: dict[str, Any] = {
     "score": 30.386,
     "maf": 0.00199,
     "mac": 1,

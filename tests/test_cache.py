@@ -16,6 +16,7 @@ Two layers:
 from __future__ import annotations
 
 import time
+from typing import Any
 
 import httpx
 import pytest
@@ -128,7 +129,7 @@ def test_get_returns_isolated_copy_not_shared_reference() -> None:
     """audit P5: mutating a value returned by get (or the value passed to set)
     must not corrupt the cached entry for the next reader."""
     c = cache.TTLCache()
-    original = {"nested": {"k": "v"}, "items": [1, 2]}
+    original: dict[str, Any] = {"nested": {"k": "v"}, "items": [1, 2]}
     c.set("key", original)
 
     # Mutating the object we handed to set must not reach into the cache.

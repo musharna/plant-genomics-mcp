@@ -35,7 +35,10 @@ async def test_lookup_coexpression_requires_organism() -> None:
     """
     async with httpx.AsyncClient() as client:
         with pytest.raises(TypeError):
-            await atted.lookup_coexpression(client, "AT1G01010")  # type: ignore[call-arg]
+            # organism is keyword-only + required; omitting it is the point of the
+            # test. mypy doesn't flag it (decorator-wrapped signature), so a
+            # `type: ignore` would be "unused"; silence pyright's stricter view instead.
+            await atted.lookup_coexpression(client, "AT1G01010")  # pyright: ignore[reportCallIssue]
 
 
 @pytest.mark.asyncio

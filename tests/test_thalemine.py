@@ -85,7 +85,7 @@ INT_ROWS = [
 ]
 
 # Column order mirrors thalemine._RIF_VIEW.
-RIF_ROWS = [
+RIF_ROWS: list[list[Any]] = [
     [LOCUS, "HY5", "HY5 binds the G-box.", "17001643", "2010-01-01"],
     [LOCUS, "HY5", "HY5 is degraded by COP1 in the dark.", "10990463", None],
 ]
@@ -255,7 +255,7 @@ async def test_interactions_skips_rows_with_non_string_partner(
     client: httpx.AsyncClient, httpx_mock: HTTPXMock
 ) -> None:
     """A malformed partner cell drops that row rather than inventing a partner."""
-    rows = [
+    rows: list[list[Any]] = [
         [LOCUS, "HY5", 12345, None, "physical", "r", "m", "1", "s"],
         [LOCUS, "HY5", "AT2G32950", "COP1", "physical", "r", "m", "1", "s"],
     ]

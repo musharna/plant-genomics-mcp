@@ -28,6 +28,7 @@ import sys
 import pytest
 from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
+from mcp.types import TextContent
 
 # Opt-in: the smoke test spawns a subprocess, costs ~500ms, and we don't
 # want it in the default `pytest -q` run.
@@ -130,7 +131,9 @@ async def test_invalid_locus_surfaces_typed_error(
             )
             assert result.isError, "expected error result for invalid locus"
             assert result.content
-            text = result.content[0].text
+            block = result.content[0]
+            assert isinstance(block, TextContent)
+            text = block.text
             # The [ClassName] prefix from errors.PlantGenomicsError.__str__
             # is what lets an LLM client route on failure type.
             assert "[NotFoundError]" in text, f"missing typed prefix in: {text!r}"
@@ -173,6 +176,7 @@ async def test_get_prompt_renders_chain(
             assert len(result.messages) == 1
             msg = result.messages[0]
             assert msg.role == "user"
+            assert isinstance(msg.content, TextContent)
             text = msg.content.text
             for tool in (
                 "ensembl_plants_lookup_locus",
@@ -193,7 +197,9 @@ async def test_get_biological_context_prompt_renders_chain(
             await session.initialize()
             result = await session.get_prompt("biological_context", {"locus": "AT1G01010"})
             assert result.description and "AT1G01010" in result.description
-            text = result.messages[0].content.text
+            content = result.messages[0].content
+            assert isinstance(content, TextContent)
+            text = content.text
             for tool in (
                 "gramene_homologs",
                 "kegg_pathways",
