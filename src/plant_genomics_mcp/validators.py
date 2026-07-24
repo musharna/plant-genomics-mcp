@@ -58,6 +58,12 @@ def assert_valid_locus(locus: str, *, backend: str) -> None:
     """
     if not LOCUS_RE.match(locus):
         raise NotFoundError(f"{backend}: invalid locus {locus!r} (must match {LOCUS_RE.pattern})")
+    if not any(c.isalnum() for c in locus):
+        # ``LOCUS_RE`` alone accepts all-punctuation values such as ``"."`` /
+        # ``".."`` which, templated into a URL path, collapse via RFC-3986
+        # dot-segment removal to a *different* endpoint than intended. A real
+        # locus always carries an identifier character, so require one.
+        raise NotFoundError(f"{backend}: invalid locus {locus!r} (needs an alphanumeric character)")
 
 
 def assert_valid_agi(locus: str, *, backend: str) -> None:

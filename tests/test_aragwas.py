@@ -108,6 +108,35 @@ async def test_lookup_paginates(httpx_mock: HTTPXMock) -> None:
 
 
 @pytest.mark.asyncio
+async def test_lookup_does_not_follow_off_host_next(httpx_mock: HTTPXMock) -> None:
+    """A next link on a look-alike host (``…1001genomes.org.evil.example``) must
+    NOT be followed — the same-host guard is a host match, not a bare prefix
+    (bug audit L2). Only page 1 is registered, so a followed off-host link would
+    fail as an unexpected request; the request count pins the mechanism."""
+    off_host = f"{aragwas.BASE_URL}.evil.example/api/genes/x/associations/?offset=25"
+    httpx_mock.add_response(
+        url=_URL, json={"count": 2, "links": {"next": off_host}, "results": [_ASSOC]}
+    )
+    async with httpx.AsyncClient() as client:
+        r = await aragwas.lookup_locus(client, "AT1G01060", "arabidopsis")
+    assert r["found"] is True
+    assert len(httpx_mock.get_requests()) == 1  # off-host next was not fetched
+
+
+@pytest.mark.asyncio
+async def test_lookup_non_json_200_raises_typed(httpx_mock: HTTPXMock) -> None:
+    """A 200 carrying a non-JSON body surfaces as a typed PlantGenomicsError,
+    not a raw JSONDecodeError (bug audit L3) — covers the ``cached``/literal-
+    service _get shape shared with onekg."""
+    from plant_genomics_mcp.errors import PlantGenomicsError
+
+    httpx_mock.add_response(url=_URL, text="<html>upstream error</html>", status_code=200)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(PlantGenomicsError, match="non-JSON"):
+            await aragwas.lookup_locus(client, "AT1G01060", "arabidopsis")
+
+
+@pytest.mark.asyncio
 async def test_lookup_page_cap_truncates(
     httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
 ) -> None:

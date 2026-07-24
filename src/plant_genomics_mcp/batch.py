@@ -62,7 +62,12 @@ def _bound(loci: list[str]) -> list[str]:
         raise ValueError("loci must be a non-empty list")
     if len(loci) > MAX_BATCH:
         raise ValueError(f"loci length {len(loci)} exceeds MAX_BATCH={MAX_BATCH}")
-    return loci
+    # De-duplicate, preserving first-seen order. ``_gather`` keys results/errors
+    # by locus, so a duplicate would overwrite its twin — leaving the envelope's
+    # ``count`` (len of this list) disagreeing with len(results)+len(errors) and
+    # silently coalescing two possibly-different outcomes. Dedup also spares the
+    # duplicate upstream calls. Length cap is checked against the raw input above.
+    return list(dict.fromkeys(loci))
 
 
 async def _gather(

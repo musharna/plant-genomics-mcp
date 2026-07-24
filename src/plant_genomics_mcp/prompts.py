@@ -195,57 +195,67 @@ def _render_find_homologs(sequence: str, program: str) -> str:
 def _render_biological_context(locus: str, organism: str | int, top_n: int) -> str:
     record = organisms.resolve(organism)
     canonical = record.canonical
-    is_arabidopsis = canonical == organisms.DEFAULT_ORGANISM
+    # Include a backend step only when the registry says THIS organism is
+    # covered by that backend — capability, not identity. KEGG resolves any
+    # organism carrying a ``kegg_org_code`` (arabidopsis natively + rice / maize
+    # / soybean / barley / poplar / brachypodium via the Ensembl->Entrez
+    # bridge); ATTED covers any organism carrying an ``atted_release`` — a
+    # DIFFERENT set (adds tomato / grape / medicago, drops barley / poplar /
+    # brachypodium). The two are independent, so gate them independently. (Fixed
+    # 2026-07-24 audit M2: the previous ``is_arabidopsis`` binary skipped both
+    # for every non-Arabidopsis organism and rendered a false "Arabidopsis-only"
+    # justification, even though the backends fully support the species above.)
+    # gramene_homologs takes only locus + homology_type — the Gramene locus
+    # already encodes species — so no organism= is passed there.
+    has_kegg = record.kegg_org_code is not None
+    has_atted = record.atted_release is not None
 
-    # Steps 1, 3, 4 always run; KEGG + ATTED only for Arabidopsis (their
-    # upstream APIs only ship the Arabidopsis genome — ATTED-II calls itself
-    # "ATTED-Ath", and KEGG uses the hardcoded "ath:" gene-id prefix).
-    # NB: gramene_homologs takes only locus + homology_type — the Gramene
-    # locus already disambiguates species, so no organism= is passed (and the
-    # tool would silently drop it). Keep organism= on the kegg/uniprot/string/
-    # atted steps below, where the tools genuinely accept it.
-    gramene = (
-        f"1. `gramene_homologs` with locus={locus!r}, "
-        "homology_type='ortholog' — retrieve orthologs across plant species "
-        "from Gramene compara.\n"
-    )
-    uniprot_step = (
+    steps: list[str] = [
+        f"`gramene_homologs` with locus={locus!r}, homology_type='ortholog' — "
+        "retrieve orthologs across plant species from Gramene compara.",
+    ]
+    if has_kegg:
+        steps.append(
+            f"`kegg_pathways` with locus={locus!r}, organism={canonical!r} — "
+            "list KEGG pathway memberships."
+        )
+    steps.append(
         f"`resolve_locus_to_uniprot` with locus={locus!r}, organism={canonical!r} "
-        "— fetch the canonical UniProt accession (needed for STRING).\n"
+        "— fetch the canonical UniProt accession (needed for STRING)."
     )
-    string_step = (
-        "`string_interactions` with locus_or_accession=<accession from "
+    steps.append(
+        "`string_interactions` with locus_or_accession=<accession from the "
         f"previous step>, organism={canonical!r}, limit={top_n} — fetch "
         "first-neighbor protein-protein interactors (STRING combined + "
-        "per-channel sub-scores).\n"
+        "per-channel sub-scores)."
     )
-
-    if is_arabidopsis:
-        steps = (
-            gramene + f"2. `kegg_pathways` with locus={locus!r} — list KEGG pathway "
-            "memberships in Arabidopsis.\n"
-            + f"3. {uniprot_step}"
-            + f"4. {string_step}"
-            + f"5. `atted_coexpression` with locus={locus!r}, top_n={top_n} — "
-            "fetch co-expression neighbors from ATTED-II.\n"
+    if has_atted:
+        steps.append(
+            f"`atted_coexpression` with locus={locus!r}, top_n={top_n} — "
+            "fetch co-expression neighbors from ATTED-II."
         )
+    numbered = "".join(f"{i}. {step}\n" for i, step in enumerate(steps, 1))
+
+    # Synthesis guidance references only the data sets actually gathered above.
+    if has_atted:
         synthesis = (
-            "Then synthesize: cross-reference the three sets (orthologs, "
-            "interactors, coexpression neighbors). Interactors that are ALSO "
-            "in the coexpression neighbor set are higher-confidence functional "
+            "Then synthesize: cross-reference the sets (orthologs, interactors, "
+            "coexpression neighbors). Interactors that are ALSO in the "
+            "coexpression neighbor set are higher-confidence functional "
             "partners. Orthologs that recur as interactors across plant species "
-            "suggest a conserved functional module. Flag any pathway from step 2 "
-            "that contains multiple interactors or coexpression partners — that "
-            "is a candidate functional context for the locus."
+            "suggest a conserved functional module."
         )
     else:
-        steps = gramene + f"2. {uniprot_step}" + f"3. {string_step}"
         synthesis = (
-            f"KEGG and ATTED-II are omitted for {record.scientific} because "
-            "those backends only ship Arabidopsis data. Then synthesize: "
-            "cross-reference orthologs from Gramene with the STRING interactor "
-            "set. Orthologs that recur as interactors across plant species "
-            "suggest a conserved functional module."
+            "Then synthesize: cross-reference orthologs from Gramene with the "
+            "STRING interactor set. Orthologs that recur as interactors across "
+            "plant species suggest a conserved functional module."
+        )
+    if has_kegg:
+        partners = "interactors or coexpression partners" if has_atted else "interactors"
+        synthesis += (
+            f" Flag any KEGG pathway that contains multiple {partners} — that "
+            "is a candidate functional context for the locus."
         )
 
     return (
@@ -253,7 +263,7 @@ def _render_biological_context(locus: str, organism: str | int, top_n: int) -> s
         f"(organism: {record.scientific}). Use this MCP server's tools in "
         "this order:\n"
         "\n"
-        f"{steps}"
+        f"{numbered}"
         "\n"
         f"{synthesis} If any step returns a [NotFoundError], report which "
         "one and continue with the remaining steps."

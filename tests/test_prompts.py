@@ -193,10 +193,9 @@ async def test_biological_context_marks_locus_required_and_organism_optional() -
 @pytest.mark.asyncio
 async def test_biological_context_arabidopsis_passes_canonical_to_organism_aware_tools() -> None:
     """Default arabidopsis renders the full 5-step chain with organism= on the
-    tools that take it (uniprot/string; kegg + atted are organism-fixed).
-    gramene_homologs takes only locus + homology_type — the Gramene locus
-    already encodes species — so the step-1 instruction must NOT carry organism=
-    (audit I1)."""
+    tools that take it (kegg/uniprot/string). gramene_homologs takes only locus
+    + homology_type — the Gramene locus already encodes species — so the step-1
+    instruction must NOT carry organism= (audit I1)."""
     result = await prompts.get_prompt(prompts.BIOLOGICAL_CONTEXT, {"locus": "AT1G01010"})
     text = result.messages[0].content.text
     assert "organism='arabidopsis_thaliana'" in text
@@ -210,24 +209,47 @@ async def test_biological_context_arabidopsis_passes_canonical_to_organism_aware
 
 
 @pytest.mark.asyncio
-async def test_biological_context_non_arabidopsis_skips_kegg_and_atted() -> None:
-    """Non-Arabidopsis renders Gramene+UniProt+STRING only; KEGG and ATTED are
-    skipped because those backends only ship Arabidopsis data (audit C5)."""
-    result = await prompts.get_prompt(
-        prompts.BIOLOGICAL_CONTEXT,
-        {"locus": "Os01g0100100", "organism": "oryza_sativa"},
-    )
-    text = result.messages[0].content.text
-    assert "oryza_sativa" in text
-    assert "arabidopsis_thaliana" not in text
-    # Three steps that DO run.
+async def test_biological_context_gates_kegg_and_atted_on_capability() -> None:
+    """KEGG and ATTED steps are gated per-organism on registry capability
+    (``kegg_org_code`` / ``atted_release``), INDEPENDENTLY — not on Arabidopsis.
+
+    Fixed 2026-07-24 (bug audit M2): the previous code skipped BOTH for every
+    non-Arabidopsis organism and rendered a false "those backends only ship
+    Arabidopsis data" note, even though rice/maize/etc. are fully supported.
+    The four organisms below exercise all four coverage combinations.
+    """
+
+    async def _text(locus: str, organism: str) -> str:
+        r = await prompts.get_prompt(
+            prompts.BIOLOGICAL_CONTEXT, {"locus": locus, "organism": organism}
+        )
+        return r.messages[0].content.text
+
+    # rice — covered by BOTH backends → both steps present, false note gone.
+    rice = await _text("Os01g0100100", "oryza_sativa")
+    assert "oryza_sativa" in rice
+    assert "kegg_pathways" in rice
+    assert "atted_coexpression" in rice
+    assert "only ship Arabidopsis data" not in rice
+    assert "omitted" not in rice
+
+    # tomato — ATTED covers it, KEGG does not → ATTED only.
+    tomato = await _text("Solyc01g005000", "tomato")
+    assert "atted_coexpression" in tomato
+    assert "kegg_pathways" not in tomato
+
+    # barley — KEGG bridge covers it, ATTED does not → KEGG only.
+    barley = await _text("HORVU.MOREX.r3.1HG0000090", "barley")
+    assert "kegg_pathways" in barley
+    assert "atted_coexpression" not in barley
+
+    # wheat — neither backend covers it → both absent, no false note, core 3 run.
+    wheat = await _text("TraesCS1A02G000100", "wheat")
+    assert "kegg_pathways" not in wheat
+    assert "atted_coexpression" not in wheat
+    assert "only ship Arabidopsis data" not in wheat
     for tool in ("gramene_homologs", "resolve_locus_to_uniprot", "string_interactions"):
-        assert tool in text
-    # Two steps that are skipped.
-    assert "kegg_pathways" not in text
-    assert "atted_coexpression" not in text
-    # Synthesis note explains the omission.
-    assert "KEGG and ATTED-II are omitted" in text
+        assert tool in wheat
 
 
 @pytest.mark.asyncio
