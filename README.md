@@ -21,14 +21,18 @@
 ## 📦 Install
 
 ```bash
-pipx install plant-genomics-mcp
-claude mcp add plant-genomics --scope local -- plant-genomics-mcp
+# Zero-install — uv fetches and runs it on demand
+claude mcp add plant-genomics --scope local -- uvx plant-genomics-mcp
 ```
 
 <details>
-<summary>Other install paths (Docker, from source)</summary>
+<summary>Other install paths (pipx, Docker, from source)</summary>
 
 ```bash
+# pipx — installs the CLI onto your PATH
+pipx install plant-genomics-mcp
+claude mcp add plant-genomics --scope local -- plant-genomics-mcp
+
 # GHCR Docker image
 docker pull ghcr.io/musharna/plant-genomics-mcp:latest
 claude mcp add plant-genomics --scope local -- \
@@ -69,7 +73,9 @@ enrichment + 1 BLAST search + 12 parallel-batch + 5 cross-source synthesis. Most
 TAIR-style locus (e.g. `AT1G01010`) plus
 optional `organism=` (slug / scientific name / common name / NCBI taxid
 — 12-plant curated coverage matrix at the `pgmcp://organisms/coverage`
-MCP resource). All publish JSON `outputSchema` and EDAM ontology tags.
+MCP resource). All publish JSON `outputSchema`, EDAM ontology tags, and
+behaviour annotations — every tool is `readOnlyHint` + `openWorldHint`, so
+hosts can surface them without a destructive-action confirmation prompt.
 
 <details>
 <summary>Full tool matrix</summary>
