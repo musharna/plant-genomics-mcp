@@ -30,11 +30,13 @@ _RAISE = object()
 _RETRY_AFTER_CAP = 60.0
 _RETRYABLE_STATUSES = (429, 500, 502, 503, 504)
 
-# Outbound response-size ceiling (env-tunable). A 200 body larger than this is
-# refused instead of parsed — bounds memory against a hostile or buggy upstream
-# (audit M4). When Content-Length is absent (chunked) the already-read body
-# length is used. Default 64 MiB comfortably fits the largest legitimate
-# payloads (BLAST reports, dense variant / coexpression sets).
+# Outbound response-size ceiling (env-tunable). Responses are streamed, so a
+# body larger than this is refused BEFORE it is fully buffered (audit L4): a
+# declared Content-Length over the cap is rejected without reading the body at
+# all, and a chunked / no-Content-Length body is capped mid-read. This bounds
+# peak memory against a hostile or buggy upstream. Default 64 MiB comfortably
+# fits the largest legitimate payloads (BLAST reports, dense variant /
+# coexpression sets).
 try:
     _MAX_RESPONSE_BYTES = int(
         os.environ.get("PLANT_GENOMICS_MCP_MAX_RESPONSE_BYTES", str(64 * 1024 * 1024))
@@ -43,15 +45,12 @@ except ValueError:
     _MAX_RESPONSE_BYTES = 64 * 1024 * 1024
 
 
-def _assert_response_size(resp: httpx.Response, service: str) -> None:
-    """Raise ``PlantGenomicsError`` if a 200 response exceeds the size ceiling."""
-    cl = resp.headers.get("content-length")
-    size = int(cl) if cl and cl.isdigit() else len(resp.content)
-    if size > _MAX_RESPONSE_BYTES:
-        raise PlantGenomicsError(
-            f"{service} response too large: {size} bytes exceeds cap "
-            f"{_MAX_RESPONSE_BYTES} (raise PLANT_GENOMICS_MCP_MAX_RESPONSE_BYTES to allow)"
-        )
+def _too_large(service: str, detail: str) -> PlantGenomicsError:
+    """Build the typed 'response too large' error (shared by both cap checks)."""
+    return PlantGenomicsError(
+        f"{service} response too large: {detail} exceeds cap {_MAX_RESPONSE_BYTES} "
+        "bytes (raise PLANT_GENOMICS_MCP_MAX_RESPONSE_BYTES to allow)"
+    )
 
 
 async def request_with_retry(
@@ -81,7 +80,11 @@ async def request_with_retry(
     last_exc: httpx.TransportError | None = None
     for attempt in range(max_retries):
         try:
-            resp = await client.request(
+            # Stream so an oversized body is refused BEFORE it is fully buffered:
+            # a declared Content-Length over the cap is rejected without reading
+            # the body at all; a chunked / no-Content-Length body is capped
+            # mid-read. Bounds peak memory against a hostile/buggy upstream (L4).
+            async with client.stream(
                 method,
                 url,
                 params=params,
@@ -89,7 +92,23 @@ async def request_with_retry(
                 json=json,
                 headers=headers,
                 timeout=timeout,
-            )
+            ) as streamed:
+                declared = streamed.headers.get("content-length")
+                if declared and declared.isdigit() and int(declared) > _MAX_RESPONSE_BYTES:
+                    raise _too_large(service, f"{declared} bytes (Content-Length)")
+                body = bytearray()
+                async for chunk in streamed.aiter_bytes():
+                    body.extend(chunk)
+                    if len(body) > _MAX_RESPONSE_BYTES:
+                        raise _too_large(service, f"{len(body)}+ bytes (streamed)")
+                # Reassemble a fully-read Response via the public constructor so
+                # callers keep .json()/.text/.status_code/.headers after close.
+                resp = httpx.Response(
+                    status_code=streamed.status_code,
+                    headers=streamed.headers,
+                    content=bytes(body),
+                    request=streamed.request,
+                )
         except httpx.TransportError as exc:
             # Connection-level failures (ConnectTimeout / ConnectError /
             # ReadTimeout / …) are raised before any HTTP status exists, so
@@ -111,13 +130,6 @@ async def request_with_retry(
             break
         last_exc = None
         last_status = resp.status_code
-
-        # Size-check every response, not just 200s: a hostile/buggy upstream can
-        # return an oversized body under any status, and the 404/error paths below
-        # also read ``resp.text``. (NOTE: the client is non-streaming, so httpx has
-        # already buffered the body by now — this bounds what we *process/return*,
-        # not peak buffering. True pre-buffer bounding would require client.stream.)
-        _assert_response_size(resp, service)
 
         if resp.status_code == 200:
             return resp
