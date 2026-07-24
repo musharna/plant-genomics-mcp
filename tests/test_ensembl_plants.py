@@ -423,6 +423,19 @@ async def test_region_query_rejects_invalid_feature() -> None:
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("region", ["1?feature=exon", "1/../x", "1 2", "1#f", "a&b", "1%2f"])
+async def test_region_query_rejects_path_metachars(region: str) -> None:
+    """``region`` is spliced into the URL path, so path/query metacharacters must
+    be rejected before any network call (bug audit M1) — the same guard
+    ``vep_annotate`` applies to its own path-templated ``region``."""
+    from plant_genomics_mcp.errors import NotFoundError
+
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError):
+            await ensembl_plants.region_query(client, region, 1, 100)
+
+
+@pytest.mark.asyncio
 async def test_region_query_rejects_start_below_one() -> None:
     async with httpx.AsyncClient() as client:
         with pytest.raises(ValueError, match="start"):

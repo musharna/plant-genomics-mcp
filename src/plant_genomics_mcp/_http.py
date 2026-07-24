@@ -112,8 +112,14 @@ async def request_with_retry(
         last_exc = None
         last_status = resp.status_code
 
+        # Size-check every response, not just 200s: a hostile/buggy upstream can
+        # return an oversized body under any status, and the 404/error paths below
+        # also read ``resp.text``. (NOTE: the client is non-streaming, so httpx has
+        # already buffered the body by now — this bounds what we *process/return*,
+        # not peak buffering. True pre-buffer bounding would require client.stream.)
+        _assert_response_size(resp, service)
+
         if resp.status_code == 200:
-            _assert_response_size(resp, service)
             return resp
 
         if resp.status_code == 404 and not_found_returns is not _RAISE:

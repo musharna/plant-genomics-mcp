@@ -1,6 +1,6 @@
 """MCP server entry point — exposes plant genomics tools over stdio.
 
-This dispatch ships forty-six tools — twenty-five single-locus, one
+This dispatch ships fifty tools — twenty-nine single-locus, one
 genomic-region query, one variant-consequence (VEP) annotator, one
 gene-set enrichment, one BLAST sequence-similarity search, twelve batch
 variants that fan out per-locus calls in parallel, and five cross-source

@@ -72,7 +72,10 @@ async def _get(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
             timeout=DEFAULT_TIMEOUT,
             max_retries=MAX_RETRIES,
         )
-        cached = resp.json()
+        try:
+            cached = resp.json()
+        except ValueError as e:
+            raise PlantGenomicsError(f"1001 Genomes returned non-JSON: {resp.text[:200]}") from e
         _CACHE.set(key, cached)
     if not isinstance(cached, dict):
         raise PlantGenomicsError(
