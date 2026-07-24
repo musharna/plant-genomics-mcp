@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.18.1 — 2026-07-23
+
+Patch release: hardening from the 2026-07-22 quality audit plus routine dependency bumps. No new tools or backends (still **50 tools / 23 backends**), no breaking API changes. **One caller-visible behaviour change** (`pdbe` `structure_count`), called out below.
+
+**Fixed**
+
+- **Negative caching for suppressed 404s** (`alphafold`, `pdbe`, `jaspar`, `plantcyc`) — a "no deposited structure / no curated motif / not a metabolic gene" answer is now cached like any hit, so a repeated lookup for the same absent accession stays off the wire. For **PDBe the 404 _is_ the hot path** (most plant proteins have no deposited structure), so this was the highest-value case. Implemented with a shared `cache.NEGATIVE` sentinel that survives the cache's deep-copy-on-read — without a custom `__deepcopy__` the sentinel would read back as a _different_ object, fail the `is NEGATIVE` identity test, and silently defeat the cache.
+- **`pdbe` count hygiene (caller-visible):** `structure_count` now counts _valid structure rows_ (non-dict rows filtered out **before** counting) instead of the raw upstream list length. A malformed row previously inflated the count and could flip `truncated` on a list that was never truncated. A consumer reading `structure_count` will now see the number of structures actually returned — a payload of two structures plus one junk row reports `2`, not `3`.
+- **`jaspar` version sort is numeric-safe** — resolving an unversioned matrix id (`MA0570` → newest) coerces `version` to an int, so a string payload of `"10"` sorts above `"9"` instead of lexicographically resolving to a stale matrix; an unparseable value sorts lowest rather than sinking the lookup.
+
+**Changed**
+
+- **CI matrix spans the full `requires-python` range** — `3.11, 3.12, 3.13, 3.14` (was `3.11, 3.12`). PyPI installers on the newest interpreters had been running code CI never exercised; both new legs pass.
+- **Dev-setup docs** (`README.md`, `CONTRIBUTING.md`) — document that a bare `uv sync` _removes_ pytest (dev deps are an optional-dependency extra, not a dependency group), with the `uv sync --extra dev` fix and a `ModuleNotFoundError` warning; corrected a stale tool/backend count in the CONTRIBUTING headline.
+- **Dependencies** — `mcp` 1.27.1 → 1.28.1 (#22); GitHub Actions minor/patch group bump (#37).
+
+**Notes**
+
+- The backend count is documented as **23 data providers** while `pgmcp://backends/status` enumerates **24 client modules** — `ensembl_plants` + `ensembl_variation` are two modules against one provider (rest.ensembl.org). Both numbers are correct; the discrepancy is now explained in the resource docstring.
+
 ## v1.18.0 — 2026-07-21
 
 Adds **`experimental_interactions`** and **`locus_gene_rifs`**, wrapping [ThaleMine](https://bar.utoronto.ca/thalemine) — BAR's Arabidopsis InterMine instance, and the one the InterMine registry lists as canonical for _A. thaliana_. Fills the server's **experimental-evidence gap for protein interactions** (STRING is predicted / text-mined; BAR AIV returns GRN paper references, not partner pairs) and adds **curated GeneRIF functional statements**, a category no existing backend covered. Tool count 48 → 50; backend count 22 → 23. Minor: two new tools + one new backend, no breaking changes, no new dependencies.
