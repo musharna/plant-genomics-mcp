@@ -38,11 +38,32 @@ async def test_rejects_oversized_response(
 ) -> None:
     """A 200 body larger than the size cap is refused, not parsed (audit M4)."""
     monkeypatch.setattr(_http, "_MAX_RESPONSE_BYTES", 5)
+    # text= sets Content-Length: 20, so this exercises the up-front header reject.
     httpx_mock.add_response(url="https://example.test/big", text="x" * 20)
     async with httpx.AsyncClient() as client:
-        with pytest.raises(PlantGenomicsError, match="too large"):
+        with pytest.raises(PlantGenomicsError, match="Content-Length"):
             await _http.request_with_retry(
                 client, "GET", "https://example.test/big", service="example"
+            )
+
+
+@pytest.mark.asyncio
+async def test_rejects_oversized_chunked_response(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A chunked body with NO Content-Length is capped mid-stream, before the
+    whole body is buffered (audit L4 — the streaming incremental cap path)."""
+    from pytest_httpx import IteratorStream
+
+    monkeypatch.setattr(_http, "_MAX_RESPONSE_BYTES", 5)
+    httpx_mock.add_response(
+        url="https://example.test/chunked",
+        stream=IteratorStream([b"xxx", b"yyy", b"zzz"]),  # 9 bytes, no Content-Length
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(PlantGenomicsError, match="streamed"):
+            await _http.request_with_retry(
+                client, "GET", "https://example.test/chunked", service="example"
             )
 
 
