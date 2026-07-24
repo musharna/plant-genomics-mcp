@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.18.2 — 2026-07-24
+
+Patch release: bug-audit remediation (a 7-agent correctness sweep of all 38 source modules — no Critical/High) plus the test-suite type-checking and HTTP-hardening work. No new tools or backends (still **50 tools / 23 backends**), no breaking API changes. **One caller-visible behaviour change** (`ensembl_region_query` now rejects malformed `region` input), called out below.
+
+**Fixed** (bug audit `bug_audit_2026-07-23` — 2 MEDIUM + 6 LOW, all verified against live code)
+
+- **`ensembl_region_query` input validation (caller-visible):** the `region` argument is now rejected (`NotFoundError`) if it contains URL path/query metacharacters (`?`/`/`/`#`/`&`/`%`/whitespace), before any network call — the same guard `vep_annotate` already applied. Closes a query-parameter/path-injection vector where a `region` like `1?feature=exon` could override request params on rest.ensembl.org. **A caller passing such a `region` now gets a typed error instead of a silently-altered request.**
+- **`biological_context` prompt now covers non-Arabidopsis organisms.** The KEGG and ATTED-II steps are included per-organism by **registry capability** (independently), instead of being skipped for every non-Arabidopsis species with a false "those backends are Arabidopsis-only" note. Rice, maize, soybean, barley, poplar, brachypodium (KEGG) and rice, maize, soybean, tomato, grape, medicago (ATTED) now get the steps their data actually supports.
+- **HTTP responses are streamed with a real size cap.** `request_with_retry` refuses an over-cap body _before_ buffering it — a declared `Content-Length` over the limit is rejected without reading the body; a chunked body is capped mid-read. Bounds peak memory against a hostile/buggy upstream.
+- **Typed errors on malformed JSON:** `string_db`, `planteome`, `europe_pmc`, `onekg`, and `aragwas` now raise a typed `PlantGenomicsError` (not a raw `JSONDecodeError`) when a 200 carries non-JSON.
+- **AraGWAS pagination SSRF guard tightened** to a host match (`BASE_URL + "/"`), so a look-alike host (`…1001genomes.org.evil.example`) in an upstream `next` link is no longer followed.
+- **`assert_valid_locus`** rejects punctuation-only loci (`.`, `..`) that would otherwise collapse a URL path segment.
+- **Batch tools de-duplicate loci**, so the envelope `count` can no longer disagree with the number of results + errors.
+
+**Changed**
+
+- **CI now type-checks `tests/`** in addition to `src/` (two mypy invocations), and the test matrix spans the full `requires-python` range (3.11–3.14).
+- **`server.py` docstring** tool count corrected (46 → 50).
+
 ## v1.18.1 — 2026-07-23
 
 Patch release: hardening from the 2026-07-22 quality audit plus routine dependency bumps. No new tools or backends (still **50 tools / 23 backends**), no breaking API changes. **One caller-visible behaviour change** (`pdbe` `structure_count`), called out below.
