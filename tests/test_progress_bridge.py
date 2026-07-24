@@ -14,7 +14,7 @@ stub and assert a backend-emitted ``progress.notify`` actually reaches it.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import mcp.server.lowlevel.server as _low
 import pytest
@@ -63,7 +63,9 @@ def test_build_reporter_none_outside_request_context() -> None:
 def test_build_reporter_none_when_no_progress_token() -> None:
     """Client opted out (no progressToken) → no reporter."""
     ctx = _Ctx(session=_RecordingSession(), meta=_Meta(token=None))
-    token = _low.request_ctx.set(ctx)
+    # ``_Ctx`` is a structural test double for RequestContext; cast past the
+    # invariant ContextVar type rather than construct the real generic.
+    token = _low.request_ctx.set(cast(Any, ctx))
     try:
         assert server._build_reporter() is None
     finally:
@@ -87,7 +89,9 @@ async def test_progress_notification_reaches_session_through_call_tool(
 
     monkeypatch.setattr(ensembl_plants, "lookup_locus", fake_backend)
 
-    token = _low.request_ctx.set(ctx)
+    # ``_Ctx`` is a structural test double for RequestContext; cast past the
+    # invariant ContextVar type rather than construct the real generic.
+    token = _low.request_ctx.set(cast(Any, ctx))
     try:
         result = await server._call_tool("ensembl_plants_lookup_locus", {"locus": "AT1G01010"})
     finally:
@@ -119,7 +123,9 @@ async def test_reporter_not_installed_when_no_token(
 
     monkeypatch.setattr(ensembl_plants, "lookup_locus", fake_backend)
 
-    token = _low.request_ctx.set(ctx)
+    # ``_Ctx`` is a structural test double for RequestContext; cast past the
+    # invariant ContextVar type rather than construct the real generic.
+    token = _low.request_ctx.set(cast(Any, ctx))
     try:
         result = await server._call_tool("ensembl_plants_lookup_locus", {"locus": "AT1G01010"})
     finally:

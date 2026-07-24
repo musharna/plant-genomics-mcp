@@ -101,7 +101,7 @@ async def test_ensembl_429_then_200_emits_retry_notification(httpx_mock: HTTPXMo
             await ensembl_plants.lookup_locus(client, "AT1G01010")
     finally:
         progress.reset_reporter(token)
-    messages = [m for _, _, m in log]
+    messages = [m for _, _, m in log if m is not None]
     assert any("Ensembl Plants" in m and "429" in m and "retrying" in m for m in messages), messages
 
 
@@ -117,7 +117,7 @@ async def test_europe_pmc_503_then_200_emits_retry_notification(httpx_mock: HTTP
             await europe_pmc.lookup_locus(client, "AT1G01010")
     finally:
         progress.reset_reporter(token)
-    messages = [m for _, _, m in log]
+    messages = [m for _, _, m in log if m is not None]
     assert any("Europe PMC" in m and "503" in m for m in messages), messages
 
 
@@ -133,7 +133,7 @@ async def test_quickgo_500_then_200_emits_retry_notification(httpx_mock: HTTPXMo
             await quickgo.lookup_by_uniprot(client, "Q0WV96")
     finally:
         progress.reset_reporter(token)
-    messages = [m for _, _, m in log]
+    messages = [m for _, _, m in log if m is not None]
     assert any("QuickGO" in m and "500" in m for m in messages), messages
 
 
@@ -158,7 +158,7 @@ async def test_uniprot_502_then_200_emits_retry_notification(httpx_mock: HTTPXMo
             await uniprot.lookup_locus(client, "AT1G01010")
     finally:
         progress.reset_reporter(token)
-    messages = [m for _, _, m in log]
+    messages = [m for _, _, m in log if m is not None]
     assert any("UniProt" in m and "502" in m for m in messages), messages
 
 
@@ -180,7 +180,7 @@ async def test_phytozome_post_emits_submit_and_complete(httpx_mock: HTTPXMock) -
             await phytozome.lookup_locus(client, "AT1G01010")
     finally:
         progress.reset_reporter(token)
-    messages = [m for _, _, m in log]
+    messages = [m for _, _, m in log if m is not None]
     assert any("submitting query" in m for m in messages), messages
     assert any("query complete" in m for m in messages), messages
 

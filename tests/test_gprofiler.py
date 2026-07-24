@@ -191,7 +191,7 @@ async def test_go_enrichment_rejects_bad_threshold() -> None:
 async def test_go_enrichment_rejects_non_list_loci() -> None:
     async with httpx.AsyncClient() as client:
         with pytest.raises(ValueError, match="must be a list"):
-            await gprofiler.go_enrichment(client, "AT1G01010")  # type: ignore[arg-type]
+            await gprofiler.go_enrichment(client, "AT1G01010")
 
 
 @pytest.mark.asyncio
