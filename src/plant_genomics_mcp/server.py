@@ -250,11 +250,40 @@ _LOCI_SCHEMA = {
 _BATCH_OUTPUT = BatchEnvelope.model_json_schema()
 
 
+# ---- tool annotations -------------------------------------------------------
+# Every tool in this catalog is a read-only lookup against an external public
+# database: none mutates state the caller owns, and every result depends on
+# upstream data outside our control (openWorld). Hosts treat OMITTED
+# annotations as destructive + open-world, so declaring the hints explicitly
+# removes needless confirmation friction. Per spec, destructiveHint and
+# idempotentHint are only strictly meaningful when readOnlyHint is false; they
+# are set anyway for clients that surface them regardless.
+
+_READ_ONLY = types.ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    idempotentHint=True,
+    openWorldHint=True,
+)
+
+# blast_sequence is the one exception to idempotency. NCBI's URLAPI is
+# asynchronous (Put → RID → poll), so each call enqueues a NEW search job
+# upstream even though the search itself only reads — and NCBI rate-limits
+# submissions. Tell hosts not to retry it freely.
+_READ_ONLY_NON_IDEMPOTENT = types.ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    idempotentHint=False,
+    openWorldHint=True,
+)
+
+
 # ---- tool catalog -----------------------------------------------------------
 
 TOOLS: list[types.Tool] = [
     types.Tool(
         name="ensembl_plants_lookup_locus",
+        title="Ensembl Plants: Locus Metadata",
         description=(
             "Fetch metadata for a plant locus identifier from Ensembl Plants. "
             "Defaults to arabidopsis_thaliana; pass organism= for other plant "
@@ -278,10 +307,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=EnsemblPlantsLocus.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="get_gene_xrefs",
+        title="Gene Cross-References",
         description=(
             "Fetch cross-database references (UniProt, NCBI Gene, TAIR, "
             "ArrayExpress, …) for a plant locus from Ensembl Plants. "
@@ -307,10 +338,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=GeneXrefs.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="get_sequence",
+        title="Gene / CDS / Protein Sequence",
         description=(
             "Fetch a locus's sequence from Ensembl Plants. seq_type is one of "
             "genomic / cds / cdna / protein (default protein — the "
@@ -342,10 +375,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=EnsemblSequence.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="ensembl_region_query",
+        title="Genomic Region → Features",
         description=(
             "List features overlapping a genomic interval via Ensembl Plants "
             "/overlap/region. region is the seq-region name (chromosome / "
@@ -380,10 +415,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=EnsemblRegionFeatures.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="phytozome_lookup_locus",
+        title="Phytozome: Locus Metadata",
         description=(
             "Fetch a gene record from Phytozome BioMart "
             "(phytozome-next.jgi.doe.gov). Defaults to arabidopsis_thaliana; "
@@ -410,10 +447,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=PhytozomeLocus.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="resolve_locus_to_uniprot",
+        title="Resolve Locus → UniProt",
         description=(
             "Resolve a plant locus to its canonical UniProtKB record. Prefers "
             "reviewed (Swiss-Prot) entries; falls back to unreviewed (TrEMBL) "
@@ -443,10 +482,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=UniProtLocus.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="locus_literature",
+        title="Literature (Europe PMC)",
         description=(
             "Search Europe PMC for literature mentioning a plant locus. "
             "Free, no API key. Returns up to `size` results (default 10, "
@@ -481,10 +522,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=LocusLiterature.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM_LITERATURE,
     ),
     types.Tool(
         name="locus_go_annotations",
+        title="GO Annotations",
         description=(
             "Fetch Gene Ontology annotations for a plant locus from QuickGO "
             "(EBI). Free, no API key. The locus is first resolved to a "
@@ -519,10 +562,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=LocusGoAnnotations.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM_GO,
     ),
     types.Tool(
         name="locus_plant_ontology",
+        title="Plant Ontology (PO/TO) Terms",
         description=(
             "Fetch Plant Ontology (PO) + Trait Ontology (TO) + experimental-"
             "condition (PECO) annotations for a plant locus from Planteome "
@@ -562,10 +607,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=LocusPlantOntology.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM_GO,
     ),
     types.Tool(
         name="go_enrichment",
+        title="GO / KEGG Enrichment (gene list)",
         description=(
             "GO + KEGG over-representation analysis for a gene LIST via g:Profiler "
             "g:GOSt (biit.cs.ut.ee/gprofiler; free, no API key). Unlike "
@@ -623,10 +670,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=GoEnrichmentResult.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM_GO,
     ),
     types.Tool(
         name="gramene_homologs",
+        title="Gramene Homologs",
         description=(
             "Fetch orthologs and paralogs for a plant locus from Gramene compara "
             "(data.gramene.org v69). Default homology_type='ortholog'; pass "
@@ -655,10 +704,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=GrameneHomologs.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="kegg_pathways",
+        title="KEGG Pathways",
         description=(
             "Fetch KEGG pathway memberships for an Arabidopsis locus from "
             "rest.kegg.jp. Returns a list of pathway IDs + names + KEGG "
@@ -689,10 +740,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=KeggPathways.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="bar_gene_summary",
+        title="BAR: Gene Summary",
         description=(
             "Fetch the BAR (Bio-Analytic Resource, U Toronto) merged "
             "ThaleMine + GAIA-aliases summary for an Arabidopsis locus. "
@@ -717,10 +770,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=BarGeneSummary.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="bar_efp_expression",
+        title="BAR: eFP Expression",
         description=(
             "Fetch BAR/eFP world-map natural-variation expression for an "
             "Arabidopsis locus. Wraps the world-eFP view at "
@@ -743,10 +798,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=BarEfpExpression.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="bar_aiv_interactions",
+        title="BAR: Predicted Interactions",
         description=(
             "Fetch BAR AIV (Arabidopsis Interactions Viewer) interactions "
             "for an Arabidopsis or rice locus. Dispatches by organism: "
@@ -778,10 +835,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=BarAIVInteractions.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="string_interactions",
+        title="STRING: Interaction Network",
         description=(
             "Fetch protein-protein interaction partners from STRING-DB "
             "(string-db.org). Accepts either a UniProt accession or a "
@@ -816,10 +875,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=StringInteractions.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="tair_locus_info",
+        title="TAIR-Style Locus Summary",
         description=(
             "Fetch the TAIR curator-vetted Arabidopsis locus summary. Served "
             "via BAR/ThaleMine (U Toronto, Global Core Biodata Resource 2023) "
@@ -841,10 +902,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=BarGeneSummary.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="plantcyc_locus_info",
+        title="PlantCyc: Metabolic Pathways",
         description=(
             "Fetch metabolic annotation for a locus from PlantCyc / the Plant "
             "Metabolic Network (pmn.plantcyc.org; free BioCyc web-services API, "
@@ -877,10 +940,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=PlantCycLocusInfo.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="alphafold_structure",
+        title="AlphaFold: Predicted Structure",
         description=(
             "Fetch the AlphaFold DB predicted-structure summary for a locus "
             "(alphafold.ebi.ac.uk; free, no key). Resolves the locus → UniProt "
@@ -911,10 +976,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=AlphaFoldStructure.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="experimental_structures",
+        title="PDBe: Experimental Structures",
         description=(
             "Fetch experimentally-solved (X-ray / cryo-EM / NMR) protein "
             "structures for a locus from PDBe (www.ebi.ac.uk/pdbe; free, no key). "
@@ -946,10 +1013,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=ExperimentalStructures.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="tf_binding_motifs",
+        title="JASPAR: TF Binding Motifs",
         description=(
             "Fetch curated transcription-factor DNA binding motifs for a locus "
             "from JASPAR (jaspar.elixir.no; free, no key) — the cis-regulatory "
@@ -989,10 +1058,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=TfBindingMotifs.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="jaspar_motif",
+        title="JASPAR: Motif Matrix",
         description=(
             "Fetch one JASPAR binding profile by matrix id, including its raw "
             "position-frequency matrix (PFM: per-base count vectors keyed "
@@ -1015,10 +1086,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=JasparMotif.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="experimental_interactions",
+        title="ThaleMine: Experimental Interactions",
         description=(
             "Fetch CURATED EXPERIMENTAL protein/genetic interaction partners for "
             "an Arabidopsis locus from ThaleMine (BAR's InterMine instance; free, "
@@ -1054,10 +1127,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=ExperimentalInteractions.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="locus_gene_rifs",
+        title="GeneRIF Functional Statements",
         description=(
             "Fetch curated GeneRIF functional statements for an Arabidopsis locus "
             "from ThaleMine (free, no key). A GeneRIF is a one-sentence, manually "
@@ -1088,10 +1163,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=GeneRifs.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="interpro_domains",
+        title="InterPro: Protein Domains",
         description=(
             "Fetch the InterPro domain / family architecture for a locus "
             "(www.ebi.ac.uk/interpro; free, no key). Resolves the locus → "
@@ -1123,10 +1200,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=InterProDomains.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="locus_variants",
+        title="Known Variants",
         description=(
             "List natural (germline) variants overlapping a locus's genomic span "
             "via Ensembl (rest.ensembl.org; free, no key). Resolves the locus → "
@@ -1155,10 +1234,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=LocusVariants.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="vep_annotate",
+        title="VEP: Variant Effect",
         description=(
             "Predict a variant's molecular consequences with Ensembl VEP "
             "(rest.ensembl.org; free, no key). Variant-first (not locus-first): "
@@ -1191,10 +1272,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=VepAnnotation.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="panther_family",
+        title="PANTHER: Protein Family",
         description=(
             "Fetch the PANTHER protein-family classification for a locus "
             "(pantherdb.org; free, no key). Returns the PANTHER family and "
@@ -1223,10 +1306,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=PantherFamily.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="orthodb_orthologs",
+        title="OrthoDB: Orthologs",
         description=(
             "Resolve a locus to its OrthoDB ortholog group and cross-species "
             "member genes (data.orthodb.org; free, no key). Searches at the "
@@ -1254,10 +1339,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=OrthoDbOrthologs.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="aragwas_associations",
+        title="AraGWAS: GWAS Associations",
         description=(
             "Fetch AraGWAS genome-wide association study hits for an Arabidopsis "
             "locus (aragwas.1001genomes.org; free, no key). Returns each "
@@ -1285,10 +1372,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=AraGwasAssociations.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="arabidopsis_natural_variation",
+        title="1001 Genomes: Natural Variation",
         description=(
             "Fetch 1001 Genomes natural-variation SNP effects for an Arabidopsis "
             "locus (tools.1001genomes.org; free, no key) — the variation observed "
@@ -1315,10 +1404,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=ArabidopsisNaturalVariation.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="batch_ensembl_plants_lookup_locus",
+        title="Batch: Ensembl Plants Locus Metadata",
         description=(
             "Batch variant of ensembl_plants_lookup_locus. Uses Ensembl's "
             "native POST /lookup/id endpoint — one HTTP round-trip for "
@@ -1344,10 +1435,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=_BATCH_OUTPUT,
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="batch_get_gene_xrefs",
+        title="Batch: Gene Cross-References",
         description=(
             "Batch variant of get_gene_xrefs. Fans out per-locus xref "
             f"lookups over Ensembl Plants in parallel (up to {batch.MAX_BATCH} "
@@ -1368,10 +1461,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=_BATCH_OUTPUT,
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="batch_phytozome_lookup_locus",
+        title="Batch: Phytozome Locus Metadata",
         description=(
             "Batch variant of phytozome_lookup_locus. Fans out per-locus "
             f"BioMart queries in parallel (up to {batch.MAX_BATCH} loci). "
@@ -1392,10 +1487,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=_BATCH_OUTPUT,
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="batch_resolve_locus_to_uniprot",
+        title="Batch: Resolve Locus → UniProt",
         description=(
             "Batch variant of resolve_locus_to_uniprot. Fans out per-locus "
             "UniProtKB searches in parallel (up to "
@@ -1417,10 +1514,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=_BATCH_OUTPUT,
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="batch_locus_literature",
+        title="Batch: Literature",
         description=(
             "Batch variant of locus_literature. Fans out per-locus Europe PMC "
             f"searches in parallel (up to {batch.MAX_BATCH} loci). Each "
@@ -1448,10 +1547,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=_BATCH_OUTPUT,
+        annotations=_READ_ONLY,
         _meta=_EDAM_LITERATURE,
     ),
     types.Tool(
         name="blast_sequence",
+        title="BLAST: Sequence Search (NCBI)",
         description=(
             "Run a BLAST sequence-similarity search against NCBI BLAST URLAPI. "
             "Async Put/Get under the hood — submits the query, polls the RID "
@@ -1527,10 +1628,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=BlastResult.model_json_schema(),
+        annotations=_READ_ONLY_NON_IDEMPOTENT,
         _meta=_EDAM_BLAST,
     ),
     types.Tool(
         name="batch_locus_go_annotations",
+        title="Batch: GO Annotations",
         description=(
             "Batch variant of locus_go_annotations. Two-stage fanout — each "
             "locus is resolved to UniProt and then queried in QuickGO. Per-locus "
@@ -1559,10 +1662,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=_BATCH_OUTPUT,
+        annotations=_READ_ONLY,
         _meta=_EDAM_GO,
     ),
     types.Tool(
         name="batch_gramene_homologs",
+        title="Batch: Gramene Homologs",
         description=(
             "Batch version of gramene_homologs. Up to 50 loci per call; "
             "shares the homology_type filter across all loci. Returns the "
@@ -1587,10 +1692,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=BatchEnvelope.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="batch_kegg_pathways",
+        title="Batch: KEGG Pathways",
         description=(
             "Batch version of kegg_pathways. Up to 50 loci per call. "
             "v1.1.0: only arabidopsis_thaliana resolves — KEGG uses NCBI "
@@ -1616,10 +1723,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=BatchEnvelope.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="batch_bar_gene_summary",
+        title="Batch: BAR Gene Summary",
         description=(
             "Batch variant of bar_gene_summary. Fans out per-locus BAR "
             "ThaleMine + GAIA-aliases calls in parallel (up to "
@@ -1636,10 +1745,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=_BATCH_OUTPUT,
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="batch_bar_aiv_interactions",
+        title="Batch: BAR Predicted Interactions",
         description=(
             "Batch variant of bar_aiv_interactions. Fans out per-locus "
             "BAR AIV calls in parallel (up to "
@@ -1662,10 +1773,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=_BATCH_OUTPUT,
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="batch_string_interactions",
+        title="Batch: STRING Interactions",
         description="Batch version of string_interactions. Up to 50 inputs per call.",
         inputSchema={
             "type": "object",
@@ -1686,10 +1799,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=BatchEnvelope.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="atted_coexpression",
+        title="ATTED-II: Coexpression",
         description=(
             "Fetch co-expressed gene neighbors from ATTED-II (atted.jp, "
             "API v5) for a plant locus. Returns top_n neighbors with "
@@ -1725,10 +1840,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=AttedCoexpression.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="batch_atted_coexpression",
+        title="Batch: ATTED-II Coexpression",
         description="Batch version of atted_coexpression. Up to 50 loci per call.",
         inputSchema={
             "type": "object",
@@ -1749,10 +1866,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=BatchEnvelope.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
     types.Tool(
         name="analyze_locus_synth",
+        title="Synthesis: Locus Overview",
         description=(
             "Synthesis: one-call equivalent of the analyze_locus prompt. "
             "Resolves a locus through Ensembl Plants, then fans out to xrefs, "
@@ -1774,10 +1893,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=SynthesisEnvelope.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM_SYNTHESIS,
     ),
     types.Tool(
         name="find_homologs_synth",
+        title="Synthesis: Homolog Search",
         description=(
             "Synthesis: one-call equivalent of the find_homologs prompt. "
             "Runs BLAST then resolves UniProt-shaped subject accessions via "
@@ -1804,10 +1925,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=SynthesisEnvelope.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM_SYNTHESIS,
     ),
     types.Tool(
         name="biological_context_synth",
+        title="Synthesis: Biological Context",
         description=(
             "Synthesis: one-call equivalent of the biological_context prompt. "
             "Resolves UniProt accession, then fans out to Gramene homologs, "
@@ -1830,10 +1953,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=SynthesisEnvelope.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM_SYNTHESIS,
     ),
     types.Tool(
         name="consensus_homologs",
+        title="Synthesis: Consensus Homologs",
         description=(
             "Synthesis: cross-source homology consensus. Resolves UniProt + "
             "FASTA sequence, then runs Gramene homology calls and NCBI BLAST "
@@ -1856,10 +1981,12 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=SynthesisEnvelope.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM_SYNTHESIS,
     ),
     types.Tool(
         name="gene_report",
+        title="Synthesis: Gene Report (Markdown dossier)",
         description=(
             "Synthesis: one-shot 'tell me about this gene' dossier. Resolves a "
             "locus through Ensembl Plants + UniProt, then fans out to "
@@ -1891,6 +2018,7 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         outputSchema=SynthesisEnvelope.model_json_schema(),
+        annotations=_READ_ONLY,
         _meta=_EDAM_SYNTHESIS,
     ),
 ]
