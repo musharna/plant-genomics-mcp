@@ -209,6 +209,11 @@ async def region_query(
         raise ValueError(f"start must be >=1, got {start}")
     if end < start:
         raise ValueError(f"end {end} must be >= start {start}")
+    # ``region`` is caller input spliced into the request path — guard it against
+    # ``?``/``/``/``#``/``&``/``%``/whitespace exactly as ``vep_annotate`` does for
+    # its own path-templated ``region``; otherwise a value like ``1?feature=exon``
+    # would inject/override query params on rest.ensembl.org.
+    validators.assert_no_path_metachars(region, field="region", backend="Ensembl Plants")
     slug = organisms.ensembl_slug_for(organism)
     region_str = f"{region}:{start}-{end}"
     raw = await _get(client, f"/overlap/region/{slug}/{region_str}", params={"feature": feature})

@@ -109,6 +109,26 @@ async def test_lookup_partners_empty_array_raises_not_found(httpx_mock: HTTPXMoc
     assert "[NotFoundError]" in str(exc.value)
 
 
+@pytest.mark.asyncio
+async def test_lookup_partners_non_json_200_raises_typed(httpx_mock: HTTPXMock):
+    """A 200 carrying a non-JSON body (e.g. an HTML error page) surfaces as a
+    typed PlantGenomicsError, not a raw JSONDecodeError (bug audit L3)."""
+    from plant_genomics_mcp.errors import PlantGenomicsError
+
+    httpx_mock.add_response(
+        url=(
+            "https://string-db.org/api/json/interaction_partners"
+            "?identifiers=Q0WV96&species=3702&limit=20"
+            "&caller_identity=plant-genomics-mcp"
+        ),
+        text="<html>upstream error</html>",
+        status_code=200,
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(PlantGenomicsError, match="non-JSON"):
+            await string_db.lookup_partners(client, "Q0WV96")
+
+
 @pytest.mark.skipif(
     not os.environ.get("PLANT_GENOMICS_MCP_LIVE"),
     reason="set PLANT_GENOMICS_MCP_LIVE=1 to hit string-db.org",

@@ -51,6 +51,16 @@ def test_locus_re_rejects_malformed_identifiers(locus: str) -> None:
     assert validators.LOCUS_RE.match(locus) is None, locus
 
 
+@pytest.mark.parametrize("locus", [".", "..", "...", "-", "_", ".-_"])
+def test_assert_valid_locus_rejects_punctuation_only(locus: str) -> None:
+    """``LOCUS_RE`` alone accepts dot/punctuation-only values, but
+    ``assert_valid_locus`` must reject them: a bare ``".."`` templated into a URL
+    path collapses via RFC-3986 dot-segment removal to a different endpoint than
+    intended (bug audit L1). A real locus always carries an identifier char."""
+    with pytest.raises(NotFoundError, match="alphanumeric"):
+        validators.assert_valid_locus(locus, backend="ensembl")
+
+
 def test_assert_valid_locus_passes_through_for_clean_input() -> None:
     # No exception. Helper returns None — its side effect is the raise.
     assert validators.assert_valid_locus("AT1G01010", backend="ensembl") is None

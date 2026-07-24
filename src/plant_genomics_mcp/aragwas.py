@@ -49,7 +49,10 @@ async def _get(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
             timeout=DEFAULT_TIMEOUT,
             max_retries=MAX_RETRIES,
         )
-        cached = resp.json()
+        try:
+            cached = resp.json()
+        except ValueError as e:
+            raise PlantGenomicsError(f"AraGWAS returned non-JSON: {resp.text[:200]}") from e
         _CACHE.set(key, cached)
     if not isinstance(cached, dict):
         raise PlantGenomicsError(
@@ -132,7 +135,13 @@ async def lookup_locus(
         # Only follow a same-host next link — the URL comes from the upstream
         # body, so an off-host value would be an SSRF vector (audit L5).
         next_url = links.get("next")
-        url = next_url if isinstance(next_url, str) and next_url.startswith(BASE_URL) else None
+        # ``startswith(BASE_URL + "/")`` — a host match, not a bare prefix:
+        # ``BASE_URL`` has no trailing slash, so a plain ``startswith(BASE_URL)``
+        # would also accept ``https://aragwas.1001genomes.org.evil.example/…``
+        # and defeat this same-host SSRF guard.
+        url = (
+            next_url if isinstance(next_url, str) and next_url.startswith(BASE_URL + "/") else None
+        )
         pages += 1
     return {
         "locus": locus,

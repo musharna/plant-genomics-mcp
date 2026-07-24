@@ -67,6 +67,13 @@ async def test_bound_rejects_oversized_loci() -> None:
             await batch.batch_get_gene_xrefs(client, too_many)
 
 
+def test_bound_deduplicates_preserving_first_seen_order() -> None:
+    """Duplicate loci collapse to first-seen order so the envelope ``count``
+    (len of this list) can't disagree with len(results)+len(errors) and two
+    outcomes for the same locus can't silently coalesce (bug audit L5)."""
+    assert batch._bound(["b", "a", "b", "a", "c"]) == ["b", "a", "c"]
+
+
 # ---------- native POST batch — Ensembl /lookup/id ----------
 
 

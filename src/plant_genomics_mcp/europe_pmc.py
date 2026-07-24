@@ -73,7 +73,10 @@ async def _get(
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
     )
-    result = resp.json()
+    try:
+        result = resp.json()
+    except ValueError as e:
+        raise PlantGenomicsError(f"Europe PMC {path} returned non-JSON: {resp.text[:200]}") from e
     _CACHE.set(key, result)
     return result
 
