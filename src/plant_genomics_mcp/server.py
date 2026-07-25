@@ -1328,8 +1328,11 @@ TOOLS: list[types.Tool] = [
             "evolutionary rate) and member genes grouped by organism (organism, "
             "gene id, description). organism_count is the true cluster total; the "
             "member list is capped with truncated flagged. found=false when the "
-            "locus maps to no ortholog group. Works for all 12 organisms. Defaults "
-            "to arabidopsis_thaliana; pass organism= for other species."
+            "locus maps to no ortholog group. Works for all 12 organisms. NOTE: "
+            "unlike the other locus tools, organism= does NOT scope the search — "
+            "the group is resolved from the locus id alone at the Viridiplantae "
+            "level, and organism is only validated and echoed back. Passing a "
+            "mismatched organism therefore still returns the locus's real group."
         ),
         inputSchema={
             "type": "object",
@@ -1340,7 +1343,7 @@ TOOLS: list[types.Tool] = [
                 },
                 "organism": {
                     "type": ["string", "integer"],
-                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid. Validated and echoed only: it does NOT scope the OrthoDB search, which keys on the locus id at the Viridiplantae level",
                     "default": "arabidopsis_thaliana",
                 },
             },
