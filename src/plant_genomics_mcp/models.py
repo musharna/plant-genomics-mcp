@@ -439,7 +439,14 @@ class BatchEnvelope(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     tool: str = Field(description="The batch tool name, e.g. batch_resolve_locus_to_uniprot")
-    count: int = Field(description="Number of loci in the input list")
+    count: int = Field(
+        description=(
+            "Number of distinct loci queried, returned (== len(results) + "
+            "len(errors)). The input list is de-duplicated first, so this is "
+            "LOWER than the number of loci you sent if you sent a duplicate — "
+            "that is de-duplication, not a dropped locus."
+        )
+    )
     results: dict[str, dict[str, Any]] = Field(
         description="locus → per-locus result dict (same shape as the single-locus tool)",
     )
@@ -722,7 +729,12 @@ class ExperimentalInteractions(BaseModel):
     organism: str = Field(description="Canonical organism slug (Arabidopsis only)")
     found: bool = Field(description="True if any curated interaction exists for this locus")
     partner_count: int = Field(description="Total distinct partners (pre-cap)")
-    evidence_count: int = Field(description="Total evidence records across all partners")
+    evidence_count: int = Field(
+        description=(
+            "Total evidence records across all partners (pre-cap) — counted "
+            "over every partner upstream, not only the partners listed here"
+        )
+    )
     truncated: bool = Field(description="True if the partner list was capped")
     partners: list[InteractionPartner] = Field(
         default_factory=list, description="Partners ordered by evidence count, descending"
@@ -849,7 +861,12 @@ class OrthoDbOrthologs(BaseModel):
     group: dict[str, Any] | None = Field(
         default=None, description="Group metadata {id, name, evolutionary_rate, level_name, …}"
     )
-    organism_count: int = Field(description="Number of member organisms (clusters)")
+    organism_count: int = Field(
+        description=(
+            "Number of member organisms in the whole ortholog group (pre-cap) "
+            "— the true cluster total, unaffected by the member cap below"
+        )
+    )
     member_count: int = Field(description="Member genes returned (post-cap)")
     truncated: bool = Field(description="True if the member list was capped")
     members: list[dict[str, Any]] = Field(
