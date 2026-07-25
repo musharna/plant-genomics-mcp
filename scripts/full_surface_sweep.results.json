@@ -1,0 +1,140 @@
+{
+  "stats": {
+    "calls": 926,
+    "echo_pass": 65,
+    "neg_correct": 216,
+    "count_pass": 24,
+    "neg_LEAK": 12,
+    "truncated_pass": 12
+  },
+  "skips": {
+    "upstream/transport error": 312,
+    "organism hardcoded upstream": 170,
+    "backend correctly rejected this locus/organism pair": 149,
+    "payload carries no comparable organism field": 134,
+    "no curated fixture for this organism": 24,
+    "organism is a search hint, not a constraint": 24,
+    "BLAST-backed; excluded from bulk sweep": 3
+  },
+  "coverage": {
+    "tools_total": 50,
+    "tools_sweepable": 47,
+    "tools_reached": 31,
+    "never_reached": [
+      "alphafold_structure",
+      "arabidopsis_natural_variation",
+      "batch_locus_go_annotations",
+      "batch_phytozome_lookup_locus",
+      "batch_resolve_locus_to_uniprot",
+      "experimental_structures",
+      "interpro_domains",
+      "kegg_pathways",
+      "locus_go_annotations",
+      "locus_plant_ontology",
+      "orthodb_orthologs",
+      "panther_family",
+      "phytozome_lookup_locus",
+      "plantcyc_locus_info",
+      "resolve_locus_to_uniprot",
+      "tf_binding_motifs"
+    ]
+  },
+  "findings": [
+    {
+      "kind": "organism_leak",
+      "tool": "go_enrichment",
+      "locus": "AT1G01010",
+      "true_organism": "arabidopsis_thaliana",
+      "declared_organism": "oryza_sativa",
+      "detail": "go_enrichment returned populated data for AT1G01010 (a arabidopsis_thaliana locus) while organism=oryza_sativa was declared"
+    },
+    {
+      "kind": "organism_leak",
+      "tool": "go_enrichment",
+      "locus": "Os01g0100100",
+      "true_organism": "oryza_sativa",
+      "declared_organism": "arabidopsis_thaliana",
+      "detail": "go_enrichment returned populated data for Os01g0100100 (a oryza_sativa locus) while organism=arabidopsis_thaliana was declared"
+    },
+    {
+      "kind": "organism_leak",
+      "tool": "go_enrichment",
+      "locus": "Zm00001eb000010",
+      "true_organism": "zea_mays",
+      "declared_organism": "arabidopsis_thaliana",
+      "detail": "go_enrichment returned populated data for Zm00001eb000010 (a zea_mays locus) while organism=arabidopsis_thaliana was declared"
+    },
+    {
+      "kind": "organism_leak",
+      "tool": "go_enrichment",
+      "locus": "GLYMA_01G001700",
+      "true_organism": "glycine_max",
+      "declared_organism": "arabidopsis_thaliana",
+      "detail": "go_enrichment returned populated data for GLYMA_01G001700 (a glycine_max locus) while organism=arabidopsis_thaliana was declared"
+    },
+    {
+      "kind": "organism_leak",
+      "tool": "go_enrichment",
+      "locus": "HORVU.MOREX.r3.1HG0000090",
+      "true_organism": "hordeum_vulgare",
+      "declared_organism": "arabidopsis_thaliana",
+      "detail": "go_enrichment returned populated data for HORVU.MOREX.r3.1HG0000090 (a hordeum_vulgare locus) while organism=arabidopsis_thaliana was declared"
+    },
+    {
+      "kind": "organism_leak",
+      "tool": "go_enrichment",
+      "locus": "Potri.001G006600.v4.1",
+      "true_organism": "populus_trichocarpa",
+      "declared_organism": "arabidopsis_thaliana",
+      "detail": "go_enrichment returned populated data for Potri.001G006600.v4.1 (a populus_trichocarpa locus) while organism=arabidopsis_thaliana was declared"
+    },
+    {
+      "kind": "organism_leak",
+      "tool": "go_enrichment",
+      "locus": "BRADI_1g00485v3",
+      "true_organism": "brachypodium_distachyon",
+      "declared_organism": "arabidopsis_thaliana",
+      "detail": "go_enrichment returned populated data for BRADI_1g00485v3 (a brachypodium_distachyon locus) while organism=arabidopsis_thaliana was declared"
+    },
+    {
+      "kind": "organism_leak",
+      "tool": "go_enrichment",
+      "locus": "TraesCS1A02G000300",
+      "true_organism": "triticum_aestivum",
+      "declared_organism": "arabidopsis_thaliana",
+      "detail": "go_enrichment returned populated data for TraesCS1A02G000300 (a triticum_aestivum locus) while organism=arabidopsis_thaliana was declared"
+    },
+    {
+      "kind": "organism_leak",
+      "tool": "go_enrichment",
+      "locus": "Solyc01g005610.4",
+      "true_organism": "solanum_lycopersicum",
+      "declared_organism": "arabidopsis_thaliana",
+      "detail": "go_enrichment returned populated data for Solyc01g005610.4 (a solanum_lycopersicum locus) while organism=arabidopsis_thaliana was declared"
+    },
+    {
+      "kind": "organism_leak",
+      "tool": "go_enrichment",
+      "locus": "Sobic.003G000100",
+      "true_organism": "sorghum_bicolor",
+      "declared_organism": "arabidopsis_thaliana",
+      "detail": "go_enrichment returned populated data for Sobic.003G000100 (a sorghum_bicolor locus) while organism=arabidopsis_thaliana was declared"
+    },
+    {
+      "kind": "organism_leak",
+      "tool": "go_enrichment",
+      "locus": "VIT_201s0010g00130",
+      "true_organism": "vitis_vinifera",
+      "declared_organism": "arabidopsis_thaliana",
+      "detail": "go_enrichment returned populated data for VIT_201s0010g00130 (a vitis_vinifera locus) while organism=arabidopsis_thaliana was declared"
+    },
+    {
+      "kind": "organism_leak",
+      "tool": "go_enrichment",
+      "locus": "Medtr1g014230",
+      "true_organism": "medicago_truncatula",
+      "declared_organism": "arabidopsis_thaliana",
+      "detail": "go_enrichment returned populated data for Medtr1g014230 (a medicago_truncatula locus) while organism=arabidopsis_thaliana was declared"
+    }
+  ]
+}

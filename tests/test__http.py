@@ -284,3 +284,70 @@ async def test_supports_post_with_form_data(httpx_mock: HTTPXMock) -> None:
             data={"query": "<xml/>"},
         )
     assert resp.text == "row1\trow2\n"
+
+
+# --- content-coding: the gzip double-decode regression -----------------------
+# PR #42's streaming size-cap copied upstream headers verbatim onto the
+# reassembled Response. `aiter_bytes()` yields DECODED bytes, so carrying
+# `Content-Encoding: gzip` across made httpx decode a SECOND time, and every
+# gzipped upstream — UniProt, Phytozome, InterPro, and everything downstream of
+# the locus->UniProt resolution — died with "incorrect header check".
+#
+# 760 tests passed against that broken build, and not because someone forgot a
+# gzip case: `pytest_httpx` CANNOT serve gzip over a streaming read. Plain
+# `client.stream()` + `aiter_bytes()` against a gzipped mock fails the same way
+# with no project code involved. The fixture layer simply cannot reach this
+# path, so the only honest regression test is a real server.
+
+
+@pytest.mark.asyncio
+async def test_gzipped_response_is_decoded_exactly_once() -> None:
+    """Real uvicorn, real gzip, real socket — the only way to cover this path."""
+    import asyncio
+    import gzip
+    import json as _json
+    import socket
+
+    import uvicorn
+    from starlette.applications import Starlette
+    from starlette.responses import Response
+    from starlette.routing import Route
+
+    payload = {"primaryAccession": "Q0WV96", "sequence": {"length": 429}}
+
+    async def gzipped(_request: object) -> Response:
+        body = gzip.compress(_json.dumps(payload).encode())
+        return Response(
+            content=body,
+            media_type="application/json",
+            headers={"Content-Encoding": "gzip", "Content-Length": str(len(body))},
+        )
+
+    sock = socket.socket()
+    sock.bind(("127.0.0.1", 0))
+    port = sock.getsockname()[1]
+    sock.close()
+
+    app = Starlette(routes=[Route("/gz", gzipped)])
+    config = uvicorn.Config(app, host="127.0.0.1", port=port, log_level="error")
+    server = uvicorn.Server(config)
+    task = asyncio.create_task(server.serve())
+    try:
+        for _ in range(100):
+            if server.started:
+                break
+            await asyncio.sleep(0.05)
+        assert server.started, "uvicorn never reported started"
+
+        async with httpx.AsyncClient() as client:
+            resp = await _http.request_with_retry(
+                client, "GET", f"http://127.0.0.1:{port}/gz", service="probe"
+            )
+        # Decoded exactly once: readable JSON, not a DecodingError.
+        assert resp.json() == payload
+        # And the reassembled headers must not still advertise a coding this
+        # body no longer carries, or the next consumer decodes it again.
+        assert "content-encoding" not in {k.lower() for k in resp.headers}
+    finally:
+        server.should_exit = True
+        await task
