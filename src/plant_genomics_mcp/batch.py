@@ -143,6 +143,7 @@ async def batch_ensembl_plants_lookup_locus(
         data=json.dumps(payload).encode("utf-8"),
         headers={"Accept": "application/json", "Content-Type": "application/json"},
         timeout=ensembl_plants.DEFAULT_TIMEOUT,
+        not_found_400_pattern=ensembl_plants.NOT_FOUND_400_RE,
     )
     # request_with_retry returns the raw httpx.Response on 2xx.
     try:

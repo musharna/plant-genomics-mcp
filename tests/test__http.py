@@ -8,6 +8,8 @@ tests that exercise it via each backend's wrapper.
 
 from __future__ import annotations
 
+import re
+
 import httpx
 import pytest
 from pytest_httpx import HTTPXMock
@@ -351,3 +353,56 @@ async def test_gzipped_response_is_decoded_exactly_once() -> None:
     finally:
         server.should_exit = True
         await task
+
+
+# --- 400-means-not-found: the Ensembl dialect --------------------------------
+# Ensembl answers an unknown identifier with `400 {"error":"ID '...' not
+# found"}` instead of 404, so the 404 -> NotFoundError mapping never fired and
+# callers could not tell "no such gene" from "the backend is broken".
+#
+# The pairing below is the whole point: the SAME status code must produce
+# DIFFERENT types depending on the body. Without the second test, a blanket
+# 400 -> NotFoundError would pass the first and quietly mislabel every
+# malformed request (an oversized region span is also a 400) as "not found".
+
+
+@pytest.mark.asyncio
+async def test_400_with_not_found_body_raises_notfound(httpx_mock: HTTPXMock) -> None:
+    httpx_mock.add_response(status_code=400, json={"error": "ID 'AT1G01010' not found"})
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError):
+            await _http.request_with_retry(
+                client,
+                "GET",
+                "https://example.test/lookup",
+                service="Ensembl Plants /lookup/id",
+                not_found_400_pattern=re.compile(r"\bnot found\b", re.IGNORECASE),
+            )
+
+
+@pytest.mark.asyncio
+async def test_400_without_not_found_body_stays_generic(httpx_mock: HTTPXMock) -> None:
+    """A malformed request is NOT a missing gene — it must not be relabelled."""
+    httpx_mock.add_response(status_code=400, json={"error": "requested region is too large"})
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(PlantGenomicsError) as excinfo:
+            await _http.request_with_retry(
+                client,
+                "GET",
+                "https://example.test/overlap",
+                service="Ensembl Plants /overlap/region",
+                not_found_400_pattern=re.compile(r"\bnot found\b", re.IGNORECASE),
+            )
+    assert not isinstance(excinfo.value, NotFoundError)
+
+
+@pytest.mark.asyncio
+async def test_400_without_the_pattern_is_unchanged(httpx_mock: HTTPXMock) -> None:
+    """Opt-in: a backend that does not pass the pattern keeps today's behaviour."""
+    httpx_mock.add_response(status_code=400, json={"error": "ID 'X' not found"})
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(PlantGenomicsError) as excinfo:
+            await _http.request_with_retry(
+                client, "GET", "https://example.test/x", service="other backend"
+            )
+    assert not isinstance(excinfo.value, NotFoundError)
