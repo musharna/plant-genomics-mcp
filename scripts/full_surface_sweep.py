@@ -264,10 +264,24 @@ async def run(delay: float, per_organism: int, out_path: Path, only: str | None)
     stats = Counter()
     covered: set[str] = set()
 
-    for tool in tools:
+    for index, tool in enumerate(tools, start=1):
         if tool.name in BLAST_BACKED:
             skips[SkipReason.BLAST_EXCLUDED] += 1
             continue
+
+        # Emit progress per tool, flushed. Not cosmetic: a rate-limited sweep
+        # runs for the better part of an hour, and a run that prints only its
+        # final report is INDISTINGUISHABLE FROM A HUNG ONE. jobd's default idle
+        # timeout is 3600s, so the silent version was SIGTERM'd one second past
+        # the hour (exit -15 at 3601s) and lost every result it had gathered —
+        # after making ~900 real calls to public APIs. Raising the timeout alone
+        # would have left the job unobservable and merely moved the cliff.
+        print(
+            f"[{index}/{len(tools)}] {tool.name} "
+            f"(calls={stats['calls']} echo_pass={stats['echo_pass']} "
+            f"neg_correct={stats['neg_correct']} findings={len(findings)})",
+            flush=True,
+        )
 
         for locus, org in pairs:
             second = next((lo for lo, o in pairs if o == org and lo != locus), locus)
