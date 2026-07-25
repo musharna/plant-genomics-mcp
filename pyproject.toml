@@ -13,10 +13,16 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
 dependencies = [
-    "mcp>=1.0",
+    # Floor is the version the suite actually runs against; the upper bound is
+    # deliberate — the 2026-07-28 spec revision is breaking (stateless core,
+    # no initialize handshake), so a major SDK bump gets opted into, not
+    # inherited silently by everyone who installs us.
+    "mcp>=1.28.1,<2",
     "httpx>=0.27",
     "pydantic>=2.6",
     "starlette>=0.36",
