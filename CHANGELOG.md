@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.19.2 — 2026-07-25
+
+Correctness patch from the semantic ("wrong but plausible") audit. No new tools or backends (still **50 tools / 23 backends**). Both changes are caller-visible but neither breaks an existing call.
+
+**Fixed**
+
+- **`orthodb_orthologs` promised an organism filter it never applied.** The tool accepts an `organism` argument that is validated and echoed back, but never reaches the wire: OrthoDB resolves the ortholog group from the locus id alone, at the Viridiplantae level (taxid 33090). The catalog nonetheless said _"Defaults to arabidopsis_thaliana; pass organism= for other species"_, which reads as a filter. A caller who believed it received real data stamped with an organism that had **no bearing on the result** — the tool description and the output field now both state that `organism` is validated and echoed only.
+
+  Verified this was the **only** organism-inert tool making such a promise; the other ten declare "ARABIDOPSIS-ONLY" or say nothing, so no other tool contract changed.
+
+- **Ensembl "unknown ID" is now typed as `NotFoundError`.** Ensembl answers an unknown identifier with `400 {"error":"ID '...' not found"}` rather than 404, so the shared 404→`NotFoundError` mapping never fired and callers received a generic `PlantGenomicsError` instead. A caller catching `NotFoundError` to distinguish "no such gene" from "the backend is broken" could not. **Affects `ensembl_plants_lookup_locus`, `get_gene_xrefs`, `get_sequence`, `ensembl_region_query`, `locus_variants`, `vep_annotate`, and `batch_ensembl_plants_lookup_locus`** — the wire-format error prefix changes from `[PlantGenomicsError]` to `[NotFoundError]` for a genuinely missing id.
+
+  The match is body-anchored and opt-in per backend rather than a blanket 400 mapping, because Ensembl **overloads** 400: an oversized region span returns 400 too, and calling that "not found" would trade one wrong answer for another.
+
+**Testing**
+
+- The audit's full-surface sweep now attributes skips **per tool**. A name in `never_reached` previously could not be distinguished between "this backend is broken" and "every corpus locus legitimately has no data here" — both cases had occurred, and telling them apart cost a live probe each. `kegg_pathways` is confirmed healthy by this route (its Entrez bridge resolves correctly; the corpus simply selects the first locus per organism, and chromosome-start genes are typically unannotated).
+- Fixed two invariant-checker defects that were reporting a healthy server as broken: `check_truncated_flag` compared a `RETURNED` count against its own list length — unsatisfiable by construction — and `orthodb_orthologs` was missing from the organism-inert set, so its negative control demanded a rejection the backend cannot produce. Each new invariant ships a negative control proving it can still fail.
+
 ## v1.19.1 — 2026-07-25
 
 **Urgent patch. v1.19.0 and v1.18.2 are broken for every gzipped upstream — upgrade immediately.**
