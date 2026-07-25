@@ -122,3 +122,30 @@ def test_organism_echo_accepts_real_backend_spellings(requested: str, echoed: st
 def test_organism_echo_rejects_the_wrong_plant(requested: str, echoed: str) -> None:
     """Silently returning another species' data is the worst failure here."""
     assert check_organism_echo(requested, echoed, "test").verdict is Verdict.FAIL
+
+
+# --- live-sweep leak detector -------------------------------------------------
+# Locks in fixes for four fabricated "leaks" the sweep reported before the
+# detector was correct: synthesis returns a pydantic envelope (not a dict) whose
+# `steps`/`elapsed_s` bookkeeping is present even when `result` is empty, so a
+# naive truthiness check called every synthesis negative control a leak.
+
+
+@pytest.mark.parametrize(
+    "payload,expected",
+    [
+        ({"locus": "AT1G01010", "organism": "x", "genes": [1, 2]}, True),
+        ({"tool": "t", "input": {}, "steps": [1, 2], "result": {}}, False),
+        ({"tool": "t", "input": {}, "steps": [1], "result": {"a": 1}}, True),
+        ({"locus": "x", "found": False, "hits": [1, 2, 3]}, False),
+        ({"locus": "x", "organism": "y", "query": "q", "hitCount": 5}, False),
+    ],
+)
+def test_leak_detector_fires_on_data_and_stays_silent_on_envelopes(
+    payload: dict[str, object], expected: bool
+) -> None:
+    """A detector that cannot fire reports green forever; one that always fires
+    fabricates bugs. Both directions are pinned here."""
+    from live_semantic_sweep import _looks_populated
+
+    assert _looks_populated(payload) is expected
