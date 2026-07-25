@@ -20,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 from benchmark_annotations import (  # noqa: E402
     _BENCHMARK_TYPED_EXCEPTIONS,
     _TOOLS,
+    _UNEXERCISED_BY_DESIGN,
     DEFAULT_EXPECTED_JSON,
 )
 
@@ -65,6 +66,64 @@ def test_every_tool_name_is_in_the_dispatch_registry(corpus: dict) -> None:
                 f"{loc['locus_id']}: tool {tool_name!r} not in _TOOLS registry "
                 f"(typo? renamed backend?)"
             )
+
+
+def test_no_registered_tool_is_silently_never_exercised(corpus: dict) -> None:
+    """The reverse of the check above: registry -> corpus, not just corpus -> registry.
+
+    A registered-but-never-called entry is invisible rot. ``find_homologs_synth``
+    sat in the registry raising TypeError on every call — its lambda passed a
+    locus where the function expects a sequence — and nothing caught it purely
+    because no corpus record referenced it. The benchmark therefore advertised
+    coverage it did not have.
+
+    Anything not exercised must be justified in ``_UNEXERCISED_BY_DESIGN``.
+    """
+    exercised = {name for loc in _loci(corpus) for name in loc.get("tools", {})}
+    unaccounted = sorted(set(_TOOLS) - exercised - set(_UNEXERCISED_BY_DESIGN))
+    assert not unaccounted, (
+        "these tools are registered but no corpus locus exercises them, and "
+        "they are not listed in _UNEXERCISED_BY_DESIGN — either wire them into "
+        f"the corpus or record why they are skipped: {unaccounted}"
+    )
+
+
+def test_unexercised_allowlist_does_not_rot(corpus: dict) -> None:
+    """An allowlist entry that IS exercised, or that names a tool no longer in
+    the registry, is stale and should be removed rather than left to mislead."""
+    exercised = {name for loc in _loci(corpus) for name in loc.get("tools", {})}
+    stale_unknown = sorted(set(_UNEXERCISED_BY_DESIGN) - set(_TOOLS))
+    stale_covered = sorted(set(_UNEXERCISED_BY_DESIGN) & exercised)
+    assert not stale_unknown, f"allowlist names tools not in _TOOLS: {stale_unknown}"
+    assert not stale_covered, (
+        f"allowlist claims these are unexercised but the corpus runs them: {stale_covered}"
+    )
+
+
+def test_every_registered_tool_lambda_binds_to_its_backend() -> None:
+    """Catch the find_homologs_synth class of bug without touching the network.
+
+    Checking the lambda's arity is not enough — the broken entry was
+    ``lambda c, locus, o: find_homologs_synth(c, locus, organism=o)``, which has
+    the right three parameters and still raised TypeError, because the BACKEND
+    takes ``(client, sequence, program, top_n)`` and has no ``organism``.
+
+    Calling the lambda binds the inner call and constructs a coroutine; the
+    TypeError for a bad signature is raised at that binding, before any await.
+    So invoking without awaiting proves the wiring is sound and performs no I/O.
+    The coroutine is closed to keep pytest from warning about it.
+    """
+    bad: list[str] = []
+    for name, fn in _TOOLS.items():
+        try:
+            coro = fn(None, "AT1G01010", "arabidopsis_thaliana")
+        except TypeError as exc:
+            bad.append(f"{name}: {exc}")
+            continue
+        close = getattr(coro, "close", None)
+        if callable(close):
+            close()
+    assert not bad, "registry lambdas that cannot call their backend:\n" + "\n".join(bad)
 
 
 def test_every_tool_entry_has_a_valid_assertion_shape(corpus: dict) -> None:

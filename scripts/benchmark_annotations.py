@@ -178,9 +178,15 @@ _TOOLS: dict[str, ToolCallable] = {
     "synthesis.analyze_locus_synth": lambda c, locus, o: synthesis.analyze_locus_synth(
         c, locus, organism=o
     ),
-    "synthesis.find_homologs_synth": lambda c, locus, o: synthesis.find_homologs_synth(
-        c, locus, organism=o
-    ),
+    # synthesis.find_homologs_synth is deliberately NOT registered. Its real
+    # signature is (client, sequence, program, top_n) — sequence-input, like
+    # blast_sequence below — so it cannot satisfy this registry's
+    # (client, locus, organism) contract. It WAS registered as
+    # `find_homologs_synth(c, locus, organism=o)`, which raised TypeError on
+    # every call and went unnoticed because no corpus record referenced it.
+    # Note the near-miss: dropping only the bad `organism=` kwarg would have
+    # passed a locus ID into `sequence`, silently BLASTing the literal string
+    # "AT1G01010" — a plausible-looking query instead of a loud error.
     "synthesis.biological_context_synth": lambda c, locus, o: synthesis.biological_context_synth(
         c, locus, organism=o
     ),
@@ -190,6 +196,26 @@ _TOOLS: dict[str, ToolCallable] = {
     # BLAST is sequence-input not locus-input — special-cased; skipped without --include-blast.
     # Wrapper signature matches but ignores organism; corpus encodes a sequence under the locus slot.
     "blast.blast_sequence": lambda c, locus, _o: blast.blast_sequence(c, locus, program="blastp"),
+}
+
+#: Tools registered above that no corpus record currently exercises, each with
+#: the reason it is acceptable. A registered-but-never-called entry is invisible
+#: rot — `find_homologs_synth` sat here broken (TypeError on every call) purely
+#: because nothing invoked it, so the benchmark advertised coverage it did not
+#: have. `test_benchmark_corpus` asserts the registry is exactly
+#: (exercised | this set), so adding a tool without either wiring it into the
+#: corpus or justifying it here now fails CI instead of going quiet.
+_UNEXERCISED_BY_DESIGN: dict[str, str] = {
+    "blast.blast_sequence": (
+        "sequence-input, and each call enqueues a real NCBI job — gated behind "
+        "--include-blast rather than run per corpus locus"
+    ),
+    "synthesis.analyze_locus_synth": (
+        "composes backends already benchmarked individually; adding it would "
+        "multiply upstream load for no new coverage"
+    ),
+    "synthesis.biological_context_synth": "same fan-out rationale as analyze_locus_synth",
+    "synthesis.consensus_homologs": "same fan-out rationale, and it reaches BLAST",
 }
 
 
