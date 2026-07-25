@@ -12,7 +12,11 @@ Gramene homology, KEGG pathways, STRING-DB
 interactions, ATTED-II coexpression, ThaleMine (curated interaction evidence +
 GeneRIFs), and BAR
 (Bio-Analytic Resource for Plant Biology, U Toronto — Global Core Biodata
-Resource 2023). v1.18 adds ``experimental_interactions`` + ``locus_gene_rifs``
+Resource 2023). v1.19 adds MCP tool annotations and display titles to all
+fifty tools — every tool declares ``readOnlyHint`` + ``openWorldHint``, so
+hosts no longer default them to destructive; ``blast_sequence`` is the sole
+``idempotentHint=False`` tool because each call enqueues a new NCBI job. No
+new tools or backends. v1.18 adds ``experimental_interactions`` + ``locus_gene_rifs``
 — ThaleMine's curated BioGRID/IntAct interaction evidence (detection method and
 PubMed ID per partner, the experimental counterpart to STRING's predictions) and
 GeneRIF functional statements. v1.17 adds ``tf_binding_motifs`` + ``jaspar_motif`` — JASPAR
@@ -36,4 +40,4 @@ Bioinformatics paid subscription). See ``server.py`` for the full tool
 catalog.
 """
 
-__version__ = "1.18.2"
+__version__ = "1.19.0"
