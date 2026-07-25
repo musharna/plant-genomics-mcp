@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import re
 from collections.abc import Mapping
 from typing import Any
 
@@ -66,6 +67,7 @@ async def request_with_retry(
     timeout: float = 30.0,
     max_retries: int = 3,
     not_found_returns: Any = _RAISE,
+    not_found_400_pattern: re.Pattern[str] | None = None,
 ) -> httpx.Response | Any:
     """Issue ``method url`` with the shared retry + classification policy.
 
@@ -74,6 +76,14 @@ async def request_with_retry(
     of ``PlantGenomicsError`` on terminal failure. Pass
     ``not_found_returns=<sentinel>`` to suppress ``NotFoundError`` on 404
     and return the sentinel instead (KEGG's "no record" idiom).
+
+    ``not_found_400_pattern=<compiled regex>`` covers upstreams that signal an
+    unknown identifier with 400 plus a body marker rather than 404 — Ensembl
+    answers an unknown gene id with ``400 {"error":"ID '...' not found"}``.
+    It is opt-in and body-matched rather than a blanket 400 mapping because
+    Ensembl overloads 400 for genuinely malformed requests too (an oversized
+    region span), and calling those "not found" would just be a different
+    wrong answer.
     """
     delay = 1.0
     last_status: int | None = None
@@ -177,6 +187,23 @@ async def request_with_retry(
 
         if resp.status_code == 404:
             raise NotFoundError(f"{service} → HTTP 404: {resp.text[:200]}")
+        # Some upstreams signal an unknown identifier with 400 + a body marker
+        # instead of 404. Ensembl is one: an unknown gene id returns
+        # `400 {"error":"ID 'AT1G01010' not found"}`. Without this, callers
+        # catching NotFoundError to separate "no such gene" from "the backend
+        # is broken" cannot — both arrive as PlantGenomicsError.
+        #
+        # It is opt-in and pattern-matched rather than a blanket 400 mapping
+        # because Ensembl OVERLOADS 400: an oversized region range also returns
+        # 400 (ensembl_plants.region_query documents this). Mapping every 400 to
+        # NotFoundError would tell a caller "no such gene" when their span was
+        # simply too wide — trading one wrong type for another.
+        if (
+            resp.status_code == 400
+            and not_found_400_pattern is not None
+            and not_found_400_pattern.search(resp.text)
+        ):
+            raise NotFoundError(f"{service} → HTTP 400 (not found): {resp.text[:200]}")
         if resp.status_code == 429:
             raise RateLimitError(f"{service} rate-limited (HTTP 429): {resp.text[:200]}")
         if resp.status_code in (500, 502, 503, 504):

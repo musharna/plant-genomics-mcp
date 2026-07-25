@@ -53,6 +53,9 @@ async def _get(client: httpx.AsyncClient, path: str, params: dict[str, Any] | No
         headers={"Accept": "application/json"},
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
+        # Same REST service, same 400-means-not-found dialect. Imported rather
+        # than re-declared so there is one pattern to keep correct.
+        not_found_400_pattern=ensembl_plants.NOT_FOUND_400_RE,
     )
     result = resp.json()
     _CACHE.set(key, result)
