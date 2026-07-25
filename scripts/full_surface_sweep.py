@@ -135,6 +135,21 @@ _ENVELOPE_META = frozenset(
     {"tool", "input", "steps", "elapsed_s", "started_at", "query", "returned", "hitCount", "count"}
 )
 
+#: Non-empty lists that are NOT evidence the tool returned data. Two kinds:
+#: input echoes (`sources`, `gene_names_searched`) and — importantly —
+#: NEGATIVE results, i.e. explicit reports of what could NOT be resolved.
+#:
+#: This cost 12 fabricated findings. Every `go_enrichment` negative control was
+#: flagged as an organism leak because the payload carried
+#: `unmapped: ["Os01g0100100", ...]` alongside `enriched: []`, `mapped: 0`,
+#: `total_terms: 0`. The tool was behaving exactly right — refusing to map rice
+#: loci under Arabidopsis and SAYING SO instead of silently dropping them — and
+#: the checker read that honesty as data. A tool that reports its failures well
+#: must not be punished for it.
+_NOT_DATA_FIELDS = frozenset(
+    {"unmapped", "sources", "errors", "gene_names_searched", "name_only_matches"}
+)
+
 
 def _required(tool: Any) -> tuple[str, ...]:
     return tuple(sorted((tool.inputSchema or {}).get("required", [])))
@@ -203,7 +218,15 @@ def _looks_populated(payload: Any) -> bool:
         return bool(payload.get("results"))
     if "result" in payload and "steps" in payload:  # synthesis envelope
         return bool(payload.get("result"))
-    ignore = {"locus", "organism", "found", "species", "canonical"} | _ENVELOPE_META
+
+    # An explicit zero-hit signal settles it regardless of what else is present.
+    for zero_field in ("mapped", "total_terms", "returned", "hitCount"):
+        if payload.get(zero_field) == 0:
+            return False
+
+    ignore = (
+        {"locus", "organism", "found", "species", "canonical"} | _ENVELOPE_META | _NOT_DATA_FIELDS
+    )
     for k, v in payload.items():
         if k in ignore:
             continue
