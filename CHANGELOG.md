@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.19.1 — 2026-07-25
+
+**Urgent patch. v1.19.0 and v1.18.2 are broken for every gzipped upstream — upgrade immediately.**
+
+**Fixed**
+
+- **Gzipped responses were decoded twice, breaking most of the tool surface.** The streaming size-cap added in v1.18.2 (PR #42) reassembled each response with the upstream headers copied verbatim. `aiter_bytes()` yields _already-decoded_ bytes, so carrying `Content-Encoding: gzip` across made httpx decompress a second time and raise `DecodingError: Error -3 while decompressing data: incorrect header check`.
+
+  **Affected any backend whose upstream gzips** — UniProt, Phytozome, InterPro — **and therefore everything downstream of the locus→UniProt resolution**: `resolve_locus_to_uniprot`, `locus_go_annotations`, `alphafold_structure`, `experimental_structures`, `interpro_domains`, `panther_family`, `orthodb_orthologs`, `tf_binding_motifs`, `phytozome_lookup_locus`, and the synthesis tools that compose them.
+
+  The fix drops `Content-Encoding` and `Content-Length` when reassembling: those headers describe the compressed wire representation, while the reassembled body is post-decode. No caller-visible API change — the affected tools simply work again.
+
+**Testing**
+
+- The regression test spins a **real uvicorn serving real gzip over a real socket**. This is not belt-and-braces: `pytest_httpx` _cannot_ serve gzip over a streaming read — plain `client.stream()` + `aiter_bytes()` against a gzipped mock fails identically with no project code involved — so the mocked fixture layer could not reach this path at all. That is why the full suite stayed green against a broken build.
+
 ## v1.19.0 — 2026-07-24
 
 Protocol-metadata release from the 2026-07-24 comparative MCP audit (P1 tier). No new tools or backends (still **50 tools / 23 backends**), no change to any tool's inputs, outputs, or dispatch behaviour. **The caller-visible change is how hosts present the tools**, described below.
