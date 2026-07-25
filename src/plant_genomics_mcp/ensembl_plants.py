@@ -12,6 +12,7 @@ tolerated. We retry on 429 and 5xx with exponential backoff.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import httpx
@@ -27,6 +28,20 @@ from plant_genomics_mcp.errors import (
 BASE_URL = "https://rest.ensembl.org"
 DEFAULT_TIMEOUT = 30.0
 MAX_RETRIES = 3
+
+# Ensembl answers an unknown identifier with `400 {"error":"ID '...' not
+# found"}` rather than 404, so the shared helper's 404 -> NotFoundError mapping
+# never fires and callers get a generic PlantGenomicsError instead. Passing this
+# to `_http.request_with_retry(not_found_400_pattern=...)` restores the typed
+# error, letting a caller tell "no such gene" from "the backend is broken".
+#
+# Matched on the body, NOT applied to every 400, because Ensembl overloads the
+# status: an oversized region span is also a 400 (see `region_query`). Calling
+# that "not found" would just be a different wrong answer.
+#
+# Defined here and imported by the other Ensembl-backed modules so there is one
+# definition to keep correct rather than three copies drifting apart.
+NOT_FOUND_400_RE = re.compile(r"\bnot found\b", re.IGNORECASE)
 
 # Per-module response cache. See plant_genomics_mcp.cache for env knobs.
 _CACHE = cache.TTLCache()
@@ -61,6 +76,7 @@ async def _get(
         headers={"Accept": "application/json"},
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
+        not_found_400_pattern=NOT_FOUND_400_RE,
     )
     result = resp.json()
     _CACHE.set(key, result)
