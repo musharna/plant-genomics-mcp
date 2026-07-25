@@ -82,6 +82,7 @@ from mcp.server.stdio import stdio_server
 from pydantic import AnyUrl
 
 from plant_genomics_mcp import (
+    __version__,
     alphafold,
     aragwas,
     atted,
@@ -150,7 +151,15 @@ from plant_genomics_mcp.models import (
     VepAnnotation,
 )
 
-server: Server = Server("plant-genomics-mcp")
+# `version=` is load-bearing, not decorative: when it is omitted the SDK
+# substitutes its OWN package version into `serverInfo.version`
+# (`server_version=self.version if self.version else pkg_version("mcp")`),
+# so every client's initialize handshake reports the mcp SDK's version
+# instead of ours. Both transports share this object, so supplying it here
+# is the single place that fixes stdio and Streamable HTTP together —
+# and it is what makes the "authenticated callers can read __version__
+# from the initialize handshake" contract in server_http.healthz true.
+server: Server = Server("plant-genomics-mcp", version=__version__)
 
 
 def _build_reporter() -> progress.Reporter | None:

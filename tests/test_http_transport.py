@@ -23,7 +23,7 @@ from starlette.applications import Starlette
 from starlette.routing import Mount
 from starlette.testclient import TestClient
 
-from plant_genomics_mcp import server_http
+from plant_genomics_mcp import __version__, server_http
 
 # 32-char placeholder satisfying the v1.0.1 fail-closed length floor — used
 # wherever a test needs a valid token without caring about the value.
@@ -157,6 +157,12 @@ async def test_http_tools_list_via_real_uvicorn() -> None:
             assert init_body.get("jsonrpc") == "2.0"
             assert "result" in init_body, init_body
             assert init_body["result"]["serverInfo"]["name"] == "plant-genomics-mcp"
+            # The other half of the /healthz security tradeoff above: the
+            # version is withheld from anonymous callers precisely because
+            # authenticated ones can read it here. If `Server()` is ever
+            # constructed without `version=`, the SDK silently substitutes
+            # its OWN package version and this contract becomes a lie.
+            assert init_body["result"]["serverInfo"]["version"] == __version__
 
             list_payload: dict[str, Any] = {
                 "jsonrpc": "2.0",
