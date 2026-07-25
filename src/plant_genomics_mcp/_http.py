@@ -103,9 +103,27 @@ async def request_with_retry(
                         raise _too_large(service, f"{len(body)}+ bytes (streamed)")
                 # Reassemble a fully-read Response via the public constructor so
                 # callers keep .json()/.text/.status_code/.headers after close.
+                #
+                # The content-coding headers MUST be dropped. `aiter_bytes()`
+                # yields DECODED bytes, so `body` is already decompressed —
+                # carrying `Content-Encoding: gzip` over to the new Response
+                # makes httpx decode a second time, and every gzipped upstream
+                # (UniProt, Phytozome, InterPro, and everything keyed on the
+                # locus->UniProt resolution) dies with
+                # "DecodingError: incorrect header check". `Content-Length`
+                # likewise describes the compressed wire size, not this body.
+                # Headers describe the wire representation; this body is
+                # post-decode, so the two must be reconciled here.
+                reassembled = httpx.Headers(
+                    [
+                        (k, v)
+                        for k, v in streamed.headers.multi_items()
+                        if k.lower() not in ("content-encoding", "content-length")
+                    ]
+                )
                 resp = httpx.Response(
                     status_code=streamed.status_code,
-                    headers=streamed.headers,
+                    headers=reassembled,
                     content=bytes(body),
                     request=streamed.request,
                 )
