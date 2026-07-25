@@ -175,9 +175,20 @@ def check_truncated_flag(spec: CountSpec, payload: dict[str, Any]) -> Result:
     A stale-true wrongly tells the caller to go paginate for data that isn't
     there; a stale-false silently presents a partial list as complete. The
     second is the dangerous one — it looks like a finished answer.
+
+    Only decidable for a PRE_CAP count. A RETURNED count is the length of the
+    list by construction, so ``count > len(list)`` can never hold and this
+    check would report every truncated payload as inconsistent — a
+    wrong-but-plausible finding of the checker's own making. The registry
+    already records which kind each count is; consult it rather than assuming.
     """
     if "truncated" not in payload or spec.list_field is None:
         return Result(Verdict.SKIPPED, "no truncated flag or no backing list")
+    if spec.kind is not CountKind.PRE_CAP:
+        return Result(
+            Verdict.SKIPPED,
+            f"{spec.field} is {spec.kind}; withheld count is not derivable from it",
+        )
     if spec.field not in payload:
         return Result(Verdict.SKIPPED, f"{spec.field} absent")
     items = payload.get(spec.list_field)
