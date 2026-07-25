@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.19.0 — 2026-07-24
+
+Protocol-metadata release from the 2026-07-24 comparative MCP audit (P1 tier). No new tools or backends (still **50 tools / 23 backends**), no change to any tool's inputs, outputs, or dispatch behaviour. **The caller-visible change is how hosts present the tools**, described below.
+
+**Added**
+
+- **MCP tool annotations on all 50 tools.** Every tool now declares `readOnlyHint: true`, `destructiveHint: false`, and `openWorldHint: true`. Hosts treat an _omitted_ annotations block as destructive + open-world, so the entire surface — which only ever reads from external public databases — was being presented with confirmation friction it does not warrant. **`blast_sequence` is the sole `idempotentHint: false`**: NCBI's URLAPI is asynchronous (Put → RID → poll), so each call enqueues a _new_ rate-limited job upstream. It reads, but it is not freely repeatable, and hosts should not retry it blindly.
+- **Display `title` on all 50 tools** — a unique human-readable name (e.g. `Ensembl Plants: Locus Metadata`, `Synthesis: Gene Report (Markdown dossier)`) for host UIs, distinguishing single-locus from `Batch:` and `Synthesis:` variants.
+- **Four coverage-lock tests** (`test_server_schema.py`) asserting that every tool declares annotations, that the whole catalog is read-only + open-world, that `blast_sequence` remains the only non-idempotent tool, and that display titles stay unique. A tool added later cannot silently ship unannotated.
+
+**Changed**
+
+- **`uvx` is now the headline install path** in the README (`claude mcp add plant-genomics --scope local -- uvx plant-genomics-mcp`); `pipx` moves into the alternatives block alongside Docker and from-source.
+- **`mcp` dependency pinned `>=1.28.1,<2`** (was `>=1.0`). The floor is the version the suite actually runs against. The upper bound is deliberate: the 2026-07-28 spec revision is breaking (stateless core, no `initialize` handshake), so a major SDK bump is opted into rather than inherited by everyone who installs the package.
+- **Python 3.13 and 3.14 trove classifiers added**, matching the CI matrix and `requires-python >= 3.11`.
+
 ## v1.18.2 — 2026-07-24
 
 Patch release: bug-audit remediation (a 7-agent correctness sweep of all 38 source modules — no Critical/High) plus the test-suite type-checking and HTTP-hardening work. No new tools or backends (still **50 tools / 23 backends**), no breaking API changes. **One caller-visible behaviour change** (`ensembl_region_query` now rejects malformed `region` input), called out below.
