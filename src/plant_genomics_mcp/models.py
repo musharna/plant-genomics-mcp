@@ -851,12 +851,21 @@ class OrthoDbOrthologs(BaseModel):
 
     ``found=False`` means the locus maps to no Viridiplantae ortholog group.
     ``organism_count`` is the true cluster total even when members are capped.
+
+    ``organism`` is an echo of the request, NOT a property of the result: the
+    search keys on the locus id at the Viridiplantae level, so the group comes
+    back the same whichever organism was declared.
     """
 
     model_config = ConfigDict(extra="forbid")
 
     locus: str
-    organism: str = Field(description="Resolved canonical organism")
+    organism: str = Field(
+        description=(
+            "Canonical organism as requested — echoed, not inferred from the hit. "
+            "Does not scope the search (see class docstring)"
+        )
+    )
     found: bool = Field(description="True if the locus maps to an ortholog group")
     group: dict[str, Any] | None = Field(
         default=None, description="Group metadata {id, name, evolutionary_rate, level_name, …}"

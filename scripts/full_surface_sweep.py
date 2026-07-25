@@ -104,6 +104,12 @@ ORGANISM_INERT = {
     "gramene_homologs",
     "batch_gramene_homologs",
     "batch_bar_gene_summary",
+    # Not Arabidopsis-hardcoded but inert for a different reason: the OrthoDB
+    # search keys on the gene id at the Viridiplantae level (taxid 33090), so
+    # the group is found from the locus alone and `organism` only ever gets
+    # validated and echoed. The negative control is therefore meaningless here
+    # — every cross-organism call returns real data by design.
+    "orthodb_orthologs",
 }
 
 #: Curated fixtures for tools that need genomic coordinates rather than a locus.
@@ -235,6 +241,39 @@ def _looks_populated(payload: Any) -> bool:
     return False
 
 
+class _SkipLedger:
+    """Skip counter that also remembers which tool each skip belonged to.
+
+    The flat counter reported "22 upstream errors" without saying whose, so a
+    name in ``never_reached`` was indistinguishable between "this backend is
+    broken" and "every corpus locus legitimately has no data here". Both cases
+    actually occurred — orthodb_orthologs was a harness misclassification,
+    kegg_pathways was a corpus artifact (the first locus on chromosome 1 is
+    usually unannotated, so KEGG correctly reports no pathway membership) — and
+    telling them apart cost a live probe each. Now the report says which.
+
+    Presents the same ``ledger[key] += 1`` / ``.most_common()`` surface as the
+    Counter it replaces, so the call sites are unchanged.
+    """
+
+    def __init__(self) -> None:
+        self.total: Counter[str] = Counter()
+        self.by_tool: defaultdict[str, Counter[str]] = defaultdict(Counter)
+        self.tool = ""
+
+    def __getitem__(self, key: str) -> int:
+        return self.total[key]
+
+    def __setitem__(self, key: str, value: int) -> None:
+        delta = value - self.total[key]
+        self.total[key] = value
+        if delta and self.tool:
+            self.by_tool[self.tool][key] += delta
+
+    def most_common(self) -> list[tuple[str, int]]:
+        return self.total.most_common()
+
+
 def _corpus_loci(per_organism: int) -> list[tuple[str, str]]:
     corpus = json.loads(
         (Path(__file__).resolve().parent / "benchmark_annotations.expected.json").read_text()
@@ -260,14 +299,29 @@ async def run(delay: float, per_organism: int, out_path: Path, only: str | None)
         count_specs[spec.tool].append(spec)
 
     findings: list[dict[str, Any]] = []
-    skips: Counter[str] = Counter()
+    skips = _SkipLedger()
     stats = Counter()
     covered: set[str] = set()
 
-    for tool in tools:
+    for index, tool in enumerate(tools, start=1):
+        skips.tool = tool.name
         if tool.name in BLAST_BACKED:
             skips[SkipReason.BLAST_EXCLUDED] += 1
             continue
+
+        # Emit progress per tool, flushed. Not cosmetic: a rate-limited sweep
+        # runs for the better part of an hour, and a run that prints only its
+        # final report is INDISTINGUISHABLE FROM A HUNG ONE. jobd's default idle
+        # timeout is 3600s, so the silent version was SIGTERM'd one second past
+        # the hour (exit -15 at 3601s) and lost every result it had gathered —
+        # after making ~900 real calls to public APIs. Raising the timeout alone
+        # would have left the job unobservable and merely moved the cliff.
+        print(
+            f"[{index}/{len(tools)}] {tool.name} "
+            f"(calls={stats['calls']} echo_pass={stats['echo_pass']} "
+            f"neg_correct={stats['neg_correct']} findings={len(findings)})",
+            flush=True,
+        )
 
         for locus, org in pairs:
             second = next((lo for lo, o in pairs if o == org and lo != locus), locus)
@@ -386,7 +440,11 @@ async def run(delay: float, per_organism: int, out_path: Path, only: str | None)
                 else:
                     skips[SkipReason.UPSTREAM_ERROR] += 1
 
-    sweepable = [t.name for t in server.TOOLS if t.name not in BLAST_BACKED]
+    # Scope to the tools this run actually attempted. Deriving it from the full
+    # catalog made `--only X` report the other 46 tools as "never reached",
+    # which is true but says nothing about them and buries the one real result.
+    sweepable = [t.name for t in tools if t.name not in BLAST_BACKED]
+    never_reached = sorted(set(sweepable) - covered)
     report = {
         "stats": dict(stats),
         "skips": {str(k): v for k, v in skips.most_common()},
@@ -394,7 +452,14 @@ async def run(delay: float, per_organism: int, out_path: Path, only: str | None)
             "tools_total": len(server.TOOLS),
             "tools_sweepable": len(sweepable),
             "tools_reached": len(covered),
-            "never_reached": sorted(set(sweepable) - covered),
+            "never_reached": never_reached,
+            # Why each unreached tool never returned data. Without this a reader
+            # cannot tell a broken backend from a tool every corpus locus
+            # legitimately misses, and "never reached" reads as an accusation.
+            "never_reached_why": {
+                name: {str(k): v for k, v in skips.by_tool[name].most_common()}
+                for name in never_reached
+            },
         },
         "findings": findings,
     }

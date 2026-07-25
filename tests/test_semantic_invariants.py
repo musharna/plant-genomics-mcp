@@ -149,3 +149,52 @@ def test_leak_detector_fires_on_data_and_stays_silent_on_envelopes(
     from live_semantic_sweep import _looks_populated
 
     assert _looks_populated(payload) is expected
+
+
+# --- truncated-flag kind sensitivity ------------------------------------------
+# The checker asked "is count > len(list)?" to decide whether rows were
+# withheld. That question is unanswerable for a RETURNED count, which equals the
+# list length by construction — so every truncated OrthoDB payload was reported
+# as self-inconsistent. Checker bug, not a server bug, and the seventh of this
+# shape in the audit: an invariant assuming one count semantics when the
+# registry already models two.
+
+
+def test_truncated_check_skips_returned_counts_instead_of_failing_them() -> None:
+    from semantic_invariants import CountKind, CountSpec, check_truncated_flag
+
+    spec = CountSpec("orthodb_orthologs", "member_count", CountKind.RETURNED, "members")
+    payload = {"member_count": 100, "members": list(range(100)), "truncated": True}
+
+    result = check_truncated_flag(spec, payload)
+
+    assert result.verdict is Verdict.SKIPPED, result.detail
+
+
+def test_truncated_check_still_fails_a_genuinely_stale_flag() -> None:
+    """Negative control. Without this the fix above could have been 'skip
+    everything', which reports green forever."""
+    from semantic_invariants import CountKind, CountSpec, check_truncated_flag
+
+    spec = CountSpec("locus_variants", "variant_count", CountKind.PRE_CAP, "variants")
+    # 900 exist upstream, 500 returned — truncated=False is a lie.
+    payload = {"variant_count": 900, "variants": list(range(500)), "truncated": False}
+
+    result = check_truncated_flag(spec, payload)
+
+    assert result.verdict is Verdict.FAIL, result.detail
+
+
+def test_orthodb_discloses_that_organism_does_not_scope_the_search() -> None:
+    """orthodb_orthologs takes an `organism` argument that is validated and
+    echoed but never reaches the wire — the search keys on the locus id at the
+    Viridiplantae level. The catalog previously said 'pass organism= for other
+    species', which reads as a filter. A caller who believes it gets real data
+    stamped with an organism that had no bearing on the result.
+    """
+    tool = next(t for t in server.TOOLS if t.name == "orthodb_orthologs")
+    org_desc = tool.inputSchema["properties"]["organism"]["description"].lower()
+
+    assert "does not scope" in (tool.description or "").lower()
+    assert "not scope" in org_desc
+    assert "pass organism= for other species" not in (tool.description or "").lower()
