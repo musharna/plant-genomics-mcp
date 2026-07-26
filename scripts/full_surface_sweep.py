@@ -461,6 +461,16 @@ async def run(delay: float, per_organism: int, out_path: Path, only: str | None)
                 for name in never_reached
             },
         },
+        # Transport errors are the one skip reason that indicts nothing in
+        # particular: a tool can log several and still be "reached", so scoping
+        # attribution to never_reached (above) discards exactly the cases worth
+        # chasing. A run-wide total of N says only "something was flaky"; per
+        # tool it separates one sick backend from N scattered blips.
+        "upstream_errors_by_tool": {
+            name: counts[SkipReason.UPSTREAM_ERROR]
+            for name, counts in sorted(skips.by_tool.items())
+            if counts[SkipReason.UPSTREAM_ERROR]
+        },
         "findings": findings,
     }
     out_path.write_text(json.dumps(report, indent=2))
