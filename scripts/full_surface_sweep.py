@@ -324,6 +324,16 @@ async def run(delay: float, per_organism: int, out_path: Path, only: str | None)
         )
 
         for locus, org in pairs:
+            # Heartbeat at the LOCUS, not the tool. A tool is up to 24 rate-limited
+            # calls against ONE backend, so a degraded backend (30s timeout x 3
+            # retries x 24 calls) pushes the gap between tool headers past jobd's
+            # 900s idle window and the run is SIGTERM'd mid-sweep -- exactly how job
+            # 3060 died at tool 9/50 while the identical command as job 3057 had
+            # finished. Per-tool progress removed the once-per-run cliff but not the
+            # mechanism: ANY silent span longer than the idle timeout still kills the
+            # run. Emitting at the smallest unit that can block bounds that span by
+            # one call's worst case (~93s), which no idle policy here can trip.
+            print(f"    - {tool.name} {locus}/{org}", flush=True)
             second = next((lo for lo, o in pairs if o == org and lo != locus), locus)
             args, why = build_args(tool, locus, org, second)
             if args is None:
