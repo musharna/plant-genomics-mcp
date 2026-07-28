@@ -23,6 +23,10 @@ from plant_genomics_mcp.errors import (
 )
 
 
+async def _no_sleep(_seconds: float) -> None:
+    """Skip real backoff delays in retry tests."""
+
+
 @pytest.mark.asyncio
 async def test_returns_httpx_response_on_200(httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(url="https://example.test/ok", json={"hello": "world"})
@@ -406,3 +410,172 @@ async def test_400_without_the_pattern_is_unchanged(httpx_mock: HTTPXMock) -> No
                 client, "GET", "https://example.test/x", service="other backend"
             )
     assert not isinstance(excinfo.value, NotFoundError)
+
+
+# --- HTTP 200 that isn't the payload: interposed pages ------------------------
+# PlantCyc/PMN sits behind Imperva. `GET /{orgid}/xmlquery` intermittently
+# answers 200 text/html with an `_Incapsula_Resource` challenge instead of
+# ptools-XML. Because it is a 200, the helper used to hand it straight to the
+# caller, and `ET.fromstring` reported `mismatched tag: line 1, column 356` —
+# blaming the upstream's DATA for what was really a blocked request. The whole
+# 2026-07-28 triage went down that wrong path first.
+#
+# CHALLENGE_BODY below is a verbatim capture from pmn.plantcyc.org
+# (2026-07-28), not a hand-written approximation.
+
+CHALLENGE_BODY = (
+    '<html>\r\n<head>\r\n<META NAME="robots" CONTENT="noindex,nofollow">\r\n'
+    '<script src="/_Incapsula_Resource?SWJIYLWA=5074a744e2e3d891814e9a2dace20bd4,'
+    '719d34d31c8e3a6e6fffd425f7e032f3">\r\n</script>\r\n<body>\r\n</body></html>\r\n'
+)
+
+PTOOLS_XML = (
+    "<?xml version='1.0' encoding='iso-8859-1'?>\n"
+    "<ptools-xml ptools-version='29.0'><metadata><num_results>0</num_results>"
+    "</metadata></ptools-xml>"
+)
+
+
+def test_challenge_body_really_is_unparseable_as_xml() -> None:
+    """Negative control for the fixture itself.
+
+    If PMN ever changed this page to something XML parses, the tests below
+    would still pass while testing nothing. Pin the premise.
+    """
+    from xml.etree import ElementTree as ET
+
+    with pytest.raises(ET.ParseError):
+        ET.fromstring(CHALLENGE_BODY)
+
+
+@pytest.mark.asyncio
+async def test_html_on_200_is_retried_then_raises_typed_error(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
+    for _ in range(3):
+        httpx_mock.add_response(text=CHALLENGE_BODY, headers={"Content-Type": "text/html"})
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError) as excinfo:
+            await _http.request_with_retry(
+                client,
+                "GET",
+                "https://example.test/ARA/xmlquery",
+                service="PlantCyc xmlquery ARA",
+                max_retries=3,
+            )
+    # The retry budget was actually spent, not short-circuited on attempt 1.
+    assert len(httpx_mock.get_requests()) == 3
+    # And the message names the real problem instead of an XML syntax error.
+    assert "text/html" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_html_on_200_retried_then_succeeds(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The functional payoff: the challenge is per-request, so a retry wins.
+
+    Pre-fix this could not happen — a 200 never reached the retry branch, so a
+    transient block was a hard first-attempt failure.
+    """
+    monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
+    httpx_mock.add_response(text=CHALLENGE_BODY, headers={"Content-Type": "text/html"})
+    httpx_mock.add_response(text=PTOOLS_XML, headers={"Content-Type": "text/xml"})
+    async with httpx.AsyncClient() as client:
+        resp = await _http.request_with_retry(
+            client,
+            "GET",
+            "https://example.test/ARA/xmlquery",
+            service="PlantCyc xmlquery ARA",
+            max_retries=3,
+        )
+    assert resp.text == PTOOLS_XML
+    assert len(httpx_mock.get_requests()) == 2
+
+
+@pytest.mark.asyncio
+async def test_allow_html_keeps_html_payloads_working(httpx_mock: HTTPXMock) -> None:
+    """Positive control: NCBI QBlast serves the RID inside an HTML page.
+
+    Without this opt-out the fix would break `blast_sequence` outright — the
+    check must reject INTERPOSED html, not all html.
+    """
+    body = "<html><body><!--QBlastInfoBegin\n RID = ABC123\nQBlastInfoEnd--></body></html>"
+    httpx_mock.add_response(text=body, headers={"Content-Type": "text/html"})
+    async with httpx.AsyncClient() as client:
+        resp = await _http.request_with_retry(
+            client, "GET", "https://example.test/Blast.cgi", service="BLAST Put", allow_html=True
+        )
+    assert "RID = ABC123" in resp.text
+    assert len(httpx_mock.get_requests()) == 1
+
+
+@pytest.mark.asyncio
+async def test_non_html_200s_are_untouched(httpx_mock: HTTPXMock) -> None:
+    """Positive control for every other backend: XML/JSON/plain still pass."""
+    for media in ("text/xml", "application/json", "text/plain", "application/octet-stream"):
+        httpx_mock.add_response(text=PTOOLS_XML, headers={"Content-Type": media})
+        async with httpx.AsyncClient() as client:
+            resp = await _http.request_with_retry(
+                client, "GET", "https://example.test/x", service="probe"
+            )
+        assert resp.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_interposed_html_rejected_against_a_real_server() -> None:
+    """Real uvicorn, real socket — the boundary check the fixtures can't make.
+
+    The v1.19.1 gzip regression shipped green because pytest_httpx could not
+    reach the streaming path at all. Anything that touches the reassembly in
+    request_with_retry gets one real-server pass on principle.
+    """
+    import asyncio
+    import socket
+
+    import uvicorn
+    from starlette.applications import Starlette
+    from starlette.responses import Response
+    from starlette.routing import Route
+
+    hits = {"n": 0}
+
+    async def flaky(_request: object) -> Response:
+        # First call challenged, second call real data — the live behaviour
+        # observed at pmn.plantcyc.org, where the same URL alternated between
+        # a challenge and ptools-XML seconds apart.
+        hits["n"] += 1
+        if hits["n"] == 1:
+            return Response(content=CHALLENGE_BODY, media_type="text/html")
+        return Response(content=PTOOLS_XML, media_type="text/xml")
+
+    sock = socket.socket()
+    sock.bind(("127.0.0.1", 0))
+    port = sock.getsockname()[1]
+    sock.close()
+
+    app = Starlette(routes=[Route("/xmlquery", flaky)])
+    config = uvicorn.Config(app, host="127.0.0.1", port=port, log_level="error")
+    server = uvicorn.Server(config)
+    task = asyncio.create_task(server.serve())
+    try:
+        for _ in range(100):
+            if server.started:
+                break
+            await asyncio.sleep(0.05)
+        assert server.started, "uvicorn never reported started"
+
+        async with httpx.AsyncClient() as client:
+            resp = await _http.request_with_retry(
+                client,
+                "GET",
+                f"http://127.0.0.1:{port}/xmlquery",
+                service="PlantCyc xmlquery ARA",
+                max_retries=3,
+            )
+        assert resp.text == PTOOLS_XML
+        assert hits["n"] == 2, "the challenge response was not retried"
+    finally:
+        server.should_exit = True
+        await task
