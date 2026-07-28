@@ -63,7 +63,7 @@ async def _getxml(client: httpx.AsyncClient, orgid: str, frame: str) -> ET.Eleme
     if cached is cache.NEGATIVE:  # cached 404 — checked before the miss test
         return None
     if cached is not None:
-        return _parse(cached, orgid, frame)
+        return _parse(cached, f"getxml {orgid}:{frame}")
     # getxml expects the raw ``?ORG:FRAME`` query, not a urlencoded key=value.
     url = f"{BASE_URL}/getxml?{orgid}:{frame}"
     resp = await _http.request_with_retry(
@@ -83,16 +83,22 @@ async def _getxml(client: httpx.AsyncClient, orgid: str, frame: str) -> ET.Eleme
         return None
     text = resp.text
     _CACHE.set(key, text)
-    return _parse(text, orgid, frame)
+    return _parse(text, f"getxml {orgid}:{frame}")
 
 
-def _parse(text: str, orgid: str, frame: str) -> ET.Element:
+def _parse(text: str, source: str) -> ET.Element:
+    """Parse a ptools-XML body; ``source`` names the endpoint that produced it.
+
+    ``source`` is passed in rather than assembled here because both endpoints
+    feed this function. The old signature took ``(orgid, frame)`` and hardcoded
+    "getxml" in the message, so a failure in the xmlquery hop reported
+    "PlantCyc getxml ARA:xmlquery" — an endpoint that does not exist, pointing
+    debugging at the wrong request.
+    """
     try:
         return ET.fromstring(text)
     except ET.ParseError as exc:
-        raise PlantGenomicsError(
-            f"PlantCyc getxml {orgid}:{frame} returned unparseable XML: {exc}"
-        ) from exc
+        raise PlantGenomicsError(f"PlantCyc {source} returned unparseable XML: {exc}") from exc
 
 
 async def _resolve_gene_frame(client: httpx.AsyncClient, orgid: str, locus: str) -> str | None:
@@ -117,7 +123,7 @@ async def _resolve_gene_frame(client: httpx.AsyncClient, orgid: str, locus: str)
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
     )
-    root = _parse(resp.text, orgid, "xmlquery")
+    root = _parse(resp.text, f"xmlquery {orgid}")
     # Result frames carry an ``ID`` attribute (e.g. ARA:AT3G51240); nested class
     # references (Unclassified-Genes, …) use ``resource=`` instead — skip those.
     for gene in root.findall(".//Gene"):

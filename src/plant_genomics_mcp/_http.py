@@ -54,6 +54,35 @@ def _too_large(service: str, detail: str) -> PlantGenomicsError:
     )
 
 
+def _media_type(resp: httpx.Response) -> str:
+    """The response's media type, lowercased, without parameters."""
+    return resp.headers.get("content-type", "").split(";")[0].strip().lower()
+
+
+def _is_interposed_html(resp: httpx.Response) -> bool:
+    """True when a 200 carries an HTML body that cannot be the requested payload.
+
+    Every backend here serves JSON, XML, plain text or FASTA. HTML on a 200 is
+    the signature of something *interposed* between us and the API: a WAF
+    bot-challenge, a captive portal, a login wall, a maintenance page. The
+    interposer answers 200 because, from its point of view, serving the
+    challenge IS success — so status alone cannot distinguish it from data.
+
+    PlantCyc/PMN sits behind Imperva and does exactly this: ``GET
+    /{orgid}/xmlquery`` intermittently returns ``200 text/html`` carrying an
+    ``_Incapsula_Resource`` challenge instead of ptools-XML. Handed to
+    ``ET.fromstring`` that surfaced as ``mismatched tag: line 1, column 356``
+    (column 356 is the challenge page's ``</head>``) — an error that blames the
+    upstream's data for what is really a blocked request. Every backend that
+    calls ``resp.json()`` or parses ``resp.text`` inherits the same confusion,
+    which is why this lives here and not in one client.
+
+    NCBI's QBlast is the one legitimate HTML producer in this codebase (the RID
+    arrives inside an HTML comment), so it opts out via ``allow_html=True``.
+    """
+    return _media_type(resp) in ("text/html", "application/xhtml+xml")
+
+
 async def request_with_retry(
     client: httpx.AsyncClient,
     method: str,
@@ -68,6 +97,7 @@ async def request_with_retry(
     max_retries: int = 3,
     not_found_returns: Any = _RAISE,
     not_found_400_pattern: re.Pattern[str] | None = None,
+    allow_html: bool = False,
 ) -> httpx.Response | Any:
     """Issue ``method url`` with the shared retry + classification policy.
 
@@ -84,10 +114,17 @@ async def request_with_retry(
     Ensembl overloads 400 for genuinely malformed requests too (an oversized
     region span), and calling those "not found" would just be a different
     wrong answer.
+
+    A 200 carrying an HTML body is not treated as success — see
+    ``_is_interposed_html``. It is retried on the same backoff as 429/5xx
+    (the interposed page is typically transient) and, once the budget is
+    spent, raises ``UpstreamUnavailableError``. Pass ``allow_html=True`` for
+    the rare endpoint that genuinely serves HTML (NCBI QBlast).
     """
     delay = 1.0
     last_status: int | None = None
     last_exc: httpx.TransportError | None = None
+    last_html_media: str | None = None
     for attempt in range(max_retries):
         try:
             # Stream so an oversized body is refused BEFORE it is fully buffered:
@@ -146,6 +183,7 @@ async def request_with_retry(
             # Retry them on the same backoff schedule as 429/5xx.
             last_exc = exc
             last_status = None
+            last_html_media = None
             if attempt < max_retries - 1:
                 retry_after = min(delay, _RETRY_AFTER_CAP)
                 await progress.notify(
@@ -158,9 +196,29 @@ async def request_with_retry(
             break
         last_exc = None
         last_status = resp.status_code
+        last_html_media = None
 
         if resp.status_code == 200:
-            return resp
+            if allow_html or not _is_interposed_html(resp):
+                return resp
+            # An interposed page, not our payload. Retrying is worthwhile
+            # rather than merely cosmetic: the challenge is issued per
+            # request, so the same URL alternates between a challenge and
+            # real data seconds apart. Because this arrives as 200 it never
+            # reached _RETRYABLE_STATUSES before, making a transient block a
+            # hard first-attempt failure.
+            last_html_media = _media_type(resp)
+            if attempt < max_retries - 1:
+                retry_after = min(delay, _RETRY_AFTER_CAP)
+                await progress.notify(
+                    f"{service}: HTTP 200 but {last_html_media} (interposed page, "
+                    f"not payload), retrying in {retry_after:.1f}s "
+                    f"(attempt {attempt + 2}/{max_retries})"
+                )
+                await asyncio.sleep(retry_after)
+                delay *= 2
+                continue
+            break
 
         if resp.status_code == 404 and not_found_returns is not _RAISE:
             return not_found_returns
@@ -218,6 +276,16 @@ async def request_with_retry(
         ) from last_exc
     if last_status == 429:
         raise RateLimitError(f"{service} exhausted {max_retries} retries (HTTP 429)")
+    if last_html_media is not None:
+        # Name the real problem. The pre-fix path let this body reach the
+        # caller's parser, so the user saw an XML/JSON syntax error and would
+        # reasonably conclude the upstream's *data* was corrupt.
+        raise UpstreamUnavailableError(
+            f"{service} exhausted {max_retries} retries (HTTP 200 with "
+            f"{last_html_media}, not the requested data — the upstream or a "
+            "bot-mitigation layer in front of it served a challenge, login or "
+            "maintenance page)"
+        )
     raise UpstreamUnavailableError(
         f"{service} exhausted {max_retries} retries (last HTTP {last_status})"
     )
