@@ -579,3 +579,52 @@ async def test_interposed_html_rejected_against_a_real_server() -> None:
     finally:
         server.should_exit = True
         await task
+
+
+# --- the label lies in BOTH directions ---------------------------------------
+# v1.19.3 decided this on Content-Type alone and broke
+# `arabidopsis_natural_variation`: tools.1001genomes.org serves valid JSON under
+# `Content-Type: text/html; charset=UTF-8`. Rejecting it as a challenge page was
+# the same mistake as the bug the check exists to fix — trusting a label over
+# the content it describes. Captured live 2026-07-28:
+#
+#   HTTP/1.1 200 OK
+#   Server: Apache/2.4.58 (Ubuntu)
+#   Content-Type: text/html; charset=UTF-8
+#   {"regions":[{"reg_str": "Chr3:19025192..19026872","dir": "+"}]}
+
+ONEKG_MISLABELLED_JSON = '{"regions":[{"reg_str": "Chr3:19025192..19026872","dir": "+"}]}'
+
+
+@pytest.mark.asyncio
+async def test_json_body_mislabelled_as_html_is_still_payload(httpx_mock: HTTPXMock) -> None:
+    """A real payload under a wrong Content-Type must NOT be rejected."""
+    httpx_mock.add_response(
+        text=ONEKG_MISLABELLED_JSON, headers={"Content-Type": "text/html; charset=UTF-8"}
+    )
+    async with httpx.AsyncClient() as client:
+        resp = await _http.request_with_retry(
+            client, "GET", "https://example.test/api/v2/gi2coords", service="1001 Genomes"
+        )
+    assert resp.json()["regions"][0]["dir"] == "+"
+    assert len(httpx_mock.get_requests()) == 1, "a valid payload must not be retried"
+
+
+@pytest.mark.asyncio
+async def test_html_body_mislabelled_as_json_is_still_rejected(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The converse: sniffing the body catches a challenge page under any label.
+
+    Header-based detection missed this case entirely — a WAF is under no
+    obligation to label its challenge `text/html`.
+    """
+    monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
+    for _ in range(3):
+        httpx_mock.add_response(text=CHALLENGE_BODY, headers={"Content-Type": "application/json"})
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError):
+            await _http.request_with_retry(
+                client, "GET", "https://example.test/x", service="probe", max_retries=3
+            )
+    assert len(httpx_mock.get_requests()) == 3

@@ -130,9 +130,36 @@ async def test_lookup_non_json_200_raises_typed(httpx_mock: HTTPXMock) -> None:
     service _get shape shared with onekg."""
     from plant_genomics_mcp.errors import PlantGenomicsError
 
-    httpx_mock.add_response(url=_URL, text="<html>upstream error</html>", status_code=200)
+    # Body is non-JSON but NOT html: this is the L3 path proper. An html body
+    # is now intercepted upstream in _http as an interposed page (see the
+    # companion test below), so it can no longer reach the "non-JSON" branch.
+    httpx_mock.add_response(url=_URL, text="upstream error, not json", status_code=200)
     async with httpx.AsyncClient() as client:
         with pytest.raises(PlantGenomicsError, match="non-JSON"):
+            await aragwas.lookup_locus(client, "AT1G01060", "arabidopsis")
+
+
+@pytest.mark.asyncio
+async def test_lookup_html_200_is_interposed_page(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An HTML body on a 200 is a challenge/error page, not this backend's data.
+
+    It is retried and typed as UpstreamUnavailableError rather than reported as
+    a parse failure, which would blame the upstream's data for a blocked or
+    intercepted request.
+    """
+    from plant_genomics_mcp import _http
+    from plant_genomics_mcp.errors import UpstreamUnavailableError
+
+    async def _no_sleep(_seconds: float) -> None:
+        pass
+
+    monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
+    for _ in range(3):
+        httpx_mock.add_response(url=_URL, text="<html>upstream error</html>", status_code=200)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError):
             await aragwas.lookup_locus(client, "AT1G01060", "arabidopsis")
 
 
