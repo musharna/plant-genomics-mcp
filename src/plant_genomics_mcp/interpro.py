@@ -53,6 +53,14 @@ async def _get(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
             max_retries=MAX_RETRIES,
         )
         cached = resp.json()
+        # Stash the release the ANSWERING response reported, inside the cached
+        # value. Cached separately it would be dropped on every cache hit, so a
+        # warm result would silently claim no version while a cold one reported
+        # 109.0 — the same answer described two different ways depending on
+        # timing. InterPro's own payload has no key in this namespace, and
+        # _project() selects fields explicitly, so it cannot leak into output.
+        if isinstance(cached, dict):
+            cached["_upstream_version"] = _http.upstream_version(resp)
         _CACHE.set(key, cached)
     if not isinstance(cached, dict):
         raise PlantGenomicsError(
@@ -99,8 +107,11 @@ async def lookup_by_uniprot(client: httpx.AsyncClient, accession: str) -> dict[s
     domains: list[dict[str, Any]] = []
     total = 0
     pages = 0
+    version: str | None = None
     while url and pages < MAX_PAGES:
         page = await _get(client, url)
+        if version is None:
+            version = page.get("_upstream_version")
         total = int(page.get("count") or 0)
         for result in page.get("results") or []:
             if isinstance(result, dict):
@@ -115,6 +126,9 @@ async def lookup_by_uniprot(client: httpx.AsyncClient, accession: str) -> dict[s
         "truncated": total > len(domains),
         "domains": domains,
         "count_by_type": dict(by_type),
+        # None means InterPro did not state a release on this response, never
+        # that no release exists.
+        "upstream_version": version,
     }
 
 
