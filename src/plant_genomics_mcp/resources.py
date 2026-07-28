@@ -159,11 +159,75 @@ def _cache_stats_payload() -> dict[str, dict[str, int]]:
     }
 
 
+# Canonical citation for each backend's underlying resource, so a caller can
+# credit the data source rather than this wrapper. Every DOI here was resolved
+# from a LIVE registry (OpenAlex) and then independently verified against the
+# CrossRef record for first-author surname + year — never written from memory.
+# Wrong-author-for-right-DOI is the dominant ghost-citation failure mode, and a
+# fabricated DOI in a scientific tool is worse than no DOI at all.
+#
+# Two entries are deliberate judgement calls, recorded so they can be argued
+# with rather than silently inherited:
+#   * plantcyc — the obvious search hit is a Populus-specific PoplarCyc paper;
+#     the resource paper for PMN/PlantCyc is Hawkins 2021.
+#   * thalemine — ThaleMine is the InterMine instance behind Araport, so the
+#     Araport paper is the closest citable resource description.
+# ensembl_plants and ensembl_variation share one citation: two client modules,
+# one provider.
+_CITATIONS: dict[str, dict[str, object]] = {
+    "atted": {"doi": "10.1093/pcp/pcv165", "first_author": "Aoki", "year": 2015},
+    "bar": {"doi": "10.1007/978-1-4939-6658-5_6", "first_author": "Waese", "year": 2016},
+    "ensembl_plants": {
+        "doi": "10.1007/978-1-4939-3167-5_6",
+        "first_author": "Bolser",
+        "year": 2016,
+    },
+    "ensembl_variation": {
+        "doi": "10.1007/978-1-4939-3167-5_6",
+        "first_author": "Bolser",
+        "year": 2016,
+    },
+    "phytozome": {"doi": "10.1093/nar/gkr944", "first_author": "Goodstein", "year": 2011},
+    "uniprot": {"doi": "10.1093/nar/gkh131", "first_author": "Apweiler", "year": 2004},
+    "europe_pmc": {
+        "doi": "10.1093/nar/gku1061",
+        "first_author": "Europe PMC Consortium",
+        "year": 2014,
+    },
+    "quickgo": {"doi": "10.1093/bioinformatics/btp536", "first_author": "Binns", "year": 2009},
+    "planteome": {"doi": "10.1093/nar/gkx1152", "first_author": "Cooper", "year": 2017},
+    "gprofiler": {"doi": "10.1093/nar/gkz369", "first_author": "Raudvere", "year": 2019},
+    "gramene": {"doi": "10.1016/j.cpb.2016.12.005", "first_author": "Gupta", "year": 2016},
+    "kegg": {"doi": "10.1093/nar/28.1.27", "first_author": "Kanehisa", "year": 2000},
+    "string_db": {"doi": "10.1093/nar/gky1131", "first_author": "Szklarczyk", "year": 2018},
+    "blast": {"doi": "10.1016/s0022-2836(05)80360-2", "first_author": "Altschul", "year": 1990},
+    "plantcyc": {"doi": "10.1111/jipb.13163", "first_author": "Hawkins", "year": 2021},
+    "alphafold": {"doi": "10.1093/nar/gkab1061", "first_author": "Varadi", "year": 2021},
+    "pdbe": {"doi": "10.1093/nar/gkp916", "first_author": "Velankar", "year": 2009},
+    "interpro": {"doi": "10.1093/nar/gkaa977", "first_author": "Blum", "year": 2020},
+    "jaspar": {"doi": "10.1093/nar/gkab1113", "first_author": "Castro-Mondragon", "year": 2021},
+    "thalemine": {"doi": "10.1093/nar/gku1200", "first_author": "Krishnakumar", "year": 2014},
+    "panther": {"doi": "10.1038/nprot.2013.092", "first_author": "Mi", "year": 2013},
+    "orthodb": {"doi": "10.1093/nar/gks1116", "first_author": "Waterhouse", "year": 2012},
+    "aragwas": {"doi": "10.1093/nar/gkx954", "first_author": "Togninalli", "year": 2017},
+    "onekg": {"doi": "10.1186/gb-2009-10-5-107", "first_author": "Weigel", "year": 2009},
+}
+
+
 def _backends_status_payload() -> list[dict[str, object]]:
     """Per-backend liveness + subscription-gating rollup.
 
-    Each entry is ``{name, base_url, kind, subscription_gated}`` (BLAST also
-    carries ``concurrency_cap``). All backends are currently ``kind="live"``.
+    Each entry is ``{name, base_url, kind, subscription_gated, citation}``
+    (BLAST also carries ``concurrency_cap``). All backends are currently
+    ``kind="live"``.
+
+    ``citation`` carries the DOI of the underlying resource so a caller can
+    credit the data source rather than this wrapper — the provenance/citability
+    gap that made every returned value uncreditable. It is attached here, on the
+    existing backend registry, rather than in a second parallel list: two lists
+    drift, and this repository has been bitten by exactly that (a stale tool
+    count in a docstring, a stale external catalog entry, a CITATION.cff that
+    fell behind pyproject).
 
     This list has **24** entries while the README and package docstring say
     "23 backends". Both are correct and neither is drift: ``ensembl_plants``
@@ -172,7 +236,7 @@ def _backends_status_payload() -> list[dict[str, object]]:
     enumerates *client modules*, which is what a caller wants when deciding
     where a given tool's data came from.
     """
-    return [
+    rows: list[dict[str, object]] = [
         {
             "name": "atted",
             "base_url": atted.BASE_URL,
@@ -321,6 +385,13 @@ def _backends_status_payload() -> list[dict[str, object]]:
             "subscription_gated": False,
         },
     ]
+    # Attach citations by name rather than inlining a DOI into each literal
+    # above: the entries and the verified citation table stay independently
+    # readable, and a backend added without a citation is a KeyError at import
+    # of this payload rather than a silently uncredited source.
+    for row in rows:
+        row["citation"] = _CITATIONS[str(row["name"])]
+    return rows
 
 
 def _phytozome_organisms_payload() -> dict[str, int]:
