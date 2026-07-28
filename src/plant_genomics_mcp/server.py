@@ -708,6 +708,16 @@ TOOLS: list[types.Tool] = [
                     "description": "Filter on homology kind",
                     "default": "ortholog",
                 },
+                "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": gramene.MAX_HOMOLOGS,
+                    "default": gramene.MAX_HOMOLOGS,
+                    "description": (
+                        "Max homolog rows to return. 'total' always reports the true "
+                        "pre-cap count and 'truncated' says whether the cap bit."
+                    ),
+                },
             },
             "required": ["locus"],
             "additionalProperties": False,
@@ -2380,6 +2390,7 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     client,
                     args["locus"],
                     homology_type=args.get("homology_type", "ortholog"),
+                    limit=args.get("limit"),
                 )
             case "analyze_locus_synth":
                 env = await synthesis.analyze_locus_synth(

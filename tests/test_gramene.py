@@ -332,3 +332,64 @@ async def test_fetch_homolog_enrichment_batch_empty_input_no_http(
     assert result == {}
     # pytest_httpx asserts no unmatched mocks on teardown; reaching this
     # line with no responses configured proves no HTTP was issued.
+
+
+# --- row cap ----------------------------------------------------------------
+# gramene_homologs was the one row-returning backend here with no cap: a locus
+# with 176 homologs serialized all of them (~18 KB) and nothing in the response
+# said it was unbounded. Every other backend already pairs a cap with a true
+# pre-cap count and a truncated flag; this brings it into line.
+
+
+def _homology_payload(n: int) -> list[dict[str, object]]:
+    return [
+        {
+            "homology": {
+                "gene_tree": {"id": "GT1"},
+                "homologous_genes": {"ortholog_one2one": [f"OS{i:05d}" for i in range(n)]},
+            }
+        }
+    ]
+
+
+@pytest.mark.asyncio
+async def test_homologs_are_capped_and_total_stays_true(httpx_mock: HTTPXMock) -> None:
+    """A capped answer must still report how much exists."""
+    gramene._CACHE.clear()
+    httpx_mock.add_response(json=_homology_payload(176))
+    async with httpx.AsyncClient() as client:
+        r = await gramene.lookup_homologs(client, "AT3G51240", homology_type="all")
+    assert r["total"] == 176, "pre-cap count must not be reduced to the row count"
+    assert len(r["homologs"]) == gramene.MAX_HOMOLOGS
+    assert r["truncated"] is True
+
+
+@pytest.mark.asyncio
+async def test_limit_is_honoured(httpx_mock: HTTPXMock) -> None:
+    gramene._CACHE.clear()
+    httpx_mock.add_response(json=_homology_payload(176))
+    async with httpx.AsyncClient() as client:
+        r = await gramene.lookup_homologs(client, "AT3G51240", homology_type="all", limit=10)
+    assert len(r["homologs"]) == 10
+    assert r["total"] == 176
+    assert r["truncated"] is True
+
+
+@pytest.mark.asyncio
+async def test_untruncated_result_reports_truncated_false(httpx_mock: HTTPXMock) -> None:
+    """Positive control: the flag must be able to be False, or it proves nothing."""
+    gramene._CACHE.clear()
+    httpx_mock.add_response(json=_homology_payload(3))
+    async with httpx.AsyncClient() as client:
+        r = await gramene.lookup_homologs(client, "AT3G51240", homology_type="all")
+    assert r["total"] == 3
+    assert len(r["homologs"]) == 3
+    assert r["truncated"] is False
+
+
+def test_limit_is_clamped_not_obeyed_blindly() -> None:
+    """A non-positive or oversized limit must not reopen the unbounded path."""
+    assert gramene._resolve_limit(None) == gramene.MAX_HOMOLOGS
+    assert gramene._resolve_limit(0) == 1
+    assert gramene._resolve_limit(-5) == 1
+    assert gramene._resolve_limit(10_000) == gramene.MAX_HOMOLOGS

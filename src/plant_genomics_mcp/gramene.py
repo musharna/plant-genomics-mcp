@@ -67,6 +67,24 @@ _HOMOLOGY_FILTERS: dict[str, tuple[str, ...]] = {
     "all": (),
 }
 
+# Row cap, matching the convention every other row-returning backend here
+# already follows (interpro MAX_PAGES, ensembl_variation MAX_VARIANTS=500,
+# orthodb MAX_MEMBERS=100). Chosen to sit above a typical gene's homolog count
+# so the cap is a guard rather than a routine truncation.
+MAX_HOMOLOGS = 100
+
+
+def _resolve_limit(limit: int | None) -> int:
+    """Clamp a caller's ``limit`` into ``1..MAX_HOMOLOGS``.
+
+    A non-positive limit is nonsense rather than a request for everything, and
+    silently honouring it would reintroduce the unbounded payload this cap
+    exists to prevent.
+    """
+    if limit is None:
+        return MAX_HOMOLOGS
+    return max(1, min(int(limit), MAX_HOMOLOGS))
+
 
 def _normalize(
     category: str,
@@ -166,8 +184,16 @@ async def lookup_homologs(
     client: httpx.AsyncClient,
     locus: str,
     homology_type: str = "ortholog",
+    limit: int | None = None,
 ) -> dict[str, Any]:
     """Fetch Gramene compara homologs for a plant locus.
+
+    ``limit`` caps the returned rows (default ``MAX_HOMOLOGS``); ``total``
+    always reports the true pre-cap count and ``truncated`` says whether the
+    cap bit. This tool was the one row-returning backend here with no cap at
+    all — a hub locus serialized every homolog into the payload, ~18 KB for a
+    single ordinary gene, with nothing in the response admitting it was
+    unbounded.
 
     ``homology_type`` is one of ``"ortholog"``, ``"paralog"``, ``"all"``.
     Unknown values default to ``"all"`` — we prefer permissive filtering
@@ -218,9 +244,14 @@ async def lookup_homologs(
         for target_locus in loci:
             if isinstance(target_locus, str):
                 normalized.append(_normalize(category, target_locus, gene_tree_id))
+    total = len(normalized)
+    rows = normalized[: _resolve_limit(limit)]
     return {
         "locus": locus,
         "release": GRAMENE_RELEASE,
-        "total": len(normalized),
-        "homologs": normalized,
+        # ``total`` is the true pre-cap count, so a capped answer still reports
+        # how much exists rather than quietly implying it returned everything.
+        "total": total,
+        "truncated": total > len(rows),
+        "homologs": rows,
     }
