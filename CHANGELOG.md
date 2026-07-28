@@ -1,5 +1,31 @@
 # Changelog
 
+## v1.19.5 — 2026-07-28
+
+No new tools or backends (still **50 tools / 23 backends**), and no behaviour change to any
+tool. Release cut so the repository can be archived to Zenodo and receive a DOI.
+
+**Added**
+
+- `CITATION.cff` (CFF 1.2.0, validated against the schema, wired to ORCID
+  [0009-0003-4055-5238](https://orcid.org/0009-0003-4055-5238)) and `.zenodo.json`. GitHub
+  now renders a **Cite this repository** panel, and Zenodo mints DOI records from pinned
+  metadata rather than inferring it from the repository.
+
+**Fixed**
+
+- `CITATION.cff` said `1.19.3` while the project had already shipped `1.19.4`. It drifted
+  within two hours of the file first landing — the same way `ghostcite` ended up claiming
+  `0.4.0` while shipping `0.5.0`. Stale citation metadata is machine-readable and reaches
+  other people's bibliographies, so it is worse than none at all.
+- A `citation` CI job now fails any change where `CITATION.cff`'s version disagrees with
+  `pyproject.toml`. It mirrors the existing tag/pyproject release gate, one layer earlier
+  and on every pull request.
+
+**Internal**
+
+- Audit sweep results refreshed against v1.19.4.
+
 ## v1.19.4 — 2026-07-28
 
 **Urgent — v1.19.3 breaks `arabidopsis_natural_variation`. Upgrade from v1.19.3.**
