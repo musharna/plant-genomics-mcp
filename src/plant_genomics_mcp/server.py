@@ -526,6 +526,15 @@ TOOLS: list[types.Tool] = [
                     "minimum": 1,
                     "maximum": europe_pmc.MAX_PAGE_SIZE,
                 },
+                "include_abstract": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": (
+                        "Set false to null out abstractText, which is ~67% of this "
+                        "payload. The response echoes 'abstracts_included' so a null "
+                        "abstract is not mistaken for an article that has none."
+                    ),
+                },
             },
             "required": ["locus"],
             "additionalProperties": False,
@@ -2188,6 +2197,7 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     args["locus"],
                     organism=args.get("organism", "arabidopsis_thaliana"),
                     size=args.get("size", europe_pmc.DEFAULT_PAGE_SIZE),
+                    include_abstract=args.get("include_abstract", True),
                 )
             case "locus_go_annotations":
                 return await _resolve_then_go_annotations(

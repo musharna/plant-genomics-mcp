@@ -237,6 +237,14 @@ class LocusLiterature(BaseModel):
     query: str = Field(description="Final query string sent to Europe PMC")
     hitCount: int = Field(description="Total hits available upstream (may exceed returned)")
     returned: int = Field(description="Number of hits actually in hits[]")
+    abstracts_included: bool = Field(
+        default=True,
+        description=(
+            "False when include_abstract=False was passed, in which case every "
+            "abstractText is null because it was not requested — not because "
+            "the article lacks one. Abstracts are ~67% of this payload."
+        ),
+    )
     hits: list[LiteratureHit]
 
 
