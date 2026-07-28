@@ -324,6 +324,16 @@ async def run(delay: float, per_organism: int, out_path: Path, only: str | None)
         )
 
         for locus, org in pairs:
+            # Heartbeat at the LOCUS, not the tool. A tool is up to 24 rate-limited
+            # calls against ONE backend, so a degraded backend (30s timeout x 3
+            # retries x 24 calls) pushes the gap between tool headers past jobd's
+            # 900s idle window and the run is SIGTERM'd mid-sweep -- exactly how job
+            # 3060 died at tool 9/50 while the identical command as job 3057 had
+            # finished. Per-tool progress removed the once-per-run cliff but not the
+            # mechanism: ANY silent span longer than the idle timeout still kills the
+            # run. Emitting at the smallest unit that can block bounds that span by
+            # one call's worst case (~93s), which no idle policy here can trip.
+            print(f"    - {tool.name} {locus}/{org}", flush=True)
             second = next((lo for lo, o in pairs if o == org and lo != locus), locus)
             args, why = build_args(tool, locus, org, second)
             if args is None:
@@ -460,6 +470,16 @@ async def run(delay: float, per_organism: int, out_path: Path, only: str | None)
                 name: {str(k): v for k, v in skips.by_tool[name].most_common()}
                 for name in never_reached
             },
+        },
+        # Transport errors are the one skip reason that indicts nothing in
+        # particular: a tool can log several and still be "reached", so scoping
+        # attribution to never_reached (above) discards exactly the cases worth
+        # chasing. A run-wide total of N says only "something was flaky"; per
+        # tool it separates one sick backend from N scattered blips.
+        "upstream_errors_by_tool": {
+            name: counts[SkipReason.UPSTREAM_ERROR]
+            for name, counts in sorted(skips.by_tool.items())
+            if counts[SkipReason.UPSTREAM_ERROR]
         },
         "findings": findings,
     }
