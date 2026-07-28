@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v1.19.3 — 2026-07-28
+
+Robustness patch. No new tools or backends (still **50 tools / 23 backends**). Affects every backend's HTTP path; `blast_sequence` is explicitly exempt.
 
 **Fixed**
 
