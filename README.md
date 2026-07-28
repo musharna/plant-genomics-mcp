@@ -13,6 +13,7 @@
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 [![Glama](https://glama.ai/mcp/servers/musharna/plant-genomics-mcp/badges/score.svg)](https://glama.ai/mcp/servers/musharna/plant-genomics-mcp)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21636352.svg)](https://doi.org/10.5281/zenodo.21636352)
 
 <p align="center">
   <img src="examples/assets/cc-demo.gif" alt="Claude Code answering a plant-genomics question live — calling plant-genomics-mcp across Ensembl Plants, UniProt, and Europe PMC and synthesizing the AT1G01010 / NAC1_ARATH gene profile in a single turn" width="780">
