@@ -257,6 +257,11 @@ async def submit(
         data=data,
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
+        # NCBI answers Put and Get(SearchInfo) with an HTML page carrying the
+        # QBlastInfo block, and Get(Text) is served as HTML too — so BLAST is
+        # the one endpoint family here where HTML IS the payload. Opt out of
+        # the interposed-page check in _http rather than weaken it globally.
+        allow_html=True,
     )
     rid, rtoe = _parse_put_response(resp.text)
     await progress.notify(
@@ -284,6 +289,11 @@ async def poll_status(client: httpx.AsyncClient, rid: str) -> str:
         params=params,
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
+        # NCBI answers Put and Get(SearchInfo) with an HTML page carrying the
+        # QBlastInfo block, and Get(Text) is served as HTML too — so BLAST is
+        # the one endpoint family here where HTML IS the payload. Opt out of
+        # the interposed-page check in _http rather than weaken it globally.
+        allow_html=True,
     )
     return _parse_status(resp.text)
 
@@ -304,6 +314,11 @@ async def fetch_result(client: httpx.AsyncClient, rid: str) -> str:
         params=params,
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
+        # NCBI answers Put and Get(SearchInfo) with an HTML page carrying the
+        # QBlastInfo block, and Get(Text) is served as HTML too — so BLAST is
+        # the one endpoint family here where HTML IS the payload. Opt out of
+        # the interposed-page check in _http rather than weaken it globally.
+        allow_html=True,
     )
     return resp.text
 

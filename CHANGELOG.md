@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+**Fixed**
+
+- **An HTTP 200 carrying an HTML body is no longer treated as data.** Every backend here serves JSON, XML, plain text or FASTA, so HTML on a 200 means something was _interposed_ between the client and the API — a WAF bot-challenge, a captive portal, a login wall, a maintenance page. The interposer answers 200 because, to it, serving the challenge _is_ success, so the status code alone could not distinguish it from real data and the page went straight to the caller's parser.
+
+  PlantCyc/PMN sits behind Imperva and does this intermittently: `plantcyc_locus_info` reported `PlantCyc getxml ARA:xmlquery returned unparseable XML: mismatched tag: line 1, column 356`, which blamed the upstream's **data** for what was really a blocked request (column 356 is the challenge page's `</head>`). All 21 upstream errors in the v1.19.2 full-surface sweep were this.
+
+  Such a response is now retried on the existing backoff and, if the budget is spent, raises **`UpstreamUnavailableError`** naming the received media type. Retrying is a real fix rather than a relabel — the challenge is issued per request, so the same URL alternates between a challenge and real data seconds apart, and because it arrived as a 200 it never reached the retry path before. A live 6-locus PlantCyc probe went from 20/24 calls failing to **5 of 6 succeeding**, with the remainder correctly typed.
+
+  `blast_sequence` is unaffected: NCBI's QBlast returns the RID inside an HTML page, so BLAST opts out via `allow_html=True`. It is the only backend that legitimately consumes HTML.
+
+- **PlantCyc named the wrong endpoint when a parse failed.** A failure in the `xmlquery` hop was reported as `PlantCyc getxml <ORG>:xmlquery` — an endpoint that does not exist — because the message template hardcoded `getxml` while both endpoints share the parser. Debugging started at the wrong request.
+
 ## v1.19.2 — 2026-07-25
 
 Correctness patch from the semantic ("wrong but plausible") audit. No new tools or backends (still **50 tools / 23 backends**). Both changes are caller-visible but neither breaks an existing call.
