@@ -978,7 +978,11 @@ class GrameneHomologs(BaseModel):
 
     locus: str
     release: str = Field(description="Gramene release identifier, e.g. v69")
-    total: int = Field(description="Number of homologs after filtering")
+    total: int = Field(description="Number of homologs after filtering, BEFORE the row cap")
+    truncated: bool = Field(
+        default=False,
+        description="True when the row list was capped (< total); pass limit= to change the cap",
+    )
     homologs: list[GrameneHomolog]
 
 
