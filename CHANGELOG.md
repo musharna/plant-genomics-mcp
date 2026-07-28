@@ -1,8 +1,12 @@
 # Changelog
 
-## Unreleased
+## v1.19.4 — 2026-07-28
 
-**Urgent — v1.19.3 breaks `arabidopsis_natural_variation`.**
+**Urgent — v1.19.3 breaks `arabidopsis_natural_variation`. Upgrade from v1.19.3.**
+
+No new tools or backends (still **50 tools / 23 backends**).
+
+**Fixed**
 
 - **The interposed-page check now inspects the response body, not `Content-Type`.** v1.19.3 rejected any 200 whose `Content-Type` was `text/html`. `tools.1001genomes.org` serves perfectly valid JSON under `Content-Type: text/html; charset=UTF-8`, so v1.19.3 retried a good response three times and then failed it as `UpstreamUnavailableError`. `arabidopsis_natural_variation` is broken on v1.19.3 for every locus.
 
@@ -11,6 +15,14 @@
   It also catches strictly more than the header check did: a challenge page served under `application/json` was invisible to v1.19.3 and is now detected. No WAF is obliged to label its own challenge honestly.
 
   Found by probing all 23 backends from the production deployment after the v1.19.3 rollout — the fixture suite could not have caught it, because the fixtures assert the content type the real server _ought_ to send.
+
+**Added**
+
+- `CITATION.cff` and `.zenodo.json` for a citable DOI (#60).
+
+**Internal**
+
+- CI action bumps: `actions/setup-python` 6.2.0 → 7.0.0, `astral-sh/setup-uv` 8.2.0 → 9.0.0, plus the actions-minor-patch group (#54, #55, #56).
 
 ## v1.19.3 — 2026-07-28
 
