@@ -1,28 +1,35 @@
 {
   "stats": {
-    "calls": 926,
+    "calls": 914,
     "echo_pass": 82,
-    "neg_correct": 372,
-    "count_pass": 33,
+    "neg_correct": 361,
+    "count_pass": 57,
     "truncated_pass": 19
   },
   "skips": {
-    "backend correctly rejected this locus/organism pair": 215,
+    "backend correctly rejected this locus/organism pair": 203,
     "payload carries no comparable organism field": 196,
-    "organism hardcoded upstream": 171,
+    "organism hardcoded upstream": 195,
     "no curated fixture for this organism": 24,
     "organism is a search hint, not a constraint": 24,
-    "upstream/transport error": 22,
+    "upstream/transport error": 21,
     "BLAST-backed; excluded from bulk sweep": 3
   },
   "coverage": {
     "tools_total": 50,
     "tools_sweepable": 47,
-    "tools_reached": 45,
+    "tools_reached": 46,
     "never_reached": [
-      "kegg_pathways",
-      "orthodb_orthologs"
-    ]
+      "kegg_pathways"
+    ],
+    "never_reached_why": {
+      "kegg_pathways": {
+        "backend correctly rejected this locus/organism pair": 12
+      }
+    }
+  },
+  "upstream_errors_by_tool": {
+    "plantcyc_locus_info": 21
   },
   "findings": []
 }
