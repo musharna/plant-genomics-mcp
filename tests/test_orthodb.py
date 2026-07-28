@@ -101,7 +101,12 @@ async def test_lookup_truncates(httpx_mock: HTTPXMock, monkeypatch: pytest.Monke
     async with httpx.AsyncClient() as client:
         r = await orthodb.lookup_locus(client, "AT1G01060", "arabidopsis")
     assert r["truncated"] is True
-    assert r["member_count"] == 1
+    # Was `== 1`, which pinned member_count to the number of rows RETURNED and
+    # so encoded the bug: under a cap the count could never exceed the list, and
+    # a caller could not tell how many orthologs actually existed. The fixture
+    # holds 2 members, so the true pre-cap total is 2 while 1 row comes back.
+    assert r["member_count"] == 2
+    assert len(r["members"]) == 1
 
 
 @pytest.mark.asyncio
@@ -135,3 +140,49 @@ async def test_live_arabidopsis_orthologs() -> None:
     assert r["found"] is True
     assert r["group"]["id"]
     assert r["organism_count"] > 0
+
+
+# --- member_count must describe the DATA, not the returned list -------------
+# It previously reported len(members), i.e. the number of rows RETURNED. With
+# the cap engaged a caller saw `member_count: 100, truncated: true` and could
+# not tell whether 101 or 10,000 orthologs existed — the count agreed with the
+# list instead of describing the data. Same class as the lying counts the
+# 2026-07-25 semantic audit fixed three of.
+
+
+def _clusters(n_orgs: int, genes_per_org: int) -> list[dict[str, object]]:
+    return [
+        {
+            "organism": {"name": f"org{o}"},
+            "genes": [
+                {"gene_id": {"id": f"g{o}_{i}", "param": "x"}, "description": "d"}
+                for i in range(genes_per_org)
+            ],
+        }
+        for o in range(n_orgs)
+    ]
+
+
+def test_member_count_is_the_true_total_not_the_row_count() -> None:
+    rows, total = orthodb._members(_clusters(10, 30), orthodb.MAX_MEMBERS)
+    assert total == 300, "count must describe the data, not the truncated list"
+    assert len(rows) == orthodb.MAX_MEMBERS
+    assert total > len(rows)
+
+
+def test_members_counts_everything_past_the_cap() -> None:
+    """The loop must keep counting after the cap, or the total is just the cap."""
+    _, total = orthodb._members(_clusters(1, orthodb.MAX_MEMBERS + 57), orthodb.MAX_MEMBERS)
+    assert total == orthodb.MAX_MEMBERS + 57
+
+
+def test_members_untruncated_reports_equal_counts() -> None:
+    """Positive control: total == rows when nothing is capped."""
+    rows, total = orthodb._members(_clusters(2, 3), orthodb.MAX_MEMBERS)
+    assert total == 6 and len(rows) == 6
+
+
+def test_orthodb_limit_is_clamped() -> None:
+    assert orthodb._resolve_limit(None) == orthodb.MAX_MEMBERS
+    assert orthodb._resolve_limit(0) == 1
+    assert orthodb._resolve_limit(10_000) == orthodb.MAX_MEMBERS

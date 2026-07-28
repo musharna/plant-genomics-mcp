@@ -73,18 +73,39 @@ def _project_group(data: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _members(clusters: list[Any]) -> tuple[list[dict[str, Any]], bool]:
-    """Flatten ortholog clusters to capped ``[{organism, gene_id, xref, description}]``."""
+def _resolve_limit(limit: int | None) -> int:
+    """Clamp a caller's ``limit`` into ``1..MAX_MEMBERS``.
+
+    A non-positive limit is nonsense rather than a request for everything;
+    returning zero rows beside a non-zero count reads as "no orthologs".
+    """
+    if limit is None:
+        return MAX_MEMBERS
+    return max(1, min(int(limit), MAX_MEMBERS))
+
+
+def _members(clusters: list[Any], cap: int) -> tuple[list[dict[str, Any]], int]:
+    """Flatten ortholog clusters to ``[{organism, gene_id, xref, description}]``.
+
+    Returns the capped rows AND the TRUE total member count. The loop no longer
+    returns early on reaching the cap: it kept counting nothing after that
+    point, so ``member_count`` was the number of rows RETURNED rather than the
+    number that exist. A caller seeing ``member_count: 100, truncated: true``
+    could not tell whether 101 or 10,000 orthologs existed — the count agreed
+    with the list instead of describing the data, which is the same class of
+    lying count the 2026-07-25 semantic audit fixed three of.
+    """
     out: list[dict[str, Any]] = []
-    truncated = False
+    total = 0
     for cluster in clusters:
         if not isinstance(cluster, dict):
             continue
         org = (cluster.get("organism") or {}).get("name")
         for gene in cluster.get("genes") or []:
-            if len(out) >= MAX_MEMBERS:
-                return out, True
             if not isinstance(gene, dict):
+                continue
+            total += 1
+            if len(out) >= cap:
                 continue
             gid = gene.get("gene_id") or {}
             out.append(
@@ -95,7 +116,7 @@ def _members(clusters: list[Any]) -> tuple[list[dict[str, Any]], bool]:
                     "description": gene.get("description"),
                 }
             )
-    return out, truncated
+    return out, total
 
 
 def _empty(locus: str, organism: str) -> dict[str, Any]:
@@ -115,12 +136,17 @@ async def lookup_locus(
     client: httpx.AsyncClient,
     locus: str,
     organism: str | int = organisms.DEFAULT_ORGANISM,
+    limit: int | None = None,
 ) -> dict[str, Any]:
     """Resolve a locus to its OrthoDB ortholog group and cross-species members.
 
     ``organism`` is validated/echoed (the OrthoDB search keys on the gene id at
     the Viridiplantae level, not a species id). Returns ``found=False`` when the
     locus maps to no ortholog group.
+
+    ``limit`` caps the returned members (default ``MAX_MEMBERS``);
+    ``member_count`` reports the TRUE pre-cap total and ``truncated`` says
+    whether the cap bit.
     """
     canonical = organisms.resolve(organism).canonical
     validators.assert_valid_locus(locus, backend="OrthoDB")
@@ -134,7 +160,7 @@ async def lookup_locus(
     ortho = await _get(client, "/current/orthologs", {"id": gid})
     clusters = ortho.get("data")
     clusters = clusters if isinstance(clusters, list) else []
-    members, truncated = _members(clusters)
+    members, member_total = _members(clusters, _resolve_limit(limit))
 
     return {
         "locus": locus,
@@ -142,7 +168,8 @@ async def lookup_locus(
         "found": True,
         "group": _project_group(group.get("data") or {}),
         "organism_count": len(clusters),
-        "member_count": len(members),
-        "truncated": truncated,
+        # TRUE pre-cap total, so a truncated answer still says how much exists.
+        "member_count": member_total,
+        "truncated": member_total > len(members),
         "members": members,
     }

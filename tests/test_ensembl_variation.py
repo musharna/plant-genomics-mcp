@@ -225,3 +225,11 @@ async def test_live_vep_rice() -> None:
         r = await ensembl_variation.vep_annotate(client, "1:10000-10000:1", "C", "rice")
     assert r["found"] is True
     assert r["most_severe_consequence"]
+
+
+def test_variant_limit_is_clamped() -> None:
+    assert ensembl_variation._resolve_limit(None) == ensembl_variation.MAX_VARIANTS
+    assert ensembl_variation._resolve_limit(0) == 1
+    assert ensembl_variation._resolve_limit(-3) == 1
+    assert ensembl_variation._resolve_limit(10_000) == ensembl_variation.MAX_VARIANTS
+    assert ensembl_variation._resolve_limit(25) == 25
