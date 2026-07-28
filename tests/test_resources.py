@@ -229,3 +229,62 @@ async def test_cache_stats_reflect_live_counters(monkeypatch: pytest.MonkeyPatch
         assert payload["ensembl_plants"]["misses"] == before["misses"] + 1
     finally:
         ensembl_plants._CACHE.clear()
+
+
+# --- backend citations -------------------------------------------------------
+# Provenance/citability: every value this server returns comes from someone
+# else's resource, and until now none of them were creditable. The DOIs were
+# resolved from a live registry and byline/year-verified against CrossRef; these
+# tests guard the properties that verification cannot guard on its own.
+
+
+def test_every_backend_carries_a_citation() -> None:
+    """A backend added without a citation must not ship silently uncredited."""
+    rows = resources._backends_status_payload()
+    assert rows, "no backends listed"
+    missing = [r["name"] for r in rows if not r.get("citation")]
+    assert not missing, f"backends with no citation: {missing}"
+
+
+def test_citations_have_doi_author_and_year() -> None:
+    bad = []
+    for name, c in resources._CITATIONS.items():
+        doi, author, year = c.get("doi"), c.get("first_author"), c.get("year")
+        if not (isinstance(doi, str) and doi.startswith("10.")):
+            bad.append((name, "doi", doi))
+        if not (isinstance(author, str) and author):
+            bad.append((name, "first_author", author))
+        if not (isinstance(year, int) and 1980 <= year <= 2030):
+            bad.append((name, "year", year))
+    assert not bad, f"malformed citation fields: {bad}"
+
+
+def test_citation_table_covers_exactly_the_listed_backends() -> None:
+    """Guards drift in BOTH directions.
+
+    An entry in the table with no backend is a leftover; a backend with no
+    entry raises at payload build. Pinning equality keeps the two from
+    diverging the way the tool-count docstring and the external catalog listing
+    both did.
+    """
+    listed = {r["name"] for r in resources._backends_status_payload()}
+    assert listed == set(resources._CITATIONS), (
+        f"only in backends: {listed - set(resources._CITATIONS)}; "
+        f"only in citations: {set(resources._CITATIONS) - listed}"
+    )
+
+
+def test_no_duplicate_doi_except_the_shared_ensembl_pair() -> None:
+    """A copy-paste DOI is the quiet way a wrong citation spreads.
+
+    ensembl_plants and ensembl_variation legitimately share one — two client
+    modules, one provider — so the assertion pins that exact exception rather
+    than waving all duplicates through.
+    """
+    seen: dict[str, list[str]] = {}
+    for name, c in resources._CITATIONS.items():
+        seen.setdefault(str(c["doi"]), []).append(name)
+    dupes = {doi: names for doi, names in seen.items() if len(names) > 1}
+    assert dupes == {"10.1007/978-1-4939-3167-5_6": ["ensembl_plants", "ensembl_variation"]}, (
+        f"unexpected shared DOIs: {dupes}"
+    )
