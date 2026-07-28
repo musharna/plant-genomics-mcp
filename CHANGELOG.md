@@ -1,5 +1,33 @@
 # Changelog
 
+## v1.20.0 — 2026-07-28
+
+Still **50 tools / 23 backends** — no new tools. A minor rather than a patch release because tools gain new parameters and response fields, and two tools change behaviour.
+
+**Added — provenance**
+
+- **Every backend is now creditable.** The `backends-status` resource carries `citation: {doi, first_author, year}` for all 24 client modules. An inventory found 18 of 50 tools exposed something provenance-ish (`accession`, `source_url`, `release`, `atted_release`, `latest_version`, `primaryAccession` — no two alike) and 32 exposed nothing.
+
+  Every DOI was resolved from a live registry and then independently verified against the CrossRef record for **first-author surname and year**, because wrong-author-for-right-DOI is the dominant ghost-citation failure mode. Taking the obvious search hit would have shipped a wrong one: for PlantCyc it is a _Populus_-specific PoplarCyc paper rather than the resource paper.
+
+- **`upstream_version` on `resolve_locus_to_uniprot` and `interpro_domains`** — the release that produced _that response_, taken from the upstream's own header (`X-UniProt-Release`, `InterPro-Version`).
+
+  Deliberately not filled in from `/info` endpoints for the backends that lack such a header: a separate metadata call is a different request and may describe a different release than the one that served your data. `null` means "the upstream did not state one", never "no release exists".
+
+**Changed — response size**
+
+- **`gramene_homologs` now caps rows at 100** and accepts `limit`. It was the only row-returning backend with no cap at all: a locus with 176 homologs serialized all 176 (~18 KB) with nothing in the response admitting the list was unbounded. `total` reports the true pre-cap count and `truncated` says whether the cap bit. **This is a behaviour change** — a locus with more than 100 homologs now returns 100 rows.
+
+- **`locus_variants` and `orthodb_orthologs` accept `limit`.** Both had internal caps but no way for a caller to ask for less. 28,468 → 4,874 bytes at `limit=20`, and 14,573 → 1,724 at `limit=10`.
+
+- **`locus_literature` accepts `include_abstract`.** `abstractText` measured 10,968 of 16,360 bytes — 67% of the payload. Opting out gives 16,388 → 5,461 bytes with all hits retained. The default is unchanged, and the response echoes `abstracts_included` so a null abstract is not mistaken for an article that has none.
+
+**Fixed**
+
+- **`orthodb_orthologs.member_count` reported the number of rows returned, not the number that exist.** The flattening loop stopped counting on reaching the cap, so a caller seeing `member_count: 100, truncated: true` could not tell whether 101 or 10,000 orthologs existed. `AT3G51240` has **626**; the tool said 100.
+
+- **`locus_variants.truncated` compared the total against the cap rather than against the rows returned.** Non-dict entries are skipped during projection, so a list shortened by malformed rows was flagged untruncated.
+
 ## v1.19.5 — 2026-07-28
 
 No new tools or backends (still **50 tools / 23 backends**), and no behaviour change to any
