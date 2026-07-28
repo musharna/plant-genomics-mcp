@@ -1,0 +1,57 @@
+name: citation
+
+# CITATION.cff records the release version in a second place, independent of
+# pyproject.toml, and nothing kept the two in agreement. That is not
+# hypothetical: ghostcite's CITATION.cff sat at 0.4.0 while the project shipped
+# 0.5.0, and plant-genomics-mcp drifted to 1.19.3-vs-1.19.4 within two hours of
+# the file being added.
+#
+# Stale citation metadata is worse than none: it is machine-readable, GitHub
+# renders it in the "Cite this repository" panel, and Zenodo mints DOI records
+# from it — so a wrong version propagates into other people's bibliographies
+# where nobody will ever check it against the tag.
+#
+# This mirrors the existing "tag matches pyproject version" release gate, which
+# exists for the same reason one layer down (refusing to publish a mislabeled
+# artifact). Same invariant, same failure mode, enforced earlier.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  version-sync:
+    name: CITATION.cff matches pyproject
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: CITATION.cff version == pyproject version
+        run: |
+          set -euo pipefail
+
+          PY=$(grep -m1 '^version = ' pyproject.toml | cut -d'"' -f2)
+          CFF=$(grep -m1 '^version:' CITATION.cff | sed 's/^version:[[:space:]]*//' | tr -d '"'\'' ')
+
+          if [ -z "$PY" ]; then
+            echo "::error::could not read version from pyproject.toml"
+            exit 1
+          fi
+          if [ -z "$CFF" ]; then
+            echo "::error::could not read version from CITATION.cff"
+            exit 1
+          fi
+
+          echo "pyproject.toml : $PY"
+          echo "CITATION.cff   : $CFF"
+
+          if [ "$PY" != "$CFF" ]; then
+            echo "::error::CITATION.cff says $CFF but pyproject.toml says $PY. The citation metadata would ship stale into GitHub's cite panel and any Zenodo DOI record. Update CITATION.cff — both 'version:' and 'date-released:' — in this change."
+            exit 1
+          fi
+
+          echo "in sync"
