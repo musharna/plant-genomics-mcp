@@ -79,8 +79,17 @@ def _is_interposed_html(resp: httpx.Response) -> bool:
 
     NCBI's QBlast is the one legitimate HTML producer in this codebase (the RID
     arrives inside an HTML comment), so it opts out via ``allow_html=True``.
+
+    The decision is made on the BODY, not on ``Content-Type``. v1.19.3 checked
+    the header alone and broke ``arabidopsis_natural_variation``: 1001 Genomes
+    serves perfectly good JSON under ``Content-Type: text/html; charset=UTF-8``,
+    so a valid payload was rejected as a challenge page. That was the same
+    mistake as the bug this function exists to fix — trusting a label (there,
+    the status code; here, the media type) over the content it describes. Only
+    the bytes know what they are, so only the bytes are consulted.
     """
-    return _media_type(resp) in ("text/html", "application/xhtml+xml")
+    head = resp.content[:512].lstrip().lstrip(b"\xef\xbb\xbf").lstrip().lower()
+    return head.startswith(b"<!doctype html") or head.startswith(b"<html")
 
 
 async def request_with_retry(
@@ -207,7 +216,7 @@ async def request_with_retry(
             # real data seconds apart. Because this arrives as 200 it never
             # reached _RETRYABLE_STATUSES before, making a transient block a
             # hard first-attempt failure.
-            last_html_media = _media_type(resp)
+            last_html_media = _media_type(resp) or "no content-type"
             if attempt < max_retries - 1:
                 retry_after = min(delay, _RETRY_AFTER_CAP)
                 await progress.notify(

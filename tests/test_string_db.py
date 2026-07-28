@@ -121,7 +121,7 @@ async def test_lookup_partners_non_json_200_raises_typed(httpx_mock: HTTPXMock):
             "?identifiers=Q0WV96&species=3702&limit=20"
             "&caller_identity=plant-genomics-mcp"
         ),
-        text="<html>upstream error</html>",
+        text="upstream error, not json",
         status_code=200,
     )
     async with httpx.AsyncClient() as client:

@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+**Urgent — v1.19.3 breaks `arabidopsis_natural_variation`.**
+
+- **The interposed-page check now inspects the response body, not `Content-Type`.** v1.19.3 rejected any 200 whose `Content-Type` was `text/html`. `tools.1001genomes.org` serves perfectly valid JSON under `Content-Type: text/html; charset=UTF-8`, so v1.19.3 retried a good response three times and then failed it as `UpstreamUnavailableError`. `arabidopsis_natural_variation` is broken on v1.19.3 for every locus.
+
+  This was the same mistake as the bug the check exists to fix — trusting a **label** over the content it describes. v1.19.3 stopped believing the status code and started believing the media type; both are upstream assertions, and neither is the payload. Detection now sniffs the leading bytes for `<!doctype html` / `<html`, so only a body that actually _is_ HTML is treated as an interposed page.
+
+  It also catches strictly more than the header check did: a challenge page served under `application/json` was invisible to v1.19.3 and is now detected. No WAF is obliged to label its own challenge honestly.
+
+  Found by probing all 23 backends from the production deployment after the v1.19.3 rollout — the fixture suite could not have caught it, because the fixtures assert the content type the real server _ought_ to send.
+
 ## v1.19.3 — 2026-07-28
 
 Robustness patch. No new tools or backends (still **50 tools / 23 backends**). Affects every backend's HTTP path; `blast_sequence` is explicitly exempt.
