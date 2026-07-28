@@ -628,3 +628,37 @@ async def test_html_body_mislabelled_as_json_is_still_rejected(
                 client, "GET", "https://example.test/x", service="probe", max_retries=3
             )
     assert len(httpx_mock.get_requests()) == 3
+
+
+# --- upstream release capture ------------------------------------------------
+# Only a header on the ANSWERING response can state the release that produced
+# it. A separate /info call is a different request and may describe a different
+# release, so it can be confidently wrong — which is the failure mode this
+# codebase is most prone to. These pin that None means "not stated", never
+# "no release exists".
+
+
+def _resp(headers: dict[str, str]) -> httpx.Response:
+    return httpx.Response(200, headers=headers, content=b"{}")
+
+
+def test_upstream_version_reads_uniprot_header() -> None:
+    assert _http.upstream_version(_resp({"X-UniProt-Release": "2026_02"})) == "2026_02"
+
+
+def test_upstream_version_reads_interpro_header() -> None:
+    assert _http.upstream_version(_resp({"InterPro-Version": "109.0"})) == "109.0"
+
+
+def test_upstream_version_is_none_when_unstated() -> None:
+    """Negative control: absence must be None, not a guess or a placeholder."""
+    assert _http.upstream_version(_resp({"Content-Type": "application/json"})) is None
+
+
+def test_upstream_version_ignores_unrelated_version_headers() -> None:
+    """STRING sends an API version, which is NOT the data release.
+
+    Reporting it as the release would be exactly the plausible-but-wrong value
+    this field exists to avoid.
+    """
+    assert _http.upstream_version(_resp({"String-api-version": "2"})) is None

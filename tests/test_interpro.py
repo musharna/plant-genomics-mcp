@@ -193,3 +193,42 @@ async def test_live_arabidopsis_has_domains() -> None:
     assert r["found"] is True
     assert r["domain_count"] >= 1
     assert any(d["source_database"] == "pfam" for d in r["domains"])
+
+
+@pytest.mark.asyncio
+async def test_upstream_version_survives_a_cache_hit(httpx_mock: HTTPXMock) -> None:
+    """The warm path must report the release it was fetched under.
+
+    This is the regression worth guarding: cache the payload but not the
+    header, and the SAME query reports 109.0 when cold and null when warm —
+    the same answer described two different ways depending on timing. Only one
+    HTTP response is mocked, so the second call is served from cache.
+    """
+    interpro._CACHE.clear()
+    httpx_mock.add_response(
+        url=("https://www.ebi.ac.uk/interpro/api/entry/all/protein/uniprot/Q0WV96/"),
+        json={"count": 0, "results": [], "next": None},
+        headers={"InterPro-Version": "109.0"},
+    )
+    async with httpx.AsyncClient() as client:
+        cold = await interpro.lookup_by_uniprot(client, "Q0WV96")
+        warm = await interpro.lookup_by_uniprot(client, "Q0WV96")
+
+    assert cold["upstream_version"] == "109.0"
+    assert warm["upstream_version"] == "109.0", "cache hit dropped the release"
+    assert len(httpx_mock.get_requests()) == 1, "second call was not served from cache"
+
+
+@pytest.mark.asyncio
+async def test_upstream_version_is_none_when_interpro_states_none(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """Positive control for the negative: absence is reported honestly."""
+    interpro._CACHE.clear()
+    httpx_mock.add_response(
+        url=("https://www.ebi.ac.uk/interpro/api/entry/all/protein/uniprot/Q0WV97/"),
+        json={"count": 0, "results": [], "next": None},
+    )
+    async with httpx.AsyncClient() as client:
+        r = await interpro.lookup_by_uniprot(client, "Q0WV97")
+    assert r["upstream_version"] is None
