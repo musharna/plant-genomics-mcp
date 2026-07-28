@@ -110,6 +110,13 @@ async def _search(
     )
     data = resp.json()
     results = list(data.get("results", []))
+    # Carry the release UniProt reported on the response that produced these
+    # rows INSIDE the cached value, so a warm hit reports the release it was
+    # actually fetched under instead of silently reporting none. Stored on the
+    # hit rather than beside it because the cache holds only this list; a
+    # sibling entry could expire independently and mismatch its payload.
+    if results:
+        results[0]["_upstream_version"] = _http.upstream_version(resp)
     _CACHE.set(key, results)
     return results
 
@@ -153,6 +160,10 @@ def _normalize(hit: dict[str, Any], locus_query: str) -> dict[str, Any]:
         "taxonId": organism.get("taxonId"),
         "sequenceLength": sequence.get("length"),
         "web_url": f"https://www.uniprot.org/uniprotkb/{accession}" if accession else None,
+        # UniProt states its release on every response, so this is the release
+        # that produced THIS record. None means the header was absent, never
+        # that no release exists.
+        "upstream_version": hit.get("_upstream_version"),
     }
 
 
@@ -186,6 +197,8 @@ async def _fetch_by_accession(
     except NotFoundError:
         raise NotFoundError(f"UniProt has no entry for accession={bare!r}") from None
     data = resp.json()
+    if isinstance(data, dict):
+        data["_upstream_version"] = _http.upstream_version(resp)
     _CACHE.set(key, data)
     return data
 

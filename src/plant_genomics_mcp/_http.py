@@ -59,6 +59,30 @@ def _media_type(resp: httpx.Response) -> str:
     return resp.headers.get("content-type", "").split(";")[0].strip().lower()
 
 
+# Headers by which an upstream states the release that produced THIS response.
+# Deliberately not a list of /info endpoints: a separate metadata call is a
+# DIFFERENT request and may describe a different release than the one that
+# answered you, so it can be confidently wrong — the failure mode this codebase
+# is most prone to. Only a header on the answering response is true by
+# construction. Probed live 2026-07-28; ensembl, alphafold, quickgo and jaspar
+# send nothing, and are honestly null rather than filled in from elsewhere.
+_VERSION_HEADERS = ("x-uniprot-release", "interpro-version")
+
+
+def upstream_version(resp: httpx.Response) -> str | None:
+    """The upstream's own release identifier for this response, if it states one.
+
+    ``None`` means "this backend did not tell us", never "no version exists".
+    Callers must keep that distinction: a fabricated or inferred version in a
+    scientific result is worse than an absent one.
+    """
+    for h in _VERSION_HEADERS:
+        v = resp.headers.get(h)
+        if v:
+            return v.strip()
+    return None
+
+
 def _is_interposed_html(resp: httpx.Response) -> bool:
     """True when a 200 carries an HTML body that cannot be the requested payload.
 

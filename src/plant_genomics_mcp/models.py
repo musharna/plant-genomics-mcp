@@ -170,6 +170,16 @@ class UniProtLocus(BaseModel):
     taxonId: int | None = Field(default=None, description="NCBI taxonomy ID")
     sequenceLength: int | None = Field(default=None, description="Protein length in residues")
     web_url: str | None = Field(default=None, description="Browser URL for the UniProt entry")
+    upstream_version: str | None = Field(
+        default=None,
+        description=(
+            "UniProt release that produced THIS record, as stated by the "
+            "upstream's own header (e.g. '2026_02'). null means UniProt did "
+            "not state one — never that no release exists, and never inferred "
+            "from a separate metadata call, which can describe a different "
+            "release than the one that answered."
+        ),
+    )
 
 
 class PhytozomeLocus(BaseModel):
@@ -576,6 +586,16 @@ class InterProDomains(BaseModel):
     truncated: bool = Field(description="True if the row list was page-capped (< domain_count)")
     domains: list[InterProDomain]
     count_by_type: dict[str, int] = Field(description="Rollup of entry count by type")
+    upstream_version: str | None = Field(
+        default=None,
+        description=(
+            "InterPro release that produced THIS response, as stated by the "
+            "upstream's own header (e.g. '109.0'). null means InterPro did not "
+            "state one — never that no release exists, and never inferred from "
+            "a separate metadata call, which can describe a different release "
+            "than the one that answered."
+        ),
+    )
 
 
 class ExperimentalStructures(BaseModel):
