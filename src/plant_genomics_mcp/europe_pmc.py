@@ -81,7 +81,7 @@ async def _get(
     return result
 
 
-def _normalize(hit: dict[str, Any]) -> dict[str, Any]:
+def _normalize(hit: dict[str, Any], include_abstract: bool = True) -> dict[str, Any]:
     """Project an Europe PMC result row down to the surfaced field set.
 
     Adds ``web_url`` derived from pmcid (preferred — open access) or pmid.
@@ -89,6 +89,15 @@ def _normalize(hit: dict[str, Any]) -> dict[str, Any]:
     is observable in the wire payload.
     """
     normalized: dict[str, Any] = {k: hit.get(k) for k in _HIT_FIELDS}
+    if not include_abstract:
+        # Measured on AT3G51240: abstractText is 10,968 of 16,360 bytes — 67% of
+        # the payload at the default page size.
+        #
+        # Nulling it does NOT by itself distinguish "not requested" from "this
+        # article has no abstract" — nothing in the row says which. The response
+        # therefore carries a top-level ``abstracts_included`` flag, so a reader
+        # who did not make the call can still tell the difference.
+        normalized["abstractText"] = None
     pmcid = hit.get("pmcid")
     pmid = hit.get("pmid")
     if pmcid:
@@ -105,10 +114,14 @@ async def lookup_locus(
     locus: str,
     organism: str | int = organisms.DEFAULT_ORGANISM,
     size: int = DEFAULT_PAGE_SIZE,
+    include_abstract: bool = True,
 ) -> dict[str, Any]:
     """Search Europe PMC for literature mentioning a plant locus.
 
     ``size`` is clamped to [1, MAX_PAGE_SIZE] to bound the wire payload.
+    ``include_abstract=False`` nulls ``abstractText``, which is ~67% of the
+    payload at the default page size; the response's ``abstracts_included``
+    flag records which mode produced it.
     ``organism`` accepts any form resolvable by :mod:`organisms` (canonical
     slug, scientific name, common name, NCBI taxid, alias). Returns a dict
     shaped per ``LocusLiterature``: locus, organism (resolved canonical),
@@ -137,12 +150,16 @@ async def lookup_locus(
         raise PlantGenomicsError(
             f"Europe PMC /search resultList.result is not a list: {type(results).__name__}"
         )
-    hits = [_normalize(r) for r in results if isinstance(r, dict)]
+    hits = [_normalize(r, include_abstract) for r in results if isinstance(r, dict)]
     return {
         "locus": locus,
         "organism": record.canonical,
         "query": query,
         "hitCount": int(raw.get("hitCount", 0)),
         "returned": len(hits),
+        # Makes the payload self-describing: without this, a null abstractText
+        # is ambiguous between "not requested" and "this article has none", and
+        # only the original caller would know which.
+        "abstracts_included": include_abstract,
         "hits": hits,
     }
