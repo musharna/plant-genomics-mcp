@@ -196,3 +196,50 @@ async def test_live_lookup_rice_locus_returns_hits() -> None:
         )
     assert result["hitCount"] >= 0  # non-crash check; literature may be sparse
     assert result["organism"] == "oryza_sativa"
+
+
+# --- abstract trimming ------------------------------------------------------
+# abstractText measured at 10,968 of 16,360 bytes (67%) for AT3G51240 at the
+# default page size. A row cap cannot help here — size already bounds rows — so
+# the lever is field-level.
+
+
+def test_include_abstract_default_keeps_the_abstract() -> None:
+    """Default is unchanged: abstracts are usually the point of this tool."""
+    row = europe_pmc._normalize({"id": "1", "abstractText": "long text"})
+    assert row["abstractText"] == "long text"
+
+
+def test_include_abstract_false_nulls_it() -> None:
+    row = europe_pmc._normalize({"id": "1", "abstractText": "long text"}, False)
+    assert row["abstractText"] is None
+    # Everything else must survive — the point is trimming one field, not
+    # degrading the record.
+    assert row["id"] == "1"
+
+
+@pytest.mark.asyncio
+async def test_response_says_which_mode_produced_it(httpx_mock: HTTPXMock) -> None:
+    """A null abstract is ambiguous without this flag.
+
+    'Not requested' and 'this article has no abstract' look identical in the
+    row, and only the original caller would know which. The flag is what makes
+    the payload self-describing to anyone reading it later.
+    """
+    europe_pmc._CACHE.clear()
+    body = {
+        "hitCount": 1,
+        "resultList": {"result": [{"id": "1", "pmid": "9", "abstractText": "long text"}]},
+    }
+    httpx_mock.add_response(json=body)
+    async with httpx.AsyncClient() as client:
+        trimmed = await europe_pmc.lookup_locus(client, "AT3G51240", include_abstract=False)
+    assert trimmed["abstracts_included"] is False
+    assert trimmed["hits"][0]["abstractText"] is None
+
+    europe_pmc._CACHE.clear()
+    httpx_mock.add_response(json=body)
+    async with httpx.AsyncClient() as client:
+        full = await europe_pmc.lookup_locus(client, "AT3G51240")
+    assert full["abstracts_included"] is True
+    assert full["hits"][0]["abstractText"] == "long text"
