@@ -77,17 +77,32 @@ def _project_variant(v: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _resolve_limit(limit: int | None) -> int:
+    """Clamp a caller's ``limit`` into ``1..MAX_VARIANTS``.
+
+    A non-positive limit is nonsense rather than a request for everything;
+    honouring it literally would return an empty list while ``variant_count``
+    reported hundreds, which reads as "this gene has no variants".
+    """
+    if limit is None:
+        return MAX_VARIANTS
+    return max(1, min(int(limit), MAX_VARIANTS))
+
+
 async def locus_variants(
     client: httpx.AsyncClient,
     locus: str,
     organism: str | int = organisms.DEFAULT_ORGANISM,
+    limit: int | None = None,
 ) -> dict[str, Any]:
     """List natural variants overlapping a locus's genomic span.
 
     Resolves the locus to its coordinates via ``ensembl_plants.lookup_locus``
     (propagating ``NotFoundError`` for an unknown locus), then queries
     ``/overlap/region``. ``variant_count`` is the true overlap total; ``variants``
-    is capped at ``MAX_VARIANTS`` with ``truncated`` flagged when the cap bites.
+    is capped at ``limit`` (default ``MAX_VARIANTS``) with ``truncated`` flagged
+    when the cap bites. A dense locus returns ~28 KB uncapped, so a caller that
+    only needs a count-plus-sample can now say so.
     """
     slug = organisms.ensembl_slug_for(organism)
     gene = await ensembl_plants.lookup_locus(client, locus, organism=organism)
@@ -107,7 +122,7 @@ async def locus_variants(
             f"Ensembl /overlap/region/{region_str} returned non-list payload: {type(raw).__name__}"
         )
     total = len(raw)
-    rows = [_project_variant(v) for v in raw[:MAX_VARIANTS] if isinstance(v, dict)]
+    rows = [_project_variant(v) for v in raw[: _resolve_limit(limit)] if isinstance(v, dict)]
     return {
         "locus": locus,
         "organism": slug,
@@ -115,7 +130,12 @@ async def locus_variants(
         "gene_start": start,
         "gene_end": end,
         "variant_count": total,
-        "truncated": total > MAX_VARIANTS,
+        # Compared against the rows actually returned, not against the cap.
+        # `total > MAX_VARIANTS` under-reported: non-dict entries are skipped
+        # during projection, so a list shortened by malformed rows could come
+        # back flagged untruncated. The count and the flag must agree with what
+        # the caller is holding.
+        "truncated": total > len(rows),
         "variants": rows,
     }
 

@@ -1248,6 +1248,16 @@ TOOLS: list[types.Tool] = [
                     "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
                     "default": "arabidopsis_thaliana",
                 },
+                "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": ensembl_variation.MAX_VARIANTS,
+                    "default": ensembl_variation.MAX_VARIANTS,
+                    "description": (
+                        "Max variant rows to return. 'variant_count' always reports the true pre-cap "
+                        "total and 'truncated' says whether the cap bit."
+                    ),
+                },
             },
             "required": ["locus"],
             "additionalProperties": False,
@@ -1355,6 +1365,16 @@ TOOLS: list[types.Tool] = [
                     "type": ["string", "integer"],
                     "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid. Validated and echoed only: it does NOT scope the OrthoDB search, which keys on the locus id at the Viridiplantae level",
                     "default": "arabidopsis_thaliana",
+                },
+                "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": orthodb.MAX_MEMBERS,
+                    "default": orthodb.MAX_MEMBERS,
+                    "description": (
+                        "Max ortholog member rows to return. 'member_count' always reports the true pre-cap "
+                        "total and 'truncated' says whether the cap bit."
+                    ),
                 },
             },
             "required": ["locus"],
@@ -2239,6 +2259,7 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     client,
                     args["locus"],
                     organism=args.get("organism", "arabidopsis_thaliana"),
+                    limit=args.get("limit"),
                 )
             case "vep_annotate":
                 return await ensembl_variation.vep_annotate(
@@ -2258,6 +2279,7 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     client,
                     args["locus"],
                     organism=args.get("organism", "arabidopsis_thaliana"),
+                    limit=args.get("limit"),
                 )
             case "aragwas_associations":
                 return await aragwas.lookup_locus(
