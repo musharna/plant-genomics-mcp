@@ -22,7 +22,7 @@ dependencies = [
     # deliberate — the 2026-07-28 spec revision is breaking (stateless core,
     # no initialize handshake), so a major SDK bump gets opted into, not
     # inherited silently by everyone who installs us.
-    "mcp>=1.28.1,<2",
+    "mcp>=1.28.1,<3",
     "httpx>=0.27",
     "pydantic>=2.6",
     "starlette>=0.36",
