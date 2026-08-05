@@ -38,7 +38,6 @@ from collections.abc import Iterable
 
 from mcp import types
 from mcp.server.lowlevel.helper_types import ReadResourceContents
-from pydantic import AnyUrl
 
 from plant_genomics_mcp import (
     alphafold,
@@ -76,16 +75,16 @@ COVERAGE_MATRIX_URI = "pgmcp://organisms/coverage"
 
 RESOURCES: list[types.Resource] = [
     types.Resource(
-        uri=AnyUrl(CACHE_STATS_URI),
+        uri=CACHE_STATS_URI,
         name="Cache statistics",
         description=(
             "Per-backend TTL+LRU cache stats (hits / misses / size). "
             "Sourced from each backend module's process-local _CACHE."
         ),
-        mimeType="application/json",
+        mime_type="application/json",
     ),
     types.Resource(
-        uri=AnyUrl(PHYTOZOME_ORGANISMS_URI),
+        uri=PHYTOZOME_ORGANISMS_URI,
         name="Phytozome organisms",
         description=(
             "Map of canonical slug → Phytozome organism_id, derived from "
@@ -93,10 +92,10 @@ RESOURCES: list[types.Resource] = [
             "non-None phytozome_int. See pgmcp://organisms/coverage for "
             "the full coverage matrix across all backends."
         ),
-        mimeType="application/json",
+        mime_type="application/json",
     ),
     types.Resource(
-        uri=AnyUrl(BACKENDS_STATUS_URI),
+        uri=BACKENDS_STATUS_URI,
         name="Backend status",
         description=(
             "Per-backend rollup (name, base_url, kind=live, "
@@ -104,10 +103,10 @@ RESOURCES: list[types.Resource] = [
             "live backends without parsing the server "
             "docstring."
         ),
-        mimeType="application/json",
+        mime_type="application/json",
     ),
     types.Resource(
-        uri=AnyUrl(COVERAGE_MATRIX_URI),
+        uri=COVERAGE_MATRIX_URI,
         name="Organism coverage matrix",
         description=(
             "Markdown table of all 12 supported plants × 9 ID slots "
@@ -117,7 +116,7 @@ RESOURCES: list[types.Resource] = [
             "coverage in one read instead of probing resolve_organism "
             "per organism."
         ),
-        mimeType="text/markdown",
+        mime_type="text/markdown",
     ),
 ]
 
@@ -450,7 +449,7 @@ def _payload_for(uri: str) -> object:
     raise ValueError(f"unknown resource URI: {uri}")
 
 
-async def read_resource(uri: AnyUrl) -> Iterable[ReadResourceContents]:
+async def read_resource(uri: str) -> Iterable[ReadResourceContents]:
     """Resolve ``uri`` to a single ``ReadResourceContents`` entry.
 
     The MCP SDK accepts an iterable of ``ReadResourceContents``; we always
