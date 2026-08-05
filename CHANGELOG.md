@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+**Changed — minimum SDK is now mcp 2.x**
+
+- **`mcp>=1.28.1,<3` → `mcp>=2,<3`.** The range moves rather than widens: `server.py` migrated off the `@server.list_tools()` decorator family, which mcp 2.x removed, onto `Server(on_list_tools=..., on_call_tool=..., ...)`. That code cannot import on 1.x at all, so leaving the old floor would let a resolver install a version this package can no longer run.
+
+  Handlers now take `(ctx, params)` and return `*Result` objects instead of bare lists, and the wire-format keys are snake_case (`input_schema`, `output_schema`, `mime_type`, `is_error`, and the `ToolAnnotations` hints). `Resource.uri` is a plain `str` rather than a pydantic `AnyUrl`.
+
+- **Error results are built explicitly now.** mcp 1.x routed an exception raised inside the tool handler through the SDK's outer `except Exception`, which turned it into `isError=true`. 2.x removed that conversion. Without catching it, a `PlantGenomicsError` would have escaped as a protocol-level crash instead of the documented error result — silently changing what every client sees on a bad locus. The `[ClassName]` prefix contract is unchanged.
+
+- **The progress bridge reads `progress_token`, not `progressToken`,** and reads it off a plain dict — `RequestParamsMeta` is a TypedDict in 2.x. The context arrives as a handler argument, so `server.request_context` (and its `LookupError` branch) is gone.
+
+No tool, schema, or response-payload changes: still **50 tools / 23 backends**.
+
 ## v1.20.0 — 2026-07-28
 
 Still **50 tools / 23 backends** — no new tools. A minor rather than a patch release because tools gain new parameters and response fields, and two tools change behaviour.

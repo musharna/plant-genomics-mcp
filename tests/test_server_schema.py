@@ -23,9 +23,9 @@ from plant_genomics_mcp import server
 def test_all_tools_have_object_input_schema() -> None:
     assert server.TOOLS, "tool catalog is empty"
     for tool in server.TOOLS:
-        schema = tool.inputSchema or {}
+        schema = tool.input_schema or {}
         assert schema.get("type") == "object", (
-            f"{tool.name} inputSchema is not type=object: {schema.get('type')!r}"
+            f"{tool.name} input_schema is not type=object: {schema.get('type')!r}"
         )
 
 
@@ -34,7 +34,7 @@ def test_every_tool_rejects_unknown_args() -> None:
     offenders = [
         tool.name
         for tool in server.TOOLS
-        if (tool.inputSchema or {}).get("additionalProperties") is not False
+        if (tool.input_schema or {}).get("additionalProperties") is not False
     ]
     assert not offenders, (
         "these tools omit additionalProperties:false and would silently accept "
@@ -56,9 +56,9 @@ def test_whole_catalog_is_read_only_and_open_world() -> None:
     for tool in server.TOOLS:
         annotations = tool.annotations
         assert annotations is not None  # covered by the test above
-        assert annotations.readOnlyHint is True, f"{tool.name} is not marked read-only"
-        assert annotations.destructiveHint is False, f"{tool.name} is marked destructive"
-        assert annotations.openWorldHint is True, (
+        assert annotations.read_only_hint is True, f"{tool.name} is not marked read-only"
+        assert annotations.destructive_hint is False, f"{tool.name} is marked destructive"
+        assert annotations.open_world_hint is True, (
             f"{tool.name} is not marked open-world despite hitting an external API"
         )
 
@@ -72,7 +72,7 @@ def test_blast_is_the_only_non_idempotent_tool() -> None:
     non_idempotent = {
         tool.name
         for tool in server.TOOLS
-        if tool.annotations is not None and tool.annotations.idempotentHint is False
+        if tool.annotations is not None and tool.annotations.idempotent_hint is False
     }
     assert non_idempotent == {"blast_sequence"}
 

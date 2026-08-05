@@ -71,15 +71,13 @@ single-locus tools. Capped at ``batch.MAX_BATCH = 50`` loci per call.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
+import json
 from typing import Any
 
 import httpx
 from mcp import types
-from mcp.server import Server
-from mcp.server.lowlevel.helper_types import ReadResourceContents
+from mcp.server import Server, ServerRequestContext
 from mcp.server.stdio import stdio_server
-from pydantic import AnyUrl
 
 from plant_genomics_mcp import (
     __version__,
@@ -151,31 +149,24 @@ from plant_genomics_mcp.models import (
     VepAnnotation,
 )
 
-# `version=` is load-bearing, not decorative: when it is omitted the SDK
-# substitutes its OWN package version into `serverInfo.version`
-# (`server_version=self.version if self.version else pkg_version("mcp")`),
-# so every client's initialize handshake reports the mcp SDK's version
-# instead of ours. Both transports share this object, so supplying it here
-# is the single place that fixes stdio and Streamable HTTP together —
-# and it is what makes the "authenticated callers can read __version__
-# from the initialize handshake" contract in server_http.healthz true.
-server: Server = Server("plant-genomics-mcp", version=__version__)
 
+def _build_reporter(ctx: ServerRequestContext) -> progress.Reporter | None:
+    """Construct a progress reporter from the MCP request context.
 
-def _build_reporter() -> progress.Reporter | None:
-    """Construct a progress reporter from the current MCP request context.
+    Returns ``None`` if (a) the client did not pass a ``progress_token``, or
+    (b) the session isn't reachable. The HTTP helpers fall back to no-op
+    behavior when no reporter is installed, so this never has to raise.
 
-    Returns ``None`` if (a) we're called outside a request, (b) the client
-    did not pass a ``progressToken``, or (c) the session isn't reachable.
-    The HTTP helpers fall back to no-op behavior when no reporter is
-    installed, so this never has to raise.
+    1.x read the context off the server via a contextvar
+    (``server.request_context``), which could raise LookupError outside a
+    request. 2.x passes it to the handler instead, so the caller always has
+    one and the LookupError branch is gone. The meta key is also
+    ``progress_token`` now, not ``progressToken`` — and because
+    RequestParamsMeta is a TypedDict, meta is a plain dict at runtime, so
+    this reads by key rather than by attribute.
     """
-    try:
-        ctx = server.request_context
-    except LookupError:
-        return None
     meta = getattr(ctx, "meta", None)
-    token = getattr(meta, "progressToken", None) if meta is not None else None
+    token = meta.get("progress_token") if isinstance(meta, dict) else None
     if token is None:
         return None
     session = ctx.session
@@ -269,10 +260,10 @@ _BATCH_OUTPUT = BatchEnvelope.model_json_schema()
 # are set anyway for clients that surface them regardless.
 
 _READ_ONLY = types.ToolAnnotations(
-    readOnlyHint=True,
-    destructiveHint=False,
-    idempotentHint=True,
-    openWorldHint=True,
+    read_only_hint=True,
+    destructive_hint=False,
+    idempotent_hint=True,
+    open_world_hint=True,
 )
 
 # blast_sequence is the one exception to idempotency. NCBI's URLAPI is
@@ -280,10 +271,10 @@ _READ_ONLY = types.ToolAnnotations(
 # upstream even though the search itself only reads — and NCBI rate-limits
 # submissions. Tell hosts not to retry it freely.
 _READ_ONLY_NON_IDEMPOTENT = types.ToolAnnotations(
-    readOnlyHint=True,
-    destructiveHint=False,
-    idempotentHint=False,
-    openWorldHint=True,
+    read_only_hint=True,
+    destructive_hint=False,
+    idempotent_hint=False,
+    open_world_hint=True,
 )
 
 
@@ -299,7 +290,7 @@ TOOLS: list[types.Tool] = [
             "species (oryza_sativa, zea_mays, ...). Locus is the TAIR-style "
             "identifier (e.g. AT1G01010 for Arabidopsis NAC001)."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -315,7 +306,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=EnsemblPlantsLocus.model_json_schema(),
+        output_schema=EnsemblPlantsLocus.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -330,7 +321,7 @@ TOOLS: list[types.Tool] = [
             "by_db rollup keyed on Ensembl's dbname (e.g. 'Uniprot_gn', "
             "'EntrezGene') for fast lookup of a single foreign identifier."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -346,7 +337,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=GeneXrefs.model_json_schema(),
+        output_schema=GeneXrefs.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -361,7 +352,7 @@ TOOLS: list[types.Tool] = [
             "(protein for blastp, cds/cdna for blastn). Defaults to "
             "arabidopsis_thaliana; pass organism= for other plant species."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -383,7 +374,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=EnsemblSequence.model_json_schema(),
+        output_schema=EnsemblSequence.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -399,7 +390,7 @@ TOOLS: list[types.Tool] = [
             "per-locus lookup. Ensembl caps the span — oversized regions error. "
             "Defaults to arabidopsis_thaliana; pass organism= for other species."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "region": {
@@ -423,7 +414,7 @@ TOOLS: list[types.Tool] = [
             "required": ["region", "start", "end"],
             "additionalProperties": False,
         },
-        outputSchema=EnsemblRegionFeatures.model_json_schema(),
+        output_schema=EnsemblRegionFeatures.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -439,7 +430,7 @@ TOOLS: list[types.Tool] = [
             "Returns organism_name, gene_name, chromosome, gene_start, gene_end, "
             "strand, description."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -455,7 +446,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=PhytozomeLocus.model_json_schema(),
+        output_schema=PhytozomeLocus.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -474,7 +465,7 @@ TOOLS: list[types.Tool] = [
             "the protein-side entry point — pair with InterPro / AlphaFold / "
             "Reactome / structural-bio tools."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -490,7 +481,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=UniProtLocus.model_json_schema(),
+        output_schema=UniProtLocus.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -507,7 +498,7 @@ TOOLS: list[types.Tool] = [
             "Pair with resolve_locus_to_uniprot or ensembl_plants_lookup_locus "
             "to ground the locus before fanning out to the literature."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -539,7 +530,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=LocusLiterature.model_json_schema(),
+        output_schema=LocusLiterature.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM_LITERATURE,
     ),
@@ -556,7 +547,7 @@ TOOLS: list[types.Tool] = [
             "[...], cellular_component: [...]}) deduped on goId so the "
             "high-level term set is one read away."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -579,7 +570,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=LocusGoAnnotations.model_json_schema(),
+        output_schema=LocusGoAnnotations.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM_GO,
     ),
@@ -601,7 +592,7 @@ TOOLS: list[types.Tool] = [
             "soybean, tomato; other organisms return an empty list, not an error. "
             "Defaults to arabidopsis_thaliana; pass organism= for other species."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -624,7 +615,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=LocusPlantOntology.model_json_schema(),
+        output_schema=LocusPlantOntology.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM_GO,
     ),
@@ -646,7 +637,7 @@ TOOLS: list[types.Tool] = [
             "so a locus-namespace mismatch is visible. Defaults to "
             "arabidopsis_thaliana; pass organism= for any of the 12 species."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "loci": {
@@ -687,7 +678,7 @@ TOOLS: list[types.Tool] = [
             "required": ["loci"],
             "additionalProperties": False,
         },
-        outputSchema=GoEnrichmentResult.model_json_schema(),
+        output_schema=GoEnrichmentResult.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM_GO,
     ),
@@ -704,7 +695,7 @@ TOOLS: list[types.Tool] = [
             "protein-level enrichment and with blast_sequence for sequence "
             "similarity discovery."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -731,7 +722,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=GrameneHomologs.model_json_schema(),
+        output_schema=GrameneHomologs.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -751,7 +742,7 @@ TOOLS: list[types.Tool] = [
             "raises OrganismNotSupported before any HTTP call. KEGG v118+ "
             "is case-sensitive on the locus: pass AGI loci as uppercase."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -767,7 +758,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=KeggPathways.model_json_schema(),
+        output_schema=KeggPathways.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -786,7 +777,7 @@ TOOLS: list[types.Tool] = [
             "Resource (2023); replaces the v0.9 subscription-gated "
             "tair_locus_info stub for the curator-summary use case."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -797,7 +788,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=BarGeneSummary.model_json_schema(),
+        output_schema=BarGeneSummary.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -814,7 +805,7 @@ TOOLS: list[types.Tool] = [
             "side. Arabidopsis only. BAR is keyless and a Global Core "
             "Biodata Resource (2023)."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -825,7 +816,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=BarEfpExpression.model_json_schema(),
+        output_schema=BarEfpExpression.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -846,7 +837,7 @@ TOOLS: list[types.Tool] = [
             "Only Arabidopsis and rice are supported by AIV; other "
             "organisms raise OrganismNotSupported."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -862,7 +853,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=BarAIVInteractions.model_json_schema(),
+        output_schema=BarAIVInteractions.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -879,7 +870,7 @@ TOOLS: list[types.Tool] = [
             "plus per-channel sub-scores (experimental, database, "
             "textmining, predicted)."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus_or_accession": {
@@ -902,7 +893,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus_or_accession"],
             "additionalProperties": False,
         },
-        outputSchema=StringInteractions.model_json_schema(),
+        output_schema=StringInteractions.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -918,7 +909,7 @@ TOOLS: list[types.Tool] = [
             "aliases (RefSeq, UniProt, TIGR locus-model IDs). Arabidopsis "
             "only. Alias of bar_gene_summary."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -929,7 +920,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=BarGeneSummary.model_json_schema(),
+        output_schema=BarGeneSummary.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -951,7 +942,7 @@ TOOLS: list[types.Tool] = [
             "arabidopsis_thaliana (AraCyc, the best-curated); pass organism= "
             "for other species."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -967,7 +958,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=PlantCycLocusInfo.model_json_schema(),
+        output_schema=PlantCycLocusInfo.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -987,7 +978,7 @@ TOOLS: list[types.Tool] = [
             "structure-level view. Defaults to arabidopsis_thaliana; pass "
             "organism= for other species."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -1003,7 +994,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=AlphaFoldStructure.model_json_schema(),
+        output_schema=AlphaFoldStructure.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1024,7 +1015,7 @@ TOOLS: list[types.Tool] = [
             "(UniProt-keyed). Defaults to arabidopsis_thaliana; pass organism= for "
             "other species."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -1040,7 +1031,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=ExperimentalStructures.model_json_schema(),
+        output_schema=ExperimentalStructures.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1069,7 +1060,7 @@ TOOLS: list[types.Tool] = [
             "and sorghum have none). Defaults to arabidopsis_thaliana; pass "
             "organism= for other species."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -1085,7 +1076,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=TfBindingMotifs.model_json_schema(),
+        output_schema=TfBindingMotifs.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1102,7 +1093,7 @@ TOOLS: list[types.Tool] = [
             "(MA0570.1) or a bare base id (MA0570, which resolves to the newest "
             "version). Unknown ids raise a typed NotFoundError."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "matrix_id": {
@@ -1113,7 +1104,7 @@ TOOLS: list[types.Tool] = [
             "required": ["matrix_id"],
             "additionalProperties": False,
         },
-        outputSchema=JasparMotif.model_json_schema(),
+        output_schema=JasparMotif.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1138,7 +1129,7 @@ TOOLS: list[types.Tool] = [
             "Arabidopsis only (ThaleMine carries genes for taxon 3702; other "
             "organisms raise OrganismNotSupported)."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -1154,7 +1145,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=ExperimentalInteractions.model_json_schema(),
+        output_schema=ExperimentalInteractions.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1174,7 +1165,7 @@ TOOLS: list[types.Tool] = [
             "means the gene exists but has no GeneRIF; an unknown locus raises a "
             "typed NotFoundError. Arabidopsis only."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -1190,7 +1181,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=GeneRifs.model_json_schema(),
+        output_schema=GeneRifs.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1211,7 +1202,7 @@ TOOLS: list[types.Tool] = [
             "list is page-capped. Works for all 12 organisms (UniProt-keyed). "
             "Defaults to arabidopsis_thaliana; pass organism= for other species."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -1227,7 +1218,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=InterProDomains.model_json_schema(),
+        output_schema=InterProDomains.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1245,7 +1236,7 @@ TOOLS: list[types.Tool] = [
             "organisms. Defaults to arabidopsis_thaliana; pass organism= for other "
             "species."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -1271,7 +1262,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=LocusVariants.model_json_schema(),
+        output_schema=LocusVariants.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1289,7 +1280,7 @@ TOOLS: list[types.Tool] = [
             "12 organisms. Defaults to arabidopsis_thaliana; pass organism= for "
             "other species."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "region": {
@@ -1309,7 +1300,7 @@ TOOLS: list[types.Tool] = [
             "required": ["region", "allele"],
             "additionalProperties": False,
         },
-        outputSchema=VepAnnotation.model_json_schema(),
+        output_schema=VepAnnotation.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1327,7 +1318,7 @@ TOOLS: list[types.Tool] = [
             "view. Works for all 12 organisms. Defaults to arabidopsis_thaliana; "
             "pass organism= for other species."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -1343,7 +1334,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=PantherFamily.model_json_schema(),
+        output_schema=PantherFamily.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1363,7 +1354,7 @@ TOOLS: list[types.Tool] = [
             "level, and organism is only validated and echoed back. Passing a "
             "mismatched organism therefore still returns the locus's real group."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -1389,7 +1380,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=OrthoDbOrthologs.model_json_schema(),
+        output_schema=OrthoDbOrthologs.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1406,7 +1397,7 @@ TOOLS: list[types.Tool] = [
             "ARABIDOPSIS-ONLY — any other organism raises OrganismNotSupported. "
             "Defaults to arabidopsis_thaliana."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -1422,7 +1413,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=AraGwasAssociations.model_json_schema(),
+        output_schema=AraGwasAssociations.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1438,7 +1429,7 @@ TOOLS: list[types.Tool] = [
             "true row total even when capped. ARABIDOPSIS-ONLY — any other organism "
             "raises OrganismNotSupported. Defaults to arabidopsis_thaliana."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -1454,7 +1445,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=ArabidopsisNaturalVariation.model_json_schema(),
+        output_schema=ArabidopsisNaturalVariation.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1472,7 +1463,7 @@ TOOLS: list[types.Tool] = [
             "`errors[]` with the `[NotFoundError]` prefix; the whole batch "
             "only fails when the retry budget is exhausted."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "loci": _LOCI_SCHEMA,
@@ -1485,7 +1476,7 @@ TOOLS: list[types.Tool] = [
             "required": ["loci"],
             "additionalProperties": False,
         },
-        outputSchema=_BATCH_OUTPUT,
+        output_schema=_BATCH_OUTPUT,
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1498,7 +1489,7 @@ TOOLS: list[types.Tool] = [
             "loci). Each results[locus] is the full single-locus shape "
             "(count + xrefs[] + by_db rollup)."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "loci": _LOCI_SCHEMA,
@@ -1511,7 +1502,7 @@ TOOLS: list[types.Tool] = [
             "required": ["loci"],
             "additionalProperties": False,
         },
-        outputSchema=_BATCH_OUTPUT,
+        output_schema=_BATCH_OUTPUT,
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1524,7 +1515,7 @@ TOOLS: list[types.Tool] = [
             "Each results[locus] is the full single-locus row "
             "(organism_name, gene_name, chromosome, start/end/strand, description)."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "loci": _LOCI_SCHEMA,
@@ -1537,7 +1528,7 @@ TOOLS: list[types.Tool] = [
             "required": ["loci"],
             "additionalProperties": False,
         },
-        outputSchema=_BATCH_OUTPUT,
+        output_schema=_BATCH_OUTPUT,
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1551,7 +1542,7 @@ TOOLS: list[types.Tool] = [
             "single-locus record (primaryAccession + uniProtkbId + entryType "
             "+ geneNames + organism + sequenceLength + web_url + …)."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "loci": _LOCI_SCHEMA,
@@ -1564,7 +1555,7 @@ TOOLS: list[types.Tool] = [
             "required": ["loci"],
             "additionalProperties": False,
         },
-        outputSchema=_BATCH_OUTPUT,
+        output_schema=_BATCH_OUTPUT,
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1577,7 +1568,7 @@ TOOLS: list[types.Tool] = [
             "results[locus] is the full single-locus payload (query + "
             "hitCount + returned + hits[])."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "loci": _LOCI_SCHEMA,
@@ -1597,7 +1588,7 @@ TOOLS: list[types.Tool] = [
             "required": ["loci"],
             "additionalProperties": False,
         },
-        outputSchema=_BATCH_OUTPUT,
+        output_schema=_BATCH_OUTPUT,
         annotations=_READ_ONLY,
         _meta=_EDAM_LITERATURE,
     ),
@@ -1616,7 +1607,7 @@ TOOLS: list[types.Tool] = [
             "re-poll. Set PLANT_GENOMICS_MCP_NCBI_EMAIL to identify the "
             "request per NCBI etiquette."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "sequence": {
@@ -1678,7 +1669,7 @@ TOOLS: list[types.Tool] = [
             "required": ["sequence"],
             "additionalProperties": False,
         },
-        outputSchema=BlastResult.model_json_schema(),
+        output_schema=BlastResult.model_json_schema(),
         annotations=_READ_ONLY_NON_IDEMPOTENT,
         _meta=_EDAM_BLAST,
     ),
@@ -1692,7 +1683,7 @@ TOOLS: list[types.Tool] = [
             "prefix preserved. Capped at "
             f"{batch.MAX_BATCH} loci."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "loci": _LOCI_SCHEMA,
@@ -1712,7 +1703,7 @@ TOOLS: list[types.Tool] = [
             "required": ["loci"],
             "additionalProperties": False,
         },
-        outputSchema=_BATCH_OUTPUT,
+        output_schema=_BATCH_OUTPUT,
         annotations=_READ_ONLY,
         _meta=_EDAM_GO,
     ),
@@ -1724,7 +1715,7 @@ TOOLS: list[types.Tool] = [
             "shares the homology_type filter across all loci. Returns the "
             "standard batch envelope (count + results dict + errors dict)."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "loci": {
@@ -1742,7 +1733,7 @@ TOOLS: list[types.Tool] = [
             "required": ["loci"],
             "additionalProperties": False,
         },
-        outputSchema=BatchEnvelope.model_json_schema(),
+        output_schema=BatchEnvelope.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1756,7 +1747,7 @@ TOOLS: list[types.Tool] = [
             "contract can't produce those yet, so a non-ath organism= "
             "raises OrganismNotSupported before any HTTP fan-out."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "loci": {
@@ -1773,7 +1764,7 @@ TOOLS: list[types.Tool] = [
             "required": ["loci"],
             "additionalProperties": False,
         },
-        outputSchema=BatchEnvelope.model_json_schema(),
+        output_schema=BatchEnvelope.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1787,7 +1778,7 @@ TOOLS: list[types.Tool] = [
             "single-locus payload (curator summary, computational "
             "description, NCBI Gene ID, cross-DB aliases). Arabidopsis only."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "loci": _LOCI_SCHEMA,
@@ -1795,7 +1786,7 @@ TOOLS: list[types.Tool] = [
             "required": ["loci"],
             "additionalProperties": False,
         },
-        outputSchema=_BATCH_OUTPUT,
+        output_schema=_BATCH_OUTPUT,
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1810,7 +1801,7 @@ TOOLS: list[types.Tool] = [
             "locus payload (kind=grn_papers for Arabidopsis with `papers` "
             "list, kind=ppi_predictions for rice with `partners` list)."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "loci": _LOCI_SCHEMA,
@@ -1823,7 +1814,7 @@ TOOLS: list[types.Tool] = [
             "required": ["loci"],
             "additionalProperties": False,
         },
-        outputSchema=_BATCH_OUTPUT,
+        output_schema=_BATCH_OUTPUT,
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1831,7 +1822,7 @@ TOOLS: list[types.Tool] = [
         name="batch_string_interactions",
         title="Batch: STRING Interactions",
         description="Batch version of string_interactions. Up to 50 inputs per call.",
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "loci_or_accessions": {
@@ -1849,7 +1840,7 @@ TOOLS: list[types.Tool] = [
             "required": ["loci_or_accessions"],
             "additionalProperties": False,
         },
-        outputSchema=BatchEnvelope.model_json_schema(),
+        output_schema=BatchEnvelope.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1868,7 +1859,7 @@ TOOLS: list[types.Tool] = [
             "surface high-confidence functional partners (interactors "
             "that are also coexpressed)."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {
@@ -1890,7 +1881,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=AttedCoexpression.model_json_schema(),
+        output_schema=AttedCoexpression.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1898,7 +1889,7 @@ TOOLS: list[types.Tool] = [
         name="batch_atted_coexpression",
         title="Batch: ATTED-II Coexpression",
         description="Batch version of atted_coexpression. Up to 50 loci per call.",
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "loci": {
@@ -1916,7 +1907,7 @@ TOOLS: list[types.Tool] = [
             "required": ["loci"],
             "additionalProperties": False,
         },
-        outputSchema=BatchEnvelope.model_json_schema(),
+        output_schema=BatchEnvelope.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -1930,7 +1921,7 @@ TOOLS: list[types.Tool] = [
             "SynthesisEnvelope with per-step status and a reconciled summary "
             "flagging cross-source name/accession disagreements."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {"type": "string", "description": "Locus name, e.g. AT1G01010"},
@@ -1943,7 +1934,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=SynthesisEnvelope.model_json_schema(),
+        output_schema=SynthesisEnvelope.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM_SYNTHESIS,
     ),
@@ -1957,7 +1948,7 @@ TOOLS: list[types.Tool] = [
             "their UniProt record (or null if subject_id is not a UniProt "
             "accession)."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "sequence": {
@@ -1975,7 +1966,7 @@ TOOLS: list[types.Tool] = [
             "required": ["sequence"],
             "additionalProperties": False,
         },
-        outputSchema=SynthesisEnvelope.model_json_schema(),
+        output_schema=SynthesisEnvelope.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM_SYNTHESIS,
     ),
@@ -1989,7 +1980,7 @@ TOOLS: list[types.Tool] = [
             "parallel. Adds a consensus_partners ranking that merges STRING + "
             "ATTED scores."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {"type": "string"},
@@ -2003,7 +1994,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=SynthesisEnvelope.model_json_schema(),
+        output_schema=SynthesisEnvelope.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM_SYNTHESIS,
     ),
@@ -2017,7 +2008,7 @@ TOOLS: list[types.Tool] = [
             "by n_sources * mean_identity — Gramene contributes identity=1.0, "
             "BLAST contributes pident/100."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {"type": "string"},
@@ -2031,7 +2022,7 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=SynthesisEnvelope.model_json_schema(),
+        output_schema=SynthesisEnvelope.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM_SYNTHESIS,
     ),
@@ -2048,7 +2039,7 @@ TOOLS: list[types.Tool] = [
             "backend failure degrades that section to an 'Unavailable' note; the "
             "rest of the dossier still renders."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "locus": {"type": "string", "description": "Locus name, e.g. AT1G01010"},
@@ -2068,16 +2059,25 @@ TOOLS: list[types.Tool] = [
             "required": ["locus"],
             "additionalProperties": False,
         },
-        outputSchema=SynthesisEnvelope.model_json_schema(),
+        output_schema=SynthesisEnvelope.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM_SYNTHESIS,
     ),
 ]
 
 
-@server.list_tools()
-async def _list_tools() -> list[types.Tool]:
-    return TOOLS
+# mcp 2.x removed the @server.list_tools() / @server.call_tool() decorator
+# family. Handlers are constructor arguments now (see the Server(...) call at
+# the bottom of this module), they take (ctx, params) instead of unpacked
+# arguments, and each must return a *Result object — a bare list is rejected.
+# The server object therefore has to be constructed AFTER these are defined.
+
+
+async def _list_tools(
+    ctx: ServerRequestContext,
+    params: types.PaginatedRequestParams | None,
+) -> types.ListToolsResult:
+    return types.ListToolsResult(tools=TOOLS)
 
 
 # ---- resources --------------------------------------------------------------
@@ -2085,14 +2085,31 @@ async def _list_tools() -> list[types.Tool]:
 # See plant_genomics_mcp.resources for the URI catalog and payload builders.
 
 
-@server.list_resources()
-async def _list_resources() -> list[types.Resource]:
-    return resources.RESOURCES
+async def _list_resources(
+    ctx: ServerRequestContext,
+    params: types.PaginatedRequestParams | None,
+) -> types.ListResourcesResult:
+    return types.ListResourcesResult(resources=resources.RESOURCES)
 
 
-@server.read_resource()
-async def _read_resource(uri: AnyUrl) -> Iterable[ReadResourceContents]:
-    return await resources.read_resource(uri)
+async def _read_resource(
+    ctx: ServerRequestContext,
+    params: types.ReadResourceRequestParams,
+) -> types.ReadResourceResult:
+    # 1.x accepted the SDK's ReadResourceContents helper straight back; 2.x
+    # wants wire types, so map onto TextResourceContents here. Every resource
+    # we serve is text (JSON or markdown) — bytes would need BlobResourceContents.
+    contents = await resources.read_resource(params.uri)
+    return types.ReadResourceResult(
+        contents=[
+            types.TextResourceContents(
+                uri=params.uri,
+                mime_type=item.mime_type,
+                text=item.content if isinstance(item.content, str) else item.content.decode(),
+            )
+            for item in contents
+        ]
+    )
 
 
 # ---- prompts ----------------------------------------------------------------
@@ -2100,14 +2117,18 @@ async def _read_resource(uri: AnyUrl) -> Iterable[ReadResourceContents]:
 # See plant_genomics_mcp.prompts for the catalog and renderers.
 
 
-@server.list_prompts()
-async def _list_prompts() -> list[types.Prompt]:
-    return prompts.PROMPTS
+async def _list_prompts(
+    ctx: ServerRequestContext,
+    params: types.PaginatedRequestParams | None,
+) -> types.ListPromptsResult:
+    return types.ListPromptsResult(prompts=prompts.PROMPTS)
 
 
-@server.get_prompt()
-async def _get_prompt(name: str, arguments: dict[str, str] | None) -> types.GetPromptResult:
-    return await prompts.get_prompt(name, arguments)
+async def _get_prompt(
+    ctx: ServerRequestContext,
+    params: types.GetPromptRequestParams,
+) -> types.GetPromptResult:
+    return await prompts.get_prompt(params.name, params.arguments)
 
 
 # ---- dispatch ---------------------------------------------------------------
@@ -2467,31 +2488,76 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                 raise ValueError(f"unknown tool: {name}")
 
 
-@server.call_tool()
-async def _call_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
-    """Return the dispatcher's dict directly.
+async def _call_tool(
+    ctx: ServerRequestContext,
+    params: types.CallToolRequestParams,
+) -> types.CallToolResult:
+    """Run the dispatcher and wrap its dict in a CallToolResult.
 
-    The SDK builds structuredContent (= this dict) AND a content[] of
-    TextContent(JSON) for backwards compat. With outputSchema set on each
-    tool, the SDK validates structuredContent against the model's schema.
+    Under 1.x this returned the dict bare and the SDK built both
+    ``structuredContent`` (= the dict) and a ``content[]`` of TextContent(JSON)
+    for backwards compat. 2.x hands that job to us, so both halves are
+    constructed here — dropping either one silently changes what clients see.
 
-    PlantGenomicsError (and subclasses) propagate to the SDK's outer
-    ``except Exception`` handler, which calls ``_make_error_result(str(exc))``.
-    Our PlantGenomicsError.__str__ prepends ``[ClassName]`` so the wire
-    payload preserves the failure type.
+    The error path is the migration's real hazard. 1.x routed a raised
+    PlantGenomicsError through the SDK's outer ``except Exception``, which
+    turned it into ``_make_error_result(str(exc))``; 2.x removed that
+    conversion, so an uncaught exception would escape as a protocol-level
+    crash instead of the documented ``is_error`` result. Catching it here
+    preserves the wire contract that tests/test_server_stdio.py asserts:
+    PlantGenomicsError.__str__ prepends ``[ClassName]``, so the failure type
+    survives into the payload.
 
-    If the client passed a ``progressToken`` in the request meta, install a
+    If the client passed a ``progress_token`` in the request meta, install a
     Reporter on the contextvar so the HTTP helpers (retry loops + BioMart
     POST) emit ``notifications/progress`` messages over the active session.
     """
-    reporter = _build_reporter()
-    if reporter is None:
-        return await _dispatch(name, arguments)
-    token = progress.set_reporter(reporter)
+    name = params.name
+    arguments = params.arguments or {}
+    reporter = _build_reporter(ctx)
     try:
-        return await _dispatch(name, arguments)
-    finally:
-        progress.reset_reporter(token)
+        if reporter is None:
+            payload = await _dispatch(name, arguments)
+        else:
+            token = progress.set_reporter(reporter)
+            try:
+                payload = await _dispatch(name, arguments)
+            finally:
+                progress.reset_reporter(token)
+    except Exception as exc:
+        return types.CallToolResult(
+            content=[types.TextContent(type="text", text=str(exc))],
+            is_error=True,
+        )
+    return types.CallToolResult(
+        content=[types.TextContent(type="text", text=json.dumps(payload))],
+        structured_content=payload,
+    )
+
+
+# ---- server object ----------------------------------------------------------
+# Constructed down here, not at the top of the module, because mcp 2.x takes
+# the handlers as constructor arguments and they have to exist first.
+# server_http.py imports this name, so it stays module-level.
+#
+# `version=` is load-bearing, not decorative: when it is omitted the SDK
+# substitutes its OWN package version into `serverInfo.version`
+# (`server_version=self.version if self.version else pkg_version("mcp")`),
+# so every client's initialize handshake reports the mcp SDK's version
+# instead of ours. Both transports share this object, so supplying it here
+# is the single place that fixes stdio and Streamable HTTP together —
+# and it is what makes the "authenticated callers can read __version__
+# from the initialize handshake" contract in server_http.healthz true.
+server: Server = Server(
+    "plant-genomics-mcp",
+    version=__version__,
+    on_list_tools=_list_tools,
+    on_list_resources=_list_resources,
+    on_read_resource=_read_resource,
+    on_list_prompts=_list_prompts,
+    on_get_prompt=_get_prompt,
+    on_call_tool=_call_tool,
+)
 
 
 # ---- entrypoint -------------------------------------------------------------

@@ -60,7 +60,7 @@ def test_every_declared_count_field_exists_in_its_tool_schema() -> None:
         if tool is None:
             missing.append(f"{spec.tool} (tool absent)")
             continue
-        props = (tool.outputSchema or {}).get("properties", {})
+        props = (tool.output_schema or {}).get("properties", {})
         if spec.field not in props:
             missing.append(f"{spec.tool}.{spec.field}")
         if spec.list_field is not None and spec.list_field not in props:
@@ -80,7 +80,7 @@ def test_count_field_docs_agree_with_declared_semantics() -> None:
     failures = []
     for spec in COUNT_SPECS:
         tool = by_name[spec.tool]
-        desc = ((tool.outputSchema or {}).get("properties", {}).get(spec.field) or {}).get(
+        desc = ((tool.output_schema or {}).get("properties", {}).get(spec.field) or {}).get(
             "description", ""
         )
         result = check_count_semantics(spec, {spec.field: 0}, desc)
@@ -193,7 +193,7 @@ def test_orthodb_discloses_that_organism_does_not_scope_the_search() -> None:
     stamped with an organism that had no bearing on the result.
     """
     tool = next(t for t in server.TOOLS if t.name == "orthodb_orthologs")
-    org_desc = tool.inputSchema["properties"]["organism"]["description"].lower()
+    org_desc = tool.input_schema["properties"]["organism"]["description"].lower()
 
     assert "does not scope" in (tool.description or "").lower()
     assert "not scope" in org_desc

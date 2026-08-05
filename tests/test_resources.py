@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 
 import pytest
-from pydantic import AnyUrl
 
 from plant_genomics_mcp import organisms, resources
 
@@ -23,14 +22,14 @@ def test_resources_catalog_has_four_entries() -> None:
 def test_resources_catalog_all_named_with_known_mime() -> None:
     """Every resource carries a name + description; mime is JSON or markdown."""
     for r in resources.RESOURCES:
-        assert r.mimeType in ("application/json", "text/markdown")
+        assert r.mime_type in ("application/json", "text/markdown")
         assert r.name
         assert r.description
 
 
 @pytest.mark.asyncio
 async def test_read_cache_stats_returns_per_backend_rollup() -> None:
-    out = list(await resources.read_resource(AnyUrl(resources.CACHE_STATS_URI)))
+    out = list(await resources.read_resource(resources.CACHE_STATS_URI))
     assert len(out) == 1
     item = out[0]
     assert item.mime_type == "application/json"
@@ -77,7 +76,7 @@ async def test_read_phytozome_organisms_matches_organisms_registry() -> None:
     """
     from plant_genomics_mcp import organisms
 
-    out = list(await resources.read_resource(AnyUrl(resources.PHYTOZOME_ORGANISMS_URI)))
+    out = list(await resources.read_resource(resources.PHYTOZOME_ORGANISMS_URI))
     payload = json.loads(out[0].content)
     expected = {
         canonical: r.phytozome_int
@@ -93,7 +92,7 @@ async def test_read_coverage_matrix_lists_all_organisms() -> None:
     """Markdown coverage matrix mentions every organism in ORGANISMS."""
     from plant_genomics_mcp import organisms
 
-    out = list(await resources.read_resource(AnyUrl(resources.COVERAGE_MATRIX_URI)))
+    out = list(await resources.read_resource(resources.COVERAGE_MATRIX_URI))
     assert len(out) == 1
     item = out[0]
     assert item.mime_type == "text/markdown"
@@ -144,7 +143,7 @@ async def test_coverage_matrix_renders_missing_slots_as_dash(
     shadowed["vitis_vinifera"] = replace(record, phytozome_int=None)
     monkeypatch.setattr(organisms, "ORGANISMS", shadowed)
 
-    out = list(await resources.read_resource(AnyUrl(resources.COVERAGE_MATRIX_URI)))
+    out = list(await resources.read_resource(resources.COVERAGE_MATRIX_URI))
     body = out[0].content
     grape_row = next(line for line in body.splitlines() if line.startswith("| vitis_vinifera "))
     assert "—" in grape_row
@@ -155,7 +154,7 @@ async def test_coverage_matrix_renders_missing_slots_as_dash(
 
 @pytest.mark.asyncio
 async def test_read_backends_status_lists_live_and_stub_backends() -> None:
-    out = list(await resources.read_resource(AnyUrl(resources.BACKENDS_STATUS_URI)))
+    out = list(await resources.read_resource(resources.BACKENDS_STATUS_URI))
     payload = json.loads(out[0].content)
     by_name = {entry["name"]: entry for entry in payload}
     # Live backends.
@@ -206,7 +205,7 @@ async def test_read_backends_status_lists_live_and_stub_backends() -> None:
 @pytest.mark.asyncio
 async def test_read_unknown_uri_raises() -> None:
     with pytest.raises(ValueError, match="unknown resource URI"):
-        await resources.read_resource(AnyUrl("pgmcp://does/not/exist"))
+        await resources.read_resource("pgmcp://does/not/exist")
 
 
 @pytest.mark.asyncio
@@ -223,7 +222,7 @@ async def test_cache_stats_reflect_live_counters(monkeypatch: pytest.MonkeyPatch
     ensembl_plants._CACHE.get("test-resource-key")
     ensembl_plants._CACHE.get("missing-key")
     try:
-        out = list(await resources.read_resource(AnyUrl(resources.CACHE_STATS_URI)))
+        out = list(await resources.read_resource(resources.CACHE_STATS_URI))
         payload = json.loads(out[0].content)
         assert payload["ensembl_plants"]["hits"] == before["hits"] + 1
         assert payload["ensembl_plants"]["misses"] == before["misses"] + 1
