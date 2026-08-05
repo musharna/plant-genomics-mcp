@@ -122,6 +122,6 @@ def test_tair_locus_info_tool_still_registered_in_server() -> None:
 
 
 def test_tair_locus_info_output_schema_is_bar_gene_summary() -> None:
-    """After the upgrade, outputSchema should match BarGeneSummary's schema."""
+    """After the upgrade, output_schema should match BarGeneSummary's schema."""
     tool = next(t for t in server.TOOLS if t.name == "tair_locus_info")
-    assert tool.outputSchema == BarGeneSummary.model_json_schema()
+    assert tool.output_schema == BarGeneSummary.model_json_schema()

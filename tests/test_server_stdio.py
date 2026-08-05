@@ -112,9 +112,9 @@ async def test_initialize_and_list_tools(server_params: StdioServerParameters) -
             # Every tool publishes an outputSchema (P0.1).
             for tool in result.tools:
                 assert tool.description, f"{tool.name} has empty description"
-                assert tool.outputSchema is not None, f"{tool.name} missing outputSchema"
-                assert tool.outputSchema.get("type") == "object", (
-                    f"{tool.name} outputSchema not an object: {tool.outputSchema}"
+                assert tool.output_schema is not None, f"{tool.name} missing output_schema"
+                assert tool.output_schema.get("type") == "object", (
+                    f"{tool.name} output_schema not an object: {tool.output_schema}"
                 )
 
 
@@ -129,7 +129,7 @@ async def test_invalid_locus_surfaces_typed_error(
             result = await session.call_tool(
                 "plantcyc_locus_info", arguments={"locus": "AT1G01010<x>"}
             )
-            assert result.isError, "expected error result for invalid locus"
+            assert result.is_error, "expected error result for invalid locus"
             assert result.content
             block = result.content[0]
             assert isinstance(block, TextContent)
@@ -215,12 +215,12 @@ async def test_get_prompt_unknown_name_surfaces_typed_error(
     server_params: StdioServerParameters,
 ) -> None:
     """Anti-rot guard for [NotFoundError] prefix on the prompts/get path."""
-    from mcp.shared.exceptions import McpError
+    from mcp.shared.exceptions import MCPError
 
     async with stdio_client(server_params) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()
-            with pytest.raises(McpError) as exc_info:
+            with pytest.raises(MCPError) as exc_info:
                 await session.get_prompt("nonexistent_prompt", {})
             assert "[NotFoundError]" in str(exc_info.value), (
                 f"missing typed prefix in: {exc_info.value!r}"
@@ -291,10 +291,10 @@ async def test_tool_schemas_use_organism_param(server_params: StdioServerParamet
             result = await session.list_tools()
             actual_organism = set()
             for tool in result.tools:
-                props = (tool.inputSchema or {}).get("properties", {})
-                assert "species" not in props, f"{tool.name} still has 'species' in inputSchema"
+                props = (tool.input_schema or {}).get("properties", {})
+                assert "species" not in props, f"{tool.name} still has 'species' in input_schema"
                 assert "organism_id" not in props, (
-                    f"{tool.name} still has 'organism_id' in inputSchema"
+                    f"{tool.name} still has 'organism_id' in input_schema"
                 )
                 if "organism" in props:
                     actual_organism.add(tool.name)

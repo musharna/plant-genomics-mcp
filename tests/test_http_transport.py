@@ -347,10 +347,10 @@ def test_blast_sequence_inputschema_has_maxlength_cap() -> None:
     from plant_genomics_mcp import server as server_module
 
     by_name = {t.name: t for t in server_module.TOOLS}
-    blast = by_name["blast_sequence"].inputSchema
+    blast = by_name["blast_sequence"].input_schema
     seq = blast["properties"]["sequence"]
     assert seq.get("maxLength") == 1_000_000, seq
-    homologs = by_name["find_homologs_synth"].inputSchema
+    homologs = by_name["find_homologs_synth"].input_schema
     seq2 = homologs["properties"]["sequence"]
     assert seq2.get("maxLength") == 1_000_000, seq2
 
