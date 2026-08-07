@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v1.21.0 — 2026-08-06
+
+Still **50 tools / 23 backends** — no tool, schema, or response-payload changes. A minor rather than a patch release because the supported SDK range **moves**: an environment that satisfied v1.20.0 may not satisfy this one.
 
 **Changed — minimum SDK is now mcp 2.x**
 
@@ -11,8 +13,6 @@
 - **Error results are built explicitly now.** mcp 1.x routed an exception raised inside the tool handler through the SDK's outer `except Exception`, which turned it into `isError=true`. 2.x removed that conversion. Without catching it, a `PlantGenomicsError` would have escaped as a protocol-level crash instead of the documented error result — silently changing what every client sees on a bad locus. The `[ClassName]` prefix contract is unchanged.
 
 - **The progress bridge reads `progress_token`, not `progressToken`,** and reads it off a plain dict — `RequestParamsMeta` is a TypedDict in 2.x. The context arrives as a handler argument, so `server.request_context` (and its `LookupError` branch) is gone.
-
-No tool, schema, or response-payload changes: still **50 tools / 23 backends**.
 
 ## v1.20.0 — 2026-07-28
 
