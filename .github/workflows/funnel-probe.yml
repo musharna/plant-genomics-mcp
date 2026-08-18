@@ -67,7 +67,12 @@ jobs:
         # page, mirroring the `for:` discipline in homelab's Prometheus rules.
         run: |
           for attempt in 1 2 3; do
-            code=$(curl -sS -o body.txt -w '%{http_code}' --max-time 20 "$FUNNEL_URL" || echo 000)
+            # No `|| echo 000` here: curl's own -w already prints 000 when the
+            # connection fails, so the fallback appended a SECOND one and the
+            # log read "HTTP 000000". Harmless to the comparison below, but the
+            # first thing a human reads during an outage should not look corrupt.
+            code=$(curl -sS -o body.txt -w '%{http_code}' --max-time 20 "$FUNNEL_URL" 2>/dev/null) || true
+            [ -n "$code" ] || code=000
             if [ "$code" = "200" ] && grep -q '"status":"ok"' body.txt; then
               echo "attempt $attempt: OK (HTTP $code)"
               exit 0
@@ -82,11 +87,28 @@ jobs:
         # Tailscale renews these automatically, so this only ever fires when
         # renewal has silently stopped — precisely the failure you would
         # otherwise discover as a browser warning.
+        #
+        # Retries 3x like the step above, and for a reason that was MEASURED
+        # rather than assumed. During the 2026-08-18 fail-test — funnel switched
+        # off, probe confirmed red, funnel switched back on — the reachability
+        # step recovered on its second attempt while this step, having only one,
+        # failed the whole run on "could not read certificate". A handshake that
+        # is a few seconds behind the HTTP path is not a stuck renewal, but a
+        # one-shot check cannot tell the difference, and every such blip would
+        # have paged. Any check that can be transiently wrong needs the same
+        # retry discipline as its neighbours, or it becomes the noisiest thing
+        # in the file and gets ignored.
         run: |
-          end=$(echo | openssl s_client -servername "$FUNNEL_HOST" \
-                  -connect "$FUNNEL_HOST:443" 2>/dev/null \
-                | openssl x509 -noout -enddate | cut -d= -f2)
-          [ -n "$end" ] || { echo "::error::could not read certificate"; exit 1; }
+          end=""
+          for attempt in 1 2 3; do
+            end=$(echo | openssl s_client -servername "$FUNNEL_HOST" \
+                    -connect "$FUNNEL_HOST:443" 2>/dev/null \
+                  | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2)
+            [ -n "$end" ] && break
+            echo "attempt $attempt: could not read certificate"
+            [ "$attempt" -lt 3 ] && sleep 20
+          done
+          [ -n "$end" ] || { echo "::error::could not read certificate after 3 attempts"; exit 1; }
           days=$(( ( $(date -d "$end" +%s) - $(date +%s) ) / 86400 ))
           echo "certificate expires in ${days}d ($end)"
           if [ "$days" -lt 7 ]; then
