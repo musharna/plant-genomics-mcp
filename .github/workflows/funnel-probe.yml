@@ -1,0 +1,95 @@
+name: funnel-probe
+
+# Can the public internet still reach this server?
+#
+# WHY THIS LIVES HERE. The deployment being probed IS this project:
+# plant-genomics-mcp-http on broker-host, published through a Tailscale Funnel. The
+# probe used to live in the private homelab repo beside the rest of that host's
+# monitoring, which was the wrong home for two reasons.
+#
+# 1. It has to run OFF the tailnet, and that is the whole measurement. Every
+#    other check on broker-host observes the service from inside: Prometheus reaches it
+#    over the docker network, healthchecks.io watches OUTBOUND pings. All of them
+#    stay green while the inbound public path is dead — Funnel switched off by a
+#    tailscaled restart, an ACL edit dropping the funnel nodeAttr, a cert that
+#    stopped renewing, DERP trouble between the internet and the node. MagicDNS
+#    makes an on-tailnet probe worse than weak: it resolves the funnel hostname
+#    to the node's 100.x address, so the check measures the LAN path and CANNOT
+#    FAIL. GitHub's runners are genuinely somewhere else.
+#
+# 2. homelab is private, so hosted minutes bill, and Actions rounds each JOB up
+#    to a whole minute — a 10-second probe cost a full minute per run. Frequency
+#    got cut twice to afford it (hourly -> 6h -> 12h) and then the workflow
+#    stopped running entirely when the account hit its spending limit: 5-second
+#    failures, zero steps, no log, the job never started. Red that meant
+#    "billing", not "the service is down", for three days while the endpoint was
+#    answering fine.
+#
+# This repo is PUBLIC, so Actions minutes are free and unmetered. The frequency
+# below is set by what is useful rather than by what is affordable.
+#
+# Failure notification is GitHub's own "scheduled workflow failed" email, and
+# that is deliberate: it must NOT route through the homelab ntfy topic, because
+# ntfy runs on broker-host and an alert saying "the outside cannot reach broker-host" is
+# worthless when delivered by broker-host.
+#
+# The homelab repo watches THIS workflow's run history in turn
+# (scripts/funnel-watch.sh -> FunnelExternalCheckNotRunning), so a probe that
+# silently stops being scheduled is itself alerted on. Renaming this file or the
+# workflow breaks that link — grep the homelab repo for `funnel-probe.yml` first.
+
+on:
+  schedule:
+    # Every 30 min. GitHub SILENTLY SKIPS scheduled runs under load — an hourly
+    # cron measured ~9.5 deliveries/day, not 24 — so treat this as "usually
+    # within an hour", and keep homelab's staleness threshold well above it.
+    - cron: "17,47 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FUNNEL_URL: https://mjarnoldgt76.tail86d19d.ts.net/healthz
+  FUNNEL_HOST: mjarnoldgt76.tail86d19d.ts.net
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe the Funnel endpoint
+        # /healthz is the one unauthenticated route (every other path needs the
+        # bearer token), so it is the only thing probeable from outside without
+        # shipping a secret to GitHub. Publishing the hostname costs nothing:
+        # Funnel is public by definition and the token is the access control.
+        #
+        # 3 attempts 20s apart: a single miss over a domestic uplink must not
+        # page, mirroring the `for:` discipline in homelab's Prometheus rules.
+        run: |
+          for attempt in 1 2 3; do
+            code=$(curl -sS -o body.txt -w '%{http_code}' --max-time 20 "$FUNNEL_URL" || echo 000)
+            if [ "$code" = "200" ] && grep -q '"status":"ok"' body.txt; then
+              echo "attempt $attempt: OK (HTTP $code)"
+              exit 0
+            fi
+            echo "attempt $attempt: FAILED (HTTP $code, body: $(head -c 200 body.txt))"
+            [ "$attempt" -lt 3 ] && sleep 20
+          done
+          echo "::error::Funnel endpoint unreachable from the public internet after 3 attempts."
+          exit 1
+
+      - name: Check TLS certificate expiry
+        # Tailscale renews these automatically, so this only ever fires when
+        # renewal has silently stopped — precisely the failure you would
+        # otherwise discover as a browser warning.
+        run: |
+          end=$(echo | openssl s_client -servername "$FUNNEL_HOST" \
+                  -connect "$FUNNEL_HOST:443" 2>/dev/null \
+                | openssl x509 -noout -enddate | cut -d= -f2)
+          [ -n "$end" ] || { echo "::error::could not read certificate"; exit 1; }
+          days=$(( ( $(date -d "$end" +%s) - $(date +%s) ) / 86400 ))
+          echo "certificate expires in ${days}d ($end)"
+          if [ "$days" -lt 7 ]; then
+            echo "::error::TLS cert expires in ${days}d — Tailscale renewal appears stuck."
+            exit 1
+          fi
