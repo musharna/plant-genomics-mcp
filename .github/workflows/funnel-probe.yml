@@ -3,12 +3,12 @@ name: funnel-probe
 # Can the public internet still reach this server?
 #
 # WHY THIS LIVES HERE. The deployment being probed IS this project:
-# plant-genomics-mcp-http on broker-host, published through a Tailscale Funnel. The
+# plant-genomics-mcp-http on the demo host, published through a Tailscale Funnel. The
 # probe used to live in the private homelab repo beside the rest of that host's
 # monitoring, which was the wrong home for two reasons.
 #
 # 1. It has to run OFF the tailnet, and that is the whole measurement. Every
-#    other check on broker-host observes the service from inside: Prometheus reaches it
+#    other check on the demo host observes the service from inside: Prometheus reaches it
 #    over the docker network, healthchecks.io watches OUTBOUND pings. All of them
 #    stay green while the inbound public path is dead — Funnel switched off by a
 #    tailscaled restart, an ACL edit dropping the funnel nodeAttr, a cert that
@@ -30,8 +30,8 @@ name: funnel-probe
 #
 # Failure notification is GitHub's own "scheduled workflow failed" email, and
 # that is deliberate: it must NOT route through the homelab ntfy topic, because
-# ntfy runs on broker-host and an alert saying "the outside cannot reach broker-host" is
-# worthless when delivered by broker-host.
+# ntfy runs on the demo host and an alert saying "the outside cannot reach the demo host" is
+# worthless when delivered by the demo host.
 #
 # The homelab repo watches THIS workflow's run history in turn
 # (scripts/funnel-watch.sh -> FunnelExternalCheckNotRunning), so a probe that

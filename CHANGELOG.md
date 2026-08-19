@@ -440,7 +440,7 @@ Remediates all 13 findings from the first multi-agent `/workflows` code audit of
 - **Output additive:** `KeggPathways` gains `organism` (always present) and `entrez_gene_id` (present for non-Arabidopsis). Consumers reading specific fields are unaffected; strict-schema consumers gain two fields.
 - No new MCP tools/resources/prompts. No new dependencies. No HTTP-transport, auth, or registry-metadata change.
 - Verification: 432 passed / 41 skipped, coverage 94% (floor 92), `ruff check .` clean, CI green on 3.11 + 3.12.
-- Docker tags `:1.7.0` / `:1.7` / `:latest` republish on tag-push; broker-host redeploy via `docker compose pull && docker compose up -d` (Diun is notifier-only per `bugs_fixed.md` #4).
+- Docker tags `:1.7.0` / `:1.7` / `:latest` republish on tag-push; the demo host redeploy via `docker compose pull && docker compose up -d` (Diun is notifier-only per internal notes).
 
 ## v1.6.0 — 2026-05-26
 
@@ -466,7 +466,7 @@ Added `scripts/benchmark_annotations.py` — operator-runnable scientific-valida
 - Exit codes: 0 = all PASS+DRIFT (safe to ship). 1 = any FAIL (block release; investigate). 2 = script error.
 - Default sweep ~3-5 min wall (without `--include-blast`); ~10-15 min with BLAST opt-in.
 - Frozen baseline + tolerance bands honor the v1.4.0 #10 doctrine: Ensembl/KEGG/UniProt drift on ~6-monthly release cycles surfaces as DRIFT, not FAIL.
-- Docker tags `:1.6.0` / `:1.6` / `:latest` republish on tag-push; broker-host redeploy via `docker compose pull && docker compose up -d` (Diun is notifier-only per `bugs_fixed.md` #4). No HTTP-transport, auth, or registry-metadata change.
+- Docker tags `:1.6.0` / `:1.6` / `:latest` republish on tag-push; the demo host redeploy via `docker compose pull && docker compose up -d` (Diun is notifier-only per internal notes). No HTTP-transport, auth, or registry-metadata change.
 
 ## v1.5.0 — 2026-05-25
 
@@ -492,7 +492,7 @@ KEGG ↔ NCBI Entrez bridge extended to 3 additional organisms: barley (`hordeum
 - Output schema unchanged — the additive `entrez_gene_id` field shipped in v1.4.0 appears for the expanded organism set; Arabidopsis still omits it.
 - One additional Ensembl `/xrefs/id` call per newly-enabled `kegg_pathways` invocation, same shape as v1.4.0. Both calls share their respective `_CACHE` TTL (~24h); cold call ≈ 1 Ensembl + 1 KEGG `/link` + N KEGG `/get` in parallel (or zero KEGG `/get` if `/link` returned empty → NotFoundError); warm call hits zero network.
 - `batch_kegg_pathways` picks up the new organisms automatically via composition — it fans out to `lookup_pathways` per locus.
-- Docker tags `:1.5.0` / `:1.5` / `:latest` republish on tag-push; broker-host redeploy via `docker compose pull && docker compose up -d` (Diun is notifier-only per `bugs_fixed.md` #4). No HTTP-transport, auth, or registry-metadata change.
+- Docker tags `:1.5.0` / `:1.5` / `:latest` republish on tag-push; the demo host redeploy via `docker compose pull && docker compose up -d` (Diun is notifier-only per internal notes). No HTTP-transport, auth, or registry-metadata change.
 
 ## v1.4.0 — 2026-05-25
 
@@ -517,7 +517,7 @@ KEGG ↔ NCBI Entrez bridge — `kegg_pathways` + `batch_kegg_pathways` now retu
 - One additional Ensembl `/xrefs/id` call per non-Arabidopsis `kegg_pathways` invocation. Both calls (Ensembl + KEGG) share their respective `_CACHE` TTL (~24h) and pipeline across the same `httpx.AsyncClient` — cold call ≈ 1 Ensembl + 1 KEGG `/link` + N KEGG `/get` in parallel; warm call hits 0 network.
 - Pre-impl probe confirmed live coverage (`scripts/verify_organisms.py` matrix re-probe ready): rice `Os01g0100100` → `EntrezGene 4326813`, maize `Zm00001eb000010` → `103644366`, soybean `GLYMA_01G001700` → `100810680`. Tomato `Solyc01g005610.3` returned only `ArrayExpress` — bridge mechanism falsified for tomato, deferred to v1.5.0 with a different mechanism (UniProt → Entrez two-hop, or NCBI Datasets).
 - `batch_kegg_pathways` picks up the bridge automatically via composition — it fans out to `lookup_pathways` per locus.
-- Docker tags `:1.4.0` / `:1.4` / `:latest` republish on tag-push; Diun on broker-host auto-redeploys the hosted demo. No HTTP-transport, auth, or registry-metadata change.
+- Docker tags `:1.4.0` / `:1.4` / `:latest` republish on tag-push; Diun on the demo host auto-redeploys the hosted demo. No HTTP-transport, auth, or registry-metadata change.
 
 ## v1.3.0 — 2026-05-24
 
@@ -533,7 +533,7 @@ KEGG ↔ NCBI Entrez bridge — `kegg_pathways` + `batch_kegg_pathways` now retu
 
 **Operational impact**
 
-- Docker tags `:1.3.0` / `:1.3` / `:latest` republish on tag-push; Diun on broker-host auto-redeploys the hosted demo. No HTTP-transport, auth, or registry-metadata change.
+- Docker tags `:1.3.0` / `:1.3` / `:latest` republish on tag-push; Diun on the demo host auto-redeploys the hosted demo. No HTTP-transport, auth, or registry-metadata change.
 - Module-level `gramene.lookup_homologs(client, locus)` (with no `homology_type` kwarg) still defaults to `"ortholog"` — only the synthesis compose is affected. Direct callers of `gramene.lookup_homologs` see no behavior change.
 - Unit tests pass unchanged: the Gramene fixture uses `ortholog_one2one`, which is in both the `"ortholog"` and `"all"` filter sets, so `homology_type` does not leak to the mocked HTTP layer.
 
@@ -562,7 +562,7 @@ KEGG ↔ NCBI Entrez bridge — `kegg_pathways` + `batch_kegg_pathways` now retu
 
 **Operational impact**
 
-- No HTTP-transport, auth, or registry-metadata change; the breaking surface is a single tool's output schema. Docker tags `:1.2.0` / `:1.2` / `:latest` republish on tag-push; Diun on broker-host auto-redeploys the hosted demo.
+- No HTTP-transport, auth, or registry-metadata change; the breaking surface is a single tool's output schema. Docker tags `:1.2.0` / `:1.2` / `:latest` republish on tag-push; Diun on the demo host auto-redeploys the hosted demo.
 - Known coverage gap, **documented not papered-over**: ~half of Gramene v69 entries in fringe organisms (cucurbits, bryophytes — e.g. `Cla97C03G067000`, `Mp4g11910`) have no Swiss-Prot or TrEMBL xref. Without an accession they can't dedup with BLAST, so they're dropped from the consensus rather than diluting it with 1-source rows. Expanding the fallback to species+gene-name on those organisms is a v1.3 candidate.
 - BLAST-only consensus rows now report `target_species=None` (was: best-effort parse from defline tokens, often `None` anyway against SwissProt). The NCBI SwissProt defline (`RecName: Full=...`) has no `OS=` species token, and we don't pay for a per-hit UniProt lookup to recover it; if you need species per BLAST hit, fetch the UniProt record from `uniprot_accession` yourself.
 
@@ -578,7 +578,7 @@ Bug fix: STRING locus inputs failed for any organism where the locus has multipl
 
 **Operational impact**
 
-- No schema change; tool signatures and registry metadata unchanged. PyPI republish + Diun-driven Docker retag on broker-host only.
+- No schema change; tool signatures and registry metadata unchanged. PyPI republish + Diun-driven Docker retag on the demo host only.
 - Live STRING tests against both arabidopsis (`Q0WV96`) and rice (`Os01g0100100`) pass post-fix.
 
 ## v1.1.0 — 2026-05-24
@@ -614,7 +614,7 @@ Polish bundle — two BREAKING contract tightenings on the multi-organism resolv
 
 **Operational impact**
 
-- Docker images retag `:1.1.0` / `:1.1` / `:latest` on tag-push; Diun on broker-host auto-redeploys the hosted demo. After the redeploy, `curl -sI https://mjarnoldgt76.tail86d19d.ts.net/mcp` returns `404` (was `307` with the broken `Location`); `curl -sI https://mjarnoldgt76.tail86d19d.ts.net/mcp/` with the bearer token returns `200`/`406` per the streamable-HTTP handler.
+- Docker images retag `:1.1.0` / `:1.1` / `:latest` on tag-push; Diun on the demo host auto-redeploys the hosted demo. After the redeploy, `curl -sI https://mjarnoldgt76.tail86d19d.ts.net/mcp` returns `404` (was `307` with the broken `Location`); `curl -sI https://mjarnoldgt76.tail86d19d.ts.net/mcp/` with the bearer token returns `200`/`406` per the streamable-HTTP handler.
 - MCP registry metadata (short description, `mcp-name` token) unchanged — no `mcp-publisher publish` re-submit needed beyond the PyPI version bump.
 
 ## v1.0.4 — 2026-05-24
@@ -634,7 +634,7 @@ Internal refactor — extracts the duplicated 429/5xx-retry + `Retry-After`-cap 
 - **Migrated callers (9 modules):** `ensembl_plants.py`, `kegg.py`, `bar.py`, `atted.py`, `europe_pmc.py`, `gramene.py`, `quickgo.py`, `string_db.py`, `phytozome.py` (POST variant), `uniprot.py` (3 inline sites — `_search`, `_fetch_by_accession`, `fetch_sequence`; the latter two wrap with `try/except NotFoundError` to preserve the canonical "UniProt has no entry/FASTA for accession=X" message that several tests assert on).
 - **Test-only change:** `tests/test_ensembl_plants.py` now patches `_http.asyncio.sleep` instead of `ensembl_plants.asyncio.sleep` to intercept retry backoff (the sleep call moved into the shared helper).
 - **Verification:** full suite green (350 passed, 34 skipped — same counts as v1.0.2). Live tests gated by `PLANT_GENOMICS_MCP_LIVE=1` were not re-run; the migration is a pure code move, not a wire-protocol change.
-- **No operational impact.** Docker images `:1.0.3` / `:1.0` / `:latest` retag on merge; Diun on broker-host auto-redeploys. Behavior on the hosted demo at `https://mjarnoldgt76.tail86d19d.ts.net/mcp` is unchanged.
+- **No operational impact.** Docker images `:1.0.3` / `:1.0` / `:latest` retag on merge; Diun on the demo host auto-redeploys. Behavior on the hosted demo at `https://mjarnoldgt76.tail86d19d.ts.net/mcp` is unchanged.
 
 ## v1.0.2 — 2026-05-23
 
@@ -643,7 +643,7 @@ Hot-fix — repairs the BAR backend, which was DOA in v1.0.0 and v1.0.1. The `ba
 - **`src/plant_genomics_mcp/server.py`** — add `bar,` to the import block (alphabetic position between `batch,` and `blast,`), restoring the binding the dispatcher relies on.
 - **`tests/test_bar.py`** — new regression test `test_dispatch_bar_gene_summary_resolves_bar_module` routes through `server._dispatch("bar_gene_summary", ...)` with mocked HTTPX so any future drop of the `bar,` import fails CI loudly. Module-level direct-call tests stayed green through the bug; this test pins the _dispatch path_ contract.
 - **`tests/test_organisms.py`** — move the `from plant_genomics_mcp.errors import (...)` block above the test function defs (E402 cleanup).
-- **Operational impact.** Hosted demo at `https://mjarnoldgt76.tail86d19d.ts.net/mcp` has been silently 500-ing on BAR tool calls for the v1.0.0 → v1.0.1 window (~few hours). The Docker pipeline retags `:1.0.2` / `:1.0` / `:latest`; Diun on broker-host auto-redeploys.
+- **Operational impact.** Hosted demo at `https://mjarnoldgt76.tail86d19d.ts.net/mcp` has been silently 500-ing on BAR tool calls for the v1.0.0 → v1.0.1 window (~few hours). The Docker pipeline retags `:1.0.2` / `:1.0` / `:latest`; Diun on the demo host auto-redeploys.
 
 ## v1.0.1 — 2026-05-23
 
@@ -730,7 +730,7 @@ Hosted endpoint release — no new tools or backends. Adds a public Streamable-H
 - **`GET /healthz` route** added to `server_http.build_app()` ahead of the `/mcp` mount. Returns `200 {"status":"ok","version":<__version__>}`. No new dependency, no MCP-protocol entanglement — drop-in target for Uptime Kuma, Diun, or curl-in-cron.
 - **`Dockerfile.http` + `ghcr.io/musharna/plant-genomics-mcp-http`** new image (two-stage builder + slim runtime, non-root mcp uid 10001, EXPOSE 8765, ENTRYPOINT `plant-genomics-mcp-http`). The existing `plant-genomics-mcp` stdio image is unchanged.
 - **`.github/workflows/docker.yml` publishes both images** from the same trigger via parallel `metadata-action` + `build-push-action` steps sharing the buildx GHA cache. Same tag policy on both — push to `main` → `:edge`; semver tag → `:vX.Y.Z` + `:vX.Y` + `:latest`.
-- **Hosted instance** at `https://mjarnoldgt76.tail86d19d.ts.net/mcp` (Tailscale Funnel → broker-host → Docker on `127.0.0.1:8765`). Open access — no token, no IP allowlist; upstream backends self-rate-limit. Best-effort uptime, demo-grade. README has the full `claude mcp add` recipe.
+- **Hosted instance** at `https://mjarnoldgt76.tail86d19d.ts.net/mcp` (Tailscale Funnel → the demo host → Docker on `127.0.0.1:8765`). Open access — no token, no IP allowlist; upstream backends self-rate-limit. Best-effort uptime, demo-grade. README has the full `claude mcp add` recipe.
 
 ## v0.8.0 — 2026-05-22
 
