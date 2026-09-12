@@ -179,7 +179,8 @@ async def run_find_homologs() -> dict[str, Any]:
         "steps": [],
     }
 
-    async with httpx.AsyncClient(timeout=None) as client:
+    # per-request bound; BLAST polling is bounded separately by max_wait below
+    async with httpx.AsyncClient(timeout=httpx.Timeout(120.0)) as client:
         t0 = time.monotonic()
         step1 = await blast.blast_sequence(
             client,

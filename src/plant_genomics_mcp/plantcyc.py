@@ -30,6 +30,7 @@ from typing import Any
 from xml.etree import ElementTree as ET
 
 import httpx
+from defusedxml.ElementTree import fromstring as _defused_fromstring  # BioCyc XML is remote input
 
 from plant_genomics_mcp import _http, cache, organisms, validators
 from plant_genomics_mcp.errors import PlantGenomicsError
@@ -96,7 +97,7 @@ def _parse(text: str, source: str) -> ET.Element:
     debugging at the wrong request.
     """
     try:
-        return ET.fromstring(text)
+        return _defused_fromstring(text)
     except ET.ParseError as exc:
         raise PlantGenomicsError(f"PlantCyc {source} returned unparseable XML: {exc}") from exc
 
