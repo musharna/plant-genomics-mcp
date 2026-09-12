@@ -23,7 +23,7 @@ def bare_replace(tree):
             yield node.lineno, "bare str.replace() discards its result (silent no-op)"
 
 
-def main(paths):
+def check_files(paths):
     rc = 0
     for p in paths:
         try:
@@ -38,4 +38,4 @@ def main(paths):
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(check_files(sys.argv[1:]))
