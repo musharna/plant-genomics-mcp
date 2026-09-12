@@ -8,6 +8,7 @@ two-string-literal shape is the discriminator.
 """
 import ast
 import sys
+from pathlib import Path
 
 
 def bare_replace(tree):
@@ -17,9 +18,10 @@ def bare_replace(tree):
         call = node.value
         if not (isinstance(call.func, ast.Attribute) and call.func.attr == "replace"):
             continue
-        if len(call.args) >= 2 and all(
+        literal_args = [
             isinstance(a, ast.Constant) and isinstance(a.value, str) for a in call.args[:2]
-        ):
+        ]
+        if len(literal_args) == 2 and all(literal_args):
             yield node.lineno, "bare str.replace() discards its result (silent no-op)"
 
 
@@ -27,7 +29,7 @@ def check_files(paths):
     rc = 0
     for p in paths:
         try:
-            tree = ast.parse(open(p, encoding="utf-8").read(), filename=p)
+            tree = ast.parse(Path(p).read_text(encoding="utf-8"), filename=p)
         except SyntaxError as e:  # let ruff report syntax; do not mask it as a rule hit
             print(f"{p}: skipped (SyntaxError: {e.msg})", file=sys.stderr)
             continue

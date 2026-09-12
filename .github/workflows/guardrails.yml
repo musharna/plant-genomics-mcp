@@ -30,8 +30,13 @@ jobs:
       # in CI they rewrite pre-existing files and report that as failure, so
       # every repo that predates the template would be red forever. The CI gate
       # is the non-modifying set: ruff check, structural checks, house rules.
+      # Use the repo's own pinned ruff when it has one (its baseline), else the
+      # template pin. A version jump is not a code defect.
       - name: ruff check (no fix)
-        run: uvx ruff@0.16.7 check .
+        run: |
+          uv sync --all-extras --dev
+          if [ -x .venv/bin/ruff ]; then echo "repo ruff: "; .venv/bin/ruff check .
+          else echo "template ruff 0.16.7"; uvx ruff@0.16.7 check .; fi
       - name: pre-commit non-modifying hooks + house rules (all files)
         env:
           SKIP: ruff-check,ruff-format,end-of-file-fixer,trailing-whitespace
