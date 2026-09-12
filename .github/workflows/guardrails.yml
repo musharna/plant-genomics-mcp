@@ -26,11 +26,15 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
-      # ruff-format is a local auto-fixer, not a CI gate: several repos predate
-      # it and a format-only red on every PR is noise, not signal.
-      - name: pre-commit (all files)
+      # Auto-FIXING hooks (ruff --fix, ruff-format, eof, whitespace) stay local:
+      # in CI they rewrite pre-existing files and report that as failure, so
+      # every repo that predates the template would be red forever. The CI gate
+      # is the non-modifying set: ruff check, structural checks, house rules.
+      - name: ruff check (no fix)
+        run: uvx ruff@0.16.7 check .
+      - name: pre-commit non-modifying hooks + house rules (all files)
         env:
-          SKIP: ruff-format
+          SKIP: ruff-check,ruff-format,end-of-file-fixer,trailing-whitespace
         run: uvx pre-commit run --all-files --show-diff-on-failure
       - name: house-rule hooks can fail (negative controls)
         run: bash scripts/guardrails-selftest.sh
