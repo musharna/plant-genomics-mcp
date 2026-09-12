@@ -10,6 +10,12 @@ import ast
 import sys
 from pathlib import Path
 
+N_REPLACE_ARGS = 2  # str.replace(old, new); renames never pass two literals
+
+
+def _is_str_literal(node):
+    return isinstance(node, ast.Constant) and isinstance(node.value, str)
+
 
 def bare_replace(tree):
     for node in ast.walk(tree):
@@ -18,10 +24,8 @@ def bare_replace(tree):
         call = node.value
         if not (isinstance(call.func, ast.Attribute) and call.func.attr == "replace"):
             continue
-        literal_args = [
-            isinstance(a, ast.Constant) and isinstance(a.value, str) for a in call.args[:2]
-        ]
-        if len(literal_args) == 2 and all(literal_args):
+        old_new = call.args[:2]
+        if len(old_new) == N_REPLACE_ARGS and all(_is_str_literal(a) for a in old_new):
             yield node.lineno, "bare str.replace() discards its result (silent no-op)"
 
 
