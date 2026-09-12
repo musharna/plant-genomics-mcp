@@ -26,6 +26,7 @@ jobs:
       - name: Install + mutmut
         run: |
           uv sync --all-extras --dev
+          if [ -f requirements-dev.txt ]; then uv pip install -r requirements-dev.txt; fi
           uv pip install "mutmut==3.7.0" pytest
       - name: Baseline suite is green (a red baseline makes every mutant "killed")
         run: uv run --with pytest pytest -q -x -p no:cacheprovider
@@ -81,6 +82,7 @@ jobs:
       - name: Install + hypothesis
         run: |
           uv sync --all-extras --dev
+          if [ -f requirements-dev.txt ]; then uv pip install -r requirements-dev.txt; fi
           uv pip install hypothesis pytest
       - uses: anthropics/claude-code-action@4169884de317bc1b4cb1b47f4476d76fed92b384 # v1
         with:

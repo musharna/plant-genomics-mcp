@@ -35,6 +35,7 @@ jobs:
       - name: ruff check (no fix)
         run: |
           uv sync --all-extras --dev
+          if [ -f requirements-dev.txt ]; then uv pip install -r requirements-dev.txt; fi
           if [ -x .venv/bin/ruff ]; then echo "repo ruff: "; .venv/bin/ruff check .
           else echo "template ruff 0.16.7"; uvx ruff@0.16.7 check .; fi
       - name: pre-commit non-modifying hooks + house rules (all files)
@@ -55,6 +56,8 @@ jobs:
         run: |
           if [ -f uv.lock ]; then uv sync --locked --all-extras --dev
           else uv sync --all-extras --dev; fi
+          # repos that pin test deps outside pyproject (taxon3d)
+          if [ -f requirements-dev.txt ]; then uv pip install -r requirements-dev.txt; fi
       - name: Tests
         run: uv run --with pytest pytest -q -p no:cacheprovider
 
@@ -66,6 +69,7 @@ jobs:
       - name: pip-audit (known-vulnerable dependencies)
         run: |
           uv sync --all-extras --dev
+          if [ -f requirements-dev.txt ]; then uv pip install -r requirements-dev.txt; fi
           uv run --with pip-audit pip-audit --strict --desc on
       - name: bandit (insecure code patterns, medium+ severity)
         run: uvx bandit -q -r . -ll -x ./tests,./.venv,./mutants
