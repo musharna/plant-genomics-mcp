@@ -1,0 +1,64 @@
+# Guardrails pre-commit config (from ~/repo-template; sync with scripts/guardrails-sync.sh).
+# Setup once per clone:  uvx pre-commit install
+# Every rev is a commit SHA verified to exist on 2026-09-11; bump deliberately.
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: e8f7d69b957a30acb2c875078d5fd012de24b64c  # v0.16.7
+    hooks:
+      - id: ruff-check
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # v6.0.0
+    hooks:
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-added-large-files
+        args: [--maxkb=2048]
+      - id: detect-private-key
+      - id: check-merge-conflict
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: 745eface02aef23e168a8afb6b5737818efbea95  # v0.11.0.1
+    hooks:
+      - id: shellcheck
+        args: [--severity=warning]
+
+  # House rules: each one is a bug class that has actually shipped here.
+  # Negative controls for every hook live in scripts/guardrails-selftest.sh.
+  - repo: local
+    hooks:
+      - id: no-bare-replace
+        name: "str.replace('a','b') as a bare statement is a silent no-op (strings are immutable)"
+        language: system
+        types: [python]
+        entry: python3 scripts/guardrails-hooks.py
+
+      - id: no-nested-lazy
+        name: "NESTED lazy quantifier (a quantified group containing *? / +?) = catastrophic backtracking"
+        language: pygrep
+        types: [python]
+        entry: '\([^()]*[\*\+]\?[^()]*\)[\*\+\{]'
+
+      - id: no-nohup-background
+        name: "nohup ... & dies with the shell scope; use systemd-run --user --unit"
+        language: pygrep
+        types: [shell]
+        entry: '^\s*nohup\b.*&\s*(#.*)?$'
+
+      - id: no-uppercase-transform
+        name: "text-transform: uppercase maps µ (U+00B5) to LATIN M; units read 1000x wrong"
+        language: pygrep
+        files: '\.(css|scss|html|svelte|vue|jsx|tsx)$'
+        entry: 'text-transform\s*:\s*uppercase'
+
+      - id: no-dev-paths
+        name: "absolute developer-machine paths in tracked files (real machine names; /home/someone is a fixture)"
+        language: pygrep
+        types: [text]
+        exclude: '^(\.pre-commit-config\.yaml|scripts/guardrails-selftest\.sh|\.github/workflows/.*)$'
+        entry: '/home/mjarnold|/mnt/c/Users/a2b32|C:\\Users\\a2b32'
