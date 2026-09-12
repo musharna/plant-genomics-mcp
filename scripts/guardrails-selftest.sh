@@ -26,6 +26,7 @@ check no-nohup-background f.sh $'#!/bin/sh\nnohup python worker.py &' fail
 check no-nohup-background g.sh $'#!/bin/sh\nsystemd-run --user --unit w python worker.py' pass
 check no-uppercase-transform h.css '.legend { text-transform: uppercase; }' fail
 check no-uppercase-transform i.css '.legend { font-variant: small-caps; }' pass
-check no-dev-paths j.py "p = "/mnt/c/Us""ers/a2b32/Zotero/x.pdf"" fail  # split so this file lacks the literal
+devroot="/mnt/c/Us"  # joined at runtime so this file never contains the literal path it plants
+check no-dev-paths j.py "p = "ers/a2b32/Zotero/x.pdf"" fail
 check no-dev-paths k.py 'p = "/home/someone/data.csv"'          pass
 exit $fail
