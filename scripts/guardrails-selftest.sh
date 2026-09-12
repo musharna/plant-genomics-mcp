@@ -26,6 +26,9 @@ check no-nohup-background f.sh $'#!/bin/sh\nnohup python worker.py &' fail
 check no-nohup-background g.sh $'#!/bin/sh\nsystemd-run --user --unit w python worker.py' pass
 check no-uppercase-transform h.css '.legend { text-transform: uppercase; }' fail
 check no-uppercase-transform i.css '.legend { font-variant: small-caps; }' pass
-check no-dev-paths j.py 'p = "/mnt/c/Users/a2b32/Zotero/x.pdf"' fail
-check no-dev-paths k.py 'p = "/home/someone/data.csv"'          pass
+devroot="/mnt/c/Us"  # joined at runtime so this file never contains the literal path it plants
+devfix=$(printf 'p = "%sers/a2b32/Zotero/x.pdf"' "$devroot")
+check no-dev-paths j.py "$devfix" fail
+homefix=$(printf 'p = "/home%s"' "/someone/data.csv")  # placeholder home must PASS
+check no-dev-paths k.py "$homefix" pass
 exit $fail

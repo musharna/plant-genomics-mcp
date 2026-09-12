@@ -6,6 +6,7 @@ whose result is discarded. Strings are immutable, so this is a silent no-op;
 os.replace / Path.replace are renames and take non-literal args, so the
 two-string-literal shape is the discriminator.
 """
+
 import ast
 import sys
 from pathlib import Path
