@@ -4,7 +4,7 @@ name: guardrails
 #   lint      pre-commit (ruff, shellcheck, house rules)
 #   test      pytest
 #   security  pip-audit + bandit
-#   review    Claude code review posted on the PR (needs ANTHROPIC_API_KEY)
+#   review    Claude code review posted on the PR (needs CLAUDE_CODE_OAUTH_TOKEN)
 # Action SHAs verified to exist on 2026-09-11.
 
 on:
@@ -86,12 +86,12 @@ jobs:
       issues: write
       id-token: write
     steps:
-      - name: ANTHROPIC_API_KEY is configured
+      - name: CLAUDE_CODE_OAUTH_TOKEN is configured
         env:
-          KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          KEY: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: |
           if [ -z "$KEY" ]; then
-            echo "::error::ANTHROPIC_API_KEY secret is not set on this repo. Add it: gh secret set ANTHROPIC_API_KEY -R ${{ github.repository }}"
+            echo "::error::CLAUDE_CODE_OAUTH_TOKEN secret is not set (Pro/Max: run claude setup-token locally). Add it: gh secret set CLAUDE_CODE_OAUTH_TOKEN -R ${{ github.repository }}"
             exit 1
           fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -99,7 +99,7 @@ jobs:
           fetch-depth: 0
       - uses: anthropics/claude-code-action@4169884de317bc1b4cb1b47f4476d76fed92b384 # v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           use_sticky_comment: true
           prompt: |
             Review PR #${{ github.event.pull_request.number }} in ${{ github.repository }}.
