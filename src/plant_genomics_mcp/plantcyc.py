@@ -30,6 +30,7 @@ from typing import Any
 from xml.etree import ElementTree as ET
 
 import httpx
+from defusedxml.common import DefusedXmlException
 from defusedxml.ElementTree import fromstring as _defused_fromstring  # BioCyc XML is remote input
 
 from plant_genomics_mcp import _http, cache, organisms, validators
@@ -98,7 +99,9 @@ def _parse(text: str, source: str) -> ET.Element:
     """
     try:
         return _defused_fromstring(text)
-    except ET.ParseError as exc:
+    except (ET.ParseError, DefusedXmlException) as exc:
+        # DefusedXmlException is a ValueError, not a ParseError: without it a
+        # DOCTYPE/entity payload escapes unwrapped and loses the source label
         raise PlantGenomicsError(f"PlantCyc {source} returned unparseable XML: {exc}") from exc
 
 
