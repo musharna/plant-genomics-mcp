@@ -1,0 +1,105 @@
+name: nightly-guardrails
+
+# From ~/repo-template. Scheduled work no PR would trigger:
+#   mutation  mutmut over the source; surviving mutants = the real coverage report
+#   fuzz      Claude writes+runs adversarial property tests against public entry points
+# Both open/refresh a GitHub issue with findings. Action SHAs verified 2026-09-11.
+
+on:
+  schedule:
+    - cron: "17 7 * * *"   # 07:17 UTC = 03:17 EDT, daily
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  mutation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          enable-cache: true
+      - name: Install + mutmut
+        run: |
+          uv sync --all-extras --dev
+          uv pip install "mutmut==3.7.0"
+      - name: Baseline suite is green (a red baseline makes every mutant "killed")
+        run: uv run pytest -q -x -p no:cacheprovider
+      - name: Run mutants (wall-clock capped; results persist incrementally)
+        run: |
+          set +e
+          timeout 90m uv run mutmut run
+          echo "mutmut exit: $?"
+      - name: Survivors
+        id: survivors
+        run: |
+          uv run mutmut results > survivors.txt || true
+          n=$(grep -c ": survived" survivors.txt || true)
+          echo "count=$n" >> "$GITHUB_OUTPUT"
+          echo "## Surviving mutants: $n" >> "$GITHUB_STEP_SUMMARY"
+          head -200 survivors.txt >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: mutmut-survivors
+          path: survivors.txt
+      - name: Upsert tracking issue
+        if: steps.survivors.outputs.count != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          N: ${{ steps.survivors.outputs.count }}
+        run: |
+          title="nightly: $N surviving mutants"
+          # shellcheck disable=SC2016  # printf format string is literal by design
+          body="$(printf 'Run: %s/%s/actions/runs/%s\n\nEach survivor is a line of code no test observes.\n\n```\n%s\n```\n' \
+                  "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$(head -150 survivors.txt)")"
+          num=$(gh issue list --label mutation --state open --json number -q '.[0].number')
+          if [ -n "$num" ]; then gh issue edit "$num" --title "$title" --body "$body"
+          else gh label create mutation --color 8B0000 --force >/dev/null; gh issue create --label mutation --title "$title" --body "$body"; fi
+
+  fuzz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+    steps:
+      - name: ANTHROPIC_API_KEY is configured
+        env:
+          KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "::error::ANTHROPIC_API_KEY secret is not set. gh secret set ANTHROPIC_API_KEY -R ${{ github.repository }}"
+            exit 1
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+      - name: Install + hypothesis
+        run: |
+          uv sync --all-extras --dev
+          uv pip install hypothesis
+      - uses: anthropics/claude-code-action@4169884de317bc1b4cb1b47f4476d76fed92b384 # v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            You are a fuzzer for ${{ github.repository }}. Budget: ~40 minutes.
+            1. Identify the public entry points (console scripts in pyproject.toml,
+               top-level package API, CLI parsers, MCP tool handlers).
+            2. Write hypothesis property tests into fuzz_scratch/ (NOT tests/) that
+               throw adversarial inputs at them: empty, huge, unicode, negative,
+               NaN, path-like, nested, malformed JSON/YAML, boundary sizes.
+            3. Run them with `uv run pytest fuzz_scratch -q -x --hypothesis-seed=0`.
+            4. Every crash or hang that is NOT a deliberate ValueError/TypeError
+               with a clear message: minimise it to a 3-line repro.
+            5. If you found any, open ONE GitHub issue titled
+               "fuzz: <n> crash(es) found <date>" with label `fuzz`, listing each
+               repro. Reuse an open `fuzz` issue if one exists (gh issue edit).
+               If none found, do nothing.
+            Never modify tracked files. Never commit.
+          claude_args: |
+            --allowed-tools "Bash(uv run pytest:*),Bash(uv run python:*),Bash(gh issue:*),Bash(gh label:*),Read,Write(fuzz_scratch/**),Grep,Glob"
+            --max-turns 60
