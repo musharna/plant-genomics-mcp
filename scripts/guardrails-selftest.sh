@@ -27,6 +27,7 @@ check no-nohup-background g.sh $'#!/bin/sh\nsystemd-run --user --unit w python w
 check no-uppercase-transform h.css '.legend { text-transform: uppercase; }' fail
 check no-uppercase-transform i.css '.legend { font-variant: small-caps; }' pass
 devroot="/mnt/c/Us"  # joined at runtime so this file never contains the literal path it plants
-check no-dev-paths j.py "p = "ers/a2b32/Zotero/x.pdf"" fail
+devfix=$(printf 'p = "%sers/a2b32/Zotero/x.pdf"' "$devroot")
+check no-dev-paths j.py "$devfix" fail
 check no-dev-paths k.py 'p = "/home/someone/data.csv"'          pass
 exit $fail
