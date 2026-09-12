@@ -57,10 +57,10 @@ repos:
         entry: 'text-transform\s*:\s*uppercase'
 
       - id: no-dev-paths
-        name: "absolute developer-machine paths in tracked files (real machine names; /home/someone is a fixture)"
+        name: "absolute developer-machine paths in tracked files (real machine names only; placeholder homes pass)"
         language: pygrep
         types: [text]
         exclude: '^(\.pre-commit-config\.yaml|scripts/guardrails-selftest\.sh|\.github/workflows/.*)$'
         # Bracketed last char so this file never contains the literal it hunts
         # (a gate whose scope includes its own definition flags itself).
-        entry: '/home/mjarnol[d]|/mnt/c/Users/a2b3[2]|C:\\Users\\a2b3[2]'
+        entry: '/home[/]mjarnol[d]|/mnt/c[/]Users/a2b3[2]|C:\\Users\\a2b3[2]'

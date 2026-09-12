@@ -29,5 +29,6 @@ check no-uppercase-transform i.css '.legend { font-variant: small-caps; }' pass
 devroot="/mnt/c/Us"  # joined at runtime so this file never contains the literal path it plants
 devfix=$(printf 'p = "%sers/a2b32/Zotero/x.pdf"' "$devroot")
 check no-dev-paths j.py "$devfix" fail
-check no-dev-paths k.py 'p = "/home/someone/data.csv"'          pass
+homefix=$(printf 'p = "/home%s"' "/someone/data.csv")  # placeholder home must PASS
+check no-dev-paths k.py "$homefix" pass
 exit $fail
