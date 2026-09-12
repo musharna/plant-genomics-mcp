@@ -61,4 +61,6 @@ repos:
         language: pygrep
         types: [text]
         exclude: '^(\.pre-commit-config\.yaml|scripts/guardrails-selftest\.sh|\.github/workflows/.*)$'
-        entry: '/home/mjarnold|/mnt/c/Users/a2b32|C:\\Users\\a2b32'
+        # Bracketed last char so this file never contains the literal it hunts
+        # (a gate whose scope includes its own definition flags itself).
+        entry: '/home/mjarnol[d]|/mnt/c/Users/a2b3[2]|C:\\Users\\a2b3[2]'
