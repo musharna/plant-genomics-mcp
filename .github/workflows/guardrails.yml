@@ -47,7 +47,7 @@ jobs:
           if [ -f uv.lock ]; then uv sync --locked --all-extras --dev
           else uv sync --all-extras --dev; fi
       - name: Tests
-        run: uv run pytest -q -p no:cacheprovider
+        run: uv run --with pytest pytest -q -p no:cacheprovider
 
   security:
     runs-on: ubuntu-latest

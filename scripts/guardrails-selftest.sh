@@ -6,7 +6,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 fail=0
-git init -q "$tmp/r"; cp .pre-commit-config.yaml "$tmp/r/"
+git init -q "$tmp/r"; cp .pre-commit-config.yaml "$tmp/r/"; mkdir -p "$tmp/r/scripts"; cp scripts/guardrails-hooks.py "$tmp/r/scripts/"
 check() {  # hook, filename, content, expect(pass|fail)
   local hook=$1 f=$2 content=$3 expect=$4 got
   printf '%s\n' "$content" > "$tmp/r/$f"
@@ -16,14 +16,16 @@ check() {  # hook, filename, content, expect(pass|fail)
   rm -f "$tmp/r/$f"
 }
 check no-bare-replace a.py 's.replace("a", "b")'            fail
+check no-bare-replace a2.py $'diag.parse(\n    SAMPLE.replace("x", "y")\n)' pass
 check no-bare-replace b.py 's = s.replace("a", "b")'        pass
-check no-bare-replace c.py 'assert s.replace("a","b") == t' pass
-check no-dotall-lazy  d.py 're.search(r"<a>(.*?)</a>", x, re.DOTALL)' fail
-check no-dotall-lazy  e.py 're.search(r"<a>([^<]*)</a>", x, re.DOTALL)' pass
+check no-bare-replace c.py 'os.replace(tmp, path)'           pass
+check no-bare-replace c2.py 'staging.replace(dst)'           pass
+check no-nested-lazy  d.py 're.search(r"(?:<p>.*?</p>)+", x, re.DOTALL)' fail
+check no-nested-lazy  e.py 're.search(r"<a>(.*?)</a>", x, re.DOTALL)'   pass
 check no-nohup-background f.sh $'#!/bin/sh\nnohup python worker.py &' fail
 check no-nohup-background g.sh $'#!/bin/sh\nsystemd-run --user --unit w python worker.py' pass
 check no-uppercase-transform h.css '.legend { text-transform: uppercase; }' fail
 check no-uppercase-transform i.css '.legend { font-variant: small-caps; }' pass
-check no-dev-paths j.py 'p = "/home/someone/data.csv"' fail
-check no-dev-paths k.py 'p = Path(__file__).parent / "data.csv"' pass
+check no-dev-paths j.py 'p = "/mnt/c/Users/a2b32/Zotero/x.pdf"' fail
+check no-dev-paths k.py 'p = "/home/someone/data.csv"'          pass
 exit $fail

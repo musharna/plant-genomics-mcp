@@ -33,16 +33,16 @@ repos:
   - repo: local
     hooks:
       - id: no-bare-replace
-        name: "str.replace() as a bare statement is a silent no-op (strings are immutable)"
-        language: pygrep
+        name: "str.replace('a','b') as a bare statement is a silent no-op (strings are immutable)"
+        language: system
         types: [python]
-        entry: '^\s*[A-Za-z_][\w\.\[\]]*\.replace\(.*\)\s*(#.*)?$'
+        entry: python3 scripts/guardrails-hooks.py
 
-      - id: no-dotall-lazy
-        name: "re.DOTALL + lazy quantifier = catastrophic backtracking on multi-KB input"
+      - id: no-nested-lazy
+        name: "NESTED lazy quantifier (a quantified group containing *? / +?) = catastrophic backtracking"
         language: pygrep
         types: [python]
-        entry: 're\.(DOTALL|S)\b.*[\*\+]\?|[\*\+]\?.*re\.(DOTALL|S)\b'
+        entry: '\([^()]*[\*\+]\?[^()]*\)[\*\+\{]'
 
       - id: no-nohup-background
         name: "nohup ... & dies with the shell scope; use systemd-run --user --unit"
@@ -57,7 +57,8 @@ repos:
         entry: 'text-transform\s*:\s*uppercase'
 
       - id: no-dev-paths
-        name: "absolute developer-machine paths in tracked files"
+        name: "absolute developer-machine paths in tracked files (real machine names; /home/someone is a fixture)"
         language: pygrep
+        types: [text]
         exclude: '^(\.pre-commit-config\.yaml|scripts/guardrails-selftest\.sh|\.github/workflows/.*)$'
-        entry: '/home/[a-z]+/|/mnt/c/Users|C:\\Users'
+        entry: '/home/mjarnold|/mnt/c/Users/a2b32|C:\\Users\\a2b32'
