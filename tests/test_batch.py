@@ -22,8 +22,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import batch, ensembl_plants
-from plant_genomics_mcp.errors import NotFoundError, RateLimitError
-from plant_genomics_mcp.errors import PlantGenomicsError
+from plant_genomics_mcp.errors import NotFoundError, PlantGenomicsError, RateLimitError
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
