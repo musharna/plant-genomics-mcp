@@ -38,15 +38,14 @@ def bare_replace(tree):
 
 
 def _imports_defusedxml(tree):
+    # Short lines on purpose: synced repos format-check at 88 AND at 100.
     for node in ast.walk(tree):
-        if isinstance(node, ast.Import) and any(
-            a.name.split(".")[0] == "defusedxml" for a in node.names
-        ):
-            return True
-        if (
-            isinstance(node, ast.ImportFrom)
-            and (node.module or "").split(".")[0] == "defusedxml"
-        ):
+        modules = []
+        if isinstance(node, ast.Import):
+            modules = [a.name for a in node.names]
+        elif isinstance(node, ast.ImportFrom):
+            modules = [node.module or ""]
+        if any(m.split(".")[0] == "defusedxml" for m in modules):
             return True
     return False
 
