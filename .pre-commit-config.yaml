@@ -3,14 +3,14 @@
 # Every rev is a commit SHA verified to exist on 2026-09-11; bump deliberately.
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: e8f7d69b957a30acb2c875078d5fd012de24b64c  # v0.16.7
+    rev: e8f7d69b957a30acb2c875078d5fd012de24b64c # v0.16.7
     hooks:
       - id: ruff-check
         args: [--fix, --exit-non-zero-on-fix]
       - id: ruff-format
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # v6.0.0
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c # v6.0.0
     hooks:
       - id: check-yaml
       - id: check-toml
@@ -23,7 +23,7 @@ repos:
       - id: check-merge-conflict
 
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: 745eface02aef23e168a8afb6b5737818efbea95  # v0.11.0.1
+    rev: 745eface02aef23e168a8afb6b5737818efbea95 # v0.11.0.1
     hooks:
       - id: shellcheck
         args: [--severity=warning]
@@ -33,10 +33,22 @@ repos:
   - repo: local
     hooks:
       - id: no-bare-replace
-        name: "str.replace('a','b') as a bare statement is a silent no-op (strings are immutable)"
+        name: "AST rules: bare str.replace() no-op; except ParseError with defusedxml imported"
         language: system
         types: [python]
         entry: python3 scripts/guardrails-hooks.py
+
+      - id: nosec-needs-reason
+        name: "# nosec must name the test id AND a traced reason: '# nosec B608 - why this value is safe'"
+        language: pygrep
+        types: [python]
+        entry: '#\s*nosec(?!:?\s*B\d+(\s*,\s*B\d+)*\s+-\s+\S)'
+
+      - id: no-raises-bare-exception
+        name: "pytest.raises(Exception) cannot tell a wrapped error from a leaked one; name the type"
+        language: pygrep
+        types: [python]
+        entry: 'pytest\.raises\(\s*(Exception|BaseException)\s*[,)]'
 
       - id: no-nested-lazy
         name: "NESTED lazy quantifier (a quantified group containing *? / +?) = catastrophic backtracking"

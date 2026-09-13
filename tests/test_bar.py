@@ -143,7 +143,7 @@ async def test_gene_summary_http_400_propagates(httpx_mock: HTTPXMock) -> None:
         },
     )
     async with httpx.AsyncClient() as client:
-        with pytest.raises(Exception, match="HTTP 400"):
+        with pytest.raises(PlantGenomicsError, match="HTTP 400"):
             await bar.gene_summary(client, "LOC_Os01g01080")
 
 

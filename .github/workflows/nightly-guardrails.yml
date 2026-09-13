@@ -7,7 +7,7 @@ name: nightly-guardrails
 
 on:
   schedule:
-    - cron: "17 7 * * *"   # 07:17 UTC = 03:17 EDT, daily
+    - cron: "17 7 * * *" # 07:17 UTC = 03:17 EDT, daily
   workflow_dispatch:
 
 permissions:
@@ -31,6 +31,10 @@ jobs:
       - name: Baseline suite is green (a red baseline makes every mutant "killed")
         run: uv run --with pytest pytest -q -x -p no:cacheprovider
       - name: Run mutants (wall-clock capped; results persist incrementally)
+        # No .pyc: a same-size source swap can leave a stale bytecode file that
+        # still runs as the mutant (or as the original) after the swap.
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
         run: |
           set +e
           timeout 90m uv run mutmut run

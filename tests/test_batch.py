@@ -22,7 +22,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import batch, ensembl_plants
-from plant_genomics_mcp.errors import NotFoundError, RateLimitError
+from plant_genomics_mcp.errors import NotFoundError, PlantGenomicsError, RateLimitError
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
@@ -143,7 +143,7 @@ async def test_batch_ensembl_http_error_raises(httpx_mock: HTTPXMock) -> None:
             text="upstream broke",
         )
     async with httpx.AsyncClient() as client:
-        with pytest.raises(Exception, match="HTTP 500"):
+        with pytest.raises(PlantGenomicsError, match="HTTP 500"):
             await batch.batch_ensembl_plants_lookup_locus(client, ["AT1G01010"])
 
 
@@ -155,7 +155,7 @@ async def test_batch_ensembl_non_dict_payload_raises(httpx_mock: HTTPXMock) -> N
         json=["this", "is", "not", "a", "dict"],
     )
     async with httpx.AsyncClient() as client:
-        with pytest.raises(Exception, match="non-dict payload"):
+        with pytest.raises(PlantGenomicsError, match="non-dict payload"):
             await batch.batch_ensembl_plants_lookup_locus(client, ["AT1G01010"])
 
 
