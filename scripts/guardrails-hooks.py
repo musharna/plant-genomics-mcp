@@ -71,11 +71,11 @@ def defused_parseerror(tree):
             continue
         names = _exc_names(node.type)
         if "ParseError" in names and not COVERS_DEFUSED.intersection(names):
-            yield (
-                node.lineno,
+            msg = (
                 "except ParseError with defusedxml imported: DefusedXmlException is a "
-                "ValueError, not a ParseError; the attack path escapes unwrapped",
+                "ValueError, not a ParseError; the attack path escapes unwrapped"
             )
+            yield node.lineno, msg
 
 
 CHECKS = (bare_replace, defused_parseerror)
