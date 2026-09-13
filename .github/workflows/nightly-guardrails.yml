@@ -104,4 +104,4 @@ jobs:
             Never modify tracked files. Never commit.
           claude_args: |
             --allowed-tools "Bash(uv run pytest:*),Bash(uv run python:*),Bash(gh issue:*),Bash(gh label:*),Read,Write(fuzz_scratch/**),Grep,Glob"
-            --max-turns 60
+            --max-turns 120
