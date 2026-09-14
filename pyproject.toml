@@ -97,3 +97,6 @@ warn_unused_ignores = true
 
 [tool.mutmut]
 source_paths = ["src"]
+also_copy = [".dockerignore", ".editorconfig", ".github", ".gitignore", ".mcp.json", ".pre-commit-config.yaml", ".zenodo.json", "CHANGELOG.md", "CITATION.cff", "CLAUDE.md", "CODE_OF_CONDUCT.md", "CONTRIBUTING.md", "Dockerfile", "Dockerfile.http", "LICENSE", "README.md", "REGISTRIES.md", "SECURITY.md", "assets", "docs", "examples", "glama.json", "scripts", "server.json", "smithery.yaml"]
+# a module-level asyncio.Semaphore binds to the first event loop, which under the in-process mutmut runner is not the test loop
+pytest_add_cli_args = ["--deselect", "tests/test_blast.py::test_blast_semaphore_caps_concurrent_at_two"]
