@@ -73,12 +73,21 @@ def _normalize(row: dict[str, Any], query_accession: str) -> dict[str, Any]:
 
     STRING returns symmetric A/B columns; the query protein is always on
     the A side, so we surface the B-side fields as the partner.
+
+    This function owns the ``string_id: str | None`` invariant that
+    synthesis._string_partner_locus consumes (#95): a non-string
+    ``stringId_B`` is an upstream contract violation and raises here, so it
+    lands as a status="error" step instead of an AttributeError downstream.
     """
+    string_id = row.get("stringId_B")
+    if string_id is not None and not isinstance(string_id, str):
+        raise PlantGenomicsError(
+            f"STRING interaction row for {query_accession!r}: stringId_B must be a string, "
+            f"got {type(string_id).__name__} {string_id!r}"
+        )
     return {
-        "string_id": row.get("stringId_B"),
-        "accession": row.get(
-            "stringId_B"
-        ),  # partner's stringId; UniProt mapping not always trivial
+        "string_id": string_id,
+        "accession": string_id,  # partner's stringId; UniProt mapping not always trivial
         "preferred_name": row.get("preferredName_B"),
         "score": row.get("score"),
         "escore": row.get("escore"),
