@@ -81,7 +81,9 @@ jobs:
     # Automated Claude code review. Fails LOUD when the key is missing rather
     # than silently skipping: a review step that quietly no-ops is worse than
     # none, because the green check claims a review happened.
-    if: github.event_name == 'pull_request'
+    # Dependabot-authored PRs never receive repository secrets (GitHub design),
+    # so there the token is unreachable rather than unset: skip, don't fail.
+    if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: read
