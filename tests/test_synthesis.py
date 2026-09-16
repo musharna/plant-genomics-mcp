@@ -1798,3 +1798,123 @@ async def test_gene_report_live_at1g01010():
     assert isinstance(md, str) and md
     assert "AT1G01010" in md
     assert "## Protein" in md and "## Literature" in md
+
+
+# ---------------------------------------------------------------------------
+# #95 — fuzz crashes: helpers assumed normaliser-typed inputs without checking
+# ---------------------------------------------------------------------------
+
+
+def test_consensus_partners_non_string_string_id_raises_typed_error():
+    """#95 crash 1 repro. Old code: AttributeError: 'bool' object has no attribute 'split'.
+
+    Negative + positive control in one test: the malformed row raises the
+    typed error, the well-formed row still ranks.
+    """
+    from plant_genomics_mcp.errors import PlantGenomicsError
+    from plant_genomics_mcp.synthesis import _consensus_partners
+
+    with pytest.raises(PlantGenomicsError, match="string_id"):
+        _consensus_partners({"partners": [{"string_id": True}]}, None, 5)
+
+    ok = _consensus_partners({"partners": [{"string_id": "3702.AT1A.1", "score": 0.5}]}, None, 5)
+    assert [c["target_locus"] for c in ok] == ["AT1A"]
+
+
+def test_reconcile_analyze_malformed_gene_names_raises_typed_error():
+    """#95 crash 2 repro. Old code: TypeError (unhashable list / int not subscriptable).
+
+    Both fuzzed shapes raise the typed error; the well-formed list still
+    reconciles (canonical name + mismatch flag) in the same test.
+    """
+    from plant_genomics_mcp.errors import PlantGenomicsError
+    from plant_genomics_mcp.synthesis import _reconcile_analyze
+
+    with pytest.raises(PlantGenomicsError, match="geneNames"):
+        _reconcile_analyze({"display_name": "X"}, {"geneNames": [[]]}, None)
+    with pytest.raises(PlantGenomicsError, match="geneNames"):
+        _reconcile_analyze({"display_name": "X"}, {"geneNames": 1}, None)
+    # No display_name → canonical comes from geneNames[0]; must not crash on shape 1.
+    with pytest.raises(PlantGenomicsError, match="geneNames"):
+        _reconcile_analyze({}, {"geneNames": 1}, None)
+
+    good = _reconcile_analyze(
+        {"display_name": "X"}, {"geneNames": ["NAC001"], "primaryAccession": "Q0WV96"}, None
+    )
+    assert good["canonical_gene_name"] == "X"
+    assert good["best_uniprot_accession"] == "Q0WV96"
+    assert good["conflict_flags"] == ["gene_name_mismatch"]
+    fallback = _reconcile_analyze({}, {"geneNames": ["NAC001"]}, None)
+    assert fallback["canonical_gene_name"] == "NAC001"
+
+
+@pytest.mark.asyncio
+async def test_biological_context_synth_malformed_string_row_lands_as_error_step(httpx_mock):
+    """#95 end-to-end: a non-string ``stringId_B`` from STRING must become a
+    status="error" step row (raised by string_db._normalize, wrapped by
+    _timed_step), NOT an AttributeError escaping from _consensus_partners.
+    The envelope still composes from ATTED (positive control).
+    """
+    httpx_mock.add_response(
+        url=re.compile(r"^https://rest\.uniprot\.org/uniprotkb/search.*"),
+        json={
+            "results": [
+                {
+                    "primaryAccession": "Q0WV96",
+                    "uniProtkbId": "Y_ARATH",
+                    "entryType": "UniProtKB reviewed (Swiss-Prot)",
+                    "proteinDescription": {"recommendedName": {"fullName": {"value": "X"}}},
+                    "genes": [{"geneName": {"value": "NAC001"}}],
+                    "organism": {"scientificName": "Arabidopsis thaliana", "taxonId": 3702},
+                    "sequence": {"length": 429},
+                }
+            ]
+        },
+    )
+    httpx_mock.add_response(
+        url=re.compile(r"^https://data\.gramene\.org/v69/genes.*"),
+        json=[{"_id": "AT1G01010", "homology": {"homologous_genes": {}}}],
+    )
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/link/pathway/ath:AT1G01010", status_code=404, text=""
+    )
+    # STRING returns a malformed row: stringId_B is a bool, not "<taxid>.<locus>.<N>".
+    httpx_mock.add_response(
+        url=re.compile(r"^https://string-db\.org/api/json/interaction_partners.*"),
+        json=[
+            {
+                "stringId_A": "3702.AT1G01010.1",
+                "stringId_B": True,
+                "preferredName_A": "NAC001",
+                "preferredName_B": "NAC3",
+                "score": 0.85,
+            }
+        ],
+    )
+    httpx_mock.add_response(
+        url=re.compile(r"^https://atted\.jp/api5/.*"),
+        json={
+            "request": {"gene": "AT1G01010"},
+            "result_set": [
+                {
+                    "entrez_gene_id": 839580,
+                    "type": "z",
+                    "results": [{"gene": 820194, "other_id": ["AT3G15500"], "z": 5.5}],
+                    "other_id": "AT1G01010",
+                }
+            ],
+        },
+    )
+
+    from plant_genomics_mcp.synthesis import biological_context_synth
+
+    async with httpx.AsyncClient() as client:
+        env = await biological_context_synth(client, "AT1G01010", top_n=10)
+
+    by_tool = {s.tool: s for s in env.steps}
+    assert by_tool["string_interactions"].status == "error"
+    assert "stringId_B" in (by_tool["string_interactions"].error or "")
+    assert by_tool["atted_coexpression"].status == "ok"
+    assert env.result is not None
+    assert env.result["string_partners"] is None
+    assert [c["target_locus"] for c in env.result["consensus_partners"]] == ["AT3G15500"]

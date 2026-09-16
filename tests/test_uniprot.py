@@ -311,3 +311,23 @@ def test_lookup_locus_accepts_organism_param(httpx_mock: HTTPXMock) -> None:
     result = asyncio.run(run())
     assert result is not None
     assert result["primaryAccession"] == "Q0WV96"
+
+
+def test_normalize_rejects_non_string_gene_name():
+    """#95: the normaliser owns the ``geneNames: list[str]`` invariant that
+    synthesis._reconcile_analyze consumes. A non-string ``geneName.value``
+    must raise the typed error; a string value lands in the list and a
+    missing value is skipped (positive controls).
+    """
+    from plant_genomics_mcp.errors import PlantGenomicsError
+
+    base = {"primaryAccession": "Q0WV96", "entryType": "UniProtKB reviewed (Swiss-Prot)"}
+    with pytest.raises(PlantGenomicsError, match="geneName"):
+        uniprot._normalize({**base, "genes": [{"geneName": {"value": ["NAC001"]}}]}, "AT1G01010")
+    with pytest.raises(PlantGenomicsError, match="geneName"):
+        uniprot._normalize({**base, "genes": [{"geneName": {"value": 7}}]}, "AT1G01010")
+
+    ok = uniprot._normalize(
+        {**base, "genes": [{"geneName": {"value": "NAC001"}}, {"geneName": {}}]}, "AT1G01010"
+    )
+    assert ok["geneNames"] == ["NAC001"]

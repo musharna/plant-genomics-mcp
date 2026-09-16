@@ -344,6 +344,21 @@ async def analyze_locus_synth(
     )
 
 
+def _uniprot_gene_names(uniprot_record: dict | None) -> list[str]:
+    """Read ``geneNames`` off a normalized UniProt record, enforcing ``list[str]``.
+
+    uniprot._normalize owns the invariant; this is the reconciler's own
+    contract check (#95) so a caller that bypasses the normaliser gets a
+    typed PlantGenomicsError instead of a TypeError deep in set()/[0].
+    """
+    names = (uniprot_record or {}).get("geneNames") or []
+    if not isinstance(names, list) or not all(isinstance(n, str) for n in names):
+        raise PlantGenomicsError(
+            f"UniProt record geneNames must be a list of strings, got {names!r}"
+        )
+    return names
+
+
 def _reconcile_analyze(
     ensembl_record: dict | None,
     uniprot_record: dict | None,
@@ -357,19 +372,20 @@ def _reconcile_analyze(
     disagrees with uniprot, or when display_name disagrees with any uniprot
     gene name.
     """
+    u_names = _uniprot_gene_names(uniprot_record)
+
     canonical_gene_name = None
     if ensembl_record and ensembl_record.get("display_name"):
         canonical_gene_name = ensembl_record["display_name"]
-    elif uniprot_record and uniprot_record.get("geneNames"):
-        canonical_gene_name = uniprot_record["geneNames"][0]
+    elif u_names:
+        canonical_gene_name = u_names[0]
 
     best_uniprot_accession = (uniprot_record or {}).get("primaryAccession") or None
 
     conflict_flags: list[str] = []
     if uniprot_record and ensembl_record:
-        u_names = set(uniprot_record.get("geneNames") or [])
         e_name = ensembl_record.get("display_name")
-        if e_name and u_names and e_name not in u_names:
+        if e_name and u_names and e_name not in set(u_names):
             conflict_flags.append("gene_name_mismatch")
     if xrefs and best_uniprot_accession:
         xref_uniprot = set((xrefs.get("by_db") or {}).get("Uniprot_gn", []))
@@ -671,6 +687,11 @@ def _string_partner_locus(string_id: str | None) -> str | None:
     ``locus`` field. Returns the input unchanged when it doesn't look
     taxid-prefixed.
     """
+    if string_id is not None and not isinstance(string_id, str):
+        raise PlantGenomicsError(
+            f"STRING partner string_id must be a string, got {type(string_id).__name__} "
+            f"{string_id!r} (#95: string_db._normalize should have rejected this row)"
+        )
     if not string_id:
         return None
     parts = string_id.split(".", 2)

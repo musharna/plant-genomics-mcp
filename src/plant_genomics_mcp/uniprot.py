@@ -29,6 +29,7 @@ import httpx
 from plant_genomics_mcp import _http, cache, organisms
 from plant_genomics_mcp.errors import (
     NotFoundError,
+    PlantGenomicsError,
 )
 
 BASE_URL = "https://rest.uniprot.org"
@@ -139,9 +140,20 @@ def _normalize(hit: dict[str, Any], locus_query: str) -> dict[str, Any]:
         .get("fullName", {})
         .get("value")
     )
+    # This loop owns the ``geneNames: list[str]`` invariant that
+    # synthesis._reconcile_analyze consumes (#95): a non-string geneName.value
+    # is an upstream contract violation and raises here (→ status="error"
+    # step) rather than a TypeError in the reconciler.
     gene_names: list[str] = []
     for g in hit.get("genes", []):
         gn = g.get("geneName", {}).get("value")
+        if gn is None:
+            continue
+        if not isinstance(gn, str):
+            raise PlantGenomicsError(
+                f"UniProt record {accession!r}: geneName.value must be a string, "
+                f"got {type(gn).__name__} {gn!r}"
+            )
         if gn:
             gene_names.append(gn)
     organism = hit.get("organism", {})

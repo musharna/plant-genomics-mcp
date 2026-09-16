@@ -211,3 +211,22 @@ async def test_lookup_partners_rejects_separator_identifier() -> None:
     async with httpx.AsyncClient() as client:
         with pytest.raises(NotFoundError, match="invalid locus"):
             await string_db.lookup_partners(client, "AT1G01010&species=9606")
+
+
+def test_normalize_rejects_non_string_string_id():
+    """#95: the normaliser owns the ``string_id: str`` invariant that
+    synthesis._string_partner_locus consumes. A non-string ``stringId_B``
+    must raise the typed error here; a string passes through unchanged
+    (positive control).
+    """
+    from plant_genomics_mcp.errors import PlantGenomicsError
+
+    with pytest.raises(PlantGenomicsError, match="stringId_B"):
+        string_db._normalize({"stringId_B": True, "score": 0.5}, "Q0WV96")
+    with pytest.raises(PlantGenomicsError, match="stringId_B"):
+        string_db._normalize({"stringId_B": 3702, "score": 0.5}, "Q0WV96")
+
+    ok = string_db._normalize({"stringId_B": "3702.AT3G15500.1", "score": 0.5}, "Q0WV96")
+    assert ok["string_id"] == "3702.AT3G15500.1"
+    # Missing field stays None (STRING rows without a B side are tolerated downstream).
+    assert string_db._normalize({"score": 0.5}, "Q0WV96")["string_id"] is None
