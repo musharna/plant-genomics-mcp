@@ -182,18 +182,29 @@ jobs:
             ONE file first; do not run mutmut. survivors.txt is the full list.
             1. Classify each diff: EQUIVALENT (behaviour unchanged: dead branch,
                log/CLI text, defensive check) or GAP (behaviour changed and no
-               test observed it). Skip trivial ones without comment.
-            2. For every GAP write ONE line: `<name>` | what changed | the test
-               that would kill it (file::test_name and the single assertion).
-               Read the real test file only when you need its name.
+               test observed it).
+            2. For EVERY gap, one bullet, this exact shape, no grouping:
+               `<mutant name>` | <what changed, <=12 words> | `tests/<file>.py::test_<name>` | `assert <the one assertion>`
+               The test name must be new or an existing test in that file
+               (Grep tests/ for it); the assertion must be a concrete
+               expression on the mutated behaviour, not a description.
+               A line without a backticked test id and an assert is not a
+               finding; drop it rather than summarise.
             3. Post ONE comment on issue #${{ steps.upsert.outputs.issue }} via
-               `gh issue comment`: heading "## Triage <UTC date> (Haiku)",
-               counts (triaged / equivalent / gaps), the GAP lines, then a
-               2-line "pattern" note if several gaps share a cause.
+               `gh issue comment --body-file <file you wrote under /tmp>`:
+               heading "## Triage <UTC date> (Haiku)", then
+               "triaged N / equivalent N / gaps N", then the gap bullets
+               (all of them, one per line), then at most 2 lines "pattern:"
+               if several gaps share a cause. No other prose, no summaries
+               of groups, no advice paragraphs.
+            4. The comment is the deliverable. Once `gh issue comment` has
+               succeeded, STOP: say "posted" and take no further action. The
+               step is red if you run out of turns, even after posting
+               (2026-09-17: posted at turn ~20, then kept grepping to 41).
             Never modify tracked files. Never commit. Do not open new issues.
           claude_args: |
             --model claude-haiku-4-5-20251001
-            --allowed-tools "Bash(gh issue comment:*),Bash(gh issue view:*),Read,Grep,Glob"
+            --allowed-tools "Bash(gh issue comment:*),Bash(gh issue view:*),Read,Write(/tmp/*),Grep,Glob"
             --max-turns 40
 
   fuzz:
