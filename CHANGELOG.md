@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- **`_http` retry policy is now pinned by tests, not just bounded.** The nightly
+  mutation run (#96) left 85 mutants alive in `_http.py`; 51 changed behaviour.
+  The existing tests capped the sleep at 60 s and asserted "raises", so a wrong
+  first delay, a non-doubling schedule, a fourth attempt past the budget, an
+  ignored `Retry-After`, a `min(None, 60)` on an HTTP-date `Retry-After`, an
+  off-by-one at the size cap, a missing `Content-Type`, a BOM-prefixed challenge
+  page, and a dropped timeout all passed. Seven tests now assert each of those
+  exactly (schedule `[1, 2, 4]` and four requests on all three retry paths).
+  Re-run of the 85 under mutmut: 45 killed; the 40 left are equivalents
+  (header-name case, message text, `None` vs `""` initialisers).
+
 ## v1.21.0 — 2026-08-06
 
 Still **50 tools / 23 backends** — no tool, schema, or response-payload changes. A minor rather than a patch release because the supported SDK range **moves**: an environment that satisfied v1.20.0 may not satisfy this one.
