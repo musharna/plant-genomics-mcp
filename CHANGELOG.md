@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased
+
+- **`_http` retry policy is now pinned by tests, not just bounded.** The nightly
+  mutation run (#96) left 85 mutants alive in `_http.py`; 51 changed behaviour.
+  The existing tests capped the sleep at 60 s and asserted "raises", so a wrong
+  first delay, a non-doubling schedule, a fourth attempt past the budget, an
+  ignored `Retry-After`, a `min(None, 60)` on an HTTP-date `Retry-After`, an
+  off-by-one at the size cap, a missing `Content-Type`, a BOM-prefixed challenge
+  page, and a dropped timeout all passed. Seven tests now assert each of those
+  exactly (schedule `[1, 2, 4]` and four requests on all three retry paths).
+  Re-run of the 85 under mutmut: 45 killed; the 40 left are equivalents
+  (header-name case, message text, `None` vs `""` initialisers).
+- **`batch` fan-out is now pinned end to end.** 91 survivors, 48 behavioural:
+  the "mixed" tests checked the success/error split but never that the
+  caller's client, organism, `limit`, `size`, `top_n` or `homology_type`
+  reached the backend, that the Ensembl POST carried the documented body,
+  headers and timeout, that a 400 "not found" body classified as
+  `NotFoundError`, or that a 50-locus batch (the documented cap) is accepted.
+  One parametrised test now asserts the whole call and the whole envelope
+  for every wrapper, plus the two-stage GO wrapper. Re-run: 67 killed; the
+  24 left are header-name case and the service label.
+
 ## v1.21.0 — 2026-08-06
 
 Still **50 tools / 23 backends** — no tool, schema, or response-payload changes. A minor rather than a patch release because the supported SDK range **moves**: an environment that satisfied v1.20.0 may not satisfy this one.

@@ -564,3 +564,185 @@ async def test_batch_locus_literature_accepts_organism_alias(
         result = await batch.batch_locus_literature(client, ["Os01g0100100"], organism="rice")
     assert result["count"] == 1
     assert seen["organism"] == "rice"
+
+
+# --- Gaps named by the nightly mutation run (2026-09-16: 48 logic survivors in batch) ---
+
+
+def test_bound_accepts_exactly_max_batch_and_rejects_one_more() -> None:
+    """Survivor: ``len(loci) > MAX_BATCH`` -> ``>=``. The documented cap is
+    inclusive: a 50-locus batch is the largest legal one."""
+    exactly = [f"AT1G{i:05d}" for i in range(batch.MAX_BATCH)]
+    assert batch._bound(exactly) == exactly
+    with pytest.raises(ValueError, match=f"exceeds MAX_BATCH={batch.MAX_BATCH}"):
+        batch._bound(exactly + ["AT1G99999"])
+
+
+@pytest.mark.asyncio
+async def test_batch_ensembl_post_is_the_documented_request(httpx_mock: HTTPXMock) -> None:
+    """The one round-trip test proved ONE request; nothing proved WHICH request.
+
+    Survivors: payload keys/values (``expand: 0`` -> 1), the JSON headers ->
+    None, ``timeout=ensembl_plants.DEFAULT_TIMEOUT`` -> None, and a non-dict
+    record landing in ``errors`` as ``None`` instead of a typed message.
+    """
+    url = f"{ensembl_plants.BASE_URL}/lookup/id"
+    httpx_mock.add_response(
+        url=url,
+        method="POST",
+        json={"AT1G01010": {"id": "AT1G01010"}, "AT1G01020": ["not", "a", "record"]},
+    )
+    async with httpx.AsyncClient() as client:
+        env = await batch.batch_ensembl_plants_lookup_locus(
+            client, ["AT1G01010", "AT1G01020", "AT1G01030"], organism="arabidopsis_thaliana"
+        )
+    req = httpx_mock.get_request(url=url, method="POST")
+    assert req is not None
+    assert req.headers["accept"] == "application/json"
+    assert req.headers["content-type"] == "application/json"
+    assert req.read() == (
+        b'{"ids": ["AT1G01010", "AT1G01020", "AT1G01030"], '
+        b'"species": "arabidopsis_thaliana", "expand": 0}'
+    )
+    assert req.extensions["timeout"]["read"] == ensembl_plants.DEFAULT_TIMEOUT
+    assert env["tool"] == "ensembl_plants_lookup_locus" and env["count"] == 3
+    assert env["results"] == {"AT1G01010": {"id": "AT1G01010"}}
+    assert env["errors"]["AT1G01020"] == (
+        "[PlantGenomicsError] Ensembl Plants returned non-dict for AT1G01020: list"
+    )
+    assert env["errors"]["AT1G01030"].startswith("[NotFoundError]")
+
+
+@pytest.mark.asyncio
+async def test_batch_ensembl_400_not_found_body_is_a_typed_not_found(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """Survivor: ``not_found_400_pattern=ensembl_plants.NOT_FOUND_400_RE`` -> None.
+    Ensembl signals an unknown id with 400 + "not found" in the body; the batch
+    call must classify that the way the single-locus call does. Positive
+    control: a 400 WITHOUT the marker stays a generic PlantGenomicsError."""
+    url = f"{ensembl_plants.BASE_URL}/lookup/id"
+    httpx_mock.add_response(
+        url=url, method="POST", status_code=400, json={"error": "ID 'x' not found"}
+    )
+    httpx_mock.add_response(
+        url=url, method="POST", status_code=400, json={"error": "region too large"}
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError):
+            await batch.batch_ensembl_plants_lookup_locus(client, ["x"])
+        with pytest.raises(PlantGenomicsError) as exc:
+            await batch.batch_ensembl_plants_lookup_locus(client, ["x"])
+    assert not isinstance(exc.value, NotFoundError)
+
+
+@pytest.mark.parametrize(
+    ("tool", "module", "fn_name", "call_kwargs"),
+    [
+        (batch.batch_get_gene_xrefs, "ensembl_plants", "lookup_xrefs", {"organism": "rice"}),
+        (batch.batch_phytozome_lookup_locus, "phytozome", "lookup_locus", {"organism": "rice"}),
+        (batch.batch_resolve_locus_to_uniprot, "uniprot", "lookup_locus", {"organism": "rice"}),
+        (
+            batch.batch_locus_literature,
+            "europe_pmc",
+            "lookup_locus",
+            {"organism": "rice", "size": 7},
+        ),
+        (batch.batch_gramene_homologs, "gramene", "lookup_homologs", {"homology_type": "paralog"}),
+        (batch.batch_kegg_pathways, "kegg", "lookup_pathways", {"organism": "rice"}),
+        (batch.batch_bar_gene_summary, "bar", "gene_summary", {}),
+        (batch.batch_bar_aiv_interactions, "bar", "aiv_interactions", {"organism": "rice"}),
+        (
+            batch.batch_string_interactions,
+            "string_db",
+            "lookup_partners",
+            {"organism": "rice", "limit": 3},
+        ),
+        (
+            batch.batch_atted_coexpression,
+            "atted",
+            "lookup_coexpression",
+            {"organism": "rice", "top_n": 4},
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_fanout_wrappers_forward_client_organism_and_kwargs(
+    monkeypatch: pytest.MonkeyPatch,
+    tool: Any,
+    module: str,
+    fn_name: str,
+    call_kwargs: dict[str, Any],
+) -> None:
+    """Survivors: ``fn(None, locus, ...)``, ``organism=None`` / dropped, ``size`` /
+    ``limit`` / ``top_n`` / ``homology_type`` dropped, and ``_envelope(None, ...)``
+    / ``results=None`` / ``errors=None``. The existing "mixed" tests checked the
+    success/error split but never that the caller's client and keyword
+    arguments reach the backend. One row per wrapper asserts the whole call
+    and the whole envelope.
+    """
+    import importlib
+
+    mod = importlib.import_module(f"plant_genomics_mcp.{module}")
+    seen: list[tuple[Any, str, dict[str, Any]]] = []
+
+    async def fake(client: httpx.AsyncClient, locus: str, **kwargs: Any) -> dict[str, Any]:
+        seen.append((client, locus, kwargs))
+        if locus == "AT9G99999":
+            raise NotFoundError(f"nothing for {locus}")
+        return {"locus": locus}
+
+    monkeypatch.setattr(mod, fn_name, fake)
+    async with httpx.AsyncClient() as client:
+        env = await tool(client, ["AT1G01010", "AT9G99999"], **call_kwargs)
+    assert env == {
+        "tool": tool.__name__.removeprefix("batch_"),
+        "count": 2,
+        "results": {"AT1G01010": {"locus": "AT1G01010"}},
+        "errors": {"AT9G99999": "[NotFoundError] nothing for AT9G99999"},
+    }
+    assert sorted(locus for _, locus, _ in seen) == ["AT1G01010", "AT9G99999"]
+    for seen_client, _, kwargs in seen:
+        assert seen_client is client, "the wrapper must pass the caller's client through"
+        assert kwargs == call_kwargs
+
+
+@pytest.mark.asyncio
+async def test_batch_locus_go_annotations_forwards_both_stages(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Survivors in the two-stage wrapper: ``uniprot.lookup_locus(None, ...)``,
+    ``organism=None`` / dropped, ``quickgo.lookup_by_uniprot(None, ...)``,
+    ``limit=None`` / dropped. The accession from stage one must be what stage
+    two receives, with the caller's client and limit."""
+    from plant_genomics_mcp import quickgo as _quickgo
+    from plant_genomics_mcp import uniprot as _uniprot
+
+    seen: dict[str, Any] = {}
+
+    async def fake_uniprot(client: httpx.AsyncClient, locus: str, **kwargs: Any) -> dict[str, Any]:
+        seen["uniprot"] = (client, locus, kwargs)
+        return {"primaryAccession": "Q9LFT1"}
+
+    async def fake_quickgo(
+        client: httpx.AsyncClient, accession: str, **kwargs: Any
+    ) -> dict[str, Any]:
+        seen["quickgo"] = (client, accession, kwargs)
+        return {
+            "numberOfHits": 1,
+            "returned": 1,
+            "annotations": [{"goId": "GO:1"}],
+            "by_aspect": {},
+        }
+
+    monkeypatch.setattr(_uniprot, "lookup_locus", fake_uniprot)
+    monkeypatch.setattr(_quickgo, "lookup_by_uniprot", fake_quickgo)
+    async with httpx.AsyncClient() as client:
+        env = await batch.batch_locus_go_annotations(
+            client, ["AT1G01010"], organism="rice", limit=5
+        )
+    assert seen["uniprot"] == (client, "AT1G01010", {"organism": "rice"})
+    assert seen["quickgo"] == (client, "Q9LFT1", {"limit": 5})
+    assert env["tool"] == "locus_go_annotations"
+    assert env["results"]["AT1G01010"]["uniprot_accession"] == "Q9LFT1"
+    assert env["results"]["AT1G01010"]["annotations"] == [{"goId": "GO:1"}]

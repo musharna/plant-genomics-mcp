@@ -662,3 +662,190 @@ def test_upstream_version_ignores_unrelated_version_headers() -> None:
     this field exists to avoid.
     """
     assert _http.upstream_version(_resp({"String-api-version": "2"})) is None
+
+
+# --- Gaps named by the nightly mutation run (2026-09-16: 51 logic survivors in _http) ---
+#
+# Each test below was written from a surviving mutant, i.e. a behaviour change
+# no test observed. The mutant it kills is named in the docstring.
+
+
+def _record_sleeps(monkeypatch: pytest.MonkeyPatch) -> list[float]:
+    sleeps: list[float] = []
+
+    async def _record(seconds: float) -> None:
+        sleeps.append(seconds)
+
+    monkeypatch.setattr(_http.asyncio, "sleep", _record)
+    return sleeps
+
+
+@pytest.mark.httpx_mock(assert_all_responses_were_requested=False)
+@pytest.mark.parametrize("failure", ["503", "transport", "interposed-html"])
+@pytest.mark.asyncio
+async def test_backoff_doubles_from_one_second_and_stops_at_max_retries(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch, failure: str
+) -> None:
+    """The schedule is 1 s, 2 s, ... and exactly max_retries requests are made.
+
+    Survivors: ``delay = 1.0`` -> 2.0; ``delay *= 2`` -> ``= 2`` / ``/= 2`` /
+    ``*= 3``; ``attempt < max_retries - 1`` -> ``<=`` and ``max_retries + 1``,
+    on all three retry paths (5xx, transport error, interposed HTML). The
+    existing tests only capped the sleep at 60 s and only asserted "raises",
+    so a fourth request or a wrong first delay passed unseen.
+    """
+    sleeps = _record_sleeps(monkeypatch)
+    notices: list[str] = []
+
+    async def _notify(text: str) -> None:
+        notices.append(text)
+
+    monkeypatch.setattr(_http.progress, "notify", _notify)
+    url = f"https://example.test/backoff-{failure}"
+    for _ in range(5):  # one MORE than the budget: a fifth request must never happen
+        if failure == "503":
+            httpx_mock.add_response(url=url, status_code=503)
+        elif failure == "transport":
+            httpx_mock.add_exception(httpx.ConnectError("boom"), url=url)
+        else:
+            httpx_mock.add_response(url=url, html="<html><body>challenge</body></html>")
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError):
+            await _http.request_with_retry(client, "GET", url, service="example", max_retries=4)
+    # Four attempts pin the DOUBLING: with three, [1, 2] cannot tell "*= 2" from "= 2".
+    assert sleeps == [1.0, 2.0, 4.0], sleeps
+    assert len(httpx_mock.get_requests(url=url)) == 4
+    # The progress line numbers the attempt that is ABOUT to run, out of the budget.
+    assert [n[n.index("(attempt") :] for n in notices] == [
+        "(attempt 2/4)",
+        "(attempt 3/4)",
+        "(attempt 4/4)",
+    ], notices
+
+
+@pytest.mark.asyncio
+async def test_retry_after_below_the_cap_is_honoured_exactly(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Survivor: ``retry_after_hdr = resp.headers.get("Retry-After")`` -> ``None``.
+
+    The cap test only proves a huge header is clamped; a header the upstream
+    means (5 s) must replace the 1 s backoff, not be ignored.
+    """
+    sleeps = _record_sleeps(monkeypatch)
+    url = "https://example.test/retry-after"
+    httpx_mock.add_response(url=url, status_code=429, headers={"Retry-After": "5"})
+    httpx_mock.add_response(url=url, json={"ok": True})
+    async with httpx.AsyncClient() as client:
+        await _http.request_with_retry(client, "GET", url, service="example")
+    assert sleeps == [5.0], sleeps
+
+
+@pytest.mark.asyncio
+async def test_unparseable_retry_after_falls_back_to_the_backoff(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Survivor: the ``except ValueError: retry_after = delay`` fallback -> ``None``,
+    which then reaches ``min(None, 60.0)`` and raises TypeError. RFC 9110 allows
+    an HTTP-date here; we do not parse it, so it must fall back to the schedule."""
+    sleeps = _record_sleeps(monkeypatch)
+    url = "https://example.test/retry-after-date"
+    httpx_mock.add_response(
+        url=url, status_code=503, headers={"Retry-After": "Wed, 21 Oct 2026 07:28:00 GMT"}
+    )
+    httpx_mock.add_response(url=url, json={"ok": True})
+    async with httpx.AsyncClient() as client:
+        resp = await _http.request_with_retry(client, "GET", url, service="example")
+    assert resp.json() == {"ok": True}
+    assert sleeps == [1.0], sleeps
+
+
+@pytest.mark.asyncio
+async def test_size_cap_is_inclusive_at_the_boundary(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A body of exactly the cap is accepted; one byte more is refused, and the
+    refusal names the service. Both the Content-Length check and the streamed
+    check.
+
+    Survivors: ``> _MAX_RESPONSE_BYTES`` -> ``>=`` (twice) and
+    ``_too_large(service, ...)`` -> ``_too_large(None, ...)`` (twice).
+    """
+    from pytest_httpx import IteratorStream
+
+    monkeypatch.setattr(_http, "_MAX_RESPONSE_BYTES", 5)
+    base = "https://example.test/cap"
+    httpx_mock.add_response(url=f"{base}/len-5", content=b"x" * 5)  # Content-Length: 5
+    httpx_mock.add_response(url=f"{base}/len-6", content=b"x" * 6)
+    httpx_mock.add_response(url=f"{base}/stream-5", stream=IteratorStream([b"xx", b"xxx"]))
+    httpx_mock.add_response(url=f"{base}/stream-6", stream=IteratorStream([b"xx", b"xxxx"]))
+    async with httpx.AsyncClient() as client:
+        ok = await _http.request_with_retry(client, "GET", f"{base}/len-5", service="example")
+        assert ok.content == b"x" * 5
+        with pytest.raises(PlantGenomicsError, match=r"example response too large.*Content-Length"):
+            await _http.request_with_retry(client, "GET", f"{base}/len-6", service="example")
+        ok = await _http.request_with_retry(client, "GET", f"{base}/stream-5", service="example")
+        assert ok.content == b"xxxxx"
+        with pytest.raises(PlantGenomicsError, match=r"example response too large.*streamed"):
+            await _http.request_with_retry(client, "GET", f"{base}/stream-6", service="example")
+
+
+@pytest.mark.asyncio
+async def test_missing_content_type_is_handled_as_no_media_type(httpx_mock: HTTPXMock) -> None:
+    """Survivor: ``headers.get("content-type", "")`` -> default ``None`` (then
+    ``.split`` raises). A 200 with no Content-Type at all is still a payload."""
+    url = "https://example.test/no-ct"
+    httpx_mock.add_response(url=url, content=b'{"ok": true}', headers={})
+    async with httpx.AsyncClient() as client:
+        resp = await _http.request_with_retry(client, "GET", url, service="example")
+    assert "content-type" not in resp.headers, "premise: the response carries no media type"
+    assert _http._media_type(resp) == ""
+    assert resp.json() == {"ok": True}
+    # The reassembled response keeps its request (survivor: ``request=None``);
+    # callers and error messages rely on ``resp.request.url``.
+    assert resp.request is not None and str(resp.request.url) == url
+
+
+@pytest.mark.httpx_mock(assert_all_responses_were_requested=False)
+@pytest.mark.asyncio
+async def test_bom_and_whitespace_before_html_do_not_hide_an_interposed_page(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Survivors: the ``lstrip().lstrip(BOM).lstrip()`` chain mutated to
+    ``rstrip`` at each link, and the BOM argument dropped. A challenge page
+    that begins with a UTF-8 BOM and a newline is still a challenge page.
+    Positive control: the same prefix before JSON is a payload.
+    """
+    _record_sleeps(monkeypatch)
+    prefix = b"\xef\xbb\xbf \n\t"
+    html_url = "https://example.test/bom-html"
+    json_url = "https://example.test/bom-json"
+    for _ in range(3):
+        httpx_mock.add_response(
+            url=html_url, content=prefix + b"<!DOCTYPE HTML><html>challenge</html>"
+        )
+    httpx_mock.add_response(url=json_url, content=prefix + b'{"ok": true}')
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError):
+            await _http.request_with_retry(client, "GET", html_url, service="example")
+        resp = await _http.request_with_retry(client, "GET", json_url, service="example")
+    assert resp.content.endswith(b'{"ok": true}')
+
+
+@pytest.mark.asyncio
+async def test_configured_timeout_reaches_the_transport(httpx_mock: HTTPXMock) -> None:
+    """Survivor: ``timeout=timeout`` -> ``timeout=None`` on the request (no
+    timeout at all). The value the caller configured must be what httpx uses."""
+    url = "https://example.test/timeout"
+    httpx_mock.add_response(url=url, json={})
+    async with httpx.AsyncClient() as client:
+        await _http.request_with_retry(client, "GET", url, service="example", timeout=7.5)
+    req = httpx_mock.get_request(url=url)
+    assert req is not None
+    assert req.extensions["timeout"] == {"connect": 7.5, "read": 7.5, "write": 7.5, "pool": 7.5}
+    # And the documented default is 30 s (survivor: ``timeout: float = 30.0`` -> 31.0).
+    httpx_mock.add_response(url=f"{url}-default", json={})
+    async with httpx.AsyncClient() as client:
+        await _http.request_with_retry(client, "GET", f"{url}-default", service="example")
+    req = httpx_mock.get_request(url=f"{url}-default")
+    assert req is not None and req.extensions["timeout"]["read"] == 30.0
