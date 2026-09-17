@@ -37,7 +37,7 @@ jobs:
             { echo "## Mutation testing opted out"; cat .github/mutation-opt-out.md; } >> "$GITHUB_STEP_SUMMARY"
             echo "::notice::mutation opted out: $(head -1 .github/mutation-opt-out.md)"
           fi
-      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         if: steps.optout.outputs.skip != '1'
         with:
           enable-cache: true
@@ -91,6 +91,20 @@ jobs:
           checked=$(grep -vcE ": not checked$|^$" all-mutants.txt || true)
           aborted=0
           if [ "$RC" != "0" ] && [ "$RC" != "124" ]; then aborted=1; fi
+          # Diffs for the triage step, dumped HERE: 2026-09-16 ldraw-mcp, the
+          # Haiku triage spent all 40 turns running `mutmut show` one mutant per
+          # turn and never wrote its comment ($0.48, nothing). Round-robin over
+          # modules so one fat module cannot crowd the rest out.
+          python3 - <<'PY' > survivor-diffs.txt || true
+          import collections, itertools, subprocess
+          names = [l.split(':')[0].strip() for l in open('survivors.txt') if ': survived' in l]
+          by = collections.defaultdict(list)
+          for n in names: by[n.rsplit('.', 1)[0]].append(n)
+          picked = [n for n in itertools.chain.from_iterable(itertools.zip_longest(*by.values())) if n][:50] if by else []
+          for n in picked:
+              d = subprocess.run(['uv', 'run', 'mutmut', 'show', n], capture_output=True, text=True, timeout=60).stdout
+              print(f"### {n}\n{d.strip()}\n")
+          PY
           {
             echo "count=$n"; echo "unchecked=$unchecked"; echo "aborted=$aborted"; echo "checked=$checked"
           } >> "$GITHUB_OUTPUT"
@@ -100,7 +114,9 @@ jobs:
         if: steps.optout.outputs.skip != '1'
         with:
           name: mutmut-survivors
-          path: survivors.txt
+          path: |
+            survivors.txt
+            survivor-diffs.txt
       - name: Upsert tracking issue
         id: upsert
         if: steps.optout.outputs.skip != '1' && steps.survivors.outputs.count != '0'
@@ -158,24 +174,26 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
-            Triage surviving mutants for ${{ github.repository }}. Budget: 40 turns.
-            survivors.txt lists them (one "<name>: survived" per line). The mutated
-            source is under mutants/; `uv run mutmut show <name>` prints a diff.
-            1. Group survivors by module. Pick the 25 most consequential (public
-               API, parsing, security, arithmetic; skip logging/CLI text).
-            2. For each: `mutmut show`, then classify:
-               EQUIVALENT (behaviour unchanged, e.g. dead branch, log text) or
-               GAP (behaviour changed, no test observed it).
-            3. For every GAP write ONE line: `<name>` | what changed | the test
+            Triage surviving mutants for ${{ github.repository }}. Budget: 40 turns;
+            post the comment by turn 20 even if partial (a partial triage beats
+            none, and the step is red if you never post).
+            survivor-diffs.txt already holds the diff of up to 50 survivors,
+            one "### <name>" block each, round-robin across modules. Read that
+            ONE file first; do not run mutmut. survivors.txt is the full list.
+            1. Classify each diff: EQUIVALENT (behaviour unchanged: dead branch,
+               log/CLI text, defensive check) or GAP (behaviour changed and no
+               test observed it). Skip trivial ones without comment.
+            2. For every GAP write ONE line: `<name>` | what changed | the test
                that would kill it (file::test_name and the single assertion).
-            4. Append a section "## Triage <UTC date> (Haiku)" to issue
-               #${{ steps.upsert.outputs.issue }} via `gh issue comment`:
-               counts (triaged / equivalent / gaps), then the GAP lines, then
-               a 2-line "pattern" note if several gaps share a cause.
+               Read the real test file only when you need its name.
+            3. Post ONE comment on issue #${{ steps.upsert.outputs.issue }} via
+               `gh issue comment`: heading "## Triage <UTC date> (Haiku)",
+               counts (triaged / equivalent / gaps), the GAP lines, then a
+               2-line "pattern" note if several gaps share a cause.
             Never modify tracked files. Never commit. Do not open new issues.
           claude_args: |
             --model claude-haiku-4-5-20251001
-            --allowed-tools "Bash(uv run mutmut show:*),Bash(gh issue comment:*),Bash(gh issue view:*),Read,Grep,Glob"
+            --allowed-tools "Bash(gh issue comment:*),Bash(gh issue view:*),Read,Grep,Glob"
             --max-turns 40
 
   fuzz:
@@ -212,7 +230,7 @@ jobs:
           fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: steps.day.outputs.run == '1'
-      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         if: steps.day.outputs.run == '1'
       - name: Install + hypothesis
         if: steps.day.outputs.run == '1'
