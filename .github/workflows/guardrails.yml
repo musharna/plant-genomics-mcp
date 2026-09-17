@@ -2,7 +2,7 @@ name: guardrails
 
 # From ~/repo-template (scripts/guardrails-sync.sh). Runs on every PR/push:
 #   lint      pre-commit (ruff, shellcheck, house rules)
-#   test      pytest
+#   test      pytest, then pytest again with NO network (empty netns)
 #   security  pip-audit + bandit
 #   review    Claude code review posted on the PR (needs CLAUDE_CODE_OAUTH_TOKEN)
 # Action SHAs verified to exist on 2026-09-11.
@@ -60,6 +60,33 @@ jobs:
           if [ -f requirements-dev.txt ]; then uv pip install -r requirements-dev.txt; fi
       - name: Tests
         run: uv run --with pytest pytest -q -p no:cacheprovider
+      - name: Tests with no network
+        # The same suite inside an empty network namespace (loopback only). A
+        # test that reaches a live registry from here fails instead of passing
+        # while the registry happens to agree with the fixture - which is how
+        # three tests hit live NCBI from required CI for months (data-aggregator
+        # #91): their monkeypatch never bound and nothing could tell. Live tests
+        # that mean to be live gate themselves on RECAP_NO_NET / *_LIVE.
+        # Ubuntu 24.04 runners restrict unprivileged user namespaces, hence sudo.
+        # Negative control first: the namespace must actually be offline, or
+        # this step would be a second copy of the one above.
+        env:
+          RECAP_NO_NET: "1"
+          PYTEST_OFFLINE: "1"
+        run: |
+          # KEEP lists what must survive both sudo hops: setup-uv's cache/python
+          # dirs (else uv resolves into an empty cache and reaches for the index)
+          # and the two offline flags. The inner sudo applies secure_path before
+          # any preserved PATH, so uv is resolved to an absolute path first.
+          KEEP=PATH,HOME,UV_CACHE_DIR,UV_PYTHON_INSTALL_DIR,RECAP_NO_NET,PYTEST_OFFLINE
+          UV="$(command -v uv)"
+          sudo --preserve-env="$KEEP" unshare -n sh -ec '
+            ip link set lo up
+            if curl -sS --max-time 5 https://api.github.com >/dev/null 2>&1; then
+              echo "::error::network namespace is NOT offline; the offline run would prove nothing"; exit 1
+            fi
+            exec sudo -u "$SUDO_USER" --preserve-env="$1" "$2" run --offline --with pytest pytest -q -p no:cacheprovider
+          ' sh "$KEEP" "$UV"
 
   security:
     runs-on: ubuntu-latest
