@@ -21,6 +21,16 @@
   One parametrised test now asserts the whole call and the whole envelope
   for every wrapper, plus the two-stage GO wrapper. Re-run: 67 killed; the
   24 left are header-name case and the service label.
+- **`server._dispatch` argument routing is now checked from the tool schema.**
+  508 survivors, 346 behavioural, almost all `args.get("x", default)` -> `None`
+  or a dropped keyword. `tests/test_server_dispatch_kwargs.py` uses the
+  catalog as the oracle: for every tool, each optional argument must reach the
+  backend as its schema default when omitted and as the caller's value when
+  given, every required argument and the client must arrive, and a schema
+  default that disagrees with the dispatcher is caught (the three arms that
+  forward `limit=None` are checked against the backend's own resolution of
+  `None`). Plus the 2.x `_call_tool` wire contract on error and success.
+  Re-run: 504 of 508 killed; the 4 left are equivalents.
 
 ## v1.21.0 — 2026-08-06
 
