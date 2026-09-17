@@ -12,6 +12,15 @@
   exactly (schedule `[1, 2, 4]` and four requests on all three retry paths).
   Re-run of the 85 under mutmut: 45 killed; the 40 left are equivalents
   (header-name case, message text, `None` vs `""` initialisers).
+- **`batch` fan-out is now pinned end to end.** 91 survivors, 48 behavioural:
+  the "mixed" tests checked the success/error split but never that the
+  caller's client, organism, `limit`, `size`, `top_n` or `homology_type`
+  reached the backend, that the Ensembl POST carried the documented body,
+  headers and timeout, that a 400 "not found" body classified as
+  `NotFoundError`, or that a 50-locus batch (the documented cap) is accepted.
+  One parametrised test now asserts the whole call and the whole envelope
+  for every wrapper, plus the two-stage GO wrapper. Re-run: 67 killed; the
+  24 left are header-name case and the service label.
 
 ## v1.21.0 — 2026-08-06
 
