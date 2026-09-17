@@ -88,12 +88,14 @@ def _sentinel_for(prop: dict[str, Any], default: Any) -> Any:
     if isinstance(default, bool):
         return not default
     if isinstance(default, int | float):
-        lo, hi = prop.get("minimum"), prop.get("maximum")
-        cand = (default or 0) + 1
+        lo: float | None = prop.get("minimum")
+        hi: float | None = prop.get("maximum")
+        cand: float = default + 1
         if hi is not None and cand > hi:
-            cand = (default or 0) - 1
+            cand = default - 1
         if lo is not None and cand < lo:
-            cand = lo if lo != default else hi
+            assert hi is not None and hi != default, f"no room for a sentinel in {prop}"
+            cand = hi
         return cand
     if "enum" in prop:
         return next(v for v in prop["enum"] if v != default)
