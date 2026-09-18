@@ -1130,7 +1130,11 @@ def _render_gene_report_md(
                 if b
             ]
             ref = f" ({'; '.join(ref_bits)})" if ref_bits else ""
-            lines.append(f"- **{title_txt}** — {h.get('authorString', '')}{ref}")
+            # `or ""`, not a .get default: Europe PMC sends the key with a null
+            # value for author-less records, and the default only covers absence.
+            # No author, no separator: "**title** — " left a dangling dash.
+            author = h.get("authorString") or ""
+            lines.append(f"- **{title_txt}**" + (f" — {author}" if author else "") + ref)
     elif note:
         lines.append(note)
     else:
@@ -1270,7 +1274,7 @@ async def consensus_homologs(
             tool="uniprot_fetch_sequence",
             status="error",
             elapsed_s=time.perf_counter() - t_step2,
-            error=f"[HTTPError] {e}",
+            error=f"[{type(e).__name__}] {e}",  # leaf class, same wire format as _timed_step
         )
         skip = "phase-1.b sequence fetch failed; downstream skipped"
         return SynthesisEnvelope(
