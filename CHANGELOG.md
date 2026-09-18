@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- **`synthesis` is now pinned whole-envelope, not status-list.** 984 survivors
+  in the nightly run, 505 behavioural: step numbers, skip reasons, tool names on
+  skip rows, backend call arguments (`program`, `hitlist_size=50`, `organism=`,
+  `limit=`, `homology_type="all"`), the sign of `elapsed_s`, the sort
+  tie-break and `top_n` cut in both consensus composers, and every Markdown
+  section of the gene dossier all changed freely under `"NAC001" in md` and
+  `statuses == ["ok"] * 5`. Three new files: `test_synthesis_render.py`
+  (byte-exact dossier for a fully populated and a sparse fixture, every fallback
+  path), `test_synthesis_compose.py` (whole-row consensus lists, identity
+  parser table), `test_synthesis_envelopes.py` (every failure envelope as a
+  literal dict, every backend call recorded with its exact arguments, step
+  helper tables). Two defects surfaced on the way: a literature hit with a null
+  `authorString` rendered the word "None" (now blank, with no dangling dash),
+  and the inline sequence-fetch handler wrote a literal `[HTTPError]` where
+  both shared step helpers write the leaf class (`[ConnectError]`). Re-run of
+  the module under mutmut: 2,446 of 2,546 killed; the 100 left are message
+  text, `split(".", 1)` vs `2` on one-dot accessions, and `>= 0` vs `> 0` on a
+  strand that is only ever ±1.
 - **`_http` retry policy is now pinned by tests, not just bounded.** The nightly
   mutation run (#96) left 85 mutants alive in `_http.py`; 51 changed behaviour.
   The existing tests capped the sleep at 60 s and asserted "raises", so a wrong

@@ -1063,7 +1063,9 @@ async def test_consensus_homologs_phase1b_plant_genomics_error_skips_downstream(
 @pytest.mark.asyncio
 async def test_consensus_homologs_phase1b_httpx_error_skips_downstream(monkeypatch):
     """P7: phase-1.b fetch raising a raw httpx.HTTPError takes the second except
-    arm (synthesis.py:830-852); step2.error carries the [HTTPError] prefix."""
+    arm; step2.error carries the leaf-class prefix ([ConnectError]), the same
+    wire format _timed_step and _gather_step emit. It used to read a literal
+    [HTTPError], which hid which network failure it was."""
     from plant_genomics_mcp.synthesis import consensus_homologs
 
     async def fake_lookup(client, locus, organism="arabidopsis_thaliana"):
@@ -1082,7 +1084,7 @@ async def test_consensus_homologs_phase1b_httpx_error_skips_downstream(monkeypat
     assert [s.status for s in env.steps] == ["ok", "error", "skipped", "skipped", "skipped"]
     step2 = env.steps[1]
     assert step2.tool == "uniprot_fetch_sequence"
-    assert step2.error.startswith("[HTTPError]")
+    assert step2.error.startswith("[ConnectError]")
     assert "connection reset by peer" in step2.error
     for s in env.steps[2:]:
         assert s.error == _PHASE1B_SKIP
