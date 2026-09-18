@@ -44,6 +44,9 @@ jobs:
       - name: Install + mutmut
         if: steps.optout.outputs.skip != '1'
         run: |
+          # Repo-specific system prerequisites (R for rpy2, OpenCV libs, ...) live in
+          # scripts/guardrails-setup.sh so the template stays generic.
+          if [ -x scripts/guardrails-setup.sh ]; then bash scripts/guardrails-setup.sh; fi
           uv sync --all-extras --dev
           if [ -f requirements-dev.txt ]; then uv pip install -r requirements-dev.txt; fi
           uv pip install "mutmut==3.7.0" pytest
@@ -135,8 +138,16 @@ jobs:
                   "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$(head -150 survivors.txt)")"
           num=$(gh issue list --label mutation --state open --json number -q '.[0].number')
           if [ -n "$num" ]; then gh issue edit "$num" --title "$title" --body "$body"
-          else gh label create mutation --color 8B0000 --force >/dev/null; gh issue create --label mutation --title "$title" --body "$body"; fi
-          num=$(gh issue list --label mutation --state open --json number -q '.[0].number')
+          else
+            gh label create mutation --color 8B0000 --force >/dev/null
+            # Take the number from the create call's URL. Re-listing right after
+            # a create returned NOTHING (figcite 2026-09-17, index lag): the
+            # triage prompt then read "issue #", Haiku spent 37 turns and $0.69
+            # with 14 permission denials, posted nowhere, and the step was green.
+            url=$(gh issue create --label mutation --title "$title" --body "$body")
+            num=${url##*/}
+          fi
+          case "$num" in ''|*[!0-9]*) echo "::error::could not determine the tracking issue number (got '$num')"; exit 1;; esac
           echo "issue=$num" >> "$GITHUB_OUTPUT"
       - name: Gate verdict (after the issue is written, so the record is accurate even when red)
         if: steps.optout.outputs.skip != '1'
@@ -161,7 +172,11 @@ jobs:
           n=$(printf '%s' "${{ github.repository }}" | cksum | cut -d' ' -f1)
           mine=$(( n % 7 + 1 )); today=$(date -u +%u)
           if [ "${{ github.event_name }}" = workflow_dispatch ] || [ "$mine" = "$today" ]; then
-            [ -n "${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}" ] && echo "run=1" >> "$GITHUB_OUTPUT"
+            # if/then, not `[ ] && echo`: as the last command of the step an
+            # and-list with a false test exits 1, and a repo without the token
+            # would go red on its triage day instead of skipping.
+            if [ -n "${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}" ]; then echo "run=1" >> "$GITHUB_OUTPUT"
+            else echo "::notice::triage day, but CLAUDE_CODE_OAUTH_TOKEN is not set: survivor triage skipped"; fi
           fi
       - name: Survivor triage (weekly; Haiku; names the missing test per real gap)
         # A surviving mutant is the coverage report, but a list of 300 names is
@@ -188,6 +203,16 @@ jobs:
                The test name must be new or an existing test in that file
                (Grep tests/ for it); the assertion must be a concrete
                expression on the mutated behaviour, not a description.
+               THE ASSERTION MUST FAIL ON THE MUTANT AND PASS ON THE ORIGINAL.
+               Check each one against the diff before writing it. These cannot
+               fail and are not findings (all seen 2026-09-17, taxon3d):
+               `assert f() == True or False`, `assert len(x) > 0 or len(x) == 0`
+               (tautologies); `assert max_tokens == 32000`, `assert attempts == 5`
+               (a name the test itself would have to set: assert what the CALLER
+               observes, e.g. the argument a mock received); `assert isinstance(r, dict)`
+               when the mutant also returns a dict. If you cannot name an
+               observable that differs, classify the mutant EQUIVALENT-OR-UNOBSERVABLE
+               and count it separately; do not invent an assertion.
                A line without a backticked test id and an assert is not a
                finding; drop it rather than summarise.
             3. Post ONE comment on issue #${{ steps.upsert.outputs.issue }} via
@@ -206,6 +231,26 @@ jobs:
             --model claude-haiku-4-5-20251001
             --allowed-tools "Bash(gh issue comment:*),Bash(gh issue view:*),Read,Write(/tmp/*),Grep,Glob"
             --max-turns 40
+      - name: Triage was actually posted (the comment is the deliverable)
+        # The action is green whenever the model stops cleanly; that is not
+        # "posted". Read the issue back. Also lint the posted assertions for
+        # the two tautology shapes: a test that cannot fail is the class this
+        # whole template exists to stop, and the triage must not recommend one.
+        if: steps.triage.outputs.run == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ steps.upsert.outputs.issue }}
+        run: |
+          today=$(date -u +%Y-%m-%d)
+          body=$(gh api "repos/$GITHUB_REPOSITORY/issues/$ISSUE/comments" --paginate -q '.[].body' | awk -v h="## Triage $today" 'index($0,h){p=1} p')
+          if [ -z "$body" ]; then
+            echo "::error::no '## Triage $today' comment on issue #$ISSUE: the triage step ran and posted nothing"; exit 1
+          fi
+          taut=$(printf '%s\n' "$body" | grep -cE '== True or False|> 0 or [^|]*== 0|or not ' || true)
+          if [ "$taut" != "0" ]; then
+            echo "::error::triage comment recommends $taut assertion(s) that cannot fail (tautology). Edit the comment or rerun; do not write those tests."; exit 1
+          fi
+          echo "triage comment present on #$ISSUE, no tautological assertions"
 
   fuzz:
     runs-on: ubuntu-latest
@@ -246,6 +291,9 @@ jobs:
       - name: Install + hypothesis
         if: steps.day.outputs.run == '1'
         run: |
+          # Repo-specific system prerequisites (R for rpy2, OpenCV libs, ...) live in
+          # scripts/guardrails-setup.sh so the template stays generic.
+          if [ -x scripts/guardrails-setup.sh ]; then bash scripts/guardrails-setup.sh; fi
           uv sync --all-extras --dev
           if [ -f requirements-dev.txt ]; then uv pip install -r requirements-dev.txt; fi
           uv pip install hypothesis pytest
