@@ -189,9 +189,10 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
-            Triage surviving mutants for ${{ github.repository }}. Budget: 40 turns;
-            post the comment by turn 20 even if partial (a partial triage beats
-            none, and the step is red if you never post).
+            Triage surviving mutants for ${{ github.repository }}. Budget: 30 turns;
+            post the comment by turn 15 even if partial (a partial triage beats
+            none, and the step is red if you never post). The hard cap is higher
+            than your budget on purpose: your own turn count runs low.
             survivor-diffs.txt already holds the diff of up to 50 survivors,
             one "### <name>" block each, round-robin across modules. Read that
             ONE file first; do not run mutmut. survivors.txt is the full list.
@@ -230,7 +231,7 @@ jobs:
           claude_args: |
             --model claude-haiku-4-5-20251001
             --allowed-tools "Bash(gh issue comment:*),Bash(gh issue view:*),Read,Write(/tmp/*),Grep,Glob"
-            --max-turns 40
+            --max-turns 60
       - name: Triage was actually posted (the comment is the deliverable)
         # The action is green whenever the model stops cleanly; that is not
         # "posted". Read the issue back. Also lint the posted assertions for
@@ -249,6 +250,43 @@ jobs:
           taut=$(printf '%s\n' "$body" | grep -cE '== True or False|> 0 or [^|]*== 0|or not ' || true)
           if [ "$taut" != "0" ]; then
             echo "::error::triage comment recommends $taut assertion(s) that cannot fail (tautology). Edit the comment or rerun; do not write those tests."; exit 1
+          fi
+          # Second lint, AST not regex. The prompt already names these shapes as
+          # non-findings and Haiku wrote them anyway (figcite 2026-09-18:
+          # `assert timeout == 45`, `assert scan_pages == 2`, and
+          # `assert pos > 1 after first iteration`, which is not Python). An
+          # assertion with no call, attribute or subscript observes nothing the
+          # code under test did. Not red (a weekly red on model sloppiness gets
+          # ignored); the record is corrected in the issue instead.
+          printf '%s\n' "$body" > /tmp/triage-body.md
+          python3 - /tmp/triage-body.md > /tmp/triage-lint.md <<'PYLINT'
+          import ast, re, sys
+          flagged = []
+          for line in open(sys.argv[1], encoding="utf-8"):
+              parts = [x.strip() for x in line.split(" | ")]
+              if len(parts) < 4 or not parts[0].startswith("`"):
+                  continue
+              m = re.search(r"`(assert .*)`\s*$", parts[-1])
+              if not m:
+                  flagged.append((parts[0], "no backticked assert", parts[-1][:80])); continue
+              src = m.group(1)
+              try:
+                  node = ast.parse(src).body[0]
+              except SyntaxError:
+                  flagged.append((parts[0], "not valid Python", src[:80])); continue
+              kinds = {type(n) for n in ast.walk(node.test)}
+              if not kinds & {ast.Call, ast.Attribute, ast.Subscript}:
+                  flagged.append((parts[0], "asserts a bare name: observes nothing the code did", src[:80]))
+          if flagged:
+              print(f"### Lint of the triage above: {len(flagged)} bullet(s) are NOT findings as written\n")
+              print("Each would pass on the mutant too, or does not run. Assert what the CALLER observes (a return value, an argument a mock received, a file on disk).\n")
+              for name, why, src in flagged:
+                  print(f"- {name} — {why}: `{src}`")
+          PYLINT
+          if [ -s /tmp/triage-lint.md ]; then
+            n=$(grep -c '^- ' /tmp/triage-lint.md)
+            gh issue comment "$ISSUE" --body-file /tmp/triage-lint.md >/dev/null
+            echo "::warning::triage on #$ISSUE had $n bullet(s) that cannot fail as written; correction comment posted"
           fi
           echo "triage comment present on #$ISSUE, no tautological assertions"
 
@@ -302,7 +340,10 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
-            You are a fuzzer for ${{ github.repository }}. Budget: ~15 minutes, 40 turns.
+            You are a fuzzer for ${{ github.repository }}. Budget: ~15 minutes, 30 turns.
+            The hard cap is 60 and the step is RED if you pass it even after a
+            successful run (figcite 2026-09-18: finished fine at turn 44 of 40,
+            job red). Count generously and stop early.
             1. Identify the public entry points (console scripts in pyproject.toml,
                top-level package API, CLI parsers, MCP tool handlers).
             2. Write hypothesis property tests into fuzz_scratch/ (NOT tests/) that
@@ -315,7 +356,9 @@ jobs:
                "fuzz: <n> crash(es) found <date>" with label `fuzz`, listing each
                repro. Reuse an open `fuzz` issue if one exists (gh issue edit).
                If none found, do nothing.
+            6. After step 5 (or after deciding there is nothing to report), STOP:
+               say "done" and take no further action.
             Never modify tracked files. Never commit.
           claude_args: |
             --allowed-tools "Bash(uv run pytest:*),Bash(uv run python:*),Bash(gh issue:*),Bash(gh label:*),Read,Write(fuzz_scratch/**),Grep,Glob"
-            --max-turns 40
+            --max-turns 60
