@@ -3,6 +3,7 @@ name: guardrails
 # From ~/repo-template (scripts/guardrails-sync.sh). Runs on every PR/push:
 #   lint      pre-commit (ruff, shellcheck, house rules)
 #   test      pytest, then pytest again with NO network (empty netns)
+#   wheel     build the wheel, install it in a clean venv outside the repo, import it
 #   security  pip-audit + bandit
 #   review    Claude code review posted on the PR (needs CLAUDE_CODE_OAUTH_TOKEN)
 # Action SHAs verified to exist on 2026-09-11.
@@ -25,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
       # Auto-FIXING hooks (ruff --fix, ruff-format, eof, whitespace) stay local:
       # in CI they rewrite pre-existing files and report that as failure, so
       # every repo that predates the template would be red forever. The CI gate
@@ -37,7 +38,10 @@ jobs:
           # Repo-specific system prerequisites (R for rpy2, OpenCV libs, ...) live in
           # scripts/guardrails-setup.sh so the template stays generic.
           if [ -x scripts/guardrails-setup.sh ]; then bash scripts/guardrails-setup.sh; fi
-          uv sync --all-extras --dev
+          # assignment, not inline $(...): a helper failure must stop the step
+          extras_s=$(python3 scripts/uv_extras.py)
+          read -ra extras <<<"$extras_s"
+          uv sync "${extras[@]}" --dev
           if [ -f requirements-dev.txt ]; then uv pip install -r requirements-dev.txt; fi
           if [ -x .venv/bin/ruff ]; then echo "repo ruff: "; .venv/bin/ruff check .
           else echo "template ruff 0.16.7"; uvx ruff@0.16.7 check .; fi
@@ -52,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
           enable-cache: true
       - name: Install
@@ -60,8 +64,11 @@ jobs:
           # Repo-specific system prerequisites (R for rpy2, OpenCV libs, ...) live in
           # scripts/guardrails-setup.sh so the template stays generic.
           if [ -x scripts/guardrails-setup.sh ]; then bash scripts/guardrails-setup.sh; fi
-          if [ -f uv.lock ]; then uv sync --locked --all-extras --dev
-          else uv sync --all-extras --dev; fi
+          # assignment, not inline $(...): a helper failure must stop the step
+          extras_s=$(python3 scripts/uv_extras.py)
+          read -ra extras <<<"$extras_s"
+          if [ -f uv.lock ]; then uv sync --locked "${extras[@]}" --dev
+          else uv sync "${extras[@]}" --dev; fi
           # repos that pin test deps outside pyproject (taxon3d)
           if [ -f requirements-dev.txt ]; then uv pip install -r requirements-dev.txt; fi
       - name: Tests
@@ -94,13 +101,29 @@ jobs:
             exec sudo -u "$SUDO_USER" --preserve-env="$1" "$2" run --offline --with pytest pytest -q -p no:cacheprovider
           ' sh "$KEEP" "$UV"
 
+  wheel:
+    # The test job installs the project editable, so it imports the SOURCE TREE:
+    # a module or data file the build leaves out is there for every test and
+    # missing for every user. This job uses the artifact that gets published.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+      - name: The smoke check can fail (negative controls)
+        run: bash scripts/wheel-smoke-selftest.sh
+      - name: Built wheel installs and imports outside the source tree
+        run: |
+          if [ -x scripts/guardrails-setup.sh ]; then bash scripts/guardrails-setup.sh; fi
+          python3 scripts/wheel_smoke.py .
+
   security:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # deps_changed.sh diffs against the PR base / pre-push sha
-      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
       - name: Did this change touch what gets installed?
         # pip-audit here answers "did THIS diff bring in a vulnerable package?".
         # "Has a CVE been published against what is already on the default
@@ -123,11 +146,14 @@ jobs:
           # Repo-specific system prerequisites (R for rpy2, OpenCV libs, ...) live in
           # scripts/guardrails-setup.sh so the template stays generic.
           if [ -x scripts/guardrails-setup.sh ]; then bash scripts/guardrails-setup.sh; fi
-          uv sync --all-extras --dev
+          # assignment, not inline $(...): a helper failure must stop the step
+          extras_s=$(python3 scripts/uv_extras.py)
+          read -ra extras <<<"$extras_s"
+          uv sync "${extras[@]}" --dev
           if [ -f requirements-dev.txt ]; then uv pip install -r requirements-dev.txt; fi
           # Audit the resolved dependency set, not the project itself (which may
           # not be on PyPI; --strict treats an unauditable/editable dist as failure).
-          uv export --all-extras --dev --no-emit-project --no-hashes -o /tmp/req.txt
+          uv export "${extras[@]}" --dev --no-emit-project --no-hashes -o /tmp/req.txt
           # requirements-dev.txt is installed above but is not in the export: audit it too.
           if [ -f requirements-dev.txt ]; then uv pip freeze | grep -v '^-e ' > /tmp/req-env.txt; else : > /tmp/req-env.txt; fi
           uvx pip-audit -r /tmp/req.txt --strict --desc on
