@@ -58,30 +58,10 @@ the diff means the bar was missed. The fix is two commits, not one:
    If the class can be caught by a hook or a lint rule, add the hook to
    `repo-template` in the same PR. Prose that must hold every time is a hook.
 
-## 5. Analysis code: the result is the product, and it can be wrong while every test is green
+## 5. Analysis code
 
-If this repo has `guardrails-analysis.yml`, the software bar above is necessary, not sufficient:
-
-- **Write `SPEC.md` first** (estimand, exclusions, model, decision rule, what would falsify). It must be
-  committed before the first `analysis/` commit. Changing it is a change of question: label `spec-change`.
-- **Every analysis has a controls file** in `tests/controls/`: a planted-effect ladder (the smallest effect
-  it can see, so a null is a bound), a shuffle null with the exchangeable unit written down, a positive
-  control that passes on real data AND fails on shuffled data, a representability check, a
-  `DataContract` at every hand-off (units, build, key uniqueness, row-count delta), and a corruption
-  injection that must fail loud. `scripts/analysis_controls.py` and `scripts/analysis_controls.R` have all
-  six (same names, same refusals); each library's selftest proves every control can fail. An R analysis
-  gets an R controls file, not a Python shim around it.
-- **Every number the README or paper reports is in `claims.yml`** with its generator and a typed
-  tolerance. Never compare bytes; a consistently wrong figure byte-matches itself.
-- **Do not fake a plot, a control, or "verified".** If a control cannot be built, say which and why in
-  `AI-USAGE.md`. An exclusion count you did not plan is a finding, not a filter.
-- **`scripts/reproduce.sh` from a fresh clone is the acceptance check** (or `make figures`). A stage a
-  hosted runner cannot run is skipped there with a printed reason and its claims carry `hosted: false`;
-  it still runs locally. If it needs data, `scripts/fetch-data.sh` with checksums.
-- **A notebook is not a record unless it reproduces top-to-bottom from a fresh kernel.** The notebooks
-  stage (`scripts/notebooks_check.py`) refuses committed execution counts that are not 1..n, outputs kept
-  after a cell was cleared, committed error outputs, and any error on fresh execution. Numbers a notebook
-  reports still go through `claims.yml`; the executed copy is never byte-compared to the committed one.
+If this repo has `guardrails-analysis.yml`, the result is the product and it can be wrong while every
+test is green: read `ANALYSIS-BAR.md` before writing analysis code. It is part of this contract.
 
 ## 6. Reporting
 
