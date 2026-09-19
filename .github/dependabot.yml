@@ -15,6 +15,11 @@ updates:
   # GitHub Actions pins in .github/workflows/*
   - package-ecosystem: "github-actions"
     directory: "/"
+    # Template-owned (repo-template): pins are bumped there and arrive by resync.
+    # Bumping them here makes this repo drift; guardrails-sync.sh --check enforces this list.
+    exclude-paths:
+      - ".github/workflows/guardrails.yml"
+      - ".github/workflows/nightly-guardrails.yml"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
