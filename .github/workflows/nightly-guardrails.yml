@@ -207,8 +207,8 @@ jobs:
                THE ASSERTION MUST FAIL ON THE MUTANT AND PASS ON THE ORIGINAL.
                Check each one against the diff before writing it. These cannot
                fail and are not findings (all seen 2026-09-17, taxon3d):
-               `assert f() == True or False`, `assert len(x) > 0 or len(x) == 0`
-               (tautologies); `assert max_tokens == 32000`, `assert attempts == 5`
+               `assert len(x) > 0 or len(x) == 0` (true for every x);
+               `assert max_tokens == 32000`, `assert attempts == 5`
                (a name the test itself would have to set: assert what the CALLER
                observes, e.g. the argument a mock received); `assert isinstance(r, dict)`
                when the mutant also returns a dict. If you cannot name an
@@ -232,63 +232,35 @@ jobs:
             --model claude-haiku-4-5-20251001
             --allowed-tools "Bash(gh issue comment:*),Bash(gh issue view:*),Read,Write(/tmp/*),Grep,Glob"
             --max-turns 60
-      - name: Triage was actually posted (the comment is the deliverable)
+      - name: Triage was actually posted BY THIS RUN (the comment is the deliverable)
         # The action is green whenever the model stops cleanly; that is not
-        # "posted". Read the issue back. Also lint the posted assertions for
-        # the two tautology shapes: a test that cannot fail is the class this
-        # whole template exists to stop, and the triage must not recommend one.
+        # "posted". Read the issue back, and accept only a comment created after
+        # this run started: until 2026-09-19 any comment carrying today's heading
+        # counted, so a second dispatch on the same day could post nothing and
+        # pass on the first one's comment.
+        #
+        # There is deliberately NO lint of the posted assertions here. Two were
+        # tried (a tautology regex, an AST "bare name" check) and both were wrong
+        # in both directions: `assert f() == True or False` is not a tautology
+        # (it fails when f() is false) and was flagged; `assert local["n"] == 5`
+        # observes nothing and passed. Whether an assertion can fail is decided
+        # by running it against the mutant, not by its shape. Until that exists,
+        # the triage is a reading list for a person, not a verdict.
         if: steps.triage.outputs.run == '1'
         env:
           GH_TOKEN: ${{ github.token }}
           ISSUE: ${{ steps.upsert.outputs.issue }}
         run: |
           today=$(date -u +%Y-%m-%d)
-          body=$(gh api "repos/$GITHUB_REPOSITORY/issues/$ISSUE/comments" --paginate -q '.[].body' | awk -v h="## Triage $today" 'index($0,h){p=1} p')
-          if [ -z "$body" ]; then
-            echo "::error::no '## Triage $today' comment on issue #$ISSUE: the triage step ran and posted nothing"; exit 1
+          start=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" -q .run_started_at)
+          case "$start" in 20??-??-??T*) ;; *) echo "::error::could not read this run's start time (got '$start')"; exit 1 ;; esac
+          n=$(gh api "repos/$GITHUB_REPOSITORY/issues/$ISSUE/comments" --paginate \
+            | jq -s --arg start "$start" --arg h "## Triage $today" \
+              '[.[][] | select(.created_at >= $start) | select(.body | contains($h))] | length')
+          if [ "$n" = 0 ]; then
+            echo "::error::no '## Triage $today' comment on issue #$ISSUE created since this run started ($start): the triage step posted nothing"; exit 1
           fi
-          taut=$(printf '%s\n' "$body" | grep -cE '== True or False|> 0 or [^|]*== 0|or not ' || true)
-          if [ "$taut" != "0" ]; then
-            echo "::error::triage comment recommends $taut assertion(s) that cannot fail (tautology). Edit the comment or rerun; do not write those tests."; exit 1
-          fi
-          # Second lint, AST not regex. The prompt already names these shapes as
-          # non-findings and Haiku wrote them anyway (figcite 2026-09-18:
-          # `assert timeout == 45`, `assert scan_pages == 2`, and
-          # `assert pos > 1 after first iteration`, which is not Python). An
-          # assertion with no call, attribute or subscript observes nothing the
-          # code under test did. Not red (a weekly red on model sloppiness gets
-          # ignored); the record is corrected in the issue instead.
-          printf '%s\n' "$body" > /tmp/triage-body.md
-          python3 - /tmp/triage-body.md > /tmp/triage-lint.md <<'PYLINT'
-          import ast, re, sys
-          flagged = []
-          for line in open(sys.argv[1], encoding="utf-8"):
-              parts = [x.strip() for x in line.split(" | ")]
-              if len(parts) < 4 or not parts[0].startswith("`"):
-                  continue
-              m = re.search(r"`(assert .*)`\s*$", parts[-1])
-              if not m:
-                  flagged.append((parts[0], "no backticked assert", parts[-1][:80])); continue
-              src = m.group(1)
-              try:
-                  node = ast.parse(src).body[0]
-              except SyntaxError:
-                  flagged.append((parts[0], "not valid Python", src[:80])); continue
-              kinds = {type(n) for n in ast.walk(node.test)}
-              if not kinds & {ast.Call, ast.Attribute, ast.Subscript}:
-                  flagged.append((parts[0], "asserts a bare name: observes nothing the code did", src[:80]))
-          if flagged:
-              print(f"### Lint of the triage above: {len(flagged)} bullet(s) are NOT findings as written\n")
-              print("Each would pass on the mutant too, or does not run. Assert what the CALLER observes (a return value, an argument a mock received, a file on disk).\n")
-              for name, why, src in flagged:
-                  print(f"- {name} — {why}: `{src}`")
-          PYLINT
-          if [ -s /tmp/triage-lint.md ]; then
-            n=$(grep -c '^- ' /tmp/triage-lint.md)
-            gh issue comment "$ISSUE" --body-file /tmp/triage-lint.md >/dev/null
-            echo "::warning::triage on #$ISSUE had $n bullet(s) that cannot fail as written; correction comment posted"
-          fi
-          echo "triage comment present on #$ISSUE, no tautological assertions"
+          echo "triage comment from this run present on #$ISSUE"
 
   fuzz:
     runs-on: ubuntu-latest
