@@ -3,6 +3,7 @@ name: guardrails
 # From ~/repo-template (scripts/guardrails-sync.sh). Runs on every PR/push:
 #   lint      pre-commit (ruff, shellcheck, house rules)
 #   test      pytest, then pytest again with NO network (empty netns)
+#   wheel     build the wheel, install it in a clean venv outside the repo, import it
 #   security  pip-audit + bandit
 #   review    Claude code review posted on the PR (needs CLAUDE_CODE_OAUTH_TOKEN)
 # Action SHAs verified to exist on 2026-09-11.
@@ -93,6 +94,22 @@ jobs:
             fi
             exec sudo -u "$SUDO_USER" --preserve-env="$1" "$2" run --offline --with pytest pytest -q -p no:cacheprovider
           ' sh "$KEEP" "$UV"
+
+  wheel:
+    # The test job installs the project editable, so it imports the SOURCE TREE:
+    # a module or data file the build leaves out is there for every test and
+    # missing for every user. This job uses the artifact that gets published.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+      - name: The smoke check can fail (negative controls)
+        run: bash scripts/wheel-smoke-selftest.sh
+      - name: Built wheel installs and imports outside the source tree
+        run: |
+          if [ -x scripts/guardrails-setup.sh ]; then bash scripts/guardrails-setup.sh; fi
+          python3 scripts/wheel_smoke.py .
 
   security:
     runs-on: ubuntu-latest
