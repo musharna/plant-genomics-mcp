@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
       # Auto-FIXING hooks (ruff --fix, ruff-format, eof, whitespace) stay local:
       # in CI they rewrite pre-existing files and report that as failure, so
       # every repo that predates the template would be red forever. The CI gate
@@ -34,6 +34,9 @@ jobs:
       # template pin. A version jump is not a code defect.
       - name: ruff check (no fix)
         run: |
+          # Repo-specific system prerequisites (R for rpy2, OpenCV libs, ...) live in
+          # scripts/guardrails-setup.sh so the template stays generic.
+          if [ -x scripts/guardrails-setup.sh ]; then bash scripts/guardrails-setup.sh; fi
           uv sync --all-extras --dev
           if [ -f requirements-dev.txt ]; then uv pip install -r requirements-dev.txt; fi
           if [ -x .venv/bin/ruff ]; then echo "repo ruff: "; .venv/bin/ruff check .
@@ -49,11 +52,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           enable-cache: true
       - name: Install
         run: |
+          # Repo-specific system prerequisites (R for rpy2, OpenCV libs, ...) live in
+          # scripts/guardrails-setup.sh so the template stays generic.
+          if [ -x scripts/guardrails-setup.sh ]; then bash scripts/guardrails-setup.sh; fi
           if [ -f uv.lock ]; then uv sync --locked --all-extras --dev
           else uv sync --all-extras --dev; fi
           # repos that pin test deps outside pyproject (taxon3d)
@@ -92,15 +98,40 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
-      - name: pip-audit (known-vulnerable dependencies)
+        with:
+          fetch-depth: 0 # deps_changed.sh diffs against the PR base / pre-push sha
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+      - name: Did this change touch what gets installed?
+        # pip-audit here answers "did THIS diff bring in a vulnerable package?".
+        # "Has a CVE been published against what is already on the default
+        # branch?" is the nightly audit job's question: it opens an issue, it does
+        # not turn an unrelated PR red (anyio, 2026-09-18, held two syncs).
+        id: deps
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          BEFORE: ${{ github.event.before }}
         run: |
+          bash scripts/deps-changed-selftest.sh
+          if bash scripts/deps_changed.sh; then echo "audit=1" >> "$GITHUB_OUTPUT"; else
+            echo "audit=0" >> "$GITHUB_OUTPUT"
+            echo "::notice::pip-audit skipped: no dependency file changed. The nightly audit job covers newly published CVEs."
+          fi
+      - name: pip-audit (known-vulnerable dependencies)
+        if: steps.deps.outputs.audit == '1'
+        run: |
+          # Repo-specific system prerequisites (R for rpy2, OpenCV libs, ...) live in
+          # scripts/guardrails-setup.sh so the template stays generic.
+          if [ -x scripts/guardrails-setup.sh ]; then bash scripts/guardrails-setup.sh; fi
           uv sync --all-extras --dev
           if [ -f requirements-dev.txt ]; then uv pip install -r requirements-dev.txt; fi
           # Audit the resolved dependency set, not the project itself (which may
           # not be on PyPI; --strict treats an unauditable/editable dist as failure).
           uv export --all-extras --dev --no-emit-project --no-hashes -o /tmp/req.txt
+          # requirements-dev.txt is installed above but is not in the export: audit it too.
+          if [ -f requirements-dev.txt ]; then uv pip freeze | grep -v '^-e ' > /tmp/req-env.txt; else : > /tmp/req-env.txt; fi
           uvx pip-audit -r /tmp/req.txt --strict --desc on
+          if [ -s /tmp/req-env.txt ]; then uvx pip-audit -r /tmp/req-env.txt --desc on; fi
       - name: bandit (insecure code patterns, medium+ severity)
         run: uvx bandit -q -r . -ll -x ./tests,./.venv,./mutants
 

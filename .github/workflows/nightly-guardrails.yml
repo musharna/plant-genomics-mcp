@@ -262,6 +262,59 @@ jobs:
           fi
           echo "triage comment from this run present on #$ISSUE"
 
+  audit:
+    # The calendar's question: has a CVE been published against what is ALREADY
+    # on the default branch? Daily, no model, a minute of runner time. A finding
+    # opens (or updates) one `dependency-audit` issue and the job is red; a clean
+    # run closes it. It never blocks a PR: guardrails.yml audits a PR only when
+    # that PR changes a dependency file.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+      - name: pip-audit the default branch's resolved dependencies
+        id: audit
+        run: |
+          if [ -x scripts/guardrails-setup.sh ]; then bash scripts/guardrails-setup.sh; fi
+          uv sync --all-extras --dev
+          uv export --all-extras --dev --no-emit-project --no-hashes -o /tmp/req.txt
+          set +e
+          uvx pip-audit -r /tmp/req.txt --strict --desc on > /tmp/audit.txt 2>&1
+          rc=$?
+          set -e
+          tail -40 /tmp/audit.txt
+          # 0 = clean, 1 = vulnerabilities. Anything else is pip-audit failing to
+          # run, which must not read as "clean" or as "vulnerable".
+          case "$rc" in
+            0) echo "state=clean" >> "$GITHUB_OUTPUT" ;;
+            1) if grep -qE 'vulnerabilit' /tmp/audit.txt; then echo "state=vulnerable" >> "$GITHUB_OUTPUT"; else echo "::error::pip-audit exited 1 without reporting a vulnerability: it did not run"; exit 1; fi ;;
+            *) echo "::error::pip-audit exited $rc: it did not run"; exit 1 ;;
+          esac
+      - name: Open, update or close the dependency-audit issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STATE: ${{ steps.audit.outputs.state }}
+        run: |
+          num=$(gh issue list --label dependency-audit --state open --json number -q '.[0].number')
+          if [ "$STATE" = clean ]; then
+            if [ -n "$num" ]; then gh issue close "$num" --comment "pip-audit is clean again on $(date -u +%Y-%m-%d) ($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)."; fi
+            echo "dependencies clean"; exit 0
+          fi
+          # shellcheck disable=SC2016  # printf format string is literal by design
+          body="$(printf 'Run: %s/%s/actions/runs/%s\n\npip-audit found a known vulnerability in a dependency already on the default branch. Bump it in a PR; that PR is audited because it changes a dependency file.\n\n```\n%s\n```\n' \
+                  "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$(grep -vE '^\s*$' /tmp/audit.txt | tail -60)")"
+          title="dependency audit: known vulnerabilities on the default branch"
+          if [ -n "$num" ]; then gh issue edit "$num" --title "$title" --body "$body" >/dev/null
+          else
+            gh label create dependency-audit --color B60205 --force >/dev/null
+            gh issue create --label dependency-audit --title "$title" --body "$body" >/dev/null
+          fi
+          echo "::error::known-vulnerable dependency on the default branch; see the dependency-audit issue"; exit 1
+
   fuzz:
     runs-on: ubuntu-latest
     timeout-minutes: 60
