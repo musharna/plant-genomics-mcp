@@ -36,16 +36,26 @@ check nosec-needs-reason m2.py 'subprocess.call(cmd, shell=True)  # nosec B602' 
 check nosec-needs-reason m3.py 'subprocess.call(cmd, shell=True)  # nosec B602 -' fail
 check nosec-needs-reason n.py 'subprocess.call(cmd, shell=True)  # nosec B602 - cmd is a module constant' pass
 check nosec-needs-reason n2.py 'q = f"SELECT * FROM {t}"  # nosec B608, B610 - t is from a fixed tuple' pass
+check bandit-medium-plus sec1.py $'import hashlib\nh = hashlib.md5(b"x").hexdigest()' fail
+check bandit-medium-plus sec2.py $'import hashlib\nh = hashlib.md5(b"x", usedforsecurity=False).hexdigest()' pass
+check bandit-medium-plus sec3.py $'import hashlib\nh = hashlib.md5(b"x").hexdigest()  # nosec B324 - content fingerprint an external tool also computes' pass
+check bandit-medium-plus sec4.py $'import subprocess\nsubprocess.call("ls " + x, shell=True)' fail
 check no-raises-bare-exception o.py 'with pytest.raises(Exception):' fail
 check no-raises-bare-exception o2.py 'with pytest.raises(Exception, match="boom"):' fail
 check no-raises-bare-exception p.py 'with pytest.raises(ValueError, match="boom"):' pass
 check no-raises-bare-exception p2.py 'with pytest.raises(ExceptionGroup):' pass
+check no-raises-bare-exception p3.py '    # was pytest.raises(Exception, match="x") and it caught a TypeError' pass
+check no-raises-bare-exception p4.py '    A bare `pytest.raises(Exception)` passes on almost any breakage.' pass
 check no-nested-lazy d.py 're.search(r"(?:<p>.*?</p>)+", x, re.DOTALL)' fail
 check no-nested-lazy e.py 're.search(r"<a>(.*?)</a>", x, re.DOTALL)' pass
 check no-nohup-background f.sh $'#!/bin/sh\nnohup python worker.py &' fail
 check no-nohup-background g.sh $'#!/bin/sh\nsystemd-run --user --unit w python worker.py' pass
 check no-uppercase-transform h.css '.legend { text-transform: uppercase; }' fail
 check no-uppercase-transform i.css '.legend { font-variant: small-caps; }' pass
+check no-uppercase-transform i2.css '/* No text-transform: uppercase - it maps µ to M in unit strings. */' pass
+check no-uppercase-transform i3.css $'.legend {\n  text-transform: uppercase;\n}' fail
+check no-uppercase-transform i4.css 'h1 { text-transform: uppercase; /* uppercase-ok: page title, no unit text */ }' pass
+check no-uppercase-transform i5.css 'h1 { text-transform: uppercase; /* uppercase-ok: */ }' fail
 devroot="/mnt/c/Us" # joined at runtime so this file never contains the literal path it plants
 devfix=$(printf 'p = "%sers/a2b32/Zotero/x.pdf"' "$devroot")
 check no-dev-paths j.py "$devfix" fail
