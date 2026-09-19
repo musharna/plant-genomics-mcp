@@ -11,7 +11,8 @@ gets published work?
      is not the repo: import every top-level package and load every
      console-script entry point (resolve `pkg.mod:func`; it is not called: an
      MCP server would sit on stdin). Refuse anything that resolves into the repo.
-  3. Then install every declared extra and import EVERY submodule. A module
+  3. Then install every declared extra (minus `scripts/guardrails-no-extras.txt`,
+     see uv_extras.py) and import EVERY submodule. A module
      behind an optional extra may fail in pass 2 only if nothing imports it
      eagerly; it may not fail here.
   4. Every git-tracked file under a shipped package directory must be in the
@@ -26,16 +27,21 @@ Exit 0 = passed, or skipped with a printed reason (no [build-system]: nothing is
 published). Exit 1 = a finding. Exit 2 = the check could not run.
 """
 
+# Template-owned and byte-identical in every repo, so it cannot follow each host
+# repo's line length: formatted once, in repo-template.
+# fmt: off
+
 from __future__ import annotations
 
 import fnmatch
+import re
 import subprocess
 import sys
 import tempfile
 import zipfile
 from pathlib import Path
 
-import tomllib
+from uv_extras import excluded  # sibling script: scripts/ is sys.path[0]
 
 PROBE = r"""
 import importlib, importlib.metadata as md, pkgutil, sys
@@ -91,14 +97,14 @@ def die(msg: str) -> None:
     sys.exit(2)
 
 
-def main() -> int:
+def smoke() -> int:
     repo = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
     pyproject = repo / "pyproject.toml"
     if not pyproject.is_file():
         print("skipped: no pyproject.toml, nothing is built or published")
         return 0
-    meta = tomllib.loads(pyproject.read_text())
-    if "build-system" not in meta:
+    # By line, not tomllib: this also ships to repos that support Python 3.10.
+    if not re.search(r"(?m)^\s*\[\s*build-system\s*\]", pyproject.read_text()):
         print(
             "skipped: pyproject.toml has no [build-system], nothing is built or published"
         )
@@ -204,6 +210,14 @@ def main() -> int:
             for ln in zipfile.ZipFile(whl).read(metadata).decode().splitlines()
             if ln.startswith("Provides-Extra:")
         ]
+        try:
+            no_extras = excluded(repo)
+        except SystemExit as e:  # a typo there is "could not run", not a finding
+            die(str(e.code))
+        skip = {re.sub(r"[-_.]+", "-", e).lower() for e in no_extras}
+        for e in [e for e in extras if e in skip]:
+            print(f"excluded extra {e} (scripts/guardrails-no-extras.txt)")
+        extras = [e for e in extras if e not in skip]
         if extras:
             spec = f"{dist}[{','.join(extras)}] @ {whl.as_uri()}"
             i = run(["uv", "pip", "install", "-q", "--python", py, spec])
@@ -218,4 +232,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(smoke())

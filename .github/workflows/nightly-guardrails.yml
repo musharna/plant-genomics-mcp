@@ -37,7 +37,7 @@ jobs:
             { echo "## Mutation testing opted out"; cat .github/mutation-opt-out.md; } >> "$GITHUB_STEP_SUMMARY"
             echo "::notice::mutation opted out: $(head -1 .github/mutation-opt-out.md)"
           fi
-      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         if: steps.optout.outputs.skip != '1'
         with:
           enable-cache: true
@@ -47,7 +47,10 @@ jobs:
           # Repo-specific system prerequisites (R for rpy2, OpenCV libs, ...) live in
           # scripts/guardrails-setup.sh so the template stays generic.
           if [ -x scripts/guardrails-setup.sh ]; then bash scripts/guardrails-setup.sh; fi
-          uv sync --all-extras --dev
+          # assignment, not inline $(...): a helper failure must stop the step
+          extras_s=$(python3 scripts/uv_extras.py)
+          read -ra extras <<<"$extras_s"
+          uv sync "${extras[@]}" --dev
           if [ -f requirements-dev.txt ]; then uv pip install -r requirements-dev.txt; fi
           uv pip install "mutmut==3.7.0" pytest
       - name: Baseline suite is green (a red baseline makes every mutant "killed")
@@ -113,7 +116,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           echo "## Mutants: $killed killed, $n survived, $checked checked, $unchecked unchecked (mutmut exit $RC, aborted=$aborted)" >> "$GITHUB_STEP_SUMMARY"
           head -200 survivors.txt >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: steps.optout.outputs.skip != '1'
         with:
           name: mutmut-survivors
@@ -275,13 +278,16 @@ jobs:
       issues: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
       - name: pip-audit the default branch's resolved dependencies
         id: audit
         run: |
           if [ -x scripts/guardrails-setup.sh ]; then bash scripts/guardrails-setup.sh; fi
-          uv sync --all-extras --dev
-          uv export --all-extras --dev --no-emit-project --no-hashes -o /tmp/req.txt
+          # assignment, not inline $(...): a helper failure must stop the step
+          extras_s=$(python3 scripts/uv_extras.py)
+          read -ra extras <<<"$extras_s"
+          uv sync "${extras[@]}" --dev
+          uv export "${extras[@]}" --dev --no-emit-project --no-hashes -o /tmp/req.txt
           set +e
           uvx pip-audit -r /tmp/req.txt --strict --desc on > /tmp/audit.txt 2>&1
           rc=$?
@@ -349,7 +355,7 @@ jobs:
           fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: steps.day.outputs.run == '1'
-      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         if: steps.day.outputs.run == '1'
       - name: Install + hypothesis
         if: steps.day.outputs.run == '1'
@@ -357,7 +363,10 @@ jobs:
           # Repo-specific system prerequisites (R for rpy2, OpenCV libs, ...) live in
           # scripts/guardrails-setup.sh so the template stays generic.
           if [ -x scripts/guardrails-setup.sh ]; then bash scripts/guardrails-setup.sh; fi
-          uv sync --all-extras --dev
+          # assignment, not inline $(...): a helper failure must stop the step
+          extras_s=$(python3 scripts/uv_extras.py)
+          read -ra extras <<<"$extras_s"
+          uv sync "${extras[@]}" --dev
           if [ -f requirements-dev.txt ]; then uv pip install -r requirements-dev.txt; fi
           uv pip install hypothesis pytest
       - uses: anthropics/claude-code-action@4169884de317bc1b4cb1b47f4476d76fed92b384 # v1

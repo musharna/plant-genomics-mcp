@@ -86,5 +86,28 @@ want "no [build-system]: skipped, and says so" 0 "$(run "$t/nobuild")" '^skipped
 pkg "$t/broken" '["demo", "no_such_package"]' 'demo.cli:main'
 want "a wheel that does not build is a finding, not a skip" 1 "$(run "$t/broken")" 'does not build'
 
+# Extras a repo keeps out of CI on purpose (scripts/guardrails-no-extras.txt, read by
+# uv_extras.py for the workflows and by wheel_smoke.py). "heavy" cannot install at all.
+# `hevy` is a key in a LATER table: a reader that does not stop at the next header would
+# take it for a declared extra.
+heavy=$'[project.optional-dependencies]\nheavy = ["no-such-dist-zz-guardrails-selftest"]\n[tool.other]\nhevy = 1'
+flags() { python3 -B "$here/uv_extras.py" "$1" >"$t/out" 2>&1; echo $?; }
+pkg "$t/extra" '["demo", "demo.sub"]' 'demo.cli:main' "$heavy"
+want "no exclusion file: every extra" 0 "$(flags "$t/extra")" '^--all-extras$'
+want "an extra that does not install is a finding" 1 "$(run "$t/extra")" 'extras do not install \(heavy\)'
+echo 'heavy  # 2 GB, tested in its own job' >"$t/extra/scripts/guardrails-no-extras.txt"
+want "excluded with a reason: the flags carry it" 0 "$(flags "$t/extra")" '^--all-extras --no-extra heavy$'
+want "  ...and the smoke check skips it, and says so" 0 "$(run "$t/extra")" 'excluded extra heavy'
+echo 'hevy' >"$t/extra/scripts/guardrails-no-extras.txt"
+want "a name that is not a declared extra is an error, not a no-op" 2 "$(flags "$t/extra")" "names \['hevy'\]"
+want "  ...and the smoke check could not run (not pass, not finding)" 2 "$(run "$t/extra")" 'could not run'
+# The workflows' exact shell pattern, under the runner's `bash -e`: the step must stop.
+(cd "$t/extra" && bash -ec "extras_s=\$(python3 -B '$here/uv_extras.py' .); echo REACHED") >"$t/out" 2>&1
+rc=$?
+grep -q REACHED "$t/out" && rc=0
+want "  ...and the workflow step stops there instead of installing without the flags" 2 "$rc"
+! grep -nE 'uv (sync|export|pip).*\$\([^)]*uv_extras' "$here"/../.github/workflows/*.yml >"$t/out" 2>&1
+want "  ...and no workflow uses the inline form, which would not stop" 0 $?
+
 echo "$n cases, $f failed"
 [ "$f" = 0 ]
