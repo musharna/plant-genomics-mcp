@@ -76,6 +76,8 @@ FAMILY_PARALOGS: dict[str, list[str]] = {
 FAMILY_ORTHOLOGS: dict[str, list[str]] = {
     "AT1G00010": ["Os01g0000100", "TraesCS1A02G000100", "Zm00001d000001"],
 }
+# Locus-id prefix -> canonical organism, for the fake `target_organism` filter.
+_FAKE_ORGANISM_OF = {"AT": "arabidopsis_thaliana", "Os": "oryza_sativa", "Tr": "triticum_aestivum"}
 FAMILY_INTERPRO: dict[str, list[str]] = {
     "AT1G00010": ["IPR010525", "IPR033389"],
     "AT1G00050": ["IPR010525"],
@@ -93,17 +95,33 @@ def _family_call(name: str, args: dict) -> dict:
     if name == "gramene_homologs":
         table = FAMILY_PARALOGS if args.get("homology_type") == "paralog" else FAMILY_ORTHOLOGS
         hits = table.get(locus, [])
-        return _text_result(
-            {
-                "locus": locus,
-                "release": "fake",
-                "total": len(hits),
-                "truncated": False,
-                "homologs": [{"target_locus": h, "type": "x", "gene_tree_id": "f"} for h in hits],
-            }
-        )
+        result = {
+            "locus": locus,
+            "release": "fake",
+            "total": len(hits),
+            "truncated": False,
+            "homologs": [{"target_locus": h, "type": "x", "gene_tree_id": "f"} for h in hits],
+        }
+        target = args.get("target_organism")
+        if target:
+            # Mirror the real filter (#125): keep the target organism's rows,
+            # tagged with it, and report the pre-filter total beside them.
+            kept = [h for h in hits if _FAKE_ORGANISM_OF.get(h[:2]) == target]
+            result.update(
+                target_organism=target,
+                total=len(kept),
+                total_all_organisms=len(hits),
+                homologs=[
+                    {"target_locus": h, "type": "x", "gene_tree_id": "f", "organism": target}
+                    for h in kept
+                ],
+            )
+        return _text_result(result)
     if name == "orthodb_orthologs":
-        return _text_result({"locus": locus, "found": True, "members": []})
+        result = {"locus": locus, "found": True, "member_count": 0, "members": []}
+        if args.get("target_organism"):
+            result.update(target_organism=args["target_organism"], member_count_all_organisms=0)
+        return _text_result(result)
     if name == "ensembl_region_query":
         region, start, end = args["region"], args["start"], args["end"]
         if region not in FAMILY_GENOME:

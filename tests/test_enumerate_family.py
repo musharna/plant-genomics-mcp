@@ -120,7 +120,18 @@ def test_closure_reaches_members_by_paralog_and_by_scan_and_rejects_by_interpro(
     wheat_calls = [c for c in calls if c["args"].get("locus") == "TraesCS1A02G000100"]
     assert [c["args"]["organism"] for c in wheat_calls if "organism" in c["args"]] == [
         "triticum_aestivum"
-    ] * 4  # interpro, orthodb, panther, ensembl — never the seed's organism
+    ] * 5  # interpro, orthodb ×2 (one per target organism), panther, ensembl — never the seed's
+    # Both ortholog tools are asked once per target organism, filtered by the tool.
+    assert sorted(
+        (c["tool"], c["args"]["target_organism"])
+        for c in wheat_calls
+        if "target_organism" in c["args"]
+    ) == [
+        ("gramene_homologs", "oryza_sativa"),
+        ("gramene_homologs", "triticum_aestivum"),
+        ("orthodb_orthologs", "oryza_sativa"),
+        ("orthodb_orthologs", "triticum_aestivum"),
+    ]
 
     # The ortholog-source table keeps both tools' answers side by side, so
     # a disagreement is visible rather than reconciled.
