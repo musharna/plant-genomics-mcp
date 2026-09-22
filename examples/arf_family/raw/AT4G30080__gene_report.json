@@ -5,1959 +5,71 @@
   "organism": "arabidopsis_thaliana",
   "top_n": 10
  },
- "started_at": "2026-09-22T02:45:57Z",
- "elapsed_s": 5.1843157460025395,
+ "started_at": "2026-09-22T07:28:30Z",
+ "elapsed_s": 5.373024398002599,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": null,
-   "result": {
-    "seq_region_name": "4",
-    "canonical_transcript": "AT4G30080.1.",
-    "description": "auxin response factor 16 [Source:NCBI gene (formerly Entrezgene);Acc:829131]",
-    "logic_name": "araport11",
-    "start": 14703065,
-    "source": "araport11",
-    "assembly_name": "TAIR10",
-    "display_name": "ARF16",
-    "strand": -1,
-    "db_type": "core",
-    "end": 14706354,
-    "id": "AT4G30080",
-    "biotype": "protein_coding",
-    "object_type": "Gene",
-    "organism": "arabidopsis_thaliana"
-   },
+   "elapsed_s": 1.0630989400015096,
+   "result": null,
    "error": null
   },
   {
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": null,
-   "result": {
-    "locus_query": "AT4G30080",
-    "primaryAccession": "Q93YR9",
-    "uniProtkbId": "ARFP_ARATH",
-    "entryType": "UniProtKB reviewed (Swiss-Prot)",
-    "reviewed": true,
-    "recommendedName": "Auxin response factor 16",
-    "geneNames": [
-     "ARF16"
-    ],
-    "organism": "Arabidopsis thaliana",
-    "taxonId": 3702,
-    "sequenceLength": 670,
-    "web_url": "https://www.uniprot.org/uniprotkb/Q93YR9",
-    "upstream_version": "2026_03"
-   },
+   "elapsed_s": 0.0011089859981439076,
+   "result": null,
    "error": null
   },
   {
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": null,
-   "result": {
-    "locus": "AT4G30080",
-    "organism": "arabidopsis_thaliana",
-    "count": 10,
-    "xrefs": [
-     {
-      "description": "auxin response factor 16",
-      "display_id": "AT4G30080-TAIR-G",
-      "db_display_name": "NASC Gene ID",
-      "primary_id": "AT4G30080",
-      "synonyms": [],
-      "info_text": "",
-      "info_type": "DIRECT",
-      "dbname": "NASC_GENE_ID",
-      "version": "0"
-     },
-     {
-      "info_type": "DIRECT",
-      "info_text": "",
-      "dbname": "TAIR_LOCUS",
-      "version": "0",
-      "description": "auxin response factor 16",
-      "primary_id": "AT4G30080",
-      "synonyms": [],
-      "display_id": "AT4G30080",
-      "db_display_name": "TAIR"
-     },
-     {
-      "synonyms": [],
-      "primary_id": "ARF16",
-      "display_id": "ARF16",
-      "db_display_name": "TAIR Gene Name",
-      "description": "",
-      "version": "0",
-      "dbname": "TAIR_SYMBOL",
-      "info_type": "DIRECT",
-      "info_text": ""
-     },
-     {
-      "info_text": "Generated via direct",
-      "info_type": "DIRECT",
-      "dbname": "Plant_Reactome_Reaction",
-      "version": "0",
-      "description": "ARF inactivation by AUX/IAA",
-      "display_id": "R-ATH-5608208",
-      "db_display_name": "Plant Reactome Reaction ID",
-      "primary_id": "R-ATH-5608208",
-      "synonyms": []
-     },
-     {
-      "dbname": "Plant_Reactome_Pathway",
-      "info_type": "DIRECT",
-      "info_text": "Generated via direct",
-      "version": "0",
-      "synonyms": [],
-      "primary_id": "R-ATH-5608118",
-      "display_id": "R-ATH-5608118",
-      "db_display_name": "Plant Reactome Pathway ID",
-      "description": "Auxin signalling"
-     },
-     {
-      "info_text": "",
-      "info_type": "DIRECT",
-      "dbname": "ArrayExpress",
-      "version": "0",
-      "description": null,
-      "db_display_name": "Expression Atlas",
-      "display_id": "AT4G30080",
-      "primary_id": "AT4G30080",
-      "synonyms": []
-     },
-     {
-      "description": null,
-      "db_display_name": "KNETMINER_ARA",
-      "display_id": "AT4G30080",
-      "primary_id": "AT4G30080",
-      "synonyms": [],
-      "version": "0",
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "dbname": "KNETMINER_ARA"
-     },
-     {
-      "description": null,
-      "display_id": "ARF16",
-      "db_display_name": "UniProtKB Gene Name",
-      "primary_id": "Q93YR9",
-      "synonyms": [],
-      "version": null,
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "dbname": "Uniprot_gn"
-     },
-     {
-      "description": "auxin response factor 16",
-      "display_id": "ARF16",
-      "db_display_name": "WikiGene",
-      "primary_id": "829131",
-      "synonyms": [],
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "dbname": "WikiGene",
-      "version": "0"
-     },
-     {
-      "version": "0",
-      "dbname": "EntrezGene",
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "display_id": "ARF16",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "primary_id": "829131",
-      "synonyms": [
-       "auxin response factor 16",
-       "F6G3.110",
-       "F6G3_110"
-      ],
-      "description": "auxin response factor 16"
-     }
-    ],
-    "by_db": {
-     "NASC_GENE_ID": [
-      "AT4G30080"
-     ],
-     "TAIR_LOCUS": [
-      "AT4G30080"
-     ],
-     "TAIR_SYMBOL": [
-      "ARF16"
-     ],
-     "Plant_Reactome_Reaction": [
-      "R-ATH-5608208"
-     ],
-     "Plant_Reactome_Pathway": [
-      "R-ATH-5608118"
-     ],
-     "ArrayExpress": [
-      "AT4G30080"
-     ],
-     "KNETMINER_ARA": [
-      "AT4G30080"
-     ],
-     "Uniprot_gn": [
-      "Q93YR9"
-     ],
-     "WikiGene": [
-      "829131"
-     ],
-     "EntrezGene": [
-      "829131"
-     ]
-    }
-   },
+   "elapsed_s": 4.309167478997551,
+   "result": null,
    "error": null
   },
   {
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": null,
-   "result": {
-    "locus": "AT4G30080",
-    "organism": "arabidopsis_thaliana",
-    "kegg_gene_id": "ath:AT4G30080",
-    "pathways": [
-     {
-      "id": "ath04075",
-      "name": "Plant hormone signal transduction - Arabidopsis thaliana (thale cress)",
-      "pathway_class": "Environmental Information Processing; Signal transduction"
-     }
-    ],
-    "errors": []
-   },
+   "elapsed_s": 0.004167333994701039,
+   "result": null,
    "error": null
   },
   {
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": null,
-   "result": {
-    "query": "AT4G30080",
-    "accession": "Q93YR9",
-    "organism": "arabidopsis_thaliana",
-    "partners": [
-     {
-      "string_id": "3702.Q8H174",
-      "accession": "3702.Q8H174",
-      "preferred_name": "IAA31",
-      "score": 0.869,
-      "escore": 0.573,
-      "dscore": 0,
-      "tscore": 0.707,
-      "pscore": 0
-     },
-     {
-      "string_id": "3702.Q01593",
-      "accession": "3702.Q01593",
-      "preferred_name": "ABI3",
-      "score": 0.843,
-      "escore": 0,
-      "dscore": 0,
-      "tscore": 0.843,
-      "pscore": 0
-     },
-     {
-      "string_id": "3702.P33078",
-      "accession": "3702.P33078",
-      "preferred_name": "IAA5",
-      "score": 0.837,
-      "escore": 0.433,
-      "dscore": 0,
-      "tscore": 0.724,
-      "pscore": 0
-     },
-     {
-      "string_id": "3702.Q9FKM7",
-      "accession": "3702.Q9FKM7",
-      "preferred_name": "IAA33",
-      "score": 0.823,
-      "escore": 0.547,
-      "dscore": 0,
-      "tscore": 0.626,
-      "pscore": 0
-     },
-     {
-      "string_id": "3702.Q570C0",
-      "accession": "3702.Q570C0",
-      "preferred_name": "TIR1",
-      "score": 0.804,
-      "escore": 0,
-      "dscore": 0,
-      "tscore": 0.804,
-      "pscore": 0
-     },
-     {
-      "string_id": "3702.P93830",
-      "accession": "3702.P93830",
-      "preferred_name": "IAA17",
-      "score": 0.798,
-      "escore": 0,
-      "dscore": 0,
-      "tscore": 0.798,
-      "pscore": 0
-     },
-     {
-      "string_id": "3702.Q96247",
-      "accession": "3702.Q96247",
-      "preferred_name": "AUX1",
-      "score": 0.794,
-      "escore": 0,
-      "dscore": 0,
-      "tscore": 0.794,
-      "pscore": 0
-     },
-     {
-      "string_id": "3702.Q9LW29",
-      "accession": "3702.Q9LW29",
-      "preferred_name": "AFB2",
-      "score": 0.793,
-      "escore": 0,
-      "dscore": 0,
-      "tscore": 0.784,
-      "pscore": 0
-     },
-     {
-      "string_id": "3702.Q8H1D2",
-      "accession": "3702.Q8H1D2",
-      "preferred_name": "WOX5",
-      "score": 0.792,
-      "escore": 0,
-      "dscore": 0,
-      "tscore": 0.792,
-      "pscore": 0
-     },
-     {
-      "string_id": "3702.Q38830",
-      "accession": "3702.Q38830",
-      "preferred_name": "IAA12",
-      "score": 0.754,
-      "escore": 0,
-      "dscore": 0,
-      "tscore": 0.754,
-      "pscore": 0
-     }
-    ]
-   },
+   "elapsed_s": 0.30431689999386435,
+   "result": null,
    "error": null
   },
   {
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": null,
-   "result": {
-    "locus": "AT4G30080",
-    "organism": "arabidopsis_thaliana",
-    "query": "AT4G30080",
-    "hitCount": 61,
-    "returned": 10,
-    "abstracts_included": true,
-    "hits": [
-     {
-      "id": "41626343",
-      "source": "MED",
-      "pmid": "41626343",
-      "pmcid": "PMC12854140",
-      "doi": "10.3389/fpls.2025.1746472",
-      "title": "Auxin-mediated seed germination and crosstalk with other phytohormones.",
-      "authorString": "Ament A, Kucha\u0159ov\u00e1 A, Vladeji\u0107 J, B\u011bl\u00ed\u010dek J, Brunoni F, Nov\u00e1k O.",
-      "journalTitle": null,
-      "pubYear": "2025",
-      "firstPublicationDate": "2026-01-15",
-      "citedByCount": 0,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
-      "abstractText": "Seed germination is a critical and highly regulated process that transitions a dormant seed to an actively growing seedling. This process plays a vital physiological role in regulating seedling establishment, plant growth, and development, while ecologically it shapes species distribution patterns, drives plant population dynamics, and influences ecosystem productivity. Seed germination is tightly controlled by various environmental and intrinsic factors, with phytohormones acting as primary mediators. Auxins, mainly indole-3-acetic acid (IAA), are involved in many aspects of plant growth and development. Accumulating evidence suggests that IAA modulates the balance between dormancy and germination similarly to abscisic acid (ABA) and gibberellins (GAs). In this mini-review, we summarize our current knowledge on the molecular mechanisms underlying the modulatory roles of IAA during seed germination. We specifically examine the crosstalk between IAA and other key phytohormones (ABA and GAs) that shape germination outcomes. Clarifying these interactions will enhance our understanding of the dormancy-germination switch and may offer practical methods to control germination timing in agriculture.",
-      "web_url": "https://europepmc.org/article/PMC/PMC12854140"
-     },
-     {
-      "id": "42698716",
-      "source": "MED",
-      "pmid": "42698716",
-      "pmcid": "PMC13541722",
-      "doi": "10.3389/fpls.2026.1942478",
-      "title": "Integrating predictive models and GWAS to identify candidate loci and genes for agronomic traits in rice.",
-      "authorString": "Zhou Q, Wang F, Yang Y, Dong L, Cao Y, Li S, Zhang G.",
-      "journalTitle": null,
-      "pubYear": "2026",
-      "firstPublicationDate": "2026-08-21",
-      "citedByCount": 0,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
-      "abstractText": "Rice is a staple crop whose improvement relies on breeding advances; precision agriculture demands predictive loci/genes for agronomic traits to innovate rice production. To cut experimental costs and boost efficiency, this study built predictive models using seedling leaf metabolomes to forecast rice agronomic traits and decode trait correlations. We integrated 11 agronomic traits and 840 metabolites from 524 rice germplasms, plus 17 agronomic traits of 3,000 varieties. Five algorithms (RF, LightGBM, SWR, LASSO, CART) were combined to build multi-model prediction systems, offsetting defects of single models for accurate complex trait prediction. GWAS on predicted phenotypes detected nine genetic hotspots. Results showed LASSO and CART had weak generalization, while LightGBM, RF and SWR delivered trait-specific predictive performance. Seven candidate genes within hotspots were validated via variation annotation, haplotype and tissue expression analyses. Distinct from laborious, environment-prone traditional phenotyping, these models realize rapid, stable high-throughput trait prediction via early metabolic markers. The uncovered loci and genes lay groundwork for dissecting molecular regulatory networks linking rice agronomy and metabolism.",
-      "web_url": "https://europepmc.org/article/PMC/PMC13541722"
-     },
-     {
-      "id": "41155342",
-      "source": "MED",
-      "pmid": "41155342",
-      "pmcid": "PMC12563625",
-      "doi": "10.3390/ijms262010042",
-      "title": "&lt;i&gt;CpARF6&lt;/i&gt; Controls Lobed Leaf Formation in Zucchini.",
-      "authorString": "Jiang S, Shi L, Fei S, Zhang M, Zhou Y, Hu Z, Yang J, Zhang M, Lyu X.",
-      "journalTitle": null,
-      "pubYear": "2025",
-      "firstPublicationDate": "2025-10-15",
-      "citedByCount": 0,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
-      "abstractText": "Lobed leaves play a critical role in enhancing the productivity of sprawling crops like zucchini by improving light capture and boosting photosynthesis. However, the genetic basis in zucchini remains largely unknown. Here, we developed an F<sub>2</sub> population from a cross between the entire-leaf cultivar 'LR' and the deeply lobed cultivar 'Xi'. Genetic analysis showed that the non-lobed trait is dominant, with the F<sub>2</sub> segregation ratios (~9 entire:6 shallowly lobed:1 deeply lobed) indicating digenic inheritance. Using bulked segregant analysis sequencing (BSA-seq) and kompetitive allele-specific PCR (KASP) marker analysis, we identified a major effect locus at a 79.8 kb interval on chromosome 10. Within in this interval, gene expression profiling and annotation indicated <i>CpARF6</i>, encoding an auxin response factor, to be the prime candidate gene. Sequencing analysis revealed five nonsynonymous mutations in this gene, including a critical serine-to-leucine substitution at position 335 within the auxin response domain, which is likely a loss function mutation. Our findings establish <i>CpARF6</i> as a critical regulator of lobed leaf formation in zucchini, providing valuable insights for both leaf development studies and zucchini breeding.",
-      "web_url": "https://europepmc.org/article/PMC/PMC12563625"
-     },
-     {
-      "id": "38852059",
-      "source": "MED",
-      "pmid": "38852059",
-      "pmcid": "PMC11536455",
-      "doi": "10.1111/pbi.14401",
-      "title": "The miR7125-MdARF1 module enhances the resistance of apple to Colletotrichum gloeosporioides by promoting lignin synthesis in response to salicylic acid signalling.",
-      "authorString": "Liu X, Dai H, Zhang F, Wang J, Shi J, Chen J, He P, Wang F, Ma Y.",
-      "journalTitle": null,
-      "pubYear": "2024",
-      "firstPublicationDate": "2024-06-09",
-      "citedByCount": 24,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
-      "abstractText": "Apple is an important cash crop in China, and it is susceptible to fungal infections that have deleterious effects on its yield. Apple bitter rot caused by Colletorichum gloeosporioides is one of the most severe fungal diseases of apple. Salicylic acid (SA) is a key signalling molecule in the plant disease resistance signalling pathways. Lignin synthesis also plays a key role in conferring disease resistance. However, few studies have clarified the relationship between the SA disease resistance signalling pathway and the lignin disease resistance pathway in apple. MdMYB46 has previously been shown to promote lignin accumulation in apple and enhance salt and osmotic stress tolerance. Here, we investigated the relationship between MdMYB46 and biological stress; we found that MdMYB46 overexpression enhances the resistance of apple to C. gloeosporioides. We also identified MdARF1, a transcription factor upstream of MdMYB46, via yeast library screening and determined that MdARF1 was regulated by miR7125 through psRNATarget prediction. This regulatory relationship was confirmed through LUC and qRT-PCR experiments, demonstrating that miR7125 negatively regulates MdARF1. Analysis of the miR7125 promoter revealed that miR7125 responds to SA signals. The accumulation of SA level will result in the decrease of miR7125 expression level. In sum, the results of our study provide novel insights into the molecular mechanisms underlying the resistance of apple to C. gloeosporioides and reveal a new pathway that enhances lignin accumulation in apple in response to SA signals. These findings provide valuable information for future studies aimed at breeding apple for disease resistance.",
-      "web_url": "https://europepmc.org/article/PMC/PMC11536455"
-     },
-     {
-      "id": "40869083",
-      "source": "MED",
-      "pmid": "40869083",
-      "pmcid": "PMC12386824",
-      "doi": "10.3390/ijms26167763",
-      "title": "Regulatory Mechanism of the GmMYB14 Transcription Factor on Auxin-Related Proteins in Soybean.",
-      "authorString": "Peng L, Liu Y, Yang H, Guo W, Hao Q, Chen S, Yuan S, Zhang C, Yang Z, Han B, Huang Y, Shan Z, Chen L, Chen H.",
-      "journalTitle": null,
-      "pubYear": "2025",
-      "firstPublicationDate": "2025-08-11",
-      "citedByCount": 1,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
-      "abstractText": "In a previous study, <i>GmMYB14</i> overexpressing (<i>GmMYB14-OX</i>) transgenic soybean plants displayed a semi-dwarfism and compact phenotype, which was regulated by the brassinosteroid (BR) pathway. However, the phenotype of <i>GmMYB14-OX</i> plants could be partly rescued after spraying them with exogenous BR. This indicates that other hormones, in addition to BR, also play a role in regulating the architecture of <i>GmMYB14-OX</i> plants. We observed a significant decrease in the content of endogenous indole-3-acetic acid (IAA) in transgenic soybean lines (OX9 and OX12) compared to wild type (WT) plants. The plant height, leaf area, leaf petiole length, and leaf petiole angle of <i>GmMYB14-OX</i> plants could also be partly rescued after applying exogenous IAA for two weeks. Transcriptome sequencing analysis revealed that the expression of many genes within the Aux/IAA gene family underwent alterations in the <i>GmMYB14-OX</i> transgenic soybean plants. Among them, <i>Glyma.02G000500</i> (<i>GmIAA1</i>) showed the highest expression in <i>GmMYB14-OX</i> plants. Furthermore, the results of electrophoretic mobility shift assay and dual-luciferase reporter indicate that GmMYB14 protein could bind to the promoter of <i>GmIAA1</i>. In summary, a decrease in endogenous IAA content may be one of the factors contributing to the compact and dwarfed architecture of <i>GmMYB14-OX</i> plants. GmMYB14 also acts as a transcriptional activator of <i>GmIAA1</i> to potentially block IAA effects. Our findings provide a theoretical basis for further investigation of the regulatory mechanism of GmMYB14 on soybean plant architecture.",
-      "web_url": "https://europepmc.org/article/PMC/PMC12386824"
-     },
-     {
-      "id": "41555233",
-      "source": "MED",
-      "pmid": "41555233",
-      "pmcid": "PMC12903673",
-      "doi": "10.1186/s12870-025-08030-3",
-      "title": "Identification of the Auxin Response Factor gene family in kernel consumption apricot and association analysis of related genes regulating fruit size in distant hybridization.",
-      "authorString": "Han C, Zhang W, Chen S, Zhang Y, Guo H, Yu L, Liu L, Liu P, Wang L, Zhao H.",
-      "journalTitle": null,
-      "pubYear": "2026",
-      "firstPublicationDate": "2026-01-20",
-      "citedByCount": 1,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
-      "abstractText": "<h4>Background</h4>Distant hybridization is pivotal for fruit tree germplasm enhancement. Although successful hybridization has been achieved between kernel consumption apricot and almond, the hybrid progeny exhibits a consistent fruit size diminution compared to the maternal parent. Auxin Response Factor (ARF) is a key regulator of fruit size. However, the role of ARF family in regulating fruit size in kernel consumption apricot\u2009\u00d7\u2009almond distant hybridization remains uncharaterized.<h4>Results</h4>A total of 14 PaARF genes were identified in the kernel consumption apricot genome ('Longwangmao') and phylogenetically classified into five groups. All encoded conserved B3 and Auxin_resp domains, with seven containing an AUX_IAA domain. All PaARF genes exhibit a dispersed distribution pattern across seven chromosomes, and their promoters were enriched with cis-elements for light, hormone, and stress responses. Collinearity analysis identified PaARF genes show high functional conservation and lack recent duplications, with interspecific collinearity identifying only nine localized orthologous pairs in Arabidopsis. RNA-seq and RT-qPCR revealed that PaARF4, PaARF11B, PaARF16, and PaARF17 were differentially expressed between large and small hybrid fruits. Tissue-specific expression analysis across different apricot tissues revealed that PaARF4, PaARF11B,and PaARF17 were highly expressed in fruit, peaking at 55, 45, and 75\u00a0days after flowering, respectively. Weighted gene co-expression network analysis (WGCNA) revealed direct interactions of PaARF4 with 12 genes in the turquoise module, while PaARF11B and PaARF17 connected to 3 and 19 genes, respectively. A combinatorial bioinformatics analysis utilizing PlantRegMap, PlantPAN, and MEME further identified a candidate transcription factor (WRKY7) for PaARF4 and predicted eight downstream target genes along with their corresponding binding motifs for three PaARF\u00a0genes.<h4>Conclusions</h4>Our results suggest that PaARF4, PaARF11B, and PaARF17 are key regulators of fruit growth and development in kernel consumption apricot\u2009\u00d7\u2009almond hybrids, with PaARF11B is a particularly promising candidate gene for the regulation of fruit size. Further, the identified candidate transcription factors and downstream target genes provide a foundational regulatory network for understanding auxin-mediated fruit development. This work provides valuable genetic resources and candidate genes for future research on fruit size, facilitating the genetic improvement of fruit trees through distant hybridization.",
-      "web_url": "https://europepmc.org/article/PMC/PMC12903673"
-     },
-     {
-      "id": "40642330",
-      "source": "MED",
-      "pmid": "40642330",
-      "pmcid": "PMC12244130",
-      "doi": "10.7717/peerj.19599",
-      "title": "Predicting and testing a gene network regulating seed germination in &lt;i&gt;Arabidopsis&lt;/i&gt;.",
-      "authorString": "Yang M, Wang Y.",
-      "journalTitle": null,
-      "pubYear": "2025",
-      "firstPublicationDate": "2025-07-07",
-      "citedByCount": 0,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
-      "abstractText": "Maternal auxin signaling inhibits seed germination in <i>Arabidopsis</i>, but little is known about the gene network that mediates the inhibition of seed germination by auxin. Based on publicly available data, we first determined the expression patterns of <i>AUXIN SIGNALING F-BOX</i> (<i>AFB</i>) genes in the funiculus (FUN)-chalazal seed coat (CSC) continuum. We found that <i>TIR1</i>, <i>AFB1</i>, and <i>AFB4</i> exhibited a down-expression gradient and <i>AFB2</i>, <i>AFB3</i>, and <i>AFB5</i> an up-expression gradient from FUN to CSC, and members in each of the two <i>AFB</i> groups were linearly correlated in expression in FUN, CSC, and the distal seed coat (DSC). We then searched for auxin-regulated genes that exhibited one of the two expression gradients. We found 118 such genes that were assigned into four groups based on their response mode to auxin and expression gradient direction. The four groups were further broken down into 12 subgroups based on the linear correlation coefficient values. Only three of the 12 subgroups, including a total of 30 genes with 21 of them being known or highly likely to function in the seed germination process. To explore whether additional genes of the remaining nine play roles in seed germination, we tested mutants of five of them in a germination assay and found all of them exhibited either delayed or hastened germination. The experimental results support the validity of our approach for predicting the involvement of these genes in seed germination. Based on publicly available data and data from this investigation, we constructed a gene network, which should provide a valuable framework and new clues for future studies of the molecular mechanism controlling seed germination.",
-      "web_url": "https://europepmc.org/article/PMC/PMC12244130"
-     },
-     {
-      "id": "38589963",
-      "source": "MED",
-      "pmid": "38589963",
-      "pmcid": "PMC11003162",
-      "doi": "10.1186/s43897-024-00090-7",
-      "title": "Large-scale analysis of the ARF and Aux/IAA gene families in 406 horticultural and other plants.",
-      "authorString": "Feng S, Li N, Chen H, Liu Z, Li C, Zhou R, Zhang Y, Cao R, Ma X, Song X.",
-      "journalTitle": null,
-      "pubYear": "2024",
-      "firstPublicationDate": "2024-04-09",
-      "citedByCount": 22,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
-      "abstractText": "The auxin response factor (ARF) and auxin/indole-3-acetic acid (Aux/IAA) family of genes are central components of the auxin signaling pathway and play essential roles in plant growth and development. Their large-scale analysis and evolutionary trajectory of origin are currently not known. Here, we identified the corresponding ARF and Aux/IAA family members and performed a large-scale analysis by scanning 406 plant genomes. The results showed that the ARF and Aux/IAA gene families originated from charophytes. The ARF family sequences were more conserved than the Aux/IAA family sequences. Dispersed duplications were the common expansion mode of ARF and Aux/IAA families in bryophytes, ferns, and gymnosperms; however, whole-genome duplication was the common expansion mode of the ARF and Aux/IAA families in basal angiosperms, magnoliids, monocots, and dicots. Expression and regulatory network analyses revealed that the Arabidopsis thaliana ARF and Aux/IAA families responded to multiple hormone, biotic, and abiotic stresses. The APETALA2 and serum response factor-transcription factor gene families were commonly enriched in the upstream and downstream genes of the ARF and Aux/IAA gene families. Our study provides a comprehensive overview of the evolutionary trajectories, structural functions, expansion mechanisms, expression patterns, and regulatory networks of these two gene families.",
-      "web_url": "https://europepmc.org/article/PMC/PMC11003162"
-     },
-     {
-      "id": "41272468",
-      "source": "MED",
-      "pmid": "41272468",
-      "pmcid": "PMC12639677",
-      "doi": "10.1186/s12870-025-07683-4",
-      "title": "Dissecting the role of strigolactone perception in barley tolerance to cadmium or zinc stress based on the receptor mutant analysis.",
-      "authorString": "Buchcik W, Sitko K, Marzec M.",
-      "journalTitle": null,
-      "pubYear": "2025",
-      "firstPublicationDate": "2025-11-21",
-      "citedByCount": 3,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
-      "abstractText": "Strigolactones (SLs) are plant hormones involved in development and environmental responses, but their role in heavy metal stress tolerance has not been fully characterized. We examined how SL perception affects barley (Hordeum vulgare) responses to cadmium (Cd) or zinc (Zn) toxicity by comparing wild-type (WT) plants and the SL-insensitive hvd14.d mutant. Phenotypic, ionomic, and transcriptomic analyses revealed that hvd14.d is more sensitive to both metals, exhibiting greater growth inhibition, increased Cd accumulation, altered Zn partitioning, and reduced photosynthetic performance. Elevated oxidative stress markers and weaker antioxidant responses further reflected an impaired redox balance in the mutant. Transcriptomic profiling revealed that SL signaling influences genes controlling detoxification, metal transport, and reactive oxygen species (ROS) homeostasis. Genes associated with ABA signaling were less responsive in hvd14.d, suggesting that SL perception contributes to the coordination of ABA-related pathways during metal stress. Transcription factor (TF) analyses identified distinct but overlapping groups of SL-dependent TFs under Cd and Zn exposure, including shared regulators. To date, most studies have focused on exogenous application of synthetic SLs; this work is the first to examine the role of endogenous SL perception in barley responses to heavy metal stress. Our findings demonstrate that SL perception influences both transcriptional programs and physiological processes essential for metal tolerance and redox regulation.",
-      "web_url": "https://europepmc.org/article/PMC/PMC12639677"
-     },
-     {
-      "id": "40983938",
-      "source": "MED",
-      "pmid": "40983938",
-      "pmcid": "PMC12455771",
-      "doi": "10.1186/s12870-025-07394-w",
-      "title": "Plasma-treated water applied as a foliar spray promotes root growth in barley.",
-      "authorString": "Kr\u00fcger A, Schl\u00f6mer S, Simm S, Bold J, St\u00f6hr C.",
-      "journalTitle": null,
-      "pubYear": "2025",
-      "firstPublicationDate": "2025-09-22",
-      "citedByCount": 1,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
-      "abstractText": "BACKGROUND: Plasma-treated water (PTW) contains reactive oxygen and nitrogen species and can therefore induce mild oxidative stress in plants. In a previous study, PTW treatment of leaves resulted in both short- and long-term systemic signalling effects. In this study, we analysed the adaptive response of the barley leaf and root transcriptome triggered by PTW treatment under short- and long-term conditions to further understand the regulatory mechanisms and the mode of action of PTW. RESULTS: The application of PTW to the leaves resulted in stronger long-term transcriptional changes in the roots. PTW treatment significantly increased root biomass, while it had no effect on shoot growth. In roots, the altered gene expression indicated that the signalling of auxin, ethylene, brassinosteroids and gibberellin was stimulated, while cytokinin signalling was impeded. Many genes encoding cell wall modifying enzymes, structural proteins and receptor kinases were upregulated in the roots in long-term response to PTW. In addition, foliar treatment with PTW led to changes in root architecture: root length, surface area, diameter and number of forks increased in the long term, as did the content of soluble phenolic compounds. CONCLUSIONS: All these changes indicate that PTW treatment affected root growth possibly by promoting cell elongation. Thus, PTW could be a suitable stimulant to improve the root growth of plants.",
-      "web_url": "https://europepmc.org/article/PMC/PMC12455771"
-     }
-    ]
-   },
+   "elapsed_s": 0.0019882150008925237,
+   "result": null,
    "error": null
   },
   {
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": null,
-   "result": {
-    "uniprot_accession": "Q93YR9",
-    "numberOfHits": 33,
-    "returned": 33,
-    "annotations": [
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "acts_upstream_of_or_within",
-      "goId": "GO:0007389",
-      "goName": "pattern specification process",
-      "goAspect": "biological_process",
-      "goEvidence": "IDA",
-      "evidenceCode": "ECO:0000314",
-      "reference": "PMID:16006581",
-      "assignedBy": "TAIR",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20051107",
-      "withFrom": null
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "acts_upstream_of_or_within",
-      "goId": "GO:0009733",
-      "goName": "response to auxin",
-      "goAspect": "biological_process",
-      "goEvidence": "IEP",
-      "evidenceCode": "ECO:0000270",
-      "reference": "PMID:16006581",
-      "assignedBy": "TAIR",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20051107",
-      "withFrom": null
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "acts_upstream_of_or_within",
-      "goId": "GO:0048829",
-      "goName": "root cap development",
-      "goAspect": "biological_process",
-      "goEvidence": "IMP",
-      "evidenceCode": "ECO:0000315",
-      "reference": "PMID:16006581",
-      "assignedBy": "TAIR",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20060612",
-      "withFrom": null
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "acts_upstream_of_or_within",
-      "goId": "GO:0048829",
-      "goName": "root cap development",
-      "goAspect": "biological_process",
-      "goEvidence": "IGI",
-      "evidenceCode": "ECO:0000316",
-      "reference": "PMID:16006581",
-      "assignedBy": "TAIR",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20110325",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G28350"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "acts_upstream_of_or_within",
-      "goId": "GO:0051301",
-      "goName": "cell division",
-      "goAspect": "biological_process",
-      "goEvidence": "IGI",
-      "evidenceCode": "ECO:0000316",
-      "reference": "PMID:16006581",
-      "assignedBy": "TAIR",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20110325",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G28350"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "enables",
-      "goId": "GO:0000976",
-      "goName": "transcription cis-regulatory region binding",
-      "goAspect": "molecular_function",
-      "goEvidence": "IBA",
-      "evidenceCode": "ECO:0000318",
-      "reference": "GO_REF:0000033",
-      "assignedBy": "GO_Central",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20250130",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19220"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19850"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G34310"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G34390"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G77850"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G33860"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G46530"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT3G61830"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT4G23980"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G37020"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G60450"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN000774836"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "enables",
-      "goId": "GO:0003677",
-      "goName": "DNA binding",
-      "goAspect": "molecular_function",
-      "goEvidence": "IEA",
-      "evidenceCode": "ECO:0000256",
-      "reference": "GO_REF:0000002",
-      "assignedBy": "InterPro",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR003340"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "enables",
-      "goId": "GO:0003700",
-      "goName": "DNA-binding transcription factor activity",
-      "goAspect": "molecular_function",
-      "goEvidence": "ISS",
-      "evidenceCode": "ECO:0000250",
-      "reference": "PMID:11118137",
-      "assignedBy": "TAIR",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20030606",
-      "withFrom": null
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "enables",
-      "goId": "GO:0005515",
-      "goName": "protein binding",
-      "goAspect": "molecular_function",
-      "goEvidence": "IPI",
-      "evidenceCode": "ECO:0000353",
-      "reference": "PMID:21734647",
-      "assignedBy": "IntAct",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260725",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "P33078"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "enables",
-      "goId": "GO:0005515",
-      "goName": "protein binding",
-      "goAspect": "molecular_function",
-      "goEvidence": "IPI",
-      "evidenceCode": "ECO:0000353",
-      "reference": "PMID:21734647",
-      "assignedBy": "IntAct",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260725",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "Q9FKM7"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "enables",
-      "goId": "GO:0005515",
-      "goName": "protein binding",
-      "goAspect": "molecular_function",
-      "goEvidence": "IPI",
-      "evidenceCode": "ECO:0000353",
-      "reference": "PMID:21798944",
-      "assignedBy": "IntAct",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260725",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "Q8H174"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "enables",
-      "goId": "GO:0005515",
-      "goName": "protein binding",
-      "goAspect": "molecular_function",
-      "goEvidence": "IPI",
-      "evidenceCode": "ECO:0000353",
-      "reference": "PMID:28650476",
-      "assignedBy": "IntAct",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260725",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "Q8H174"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "enables",
-      "goId": "GO:0005515",
-      "goName": "protein binding",
-      "goAspect": "molecular_function",
-      "goEvidence": "IPI",
-      "evidenceCode": "ECO:0000353",
-      "reference": "PMID:28650476",
-      "assignedBy": "IntAct",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260725",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "Q9FKM7"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "enables",
-      "goId": "GO:0005515",
-      "goName": "protein binding",
-      "goAspect": "molecular_function",
-      "goEvidence": "IPI",
-      "evidenceCode": "ECO:0000353",
-      "reference": "PMID:32612234",
-      "assignedBy": "IntAct",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260725",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "P33078"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "enables",
-      "goId": "GO:0005515",
-      "goName": "protein binding",
-      "goAspect": "molecular_function",
-      "goEvidence": "IPI",
-      "evidenceCode": "ECO:0000353",
-      "reference": "PMID:32612234",
-      "assignedBy": "IntAct",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260725",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "Q8H174"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "enables",
-      "goId": "GO:0005515",
-      "goName": "protein binding",
-      "goAspect": "molecular_function",
-      "goEvidence": "IPI",
-      "evidenceCode": "ECO:0000353",
-      "reference": "PMID:32612234",
-      "assignedBy": "IntAct",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260725",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "Q9FKM7"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "enables",
-      "goId": "GO:0005515",
-      "goName": "protein binding",
-      "goAspect": "molecular_function",
-      "goEvidence": "IPI",
-      "evidenceCode": "ECO:0000353",
-      "reference": "PMID:32612234",
-      "assignedBy": "IntAct",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260725",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "Q9FX36"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "enables",
-      "goId": "GO:0005515",
-      "goName": "protein binding",
-      "goAspect": "molecular_function",
-      "goEvidence": "IPI",
-      "evidenceCode": "ECO:0000353",
-      "reference": "PMID:32612234",
-      "assignedBy": "IntAct",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260725",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "Q9MAI5"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "enables",
-      "goId": "GO:0035198",
-      "goName": "miRNA binding",
-      "goAspect": "molecular_function",
-      "goEvidence": "ISS",
-      "evidenceCode": "ECO:0000250",
-      "reference": "PMID:15829600",
-      "assignedBy": "TAIR",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20061004",
-      "withFrom": null
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "involved_in",
-      "goId": "GO:0006355",
-      "goName": "regulation of DNA-templated transcription",
-      "goAspect": "biological_process",
-      "goEvidence": "IEA",
-      "evidenceCode": "ECO:0000256",
-      "reference": "GO_REF:0000002",
-      "assignedBy": "InterPro",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "involved_in",
-      "goId": "GO:0006355",
-      "goName": "regulation of DNA-templated transcription",
-      "goAspect": "biological_process",
-      "goEvidence": "IBA",
-      "evidenceCode": "ECO:0000318",
-      "reference": "GO_REF:0000033",
-      "assignedBy": "GO_Central",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20250130",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19850"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G59750"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G20730"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G62000"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN000774836"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "involved_in",
-      "goId": "GO:0007389",
-      "goName": "pattern specification process",
-      "goAspect": "biological_process",
-      "goEvidence": "IBA",
-      "evidenceCode": "ECO:0000318",
-      "reference": "GO_REF:0000033",
-      "assignedBy": "GO_Central",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20250130",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G28350"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT4G30080"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN002046414"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "involved_in",
-      "goId": "GO:0007389",
-      "goName": "pattern specification process",
-      "goAspect": "biological_process",
-      "goEvidence": "IEA",
-      "evidenceCode": "ECO:0000256",
-      "reference": "GO_REF:0000117",
-      "assignedBy": "UniProt",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "ARBA",
-          "id": "ARBA00027400"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "involved_in",
-      "goId": "GO:0009725",
-      "goName": "response to hormone",
-      "goAspect": "biological_process",
-      "goEvidence": "IEA",
-      "evidenceCode": "ECO:0000256",
-      "reference": "GO_REF:0000002",
-      "assignedBy": "InterPro",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "involved_in",
-      "goId": "GO:0009733",
-      "goName": "response to auxin",
-      "goAspect": "biological_process",
-      "goEvidence": "IBA",
-      "evidenceCode": "ECO:0000318",
-      "reference": "GO_REF:0000033",
-      "assignedBy": "GO_Central",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20250130",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G28350"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT4G30080"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN002046414"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "involved_in",
-      "goId": "GO:0009733",
-      "goName": "response to auxin",
-      "goAspect": "biological_process",
-      "goEvidence": "IEA",
-      "evidenceCode": "ECO:0000256",
-      "reference": "GO_REF:0000117",
-      "assignedBy": "UniProt",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "ARBA",
-          "id": "ARBA00028751"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "involved_in",
-      "goId": "GO:0048829",
-      "goName": "root cap development",
-      "goAspect": "biological_process",
-      "goEvidence": "IBA",
-      "evidenceCode": "ECO:0000318",
-      "reference": "GO_REF:0000033",
-      "assignedBy": "GO_Central",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20250130",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G28350"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT4G30080"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN002046414"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "involved_in",
-      "goId": "GO:0048829",
-      "goName": "root cap development",
-      "goAspect": "biological_process",
-      "goEvidence": "IEA",
-      "evidenceCode": "ECO:0000256",
-      "reference": "GO_REF:0000117",
-      "assignedBy": "UniProt",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "ARBA",
-          "id": "ARBA00090561"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "involved_in",
-      "goId": "GO:0051301",
-      "goName": "cell division",
-      "goAspect": "biological_process",
-      "goEvidence": "IEA",
-      "evidenceCode": "ECO:0000256",
-      "reference": "GO_REF:0000117",
-      "assignedBy": "UniProt",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "ARBA",
-          "id": "ARBA00027793"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "is_active_in",
-      "goId": "GO:0005634",
-      "goName": "nucleus",
-      "goAspect": "cellular_component",
-      "goEvidence": "IBA",
-      "evidenceCode": "ECO:0000318",
-      "reference": "GO_REF:0000033",
-      "assignedBy": "GO_Central",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260529",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19220"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G30330"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G59750"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G33860"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT4G30080"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G20730"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G62000"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN000774836"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "K4DF01"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "Q2LAJ3"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "located_in",
-      "goId": "GO:0005634",
-      "goName": "nucleus",
-      "goAspect": "cellular_component",
-      "goEvidence": "IEA",
-      "evidenceCode": "ECO:0000501",
-      "reference": "GO_REF:0000120",
-      "assignedBy": "UniProt",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB-SubCell",
-          "id": "SL-0191"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "located_in",
-      "goId": "GO:0005634",
-      "goName": "nucleus",
-      "goAspect": "cellular_component",
-      "goEvidence": "ISM",
-      "evidenceCode": "ECO:0000255",
-      "reference": "GO_REF:0000122",
-      "assignedBy": "TAIR",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20180831",
-      "withFrom": null
-     },
-     {
-      "geneProductId": "UniProtKB:Q93YR9",
-      "symbol": "ARF16",
-      "qualifier": "located_in",
-      "goId": "GO:0005634",
-      "goName": "nucleus",
-      "goAspect": "cellular_component",
-      "goEvidence": "IDA",
-      "evidenceCode": "ECO:0000314",
-      "reference": "PMID:16006581",
-      "assignedBy": "TAIR",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20051107",
-      "withFrom": null
-     }
-    ],
-    "by_aspect": {
-     "biological_process": [
-      {
-       "goId": "GO:0007389",
-       "goName": "pattern specification process"
-      },
-      {
-       "goId": "GO:0009733",
-       "goName": "response to auxin"
-      },
-      {
-       "goId": "GO:0048829",
-       "goName": "root cap development"
-      },
-      {
-       "goId": "GO:0051301",
-       "goName": "cell division"
-      },
-      {
-       "goId": "GO:0006355",
-       "goName": "regulation of DNA-templated transcription"
-      },
-      {
-       "goId": "GO:0009725",
-       "goName": "response to hormone"
-      }
-     ],
-     "molecular_function": [
-      {
-       "goId": "GO:0000976",
-       "goName": "transcription cis-regulatory region binding"
-      },
-      {
-       "goId": "GO:0003677",
-       "goName": "DNA binding"
-      },
-      {
-       "goId": "GO:0003700",
-       "goName": "DNA-binding transcription factor activity"
-      },
-      {
-       "goId": "GO:0005515",
-       "goName": "protein binding"
-      },
-      {
-       "goId": "GO:0035198",
-       "goName": "miRNA binding"
-      }
-     ],
-     "cellular_component": [
-      {
-       "goId": "GO:0005634",
-       "goName": "nucleus"
-      }
-     ]
-    }
-   },
+   "elapsed_s": 0.0005886099970666692,
+   "result": null,
    "error": null
   },
   {
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": null,
-   "result": {
-    "accession": "Q93YR9",
-    "found": true,
-    "domain_count": 16,
-    "truncated": false,
-    "domains": [
-     {
-      "accession": "cd10017",
-      "name": "Plant-specific B3-DNA binding domain",
-      "type": "domain",
-      "source_database": "cdd",
-      "interpro": "IPR003340",
-      "go_terms": null,
-      "locations": [
-       {
-        "start": 118,
-        "end": 220
-       }
-      ]
-     },
-     {
-      "accession": "G3DSA:2.30.30.1040",
-      "name": null,
-      "type": "homologous_superfamily",
-      "source_database": "cathgene3d",
-      "interpro": null,
-      "go_terms": null,
-      "locations": [
-       {
-        "start": 317,
-        "end": 389
-       }
-      ]
-     },
-     {
-      "accession": "G3DSA:2.40.330.10",
-      "name": "DNA-binding pseudobarrel domain",
-      "type": "homologous_superfamily",
-      "source_database": "cathgene3d",
-      "interpro": "IPR015300",
-      "go_terms": null,
-      "locations": [
-       {
-        "start": 118,
-        "end": 222
-       }
-      ]
-     },
-     {
-      "accession": "G3DSA:3.10.20.90",
-      "name": "Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1",
-      "type": "homologous_superfamily",
-      "source_database": "cathgene3d",
-      "interpro": null,
-      "go_terms": null,
-      "locations": [
-       {
-        "start": 582,
-        "end": 668
-       }
-      ]
-     },
-     {
-      "accession": "IPR003340",
-      "name": "B3 DNA binding domain",
-      "type": "domain",
-      "source_database": "interpro",
-      "interpro": null,
-      "go_terms": [
-       {
-        "identifier": "GO:0003677",
-        "name": "DNA binding",
-        "category": {
-         "code": "F",
-         "name": "molecular_function"
-        }
-       }
-      ],
-      "locations": [
-       {
-        "start": 118,
-        "end": 222
-       }
-      ]
-     },
-     {
-      "accession": "IPR010525",
-      "name": "Auxin response factor domain",
-      "type": "domain",
-      "source_database": "interpro",
-      "interpro": null,
-      "go_terms": [
-       {
-        "identifier": "GO:0003677",
-        "name": "DNA binding",
-        "category": {
-         "code": "F",
-         "name": "molecular_function"
-        }
-       },
-       {
-        "identifier": "GO:0006355",
-        "name": "regulation of DNA-templated transcription",
-        "category": {
-         "code": "P",
-         "name": "biological_process"
-        }
-       },
-       {
-        "identifier": "GO:0009725",
-        "name": "response to hormone",
-        "category": {
-         "code": "P",
-         "name": "biological_process"
-        }
-       },
-       {
-        "identifier": "GO:0005634",
-        "name": "nucleus",
-        "category": {
-         "code": "C",
-         "name": "cellular_component"
-        }
-       }
-      ],
-      "locations": [
-       {
-        "start": 302,
-        "end": 385
-       }
-      ]
-     },
-     {
-      "accession": "IPR015300",
-      "name": "DNA-binding pseudobarrel domain superfamily",
-      "type": "homologous_superfamily",
-      "source_database": "interpro",
-      "interpro": null,
-      "go_terms": null,
-      "locations": [
-       {
-        "start": 115,
-        "end": 223
-       }
-      ]
-     },
-     {
-      "accession": "IPR044835",
-      "name": "Auxin response factor",
-      "type": "family",
-      "source_database": "interpro",
-      "interpro": null,
-      "go_terms": [
-       {
-        "identifier": "GO:0003677",
-        "name": "DNA binding",
-        "category": {
-         "code": "F",
-         "name": "molecular_function"
-        }
-       },
-       {
-        "identifier": "GO:0006355",
-        "name": "regulation of DNA-templated transcription",
-        "category": {
-         "code": "P",
-         "name": "biological_process"
-        }
-       },
-       {
-        "identifier": "GO:0009725",
-        "name": "response to hormone",
-        "category": {
-         "code": "P",
-         "name": "biological_process"
-        }
-       }
-      ],
-      "locations": [
-       {
-        "start": 14,
-        "end": 663
-       }
-      ]
-     },
-     {
-      "accession": "IPR053793",
-      "name": "PB1-like domain",
-      "type": "domain",
-      "source_database": "interpro",
-      "interpro": null,
-      "go_terms": null,
-      "locations": [
-       {
-        "start": 584,
-        "end": 664
-       }
-      ]
-     },
-     {
-      "accession": "PF02362",
-      "name": "B3 DNA binding domain",
-      "type": "domain",
-      "source_database": "pfam",
-      "interpro": "IPR003340",
-      "go_terms": null,
-      "locations": [
-       {
-        "start": 120,
-        "end": 221
-       }
-      ]
-     },
-     {
-      "accession": "PF06507",
-      "name": "Auxin response factor ancillary domain",
-      "type": "domain",
-      "source_database": "pfam",
-      "interpro": "IPR010525",
-      "go_terms": null,
-      "locations": [
-       {
-        "start": 302,
-        "end": 385
-       }
-      ]
-     },
-     {
-      "accession": "PS50863",
-      "name": "B3 DNA-binding domain profile",
-      "type": "domain",
-      "source_database": "profile",
-      "interpro": "IPR003340",
-      "go_terms": null,
-      "locations": [
-       {
-        "start": 120,
-        "end": 222
-       }
-      ]
-     },
-     {
-      "accession": "PS51745",
-      "name": "PB1 domain profile",
-      "type": "domain",
-      "source_database": "profile",
-      "interpro": "IPR053793",
-      "go_terms": null,
-      "locations": [
-       {
-        "start": 584,
-        "end": 664
-       }
-      ]
-     },
-     {
-      "accession": "PTHR31384",
-      "name": "AUXIN RESPONSE FACTOR 4-RELATED",
-      "type": "family",
-      "source_database": "panther",
-      "interpro": "IPR044835",
-      "go_terms": null,
-      "locations": [
-       {
-        "start": 14,
-        "end": 663
-       }
-      ]
-     },
-     {
-      "accession": "SM01019",
-      "name": "B3 DNA binding domain",
-      "type": "domain",
-      "source_database": "smart",
-      "interpro": "IPR003340",
-      "go_terms": null,
-      "locations": [
-       {
-        "start": 120,
-        "end": 222
-       }
-      ]
-     },
-     {
-      "accession": "SSF101936",
-      "name": "DNA-binding pseudobarrel domain",
-      "type": "homologous_superfamily",
-      "source_database": "ssf",
-      "interpro": "IPR015300",
-      "go_terms": null,
-      "locations": [
-       {
-        "start": 115,
-        "end": 223
-       }
-      ]
-     }
-    ],
-    "count_by_type": {
-     "domain": 9,
-     "homologous_superfamily": 5,
-     "family": 2
-    },
-    "upstream_version": "110.0"
-   },
+   "elapsed_s": 0.00037237099604681134,
+   "result": null,
    "error": null
   }
  ],
@@ -1965,25 +77,33 @@
   "locus": "AT4G30080",
   "organism": "arabidopsis_thaliana",
   "canonical_gene_name": "ARF16",
+  "gene_names": {
+   "canonical": "ARF16",
+   "ensembl": "ARF16",
+   "uniprot": [
+    "ARF16"
+   ]
+  },
   "uniprot_accession": "Q93YR9",
-  "markdown": "# ARF16 \u2014 `AT4G30080`\n\n*Arabidopsis thaliana* \u00b7 protein_coding \u00b7 4:14,703,065\u201314,706,354 (-) \u00b7 TAIR10\n\nauxin response factor 16 [Source:NCBI gene (formerly Entrezgene);Acc:829131]\n\n## Protein\n**Auxin response factor 16**\nARFP_ARATH \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 670 aa\nUniProt: [Q93YR9](https://www.uniprot.org/uniprotkb/Q93YR9)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [118\u2013220]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [317\u2013389]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [118\u2013222]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [582\u2013668]\n- **B3 DNA binding domain** (domain, interpro) [118\u2013222]\n- **Auxin response factor domain** (domain, interpro) [302\u2013385]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [115\u2013223]\n- **Auxin response factor** (family, interpro) [14\u2013663]\n- **PB1-like domain** (domain, interpro) [584\u2013664]\n- **B3 DNA binding domain** (domain, pfam) [120\u2013221]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n- [GO:0003700] DNA-binding transcription factor activity (ISS)\n- [GO:0005515] protein binding (IPI)\n- [GO:0005515] protein binding (IPI)\n- [GO:0005515] protein binding (IPI)\n- [GO:0005515] protein binding (IPI)\n- [GO:0005515] protein binding (IPI)\n- [GO:0005515] protein binding (IPI)\n- [GO:0005515] protein binding (IPI)\n**Biological Process**\n- [GO:0007389] pattern specification process (IDA)\n- [GO:0009733] response to auxin (IEP)\n- [GO:0048829] root cap development (IMP)\n- [GO:0048829] root cap development (IGI)\n- [GO:0051301] cell division (IGI)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0007389] pattern specification process (IBA)\n- [GO:0007389] pattern specification process (IEA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n- [GO:0005634] nucleus (ISM)\n- [GO:0005634] nucleus (IDA)\n\n## Pathways (KEGG)\n- `ath04075` Plant hormone signal transduction - Arabidopsis thaliana (thale cress) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| IAA31 | 0.869 |\n| ABI3 | 0.843 |\n| IAA5 | 0.837 |\n| IAA33 | 0.823 |\n| TIR1 | 0.804 |\n| IAA17 | 0.798 |\n| AUX1 | 0.794 |\n| AFB2 | 0.793 |\n| WOX5 | 0.792 |\n| IAA12 | 0.754 |\n\n## Cross-references\n- NASC Gene ID: AT4G30080\n- TAIR: AT4G30080\n- TAIR Gene Name: ARF16\n- Plant Reactome Reaction ID: R-ATH-5608208\n- Plant Reactome Pathway ID: R-ATH-5608118\n- Expression Atlas: AT4G30080\n- KNETMINER_ARA: AT4G30080\n- UniProtKB Gene Name: Q93YR9\n- WikiGene: 829131\n- NCBI gene (formerly Entrezgene): 829131\n\n## Literature\n61 hits total; showing top 10.\n- **Auxin-mediated seed germination and crosstalk with other phytohormones** \u2014 Ament A, Kucha\u0159ov\u00e1 A, Vladeji\u0107 J, B\u011bl\u00ed\u010dek J, Brunoni F, Nov\u00e1k O. (PMID:41626343; doi:10.3389/fpls.2025.1746472)\n- **Integrating predictive models and GWAS to identify candidate loci and genes for agronomic traits in rice** \u2014 Zhou Q, Wang F, Yang Y, Dong L, Cao Y, Li S, Zhang G. (PMID:42698716; doi:10.3389/fpls.2026.1942478)\n- **&lt;i&gt;CpARF6&lt;/i&gt; Controls Lobed Leaf Formation in Zucchini** \u2014 Jiang S, Shi L, Fei S, Zhang M, Zhou Y, Hu Z, Yang J, Zhang M, Lyu X. (PMID:41155342; doi:10.3390/ijms262010042)\n- **The miR7125-MdARF1 module enhances the resistance of apple to Colletotrichum gloeosporioides by promoting lignin synthesis in response to salicylic acid signalling** \u2014 Liu X, Dai H, Zhang F, Wang J, Shi J, Chen J, He P, Wang F, Ma Y. (PMID:38852059; doi:10.1111/pbi.14401)\n- **Regulatory Mechanism of the GmMYB14 Transcription Factor on Auxin-Related Proteins in Soybean** \u2014 Peng L, Liu Y, Yang H, Guo W, Hao Q, Chen S, Yuan S, Zhang C, Yang Z, Han B, Huang Y, Shan Z, Chen L, Chen H. (PMID:40869083; doi:10.3390/ijms26167763)\n- **Identification of the Auxin Response Factor gene family in kernel consumption apricot and association analysis of related genes regulating fruit size in distant hybridization** \u2014 Han C, Zhang W, Chen S, Zhang Y, Guo H, Yu L, Liu L, Liu P, Wang L, Zhao H. (PMID:41555233; doi:10.1186/s12870-025-08030-3)\n- **Predicting and testing a gene network regulating seed germination in &lt;i&gt;Arabidopsis&lt;/i&gt;** \u2014 Yang M, Wang Y. (PMID:40642330; doi:10.7717/peerj.19599)\n- **Large-scale analysis of the ARF and Aux/IAA gene families in 406 horticultural and other plants** \u2014 Feng S, Li N, Chen H, Liu Z, Li C, Zhou R, Zhang Y, Cao R, Ma X, Song X. (PMID:38589963; doi:10.1186/s43897-024-00090-7)\n- **Dissecting the role of strigolactone perception in barley tolerance to cadmium or zinc stress based on the receptor mutant analysis** \u2014 Buchcik W, Sitko K, Marzec M. (PMID:41272468; doi:10.1186/s12870-025-07683-4)\n- **Plasma-treated water applied as a foliar spray promotes root growth in barley** \u2014 Kr\u00fcger A, Schl\u00f6mer S, Simm S, Bold J, St\u00f6hr C. (PMID:40983938; doi:10.1186/s12870-025-07394-w)\n",
+  "markdown": "# ARF16 \u2014 `AT4G30080`\n\n*Arabidopsis thaliana* \u00b7 protein_coding \u00b7 4:14,703,065\u201314,706,354 (-) \u00b7 TAIR10\n\nauxin response factor 16 [Source:NCBI gene (formerly Entrezgene);Acc:829131]\n\n## Protein\n**Auxin response factor 16**\nARFP_ARATH \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 670 aa\nUniProt: [Q93YR9](https://www.uniprot.org/uniprotkb/Q93YR9)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [118\u2013220]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [317\u2013389]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [118\u2013222]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [582\u2013668]\n- **B3 DNA binding domain** (domain, interpro) [118\u2013222]\n- **Auxin response factor domain** (domain, interpro) [302\u2013385]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [115\u2013223]\n- **Auxin response factor** (family, interpro) [14\u2013663]\n- **PB1-like domain** (domain, interpro) [584\u2013664]\n- **B3 DNA binding domain** (domain, pfam) [120\u2013221]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n- [GO:0003700] DNA-binding transcription factor activity (ISS)\n- [GO:0005515] protein binding (IPI)\n- [GO:0035198] miRNA binding (ISS)\n**Biological Process**\n- [GO:0007389] pattern specification process (IDA)\n- [GO:0009733] response to auxin (IEP)\n- [GO:0048829] root cap development (IMP)\n- [GO:0048829] root cap development (IGI)\n- [GO:0051301] cell division (IGI)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0007389] pattern specification process (IBA)\n- [GO:0007389] pattern specification process (IEA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n- [GO:0005634] nucleus (ISM)\n- [GO:0005634] nucleus (IDA)\n\n## Pathways (KEGG)\n- `ath04075` Plant hormone signal transduction - Arabidopsis thaliana (thale cress) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| IAA31 | 0.869 |\n| ABI3 | 0.843 |\n| IAA5 | 0.837 |\n| IAA33 | 0.823 |\n| TIR1 | 0.804 |\n| IAA17 | 0.798 |\n| AUX1 | 0.794 |\n| AFB2 | 0.793 |\n| WOX5 | 0.792 |\n| IAA12 | 0.754 |\n\n## Cross-references\n- NASC Gene ID: AT4G30080\n- TAIR: AT4G30080\n- TAIR Gene Name: ARF16\n- Plant Reactome Reaction ID: R-ATH-5608208\n- Plant Reactome Pathway ID: R-ATH-5608118\n- Expression Atlas: AT4G30080\n- KNETMINER_ARA: AT4G30080\n- UniProtKB Gene Name: Q93YR9\n- WikiGene: 829131\n- NCBI gene (formerly Entrezgene): 829131\n\n## Literature\n61 hits total; showing top 10.\n- **Auxin-mediated seed germination and crosstalk with other phytohormones** \u2014 Ament A, Kucha\u0159ov\u00e1 A, Vladeji\u0107 J, B\u011bl\u00ed\u010dek J, Brunoni F, Nov\u00e1k O. (PMID:41626343; doi:10.3389/fpls.2025.1746472)\n- **Integrating predictive models and GWAS to identify candidate loci and genes for agronomic traits in rice** \u2014 Zhou Q, Wang F, Yang Y, Dong L, Cao Y, Li S, Zhang G. (PMID:42698716; doi:10.3389/fpls.2026.1942478)\n- **&lt;i&gt;CpARF6&lt;/i&gt; Controls Lobed Leaf Formation in Zucchini** \u2014 Jiang S, Shi L, Fei S, Zhang M, Zhou Y, Hu Z, Yang J, Zhang M, Lyu X. (PMID:41155342; doi:10.3390/ijms262010042)\n- **The miR7125-MdARF1 module enhances the resistance of apple to Colletotrichum gloeosporioides by promoting lignin synthesis in response to salicylic acid signalling** \u2014 Liu X, Dai H, Zhang F, Wang J, Shi J, Chen J, He P, Wang F, Ma Y. (PMID:38852059; doi:10.1111/pbi.14401)\n- **Regulatory Mechanism of the GmMYB14 Transcription Factor on Auxin-Related Proteins in Soybean** \u2014 Peng L, Liu Y, Yang H, Guo W, Hao Q, Chen S, Yuan S, Zhang C, Yang Z, Han B, Huang Y, Shan Z, Chen L, Chen H. (PMID:40869083; doi:10.3390/ijms26167763)\n- **Identification of the Auxin Response Factor gene family in kernel consumption apricot and association analysis of related genes regulating fruit size in distant hybridization** \u2014 Han C, Zhang W, Chen S, Zhang Y, Guo H, Yu L, Liu L, Liu P, Wang L, Zhao H. (PMID:41555233; doi:10.1186/s12870-025-08030-3)\n- **Predicting and testing a gene network regulating seed germination in &lt;i&gt;Arabidopsis&lt;/i&gt;** \u2014 Yang M, Wang Y. (PMID:40642330; doi:10.7717/peerj.19599)\n- **Large-scale analysis of the ARF and Aux/IAA gene families in 406 horticultural and other plants** \u2014 Feng S, Li N, Chen H, Liu Z, Li C, Zhou R, Zhang Y, Cao R, Ma X, Song X. (PMID:38589963; doi:10.1186/s43897-024-00090-7)\n- **Dissecting the role of strigolactone perception in barley tolerance to cadmium or zinc stress based on the receptor mutant analysis** \u2014 Buchcik W, Sitko K, Marzec M. (PMID:41272468; doi:10.1186/s12870-025-07683-4)\n- **Plasma-treated water applied as a foliar spray promotes root growth in barley** \u2014 Kr\u00fcger A, Schl\u00f6mer S, Simm S, Bold J, St\u00f6hr C. (PMID:40983938; doi:10.1186/s12870-025-07394-w)\n",
   "sections": {
    "annotation": {
+    "source": "araport11",
+    "display_name": "ARF16",
+    "db_type": "core",
+    "id": "AT4G30080",
+    "assembly_name": "TAIR10",
+    "object_type": "Gene",
     "seq_region_name": "4",
-    "canonical_transcript": "AT4G30080.1.",
     "description": "auxin response factor 16 [Source:NCBI gene (formerly Entrezgene);Acc:829131]",
+    "strand": -1,
+    "canonical_transcript": "AT4G30080.1.",
+    "end": 14706354,
     "logic_name": "araport11",
     "start": 14703065,
-    "source": "araport11",
-    "assembly_name": "TAIR10",
-    "display_name": "ARF16",
-    "strand": -1,
-    "db_type": "core",
-    "end": 14706354,
-    "id": "AT4G30080",
     "biotype": "protein_coding",
-    "object_type": "Gene",
-    "organism": "arabidopsis_thaliana"
+    "organism": "arabidopsis_thaliana",
+    "upstream_version": null
    },
    "protein": {
     "locus_query": "AT4G30080",
@@ -2007,118 +127,118 @@
     "count": 10,
     "xrefs": [
      {
-      "description": "auxin response factor 16",
       "display_id": "AT4G30080-TAIR-G",
-      "db_display_name": "NASC Gene ID",
-      "primary_id": "AT4G30080",
       "synonyms": [],
+      "description": "auxin response factor 16",
+      "primary_id": "AT4G30080",
+      "version": "0",
       "info_text": "",
-      "info_type": "DIRECT",
       "dbname": "NASC_GENE_ID",
-      "version": "0"
+      "db_display_name": "NASC Gene ID",
+      "info_type": "DIRECT"
      },
      {
-      "info_type": "DIRECT",
-      "info_text": "",
-      "dbname": "TAIR_LOCUS",
-      "version": "0",
       "description": "auxin response factor 16",
       "primary_id": "AT4G30080",
-      "synonyms": [],
+      "version": "0",
       "display_id": "AT4G30080",
+      "synonyms": [],
+      "info_text": "",
+      "dbname": "TAIR_LOCUS",
+      "info_type": "DIRECT",
       "db_display_name": "TAIR"
      },
      {
-      "synonyms": [],
-      "primary_id": "ARF16",
-      "display_id": "ARF16",
-      "db_display_name": "TAIR Gene Name",
-      "description": "",
-      "version": "0",
-      "dbname": "TAIR_SYMBOL",
       "info_type": "DIRECT",
+      "db_display_name": "TAIR Gene Name",
+      "dbname": "TAIR_SYMBOL",
+      "info_text": "",
+      "description": "",
+      "primary_id": "ARF16",
+      "version": "0",
+      "display_id": "ARF16",
+      "synonyms": []
+     },
+     {
+      "info_text": "Generated via direct",
+      "synonyms": [],
+      "display_id": "R-ATH-5608208",
+      "primary_id": "R-ATH-5608208",
+      "version": "0",
+      "description": "ARF inactivation by AUX/IAA",
+      "db_display_name": "Plant Reactome Reaction ID",
+      "info_type": "DIRECT",
+      "dbname": "Plant_Reactome_Reaction"
+     },
+     {
+      "display_id": "R-ATH-5608118",
+      "synonyms": [],
+      "description": "Auxin signalling",
+      "version": "0",
+      "primary_id": "R-ATH-5608118",
+      "info_text": "Generated via direct",
+      "dbname": "Plant_Reactome_Pathway",
+      "db_display_name": "Plant Reactome Pathway ID",
+      "info_type": "DIRECT"
+     },
+     {
+      "db_display_name": "Expression Atlas",
+      "info_type": "DIRECT",
+      "dbname": "ArrayExpress",
+      "info_text": "",
+      "synonyms": [],
+      "display_id": "AT4G30080",
+      "primary_id": "AT4G30080",
+      "version": "0",
+      "description": null
+     },
+     {
+      "dbname": "KNETMINER_ARA",
+      "info_type": "DEPENDENT",
+      "db_display_name": "KNETMINER_ARA",
+      "description": null,
+      "primary_id": "AT4G30080",
+      "version": "0",
+      "display_id": "AT4G30080",
+      "synonyms": [],
       "info_text": ""
      },
      {
-      "info_text": "Generated via direct",
-      "info_type": "DIRECT",
-      "dbname": "Plant_Reactome_Reaction",
-      "version": "0",
-      "description": "ARF inactivation by AUX/IAA",
-      "display_id": "R-ATH-5608208",
-      "db_display_name": "Plant Reactome Reaction ID",
-      "primary_id": "R-ATH-5608208",
-      "synonyms": []
-     },
-     {
-      "dbname": "Plant_Reactome_Pathway",
-      "info_type": "DIRECT",
-      "info_text": "Generated via direct",
-      "version": "0",
       "synonyms": [],
-      "primary_id": "R-ATH-5608118",
-      "display_id": "R-ATH-5608118",
-      "db_display_name": "Plant Reactome Pathway ID",
-      "description": "Auxin signalling"
-     },
-     {
-      "info_text": "",
-      "info_type": "DIRECT",
-      "dbname": "ArrayExpress",
-      "version": "0",
-      "description": null,
-      "db_display_name": "Expression Atlas",
-      "display_id": "AT4G30080",
-      "primary_id": "AT4G30080",
-      "synonyms": []
-     },
-     {
-      "description": null,
-      "db_display_name": "KNETMINER_ARA",
-      "display_id": "AT4G30080",
-      "primary_id": "AT4G30080",
-      "synonyms": [],
-      "version": "0",
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "dbname": "KNETMINER_ARA"
-     },
-     {
-      "description": null,
       "display_id": "ARF16",
-      "db_display_name": "UniProtKB Gene Name",
       "primary_id": "Q93YR9",
-      "synonyms": [],
       "version": null,
+      "description": null,
       "info_text": "",
-      "info_type": "DEPENDENT",
-      "dbname": "Uniprot_gn"
+      "dbname": "Uniprot_gn",
+      "db_display_name": "UniProtKB Gene Name",
+      "info_type": "DEPENDENT"
      },
      {
-      "description": "auxin response factor 16",
+      "info_text": "",
       "display_id": "ARF16",
-      "db_display_name": "WikiGene",
-      "primary_id": "829131",
       "synonyms": [],
-      "info_text": "",
+      "description": "auxin response factor 16",
+      "version": "0",
+      "primary_id": "829131",
+      "db_display_name": "WikiGene",
       "info_type": "DEPENDENT",
-      "dbname": "WikiGene",
-      "version": "0"
+      "dbname": "WikiGene"
      },
      {
-      "version": "0",
       "dbname": "EntrezGene",
-      "info_text": "",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
       "info_type": "DEPENDENT",
       "display_id": "ARF16",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "primary_id": "829131",
       "synonyms": [
        "auxin response factor 16",
        "F6G3.110",
        "F6G3_110"
       ],
-      "description": "auxin response factor 16"
+      "description": "auxin response factor 16",
+      "primary_id": "829131",
+      "version": "0",
+      "info_text": ""
      }
     ],
     "by_db": {
@@ -2165,7 +285,8 @@
       "pathway_class": "Environmental Information Processing; Signal transduction"
      }
     ],
-    "errors": []
+    "errors": [],
+    "upstream_version": null
    },
    "interactions": {
     "query": "AT4G30080",
@@ -2272,7 +393,8 @@
       "tscore": 0.754,
       "pscore": 0
      }
-    ]
+    ],
+    "upstream_version": null
    },
    "literature": {
     "locus": "AT4G30080",
@@ -2452,7 +574,8 @@
       "abstractText": "BACKGROUND: Plasma-treated water (PTW) contains reactive oxygen and nitrogen species and can therefore induce mild oxidative stress in plants. In a previous study, PTW treatment of leaves resulted in both short- and long-term systemic signalling effects. In this study, we analysed the adaptive response of the barley leaf and root transcriptome triggered by PTW treatment under short- and long-term conditions to further understand the regulatory mechanisms and the mode of action of PTW. RESULTS: The application of PTW to the leaves resulted in stronger long-term transcriptional changes in the roots. PTW treatment significantly increased root biomass, while it had no effect on shoot growth. In roots, the altered gene expression indicated that the signalling of auxin, ethylene, brassinosteroids and gibberellin was stimulated, while cytokinin signalling was impeded. Many genes encoding cell wall modifying enzymes, structural proteins and receptor kinases were upregulated in the roots in long-term response to PTW. In addition, foliar treatment with PTW led to changes in root architecture: root length, surface area, diameter and number of forks increased in the long term, as did the content of soluble phenolic compounds. CONCLUSIONS: All these changes indicate that PTW treatment affected root growth possibly by promoting cell elongation. Thus, PTW could be a suitable stimulant to improve the root growth of plants.",
       "web_url": "https://europepmc.org/article/PMC/PMC12455771"
      }
-    ]
+    ],
+    "upstream_version": null
    },
    "go_annotations": {
     "uniprot_accession": "Q93YR9",
@@ -3557,7 +1680,8 @@
        "goName": "nucleus"
       }
      ]
-    }
+    },
+    "upstream_version": null
    },
    "domains": {
     "accession": "Q93YR9",

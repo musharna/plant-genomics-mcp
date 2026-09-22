@@ -1,38 +1,38 @@
 tool	calls	ok	errors	median_bytes	upstream_version_null	median_elapsed_s	release_status	status	loci	locus_errors	expected
-alphafold_structure	29	29	0	1441	29	0.25	release under another key	ok	29	0	0
+alphafold_structure	48	48	0	1511	0	0.26	upstream_version field	ok	48	0	0
 analyze_locus_synth	0	0	0	0	0	0.0	unused	unused	0	0	0
 arabidopsis_natural_variation	0	0	0	0	0	0.0	unused	unused	0	0	0
-aragwas_associations	29	22	1	113333	29	1.19	no release in the payload	error	29	1	6
+aragwas_associations	48	22	1	210	48	0.01	no release in the payload	error	48	1	25
 atted_coexpression	0	0	0	0	0	0.0	unused	unused	0	0	0
 bar_aiv_interactions	0	0	0	0	0	0.0	unused	unused	0	0	0
 bar_efp_expression	0	0	0	0	0	0.0	unused	unused	0	0	0
 bar_gene_summary	0	0	0	0	0	0.0	unused	unused	0	0	0
-batch_atted_coexpression	2	0	2	30730	2	2.19	release under another key	error	29	13	0
+batch_atted_coexpression	2	0	2	34844	0	2.59	upstream_version field	error	48	31	0
 batch_bar_aiv_interactions	0	0	0	0	0	0.0	unused	unused	0	0	0
 batch_bar_gene_summary	0	0	0	0	0	0.0	unused	unused	0	0	0
-batch_ensembl_plants_lookup_locus	2	2	0	13177	2	2.38	no release in the payload	ok	29	0	0
+batch_ensembl_plants_lookup_locus	2	2	0	20390	2	1.41	no release in the payload	ok	48	0	0
 batch_get_gene_xrefs	0	0	0	0	0	0.0	unused	unused	0	0	0
-batch_gramene_homologs	2	2	0	319911	2	0.47	release under another key	ok	29	0	0
-batch_kegg_pathways	2	0	2	8620	2	3.0	no release in the payload	error	29	6	0
-batch_locus_go_annotations	2	2	0	364964	2	1.01	no release in the payload	ok	29	0	0
-batch_locus_literature	2	2	0	334038	2	1.52	no release in the payload	ok	29	0	0
+batch_gramene_homologs	2	2	0	517554	0	0.55	upstream_version field	ok	48	0	0
+batch_kegg_pathways	2	0	2	14916	2	6.11	no release in the payload	error	48	13	0
+batch_locus_go_annotations	2	2	0	494910	2	1.4	no release in the payload	ok	48	0	0
+batch_locus_literature	2	2	0	577196	2	2.55	no release in the payload	ok	48	0	0
 batch_phytozome_lookup_locus	0	0	0	0	0	0.0	unused	unused	0	0	0
-batch_resolve_locus_to_uniprot	2	2	0	12288	0	6.84	upstream_version field	ok	29	0	0
-batch_string_interactions	2	2	0	96889	2	1.13	no release in the payload	ok	29	0	0
+batch_resolve_locus_to_uniprot	2	2	0	20361	0	11.55	upstream_version field	ok	48	0	0
+batch_string_interactions	2	1	1	142521	2	1.4	no release in the payload	error	48	2	0
 biological_context_synth	0	0	0	0	0	0.0	unused	unused	0	0	0
 blast_sequence	0	0	0	0	0	0.0	unused	unused	0	0	0
 consensus_homologs	0	0	0	0	0	0.0	unused	unused	0	0	0
 ensembl_plants_lookup_locus	0	0	0	0	0	0.0	unused	unused	0	0	0
 ensembl_region_query	0	0	0	0	0	0.0	unused	unused	0	0	0
 experimental_interactions	0	0	0	0	0	0.0	unused	unused	0	0	0
-experimental_structures	29	29	0	359	29	0.6	no release in the payload	ok	29	0	0
+experimental_structures	48	48	0	418	48	0.6	no release in the payload	ok	48	0	0
 find_homologs_synth	0	0	0	0	0	0.0	unused	unused	0	0	0
-gene_report	29	29	0	135393	0	0.95	upstream_version field	ok	29	0	0
+gene_report	48	48	0	67275	0	1.84	upstream_version field	ok	48	0	0
 get_gene_xrefs	0	0	0	0	0	0.0	unused	unused	0	0	0
 get_sequence	0	0	0	0	0	0.0	unused	unused	0	0	0
 go_enrichment	0	0	0	0	0	0.0	unused	unused	0	0	0
 gramene_homologs	0	0	0	0	0	0.0	unused	unused	0	0	0
-interpro_domains	29	29	0	10369	0	0.53	upstream_version field	ok	29	0	0
+interpro_domains	48	48	0	10369	0	0.54	upstream_version field	ok	48	0	0
 jaspar_motif	0	0	0	0	0	0.0	unused	unused	0	0	0
 kegg_pathways	0	0	0	0	0	0.0	unused	unused	0	0	0
 locus_gene_rifs	0	0	0	0	0	0.0	unused	unused	0	0	0
@@ -40,12 +40,12 @@ locus_go_annotations	0	0	0	0	0	0.0	unused	unused	0	0	0
 locus_literature	0	0	0	0	0	0.0	unused	unused	0	0	0
 locus_plant_ontology	0	0	0	0	0	0.0	unused	unused	0	0	0
 locus_variants	0	0	0	0	0	0.0	unused	unused	0	0	0
-orthodb_orthologs	29	29	0	27076	29	0.97	no release in the payload	ok	29	0	0
-panther_family	29	29	0	1715	29	0.4	no release in the payload	ok	29	0	0
+orthodb_orthologs	48	48	0	27210	48	0.96	no release in the payload	ok	48	0	0
+panther_family	48	48	0	1535	48	0.4	no release in the payload	ok	48	0	0
 phytozome_lookup_locus	0	0	0	0	0	0.0	unused	unused	0	0	0
 plantcyc_locus_info	0	0	0	0	0	0.0	unused	unused	0	0	0
 resolve_locus_to_uniprot	0	0	0	0	0	0.0	unused	unused	0	0	0
 string_interactions	0	0	0	0	0	0.0	unused	unused	0	0	0
 tair_locus_info	0	0	0	0	0	0.0	unused	unused	0	0	0
-tf_binding_motifs	29	29	0	495	29	1.18	no release in the payload	ok	29	0	0
+tf_binding_motifs	48	48	0	554	48	0.52	no release in the payload	ok	48	0	0
 vep_annotate	0	0	0	0	0	0.0	unused	unused	0	0	0

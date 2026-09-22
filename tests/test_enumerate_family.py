@@ -206,19 +206,24 @@ def test_the_ortholog_disagreement_row_matches_a_recount_of_its_own_evidence():
     counts = _recount_ortholog_sources()
     assert counts["gramene_homologs_queries"] == counts["orthodb_orthologs_queries"]
     m = counts["gramene_homologs_queries"]
+    # The row was closed by a later run: the observation to recount is the
+    # one that run produced, kept beside the original.
+    observed = row["closed"]["returned"] if row.get("closed") else row["returned"]
     claims = dict(
         re.findall(
             r"(gramene_homologs|orthodb_orthologs) names (?:a rice or wheat locus|one) for (\d+) of",
-            row["returned"],
+            observed,
         )
     )
-    assert set(claims) == {"gramene_homologs", "orthodb_orthologs"}, row["returned"]
-    assert f"of {m} queries" in row["returned"]
+    assert set(claims) == {"gramene_homologs", "orthodb_orthologs"}, observed
+    assert f"of {m} queries" in observed
     assert int(claims["gramene_homologs"]) == counts["gramene_homologs"]
     assert int(claims["orthodb_orthologs"]) == counts["orthodb_orthologs"]
     # Positive control for the recount: it is not trivially zero or total.
+    # (On the first run orthodb was 0 of 26 — the gap; the closing run has
+    # both tools answering, so the recount must see both strictly inside.)
     assert 0 < counts["gramene_homologs"] < m
-    assert counts["orthodb_orthologs"] == 0
+    assert 0 < counts["orthodb_orthologs"] < m
 
 
 def test_the_undecidable_row_matches_a_recount_of_family_candidates():

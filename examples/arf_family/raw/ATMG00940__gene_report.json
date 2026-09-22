@@ -5,143 +5,38 @@
   "organism": "arabidopsis_thaliana",
   "top_n": 10
  },
- "started_at": "2026-09-22T02:46:09Z",
- "elapsed_s": 0.810317389001284,
+ "started_at": "2026-09-22T07:28:41Z",
+ "elapsed_s": 1.2017764959964552,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": null,
-   "result": {
-    "end": 251897,
-    "logic_name": "araport11",
-    "start": 251403,
-    "biotype": "protein_coding",
-    "source": "araport11",
-    "db_type": "core",
-    "id": "ATMG00940",
-    "assembly_name": "TAIR10",
-    "object_type": "Gene",
-    "seq_region_name": "Mt",
-    "canonical_transcript": "ATMG00940.1.",
-    "strand": -1,
-    "organism": "arabidopsis_thaliana"
-   },
+   "elapsed_s": 0.5597912640005234,
+   "result": null,
    "error": null
   },
   {
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": null,
-   "result": {
-    "locus_query": "ATMG00940",
-    "primaryAccession": "P92530",
-    "uniProtkbId": "M940_ARATH",
-    "entryType": "UniProtKB reviewed (Swiss-Prot)",
-    "reviewed": true,
-    "recommendedName": "Uncharacterized mitochondrial protein AtMg00940",
-    "geneNames": [],
-    "organism": "Arabidopsis thaliana",
-    "taxonId": 3702,
-    "sequenceLength": 164,
-    "web_url": "https://www.uniprot.org/uniprotkb/P92530",
-    "upstream_version": "2026_03"
-   },
+   "elapsed_s": 0.0005031370019423775,
+   "result": null,
    "error": null
   },
   {
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": null,
-   "result": {
-    "locus": "ATMG00940",
-    "organism": "arabidopsis_thaliana",
-    "count": 5,
-    "xrefs": [
-     {
-      "info_type": "DIRECT",
-      "version": "0",
-      "synonyms": [],
-      "info_text": "",
-      "display_id": "ATMG00940-TAIR-G",
-      "db_display_name": "NASC Gene ID",
-      "primary_id": "ATMG00940",
-      "description": "DNA binding",
-      "dbname": "NASC_GENE_ID"
-     },
-     {
-      "info_type": "DIRECT",
-      "version": "0",
-      "synonyms": [],
-      "info_text": "",
-      "display_id": "ATMG00940",
-      "db_display_name": "TAIR",
-      "primary_id": "ATMG00940",
-      "description": "DNA binding",
-      "dbname": "TAIR_LOCUS"
-     },
-     {
-      "synonyms": [],
-      "version": "0",
-      "info_text": "",
-      "info_type": "DIRECT",
-      "dbname": "TAIR_SYMBOL",
-      "description": "",
-      "primary_id": "ORF164",
-      "display_id": "ORF164",
-      "db_display_name": "TAIR Gene Name"
-     },
-     {
-      "display_id": "ATMG00940",
-      "db_display_name": "Expression Atlas",
-      "primary_id": "ATMG00940",
-      "dbname": "ArrayExpress",
-      "description": null,
-      "info_type": "DIRECT",
-      "version": "0",
-      "synonyms": [],
-      "info_text": ""
-     },
-     {
-      "db_display_name": "KNETMINER_ARA",
-      "display_id": "ATMG00940",
-      "primary_id": "ATMG00940",
-      "description": null,
-      "dbname": "KNETMINER_ARA",
-      "info_type": "DEPENDENT",
-      "info_text": "",
-      "version": "0",
-      "synonyms": []
-     }
-    ],
-    "by_db": {
-     "NASC_GENE_ID": [
-      "ATMG00940"
-     ],
-     "TAIR_LOCUS": [
-      "ATMG00940"
-     ],
-     "TAIR_SYMBOL": [
-      "ORF164"
-     ],
-     "ArrayExpress": [
-      "ATMG00940"
-     ],
-     "KNETMINER_ARA": [
-      "ATMG00940"
-     ]
-    }
-   },
+   "elapsed_s": 0.6414735840007779,
+   "result": null,
    "error": null
   },
   {
    "step": 4,
    "tool": "kegg_pathways",
    "status": "error",
-   "elapsed_s": null,
+   "elapsed_s": 3.4094999136868864e-05,
    "result": null,
    "error": "[NotFoundError] KEGG: no pathway memberships for ATMG00940 (queried as ath:ATMG00940)"
   },
@@ -149,492 +44,32 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": null,
-   "result": {
-    "query": "ATMG00940",
-    "accession": "P92530",
-    "organism": "arabidopsis_thaliana",
-    "partners": [
-     {
-      "string_id": "3702.P93298",
-      "accession": "3702.P93298",
-      "preferred_name": "ATP6-1",
-      "score": 0.462,
-      "escore": 0,
-      "dscore": 0,
-      "tscore": 0.435,
-      "pscore": 0
-     },
-     {
-      "string_id": "3702.P92547",
-      "accession": "3702.P92547",
-      "preferred_name": "ATP6-2",
-      "score": 0.429,
-      "escore": 0,
-      "dscore": 0,
-      "tscore": 0.4,
-      "pscore": 0
-     }
-    ]
-   },
+   "elapsed_s": 0.31281737200333737,
+   "result": null,
    "error": null
   },
   {
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": null,
-   "result": {
-    "locus": "ATMG00940",
-    "organism": "arabidopsis_thaliana",
-    "query": "ATMG00940",
-    "hitCount": 5,
-    "returned": 5,
-    "abstracts_included": true,
-    "hits": [
-     {
-      "id": "42026481",
-      "source": "MED",
-      "pmid": "42026481",
-      "pmcid": "PMC13245101",
-      "doi": "10.1186/s12866-026-05031-6",
-      "title": "Genomic and experimental characterization of unique Antarctic temperate phage Perkons reveals multiple integrases and complex lysogenic dynamics in Psychrobacillus sp. L4.",
-      "authorString": "Zrelovs N, Svanberga K, Priedeslaipa A, Jansons J, Lamsters K, Karuss J, Krievans M, Fridmanis D, Dislers A, Kazaks A.",
-      "journalTitle": null,
-      "pubYear": "2026",
-      "firstPublicationDate": "2026-04-23",
-      "citedByCount": 0,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
-      "abstractText": "BACKGROUND: Advances in culture-free microbial research have considerably expanded the known genomic diversity of prokaryotes and viruses associated with any imaginable environment. However, only a tiny fraction of this diversity has been obtained in culture, locking most of it to merely biological sequences of various contiguities, regardless of the environment. Yet, many environments are housing relatively easily culturable biological entities sufficiently distinct from those cultures so far, allowing for a better understanding of at least some of their manifestations and impacts in the said environment by virtue of culture-based studies. Expectedly, undersampled and understudied environments serve as a low-hanging fruit for uncovering novel culturable microbiological entities with exciting biology, given access to the samples. RESULTS: Attempts to culture novel phage-host pairs from ice-free soil samples collected at Waddington Bay, Graham Coast, Antarctica, during the First Latvian Antarctic Expedition have resulted in the recovery of a unique Psychrobacillus siphophage Perkons that infects a Psychrobacillus isolate designated as \"L4\" originating from the same source material. Results of the whole genome sequencing revealed phage Perkons to be unique in terms of its overall genomic nucleotide sequence similarity, whereas isolate L4 was found to be most closely related to Psychrobacillus glaciei strain PB01 and Psychrobacillus sp. L3 (latter of which originated from the same source material, but was not susceptible to infection by Perkons), yet demonstrated sufficient differences from both. The unexpected presence of several integrase genes in the genome of Perkons has prompted lysogenization experiments of the host strain, revealing site-specific integration into the chromosome of Psychrobacillus sp. L4 resulting in the disruption of an ORF encoding a flotillin-like protein floA. While the temperate nature of phage Perkons hindered replicability of the classical microbiological assays, ddPCR-based investigations have given a hint at the Perkons-L4 interaction dynamics and verified spontaneous Perkons induction from the lysogenized host. CONCLUSIONS: Isolation and characterization of Psychrobacillus sp. L4 and unique temperate bacteriophage Perkons expand the known culturable microbial diversity. Characterization of bacteriophage Perkons presented in this work is expected to provide baseline knowledge of the Perkons-like phages, more of which are anticipated to be uncovered in the future owing to both culture-independent and culture-dependent experimental efforts.",
-      "web_url": "https://europepmc.org/article/PMC/PMC13245101"
-     },
-     {
-      "id": "39769480",
-      "source": "MED",
-      "pmid": "39769480",
-      "pmcid": "PMC11676349",
-      "doi": "10.3390/ijms252413718",
-      "title": "Comparison of the Effects of UV-C Light in the Form of Flash or Continuous Exposure: A Transcriptomic Analysis on <i>Arabidopsis thaliana</i> L.",
-      "authorString": "Jazayeri SM, Aarrouf J, Urban L, Lopez-Lauri F.",
-      "journalTitle": null,
-      "pubYear": "2024",
-      "firstPublicationDate": "2024-12-22",
-      "citedByCount": 3,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
-      "abstractText": "Ultraviolet C (UV-C) flash treatment represents a promising method for priming plants. This study compared the effects of 1 s (flash) and 60 s (60 s) UV-C exposures on the transcriptome of <i>Arabidopsis thaliana</i> L. plants. A dose of 200 J m<sup>-2</sup> delivered in one second was observed to effectively stimulate plant defenses without causing any adverse effects on plant health. A total of 3054 and 1865 differentially expressed genes (DEGs) were identified in the flash and 60 s treatments, respectively, in comparison to the control plants. Of these, 1131 were common to both treatments. The flash treatment affected a greater number of transcription factors (415 genes) than the 60 s treatment (254 genes), indicating more pronounced alterations in gene expression. The flash treatment resulted in a significant overexpression of heat shock proteins (HSPs), heat shock factors (HSFs), and their associated genes, which impacted oxidative stress, proteostasis, genome stability, cell survival, and thermotolerance. The majority of mitochondrial genes were found to be upregulated, while photosynthetic genes exhibited a downregulation. These expression patterns coordinate electron transport and crosstalk between the nucleus, chloroplasts, and mitochondria, eliciting an adaptive protective response to UV-C flash. Additionally, the flash treatment resulted in alterations to several genes involved in cell cycle regulation, division, and DNA replication. These included ATP BMMs, BRCA2 s, IQDs, kinesin complex, MCM complex, CYCs, and CDKs, which ultimately led to cell cycle arrest as a temporary preparation for subsequent conditions. The present study demonstrates that a 1 s exposure to UV-C induces distinctive plant responses through coordinated gene expression. The findings suggest that the flash treatment is an innovative method that triggers a unique cellular response, prioritizing repair mechanisms and potentially enhancing plant immunity, resilience, and priming. It can be used as a plant resistance inducer and stimulator.",
-      "web_url": "https://europepmc.org/article/PMC/PMC11676349"
-     },
-     {
-      "id": "27912769",
-      "source": "MED",
-      "pmid": "27912769",
-      "pmcid": "PMC5135824",
-      "doi": "10.1186/s12985-016-0656-6",
-      "title": "Three novel bacteriophages isolated from the East African Rift Valley soda lakes.",
-      "authorString": "van Zyl LJ, Nemavhulani S, Cass J, Cowan DA, Trindade M.",
-      "journalTitle": null,
-      "pubYear": "2016",
-      "firstPublicationDate": "2016-12-03",
-      "citedByCount": 9,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
-      "abstractText": "<h4>Background</h4>Soda lakes are unique environments in terms of their physical characteristics and the biology they harbour. Although well studied with respect to their microbial composition, their viral compositions have not, and consequently few bacteriophages that infect bacteria from haloalkaline environments have been described.<h4>Methods</h4>Bacteria were isolated from sediment samples of lakes Magadi and Shala. Three phages were isolated on two different Bacillus species and one Paracoccus species using agar overlays. The growth characteristics of each phage in its host was investigated and the genome sequences determined and analysed by comparison with known phages.<h4>Results</h4>Phage Shbh1 belongs to the family Myoviridae while Mgbh1 and Shpa belong to the Siphoviridae family. Tetranucleotide usage frequencies and G\u2009+\u2009C content suggests that Shbh1 and Mgbh1 do not regularly infect, and have therefore not evolved with, the hosts they were isolated on here. Shbh1 was shown capable of infecting two different Bacillus species from the two different lakes demonstrating its potential broad-host range. Comparative analysis of their genome sequence with known phages revealed that, although novel, Shbh1 does share substantial amino acid similarity with previously described Bacillus infecting phages (Grass, phiNIT1 and phiAGATE) and belongs to the Bastille group, while Mgbh1 and Shpa are highly novel.<h4>Conclusion</h4>The addition of these phages to current databases should help with metagenome/metavirome annotation efforts. We describe a highly novel Paracoccus infecting virus (Shpa) which together with Ngo\u03a66 and vB_PmaS_IMEP1 is one of only three phages known to infect Paracoccus species but does not show similarity to these phages.",
-      "web_url": "https://europepmc.org/article/PMC/PMC5135824"
-     },
-     {
-      "id": "24067958",
-      "source": "MED",
-      "pmid": "24067958",
-      "pmcid": "PMC3838149",
-      "doi": "10.1128/jvi.02656-13",
-      "title": "Phylogenomic network and comparative genomics reveal a diverged member of the \u03a6KZ-related group, marine vibrio phage \u03a6JM-2012.",
-      "authorString": "Jang HB, Fagutao FF, Nho SW, Park SB, Cha IS, Yu JE, Lee JS, Im SP, Aoki T, Jung TS.",
-      "journalTitle": null,
-      "pubYear": "2013",
-      "firstPublicationDate": "2013-09-25",
-      "citedByCount": 32,
-      "isOpenAccess": "N",
-      "hasPDF": "Y",
-      "abstractText": "Bacteriophages are the largest reservoir of genetic diversity. Here we describe the novel phage \u03a6JM-2012. This natural isolate from marine Vibrio cyclitrophicus possesses very few gene contents relevant to other well-studied marine Vibrio phages. To better understand its evolutionary history, we built a mathematical model of pairwise relationships among 1,221 phage genomes, in which the genomes (nodes) are linked by edges representing the normalized number of shared orthologous protein families. This weighted network revealed that \u03a6JM-2012 was connected to only five members of the Pseudomonas \u03a6KZ-like phage family in an isolated network, strongly indicating that it belongs to this phage group. However, comparative genomic analyses highlighted an almost complete loss of colinearity with the \u03a6KZ-related genomes and little conservation of gene order, probably reflecting the action of distinct evolutionary forces on the genome of \u03a6JM-2012. In this phage, typical conserved core genes, including six RNA polymerase genes, were frequently displaced and the hyperplastic regions were rich in both unique genes and predicted unidirectional promoters with highly correlated orientations. Further, analysis of the \u03a6JM-2012 genome showed that segments of the conserved N-terminal parts of \u03a6KZ tail fiber paralogs exhibited evidence of combinatorial assortment, having switched transcriptional orientation, and there was recruitment and/or structural changes among phage endolysins and tail spike protein. Thus, this naturally occurring phage appears to have branched from a common ancestor of the \u03a6KZ-related groups, showing a distinct genomic architecture and unique genes that most likely reflect adaptation to its chosen host and environment.",
-      "web_url": "https://europepmc.org/article/PMC/PMC3838149"
-     },
-     {
-      "id": "9797291",
-      "source": "MED",
-      "pmid": "9797291",
-      "pmcid": "PMC106653",
-      "doi": "10.1128/aem.64.11.4363-4367.1998",
-      "title": "Characterization of the basic replicon of Rhodococcus plasmid pSOX and development of a Rhodococcus-Escherichia coli shuttle vector.",
-      "authorString": "Denis-Larose C, Bergeron H, Labb\u00e9 D, Greer CW, Hawari J, Grossman MJ, Sankey BM, Lau PC.",
-      "journalTitle": null,
-      "pubYear": "1998",
-      "firstPublicationDate": "1998-11-01",
-      "citedByCount": 14,
-      "isOpenAccess": "N",
-      "hasPDF": "Y",
-      "abstractText": "The replication region of a 100-kb desulfurization plasmid (pSOX) from Rhodococcus sp. strain X309 was localized to a 4-kb KpnI fragment, and its sequence was determined. The amino acid sequence of one of the predicted open reading frames (ORFs) was related to the putative replication (Rep) protein sequences of the mycobacterial pLR7 family of plasmids. Three of the five predicted ORF products were identified by radiolabelling with the Escherichia coli T7 polymerase/promoter system. In E. coli, the Rep protein of pSOX was apparently synthesized in a shortened form, 21.3 kDa instead of the predicted 41.3 kDa, as a result of an internal initiation. This situation is reminescent of that for some bacterial Rep proteins. A shuttle plasmid was constructed with the pSOX origin, pBluescript II KS-, and the chloramphenicol resistance (Cmr) gene from pRF29. This new shuttle plasmid was used to demonstrate expression of the Bacillus subtilis sacB gene in a strain of Rhodococcus, rendering it sensitive to the presence of sucrose.",
-      "web_url": "https://europepmc.org/article/PMC/PMC106653"
-     }
-    ]
-   },
+   "elapsed_s": 0.001135161001002416,
+   "result": null,
    "error": null
   },
   {
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": null,
-   "result": {
-    "uniprot_accession": "P92530",
-    "numberOfHits": 6,
-    "returned": 6,
-    "annotations": [
-     {
-      "geneProductId": "UniProtKB:P92530",
-      "symbol": "AtMg00940",
-      "qualifier": "enables",
-      "goId": "GO:0003677",
-      "goName": "DNA binding",
-      "goAspect": "molecular_function",
-      "goEvidence": "IEA",
-      "evidenceCode": "ECO:0000256",
-      "reference": "GO_REF:0000002",
-      "assignedBy": "InterPro",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:P92530",
-      "symbol": "AtMg00940",
-      "qualifier": "involved_in",
-      "goId": "GO:0006355",
-      "goName": "regulation of DNA-templated transcription",
-      "goAspect": "biological_process",
-      "goEvidence": "IEA",
-      "evidenceCode": "ECO:0000256",
-      "reference": "GO_REF:0000002",
-      "assignedBy": "InterPro",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:P92530",
-      "symbol": "AtMg00940",
-      "qualifier": "involved_in",
-      "goId": "GO:0009725",
-      "goName": "response to hormone",
-      "goAspect": "biological_process",
-      "goEvidence": "IEA",
-      "evidenceCode": "ECO:0000256",
-      "reference": "GO_REF:0000002",
-      "assignedBy": "InterPro",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:P92530",
-      "symbol": "AtMg00940",
-      "qualifier": "located_in",
-      "goId": "GO:0005634",
-      "goName": "nucleus",
-      "goAspect": "cellular_component",
-      "goEvidence": "IEA",
-      "evidenceCode": "ECO:0000256",
-      "reference": "GO_REF:0000002",
-      "assignedBy": "InterPro",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "geneProductId": "UniProtKB:P92530",
-      "symbol": "AtMg00940",
-      "qualifier": "located_in",
-      "goId": "GO:0005634",
-      "goName": "nucleus",
-      "goAspect": "cellular_component",
-      "goEvidence": "ISM",
-      "evidenceCode": "ECO:0000255",
-      "reference": "GO_REF:0000122",
-      "assignedBy": "TAIR",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20180831",
-      "withFrom": null
-     },
-     {
-      "geneProductId": "UniProtKB:P92530",
-      "symbol": "AtMg00940",
-      "qualifier": "located_in",
-      "goId": "GO:0005739",
-      "goName": "mitochondrion",
-      "goAspect": "cellular_component",
-      "goEvidence": "IEA",
-      "evidenceCode": "ECO:0007322",
-      "reference": "GO_REF:0000044",
-      "assignedBy": "UniProt",
-      "taxonId": 3702,
-      "taxonName": "Arabidopsis thaliana",
-      "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB-SubCell",
-          "id": "SL-0173"
-         }
-        ]
-       }
-      ]
-     }
-    ],
-    "by_aspect": {
-     "molecular_function": [
-      {
-       "goId": "GO:0003677",
-       "goName": "DNA binding"
-      }
-     ],
-     "biological_process": [
-      {
-       "goId": "GO:0006355",
-       "goName": "regulation of DNA-templated transcription"
-      },
-      {
-       "goId": "GO:0009725",
-       "goName": "response to hormone"
-      }
-     ],
-     "cellular_component": [
-      {
-       "goId": "GO:0005634",
-       "goName": "nucleus"
-      },
-      {
-       "goId": "GO:0005739",
-       "goName": "mitochondrion"
-      }
-     ]
-    }
-   },
+   "elapsed_s": 0.00014924100105417892,
+   "result": null,
    "error": null
   },
   {
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": null,
-   "result": {
-    "accession": "P92530",
-    "found": true,
-    "domain_count": 5,
-    "truncated": false,
-    "domains": [
-     {
-      "accession": "G3DSA:2.30.30.1040",
-      "name": null,
-      "type": "homologous_superfamily",
-      "source_database": "cathgene3d",
-      "interpro": null,
-      "go_terms": null,
-      "locations": [
-       {
-        "start": 108,
-        "end": 154
-       }
-      ]
-     },
-     {
-      "accession": "IPR010525",
-      "name": "Auxin response factor domain",
-      "type": "domain",
-      "source_database": "interpro",
-      "interpro": null,
-      "go_terms": [
-       {
-        "identifier": "GO:0003677",
-        "name": "DNA binding",
-        "category": {
-         "code": "F",
-         "name": "molecular_function"
-        }
-       },
-       {
-        "identifier": "GO:0006355",
-        "name": "regulation of DNA-templated transcription",
-        "category": {
-         "code": "P",
-         "name": "biological_process"
-        }
-       },
-       {
-        "identifier": "GO:0009725",
-        "name": "response to hormone",
-        "category": {
-         "code": "P",
-         "name": "biological_process"
-        }
-       },
-       {
-        "identifier": "GO:0005634",
-        "name": "nucleus",
-        "category": {
-         "code": "C",
-         "name": "cellular_component"
-        }
-       }
-      ],
-      "locations": [
-       {
-        "start": 93,
-        "end": 151
-       }
-      ]
-     },
-     {
-      "accession": "IPR044835",
-      "name": "Auxin response factor",
-      "type": "family",
-      "source_database": "interpro",
-      "interpro": null,
-      "go_terms": [
-       {
-        "identifier": "GO:0003677",
-        "name": "DNA binding",
-        "category": {
-         "code": "F",
-         "name": "molecular_function"
-        }
-       },
-       {
-        "identifier": "GO:0006355",
-        "name": "regulation of DNA-templated transcription",
-        "category": {
-         "code": "P",
-         "name": "biological_process"
-        }
-       },
-       {
-        "identifier": "GO:0009725",
-        "name": "response to hormone",
-        "category": {
-         "code": "P",
-         "name": "biological_process"
-        }
-       }
-      ],
-      "locations": [
-       {
-        "start": 2,
-        "end": 151
-       }
-      ]
-     },
-     {
-      "accession": "PF06507",
-      "name": "Auxin response factor ancillary domain",
-      "type": "domain",
-      "source_database": "pfam",
-      "interpro": "IPR010525",
-      "go_terms": null,
-      "locations": [
-       {
-        "start": 93,
-        "end": 151
-       }
-      ]
-     },
-     {
-      "accession": "PTHR31384",
-      "name": "AUXIN RESPONSE FACTOR 4-RELATED",
-      "type": "family",
-      "source_database": "panther",
-      "interpro": "IPR044835",
-      "go_terms": null,
-      "locations": [
-       {
-        "start": 2,
-        "end": 151
-       }
-      ]
-     }
-    ],
-    "count_by_type": {
-     "homologous_superfamily": 1,
-     "domain": 2,
-     "family": 2
-    },
-    "upstream_version": "110.0"
-   },
+   "elapsed_s": 0.00017492600454716012,
+   "result": null,
    "error": null
   }
  ],
@@ -642,23 +77,29 @@
   "locus": "ATMG00940",
   "organism": "arabidopsis_thaliana",
   "canonical_gene_name": null,
+  "gene_names": {
+   "canonical": null,
+   "ensembl": null,
+   "uniprot": []
+  },
   "uniprot_accession": "P92530",
   "markdown": "# ATMG00940 \u2014 `ATMG00940`\n\n*Arabidopsis thaliana* \u00b7 protein_coding \u00b7 Mt:251,403\u2013251,897 (-) \u00b7 TAIR10\n\n## Protein\n**Uncharacterized mitochondrial protein AtMg00940**\nM940_ARATH \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 164 aa\nUniProt: [P92530](https://www.uniprot.org/uniprotkb/P92530)\n\n## Protein domains\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [108\u2013154]\n- **Auxin response factor domain** (domain, interpro) [93\u2013151]\n- **Auxin response factor** (family, interpro) [2\u2013151]\n- **Auxin response factor ancillary domain** (domain, pfam) [93\u2013151]\n- **AUXIN RESPONSE FACTOR 4-RELATED** (family, panther) [2\u2013151]\n\n## GO annotations\n**Molecular Function**\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IEA)\n- [GO:0005634] nucleus (ISM)\n- [GO:0005739] mitochondrion (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [NotFoundError] KEGG: no pathway memberships for ATMG00940 (queried as ath:ATMG00940)_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| ATP6-1 | 0.462 |\n| ATP6-2 | 0.429 |\n\n## Cross-references\n- NASC Gene ID: ATMG00940\n- TAIR: ATMG00940\n- TAIR Gene Name: ORF164\n- Expression Atlas: ATMG00940\n- KNETMINER_ARA: ATMG00940\n\n## Literature\n5 hits total; showing top 5.\n- **Genomic and experimental characterization of unique Antarctic temperate phage Perkons reveals multiple integrases and complex lysogenic dynamics in Psychrobacillus sp. L4** \u2014 Zrelovs N, Svanberga K, Priedeslaipa A, Jansons J, Lamsters K, Karuss J, Krievans M, Fridmanis D, Dislers A, Kazaks A. (PMID:42026481; doi:10.1186/s12866-026-05031-6)\n- **Comparison of the Effects of UV-C Light in the Form of Flash or Continuous Exposure: A Transcriptomic Analysis on <i>Arabidopsis thaliana</i> L** \u2014 Jazayeri SM, Aarrouf J, Urban L, Lopez-Lauri F. (PMID:39769480; doi:10.3390/ijms252413718)\n- **Three novel bacteriophages isolated from the East African Rift Valley soda lakes** \u2014 van Zyl LJ, Nemavhulani S, Cass J, Cowan DA, Trindade M. (PMID:27912769; doi:10.1186/s12985-016-0656-6)\n- **Phylogenomic network and comparative genomics reveal a diverged member of the \u03a6KZ-related group, marine vibrio phage \u03a6JM-2012** \u2014 Jang HB, Fagutao FF, Nho SW, Park SB, Cha IS, Yu JE, Lee JS, Im SP, Aoki T, Jung TS. (PMID:24067958; doi:10.1128/jvi.02656-13)\n- **Characterization of the basic replicon of Rhodococcus plasmid pSOX and development of a Rhodococcus-Escherichia coli shuttle vector** \u2014 Denis-Larose C, Bergeron H, Labb\u00e9 D, Greer CW, Hawari J, Grossman MJ, Sankey BM, Lau PC. (PMID:9797291; doi:10.1128/aem.64.11.4363-4367.1998)\n",
   "sections": {
    "annotation": {
-    "end": 251897,
-    "logic_name": "araport11",
-    "start": 251403,
-    "biotype": "protein_coding",
-    "source": "araport11",
     "db_type": "core",
-    "id": "ATMG00940",
-    "assembly_name": "TAIR10",
+    "source": "araport11",
     "object_type": "Gene",
-    "seq_region_name": "Mt",
     "canonical_transcript": "ATMG00940.1.",
+    "id": "ATMG00940",
+    "logic_name": "araport11",
     "strand": -1,
-    "organism": "arabidopsis_thaliana"
+    "end": 251897,
+    "start": 251403,
+    "assembly_name": "TAIR10",
+    "biotype": "protein_coding",
+    "seq_region_name": "Mt",
+    "organism": "arabidopsis_thaliana",
+    "upstream_version": null
    },
    "protein": {
     "locus_query": "ATMG00940",
@@ -680,59 +121,59 @@
     "count": 5,
     "xrefs": [
      {
-      "info_type": "DIRECT",
       "version": "0",
-      "synonyms": [],
+      "info_type": "DIRECT",
       "info_text": "",
-      "display_id": "ATMG00940-TAIR-G",
+      "dbname": "NASC_GENE_ID",
+      "description": "DNA binding",
+      "synonyms": [],
+      "primary_id": "ATMG00940",
       "db_display_name": "NASC Gene ID",
-      "primary_id": "ATMG00940",
-      "description": "DNA binding",
-      "dbname": "NASC_GENE_ID"
+      "display_id": "ATMG00940-TAIR-G"
      },
      {
-      "info_type": "DIRECT",
-      "version": "0",
-      "synonyms": [],
       "info_text": "",
-      "display_id": "ATMG00940",
-      "db_display_name": "TAIR",
-      "primary_id": "ATMG00940",
+      "info_type": "DIRECT",
+      "dbname": "TAIR_LOCUS",
+      "version": "0",
       "description": "DNA binding",
-      "dbname": "TAIR_LOCUS"
+      "db_display_name": "TAIR",
+      "display_id": "ATMG00940",
+      "primary_id": "ATMG00940",
+      "synonyms": []
      },
      {
+      "description": "",
+      "display_id": "ORF164",
+      "db_display_name": "TAIR Gene Name",
       "synonyms": [],
-      "version": "0",
+      "primary_id": "ORF164",
       "info_text": "",
       "info_type": "DIRECT",
       "dbname": "TAIR_SYMBOL",
-      "description": "",
-      "primary_id": "ORF164",
-      "display_id": "ORF164",
-      "db_display_name": "TAIR Gene Name"
+      "version": "0"
      },
      {
-      "display_id": "ATMG00940",
       "db_display_name": "Expression Atlas",
+      "display_id": "ATMG00940",
       "primary_id": "ATMG00940",
-      "dbname": "ArrayExpress",
-      "description": null,
-      "info_type": "DIRECT",
-      "version": "0",
       "synonyms": [],
-      "info_text": ""
+      "description": null,
+      "dbname": "ArrayExpress",
+      "info_text": "",
+      "info_type": "DIRECT",
+      "version": "0"
      },
      {
+      "dbname": "KNETMINER_ARA",
+      "info_text": "",
+      "info_type": "DEPENDENT",
+      "version": "0",
       "db_display_name": "KNETMINER_ARA",
       "display_id": "ATMG00940",
+      "synonyms": [],
       "primary_id": "ATMG00940",
-      "description": null,
-      "dbname": "KNETMINER_ARA",
-      "info_type": "DEPENDENT",
-      "info_text": "",
-      "version": "0",
-      "synonyms": []
+      "description": null
      }
     ],
     "by_db": {
@@ -779,7 +220,8 @@
       "tscore": 0.4,
       "pscore": 0
      }
-    ]
+    ],
+    "upstream_version": null
    },
    "literature": {
     "locus": "ATMG00940",
@@ -874,7 +316,8 @@
       "abstractText": "The replication region of a 100-kb desulfurization plasmid (pSOX) from Rhodococcus sp. strain X309 was localized to a 4-kb KpnI fragment, and its sequence was determined. The amino acid sequence of one of the predicted open reading frames (ORFs) was related to the putative replication (Rep) protein sequences of the mycobacterial pLR7 family of plasmids. Three of the five predicted ORF products were identified by radiolabelling with the Escherichia coli T7 polymerase/promoter system. In E. coli, the Rep protein of pSOX was apparently synthesized in a shortened form, 21.3 kDa instead of the predicted 41.3 kDa, as a result of an internal initiation. This situation is reminescent of that for some bacterial Rep proteins. A shuttle plasmid was constructed with the pSOX origin, pBluescript II KS-, and the chloramphenicol resistance (Cmr) gene from pRF29. This new shuttle plasmid was used to demonstrate expression of the Bacillus subtilis sacB gene in a strain of Rhodococcus, rendering it sensitive to the presence of sucrose.",
       "web_url": "https://europepmc.org/article/PMC/PMC106653"
      }
-    ]
+    ],
+    "upstream_version": null
    },
    "go_annotations": {
     "uniprot_accession": "P92530",
@@ -1074,7 +517,8 @@
        "goName": "mitochondrion"
       }
      ]
-    }
+    },
+    "upstream_version": null
    },
    "domains": {
     "accession": "P92530",

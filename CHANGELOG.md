@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **`examples/arf_family/` re-run at `967bc36`, the fixes below on the
+  record.** 400 calls over 48 genes: the same 23 Arabidopsis members and
+  25 rice (6 on the first run) once both ortholog tools filter by
+  `target_organism`; wheat stays at 0 because none of the 56 IWGSC loci
+  queried resolves to a protein. 8 of the 40 hand-logged gap rows are
+  closed against the new run and listed last on the page with what the run
+  returned instead (`render_gaps.py` renders a `closed` field;
+  `run_dossier.py` logs the server commit beside its version, since a fix
+  branch reports the release it fixes). `upstream_version` null rate
+  250/400 (was 188/248); no `gene_report` response over 200 kB (was 6).
 - **Every chain tool carries `upstream_version` (#121).** The ARF dossier
   found the key on 3 of 16 tools and a release under a private key on three
   more. Now `gramene_homologs` reports the release pinned in its request path

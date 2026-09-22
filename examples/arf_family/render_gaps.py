@@ -1,8 +1,8 @@
 """Render the run's gap log as the `## Known gaps` section of `PAGE.md`.
 
 `gaps.jsonl` (40 hand-logged rows) and `gaps_auto.jsonl` (9 rows the
-runner flagged itself) are the record of what the 248-call family
-dossier run turned up. `PAGE.md` shows all 49 of them. Typing them into the page by
+runner flagged itself) are the record of what the family dossier runs
+turned up. `PAGE.md` shows all 49 of them, the closed ones last. Typing them into the page by
 hand would mean a page that is correct on the day it is written and
 silently wrong the next time a row is corrected — which has already
 happened once here: four rows in `gaps.jsonl` were false and were
@@ -62,6 +62,13 @@ ORIGIN_HEADINGS: dict[str, str] = {
 # Rows the runner logged itself carry no `origin`: an oversize response
 # is this server's envelope, not an upstream value.
 AUTO_ORIGIN = "tool"
+
+# A hand row may carry `closed: {"commit": ..., "returned": ...}` once a
+# later run no longer reproduces it: the commit whose run was read, and
+# what that run returned instead. The row keeps its original observation
+# and is listed under this heading, after the open ones — a closed gap is
+# still a gap the tool had, not a row to delete.
+CLOSED_HEADING = "### Closed by a later run"
 
 SEVERAL_TOOLS = "several tools"
 
@@ -139,6 +146,10 @@ def render_row(row: dict, tool_names: Sequence[str]) -> str:
     label = SEVERAL_TOOLS if subject == SEVERAL_TOOLS else f"`{subject}`"
     what = escape_markdown(balanced_backticks(truncate(happened)))
     expected = escape_markdown(row["expected"])
+    closed = row.get("closed")
+    if closed:
+        now = escape_markdown(balanced_backticks(truncate(closed["returned"])))
+        return f"- **{label}** ({row['kind']}) — was: {what} — now, at `{closed['commit']}`: {now}"
     return f"- **{label}** ({row['kind']}) — {what} — expected: {expected}"
 
 
@@ -155,10 +166,15 @@ def render_section(
 
     Raises `ValueError` on a row whose `origin` has no heading: an
     unclassified gap must stop the build, not vanish from the page.
+    Rows carrying `closed` are listed last under `CLOSED_HEADING`.
     """
     rows = list(hand_rows) + list(auto_rows)
     grouped: dict[str, list[dict]] = {key: [] for key in ORIGIN_HEADINGS}
+    closed: list[dict] = []
     for row in rows:
+        if row.get("closed"):
+            closed.append(row)
+            continue
         origin = origin_of(row)
         if origin not in grouped:
             raise ValueError(
@@ -168,19 +184,30 @@ def render_section(
             )
         grouped[origin].append(row)
 
+    n_open = len(rows) - len(closed)
+    intro = (
+        f"All {n_open} open rows, one line each: what was attempted, what came "
+        f"back, what was expected instead."
+    )
+    if closed:
+        intro += (
+            f" The {len(closed)} rows logged against an earlier run that a later "
+            f"run no longer reproduces are listed last, with what it returned instead."
+        )
     out = [
         SECTION_HEADING,
         "",
-        f"All {len(rows)} rows the run logged, one line each: what was "
-        f"attempted, what came back, what was expected instead. Full text "
-        f"and the raw response each row was read from are in "
-        f"[`gaps.jsonl`](gaps.jsonl) and [`gaps_auto.jsonl`](gaps_auto.jsonl).",
+        intro + " Full text and the raw response each row was read from are in "
+        "[`gaps.jsonl`](gaps.jsonl) and [`gaps_auto.jsonl`](gaps_auto.jsonl).",
     ]
     for origin, heading in ORIGIN_HEADINGS.items():
         if not grouped[origin]:
             continue  # an empty heading would read as a category with no findings
         out += ["", heading, ""]
         out += [render_row(row, tool_names) for row in grouped[origin]]
+    if closed:
+        out += ["", CLOSED_HEADING, ""]
+        out += [render_row(row, tool_names) for row in closed]
     return "\n".join(out)
 
 

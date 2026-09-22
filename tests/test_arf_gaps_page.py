@@ -107,9 +107,31 @@ def test_render_section_files_each_row_under_the_heading_for_its_origin() -> Non
     assert any("999999 bytes" in line for line in tool_lines)
 
     assert out.splitlines()[0] == SECTION_HEADING
-    assert "All 3 rows the run logged" in out
+    assert "All 3 open rows" in out
     # Every row rendered exactly once, under one heading or the other.
     assert len(tool_lines) + len(upstream_lines) == 3
+
+
+def test_a_closed_row_is_listed_last_with_both_observations() -> None:
+    closed = {
+        **HAND_TOOL_ROW,
+        "kind": "synthetic-closed-kind",
+        "closed": {"commit": "abc1234", "returned": "the synthetic answer now expected"},
+    }
+    out = render_section([HAND_TOOL_ROW, closed], [AUTO_ROW], TOOL_NAMES)
+    closed_lines = _section_of(render_gaps.CLOSED_HEADING, out)
+    tool_lines = _section_of(ORIGIN_HEADINGS["tool"], out)
+    # The closed row moves out of its origin heading; the open one stays.
+    assert len(closed_lines) == 1 and "synthetic-closed-kind" in closed_lines[0]
+    assert "was: a short synthetic answer" in closed_lines[0]
+    assert "now, at `abc1234`: the synthetic answer now expected" in closed_lines[0]
+    assert not any("synthetic-closed-kind" in line for line in tool_lines)
+    assert any("synthetic-tool-kind" in line for line in tool_lines)
+    assert "All 2 open rows" in out and "The 1 rows logged against an earlier run" in out
+    # Positive control: no closed rows, no closed heading, no closed sentence.
+    plain = render_section([HAND_TOOL_ROW], [AUTO_ROW], TOOL_NAMES)
+    assert render_gaps.CLOSED_HEADING not in plain and "earlier run" not in plain
+    assert "All 2 open rows" in plain
 
 
 def test_render_section_raises_on_an_origin_it_has_no_heading_for() -> None:
