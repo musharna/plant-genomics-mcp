@@ -8,8 +8,8 @@ _Triticum aestivum_ members the tools could name and verify — in a
 single sitting: every response captured to [`raw/`](raw), and every
 place an answer came back unusable, inconsistent or silently short
 written down as it was found. It is a showcase and a defect list at the
-same time. The recipes below are what the tools do well; the 41 open rows
-under **Known gaps** are what they do not, and the 8 closed ones are what
+same time. The recipes below are what the tools do well; the 42 open rows
+under **Known gaps** are what they do not, and the 7 closed ones are what
 a fix pass between the two runs did about it.
 
 Provenance: run 2026-09-22 against server version `1.21.0` at commit
@@ -178,8 +178,18 @@ characters.
 {
   "elapsed_s": 3.7683510970018688,
   "steps": [
-    { "tool": "ensembl_plants_lookup_locus", "elapsed_s": 3.3594275700015714, "result": null, "error": null },
-    { "tool": "resolve_locus_to_uniprot", "elapsed_s": 0.0019355689946678467, "result": null, "error": null }
+    {
+      "tool": "ensembl_plants_lookup_locus",
+      "elapsed_s": 3.3594275700015714,
+      "result": null,
+      "error": null
+    },
+    {
+      "tool": "resolve_locus_to_uniprot",
+      "elapsed_s": 0.0019355689946678467,
+      "result": null,
+      "error": null
+    }
   ],
   "result": {
     "canonical_gene_name": "MP",

@@ -13,7 +13,7 @@ what the server serializes around these dicts, so going through stdio adds
 latency without showing anything new).
 
 A worked 400-call run of 16 tools over 48 genes, with the 49 gaps it
-logged (8 since closed), is in [`arf_family/PAGE.md`](arf_family/PAGE.md).
+logged (7 since closed), is in [`arf_family/PAGE.md`](arf_family/PAGE.md).
 
 ## Transcripts
 

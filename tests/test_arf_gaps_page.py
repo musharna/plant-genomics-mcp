@@ -224,6 +224,31 @@ def test_every_gap_row_reaches_the_page() -> None:
         assert any(f"({row['kind']})" in line for line in bullets), row["kind"]
 
 
+def test_prose_counts_of_open_and_closed_rows_match_the_gap_log() -> None:
+    """The intro prose and both READMEs quote the open/closed split by hand.
+
+    The rendered section is pinned byte-for-byte, but the sentences above
+    it and the two READMEs are typed, and a typed count drifted (8 for 7)
+    the first time the log changed under it. Recount from the log.
+    """
+    hand = read_rows(render_gaps.GAPS_PATH)
+    auto = read_rows(render_gaps.GAPS_AUTO_PATH)
+    n_closed = sum(1 for row in hand if "closed" in row)
+    n_open = len(hand) + len(auto) - n_closed
+    assert 0 < n_closed < len(hand)  # positive control: the split is real
+
+    page = render_gaps.PAGE_PATH.read_text()
+    assert f"the {n_open} open rows" in page
+    assert f"the {n_closed} closed ones" in page
+    for readme in (
+        render_gaps.PAGE_PATH.parents[2] / "README.md",
+        render_gaps.PAGE_PATH.parents[1] / "README.md",
+    ):
+        text = readme.read_text()
+        assert f"{len(hand) + len(auto)} gaps it" in text, readme
+        assert f"({n_closed} since closed)" in text, readme
+
+
 def test_main_check_exits_zero_against_the_committed_page() -> None:
     """Real execution of the CLI path, not only the pure functions."""
     assert render_gaps.main(["--check"]) == 0
