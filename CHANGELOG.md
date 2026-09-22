@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- **`gramene_homologs`, `batch_gramene_homologs` and `orthodb_orthologs`
+  take `target_organism` (#125).** The filter runs BEFORE the cap, so a hub
+  gene's rice or wheat orthologs can no longer be pushed past `limit` by
+  other species; the filtered answer reports `total` / `member_count` for
+  the organism asked and `total_all_organisms` / `member_count_all_organisms`
+  for everything. Live, ARF5 (AT1G19850) goes from 0 rice and 0 wheat hits
+  in either tool to 1 rice + 3 wheat (Gramene) and 24 rice + 12 wheat
+  (OrthoDB).
+- **Fixed: Gramene enrichment resolved only 20 of every 100 ids.** The
+  `genes?idList=` endpoint pages at 20 rows unless `rows` is sent, so
+  `fetch_homolog_enrichment_batch` (used by `consensus_homologs`) silently
+  dropped 80% of each chunk. Every chunk now asks for exactly the rows it
+  sends.
 - **`gene_report` carries each backend payload once (#122).** `steps[]`
   is now the audit trail (status, per-step `elapsed_s`, error) and the data
   lives under `result.sections` alone, halving the response. Every

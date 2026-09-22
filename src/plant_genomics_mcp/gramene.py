@@ -16,7 +16,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import _http, cache, validators
+from plant_genomics_mcp import _http, cache, organisms, validators
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
@@ -159,10 +159,12 @@ async def fetch_homolog_enrichment_batch(
     }
     for i in range(0, len(loci), chunk_size):
         chunk = loci[i : i + chunk_size]
+        # ``rows``: the endpoint pages at 20 records by default, whatever the
+        # idList length, so without it a 100-id chunk resolved only 20.
         raw = await _get(
             client,
             f"/{GRAMENE_RELEASE}/genes",
-            params={"idList": ",".join(chunk), "fl": "_id,xrefs,system_name"},
+            params={"idList": ",".join(chunk), "fl": "_id,xrefs,system_name", "rows": len(chunk)},
         )
         if not isinstance(raw, list):
             continue
@@ -185,6 +187,7 @@ async def lookup_homologs(
     locus: str,
     homology_type: str = "ortholog",
     limit: int | None = None,
+    target_organism: str | int | None = None,
 ) -> dict[str, Any]:
     """Fetch Gramene compara homologs for a plant locus.
 
@@ -194,6 +197,15 @@ async def lookup_homologs(
     all — a hub locus serialized every homolog into the payload, ~18 KB for a
     single ordinary gene, with nothing in the response admitting it was
     unbounded.
+
+    ``target_organism`` keeps only homologs in that organism, filtering
+    BEFORE the cap: a hub gene's 177-340 homologs come back in Gramene's
+    own order, other species first, so the cap alone silently dropped the
+    rice or wheat orthologs a caller asked about (issue #125). The species
+    of each homolog is resolved through ``fetch_homolog_enrichment_batch``
+    (``genes?idList=...&fl=system_name``, chunks of 100), and every returned
+    row then carries ``organism``. ``total`` counts the filtered set and
+    ``total_all_organisms`` the pre-filter one.
 
     ``homology_type`` is one of ``"ortholog"``, ``"paralog"``, ``"all"``.
     Unknown values default to ``"all"`` — we prefer permissive filtering
@@ -210,6 +222,8 @@ async def lookup_homologs(
     ID, dn/ds, or goc_score — so we only surface what's there.
     """
     validators.assert_valid_locus(locus, backend="Gramene")
+    # Resolve the target first so a typo fails before any upstream call.
+    target_slug = organisms.resolve(target_organism).canonical if target_organism else None
     raw = await _get(
         client,
         f"/{GRAMENE_RELEASE}/genes",
@@ -244,14 +258,34 @@ async def lookup_homologs(
         for target_locus in loci:
             if isinstance(target_locus, str):
                 normalized.append(_normalize(category, target_locus, gene_tree_id))
-    total = len(normalized)
-    rows = normalized[: _resolve_limit(limit)]
+    if target_slug is None:
+        total = len(normalized)
+        rows = normalized[: _resolve_limit(limit)]
+        return {
+            "locus": locus,
+            "release": GRAMENE_RELEASE,
+            # ``total`` is the true pre-cap count, so a capped answer still reports
+            # how much exists rather than quietly implying it returned everything.
+            "total": total,
+            "truncated": total > len(rows),
+            "homologs": rows,
+        }
+
+    species = await fetch_homolog_enrichment_batch(
+        client, [row["target_locus"] for row in normalized]
+    )
+    kept: list[dict[str, Any]] = []
+    for row in normalized:
+        slug = species[row["target_locus"]]["system_name"]
+        if slug == target_slug:
+            kept.append({**row, "organism": slug})
+    rows = kept[: _resolve_limit(limit)]
     return {
         "locus": locus,
         "release": GRAMENE_RELEASE,
-        # ``total`` is the true pre-cap count, so a capped answer still reports
-        # how much exists rather than quietly implying it returned everything.
-        "total": total,
-        "truncated": total > len(rows),
+        "target_organism": target_slug,
+        "total": len(kept),
+        "total_all_organisms": len(normalized),
+        "truncated": len(kept) > len(rows),
         "homologs": rows,
     }

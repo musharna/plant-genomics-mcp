@@ -84,6 +84,17 @@ def _resolve_limit(limit: int | None) -> int:
     return max(1, min(int(limit), MAX_MEMBERS))
 
 
+def _organism_matches(name: str | None, scientific: str) -> bool:
+    """OrthoDB names organisms by scientific name, sometimes with a strain or
+    group suffix ('Oryza sativa Japonica Group'); match on the prefix,
+    case-insensitively, at a word boundary so 'Oryza sativa' cannot take
+    'Oryza sativa-like' species that merely share the stem."""
+    if not isinstance(name, str):
+        return False
+    n, s = name.lower(), scientific.lower()
+    return n == s or n.startswith(s + " ")
+
+
 def _members(clusters: list[Any], cap: int) -> tuple[list[dict[str, Any]], int]:
     """Flatten ortholog clusters to ``[{organism, gene_id, xref, description}]``.
 
@@ -137,6 +148,7 @@ async def lookup_locus(
     locus: str,
     organism: str | int = organisms.DEFAULT_ORGANISM,
     limit: int | None = None,
+    target_organism: str | int | None = None,
 ) -> dict[str, Any]:
     """Resolve a locus to its OrthoDB ortholog group and cross-species members.
 
@@ -147,8 +159,16 @@ async def lookup_locus(
     ``limit`` caps the returned members (default ``MAX_MEMBERS``);
     ``member_count`` reports the TRUE pre-cap total and ``truncated`` says
     whether the cap bit.
+
+    ``target_organism`` keeps only the clusters of that organism, BEFORE the
+    cap. OrthoDB lists members by organism name, so over a Viridiplantae group
+    of ~2,000 members the cap of 100 ended inside 'Lupinus albus' and never
+    reached Oryza or Triticum (issue #125). ``member_count`` then counts the
+    filtered members and ``member_count_all_organisms`` the whole group;
+    ``organism_count`` stays the group's true organism total.
     """
     canonical = organisms.resolve(organism).canonical
+    target = organisms.resolve(target_organism) if target_organism else None
     validators.assert_valid_locus(locus, backend="OrthoDB")
     search = await _get(client, "/current/search", {"query": locus, "level": LEVEL, "limit": 1})
     ids = search.get("data")
@@ -160,16 +180,37 @@ async def lookup_locus(
     ortho = await _get(client, "/current/orthologs", {"id": gid})
     clusters = ortho.get("data")
     clusters = clusters if isinstance(clusters, list) else []
-    members, member_total = _members(clusters, _resolve_limit(limit))
+    if target is None:
+        members, member_total = _members(clusters, _resolve_limit(limit))
+        return {
+            "locus": locus,
+            "organism": canonical,
+            "found": True,
+            "group": _project_group(group.get("data") or {}),
+            "organism_count": len(clusters),
+            # TRUE pre-cap total, so a truncated answer still says how much exists.
+            "member_count": member_total,
+            "truncated": member_total > len(members),
+            "members": members,
+        }
 
+    wanted = [
+        c
+        for c in clusters
+        if isinstance(c, dict)
+        and _organism_matches((c.get("organism") or {}).get("name"), target.scientific)
+    ]
+    members, member_total = _members(wanted, _resolve_limit(limit))
+    _, all_total = _members(clusters, 0)
     return {
         "locus": locus,
         "organism": canonical,
+        "target_organism": target.canonical,
         "found": True,
         "group": _project_group(group.get("data") or {}),
         "organism_count": len(clusters),
-        # TRUE pre-cap total, so a truncated answer still says how much exists.
         "member_count": member_total,
+        "member_count_all_organisms": all_total,
         "truncated": member_total > len(members),
         "members": members,
     }

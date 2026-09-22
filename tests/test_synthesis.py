@@ -967,7 +967,7 @@ async def test_consensus_homologs_happy_path(httpx_mock, monkeypatch):
     # Phase 3 — Gramene v69 enrichment projection (UniProt acc + system_name)
     # so we can dedup Gramene homologs against BLAST in UniProt-accession-space.
     httpx_mock.add_response(
-        url="https://data.gramene.org/v69/genes?idList=OS01G0100100&fl=_id%2Cxrefs%2Csystem_name",
+        url="https://data.gramene.org/v69/genes?idList=OS01G0100100&fl=_id%2Cxrefs%2Csystem_name&rows=1",
         json=[
             {
                 "_id": "OS01G0100100",
