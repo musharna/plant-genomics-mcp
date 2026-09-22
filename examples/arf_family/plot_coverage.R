@@ -111,7 +111,8 @@ p <- ggplot(calls, aes(x = n_bytes, y = y)) +
     name = NULL,
     values = c(21, 22, 24)[seq_along(organisms_sorted)],
     breaks = organisms_sorted,
-    labels = gsub("_", " ", organisms_sorted)
+    labels = gsub("_", " ", organisms_sorted),
+    guide = ggplot2::guide_legend(override.aes = list(fill = "grey60"))
   ) +
   scale_x_log10(labels = scales::label_comma()) +
   scale_y_continuous(
@@ -125,8 +126,9 @@ p <- ggplot(calls, aes(x = n_bytes, y = y)) +
     # Two rows: the three release_status labels together don't fit one row
     # at the figure's fixed 7in width without clipping (round 1 of the
     # visual review caught "no release in the payload" truncating off the
-    # right edge).
-    guide = ggplot2::guide_legend(nrow = 2)
+    # right edge). With `shape` mapped to organism the fill keys draw no
+    # glyph unless a shape is forced onto them.
+    guide = ggplot2::guide_legend(nrow = 2, override.aes = list(shape = 21))
   ) +
   scale_linetype_manual(name = NULL, values = c("200 kB oversize threshold" = "dashed")) +
   labs(
@@ -136,9 +138,8 @@ p <- ggplot(calls, aes(x = n_bytes, y = y)) +
     fill = NULL,
     caption = sprintf(
       paste0(
-        "One point per MCP call (%d calls over %d genes in %d organisms; batch_* calls cover up to 50 loci each),\n",
-        "offset vertically by organism, shape by organism; hollow = documented organism refusal (expected). ",
-        "Tools ordered by median size."
+        "One point per MCP call: %d calls, %d genes, %d organisms; a batch_* call covers up to 50 loci.\n",
+        "Offset and shape by organism; hollow = documented organism refusal. Tools ordered by median size."
       ),
       n_calls, n_genes, length(organisms_sorted)
     )

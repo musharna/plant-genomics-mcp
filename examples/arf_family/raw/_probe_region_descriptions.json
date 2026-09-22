@@ -1,0 +1,65 @@
+{
+ "probe": "ensembl_region_query descriptions outside Arabidopsis",
+ "results": {
+  "oryza_sativa": {
+   "args": {
+    "region": "1",
+    "start": 1,
+    "end": 1000000
+   },
+   "count": 180,
+   "protein_coding": 165,
+   "protein_coding_with_description": 1,
+   "first_three": [
+    {
+     "gene_id": "Os01g0116900",
+     "biotype": "protein_coding",
+     "description": null,
+     "external_name": null
+    },
+    {
+     "gene_id": "Os01g0114700",
+     "biotype": "protein_coding",
+     "description": null,
+     "external_name": null
+    },
+    {
+     "gene_id": "Os01g0114402",
+     "biotype": "protein_coding",
+     "description": null,
+     "external_name": null
+    }
+   ]
+  },
+  "triticum_aestivum": {
+   "args": {
+    "region": "1A",
+    "start": 1,
+    "end": 1000000
+   },
+   "count": 126,
+   "protein_coding": 17,
+   "protein_coding_with_description": 0,
+   "first_three": [
+    {
+     "gene_id": "TraesCS1A02G000300",
+     "biotype": "protein_coding",
+     "description": null,
+     "external_name": null
+    },
+    {
+     "gene_id": "TraesCS1A02G001700",
+     "biotype": "protein_coding",
+     "description": null,
+     "external_name": null
+    },
+    {
+     "gene_id": "TraesCS1A02G001500",
+     "biotype": "protein_coding",
+     "description": null,
+     "external_name": null
+    }
+   ]
+  }
+ }
+}

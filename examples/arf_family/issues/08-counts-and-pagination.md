@@ -1,8 +1,9 @@
 # Nine names for “how many exist upstream”, no cursor to reach the rest, and one count that counts chains
 
-**Draft — not filed.** Written from the 48-call ARF dossier run in
+**Draft — not filed.** Written from the ARF family dossier run in
 [`examples/arf_family/`](../), server version `1.21.0`, 2026-09-21
-(3 genes x 16 tools). Each section below is one row of
+(29 genes x 16 tools, 248 MCP calls; the family itself from a 516-call
+enumeration through the same tools). Each section below is one row of
 [`gaps.jsonl`](../gaps.jsonl), quoted as logged; `Check` names the
 captured response to read it back from.
 
@@ -20,9 +21,9 @@ Covers 3 rows of `gaps.jsonl`.
 ## `no-pagination`
 
 - **Attempted:** fetch the rows past the first page of a truncated list
-- **Returned:** orthodb_orthologs returns 100 of member_count 1986; gramene_homologs 100 of total 177; aragwas_associations 100 of association_count 126; locus_literature 10 of hitCount 91. No tool has an offset, page or cursor argument, so the rows past the cap are unreachable. The caps are not uniform either: orthodb_orthologs and gramene_homologs take `limit`, locus_literature takes `size` (its description caps it at 25, below the 91 hits), and aragwas_associations takes neither - its live schema is locus and organism only.
+- **Returned:** orthodb_orthologs returns 100 of member_count 1986; gramene_homologs 100 of total 177; aragwas_associations 100 of association_count 126; locus_literature 10 of hitCount 91 (raw/\_probe_literature_recheck.json; the dossier capture of that gene reports hitCount 0, see silent-empty-result). No tool has an offset, page or cursor argument, so the rows past the cap are unreachable. The caps are not uniform either: orthodb_orthologs and gramene_homologs take `limit`, locus_literature takes `size` (its description caps it at 25, below the 91 hits), and aragwas_associations takes neither - its live schema is locus and organism only.
 - **Expected:** an offset or cursor on any tool that reports more rows upstream than it returns
-- **Check:** `raw/AT1G19850__orthodb_orthologs.json, raw/AT1G19850__gramene_homologs.json, raw/AT1G19850__aragwas_associations.json, raw/AT1G19850__locus_literature.json`
+- **Check:** `raw/AT1G19850__orthodb_orthologs.json, raw/AT1G19850__gramene_homologs.json, raw/AT1G19850__aragwas_associations.json, raw/_probe_literature_recheck.json`
 
 ## `count-counts-rows`
 

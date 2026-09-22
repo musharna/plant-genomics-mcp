@@ -1,8 +1,9 @@
 # Normalisation requests: six values this server passes through from upstream unchanged
 
-**Draft — not filed.** Written from the 48-call ARF dossier run in
+**Draft — not filed.** Written from the ARF family dossier run in
 [`examples/arf_family/`](../), server version `1.21.0`, 2026-09-21
-(3 genes x 16 tools). Each section below is one row of
+(29 genes x 16 tools, 248 MCP calls; the family itself from a 516-call
+enumeration through the same tools). Each section below is one row of
 [`gaps.jsonl`](../gaps.jsonl), quoted as logged; `Check` names the
 captured response to read it back from.
 
@@ -20,9 +21,9 @@ Covers 6 rows of `gaps.jsonl`.
 ## `locus-case`
 
 - **Attempted:** feed atted_coexpression's neighbours back into another chain tool
-- **Returned:** all 75 neighbour loci across the three genes come back mixed-case ('At2g44830', 'At2g21050', 'At5g50090'). Every other tool in the chain, and genes.tsv, use upper case ('AT1G19850'). The caller has to know to normalise.
+- **Returned:** 396 of the 400 neighbour loci across the 16 genes ATTED-II answers for come back mixed-case ('At2g44830', 'At2g21050', 'At5g50090'); the 4 exceptions are rice neighbours of Os08g0520550 whose locus is the empty string or 'OSNPB_080175600'. Every other tool in the chain, and genes.tsv, use upper case ('AT1G19850'). The caller has to know to normalise.
 - **Expected:** one locus spelling across tools
-- **Check:** `raw/AT1G19850__atted_coexpression.json, raw/AT1G59750__atted_coexpression.json, raw/AT2G28350__atted_coexpression.json`
+- **Check:** `raw/AT1G19850__atted_coexpression.json, raw/AT1G59750__atted_coexpression.json, raw/Os08g0520550__atted_coexpression.json`
 
 ## `enrichment-ask`
 
@@ -48,6 +49,6 @@ Covers 6 rows of `gaps.jsonl`.
 ## `normalise-upstream-id`
 
 - **Attempted:** use ensembl_plants_lookup_locus' canonical_transcript as a transcript id
-- **Returned:** 'AT1G19850.1.' - a trailing period, on all three genes ('AT1G59750.1.', 'AT2G28350.1.'). This is Ensembl's own value: src/plant_genomics_mcp/ensembl_plants.py:110 returns `{\*\*raw}` with only species renamed to organism. The same id appears WITHOUT the trailing period inside aragwas_associations ('AT1G19850.1'), so the two tools disagree on the spelling of one identifier.
+- **Returned:** 'AT1G19850.1.' - a trailing period, on all 29 genes in both organisms ('AT1G59750.1.', 'Os01t0236300-01.'). This is Ensembl's own value: src/plant_genomics_mcp/ensembl_plants.py:110 returns `{**raw}` with only species renamed to organism. The same id appears WITHOUT the trailing period inside aragwas_associations ('AT1G19850.1'), so the two tools disagree on the spelling of one identifier.
 - **Expected:** one transcript-id spelling across tools, or a note that this field is Ensembl's raw value
-- **Check:** `raw/AT1G19850__ensembl_plants_lookup_locus.json, raw/AT1G19850__aragwas_associations.json`
+- **Check:** `raw/AT1G19850__ensembl_plants_lookup_locus.json, raw/Os01g0236300__ensembl_plants_lookup_locus.json, raw/AT1G19850__aragwas_associations.json`

@@ -194,7 +194,12 @@ def build_rows(
             release_status = RELEASE_UNUSED
         elif upstream_version_null < n:
             release_status = RELEASE_UPSTREAM_FIELD
-        elif tool in release_under_another_key:
+        elif tool in release_under_another_key or (
+            # A batch_ form carries each locus's payload, release key and
+            # all, inside its envelope: the gap row cites the split
+            # per-locus raw files, which are the same payloads.
+            tool.removeprefix("batch_") in release_under_another_key
+        ):
             release_status = RELEASE_UNDER_ANOTHER_KEY
         else:
             release_status = RELEASE_ABSENT

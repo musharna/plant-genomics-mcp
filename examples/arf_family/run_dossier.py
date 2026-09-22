@@ -131,6 +131,8 @@ class Runner:
         self.calls = open(here / "calls.jsonl", "w")  # noqa: SIM115
         # (chain_tool, kind, error class) -> loci
         self.auto: dict[tuple[str, str, str], list[str]] = defaultdict(list)
+        # (chain_tool, "oversize", cls) -> largest response seen, bytes
+        self.largest: dict[tuple[str, str, str], int] = defaultdict(int)
         self.batch_seq: dict[str, int] = defaultdict(int)
 
     def close(self) -> None:
@@ -151,7 +153,9 @@ class Runner:
         """Record the per-locus outcome; return its kind."""
         if ok:
             if n_bytes > OVERSIZE:
-                self.auto[(chain_tool, "oversize", f"{n_bytes} bytes")].append(locus)
+                key = (chain_tool, "oversize", f"over {OVERSIZE // 1000} kB on the wire")
+                self.auto[key].append(locus)
+                self.largest[key] = max(self.largest[key], n_bytes)
             return "ok"
         if is_expected(error):
             return "expected"
@@ -214,7 +218,9 @@ class Runner:
                     self._write_raw(locus, chain_tool, False, None, missing)
                 counts[kind] += 1
             if res.n_bytes > OVERSIZE:
-                self.auto[(chain_tool, "oversize", f"{res.n_bytes} bytes (batch)")].extend(loci)
+                key = (chain_tool, "oversize", f"over {OVERSIZE // 1000} kB on the wire (batch)")
+                self.auto[key].extend(loci)
+                self.largest[key] = max(self.largest[key], res.n_bytes)
             # An ok envelope whose every locus was refused is a refused call,
             # not an ok one: the call row must not read better than its rows.
             if counts["error"]:
@@ -255,6 +261,9 @@ class Runner:
     def write_auto_gaps(self) -> None:
         with open(self.here / "gaps_auto.jsonl", "w") as gaps:
             for (chain_tool, kind, cls), loci in self.auto.items():
+                returned = cls[:300]
+                if kind == "oversize":
+                    returned = f"{cls}, largest {self.largest[(chain_tool, kind, cls)]} bytes"
                 gaps.write(
                     json.dumps(
                         {
@@ -263,7 +272,7 @@ class Runner:
                             "locus": loci[0] if len(loci) == 1 else f"{len(loci)} loci",
                             "loci": loci,
                             "attempted": f"{chain_tool} on {len(loci)} loci",
-                            "returned": cls[:300],
+                            "returned": returned,
                             "expected": "a usable answer within 200 kB"
                             if kind == "oversize"
                             else "a usable answer",

@@ -1,8 +1,9 @@
 # `gene_report`: payloads carried twice, per-step timings always null, two names for one gene, GO bullets repeated
 
-**Draft — not filed.** Written from the 48-call ARF dossier run in
+**Draft — not filed.** Written from the ARF family dossier run in
 [`examples/arf_family/`](../), server version `1.21.0`, 2026-09-21
-(3 genes x 16 tools). Each section below is one row of
+(29 genes x 16 tools, 248 MCP calls; the family itself from a 516-call
+enumeration through the same tools). Each section below is one row of
 [`gaps.jsonl`](../gaps.jsonl), quoted as logged; `Check` names the
 captured response to read it back from.
 
@@ -13,16 +14,16 @@ Covers 4 rows of `gaps.jsonl`.
 ## `payload-duplicated`
 
 - **Attempted:** read gene_report's answer
-- **Returned:** every sub-tool payload appears twice in one envelope: the eight steps[].result payloads total 58,099 B and the eight result.sections payloads total the same 58,099 B, byte-identical per tool. The description documents result.sections as 'a structured result.sections mirror' of the markdown, but not the third copy under steps[]. The human-readable result.markdown is 5,695 B (5,642 characters). On the wire the three gene_report calls were 252,044 / 211,826 / 208,165 bytes - the only three of 48 calls over the 200 kB threshold.
+- **Returned:** every sub-tool payload appears twice in one envelope: for AT1G19850 the eight steps[].result payloads total 36,021 B and the eight result.sections payloads total the same 36,021 B, byte-identical per tool, and the equality holds on all 29 genes. The description documents result.sections as 'a structured result.sections mirror' of the markdown, but not the third copy under steps[]. The human-readable result.markdown is 3,153 B (3,122 characters) for that gene. On the wire gene_report was 61,513-247,929 bytes across the 29 genes and over the 200 kB threshold on 6 of them.
 - **Expected:** the sub-payloads once, or a flag to drop the raw steps
 - **Check:** `raw/AT1G19850__gene_report.json`
 
 ## `null-field`
 
 - **Attempted:** read gene_report's per-step timings
-- **Returned:** steps[].elapsed_s is null for all 8 steps of all 3 genes (24/24), while the envelope's own top-level elapsed_s is populated (2.92 / 2.50 / 3.77). steps[].error is likewise null throughout, which here is correct.
+- **Returned:** steps[].elapsed_s is null for all 8 steps of all 29 genes (232/232), while the envelope's own top-level elapsed_s is populated (0.87 for AT1G19850). steps[].error is likewise null throughout, which here is correct.
 - **Expected:** a per-step number or no field at all
-- **Check:** `raw/AT1G19850__gene_report.json, raw/AT1G59750__gene_report.json, raw/AT2G28350__gene_report.json`
+- **Check:** `raw/AT1G19850__gene_report.json, raw/Os01g0236300__gene_report.json`
 
 ## `inconsistent-name`
 
@@ -40,6 +41,6 @@ Covers 4 rows of `gaps.jsonl`.
 
 ## The runner's own flag (`gaps_auto.jsonl`)
 
-The dossier runner logs any response over its 200,000-byte threshold. `gene_report` is the only tool that crosses it, and it crosses on every gene: AT1G19850 252044 bytes, AT1G59750 211826 bytes, AT2G28350 208165 bytes. The largest of the other 45 calls is `aragwas_associations` on AT1G19850 at 133,374 bytes; the smallest is `experimental_structures` on AT2G28350 at 359 bytes.
+The dossier runner logs any response over its 200,000-byte threshold. `gene_report` crosses it on 6 of the 29 genes (largest AT3G61830 at 247,929 bytes; AT1G19850 is 158,103 bytes in this run, with an empty literature step — see `silent-empty-result` in the gap log). Three batch calls over the 23 Arabidopsis loci cross it too: `batch_gramene_homologs` 506,333 bytes, `batch_locus_go_annotations` 651,444 bytes, `batch_locus_literature` 585,924 bytes. The smallest of the 248 calls is `aragwas_associations` on ATMG00940 at 174 bytes.
 
-Every byte figure in this draft is the size of the JSON-RPC response line, which carries each payload as both `content[].text` and `structuredContent`; the files in `raw/` are the parsed payload, re-indented. The payload-level totals above (58,099 B) are `json.dumps` of the parsed payload's own entries, and `result.markdown`'s 5,695 B is its UTF-8 byte length (5,642 characters), both read back from `raw/AT1G19850__gene_report.json`.
+Every byte figure in this draft is the size of the JSON-RPC response line, which carries each payload as both `content[].text` and `structuredContent`; the files in `raw/` are the parsed payload, re-indented. The payload-level totals above (36,021 B) are `json.dumps` of the parsed payload's own entries, and `result.markdown`'s 3,153 B is its UTF-8 byte length (3,122 characters), both read back from `raw/AT1G19850__gene_report.json`.

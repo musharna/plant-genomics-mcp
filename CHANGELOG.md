@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- **`examples/arf_family/`: the ARF family dossier, built through the MCP
+  alone.** A worked run of 16 tools over a whole gene family — 23
+  _Arabidopsis thaliana_ members enumerated by `enumerate_family.py`
+  (paralog closure, a genome walk with `ensembl_region_query`, and
+  `interpro_domains` as the arbiter on 325 candidates), plus the 6 rice and
+  0 wheat members the ortholog tools could name and verify — 248 MCP calls,
+  every response captured under `raw/`, a per-tool coverage table and
+  figure, and 48 logged gaps rendered onto `PAGE.md` by `render_gaps.py`
+  with 19 issue drafts (not filed). Findings that came out of scaling up:
+  both ortholog tools cap at 100 rows with no target-organism filter, so
+  rice and wheat never come back from OrthoDB and rarely from Gramene; no
+  wheat IWGSC locus resolves to UniProt, so no protein-level tool answers
+  for wheat; `batch_kegg_pathways` reports a refused organism inside an ok
+  envelope where the single tool raises; KEGG and ATTED-II deliver "nothing
+  here" as `NotFoundError`; and `locus_literature` returned `hitCount: 0`
+  for 6 genes that have 22–91 papers when asked again, with nothing in the
+  answer to say the source had not responded.
+
 - **`synthesis` is now pinned whole-envelope, not status-list.** 984 survivors
   in the nightly run, 505 behavioural: step numbers, skip reasons, tool names on
   skip rows, backend call arguments (`program`, `hitlist_size=50`, `organism=`,

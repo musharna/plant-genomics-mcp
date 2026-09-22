@@ -1,0 +1,143 @@
+{
+ "locus": "ATMG00940",
+ "accession": "P92530",
+ "found": true,
+ "domain_count": 5,
+ "truncated": false,
+ "domains": [
+  {
+   "accession": "G3DSA:2.30.30.1040",
+   "name": null,
+   "type": "homologous_superfamily",
+   "source_database": "cathgene3d",
+   "interpro": null,
+   "go_terms": null,
+   "locations": [
+    {
+     "start": 108,
+     "end": 154
+    }
+   ]
+  },
+  {
+   "accession": "IPR010525",
+   "name": "Auxin response factor domain",
+   "type": "domain",
+   "source_database": "interpro",
+   "interpro": null,
+   "go_terms": [
+    {
+     "identifier": "GO:0003677",
+     "name": "DNA binding",
+     "category": {
+      "code": "F",
+      "name": "molecular_function"
+     }
+    },
+    {
+     "identifier": "GO:0006355",
+     "name": "regulation of DNA-templated transcription",
+     "category": {
+      "code": "P",
+      "name": "biological_process"
+     }
+    },
+    {
+     "identifier": "GO:0009725",
+     "name": "response to hormone",
+     "category": {
+      "code": "P",
+      "name": "biological_process"
+     }
+    },
+    {
+     "identifier": "GO:0005634",
+     "name": "nucleus",
+     "category": {
+      "code": "C",
+      "name": "cellular_component"
+     }
+    }
+   ],
+   "locations": [
+    {
+     "start": 93,
+     "end": 151
+    }
+   ]
+  },
+  {
+   "accession": "IPR044835",
+   "name": "Auxin response factor",
+   "type": "family",
+   "source_database": "interpro",
+   "interpro": null,
+   "go_terms": [
+    {
+     "identifier": "GO:0003677",
+     "name": "DNA binding",
+     "category": {
+      "code": "F",
+      "name": "molecular_function"
+     }
+    },
+    {
+     "identifier": "GO:0006355",
+     "name": "regulation of DNA-templated transcription",
+     "category": {
+      "code": "P",
+      "name": "biological_process"
+     }
+    },
+    {
+     "identifier": "GO:0009725",
+     "name": "response to hormone",
+     "category": {
+      "code": "P",
+      "name": "biological_process"
+     }
+    }
+   ],
+   "locations": [
+    {
+     "start": 2,
+     "end": 151
+    }
+   ]
+  },
+  {
+   "accession": "PF06507",
+   "name": "Auxin response factor ancillary domain",
+   "type": "domain",
+   "source_database": "pfam",
+   "interpro": "IPR010525",
+   "go_terms": null,
+   "locations": [
+    {
+     "start": 93,
+     "end": 151
+    }
+   ]
+  },
+  {
+   "accession": "PTHR31384",
+   "name": "AUXIN RESPONSE FACTOR 4-RELATED",
+   "type": "family",
+   "source_database": "panther",
+   "interpro": "IPR044835",
+   "go_terms": null,
+   "locations": [
+    {
+     "start": 2,
+     "end": 151
+    }
+   ]
+  }
+ ],
+ "count_by_type": {
+  "homologous_superfamily": 1,
+  "domain": 2,
+  "family": 2
+ },
+ "upstream_version": "110.0"
+}

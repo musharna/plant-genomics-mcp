@@ -4,7 +4,7 @@
 argument builders. Nothing in the repo stops it drifting from the server's
 real `tools/list` schemas: a renamed argument, a dropped tool or a wrong
 required key would only surface as a run-time error part-way through a
-48-call run, one gene at a time.
+248-call run, one gene at a time.
 
 This test drives the real server over real stdio (`tools/list` needs no
 network — the server answers it from its own registry, which is why this

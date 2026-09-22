@@ -1,0 +1,2551 @@
+{
+ "tool": "gene_report",
+ "input": {
+  "locus": "Os06g0196700",
+  "organism": "oryza_sativa",
+  "top_n": 10
+ },
+ "started_at": "2026-09-22T02:46:47Z",
+ "elapsed_s": 1.0433951639970473,
+ "steps": [
+  {
+   "step": 1,
+   "tool": "ensembl_plants_lookup_locus",
+   "status": "ok",
+   "elapsed_s": null,
+   "result": {
+    "assembly_name": "IRGSP-1.0",
+    "object_type": "Gene",
+    "canonical_transcript": "Os06t0196700-02.",
+    "start": 4926019,
+    "logic_name": "rapdb_genes",
+    "source": "RAP2022-09-01",
+    "biotype": "protein_coding",
+    "end": 4932612,
+    "id": "Os06g0196700",
+    "db_type": "core",
+    "strand": 1,
+    "seq_region_name": "6",
+    "organism": "oryza_sativa"
+   },
+   "error": null
+  },
+  {
+   "step": 2,
+   "tool": "resolve_locus_to_uniprot",
+   "status": "ok",
+   "elapsed_s": null,
+   "result": {
+    "locus_query": "Os06g0196700",
+    "primaryAccession": "A3B9A0",
+    "uniProtkbId": "ARFP_ORYSJ",
+    "entryType": "UniProtKB reviewed (Swiss-Prot)",
+    "reviewed": true,
+    "recommendedName": "Auxin response factor 16",
+    "geneNames": [
+     "ARF16"
+    ],
+    "organism": "Oryza sativa subsp. japonica",
+    "taxonId": 39947,
+    "sequenceLength": 1055,
+    "web_url": "https://www.uniprot.org/uniprotkb/A3B9A0",
+    "upstream_version": "2026_03"
+   },
+   "error": null
+  },
+  {
+   "step": 3,
+   "tool": "get_gene_xrefs",
+   "status": "ok",
+   "elapsed_s": null,
+   "result": {
+    "locus": "Os06g0196700",
+    "organism": "oryza_sativa",
+    "count": 3,
+    "xrefs": [
+     {
+      "version": "0",
+      "description": "auxin response factor 16-like",
+      "db_display_name": "WikiGene",
+      "display_id": "LOC9270361",
+      "info_text": "",
+      "dbname": "WikiGene",
+      "info_type": "DEPENDENT",
+      "synonyms": [],
+      "primary_id": "9270361"
+     },
+     {
+      "primary_id": "Os06g0196700",
+      "synonyms": [],
+      "display_id": "Os06g0196700",
+      "info_type": "DIRECT",
+      "info_text": "",
+      "dbname": "ArrayExpress",
+      "version": "0",
+      "db_display_name": "Expression Atlas",
+      "description": null
+     },
+     {
+      "version": "0",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "description": "auxin response factor 16-like",
+      "display_id": "LOC9270361",
+      "info_type": "DEPENDENT",
+      "dbname": "EntrezGene",
+      "info_text": "",
+      "synonyms": [],
+      "primary_id": "9270361"
+     }
+    ],
+    "by_db": {
+     "WikiGene": [
+      "9270361"
+     ],
+     "ArrayExpress": [
+      "Os06g0196700"
+     ],
+     "EntrezGene": [
+      "9270361"
+     ]
+    }
+   },
+   "error": null
+  },
+  {
+   "step": 4,
+   "tool": "kegg_pathways",
+   "status": "error",
+   "elapsed_s": null,
+   "result": null,
+   "error": "[NotFoundError] KEGG: no pathway memberships for Os06g0196700 (queried as osa:9270361)"
+  },
+  {
+   "step": 5,
+   "tool": "string_interactions",
+   "status": "ok",
+   "elapsed_s": null,
+   "result": {
+    "query": "Os06g0196700",
+    "accession": "A3B9A0",
+    "organism": "oryza_sativa",
+    "partners": [
+     {
+      "string_id": "39947.P93411",
+      "accession": "39947.P93411",
+      "preferred_name": "CCC11_ORYSJ",
+      "score": 0.955,
+      "escore": 0.799,
+      "dscore": 0.665,
+      "tscore": 0.39,
+      "pscore": 0
+     },
+     {
+      "string_id": "39947.Q336M2",
+      "accession": "39947.Q336M2",
+      "preferred_name": "CDKE-1",
+      "score": 0.954,
+      "escore": 0.797,
+      "dscore": 0.665,
+      "tscore": 0.389,
+      "pscore": 0
+     },
+     {
+      "string_id": "39947.Q6Z2J8",
+      "accession": "39947.Q6Z2J8",
+      "preferred_name": "Q6Z2J8_ORYSJ",
+      "score": 0.952,
+      "escore": 0.787,
+      "dscore": 0.665,
+      "tscore": 0.369,
+      "pscore": 0
+     },
+     {
+      "string_id": "39947.Q69TG3",
+      "accession": "39947.Q69TG3",
+      "preferred_name": "Q69TG3_ORYSJ",
+      "score": 0.948,
+      "escore": 0.774,
+      "dscore": 0.665,
+      "tscore": 0.37,
+      "pscore": 0
+     },
+     {
+      "string_id": "39947.Q0J064",
+      "accession": "39947.Q0J064",
+      "preferred_name": "MED10",
+      "score": 0.948,
+      "escore": 0.774,
+      "dscore": 0.665,
+      "tscore": 0.374,
+      "pscore": 0
+     },
+     {
+      "string_id": "39947.Q7F8R5",
+      "accession": "39947.Q7F8R5",
+      "preferred_name": "Q7F8R5_ORYSJ",
+      "score": 0.933,
+      "escore": 0.774,
+      "dscore": 0.591,
+      "tscore": 0.337,
+      "pscore": 0
+     },
+     {
+      "string_id": "39947.Q0DWF2",
+      "accession": "39947.Q0DWF2",
+      "preferred_name": "IAA10",
+      "score": 0.926,
+      "escore": 0.397,
+      "dscore": 0.85,
+      "tscore": 0.254,
+      "pscore": 0
+     },
+     {
+      "string_id": "39947.Q336R8",
+      "accession": "39947.Q336R8",
+      "preferred_name": "Q336R8_ORYSJ",
+      "score": 0.923,
+      "escore": 0.748,
+      "dscore": 0.633,
+      "tscore": 0.236,
+      "pscore": 0
+     },
+     {
+      "string_id": "39947.Q7XIE0",
+      "accession": "39947.Q7XIE0",
+      "preferred_name": "Q7XIE0_ORYSJ",
+      "score": 0.923,
+      "escore": 0.748,
+      "dscore": 0.633,
+      "tscore": 0.236,
+      "pscore": 0
+     },
+     {
+      "string_id": "39947.A0A0N7KP87",
+      "accession": "39947.A0A0N7KP87",
+      "preferred_name": "A0A0N7KP87",
+      "score": 0.915,
+      "escore": 0.774,
+      "dscore": 0.591,
+      "tscore": 0.161,
+      "pscore": 0
+     }
+    ]
+   },
+   "error": null
+  },
+  {
+   "step": 6,
+   "tool": "locus_literature",
+   "status": "ok",
+   "elapsed_s": null,
+   "result": {
+    "locus": "Os06g0196700",
+    "organism": "oryza_sativa",
+    "query": "Os06g0196700 AND rice",
+    "hitCount": 4,
+    "returned": 4,
+    "abstracts_included": true,
+    "hits": [
+     {
+      "id": "41814380",
+      "source": "MED",
+      "pmid": "41814380",
+      "pmcid": "PMC13523320",
+      "doi": "10.1186/s13007-026-01503-y",
+      "title": "Predicting rice drought-responsive genes via distance-based prototypical graph neural network with path aggregation mechanism.",
+      "authorString": "Liu J, Zhang H, Wang S, Zhang N, Zhu X, Xiao Y.",
+      "journalTitle": null,
+      "pubYear": "2026",
+      "firstPublicationDate": "2026-03-11",
+      "citedByCount": 0,
+      "isOpenAccess": "Y",
+      "hasPDF": "Y",
+      "abstractText": "Drought is a primary factor that adversely impacts rice yield and quality. Identifying drought-responsive genes is essential for developing drought-responsive cultivars. Recently, graph neural network methods based on embedding learning have shown considerable success in biological networks. However, challenges still remain in adequately capturing node attribute features, representing topological structures, and addressing class imbalance, which may constrain the model's predictive capability. To address these issues, we propose a distance-based prototypical graph neural network with path aggregation mechanism (DPGNNPAM) to mine drought-responsive genes in rice. First, we combine gene expression data and protein interaction networks in rice to construct graph-based datasets. Next, we utilize a random walk strategy to generate diverse walk paths and employ a recursive neural network-based path aggregator to encode node attributes along these paths. The prototypical network approach is subsequently employed during training to focus on global information and address the issue of sample imbalance. After that, the weighted similarity is computed by measuring the distance between the node embeddings and the class prototypes. Specifically, class prototypes are representative embeddings that capture the central characteristic of each class. Finally, we transform this value into a predictive probability using the softmax function. Experimental results demonstrate that DPGNNPAM outperforms traditional graph neural network algorithms in identifying drought-responsive genes in rice. Ultimately, we identify 17 candidate genes closely related to drought stress, 12 of which are confirmed in the literature as being involved in the plant's drought stress response.",
+      "web_url": "https://europepmc.org/article/PMC/PMC13523320"
+     },
+     {
+      "id": "37100819",
+      "source": "MED",
+      "pmid": "37100819",
+      "pmcid": "PMC10130139",
+      "doi": "10.1038/s42003-023-04835-w",
+      "title": "Initiation of scutellum-derived callus is regulated by an embryo-like developmental pathway in rice.",
+      "authorString": "Guo F, Wang H, Lian G, Cai G, Liu W, Zhang H, Li D, Zhou C, Han N, Zhu M, Su Y, Seo PJ, Xu L, Bian H.",
+      "journalTitle": null,
+      "pubYear": "2023",
+      "firstPublicationDate": "2023-04-25",
+      "citedByCount": 11,
+      "isOpenAccess": "Y",
+      "hasPDF": "Y",
+      "abstractText": "In rice (Oryza sativa) tissue culture, callus can be induced from the scutellum in embryo or from the vasculature of non-embryonic organs such as leaves, nodes, or roots. Here we show that the auxin signaling pathway triggers cell division in the epidermis of the scutellum to form an embryo-like structure, which leads to callus formation. Our transcriptome data show that embryo-, stem cell-, and auxin-related genes are upregulated during scutellum-derived callus initiation. Among those genes, the embryo-specific gene OsLEC1 is activated by auxin and involved in scutellum-derived callus initiation. However, OsLEC1 is not required for vasculature-derived callus initiation from roots. In addition, OsIAA11 and OsCRL1, which are involved in root development, are required for vasculature-derived callus formation but not for scutellum-derived callus formation. Overall, our data indicate that scutellum-derived callus initiation is regulated by an embryo-like development program, and this is different from vasculature-derived callus initiation which borrows a root development program.",
+      "web_url": "https://europepmc.org/article/PMC/PMC10130139"
+     },
+     {
+      "id": "31754813",
+      "source": "MED",
+      "pmid": "31754813",
+      "pmcid": "PMC6872702",
+      "doi": "10.1186/s12284-019-0337-3",
+      "title": "Genome-wide association mapping of gene loci affecting disease resistance in the rice-Fusarium fujikuroi pathosystem.",
+      "authorString": "Chen SY, Lai MH, Tung CW, Wu DH, Chang FY, Lin TC, Chung CL.",
+      "journalTitle": null,
+      "pubYear": "2019",
+      "firstPublicationDate": "2019-11-21",
+      "citedByCount": 9,
+      "isOpenAccess": "Y",
+      "hasPDF": "Y",
+      "abstractText": "<h4>Background</h4>Rice bakanae disease has emerged as a new threat to rice production. In recent years, an increase in the occurrence and severity of bakanae disease has been reported in several areas in Asia. Although bakanae disease affects rice yield and quality, little is known about the genetics of bakanae resistance in rice. The lack of large-scale screens for bakanae resistance in rice germplasm has also limited the development and deployment of resistant varieties.<h4>Results</h4>A genome-wide association study (GWAS) was conducted to identify genes/loci conferring bakanae resistance in rice. A total of 231 diverse accessions from Rice Diversity Panel 1 (RDP1) were inoculated with a highly virulent Taiwanese Fusarium fujikuroi isolate and assessed for resistance using two parameters: (1) disease severity index based on visual rating and (2) colonization rate determined by reisolation of F. fujikuroi from the basal stems of infected rice seedlings. We identified 14 quantitative trait loci (QTLs) (10 for disease severity and 4 for colonization rate), including 1 mapped for both parameters. A total of 206 candidate genes were identified within the 14 QTLs, including genes encoding leucine-rich repeat (LRR)-containing and NB-ARC (nucleotide-binding adaptor shared by APAF-1, R proteins, and CED-4) proteins, hormone-related genes, transcription factor genes, ubiquitination-related genes, and oxidase/oxidoreductase genes. In addition, a candidate QTL (qBK1.7) that co-localized with the previously identified QTLs qBK1 and qFfR1, was verified by linkage analysis using a population of 132 recombinant inbred lines derived from IR64 x Nipponbare. GWAS delineated qBK1.7 to a region of 8239\u2009bp containing three genes. Full-length sequencing across qBK1.7 in 20 rice accessions revealed that the coding regions of two LRR-containing genes Os01g0601625 and Os01g0601675 may be associated with bakanae resistance.<h4>Conclusions</h4>This study facilitates the exploitation of bakanae resistance resources in RDP1. The information on the resistance performance of 231 rice accessions and 14 candidate QTLs will aid efforts to breed resistance to bakanae and uncover resistance mechanisms. Quantification of the level of F. fujikuroi colonization in addition to the conventional rating of visual symptoms offers new insights into the genetics of bakanae resistance.",
+      "web_url": "https://europepmc.org/article/PMC/PMC6872702"
+     },
+     {
+      "id": "23705659",
+      "source": "MED",
+      "pmid": "23705659",
+      "pmcid": "PMC4008027",
+      "doi": "10.1186/1471-2164-14-351",
+      "title": "Autotoxicity mechanism of Oryza sativa: transcriptome response in rice roots exposed to ferulic acid.",
+      "authorString": "Chi WC, Chen YA, Hsiung YC, Fu SF, Chou CH, Trinh NN, Chen YC, Huang HJ.",
+      "journalTitle": null,
+      "pubYear": "2013",
+      "firstPublicationDate": "2013-05-25",
+      "citedByCount": 38,
+      "isOpenAccess": "Y",
+      "hasPDF": "Y",
+      "abstractText": "<h4>Background</h4>Autotoxicity plays an important role in regulating crop yield and quality. To help characterize the autotoxicity mechanism of rice, we performed a large-scale, transcriptomic analysis of the rice root response to ferulic acid, an autotoxin from rice straw.<h4>Results</h4>Root growth rate was decreased and reactive oxygen species, calcium content and lipoxygenase activity were increased with increasing ferulic acid concentration in roots. Transcriptome analysis revealed more transcripts responsive to short ferulic-acid exposure (1- and 3-h treatments, 1,204 genes) than long exposure (24 h, 176 genes). Induced genes were involved in cell wall formation, chemical detoxification, secondary metabolism, signal transduction, and abiotic stress response. Genes associated with signaling and biosynthesis for ethylene and jasmonic acid were upregulated with ferulic acid. Ferulic acid upregulated ATP-binding cassette and amino acid/auxin permease transporters as well as genes encoding signaling components such as leucine-rich repeat VIII and receptor-like cytoplasmic kinases VII protein kinases, APETALA2/ethylene response factor, WRKY, MYB and Zinc-finger protein expressed in inflorescence meristem transcription factors.<h4>Conclusions</h4>The results of a transcriptome analysis suggest the molecular mechanisms of plants in response to FA, including toxicity, detoxicification and signaling machinery. FA may have a significant effect on inhibiting rice root elongation through modulating ET and JA hormone homeostasis. FA-induced gene expression of AAAP transporters may contribute to detoxicification of the autotoxin. Moreover, the WRKY and Myb TFs and LRR-VIII and SD-2b kinases might regulate downstream genes under FA stress but not general allelochemical stress. This comprehensive description of gene expression information could greatly facilitate our understanding of the mechanisms of autotoxicity in plants.",
+      "web_url": "https://europepmc.org/article/PMC/PMC4008027"
+     }
+    ]
+   },
+   "error": null
+  },
+  {
+   "step": 7,
+   "tool": "locus_go_annotations",
+   "status": "ok",
+   "elapsed_s": null,
+   "result": {
+    "uniprot_accession": "A3B9A0",
+    "numberOfHits": 11,
+    "returned": 11,
+    "annotations": [
+     {
+      "geneProductId": "UniProtKB:A3B9A0",
+      "symbol": "ARF16",
+      "qualifier": "enables",
+      "goId": "GO:0000976",
+      "goName": "transcription cis-regulatory region binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 39947,
+      "taxonName": "Oryza sativa subsp. japonica",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19220"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19850"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G34310"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G34390"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G77850"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT2G33860"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT2G46530"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT3G61830"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT4G23980"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G37020"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G60450"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN000774836"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A3B9A0",
+      "symbol": "ARF16",
+      "qualifier": "enables",
+      "goId": "GO:0003677",
+      "goName": "DNA binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000256",
+      "reference": "GO_REF:0000002",
+      "assignedBy": "InterPro",
+      "taxonId": 39947,
+      "taxonName": "Oryza sativa subsp. japonica",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR003340"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR044835"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A3B9A0",
+      "symbol": "ARF16",
+      "qualifier": "involved_in",
+      "goId": "GO:0006355",
+      "goName": "regulation of DNA-templated transcription",
+      "goAspect": "biological_process",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000256",
+      "reference": "GO_REF:0000002",
+      "assignedBy": "InterPro",
+      "taxonId": 39947,
+      "taxonName": "Oryza sativa subsp. japonica",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR044835"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A3B9A0",
+      "symbol": "ARF16",
+      "qualifier": "involved_in",
+      "goId": "GO:0006355",
+      "goName": "regulation of DNA-templated transcription",
+      "goAspect": "biological_process",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 39947,
+      "taxonName": "Oryza sativa subsp. japonica",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19850"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G59750"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G20730"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G62000"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN000774836"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A3B9A0",
+      "symbol": "ARF16",
+      "qualifier": "involved_in",
+      "goId": "GO:0009725",
+      "goName": "response to hormone",
+      "goAspect": "biological_process",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000256",
+      "reference": "GO_REF:0000002",
+      "assignedBy": "InterPro",
+      "taxonId": 39947,
+      "taxonName": "Oryza sativa subsp. japonica",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR044835"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A3B9A0",
+      "symbol": "ARF16",
+      "qualifier": "involved_in",
+      "goId": "GO:0009733",
+      "goName": "response to auxin",
+      "goAspect": "biological_process",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 39947,
+      "taxonName": "Oryza sativa subsp. japonica",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19220"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G20730"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN004816699"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A3B9A0",
+      "symbol": "ARF16",
+      "qualifier": "involved_in",
+      "goId": "GO:0010311",
+      "goName": "lateral root formation",
+      "goAspect": "biological_process",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 39947,
+      "taxonName": "Oryza sativa subsp. japonica",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19220"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G20730"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN004816699"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A3B9A0",
+      "symbol": "ARF16",
+      "qualifier": "involved_in",
+      "goId": "GO:0048366",
+      "goName": "leaf development",
+      "goAspect": "biological_process",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 39947,
+      "taxonName": "Oryza sativa subsp. japonica",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19220"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G20730"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN004816699"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A3B9A0",
+      "symbol": "ARF16",
+      "qualifier": "involved_in",
+      "goId": "GO:1990110",
+      "goName": "callus formation",
+      "goAspect": "biological_process",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 39947,
+      "taxonName": "Oryza sativa subsp. japonica",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19220"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G20730"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN004816699"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A3B9A0",
+      "symbol": "ARF16",
+      "qualifier": "is_active_in",
+      "goId": "GO:0005634",
+      "goName": "nucleus",
+      "goAspect": "cellular_component",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 39947,
+      "taxonName": "Oryza sativa subsp. japonica",
+      "date": "20260529",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19220"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G30330"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G59750"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT2G33860"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT4G30080"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G20730"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G62000"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN000774836"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "K4DF01"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q2LAJ3"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A3B9A0",
+      "symbol": "ARF16",
+      "qualifier": "located_in",
+      "goId": "GO:0005634",
+      "goName": "nucleus",
+      "goAspect": "cellular_component",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000501",
+      "reference": "GO_REF:0000120",
+      "assignedBy": "UniProt",
+      "taxonId": 39947,
+      "taxonName": "Oryza sativa subsp. japonica",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB-SubCell",
+          "id": "SL-0191"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "by_aspect": {
+     "molecular_function": [
+      {
+       "goId": "GO:0000976",
+       "goName": "transcription cis-regulatory region binding"
+      },
+      {
+       "goId": "GO:0003677",
+       "goName": "DNA binding"
+      }
+     ],
+     "biological_process": [
+      {
+       "goId": "GO:0006355",
+       "goName": "regulation of DNA-templated transcription"
+      },
+      {
+       "goId": "GO:0009725",
+       "goName": "response to hormone"
+      },
+      {
+       "goId": "GO:0009733",
+       "goName": "response to auxin"
+      },
+      {
+       "goId": "GO:0010311",
+       "goName": "lateral root formation"
+      },
+      {
+       "goId": "GO:0048366",
+       "goName": "leaf development"
+      },
+      {
+       "goId": "GO:1990110",
+       "goName": "callus formation"
+      }
+     ],
+     "cellular_component": [
+      {
+       "goId": "GO:0005634",
+       "goName": "nucleus"
+      }
+     ]
+    }
+   },
+   "error": null
+  },
+  {
+   "step": 8,
+   "tool": "interpro_domains",
+   "status": "ok",
+   "elapsed_s": null,
+   "result": {
+    "accession": "A3B9A0",
+    "found": true,
+    "domain_count": 19,
+    "truncated": false,
+    "domains": [
+     {
+      "accession": "cd10017",
+      "name": "Plant-specific B3-DNA binding domain",
+      "type": "domain",
+      "source_database": "cdd",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 126,
+        "end": 227
+       }
+      ]
+     },
+     {
+      "accession": "G3DSA:2.30.30.1040",
+      "name": null,
+      "type": "homologous_superfamily",
+      "source_database": "cathgene3d",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 290,
+        "end": 361
+       }
+      ]
+     },
+     {
+      "accession": "G3DSA:2.40.330.10",
+      "name": "DNA-binding pseudobarrel domain",
+      "type": "homologous_superfamily",
+      "source_database": "cathgene3d",
+      "interpro": "IPR015300",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 125,
+        "end": 229
+       }
+      ]
+     },
+     {
+      "accession": "G3DSA:3.10.20.90",
+      "name": "Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1",
+      "type": "homologous_superfamily",
+      "source_database": "cathgene3d",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 935,
+        "end": 1029
+       }
+      ]
+     },
+     {
+      "accession": "IPR003340",
+      "name": "B3 DNA binding domain",
+      "type": "domain",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": [
+       {
+        "identifier": "GO:0003677",
+        "name": "DNA binding",
+        "category": {
+         "code": "F",
+         "name": "molecular_function"
+        }
+       }
+      ],
+      "locations": [
+       {
+        "start": 126,
+        "end": 229
+       }
+      ]
+     },
+     {
+      "accession": "IPR010525",
+      "name": "Auxin response factor domain",
+      "type": "domain",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": [
+       {
+        "identifier": "GO:0003677",
+        "name": "DNA binding",
+        "category": {
+         "code": "F",
+         "name": "molecular_function"
+        }
+       },
+       {
+        "identifier": "GO:0006355",
+        "name": "regulation of DNA-templated transcription",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       },
+       {
+        "identifier": "GO:0009725",
+        "name": "response to hormone",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       },
+       {
+        "identifier": "GO:0005634",
+        "name": "nucleus",
+        "category": {
+         "code": "C",
+         "name": "cellular_component"
+        }
+       }
+      ],
+      "locations": [
+       {
+        "start": 276,
+        "end": 358
+       }
+      ]
+     },
+     {
+      "accession": "IPR015300",
+      "name": "DNA-binding pseudobarrel domain superfamily",
+      "type": "homologous_superfamily",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 117,
+        "end": 256
+       }
+      ]
+     },
+     {
+      "accession": "IPR033389",
+      "name": "AUX/IAA domain",
+      "type": "domain",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 935,
+        "end": 1026
+       }
+      ]
+     },
+     {
+      "accession": "IPR044835",
+      "name": "Auxin response factor",
+      "type": "family",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": [
+       {
+        "identifier": "GO:0003677",
+        "name": "DNA binding",
+        "category": {
+         "code": "F",
+         "name": "molecular_function"
+        }
+       },
+       {
+        "identifier": "GO:0006355",
+        "name": "regulation of DNA-templated transcription",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       },
+       {
+        "identifier": "GO:0009725",
+        "name": "response to hormone",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       }
+      ],
+      "locations": [
+       {
+        "start": 18,
+        "end": 558
+       }
+      ]
+     },
+     {
+      "accession": "IPR053793",
+      "name": "PB1-like domain",
+      "type": "domain",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 940,
+        "end": 1024
+       }
+      ]
+     },
+     {
+      "accession": "PF02309",
+      "name": "AUX/IAA family",
+      "type": "family",
+      "source_database": "pfam",
+      "interpro": "IPR033389",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 935,
+        "end": 1026
+       }
+      ]
+     },
+     {
+      "accession": "PF02362",
+      "name": "B3 DNA binding domain",
+      "type": "domain",
+      "source_database": "pfam",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 127,
+        "end": 228
+       }
+      ]
+     },
+     {
+      "accession": "PF06507",
+      "name": "Auxin response factor ancillary domain",
+      "type": "domain",
+      "source_database": "pfam",
+      "interpro": "IPR010525",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 276,
+        "end": 358
+       }
+      ]
+     },
+     {
+      "accession": "PS50863",
+      "name": "B3 DNA-binding domain profile",
+      "type": "domain",
+      "source_database": "profile",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 127,
+        "end": 229
+       }
+      ]
+     },
+     {
+      "accession": "PS51745",
+      "name": "PB1 domain profile",
+      "type": "domain",
+      "source_database": "profile",
+      "interpro": "IPR053793",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 940,
+        "end": 1024
+       }
+      ]
+     },
+     {
+      "accession": "PTHR31384",
+      "name": "AUXIN RESPONSE FACTOR 4-RELATED",
+      "type": "family",
+      "source_database": "panther",
+      "interpro": "IPR044835",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 18,
+        "end": 558
+       }
+      ]
+     },
+     {
+      "accession": "SM01019",
+      "name": "B3 DNA binding domain",
+      "type": "domain",
+      "source_database": "smart",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 127,
+        "end": 229
+       }
+      ]
+     },
+     {
+      "accession": "SSF101936",
+      "name": "DNA-binding pseudobarrel domain",
+      "type": "homologous_superfamily",
+      "source_database": "ssf",
+      "interpro": "IPR015300",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 117,
+        "end": 256
+       }
+      ]
+     },
+     {
+      "accession": "SSF54277",
+      "name": "CAD & PB1 domains",
+      "type": "homologous_superfamily",
+      "source_database": "ssf",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 958,
+        "end": 1019
+       }
+      ]
+     }
+    ],
+    "count_by_type": {
+     "domain": 10,
+     "homologous_superfamily": 6,
+     "family": 3
+    },
+    "upstream_version": "110.0"
+   },
+   "error": null
+  }
+ ],
+ "result": {
+  "locus": "Os06g0196700",
+  "organism": "oryza_sativa",
+  "canonical_gene_name": "ARF16",
+  "uniprot_accession": "A3B9A0",
+  "markdown": "# ARF16 \u2014 `Os06g0196700`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 6:4,926,019\u20134,932,612 (+) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 16**\nARFP_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 1055 aa\nUniProt: [A3B9A0](https://www.uniprot.org/uniprotkb/A3B9A0)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [126\u2013227]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [290\u2013361]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [125\u2013229]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [935\u20131029]\n- **B3 DNA binding domain** (domain, interpro) [126\u2013229]\n- **Auxin response factor domain** (domain, interpro) [276\u2013358]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [117\u2013256]\n- **AUX/IAA domain** (domain, interpro) [935\u20131026]\n- **Auxin response factor** (family, interpro) [18\u2013558]\n- **PB1-like domain** (domain, interpro) [940\u20131024]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n- [GO:0009733] response to auxin (IBA)\n- [GO:0010311] lateral root formation (IBA)\n- [GO:0048366] leaf development (IBA)\n- [GO:1990110] callus formation (IBA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [NotFoundError] KEGG: no pathway memberships for Os06g0196700 (queried as osa:9270361)_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| CCC11_ORYSJ | 0.955 |\n| CDKE-1 | 0.954 |\n| Q6Z2J8_ORYSJ | 0.952 |\n| Q69TG3_ORYSJ | 0.948 |\n| MED10 | 0.948 |\n| Q7F8R5_ORYSJ | 0.933 |\n| IAA10 | 0.926 |\n| Q336R8_ORYSJ | 0.923 |\n| Q7XIE0_ORYSJ | 0.923 |\n| A0A0N7KP87 | 0.915 |\n\n## Cross-references\n- WikiGene: 9270361\n- Expression Atlas: Os06g0196700\n- NCBI gene (formerly Entrezgene): 9270361\n\n## Literature\n4 hits total; showing top 4.\n- **Predicting rice drought-responsive genes via distance-based prototypical graph neural network with path aggregation mechanism** \u2014 Liu J, Zhang H, Wang S, Zhang N, Zhu X, Xiao Y. (PMID:41814380; doi:10.1186/s13007-026-01503-y)\n- **Initiation of scutellum-derived callus is regulated by an embryo-like developmental pathway in rice** \u2014 Guo F, Wang H, Lian G, Cai G, Liu W, Zhang H, Li D, Zhou C, Han N, Zhu M, Su Y, Seo PJ, Xu L, Bian H. (PMID:37100819; doi:10.1038/s42003-023-04835-w)\n- **Genome-wide association mapping of gene loci affecting disease resistance in the rice-Fusarium fujikuroi pathosystem** \u2014 Chen SY, Lai MH, Tung CW, Wu DH, Chang FY, Lin TC, Chung CL. (PMID:31754813; doi:10.1186/s12284-019-0337-3)\n- **Autotoxicity mechanism of Oryza sativa: transcriptome response in rice roots exposed to ferulic acid** \u2014 Chi WC, Chen YA, Hsiung YC, Fu SF, Chou CH, Trinh NN, Chen YC, Huang HJ. (PMID:23705659; doi:10.1186/1471-2164-14-351)\n",
+  "sections": {
+   "annotation": {
+    "assembly_name": "IRGSP-1.0",
+    "object_type": "Gene",
+    "canonical_transcript": "Os06t0196700-02.",
+    "start": 4926019,
+    "logic_name": "rapdb_genes",
+    "source": "RAP2022-09-01",
+    "biotype": "protein_coding",
+    "end": 4932612,
+    "id": "Os06g0196700",
+    "db_type": "core",
+    "strand": 1,
+    "seq_region_name": "6",
+    "organism": "oryza_sativa"
+   },
+   "protein": {
+    "locus_query": "Os06g0196700",
+    "primaryAccession": "A3B9A0",
+    "uniProtkbId": "ARFP_ORYSJ",
+    "entryType": "UniProtKB reviewed (Swiss-Prot)",
+    "reviewed": true,
+    "recommendedName": "Auxin response factor 16",
+    "geneNames": [
+     "ARF16"
+    ],
+    "organism": "Oryza sativa subsp. japonica",
+    "taxonId": 39947,
+    "sequenceLength": 1055,
+    "web_url": "https://www.uniprot.org/uniprotkb/A3B9A0",
+    "upstream_version": "2026_03"
+   },
+   "xrefs": {
+    "locus": "Os06g0196700",
+    "organism": "oryza_sativa",
+    "count": 3,
+    "xrefs": [
+     {
+      "version": "0",
+      "description": "auxin response factor 16-like",
+      "db_display_name": "WikiGene",
+      "display_id": "LOC9270361",
+      "info_text": "",
+      "dbname": "WikiGene",
+      "info_type": "DEPENDENT",
+      "synonyms": [],
+      "primary_id": "9270361"
+     },
+     {
+      "primary_id": "Os06g0196700",
+      "synonyms": [],
+      "display_id": "Os06g0196700",
+      "info_type": "DIRECT",
+      "info_text": "",
+      "dbname": "ArrayExpress",
+      "version": "0",
+      "db_display_name": "Expression Atlas",
+      "description": null
+     },
+     {
+      "version": "0",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "description": "auxin response factor 16-like",
+      "display_id": "LOC9270361",
+      "info_type": "DEPENDENT",
+      "dbname": "EntrezGene",
+      "info_text": "",
+      "synonyms": [],
+      "primary_id": "9270361"
+     }
+    ],
+    "by_db": {
+     "WikiGene": [
+      "9270361"
+     ],
+     "ArrayExpress": [
+      "Os06g0196700"
+     ],
+     "EntrezGene": [
+      "9270361"
+     ]
+    }
+   },
+   "pathways": null,
+   "interactions": {
+    "query": "Os06g0196700",
+    "accession": "A3B9A0",
+    "organism": "oryza_sativa",
+    "partners": [
+     {
+      "string_id": "39947.P93411",
+      "accession": "39947.P93411",
+      "preferred_name": "CCC11_ORYSJ",
+      "score": 0.955,
+      "escore": 0.799,
+      "dscore": 0.665,
+      "tscore": 0.39,
+      "pscore": 0
+     },
+     {
+      "string_id": "39947.Q336M2",
+      "accession": "39947.Q336M2",
+      "preferred_name": "CDKE-1",
+      "score": 0.954,
+      "escore": 0.797,
+      "dscore": 0.665,
+      "tscore": 0.389,
+      "pscore": 0
+     },
+     {
+      "string_id": "39947.Q6Z2J8",
+      "accession": "39947.Q6Z2J8",
+      "preferred_name": "Q6Z2J8_ORYSJ",
+      "score": 0.952,
+      "escore": 0.787,
+      "dscore": 0.665,
+      "tscore": 0.369,
+      "pscore": 0
+     },
+     {
+      "string_id": "39947.Q69TG3",
+      "accession": "39947.Q69TG3",
+      "preferred_name": "Q69TG3_ORYSJ",
+      "score": 0.948,
+      "escore": 0.774,
+      "dscore": 0.665,
+      "tscore": 0.37,
+      "pscore": 0
+     },
+     {
+      "string_id": "39947.Q0J064",
+      "accession": "39947.Q0J064",
+      "preferred_name": "MED10",
+      "score": 0.948,
+      "escore": 0.774,
+      "dscore": 0.665,
+      "tscore": 0.374,
+      "pscore": 0
+     },
+     {
+      "string_id": "39947.Q7F8R5",
+      "accession": "39947.Q7F8R5",
+      "preferred_name": "Q7F8R5_ORYSJ",
+      "score": 0.933,
+      "escore": 0.774,
+      "dscore": 0.591,
+      "tscore": 0.337,
+      "pscore": 0
+     },
+     {
+      "string_id": "39947.Q0DWF2",
+      "accession": "39947.Q0DWF2",
+      "preferred_name": "IAA10",
+      "score": 0.926,
+      "escore": 0.397,
+      "dscore": 0.85,
+      "tscore": 0.254,
+      "pscore": 0
+     },
+     {
+      "string_id": "39947.Q336R8",
+      "accession": "39947.Q336R8",
+      "preferred_name": "Q336R8_ORYSJ",
+      "score": 0.923,
+      "escore": 0.748,
+      "dscore": 0.633,
+      "tscore": 0.236,
+      "pscore": 0
+     },
+     {
+      "string_id": "39947.Q7XIE0",
+      "accession": "39947.Q7XIE0",
+      "preferred_name": "Q7XIE0_ORYSJ",
+      "score": 0.923,
+      "escore": 0.748,
+      "dscore": 0.633,
+      "tscore": 0.236,
+      "pscore": 0
+     },
+     {
+      "string_id": "39947.A0A0N7KP87",
+      "accession": "39947.A0A0N7KP87",
+      "preferred_name": "A0A0N7KP87",
+      "score": 0.915,
+      "escore": 0.774,
+      "dscore": 0.591,
+      "tscore": 0.161,
+      "pscore": 0
+     }
+    ]
+   },
+   "literature": {
+    "locus": "Os06g0196700",
+    "organism": "oryza_sativa",
+    "query": "Os06g0196700 AND rice",
+    "hitCount": 4,
+    "returned": 4,
+    "abstracts_included": true,
+    "hits": [
+     {
+      "id": "41814380",
+      "source": "MED",
+      "pmid": "41814380",
+      "pmcid": "PMC13523320",
+      "doi": "10.1186/s13007-026-01503-y",
+      "title": "Predicting rice drought-responsive genes via distance-based prototypical graph neural network with path aggregation mechanism.",
+      "authorString": "Liu J, Zhang H, Wang S, Zhang N, Zhu X, Xiao Y.",
+      "journalTitle": null,
+      "pubYear": "2026",
+      "firstPublicationDate": "2026-03-11",
+      "citedByCount": 0,
+      "isOpenAccess": "Y",
+      "hasPDF": "Y",
+      "abstractText": "Drought is a primary factor that adversely impacts rice yield and quality. Identifying drought-responsive genes is essential for developing drought-responsive cultivars. Recently, graph neural network methods based on embedding learning have shown considerable success in biological networks. However, challenges still remain in adequately capturing node attribute features, representing topological structures, and addressing class imbalance, which may constrain the model's predictive capability. To address these issues, we propose a distance-based prototypical graph neural network with path aggregation mechanism (DPGNNPAM) to mine drought-responsive genes in rice. First, we combine gene expression data and protein interaction networks in rice to construct graph-based datasets. Next, we utilize a random walk strategy to generate diverse walk paths and employ a recursive neural network-based path aggregator to encode node attributes along these paths. The prototypical network approach is subsequently employed during training to focus on global information and address the issue of sample imbalance. After that, the weighted similarity is computed by measuring the distance between the node embeddings and the class prototypes. Specifically, class prototypes are representative embeddings that capture the central characteristic of each class. Finally, we transform this value into a predictive probability using the softmax function. Experimental results demonstrate that DPGNNPAM outperforms traditional graph neural network algorithms in identifying drought-responsive genes in rice. Ultimately, we identify 17 candidate genes closely related to drought stress, 12 of which are confirmed in the literature as being involved in the plant's drought stress response.",
+      "web_url": "https://europepmc.org/article/PMC/PMC13523320"
+     },
+     {
+      "id": "37100819",
+      "source": "MED",
+      "pmid": "37100819",
+      "pmcid": "PMC10130139",
+      "doi": "10.1038/s42003-023-04835-w",
+      "title": "Initiation of scutellum-derived callus is regulated by an embryo-like developmental pathway in rice.",
+      "authorString": "Guo F, Wang H, Lian G, Cai G, Liu W, Zhang H, Li D, Zhou C, Han N, Zhu M, Su Y, Seo PJ, Xu L, Bian H.",
+      "journalTitle": null,
+      "pubYear": "2023",
+      "firstPublicationDate": "2023-04-25",
+      "citedByCount": 11,
+      "isOpenAccess": "Y",
+      "hasPDF": "Y",
+      "abstractText": "In rice (Oryza sativa) tissue culture, callus can be induced from the scutellum in embryo or from the vasculature of non-embryonic organs such as leaves, nodes, or roots. Here we show that the auxin signaling pathway triggers cell division in the epidermis of the scutellum to form an embryo-like structure, which leads to callus formation. Our transcriptome data show that embryo-, stem cell-, and auxin-related genes are upregulated during scutellum-derived callus initiation. Among those genes, the embryo-specific gene OsLEC1 is activated by auxin and involved in scutellum-derived callus initiation. However, OsLEC1 is not required for vasculature-derived callus initiation from roots. In addition, OsIAA11 and OsCRL1, which are involved in root development, are required for vasculature-derived callus formation but not for scutellum-derived callus formation. Overall, our data indicate that scutellum-derived callus initiation is regulated by an embryo-like development program, and this is different from vasculature-derived callus initiation which borrows a root development program.",
+      "web_url": "https://europepmc.org/article/PMC/PMC10130139"
+     },
+     {
+      "id": "31754813",
+      "source": "MED",
+      "pmid": "31754813",
+      "pmcid": "PMC6872702",
+      "doi": "10.1186/s12284-019-0337-3",
+      "title": "Genome-wide association mapping of gene loci affecting disease resistance in the rice-Fusarium fujikuroi pathosystem.",
+      "authorString": "Chen SY, Lai MH, Tung CW, Wu DH, Chang FY, Lin TC, Chung CL.",
+      "journalTitle": null,
+      "pubYear": "2019",
+      "firstPublicationDate": "2019-11-21",
+      "citedByCount": 9,
+      "isOpenAccess": "Y",
+      "hasPDF": "Y",
+      "abstractText": "<h4>Background</h4>Rice bakanae disease has emerged as a new threat to rice production. In recent years, an increase in the occurrence and severity of bakanae disease has been reported in several areas in Asia. Although bakanae disease affects rice yield and quality, little is known about the genetics of bakanae resistance in rice. The lack of large-scale screens for bakanae resistance in rice germplasm has also limited the development and deployment of resistant varieties.<h4>Results</h4>A genome-wide association study (GWAS) was conducted to identify genes/loci conferring bakanae resistance in rice. A total of 231 diverse accessions from Rice Diversity Panel 1 (RDP1) were inoculated with a highly virulent Taiwanese Fusarium fujikuroi isolate and assessed for resistance using two parameters: (1) disease severity index based on visual rating and (2) colonization rate determined by reisolation of F. fujikuroi from the basal stems of infected rice seedlings. We identified 14 quantitative trait loci (QTLs) (10 for disease severity and 4 for colonization rate), including 1 mapped for both parameters. A total of 206 candidate genes were identified within the 14 QTLs, including genes encoding leucine-rich repeat (LRR)-containing and NB-ARC (nucleotide-binding adaptor shared by APAF-1, R proteins, and CED-4) proteins, hormone-related genes, transcription factor genes, ubiquitination-related genes, and oxidase/oxidoreductase genes. In addition, a candidate QTL (qBK1.7) that co-localized with the previously identified QTLs qBK1 and qFfR1, was verified by linkage analysis using a population of 132 recombinant inbred lines derived from IR64 x Nipponbare. GWAS delineated qBK1.7 to a region of 8239\u2009bp containing three genes. Full-length sequencing across qBK1.7 in 20 rice accessions revealed that the coding regions of two LRR-containing genes Os01g0601625 and Os01g0601675 may be associated with bakanae resistance.<h4>Conclusions</h4>This study facilitates the exploitation of bakanae resistance resources in RDP1. The information on the resistance performance of 231 rice accessions and 14 candidate QTLs will aid efforts to breed resistance to bakanae and uncover resistance mechanisms. Quantification of the level of F. fujikuroi colonization in addition to the conventional rating of visual symptoms offers new insights into the genetics of bakanae resistance.",
+      "web_url": "https://europepmc.org/article/PMC/PMC6872702"
+     },
+     {
+      "id": "23705659",
+      "source": "MED",
+      "pmid": "23705659",
+      "pmcid": "PMC4008027",
+      "doi": "10.1186/1471-2164-14-351",
+      "title": "Autotoxicity mechanism of Oryza sativa: transcriptome response in rice roots exposed to ferulic acid.",
+      "authorString": "Chi WC, Chen YA, Hsiung YC, Fu SF, Chou CH, Trinh NN, Chen YC, Huang HJ.",
+      "journalTitle": null,
+      "pubYear": "2013",
+      "firstPublicationDate": "2013-05-25",
+      "citedByCount": 38,
+      "isOpenAccess": "Y",
+      "hasPDF": "Y",
+      "abstractText": "<h4>Background</h4>Autotoxicity plays an important role in regulating crop yield and quality. To help characterize the autotoxicity mechanism of rice, we performed a large-scale, transcriptomic analysis of the rice root response to ferulic acid, an autotoxin from rice straw.<h4>Results</h4>Root growth rate was decreased and reactive oxygen species, calcium content and lipoxygenase activity were increased with increasing ferulic acid concentration in roots. Transcriptome analysis revealed more transcripts responsive to short ferulic-acid exposure (1- and 3-h treatments, 1,204 genes) than long exposure (24 h, 176 genes). Induced genes were involved in cell wall formation, chemical detoxification, secondary metabolism, signal transduction, and abiotic stress response. Genes associated with signaling and biosynthesis for ethylene and jasmonic acid were upregulated with ferulic acid. Ferulic acid upregulated ATP-binding cassette and amino acid/auxin permease transporters as well as genes encoding signaling components such as leucine-rich repeat VIII and receptor-like cytoplasmic kinases VII protein kinases, APETALA2/ethylene response factor, WRKY, MYB and Zinc-finger protein expressed in inflorescence meristem transcription factors.<h4>Conclusions</h4>The results of a transcriptome analysis suggest the molecular mechanisms of plants in response to FA, including toxicity, detoxicification and signaling machinery. FA may have a significant effect on inhibiting rice root elongation through modulating ET and JA hormone homeostasis. FA-induced gene expression of AAAP transporters may contribute to detoxicification of the autotoxin. Moreover, the WRKY and Myb TFs and LRR-VIII and SD-2b kinases might regulate downstream genes under FA stress but not general allelochemical stress. This comprehensive description of gene expression information could greatly facilitate our understanding of the mechanisms of autotoxicity in plants.",
+      "web_url": "https://europepmc.org/article/PMC/PMC4008027"
+     }
+    ]
+   },
+   "go_annotations": {
+    "uniprot_accession": "A3B9A0",
+    "numberOfHits": 11,
+    "returned": 11,
+    "annotations": [
+     {
+      "geneProductId": "UniProtKB:A3B9A0",
+      "symbol": "ARF16",
+      "qualifier": "enables",
+      "goId": "GO:0000976",
+      "goName": "transcription cis-regulatory region binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 39947,
+      "taxonName": "Oryza sativa subsp. japonica",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19220"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19850"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G34310"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G34390"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G77850"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT2G33860"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT2G46530"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT3G61830"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT4G23980"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G37020"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G60450"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN000774836"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A3B9A0",
+      "symbol": "ARF16",
+      "qualifier": "enables",
+      "goId": "GO:0003677",
+      "goName": "DNA binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000256",
+      "reference": "GO_REF:0000002",
+      "assignedBy": "InterPro",
+      "taxonId": 39947,
+      "taxonName": "Oryza sativa subsp. japonica",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR003340"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR044835"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A3B9A0",
+      "symbol": "ARF16",
+      "qualifier": "involved_in",
+      "goId": "GO:0006355",
+      "goName": "regulation of DNA-templated transcription",
+      "goAspect": "biological_process",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000256",
+      "reference": "GO_REF:0000002",
+      "assignedBy": "InterPro",
+      "taxonId": 39947,
+      "taxonName": "Oryza sativa subsp. japonica",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR044835"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A3B9A0",
+      "symbol": "ARF16",
+      "qualifier": "involved_in",
+      "goId": "GO:0006355",
+      "goName": "regulation of DNA-templated transcription",
+      "goAspect": "biological_process",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 39947,
+      "taxonName": "Oryza sativa subsp. japonica",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19850"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G59750"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G20730"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G62000"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN000774836"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A3B9A0",
+      "symbol": "ARF16",
+      "qualifier": "involved_in",
+      "goId": "GO:0009725",
+      "goName": "response to hormone",
+      "goAspect": "biological_process",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000256",
+      "reference": "GO_REF:0000002",
+      "assignedBy": "InterPro",
+      "taxonId": 39947,
+      "taxonName": "Oryza sativa subsp. japonica",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR044835"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A3B9A0",
+      "symbol": "ARF16",
+      "qualifier": "involved_in",
+      "goId": "GO:0009733",
+      "goName": "response to auxin",
+      "goAspect": "biological_process",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 39947,
+      "taxonName": "Oryza sativa subsp. japonica",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19220"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G20730"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN004816699"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A3B9A0",
+      "symbol": "ARF16",
+      "qualifier": "involved_in",
+      "goId": "GO:0010311",
+      "goName": "lateral root formation",
+      "goAspect": "biological_process",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 39947,
+      "taxonName": "Oryza sativa subsp. japonica",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19220"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G20730"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN004816699"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A3B9A0",
+      "symbol": "ARF16",
+      "qualifier": "involved_in",
+      "goId": "GO:0048366",
+      "goName": "leaf development",
+      "goAspect": "biological_process",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 39947,
+      "taxonName": "Oryza sativa subsp. japonica",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19220"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G20730"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN004816699"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A3B9A0",
+      "symbol": "ARF16",
+      "qualifier": "involved_in",
+      "goId": "GO:1990110",
+      "goName": "callus formation",
+      "goAspect": "biological_process",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 39947,
+      "taxonName": "Oryza sativa subsp. japonica",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19220"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G20730"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN004816699"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A3B9A0",
+      "symbol": "ARF16",
+      "qualifier": "is_active_in",
+      "goId": "GO:0005634",
+      "goName": "nucleus",
+      "goAspect": "cellular_component",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 39947,
+      "taxonName": "Oryza sativa subsp. japonica",
+      "date": "20260529",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19220"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G30330"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G59750"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT2G33860"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT4G30080"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G20730"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G62000"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN000774836"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "K4DF01"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q2LAJ3"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A3B9A0",
+      "symbol": "ARF16",
+      "qualifier": "located_in",
+      "goId": "GO:0005634",
+      "goName": "nucleus",
+      "goAspect": "cellular_component",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000501",
+      "reference": "GO_REF:0000120",
+      "assignedBy": "UniProt",
+      "taxonId": 39947,
+      "taxonName": "Oryza sativa subsp. japonica",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB-SubCell",
+          "id": "SL-0191"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "by_aspect": {
+     "molecular_function": [
+      {
+       "goId": "GO:0000976",
+       "goName": "transcription cis-regulatory region binding"
+      },
+      {
+       "goId": "GO:0003677",
+       "goName": "DNA binding"
+      }
+     ],
+     "biological_process": [
+      {
+       "goId": "GO:0006355",
+       "goName": "regulation of DNA-templated transcription"
+      },
+      {
+       "goId": "GO:0009725",
+       "goName": "response to hormone"
+      },
+      {
+       "goId": "GO:0009733",
+       "goName": "response to auxin"
+      },
+      {
+       "goId": "GO:0010311",
+       "goName": "lateral root formation"
+      },
+      {
+       "goId": "GO:0048366",
+       "goName": "leaf development"
+      },
+      {
+       "goId": "GO:1990110",
+       "goName": "callus formation"
+      }
+     ],
+     "cellular_component": [
+      {
+       "goId": "GO:0005634",
+       "goName": "nucleus"
+      }
+     ]
+    }
+   },
+   "domains": {
+    "accession": "A3B9A0",
+    "found": true,
+    "domain_count": 19,
+    "truncated": false,
+    "domains": [
+     {
+      "accession": "cd10017",
+      "name": "Plant-specific B3-DNA binding domain",
+      "type": "domain",
+      "source_database": "cdd",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 126,
+        "end": 227
+       }
+      ]
+     },
+     {
+      "accession": "G3DSA:2.30.30.1040",
+      "name": null,
+      "type": "homologous_superfamily",
+      "source_database": "cathgene3d",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 290,
+        "end": 361
+       }
+      ]
+     },
+     {
+      "accession": "G3DSA:2.40.330.10",
+      "name": "DNA-binding pseudobarrel domain",
+      "type": "homologous_superfamily",
+      "source_database": "cathgene3d",
+      "interpro": "IPR015300",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 125,
+        "end": 229
+       }
+      ]
+     },
+     {
+      "accession": "G3DSA:3.10.20.90",
+      "name": "Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1",
+      "type": "homologous_superfamily",
+      "source_database": "cathgene3d",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 935,
+        "end": 1029
+       }
+      ]
+     },
+     {
+      "accession": "IPR003340",
+      "name": "B3 DNA binding domain",
+      "type": "domain",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": [
+       {
+        "identifier": "GO:0003677",
+        "name": "DNA binding",
+        "category": {
+         "code": "F",
+         "name": "molecular_function"
+        }
+       }
+      ],
+      "locations": [
+       {
+        "start": 126,
+        "end": 229
+       }
+      ]
+     },
+     {
+      "accession": "IPR010525",
+      "name": "Auxin response factor domain",
+      "type": "domain",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": [
+       {
+        "identifier": "GO:0003677",
+        "name": "DNA binding",
+        "category": {
+         "code": "F",
+         "name": "molecular_function"
+        }
+       },
+       {
+        "identifier": "GO:0006355",
+        "name": "regulation of DNA-templated transcription",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       },
+       {
+        "identifier": "GO:0009725",
+        "name": "response to hormone",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       },
+       {
+        "identifier": "GO:0005634",
+        "name": "nucleus",
+        "category": {
+         "code": "C",
+         "name": "cellular_component"
+        }
+       }
+      ],
+      "locations": [
+       {
+        "start": 276,
+        "end": 358
+       }
+      ]
+     },
+     {
+      "accession": "IPR015300",
+      "name": "DNA-binding pseudobarrel domain superfamily",
+      "type": "homologous_superfamily",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 117,
+        "end": 256
+       }
+      ]
+     },
+     {
+      "accession": "IPR033389",
+      "name": "AUX/IAA domain",
+      "type": "domain",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 935,
+        "end": 1026
+       }
+      ]
+     },
+     {
+      "accession": "IPR044835",
+      "name": "Auxin response factor",
+      "type": "family",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": [
+       {
+        "identifier": "GO:0003677",
+        "name": "DNA binding",
+        "category": {
+         "code": "F",
+         "name": "molecular_function"
+        }
+       },
+       {
+        "identifier": "GO:0006355",
+        "name": "regulation of DNA-templated transcription",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       },
+       {
+        "identifier": "GO:0009725",
+        "name": "response to hormone",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       }
+      ],
+      "locations": [
+       {
+        "start": 18,
+        "end": 558
+       }
+      ]
+     },
+     {
+      "accession": "IPR053793",
+      "name": "PB1-like domain",
+      "type": "domain",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 940,
+        "end": 1024
+       }
+      ]
+     },
+     {
+      "accession": "PF02309",
+      "name": "AUX/IAA family",
+      "type": "family",
+      "source_database": "pfam",
+      "interpro": "IPR033389",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 935,
+        "end": 1026
+       }
+      ]
+     },
+     {
+      "accession": "PF02362",
+      "name": "B3 DNA binding domain",
+      "type": "domain",
+      "source_database": "pfam",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 127,
+        "end": 228
+       }
+      ]
+     },
+     {
+      "accession": "PF06507",
+      "name": "Auxin response factor ancillary domain",
+      "type": "domain",
+      "source_database": "pfam",
+      "interpro": "IPR010525",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 276,
+        "end": 358
+       }
+      ]
+     },
+     {
+      "accession": "PS50863",
+      "name": "B3 DNA-binding domain profile",
+      "type": "domain",
+      "source_database": "profile",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 127,
+        "end": 229
+       }
+      ]
+     },
+     {
+      "accession": "PS51745",
+      "name": "PB1 domain profile",
+      "type": "domain",
+      "source_database": "profile",
+      "interpro": "IPR053793",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 940,
+        "end": 1024
+       }
+      ]
+     },
+     {
+      "accession": "PTHR31384",
+      "name": "AUXIN RESPONSE FACTOR 4-RELATED",
+      "type": "family",
+      "source_database": "panther",
+      "interpro": "IPR044835",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 18,
+        "end": 558
+       }
+      ]
+     },
+     {
+      "accession": "SM01019",
+      "name": "B3 DNA binding domain",
+      "type": "domain",
+      "source_database": "smart",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 127,
+        "end": 229
+       }
+      ]
+     },
+     {
+      "accession": "SSF101936",
+      "name": "DNA-binding pseudobarrel domain",
+      "type": "homologous_superfamily",
+      "source_database": "ssf",
+      "interpro": "IPR015300",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 117,
+        "end": 256
+       }
+      ]
+     },
+     {
+      "accession": "SSF54277",
+      "name": "CAD & PB1 domains",
+      "type": "homologous_superfamily",
+      "source_database": "ssf",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 958,
+        "end": 1019
+       }
+      ]
+     }
+    ],
+    "count_by_type": {
+     "domain": 10,
+     "homologous_superfamily": 6,
+     "family": 3
+    },
+    "upstream_version": "110.0"
+   }
+  }
+ }
+}

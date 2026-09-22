@@ -1,8 +1,9 @@
 # Family, entry and gene-tree accessions come back from tools that nothing can take them into
 
-**Draft — not filed.** Written from the 48-call ARF dossier run in
+**Draft — not filed.** Written from the ARF family dossier run in
 [`examples/arf_family/`](../), server version `1.21.0`, 2026-09-21
-(3 genes x 16 tools). Each section below is one row of
+(29 genes x 16 tools, 248 MCP calls; the family itself from a 516-call
+enumeration through the same tools). Each section below is one row of
 [`gaps.jsonl`](../gaps.jsonl), quoted as logged; `Check` names the
 captured response to read it back from.
 

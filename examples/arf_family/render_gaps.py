@@ -1,8 +1,8 @@
 """Render the run's gap log as the `## Known gaps` section of `PAGE.md`.
 
-`gaps.jsonl` (27 hand-logged rows) and `gaps_auto.jsonl` (3 rows the
-runner flagged itself) are the record of what the 48-call dossier run
-turned up. `PAGE.md` shows all 30 of them. Typing them into the page by
+`gaps.jsonl` (39 hand-logged rows) and `gaps_auto.jsonl` (9 rows the
+runner flagged itself) are the record of what the 248-call family
+dossier run turned up. `PAGE.md` shows all 48 of them. Typing them into the page by
 hand would mean a page that is correct on the day it is written and
 silently wrong the next time a row is corrected — which has already
 happened once here: four rows in `gaps.jsonl` were false and were

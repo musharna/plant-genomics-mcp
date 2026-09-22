@@ -182,7 +182,12 @@ def test_build_rows_counts_loci_locus_errors_and_expected_refusals():
         ],
         "z": [{"tool": "z", "ok": False, "n_bytes": 1, "elapsed_s": 0.1, "upstream_version": None}],
     }
-    rows = {r[0]: r for r in build_rows(["batch_x", "y", "z"], by_tool)}
+    rows = {r[0]: r for r in build_rows(["batch_x", "y", "z"], by_tool, {"x"})}
+    # The batch form inherits its single form's release-under-another-key
+    # status (the envelope carries the same per-locus payloads); `y` has no
+    # such entry and stays RELEASE_ABSENT.
+    assert rows["batch_x"][7] == RELEASE_UNDER_ANOTHER_KEY
+    assert rows["y"][7] == RELEASE_ABSENT
     # columns: tool, calls, ok, errors, ..., status, loci, locus_errors, expected
     assert rows["batch_x"][1:4] == [1, 0, 1]
     assert rows["batch_x"][8:] == ["error", 3, 1, 0]
