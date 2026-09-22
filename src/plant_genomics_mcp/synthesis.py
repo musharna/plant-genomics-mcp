@@ -119,50 +119,6 @@ async def _timed_step(step: int, tool: str, coro) -> StepRow:
     )
 
 
-def _gather_step(step: int, tool: str, outcome: Any, elapsed_s: float | None) -> StepRow:
-    """Convert one slot of ``asyncio.gather(return_exceptions=True)`` into a StepRow.
-
-    Used for phase-2 fanout — each coroutine's outcome lands here. Callers
-    pass ``elapsed_s=None`` for gather rows: the gather wall time can't be
-    honestly attributed per-coroutine, and SynthesisEnvelope.elapsed_s is the
-    authoritative total. PlantGenomicsError → status="error" using its
-    existing [ClassName] __str__. Raw httpx network errors → status="error"
-    with explicit [ClassName] prefix. Other exceptions re-raise (caller wraps
-    in try, or the gather machinery propagates).
-    """
-    if isinstance(outcome, OrganismNotSupported):
-        # Same translation as _timed_step: phase-2 backends that don't
-        # support the requested organism become "skipped", not "error".
-        return StepRow(
-            step=step, tool=tool, status="skipped", elapsed_s=elapsed_s, error=str(outcome)
-        )
-    if isinstance(outcome, PlantGenomicsError):
-        return StepRow(
-            step=step, tool=tool, status="error", elapsed_s=elapsed_s, error=str(outcome)
-        )
-    if isinstance(outcome, httpx.HTTPError):
-        return StepRow(
-            step=step,
-            tool=tool,
-            status="error",
-            elapsed_s=elapsed_s,
-            error=f"[{type(outcome).__name__}] {outcome}",
-        )
-    if isinstance(outcome, Exception):
-        # Unexpected error (projection bug etc.) — degrade this step, don't crash
-        # the whole envelope (audit L6).
-        return StepRow(
-            step=step,
-            tool=tool,
-            status="error",
-            elapsed_s=elapsed_s,
-            error=f"[{type(outcome).__name__}] {outcome}",
-        )
-    if isinstance(outcome, BaseException):
-        raise outcome  # CancelledError / KeyboardInterrupt / SystemExit only
-    return StepRow(step=step, tool=tool, status="ok", elapsed_s=elapsed_s, result=outcome)
-
-
 def _skipped(step: int, tool: str, reason: str) -> StepRow:
     # elapsed_s=None: a skip never actually ran the backend, so there's no
     # per-step wall time to report. SynthesisEnvelope.elapsed_s carries the
@@ -194,17 +150,14 @@ async def _gather_phase2(
 ) -> list[StepRow]:
     """Run a list of (step, tool, coroutine) concurrently; return StepRows in input order.
 
-    Phase-2 StepRows carry ``elapsed_s=None``. Per-coroutine attribution would
-    require wrapping each await with its own ``perf_counter()``; the
-    gather-aggregate is structurally misleading (every row reports the same
-    total) and the orchestrator-level elapsed_s already captures the real
-    wall time. Honest None > misleading aggregate.
+    Each coroutine is awaited under its own timer (``_timed_step``), so every
+    row's ``elapsed_s`` is that backend's own wall time inside the gather —
+    not the gather total copied onto every row, which is what made the
+    earlier ``None`` the honest choice. ``_timed_step`` already translates
+    every exception class into a row, so nothing here needs
+    ``return_exceptions``; a BaseException still propagates.
     """
-    raw = await asyncio.gather(*(c for _, _, c in items), return_exceptions=True)
-    rows: list[StepRow] = []
-    for (step, tool, _), outcome in zip(items, raw, strict=True):
-        rows.append(_gather_step(step, tool, outcome, None))
-    return rows
+    return list(await asyncio.gather(*(_timed_step(step, tool, c) for step, tool, c in items)))
 
 
 # ---------------------------------------------------------------------------
@@ -917,10 +870,8 @@ async def gene_report(
     ensembl_record = _result_dict(root)
     uniprot_record = _ok(uniprot_row)
 
-    canonical_gene_name = ensembl_record.get("display_name")
-    if not canonical_gene_name and uniprot_record:
-        names = uniprot_record.get("geneNames") or []
-        canonical_gene_name = names[0] if names else None
+    gene_names = _gene_names(ensembl_record, uniprot_record)
+    canonical_gene_name = gene_names["canonical"]
 
     uniprot_accession = (uniprot_record or {}).get("primaryAccession")
 
@@ -940,23 +891,47 @@ async def gene_report(
         canonical_gene_name=canonical_gene_name,
         rows=rows,
         top_n=top_n,
+        uniprot_names=gene_names["uniprot"],
     )
+
+    # The steps are the audit trail (status, timing, error); the data lives
+    # once, under result.sections. Carrying each payload under steps[].result
+    # as well doubled every gene_report response (issue #122).
+    audit_steps = [
+        s.model_copy(update={"result": None}) if s.status == "ok" else s
+        for s in (root, uniprot_row, *p2)
+    ]
 
     return SynthesisEnvelope(
         tool="gene_report",
         input=input_args,
         started_at=started_at,
         elapsed_s=time.perf_counter() - t0,
-        steps=[root, uniprot_row, *p2],
+        steps=audit_steps,
         result={
             "locus": locus,
             "organism": resolved.canonical,
             "canonical_gene_name": canonical_gene_name,
+            "gene_names": gene_names,
             "uniprot_accession": uniprot_accession,
             "markdown": markdown,
             "sections": {name: _ok(row) for name, row in rows.items()},
         },
     )
+
+
+def _gene_names(ensembl_record: dict[str, Any], uniprot_record: dict[str, Any] | None) -> dict:
+    """Both sources' gene names, labelled, plus the one the dossier is titled by.
+
+    Ensembl's ``display_name`` is canonical when present (it is the locus's
+    own annotation); UniProt's first ``geneNames`` entry stands in when
+    Ensembl has none. The two can legitimately differ (``MP`` vs ``ARF5``),
+    which is why both ship rather than one being silently dropped.
+    """
+    ensembl_name = ensembl_record.get("display_name") or None
+    uniprot_names = list((uniprot_record or {}).get("geneNames") or [])
+    canonical = ensembl_name or (uniprot_names[0] if uniprot_names else None)
+    return {"canonical": canonical, "ensembl": ensembl_name, "uniprot": uniprot_names}
 
 
 def _section_note(row: StepRow) -> str | None:
@@ -972,11 +947,14 @@ def _render_gene_report_md(
     canonical_gene_name: str | None,
     rows: dict[str, StepRow],
     top_n: int,
+    uniprot_names: list[str] | None = None,
 ) -> str:
     """Render the composed backend rows into a single Markdown gene dossier.
 
     Each section renders from its ok row, or falls back to the row's
     error/skip message so a partial dossier stays legible and self-explaining.
+    When UniProt names the gene differently from the canonical (Ensembl)
+    name, the title carries both, labelled.
     """
 
     def _ok(name: str) -> Any:
@@ -984,6 +962,10 @@ def _render_gene_report_md(
         return row.result if row.status == "ok" else None
 
     title = canonical_gene_name or locus
+    # Label UniProt's names only when the canonical name did not come from
+    # UniProt itself; a canonical taken from geneNames[0] needs no suffix.
+    if canonical_gene_name and uniprot_names and canonical_gene_name not in uniprot_names:
+        title += f" (UniProt: {', '.join(uniprot_names)})"
     lines: list[str] = [f"# {title} — `{locus}`", ""]
 
     # Header — organism · biotype · location · assembly
@@ -1047,12 +1029,16 @@ def _render_gene_report_md(
     go = _ok("go_annotations")
     note = _section_note(rows["go_annotations"])
     if go and go.get("annotations"):
+        # QuickGO returns one annotation per (term, evidence, reference); the
+        # dossier lists one bullet per (term, evidence), so repeats collapse.
         by_aspect: dict[str, list[str]] = {}
         for a in go["annotations"]:
             label = f"[{a.get('goId')}] {a.get('goName')}"
             if a.get("goEvidence"):
                 label += f" ({a['goEvidence']})"
-            by_aspect.setdefault(a.get("goAspect", "other"), []).append(label)
+            bucket = by_aspect.setdefault(a.get("goAspect", "other"), [])
+            if label not in bucket:
+                bucket.append(label)
         for aspect in ("molecular_function", "biological_process", "cellular_component"):
             if by_aspect.get(aspect):
                 lines.append(f"**{aspect.replace('_', ' ').title()}**")

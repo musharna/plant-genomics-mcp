@@ -2035,9 +2035,12 @@ TOOLS: list[types.Tool] = [
             "cross-references, KEGG pathways, STRING interactors, Europe PMC "
             "literature, and QuickGO GO terms. Returns a SynthesisEnvelope whose "
             "result.markdown is a rendered Markdown gene dossier (the headline "
-            "output) alongside a structured result.sections mirror. Any single "
-            "backend failure degrades that section to an 'Unavailable' note; the "
-            "rest of the dossier still renders."
+            "output) alongside a structured result.sections mirror; each "
+            "backend payload appears once, under sections, while steps[] carries "
+            "status and per-step timing only. result.gene_names labels the "
+            "Ensembl and UniProt gene names separately when they differ. Any "
+            "single backend failure degrades that section to an 'Unavailable' "
+            "note; the rest of the dossier still renders."
         ),
         input_schema={
             "type": "object",

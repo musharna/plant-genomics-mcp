@@ -86,7 +86,7 @@ def _nf_error(err: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# helpers: _timed_step / _gather_step / _gather_phase2 / _skipped / _bound_top_n
+# helpers: _timed_step / _gather_phase2 / _skipped / _bound_top_n
 # ---------------------------------------------------------------------------
 
 
@@ -151,34 +151,8 @@ async def test_timed_step_table():
         await synthesis._timed_step(8, "c", _raise(asyncio.CancelledError()))
 
 
-def test_gather_step_table():
-    ns = OrganismNotSupported(backend="atted", organism="x", supported=["a"])
-    assert synthesis._gather_step(2, "a", ns, None).model_dump() == row(
-        2, "a", "skipped", elapsed=None, error=str(ns)
-    )
-    # elapsed_s is passed through verbatim, whatever the caller says it is.
-    assert synthesis._gather_step(2, "a", ns, 0.25).elapsed_s == 0.25
-    assert synthesis._gather_step(3, "b", PlantGenomicsError("boom"), 0.5).model_dump() == row(
-        3, "b", "error", elapsed=0.5, error="boom"
-    )
-    assert synthesis._gather_step(4, "c", httpx.ReadTimeout("slow"), None).model_dump() == row(
-        4, "c", "error", elapsed=None, error="[ReadTimeout] slow"
-    )
-    assert synthesis._gather_step(5, "d", _Weird("odd"), 1.0).model_dump() == row(
-        5, "d", "error", elapsed=1.0, error="[_Weird] odd"
-    )
-    assert synthesis._gather_step(6, "e", {"k": "v"}, None).model_dump() == row(
-        6, "e", "ok", elapsed=None, result={"k": "v"}
-    )
-    assert synthesis._gather_step(7, "f", [1, 2], 0.0).model_dump() == row(
-        7, "f", "ok", elapsed=0.0, result=[1, 2]
-    )
-    with pytest.raises(KeyboardInterrupt):
-        synthesis._gather_step(8, "g", KeyboardInterrupt(), None)
-
-
 @pytest.mark.asyncio
-async def test_gather_phase2_keeps_input_order_and_none_elapsed():
+async def test_gather_phase2_keeps_input_order_and_times_each_slot():
     async def slow():
         await asyncio.sleep(0.01)
         return {"slow": True}
@@ -186,10 +160,17 @@ async def test_gather_phase2_keeps_input_order_and_none_elapsed():
     rows = await synthesis._gather_phase2(
         [(9, "slow", slow()), (3, "err", _raise(PlantGenomicsError("x"))), (1, "fast", _value([]))]
     )
-    assert [r.model_dump() for r in rows] == [
-        row(9, "slow", "ok", elapsed=None, result={"slow": True}),
-        row(3, "err", "error", elapsed=None, error="x"),
-        row(1, "fast", "ok", elapsed=None, result=[]),
+    dumped = [r.model_dump() for r in rows]
+    for dr in dumped:
+        assert isinstance(dr["elapsed_s"], float) and dr["elapsed_s"] >= 0.0, dr
+        dr["elapsed_s"] = "t"
+    assert (
+        dumped[0]["elapsed_s"] == "t" and rows[0].elapsed_s >= 0.01
+    )  # the slow slot really waited
+    assert dumped == [
+        row(9, "slow", "ok", elapsed="t", result={"slow": True}),
+        row(3, "err", "error", elapsed="t", error="x"),
+        row(1, "fast", "ok", elapsed="t", result=[]),
     ]
     assert await synthesis._gather_phase2([]) == []
 
@@ -479,14 +460,14 @@ async def test_analyze_locus_synth_ensembl_failure_envelope_exact(monkeypatch):
                 1,
                 "ensembl_plants_lookup_locus",
                 "error",
-                elapsed=None,
+                elapsed="t",
                 error="[NotFoundError] no such locus",
             ),
             row(
                 2,
                 "resolve_locus_to_uniprot",
                 "ok",
-                elapsed=None,
+                elapsed="t",
                 result={"primaryAccession": "Q0WV96", "geneNames": ["NAC001"]},
             ),
             skipped(3, "get_gene_xrefs", "phase-1 ensembl lookup failed; skipped"),
@@ -524,25 +505,25 @@ async def test_analyze_locus_synth_happy_path_calls_and_envelope_exact(monkeypat
                 1,
                 "ensembl_plants_lookup_locus",
                 "ok",
-                elapsed=None,
+                elapsed="t",
                 result={"id": "AT1G01010", "display_name": "NAC001"},
             ),
             row(
                 2,
                 "resolve_locus_to_uniprot",
                 "ok",
-                elapsed=None,
+                elapsed="t",
                 result={"primaryAccession": "Q0WV96", "geneNames": ["NAC001"]},
             ),
             row(
                 3,
                 "get_gene_xrefs",
                 "ok",
-                elapsed=None,
+                elapsed="t",
                 result={"by_db": {"Uniprot_gn": ["Q0WV96"]}},
             ),
-            row(4, "locus_literature", "ok", elapsed=None, result=[{"pmid": "1"}]),
-            row(5, "locus_go_annotations", "ok", elapsed=None, result={"annotations": []}),
+            row(4, "locus_literature", "ok", elapsed="t", result=[{"pmid": "1"}]),
+            row(5, "locus_go_annotations", "ok", elapsed="t", result={"annotations": []}),
         ],
         "result": {
             "ensembl_record": {"id": "AT1G01010", "display_name": "NAC001"},
@@ -583,12 +564,12 @@ async def test_analyze_locus_synth_uniprot_failure_skips_quickgo_and_keeps_order
             1,
             "ensembl_plants_lookup_locus",
             "ok",
-            elapsed=None,
+            elapsed="t",
             result={"id": "AT1G01010", "display_name": "NAC001"},
         ),
-        row(2, "resolve_locus_to_uniprot", "error", elapsed=None, error="[ReadTimeout] slow"),
-        row(3, "get_gene_xrefs", "ok", elapsed=None, result={"by_db": {}}),
-        row(4, "locus_literature", "ok", elapsed=None, result=[]),
+        row(2, "resolve_locus_to_uniprot", "error", elapsed="t", error="[ReadTimeout] slow"),
+        row(3, "get_gene_xrefs", "ok", elapsed="t", result={"by_db": {}}),
+        row(4, "locus_literature", "ok", elapsed="t", result=[]),
         skipped(5, "locus_go_annotations", "phase-1 UniProt resolution failed; quickgo skipped"),
     ]
     assert d["result"] == {
@@ -845,26 +826,26 @@ async def test_biological_context_synth_happy_path_calls_and_envelope_exact(monk
                 elapsed="t",
                 result={"primaryAccession": "Q0WV96"},
             ),
-            row(2, "gramene_homologs", "ok", elapsed=None, result={"homologs": []}),
+            row(2, "gramene_homologs", "ok", elapsed="t", result={"homologs": []}),
             row(
                 3,
                 "kegg_pathways",
                 "skipped",
-                elapsed=None,
+                elapsed="t",
                 error="[OrganismNotSupported] backend 'kegg' has no ID for 'oryza_sativa'; supported by 'kegg': ['arabidopsis_thaliana']",
             ),
             row(
                 4,
                 "string_interactions",
                 "ok",
-                elapsed=None,
+                elapsed="t",
                 result={"partners": [{"string_id": "3702.AT3G15500.1", "score": 0.8}]},
             ),
             row(
                 5,
                 "atted_coexpression",
                 "ok",
-                elapsed=None,
+                elapsed="t",
                 result={"neighbors": [{"locus": "AT3G15500", "z_score": 3.0}]},
             ),
         ],
@@ -928,8 +909,8 @@ async def test_gene_report_ensembl_failure_envelope_exact(monkeypatch):
         "started_at": "ISO",
         "elapsed_s": "t",
         "steps": [
-            row(1, GR[0], "error", elapsed=None, error="[ConnectTimeout] t"),
-            row(2, GR[1], "ok", elapsed=None, result={"primaryAccession": "Q0WV96"}),
+            row(1, GR[0], "error", elapsed="t", error="[ConnectTimeout] t"),
+            row(2, GR[1], "ok", elapsed="t", result={"primaryAccession": "Q0WV96"}),
         ]
         + [skipped(i + 1, GR[i], "phase-1 ensembl lookup failed; skipped") for i in range(2, 8)],
         "result": None,
@@ -976,34 +957,15 @@ async def test_gene_report_happy_path_calls_steps_and_result_exact(monkeypatch):
     assert recs["ip"].calls == [((CLIENT, "Q0WV96"), {})]
     d = shape(env)
     assert d["input"] == {"locus": "AT1G01010", "organism": "rice", "top_n": 3}
-    assert d["steps"] == [
-        row(
-            1,
-            GR[0],
-            "ok",
-            elapsed=None,
-            result={"id": "AT1G01010", "display_name": "NAC001", "biotype": "protein_coding"},
-        ),
-        row(2, GR[1], "ok", elapsed=None, result=uni_rec),
-        row(
-            3,
-            GR[2],
-            "ok",
-            elapsed=None,
-            result={"xrefs": [{"dbname": "TAIR", "primary_id": "AT1G01010"}]},
-        ),
-        row(4, GR[3], "ok", elapsed=None, result={"pathways": []}),
-        row(5, GR[4], "ok", elapsed=None, result={"partners": []}),
-        row(6, GR[5], "ok", elapsed=None, result={"hitCount": 0, "hits": []}),
-        row(7, GR[6], "ok", elapsed=None, result={"annotations": []}),
-        row(8, GR[7], "ok", elapsed=None, result={"domains": []}),
-    ]
+    # The steps are the audit trail; each payload lives once, under sections.
+    assert d["steps"] == [row(i, GR[i - 1], "ok", elapsed="t") for i in range(1, 9)]
     res = d["result"]
     md = res.pop("markdown")
     assert res == {
         "locus": "AT1G01010",
         "organism": "oryza_sativa",
         "canonical_gene_name": "NAC001",  # ensembl display_name wins over UniProt geneNames
+        "gene_names": {"canonical": "NAC001", "ensembl": "NAC001", "uniprot": ["ANAC001"]},
         "uniprot_accession": "Q0WV96",
         "sections": {
             "annotation": {
@@ -1021,7 +983,9 @@ async def test_gene_report_happy_path_calls_steps_and_result_exact(monkeypatch):
         },
     }
     # the renderer got the locus, the resolved scientific name, the name and the cap
-    assert md.startswith("# NAC001 — `AT1G01010`\n\n*Oryza sativa* · protein_coding\n")
+    assert md.startswith(
+        "# NAC001 (UniProt: ANAC001) — `AT1G01010`\n\n*Oryza sativa* · protein_coding\n"
+    )
     assert "## Interaction partners (STRING, top 3)" in md
 
 
@@ -1032,7 +996,7 @@ async def test_gene_report_uniprot_failure_skips_go_and_domains_with_reasons(mon
     )
     env = await synthesis.gene_report(CLIENT, "AT1G01010")
     d = shape(env)
-    assert d["steps"][1] == row(2, GR[1], "error", elapsed=None, error="[NotFoundError] x")
+    assert d["steps"][1] == row(2, GR[1], "error", elapsed="t", error="[NotFoundError] x")
     assert d["steps"][6:] == [
         skipped(7, GR[6], "phase-1 UniProt resolution failed; quickgo skipped"),
         skipped(8, GR[7], "phase-1 UniProt resolution failed; interpro skipped"),
@@ -1219,7 +1183,7 @@ async def test_consensus_homologs_happy_path_calls_and_envelope_exact(monkeypatc
                 3,
                 CH_TOOLS[2],
                 "ok",
-                elapsed=None,
+                elapsed="t",
                 result={
                     "homologs": [
                         {"target_locus": "OS01G0100100"},
@@ -1232,7 +1196,7 @@ async def test_consensus_homologs_happy_path_calls_and_envelope_exact(monkeypatc
                 4,
                 CH_TOOLS[3],
                 "ok",
-                elapsed=None,
+                elapsed="t",
                 result={"hits": [{"accession": "sp|Q5VMS9.1|Y", "identity": "78%"}]},
             ),
             row(
@@ -1291,7 +1255,7 @@ async def test_consensus_homologs_enrichment_skip_reasons(monkeypatch):
     env = await synthesis.consensus_homologs(CLIENT, "AT1G01010")
     d = shape(env)
     assert d["steps"][2] == row(
-        3, CH_TOOLS[2], "error", elapsed=None, error="[UpstreamUnavailableError] gramene down"
+        3, CH_TOOLS[2], "error", elapsed="t", error="[UpstreamUnavailableError] gramene down"
     )
     assert d["steps"][4] == skipped(
         5, CH_TOOLS[4], "gramene_homologs phase did not return ok; enrichment skipped"
@@ -1315,5 +1279,5 @@ async def test_consensus_homologs_enrichment_failure_falls_back_to_no_xrefs(monk
     _ch_backends(monkeypatch, bl=httpx.ReadTimeout("b"), en=httpx.ReadTimeout("e"))
     env = await synthesis.consensus_homologs(CLIENT, "AT1G01010")
     d = shape(env)
-    assert d["steps"][3] == row(4, CH_TOOLS[3], "error", elapsed=None, error="[ReadTimeout] b")
+    assert d["steps"][3] == row(4, CH_TOOLS[3], "error", elapsed="t", error="[ReadTimeout] b")
     assert d["result"] == {"uniprot_accession": "Q0WV96", "sequence_length": 24, "consensus": []}

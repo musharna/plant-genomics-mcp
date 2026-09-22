@@ -1304,8 +1304,11 @@ class AttedCoexpression(BaseModel):
 class StepRow(BaseModel):
     """One backend call inside a synthesis envelope.
 
-    ``status="ok"`` populates ``result``; ``status="error"`` populates ``error``
-    with the existing ``[ExceptionClass] message`` wire format from
+    ``status="ok"`` populates ``result`` — unless the orchestrator carries the
+    payload elsewhere in the envelope (``gene_report`` keeps it once, under
+    ``result.sections``), in which case the row is the audit trail alone and
+    ``result`` is None. ``status="error"`` populates ``error`` with the
+    existing ``[ExceptionClass] message`` wire format from
     ``errors.PlantGenomicsError.__str__``. ``status="skipped"`` populates
     ``error`` with a human-readable skip reason (e.g. phase 1 failed).
     """
@@ -1318,10 +1321,10 @@ class StepRow(BaseModel):
     elapsed_s: float | None = Field(
         default=None,
         description=(
-            "Per-step wall time when separately measurable, else None. "
-            "Phase-2 gather rows and phase-0 pre-call validation failures "
-            "return None because their wall time can't be honestly attributed "
-            "per-step; SynthesisEnvelope.elapsed_s carries the authoritative total."
+            "Per-step wall time: every awaited backend call is timed on its own, "
+            "including inside a phase-2 gather. None only for rows that never "
+            "ran (skipped, or a phase-0 pre-call validation failure); "
+            "SynthesisEnvelope.elapsed_s carries the orchestrator total."
         ),
     )
     result: dict | list | None = Field(
@@ -1336,8 +1339,8 @@ class StepRow(BaseModel):
     @model_validator(mode="after")
     def _check_status_coherence(self) -> StepRow:
         if self.status == "ok":
-            if self.result is None or self.error is not None:
-                raise ValueError("status='ok' requires result is not None and error is None")
+            if self.error is not None:
+                raise ValueError("status='ok' requires error is None")
         elif self.status == "error":
             if self.error is None or self.result is not None:
                 raise ValueError("status='error' requires error is not None and result is None")

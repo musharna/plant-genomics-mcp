@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **`gene_report` carries each backend payload once (#122).** `steps[]`
+  is now the audit trail (status, per-step `elapsed_s`, error) and the data
+  lives under `result.sections` alone, halving the response. Every
+  synthesis tool's phase-2 rows now report their own wall time instead of
+  `null`. `result.gene_names` labels the Ensembl and UniProt gene names
+  separately (`MP` vs `ARF5`) and the dossier title shows both when they
+  differ; GO bullets are one per (term, evidence). `StepRow` allows
+  `status="ok"` with `result=None` for audit rows.
 - **`examples/arf_family/`: the ARF family dossier, built through the MCP
   alone.** A worked run of 16 tools over a whole gene family — 23
   _Arabidopsis thaliana_ members enumerated by `enumerate_family.py`

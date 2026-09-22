@@ -323,3 +323,62 @@ def test_render_gene_report_md_every_list_section_can_be_unavailable():
     rows["protein"] = _ok("protein", {"uniProtkbId": "X_ARATH"})
     md = _render_gene_report_md("X", "Org", None, rows, top_n=3)
     assert "## Protein\n**X_ARATH**\nX_ARATH\n" in md
+
+
+def test_render_gene_report_md_go_bullets_are_one_per_term_and_evidence():
+    """Issue #122: '[GO:0005515] protein binding (IPI)' rendered three times
+    byte-identically because QuickGO returns one annotation per reference.
+    One bullet per (term, evidence); different evidence for the same term
+    stays distinct (positive control)."""
+    rows = _full_rows()
+    rows["go_annotations"] = _ok(
+        "go_annotations",
+        {
+            "annotations": [
+                {
+                    "goId": "GO:0005515",
+                    "goName": "protein binding",
+                    "goAspect": "molecular_function",
+                    "goEvidence": "IPI",
+                },
+                {
+                    "goId": "GO:0005515",
+                    "goName": "protein binding",
+                    "goAspect": "molecular_function",
+                    "goEvidence": "IPI",
+                },
+                {
+                    "goId": "GO:0005515",
+                    "goName": "protein binding",
+                    "goAspect": "molecular_function",
+                    "goEvidence": "IPI",
+                },
+                {
+                    "goId": "GO:0005515",
+                    "goName": "protein binding",
+                    "goAspect": "molecular_function",
+                    "goEvidence": "IDA",
+                },
+            ]
+        },
+    )
+    md = _render_gene_report_md("X", "Org", None, rows, top_n=10)
+    assert md.count("- [GO:0005515] protein binding (IPI)") == 1
+    assert md.count("- [GO:0005515] protein binding (IDA)") == 1
+
+
+def test_render_gene_report_md_title_names_both_sources_when_they_differ():
+    md = _render_gene_report_md(
+        "AT1G19850", "Arabidopsis thaliana", "MP", _full_rows(), top_n=2, uniprot_names=["ARF5"]
+    )
+    assert md.startswith("# MP (UniProt: ARF5) — `AT1G19850`\n")
+    # Positive control: same name → the title is unchanged.
+    md2 = _render_gene_report_md(
+        "AT1G01010",
+        "Arabidopsis thaliana",
+        "NAC001",
+        _full_rows(),
+        top_n=2,
+        uniprot_names=["NAC001"],
+    )
+    assert md2.startswith("# NAC001 — `AT1G01010`\n")
