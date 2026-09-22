@@ -97,6 +97,25 @@ def test_verify_genes_fails_on_panther_subfamily_mismatch(tmp_path):
     assert "panther_subfamily mismatch" in bad[0][2]
 
 
+def test_verify_genes_passes_each_rows_organism_to_the_tools(tmp_path):
+    # Task 7: rows in rice and wheat. The fake's rice fixture answers only
+    # when the call carries organism=oryza_sativa, so a rice row verifies
+    # clean (positive) and the same locus filed under Arabidopsis fails on
+    # the call itself (negative, same run) — the failure is a failed call,
+    # never read as "not an ARF".
+    rice = {**_row("Os01g0000100", "OsX", "PTHR31384:SF50", "false"), "organism": "oryza_sativa"}
+    misfiled = _row("Os01g0000100", "OsX", "PTHR31384:SF50", "false")
+    genes = _write_genes_tsv(
+        tmp_path, [rice, _row("GOOD_ARF_PB1", "ARF5", "PTHR31384:SF10", "true")]
+    )
+    assert run(verify(genes, FAKE_ARF)) == []
+    genes = _write_genes_tsv(tmp_path, [misfiled])
+    bad = run(verify(genes, FAKE_ARF))
+    assert [locus for locus, _, _ in bad] == ["Os01g0000100"]
+    assert "interpro_domains call failed" in bad[0][2]
+    assert "not ARF family" not in bad[0][2]
+
+
 def _write_raw_tsv(tmp_path: Path, lines: list[str]) -> Path:
     # For malformed manifests _write_genes_tsv's DictWriter can't produce:
     # a bad/missing header, or a data row with fewer tab-separated fields

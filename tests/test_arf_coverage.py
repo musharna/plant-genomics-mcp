@@ -75,7 +75,7 @@ def test_build_rows_counts_median_null_count_release_status_and_status(tmp_path)
     assert set(by_name) == set(TOOL_NAMES)
 
     # tool_a: all-ok positive control, reports under upstream_version.
-    (tool, calls, ok, errors, median_bytes, uv_null, median_elapsed, release_status, status) = (
+    (tool, calls, ok, errors, median_bytes, uv_null, median_elapsed, release_status, status, *_) = (
         by_name["tool_a"]
     )
     assert calls == 2
@@ -89,7 +89,7 @@ def test_build_rows_counts_median_null_count_release_status_and_status(tmp_path)
 
     # tool_b: one failed call -> the negative case, "error" status; no
     # release under any key.
-    (tool, calls, ok, errors, median_bytes, uv_null, median_elapsed, release_status, status) = (
+    (tool, calls, ok, errors, median_bytes, uv_null, median_elapsed, release_status, status, *_) = (
         by_name["tool_b"]
     )
     assert calls == 2
@@ -102,7 +102,7 @@ def test_build_rows_counts_median_null_count_release_status_and_status(tmp_path)
     assert status == "error"
 
     # tool_c: never appears in calls.jsonl -> "unused", zeroed numerics.
-    (tool, calls, ok, errors, median_bytes, uv_null, median_elapsed, release_status, status) = (
+    (tool, calls, ok, errors, median_bytes, uv_null, median_elapsed, release_status, status, *_) = (
         by_name["tool_c"]
     )
     assert calls == 0
@@ -116,7 +116,7 @@ def test_build_rows_counts_median_null_count_release_status_and_status(tmp_path)
 
     # tool_d: null upstream_version every call, but in
     # release_under_another_key -> RELEASE_UNDER_ANOTHER_KEY, not RELEASE_ABSENT.
-    (tool, calls, ok, errors, median_bytes, uv_null, median_elapsed, release_status, status) = (
+    (tool, calls, ok, errors, median_bytes, uv_null, median_elapsed, release_status, status, *_) = (
         by_name["tool_d"]
     )
     assert uv_null == 2
@@ -126,12 +126,70 @@ def test_build_rows_counts_median_null_count_release_status_and_status(tmp_path)
     # tool_e: null upstream_version, all-ok, NOT in release_under_another_key
     # -> RELEASE_ABSENT. The positive control for RELEASE_ABSENT isolated
     # from tool_b's error status.
-    (tool, calls, ok, errors, median_bytes, uv_null, median_elapsed, release_status, status) = (
+    (tool, calls, ok, errors, median_bytes, uv_null, median_elapsed, release_status, status, *_) = (
         by_name["tool_e"]
     )
     assert uv_null == 1
     assert release_status == RELEASE_ABSENT
     assert status == "ok"
+
+
+def test_build_rows_counts_loci_locus_errors_and_expected_refusals():
+    # Task 7 rows: a batch call covering three loci with one per-locus
+    # error inside an ok envelope; a single call refused for an organism
+    # (`expected`, in neither ok nor errors); and a thin-slice row with no
+    # `kind`, which must still derive its kind from `ok`.
+    by_tool = {
+        "batch_x": [
+            {
+                "tool": "batch_x",
+                "ok": True,
+                "kind": "error",
+                "loci": ["A", "B", "C"],
+                "n_ok": 2,
+                "n_error": 1,
+                "n_expected": 0,
+                "n_bytes": 900,
+                "elapsed_s": 1.0,
+                "upstream_version": None,
+            }
+        ],
+        "y": [
+            {
+                "tool": "y",
+                "ok": False,
+                "kind": "expected",
+                "locus": "A",
+                "n_ok": 0,
+                "n_error": 0,
+                "n_expected": 1,
+                "n_bytes": 200,
+                "elapsed_s": 0.1,
+                "upstream_version": None,
+            },
+            {
+                "tool": "y",
+                "ok": True,
+                "kind": "ok",
+                "locus": "B",
+                "n_ok": 1,
+                "n_error": 0,
+                "n_expected": 0,
+                "n_bytes": 300,
+                "elapsed_s": 0.1,
+                "upstream_version": None,
+            },
+        ],
+        "z": [{"tool": "z", "ok": False, "n_bytes": 1, "elapsed_s": 0.1, "upstream_version": None}],
+    }
+    rows = {r[0]: r for r in build_rows(["batch_x", "y", "z"], by_tool)}
+    # columns: tool, calls, ok, errors, ..., status, loci, locus_errors, expected
+    assert rows["batch_x"][1:4] == [1, 0, 1]
+    assert rows["batch_x"][8:] == ["error", 3, 1, 0]
+    assert rows["y"][1:4] == [2, 1, 0]
+    assert rows["y"][8:] == ["ok", 2, 0, 1]  # the refusal is neither ok nor error
+    assert rows["z"][1:4] == [1, 0, 1]
+    assert rows["z"][8:] == ["error", 1, 1, 0]
 
 
 def _write_gaps_jsonl(tmp_path, raw_field, extra_rows=()):

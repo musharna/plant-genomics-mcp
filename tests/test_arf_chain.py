@@ -30,8 +30,9 @@ from pathlib import Path
 from examples.arf_family import run_dossier
 from examples.arf_family.chain import CHAIN
 from examples.arf_family.mcp_client import SERVER_CMD, McpClient
+from examples.arf_family.run_dossier import BATCH_FORMS
 
-from ._fake_mcp_server import CHAIN_FAILING_TOOL
+from ._fake_mcp_server import CHAIN_FAILING_TOOL, CHAIN_UNSUPPORTED_ORGANISM
 
 LOCUS = "AT1G19850"
 ORGANISM = "arabidopsis_thaliana"
@@ -131,6 +132,21 @@ def test_chain_arguments_match_the_live_tool_schemas():
         "no_such_tool_at_all: no such tool on the live server"
     ]
 
+    # The runner's batch table must name real batch tools whose list
+    # argument is the required one, and must cover EVERY chain tool that
+    # has a batch form on the live server — a chain tool whose batch_ form
+    # exists but is missing from BATCH_FORMS would silently run per locus.
+    for chain_tool, (batch_tool, list_arg, takes_organism) in BATCH_FORMS.items():
+        assert chain_tool in dict(CHAIN), chain_tool
+        args = {list_arg: [LOCUS], "organism": ORGANISM} if takes_organism else {list_arg: [LOCUS]}
+        assert schema_violations(batch_tool, args, schemas) == [], (batch_tool, args)
+        # ...and the flag is not a free choice: it must match the schema.
+        assert takes_organism == ("organism" in schemas[batch_tool]["properties"]), batch_tool
+        assert schemas[batch_tool]["properties"][list_arg]["maxItems"] == run_dossier.BATCH_MAX
+    live_batch_forms = {f"batch_{name}" for name, _ in CHAIN} & set(schemas)
+    assert live_batch_forms == {b for b, _, _ in BATCH_FORMS.values()}
+    assert schema_violations("batch_kegg_pathways", {"locus": [LOCUS]}, schemas) != []
+
 
 def _run_once(tmp_path: Path) -> None:
     """Drive the real runner against the fake server, writing into tmp_path."""
@@ -172,13 +188,34 @@ def test_a_rerun_rewrites_auto_gaps_and_never_touches_the_hand_logged_file(tmp_p
     # Positive control, in this same test: the run really happened and walked
     # the whole chain. Without it, an empty gaps_auto.jsonl would satisfy the
     # idempotence assertion below for the wrong reason.
-    assert [
-        json.loads(line)["tool"] for line in (tmp_path / "calls.jsonl").read_text().splitlines()
-    ] == [name for name, _ in CHAIN], "the runner did not walk the whole chain"
+    calls = [json.loads(line) for line in (tmp_path / "calls.jsonl").read_text().splitlines()]
+    assert [c["chain_tool"] for c in calls] == [name for name, _ in CHAIN], (
+        "the runner did not walk the whole chain"
+    )
+    # Every chain tool with a batch form went through it, with the one
+    # locus in `loci`; every other tool was called by its own name.
+    for c in calls:
+        if c["chain_tool"] in BATCH_FORMS:
+            assert c["tool"] == BATCH_FORMS[c["chain_tool"]][0]
+            assert c["loci"] == ["AT1G19850"] and c["locus"] is None
+        else:
+            assert c["tool"] == c["chain_tool"]
+            assert c["locus"] == "AT1G19850" and c["loci"] is None
+    # The failing tool is reported as an error at BOTH levels — the call
+    # row and the per-locus count — and the split raw file says so too.
+    failing = [c for c in calls if c["chain_tool"] == CHAIN_FAILING_TOOL]
+    assert [c["kind"] for c in failing] == ["error"]
+    assert failing[0]["n_error"] == 1 and failing[0]["n_ok"] == 0
+    assert json.loads((tmp_path / "raw" / f"AT1G19850__{CHAIN_FAILING_TOOL}.json").read_text()) == {
+        "ok": False,
+        "error": f"fake chain failure for {CHAIN_FAILING_TOOL}",
+    }
+    assert sum(c["n_ok"] for c in calls) == len(CHAIN) - 1
     assert len(list(RAW.glob("*"))) > 0  # the committed captures are untouched
     assert len(first_rows) == 1, first_rows
     assert first_rows[0]["tool"] == CHAIN_FAILING_TOOL
     assert first_rows[0]["kind"] == "error"
+    assert first_rows[0]["loci"] == ["AT1G19850"]
     assert first_rows[0]["auto"] is True
     # ...and the fifteen succeeding calls produced no auto row, so the count
     # below is a real count and not "everything is logged".
@@ -195,6 +232,40 @@ def test_a_rerun_rewrites_auto_gaps_and_never_touches_the_hand_logged_file(tmp_p
     assert (tmp_path / "gaps.jsonl").read_text() == hand_logged, (
         "the runner modified gaps.jsonl, the hand-logged file"
     )
+
+
+def test_a_documented_organism_refusal_is_expected_not_a_gap(tmp_path):
+    # Two rows: one in an organism every fake tool answers for, one in the
+    # organism the fake refuses with the live server's
+    # `[OrganismNotSupported]` tag. The refusals must be recorded as
+    # `expected` on the call row and in the split raw file, and must NOT
+    # produce an auto gap row; the ordinary failure on the other row
+    # (CHAIN_FAILING_TOOL) still must — same run, same file.
+    (tmp_path / "genes.tsv").write_text(
+        "locus\tsymbol\torganism\tpanther_subfamily\thas_pb1_domain\n"
+        "AT1G19850\tARF5\tarabidopsis_thaliana\tPTHR31384:SF10\ttrue\n"
+        f"XX1\tX\t{CHAIN_UNSUPPORTED_ORGANISM}\tPTHR0\tfalse\n"
+    )
+    _run_once(tmp_path)
+    calls = [json.loads(line) for line in (tmp_path / "calls.jsonl").read_text().splitlines()]
+    refused = [c for c in calls if c["organism"] == CHAIN_UNSUPPORTED_ORGANISM]
+    assert len(refused) == len(CHAIN)
+    # gramene_homologs takes no organism, so the fake cannot refuse it.
+    assert {c["kind"] for c in refused if c["chain_tool"] != "gramene_homologs"} == {"expected"}
+    assert sum(c["n_expected"] for c in refused) == len(CHAIN) - 1
+    assert sum(c["n_error"] for c in refused) == 0
+    raw = json.loads((tmp_path / "raw" / "XX1__interpro_domains.json").read_text())
+    assert raw["ok"] is False and raw["expected"] is True
+    assert "[OrganismNotSupported]" in raw["error"]
+    gaps = [json.loads(line) for line in (tmp_path / "gaps_auto.jsonl").read_text().splitlines()]
+    assert [(g["tool"], g["kind"], g["loci"]) for g in gaps] == [
+        (CHAIN_FAILING_TOOL, "error", ["AT1G19850"])
+    ]
+    # Positive control for the classifier itself: an error without the
+    # tag is not expected; an error with it is.
+    assert not run_dossier.is_expected("[NotFoundError] KEGG: no pathway memberships for X")
+    assert run_dossier.is_expected("[OrganismNotSupported] backend 'kegg' has no ID for 'x'")
+    assert not run_dossier.is_expected(None)
 
 
 def test_every_hand_logged_gap_row_is_checkable():

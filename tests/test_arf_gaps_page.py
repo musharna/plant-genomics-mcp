@@ -117,8 +117,14 @@ def test_render_section_raises_on_an_origin_it_has_no_heading_for() -> None:
     # Positive control: the same call with a known origin succeeds.
     assert render_section([HAND_TOOL_ROW], [], TOOL_NAMES)
 
-    unclassified = {**HAND_TOOL_ROW, "origin": "unverified"}
-    with pytest.raises(ValueError, match="unverified"):
+    unverified = {**HAND_TOOL_ROW, "origin": "unverified"}
+    out = render_section([unverified], [], TOOL_NAMES)
+    assert any(
+        "synthetic-tool-kind" in line for line in _section_of(ORIGIN_HEADINGS["unverified"], out)
+    )
+
+    unclassified = {**HAND_TOOL_ROW, "origin": "probably-upstream"}
+    with pytest.raises(ValueError, match="probably-upstream"):
         render_section([unclassified], [], TOOL_NAMES)
 
 

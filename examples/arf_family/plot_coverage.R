@@ -23,8 +23,19 @@
 # (2) random jitter plus solid points let identical byte counts (e.g.
 # kegg_pathways, 724 B on all three genes) draw as a single dot, hiding
 # 25 of 48 points. Both are fixed below: release_status is the real
-# three-level table column, and each point gets a deterministic per-gene
-# offset plus a white outline so all 48 are individually countable.
+# three-level table column, and each point gets a deterministic offset
+# plus a white outline so ties stay countable.
+#
+# Task 7 (full family, three organisms): one row of calls.jsonl is one MCP
+# call, and eight chain tools now go through their batch_ form (one call
+# per organism per 50 loci) while the other eight are still called once
+# per locus. So a point is one CALL, not one gene; the per-locus tools
+# draw a hundred-odd points per row and the batch tools draw three to six.
+# The per-gene offset (3 levels) became a per-ORGANISM offset (3 levels):
+# one point per gene per tool is no longer readable at this count, and the
+# organism is what the figure has to let the eye separate. The caption
+# says so. Calls of kind "expected" (a documented organism refusal, e.g.
+# kegg_pathways on wheat) are drawn hollow: they are answers, not data.
 
 library(ggplot2)
 library(jsonlite)
@@ -44,13 +55,19 @@ release_lookup <- setNames(chain$release_status, chain$tool)
 release_levels <- c("upstream_version field", "release under another key", "no release in the payload")
 calls$release_status <- factor(release_lookup[as.character(calls$tool)], levels = release_levels)
 
-# Deterministic per-gene vertical offset, by sorted locus, so all 3 calls
-# per tool stay visible even when their byte counts are identical —
+# Deterministic per-organism vertical offset, by sorted organism slug —
 # replaces random jitter, which drew a different figure on every render
 # and still overlapped exact ties.
-loci_sorted <- sort(unique(calls$locus))
-locus_offset <- setNames(c(-0.25, 0, 0.25), loci_sorted)
-calls$y <- as.numeric(calls$tool) + locus_offset[calls$locus]
+organisms_sorted <- sort(unique(calls$organism))
+stopifnot(length(organisms_sorted) <= 3)
+organism_offset <- setNames(c(-0.25, 0, 0.25)[seq_along(organisms_sorted)], organisms_sorted)
+calls$y <- as.numeric(calls$tool) + organism_offset[calls$organism]
+calls$organism <- factor(calls$organism, levels = organisms_sorted)
+if (is.null(calls$kind)) calls$kind <- ifelse(calls$ok, "ok", "error")
+calls$expected <- calls$kind == "expected"
+
+n_calls <- nrow(calls)
+n_genes <- nrow(read.delim("examples/arf_family/genes.tsv"))
 
 oversize_threshold <- 200000  # bytes; the dossier runner's gaps_auto.jsonl cutoff
 
@@ -75,11 +92,26 @@ p <- ggplot(calls, aes(x = n_bytes, y = y)) +
     colour = pgmcp_refline_colour
   ) +
   geom_point(
-    aes(fill = release_status),
-    shape = 21,
+    data = calls[!calls$expected, ],
+    aes(fill = release_status, shape = organism),
     colour = pgmcp_point_outline,
     stroke = pgmcp_point_stroke,
+    size = pgmcp_point_size,
+    alpha = 0.85
+  ) +
+  geom_point(
+    data = calls[calls$expected, ],
+    aes(shape = organism),
+    fill = NA,
+    colour = pgmcp_refline_colour,
+    stroke = pgmcp_point_stroke,
     size = pgmcp_point_size
+  ) +
+  scale_shape_manual(
+    name = NULL,
+    values = c(21, 22, 24)[seq_along(organisms_sorted)],
+    breaks = organisms_sorted,
+    labels = gsub("_", " ", organisms_sorted)
   ) +
   scale_x_log10(labels = scales::label_comma()) +
   scale_y_continuous(
@@ -102,8 +134,15 @@ p <- ggplot(calls, aes(x = n_bytes, y = y)) +
     x = "response size on the wire, bytes (log10 scale)",
     y = NULL,
     fill = NULL,
-    caption = "One point per gene call (3 genes × 16 chain tools); tools ordered by median size."
+    caption = sprintf(
+      paste0(
+        "One point per MCP call (%d calls over %d genes in %d organisms; batch_* calls cover up to 50 loci each),\n",
+        "offset vertically by organism, shape by organism; hollow = documented organism refusal (expected). ",
+        "Tools ordered by median size."
+      ),
+      n_calls, n_genes, length(organisms_sorted)
+    )
   ) +
   theme_pgmcp()
 
-ggsave("examples/arf_family/coverage.png", p, width = 7, height = 5, dpi = 200)
+ggsave("examples/arf_family/coverage.png", p, width = 7, height = 6, dpi = 200)

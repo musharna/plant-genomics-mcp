@@ -48,13 +48,15 @@ PAGE_PATH = HERE / "PAGE.md"
 
 SECTION_HEADING = "## Known gaps"
 
-# One heading per `origin` value in gaps.jsonl. `unverified` is a valid
-# origin in the schema (tests/test_arf_chain.py) but no row carries it;
-# if one ever does, `render_section` raises rather than filing it under
-# either of these.
+# One heading per `origin` value in gaps.jsonl. `unverified` is for rows
+# whose cause could not be attributed to the tool or to upstream from
+# inside the MCP (the family run may not leave it: no direct HTTP). A row
+# with any other origin makes `render_section` raise rather than be filed
+# under the wrong heading.
 ORIGIN_HEADINGS: dict[str, str] = {
     "tool": "### Defects in this tool",
     "upstream-passthrough": "### Upstream values passed through unchanged",
+    "unverified": "### Not attributable from inside the MCP",
 }
 
 # Rows the runner logged itself carry no `origin`: an oversize response
@@ -127,6 +129,8 @@ def render_row(row: dict, tool_names: Sequence[str]) -> str:
     """One gap row as one Markdown list item: subject — what happens — expected."""
     if row.get("auto"):
         subject = row["tool"]
+        # A full-family auto row groups every locus with the same outcome;
+        # `locus` then reads "N loci" and the list is in the JSONL.
         happened = f"{row['locus']}: {row['returned']}"
     else:
         subject = subject_of(row["attempted"], tool_names)
@@ -173,6 +177,8 @@ def render_section(
         f"[`gaps.jsonl`](gaps.jsonl) and [`gaps_auto.jsonl`](gaps_auto.jsonl).",
     ]
     for origin, heading in ORIGIN_HEADINGS.items():
+        if not grouped[origin]:
+            continue  # an empty heading would read as a category with no findings
         out += ["", heading, ""]
         out += [render_row(row, tool_names) for row in grouped[origin]]
     return "\n".join(out)

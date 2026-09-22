@@ -68,6 +68,15 @@ FIELDNAMES = [
     "median_elapsed_s",
     "release_status",
     "status",
+    # Task 7 (full family, batch forms): a row of calls.jsonl is one MCP
+    # call, which for a batch_* tool covers up to 50 loci. `loci` is how
+    # many loci the tool's calls covered in all; `locus_errors` counts the
+    # per-locus failures inside envelopes plus failed single calls;
+    # `expected` counts loci the tool refused for an organism it documents
+    # as unsupported (`run_dossier.EXPECTED_ERROR_TAGS`) — never an error.
+    "loci",
+    "locus_errors",
+    "expected",
 ]
 
 
@@ -142,9 +151,12 @@ def build_rows(
     """One row per tool in `tool_names`, in that order.
 
     A tool absent from `by_tool` (never called) gets `status == "unused"`
-    and zeroed numeric columns. A tool with at least one `ok is False` call
-    gets `status == "error"` even if some of its calls succeeded — any
-    failure is a gap worth a row that says so, not one averaged away.
+    and zeroed numeric columns. A tool with at least one call of
+    `kind == "error"` gets `status == "error"` even if some of its calls
+    succeeded — any failure is a gap worth a row that says so, not one
+    averaged away. A call of `kind == "expected"` (a documented organism
+    refusal) counts in neither `ok` nor `errors`. Rows without a `kind`
+    (the thin-slice format) derive it from `ok`.
 
     `release_status` is derived per tool, independent of `status`: a tool
     with at least one non-null `upstream_version` gets
@@ -157,8 +169,16 @@ def build_rows(
     for tool in tool_names:
         calls = by_tool.get(tool, [])
         n = len(calls)
-        ok = sum(1 for r in calls if r["ok"])
-        errors = n - ok
+        kinds = [r.get("kind") or ("ok" if r["ok"] else "error") for r in calls]
+        ok = kinds.count("ok")
+        errors = kinds.count("error")
+        loci = sum(len(r["loci"]) if r.get("loci") else 1 for r in calls)
+        locus_errors = sum(
+            r.get("n_error", int(k == "error")) for r, k in zip(calls, kinds, strict=True)
+        )
+        expected = sum(
+            r.get("n_expected", int(k == "expected")) for r, k in zip(calls, kinds, strict=True)
+        )
         if n == 0:
             status = "unused"
         elif errors == 0:
@@ -189,6 +209,9 @@ def build_rows(
                 median_elapsed_s,
                 release_status,
                 status,
+                loci,
+                locus_errors,
+                expected,
             ]
         )
     return rows
