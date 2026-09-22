@@ -118,6 +118,10 @@ def _family_call(name: str, args: dict) -> dict:
             )
         return _text_result(result)
     if name == "orthodb_orthologs":
+        # Wheat-shaped loci have no group: found=False carries no filter keys,
+        # exactly as the real tool answers (a re-run died on that KeyError).
+        if locus.startswith("Traes"):
+            return _text_result({"locus": locus, "found": False, "member_count": 0, "members": []})
         result = {"locus": locus, "found": True, "member_count": 0, "members": []}
         if args.get("target_organism"):
             result.update(target_organism=args["target_organism"], member_count_all_organisms=0)

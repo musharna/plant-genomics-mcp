@@ -318,7 +318,9 @@ class Enumerator:
                     "target_organism": org,
                 },
             )
-            if res.ok:
+            # A locus with no ortholog group answers found=False with no
+            # members and none of the filter keys: nothing to take or count.
+            if res.ok and res.payload.get("found"):
                 for m in res.payload.get("members", []):
                     if not m.get("organism", "").startswith(ORTHODB_ORGANISMS[org]):
                         raise EnumerationError(
