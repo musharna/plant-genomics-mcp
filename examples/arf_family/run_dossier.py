@@ -107,7 +107,7 @@ def find_version(obj: object) -> str | None:
 
 
 def is_expected(error: str | None) -> bool:
-    return bool(error) and any(tag in error for tag in EXPECTED_ERROR_TAGS)
+    return error is not None and any(tag in error for tag in EXPECTED_ERROR_TAGS)
 
 
 def error_class(error: str, locus: str) -> str:
@@ -203,6 +203,8 @@ class Runner:
         )
         counts = {"ok": 0, "error": 0, "expected": 0}
         if res.ok:
+            if res.payload is None:
+                raise RuntimeError(f"{batch_tool}: ok=True with no payload")
             results = res.payload.get("results", {})
             errors = res.payload.get("errors", {})
             for locus in loci:

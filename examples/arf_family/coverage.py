@@ -41,6 +41,7 @@ import json
 import re
 import statistics
 from collections import defaultdict
+from collections.abc import Set as AbstractSet
 from pathlib import Path
 
 from examples.arf_family.mcp_client import SERVER_CMD, McpClient
@@ -144,7 +145,7 @@ def release_under_another_key_tools(gaps_path: Path, root: Path) -> set[str]:
 def build_rows(
     tool_names: list[str],
     by_tool: dict[str, list[dict]],
-    release_under_another_key: set[str] = frozenset(),
+    release_under_another_key: AbstractSet[str] = frozenset(),
 ) -> list[list]:
     """One row per tool in `tool_names`, in that order.
 

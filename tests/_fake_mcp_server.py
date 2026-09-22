@@ -89,7 +89,7 @@ FAMILY_INTERPRO: dict[str, list[str]] = {
 
 
 def _family_call(name: str, args: dict) -> dict:
-    locus = args.get("locus")
+    locus = str(args.get("locus", ""))
     if name == "gramene_homologs":
         table = FAMILY_PARALOGS if args.get("homology_type") == "paralog" else FAMILY_ORTHOLOGS
         hits = table.get(locus, [])
