@@ -2,6 +2,53 @@
 
 ## Unreleased
 
+- **`examples/arf_family/` re-run at `967bc36`, the fixes below on the
+  record.** 400 calls over 48 genes: the same 23 Arabidopsis members and
+  25 rice (6 on the first run) once both ortholog tools filter by
+  `target_organism`; wheat stays at 0 because none of the 56 IWGSC loci
+  queried resolves to a protein. 8 of the 40 hand-logged gap rows are
+  closed against the new run and listed last on the page with what the run
+  returned instead (`render_gaps.py` renders a `closed` field;
+  `run_dossier.py` logs the server commit beside its version, since a fix
+  branch reports the release it fixes). `upstream_version` null rate
+  250/400 (was 188/248); no `gene_report` response over 200 kB (was 6).
+- **Every chain tool carries `upstream_version` (#121).** The ARF dossier
+  found the key on 3 of 16 tools and a release under a private key on three
+  more. Now `gramene_homologs` reports the release pinned in its request path
+  (`v69`), `atted_coexpression` the `db=` it asked for (`Ath-u.c4-0`) and
+  `alphafold_structure` the entry's own `latestVersion` (`'6'`), each keeping
+  its old key; the ten backends whose answering response states no release
+  (headers probed live 2026-09-22: Ensembl, Europe PMC, QuickGO, PDBe, JASPAR,
+  PANTHER, OrthoDB, AraGWAS, KEGG, STRING) carry the key as `null` rather
+  than omitting it, so one pass reads every tool. A separate `/info` call is
+  still never consulted — it can describe a different release than the one
+  that answered.
+- **Fixed: the `gramene_homologs` and `orthodb_orthologs` output schemas
+  contradicted their filtered results.** The `target_organism` keys added
+  above (#125) were missing from the `additionalProperties: false` output
+  models the server advertises; a client validating against `outputSchema`
+  would have rejected every filtered answer.
+- **`gramene_homologs`, `batch_gramene_homologs` and `orthodb_orthologs`
+  take `target_organism` (#125).** The filter runs BEFORE the cap, so a hub
+  gene's rice or wheat orthologs can no longer be pushed past `limit` by
+  other species; the filtered answer reports `total` / `member_count` for
+  the organism asked and `total_all_organisms` / `member_count_all_organisms`
+  for everything. Live, ARF5 (AT1G19850) goes from 0 rice and 0 wheat hits
+  in either tool to 1 rice + 3 wheat (Gramene) and 24 rice + 12 wheat
+  (OrthoDB).
+- **Fixed: Gramene enrichment resolved only 20 of every 100 ids.** The
+  `genes?idList=` endpoint pages at 20 rows unless `rows` is sent, so
+  `fetch_homolog_enrichment_batch` (used by `consensus_homologs`) silently
+  dropped 80% of each chunk. Every chunk now asks for exactly the rows it
+  sends.
+- **`gene_report` carries each backend payload once (#122).** `steps[]`
+  is now the audit trail (status, per-step `elapsed_s`, error) and the data
+  lives under `result.sections` alone, halving the response. Every
+  synthesis tool's phase-2 rows now report their own wall time instead of
+  `null`. `result.gene_names` labels the Ensembl and UniProt gene names
+  separately (`MP` vs `ARF5`) and the dossier title shows both when they
+  differ; GO bullets are one per (term, evidence). `StepRow` allows
+  `status="ok"` with `result=None` for audit rows.
 - **`examples/arf_family/`: the ARF family dossier, built through the MCP
   alone.** A worked run of 16 tools over a whole gene family — 23
   _Arabidopsis thaliana_ members enumerated by `enumerate_family.py`

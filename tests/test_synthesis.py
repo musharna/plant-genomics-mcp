@@ -21,9 +21,12 @@ def test_step_row_status_values_constrained_to_three():
         StepRow(step=1, tool="x", status="bogus", elapsed_s=0.0)
 
 
-def test_step_row_validator_rejects_ok_without_result():
+def test_step_row_validator_ok_rows_may_omit_result_but_never_carry_error():
+    # An ok row with no result is an audit-trail row (gene_report keeps the
+    # payload once, under result.sections) — allowed.
+    assert StepRow(step=1, tool="x", status="ok", elapsed_s=0.1).result is None
     with pytest.raises(ValidationError):
-        StepRow(step=1, tool="x", status="ok", elapsed_s=0.1)
+        StepRow(step=1, tool="x", status="ok", elapsed_s=0.1, error="[E] x")
 
 
 def test_step_row_validator_rejects_error_without_message():
@@ -149,12 +152,9 @@ async def test_analyze_locus_synth_all_backends_succeed_returns_full_envelope(ht
     assert env.result["ensembl_record"]["id"] == "AT1G01010"
     assert env.result["reconciled"]["best_uniprot_accession"] == "Q0WV96"
     assert env.result["reconciled"]["canonical_gene_name"] == "NAC001"
-    # Wave C1 contract: gather rows carry elapsed_s=None because per-coroutine
-    # wall time can't be honestly attributed in asyncio.gather. analyze_locus_synth
-    # uses _gather_phase2 for both the parallel ensembl+uniprot root pair AND the
-    # phase-2 fanout, so all 5 rows are gather rows → all None.
-    # Envelope.elapsed_s remains the authoritative orchestrator total.
-    assert all(s.elapsed_s is None for s in env.steps)
+    # Every row is awaited under its own timer, gather rows included, so each
+    # carries its own wall time; Envelope.elapsed_s is the orchestrator total.
+    assert all(isinstance(s.elapsed_s, float) and s.elapsed_s >= 0.0 for s in env.steps)
     assert isinstance(env.elapsed_s, float)
 
 
@@ -274,14 +274,23 @@ async def test_timed_step_unexpected_exception_becomes_error_steprow():
     assert row.error is not None and row.error.startswith("[KeyError]")
 
 
-def test_gather_step_unexpected_exception_becomes_error_steprow():
-    """The gather-slot handler degrades an unexpected exception to status="error"
-    instead of re-raising it (audit L6)."""
-    from plant_genomics_mcp.synthesis import _gather_step
+@pytest.mark.asyncio
+async def test_gather_phase2_unexpected_exception_becomes_error_steprow():
+    """A phase-2 slot that raises an unexpected exception degrades to
+    status="error" instead of re-raising it (audit L6), and the slot beside
+    it still lands as ok (positive control)."""
+    from plant_genomics_mcp.synthesis import _gather_phase2
 
-    row = _gather_step(3, "fake", KeyError("boom"), None)
-    assert row.status == "error"
-    assert row.error is not None and row.error.startswith("[KeyError]")
+    async def boom():
+        raise KeyError("boom")
+
+    async def fine():
+        return {"ok": True}
+
+    err, ok = await _gather_phase2([(3, "fake", boom()), (4, "good", fine())])
+    assert err.status == "error"
+    assert err.error is not None and err.error.startswith("[KeyError]")
+    assert ok.status == "ok" and ok.result == {"ok": True}
 
 
 @pytest.mark.asyncio
@@ -958,7 +967,7 @@ async def test_consensus_homologs_happy_path(httpx_mock, monkeypatch):
     # Phase 3 — Gramene v69 enrichment projection (UniProt acc + system_name)
     # so we can dedup Gramene homologs against BLAST in UniProt-accession-space.
     httpx_mock.add_response(
-        url="https://data.gramene.org/v69/genes?idList=OS01G0100100&fl=_id%2Cxrefs%2Csystem_name",
+        url="https://data.gramene.org/v69/genes?idList=OS01G0100100&fl=_id%2Cxrefs%2Csystem_name&rows=1",
         json=[
             {
                 "_id": "OS01G0100100",
@@ -1920,3 +1929,69 @@ async def test_biological_context_synth_malformed_string_row_lands_as_error_step
     assert env.result is not None
     assert env.result["string_partners"] is None
     assert [c["target_locus"] for c in env.result["consensus_partners"]] == ["AT3G15500"]
+
+
+@pytest.mark.asyncio
+async def test_gene_report_carries_each_backend_payload_once(httpx_mock):
+    """Issue #122: every sub-tool payload appeared twice in one envelope —
+    once under steps[].result and again under result.sections. The steps
+    are the audit trail (status, timing, error); the sections are the data."""
+    import json
+
+    _gene_report_success_mocks(httpx_mock)
+    from plant_genomics_mcp.synthesis import gene_report
+
+    async with httpx.AsyncClient() as client:
+        env = await gene_report(client, "AT1G01010", organism="arabidopsis_thaliana")
+
+    assert env.result is not None
+    sections = env.result["sections"]
+    # Positive control: the data is present, once, under sections.
+    assert sections["annotation"]["id"] == "AT1G01010"
+    assert sections["protein"]["primaryAccession"] == "Q0WV96"
+    # The audit trail carries no payload.
+    assert [s.status for s in env.steps] == ["ok"] * 8
+    assert all(s.result is None for s in env.steps), [s.tool for s in env.steps if s.result]
+    # And the wire form carries each distinctive backend value exactly once
+    # outside the markdown (the markdown legitimately re-mentions accessions).
+    d = env.model_dump(mode="json")
+    d["result"]["markdown"] = ""
+    wire = json.dumps(d)
+    assert wire.count("NAC1_ARATH") == 1
+    assert wire.count("Spaceflight transcriptome") == 1
+
+
+@pytest.mark.asyncio
+async def test_gene_report_steps_carry_per_step_elapsed(httpx_mock):
+    """Issue #122: steps[].elapsed_s was null for all eight steps while the
+    envelope's own elapsed_s was populated. Each step is awaited under its
+    own timer, so each row carries its own wall time."""
+    _gene_report_success_mocks(httpx_mock)
+    from plant_genomics_mcp.synthesis import gene_report
+
+    async with httpx.AsyncClient() as client:
+        env = await gene_report(client, "AT1G01010", organism="arabidopsis_thaliana")
+
+    assert [s.status for s in env.steps] == ["ok"] * 8
+    for s in env.steps:
+        assert isinstance(s.elapsed_s, float) and 0.0 <= s.elapsed_s <= env.elapsed_s, s
+    # Positive control: a skipped step still reports no time (it never ran).
+    from plant_genomics_mcp.synthesis import _skipped
+
+    assert _skipped(9, "x", "why").elapsed_s is None
+
+
+def test_gene_names_keeps_both_sources_when_they_differ():
+    """Issue #122: canonical_gene_name was Ensembl's display_name alone
+    ('MP') while the same envelope's UniProt section said ARF5. Both names
+    ship, labelled by source; the canonical one is still Ensembl's."""
+    from plant_genomics_mcp.synthesis import _gene_names
+
+    names = _gene_names({"display_name": "MP"}, {"geneNames": ["ARF5"]})
+    assert names == {"canonical": "MP", "ensembl": "MP", "uniprot": ["ARF5"]}
+    # Positive control: same name from both → one canonical, no ambiguity.
+    same = _gene_names({"display_name": "NAC001"}, {"geneNames": ["NAC001"]})
+    assert same == {"canonical": "NAC001", "ensembl": "NAC001", "uniprot": ["NAC001"]}
+    # No Ensembl name → UniProt's first name becomes canonical (existing rule).
+    assert _gene_names({}, {"geneNames": ["ARF5", "MP"]})["canonical"] == "ARF5"
+    assert _gene_names({}, None) == {"canonical": None, "ensembl": None, "uniprot": []}

@@ -109,6 +109,9 @@ async def lookup_locus(
     if isinstance(raw, dict) and "species" in raw:
         out = {**raw}
         out["organism"] = out.pop("species")
+        # Issue #121: uniform key; Ensembl states no release on the answering
+        # response (headers probed live 2026-09-22).
+        out["upstream_version"] = None
         return out
     return raw
 

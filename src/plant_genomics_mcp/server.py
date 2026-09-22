@@ -690,10 +690,10 @@ TOOLS: list[types.Tool] = [
             "(data.gramene.org v69). Default homology_type='ortholog'; pass "
             "'paralog' for in-species duplicates or 'all' for everything. "
             "Returns target_locus + homology category (type) + shared gene_tree_id "
-            "per hit. The fl=homology projection does not carry per-row taxon, "
-            "identity, or protein ID; pair with resolve_locus_to_uniprot for "
-            "protein-level enrichment and with blast_sequence for sequence "
-            "similarity discovery."
+            "per hit. Rows carry no taxon unless target_organism is given, which "
+            "filters to one organism before the cap and adds 'organism' per row; "
+            "pair with resolve_locus_to_uniprot for protein-level enrichment and "
+            "with blast_sequence for sequence similarity discovery."
         ),
         input_schema={
             "type": "object",
@@ -707,6 +707,15 @@ TOOLS: list[types.Tool] = [
                     "enum": ["ortholog", "paralog", "all"],
                     "description": "Filter on homology kind",
                     "default": "ortholog",
+                },
+                "target_organism": {
+                    "type": ["string", "integer"],
+                    "description": (
+                        "Keep only homologs in this organism (slug, scientific/common "
+                        "name, or NCBI taxid), filtered BEFORE the cap so a hub gene's "
+                        "rice or wheat orthologs cannot be pushed past 'limit' by other "
+                        "species. Adds 'organism' to every row and 'total_all_organisms'."
+                    ),
                 },
                 "limit": {
                     "type": "integer",
@@ -1352,7 +1361,10 @@ TOOLS: list[types.Tool] = [
             "unlike the other locus tools, organism= does NOT scope the search — "
             "the group is resolved from the locus id alone at the Viridiplantae "
             "level, and organism is only validated and echoed back. Passing a "
-            "mismatched organism therefore still returns the locus's real group."
+            "mismatched organism therefore still returns the locus's real group. "
+            "target_organism= DOES filter: it keeps only that organism's members, "
+            "before the cap, so a 2,000-member group cannot hide rice or wheat "
+            "behind 'limit'."
         ),
         input_schema={
             "type": "object",
@@ -1365,6 +1377,14 @@ TOOLS: list[types.Tool] = [
                     "type": ["string", "integer"],
                     "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid. Validated and echoed only: it does NOT scope the OrthoDB search, which keys on the locus id at the Viridiplantae level",
                     "default": "arabidopsis_thaliana",
+                },
+                "target_organism": {
+                    "type": ["string", "integer"],
+                    "description": (
+                        "Keep only this organism's members (slug, scientific/common "
+                        "name, or NCBI taxid), filtered BEFORE the cap. Adds "
+                        "'member_count_all_organisms' for the whole group."
+                    ),
                 },
                 "limit": {
                     "type": "integer",
@@ -1729,6 +1749,15 @@ TOOLS: list[types.Tool] = [
                     "enum": ["ortholog", "paralog", "all"],
                     "default": "ortholog",
                 },
+                "target_organism": {
+                    "type": ["string", "integer"],
+                    "description": (
+                        "Keep only homologs in this organism (slug, scientific/common "
+                        "name, or NCBI taxid), filtered BEFORE the cap so a hub gene's "
+                        "rice or wheat orthologs cannot be pushed past 'limit' by other "
+                        "species. Adds 'organism' to every row and 'total_all_organisms'."
+                    ),
+                },
             },
             "required": ["loci"],
             "additionalProperties": False,
@@ -2035,9 +2064,12 @@ TOOLS: list[types.Tool] = [
             "cross-references, KEGG pathways, STRING interactors, Europe PMC "
             "literature, and QuickGO GO terms. Returns a SynthesisEnvelope whose "
             "result.markdown is a rendered Markdown gene dossier (the headline "
-            "output) alongside a structured result.sections mirror. Any single "
-            "backend failure degrades that section to an 'Unavailable' note; the "
-            "rest of the dossier still renders."
+            "output) alongside a structured result.sections mirror; each "
+            "backend payload appears once, under sections, while steps[] carries "
+            "status and per-step timing only. result.gene_names labels the "
+            "Ensembl and UniProt gene names separately when they differ. Any "
+            "single backend failure degrades that section to an 'Unavailable' "
+            "note; the rest of the dossier still renders."
         ),
         input_schema={
             "type": "object",
@@ -2311,6 +2343,7 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     args["locus"],
                     organism=args.get("organism", "arabidopsis_thaliana"),
                     limit=args.get("limit"),
+                    target_organism=args.get("target_organism"),
                 )
             case "aragwas_associations":
                 return await aragwas.lookup_locus(
@@ -2410,6 +2443,7 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     client,
                     args["loci"],
                     homology_type=args.get("homology_type", "ortholog"),
+                    target_organism=args.get("target_organism"),
                 )
             case "kegg_pathways":
                 return await kegg.lookup_pathways(
@@ -2444,6 +2478,7 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     args["locus"],
                     homology_type=args.get("homology_type", "ortholog"),
                     limit=args.get("limit"),
+                    target_organism=args.get("target_organism"),
                 )
             case "analyze_locus_synth":
                 env = await synthesis.analyze_locus_synth(

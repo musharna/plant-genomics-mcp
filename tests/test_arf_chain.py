@@ -275,7 +275,13 @@ def test_every_hand_logged_gap_row_is_checkable():
     assert rows, "gaps.jsonl is empty"
     for i, row in enumerate(rows, start=1):
         assert row["auto"] is False, f"row {i}: gaps.jsonl holds hand-logged rows only"
-        assert set(row) == HAND_LOGGED_KEYS, f"row {i}: keys {sorted(set(row) ^ HAND_LOGGED_KEYS)}"
+        # `closed` is the one optional key: {commit, returned} from the later
+        # run that no longer reproduces the row (render_gaps.CLOSED_HEADING).
+        keys = set(row) - {"closed"}
+        assert keys == HAND_LOGGED_KEYS, f"row {i}: keys {sorted(keys ^ HAND_LOGGED_KEYS)}"
+        if "closed" in row:
+            assert set(row["closed"]) == {"commit", "returned"}, f"row {i}: closed keys"
+            assert row["closed"]["commit"] and row["closed"]["returned"], f"row {i}: closed empty"
         assert row["origin"] in VALID_ORIGINS, f"row {i}: origin {row['origin']!r}"
         for ref in row["raw"].split(", "):
             ref = ref.strip()

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 
 import httpx
 import pytest
@@ -178,7 +179,7 @@ async def test_fetch_homolog_enrichment_batch_prefers_swissprot(httpx_mock: HTTP
     in ``uniprot.lookup_locus``.
     """
     httpx_mock.add_response(
-        url="https://data.gramene.org/v69/genes?idList=AT1G01010&fl=_id%2Cxrefs%2Csystem_name",
+        url="https://data.gramene.org/v69/genes?idList=AT1G01010&fl=_id%2Cxrefs%2Csystem_name&rows=1",
         json=[
             {
                 "_id": "AT1G01010",
@@ -198,7 +199,7 @@ async def test_fetch_homolog_enrichment_batch_prefers_swissprot(httpx_mock: HTTP
 @pytest.mark.asyncio
 async def test_fetch_homolog_enrichment_batch_sptrembl_fallback(httpx_mock: HTTPXMock):
     httpx_mock.add_response(
-        url="https://data.gramene.org/v69/genes?idList=Mp4g11910&fl=_id%2Cxrefs%2Csystem_name",
+        url="https://data.gramene.org/v69/genes?idList=Mp4g11910&fl=_id%2Cxrefs%2Csystem_name&rows=1",
         json=[
             {
                 "_id": "Mp4g11910",
@@ -227,7 +228,7 @@ async def test_fetch_homolog_enrichment_batch_no_uniprot_xref_returns_none(
     to a species even when no canonical protein record exists.
     """
     httpx_mock.add_response(
-        url="https://data.gramene.org/v69/genes?idList=Cla97C03G067000&fl=_id%2Cxrefs%2Csystem_name",
+        url="https://data.gramene.org/v69/genes?idList=Cla97C03G067000&fl=_id%2Cxrefs%2Csystem_name&rows=1",
         json=[
             {
                 "_id": "Cla97C03G067000",
@@ -250,7 +251,7 @@ async def test_fetch_homolog_enrichment_batch_missing_record_returns_none(
     fields None, so the caller's join is total over the input list.
     """
     httpx_mock.add_response(
-        url="https://data.gramene.org/v69/genes?idList=AT1G01010%2CNOPE&fl=_id%2Cxrefs%2Csystem_name",
+        url="https://data.gramene.org/v69/genes?idList=AT1G01010%2CNOPE&fl=_id%2Cxrefs%2Csystem_name&rows=2",
         json=[
             {
                 "_id": "AT1G01010",
@@ -273,7 +274,7 @@ async def test_fetch_homolog_enrichment_batch_chunks_by_size(httpx_mock: HTTPXMo
     Two chunks of 2 loci verified by both endpoint URLs receiving a response.
     """
     httpx_mock.add_response(
-        url="https://data.gramene.org/v69/genes?idList=AT1G01010%2CAT3G15500&fl=_id%2Cxrefs%2Csystem_name",
+        url="https://data.gramene.org/v69/genes?idList=AT1G01010%2CAT3G15500&fl=_id%2Cxrefs%2Csystem_name&rows=2",
         json=[
             {
                 "_id": "AT1G01010",
@@ -288,7 +289,7 @@ async def test_fetch_homolog_enrichment_batch_chunks_by_size(httpx_mock: HTTPXMo
         ],
     )
     httpx_mock.add_response(
-        url="https://data.gramene.org/v69/genes?idList=Os01g0100100%2CMp4g11910&fl=_id%2Cxrefs%2Csystem_name",
+        url="https://data.gramene.org/v69/genes?idList=Os01g0100100%2CMp4g11910&fl=_id%2Cxrefs%2Csystem_name&rows=2",
         json=[
             {
                 "_id": "Os01g0100100",
@@ -393,3 +394,84 @@ def test_limit_is_clamped_not_obeyed_blindly() -> None:
     assert gramene._resolve_limit(0) == 1
     assert gramene._resolve_limit(-5) == 1
     assert gramene._resolve_limit(10_000) == gramene.MAX_HOMOLOGS
+
+
+# --- target_organism (#125) ---------------------------------------------------
+# A hub gene has 177-340 homologs and the cap returns the first 100 in
+# Gramene's order, which for an Arabidopsis query is other species first —
+# so the rice or wheat orthologs a caller asked about never came back.
+# ``target_organism`` filters BEFORE the cap, resolving each homolog's
+# species through the same ``genes?idList=...&fl=system_name`` call the
+# enrichment path already uses.
+
+
+def _system_name_payload(loci: list[str], slug_for: dict[str, str]) -> list[dict[str, object]]:
+    return [{"_id": lo, "system_name": slug_for.get(lo, "other_species")} for lo in loci]
+
+
+@pytest.mark.asyncio
+async def test_target_organism_filters_before_the_cap(httpx_mock: HTTPXMock) -> None:
+    gramene._CACHE.clear()
+    loci = [f"X{i:05d}" for i in range(150)] + ["Os01g0100100", "Os02g0200200"]
+    homology = [
+        {
+            "homology": {
+                "gene_tree": {"id": "GT1"},
+                "homologous_genes": {"ortholog_one2one": loci},
+            }
+        }
+    ]
+    httpx_mock.add_response(url=re.compile(r".*fl=homology$"), json=homology)
+    rice = {"Os01g0100100": "oryza_sativa", "Os02g0200200": "oryza_sativa"}
+    # Two enrichment chunks of 100 (152 loci).
+    httpx_mock.add_response(
+        url=re.compile(r".*system_name&rows=\d+$"), json=_system_name_payload(loci[:100], rice)
+    )
+    httpx_mock.add_response(
+        url=re.compile(r".*system_name&rows=\d+$"), json=_system_name_payload(loci[100:], rice)
+    )
+    async with httpx.AsyncClient() as client:
+        r = await gramene.lookup_homologs(client, "AT1G19850", target_organism="rice")
+    # The rice loci sat at positions 150 and 151 — past the cap — and still come back.
+    assert [h["target_locus"] for h in r["homologs"]] == ["Os01g0100100", "Os02g0200200"]
+    assert all(h["organism"] == "oryza_sativa" for h in r["homologs"])
+    assert r["target_organism"] == "oryza_sativa"
+    # total counts the FILTERED set; total_all_organisms the pre-filter one.
+    assert r["total"] == 2 and r["total_all_organisms"] == 152
+    assert r["truncated"] is False
+    # Positive control: no filter → the old behaviour, rice not among the first 100.
+    gramene._CACHE.clear()
+    httpx_mock.add_response(url=re.compile(r".*fl=homology$"), json=homology)
+    async with httpx.AsyncClient() as client:
+        r0 = await gramene.lookup_homologs(client, "AT1G19850")
+    assert len(r0["homologs"]) == 100 and r0["total"] == 152
+    assert not any(h["target_locus"].startswith("Os") for h in r0["homologs"])
+    assert "target_organism" not in r0 and "organism" not in r0["homologs"][0]
+
+
+@pytest.mark.asyncio
+async def test_target_organism_unknown_raises_before_any_call(httpx_mock: HTTPXMock) -> None:
+    from plant_genomics_mcp.errors import OrganismNotFound
+
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(OrganismNotFound):
+            await gramene.lookup_homologs(client, "AT1G19850", target_organism="klingon_plant")
+    assert httpx_mock.get_requests() == []
+
+
+@pytest.mark.asyncio
+async def test_enrichment_chunk_asks_for_as_many_rows_as_it_sends(httpx_mock: HTTPXMock) -> None:
+    """Gramene's genes endpoint pages at 20 rows unless ``rows`` is given, so a
+    100-id chunk silently resolved only its first 20 (measured live 2026-09-22:
+    100 ids -> 20 records; with rows=100 -> 100). Every chunk must ask for
+    exactly as many rows as ids it sends."""
+    gramene._CACHE.clear()
+    loci = [f"L{i:03d}" for i in range(150)]
+    httpx_mock.add_response(json=[{"_id": lo, "system_name": "x"} for lo in loci[:100]])
+    httpx_mock.add_response(json=[{"_id": lo, "system_name": "x"} for lo in loci[100:]])
+    async with httpx.AsyncClient() as client:
+        out = await gramene.fetch_homolog_enrichment_batch(client, loci)
+    reqs = httpx_mock.get_requests()
+    assert [r.url.params.get("rows") for r in reqs] == ["100", "50"]
+    # Positive control: the join is total over the input and every id resolved.
+    assert len(out) == 150 and all(v["system_name"] == "x" for v in out.values())

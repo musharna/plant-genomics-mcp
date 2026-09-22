@@ -17,6 +17,34 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
+def upstream_version_field(source: str, stated_by: str | None) -> Any:
+    """The ``upstream_version`` field every chain tool carries (issue #121).
+
+    A release is reported only when the ANSWERING request or response states
+    it: a response header (UniProt, InterPro), a release pinned in the request
+    itself (Gramene ``/v69/``, ATTED ``db=``) or a field of the payload
+    (AlphaFold ``latestVersion``). A separate ``/info`` call is a DIFFERENT
+    request that may describe a different release, so it is never consulted.
+    ``stated_by=None`` documents a backend that states nothing (headers probed
+    live 2026-09-22): the field is then always null, and a single-key pass over
+    every tool still reads it uniformly instead of finding it missing.
+    """
+    how = (
+        f"as stated by {stated_by}"
+        if stated_by
+        else "— always null today: this backend states no release on its responses"
+    )
+    return Field(
+        default=None,
+        description=(
+            f"{source} release that produced THIS response, {how}. null means "
+            f"{source} did not state one — never that no release exists, and never "
+            "inferred from a separate metadata call, which can describe a different "
+            "release than the one that answered."
+        ),
+    )
+
+
 class EnsemblPlantsLocus(BaseModel):
     """Ensembl Plants ``/lookup/id/{locus}`` response.
 
@@ -46,6 +74,7 @@ class EnsemblPlantsLocus(BaseModel):
     logic_name: str | None = Field(default=None, description="Source annotation pipeline")
     source: str | None = Field(default=None)
     canonical_transcript: str | None = Field(default=None)
+    upstream_version: str | None = upstream_version_field("Ensembl Plants", None)
 
 
 class GeneXrefEntry(BaseModel):
@@ -246,6 +275,7 @@ class LocusLiterature(BaseModel):
         ),
     )
     hits: list[LiteratureHit]
+    upstream_version: str | None = upstream_version_field("Europe PMC", None)
 
 
 class GoAnnotation(BaseModel):
@@ -299,6 +329,7 @@ class LocusGoAnnotations(BaseModel):
     by_aspect: dict[str, list[dict[str, str]]] = Field(
         description="aspect → [{goId, goName}, ...], deduped on goId",
     )
+    upstream_version: str | None = upstream_version_field("QuickGO", None)
 
 
 class PlantOntologyAnnotation(BaseModel):
@@ -551,6 +582,9 @@ class AlphaFoldStructure(BaseModel):
     cif_url: str | None = Field(default=None, description="mmCIF model download URL")
     pdb_url: str | None = Field(default=None, description="PDB model download URL")
     pae_image_url: str | None = Field(default=None, description="Predicted-aligned-error image URL")
+    upstream_version: str | None = upstream_version_field(
+        "AlphaFold DB", "the entry's own latestVersion (e.g. '6')"
+    )
 
 
 class InterProDomain(BaseModel):
@@ -627,6 +661,7 @@ class ExperimentalStructures(BaseModel):
         default_factory=list,
         description="Best-first {pdb_id, chain_id, experimental_method, resolution, coverage, …}",
     )
+    upstream_version: str | None = upstream_version_field("PDBe", None)
 
 
 class TfBindingMotif(BaseModel):
@@ -691,6 +726,7 @@ class TfBindingMotifs(BaseModel):
             "[{matrix_id, name, uniprot_ids}] — not this locus's motifs"
         ),
     )
+    upstream_version: str | None = upstream_version_field("JASPAR", None)
 
 
 class JasparMotif(TfBindingMotif):
@@ -872,6 +908,7 @@ class PantherFamily(BaseModel):
     go_cellular_component: list[dict[str, Any]] = Field(default_factory=list)
     protein_class: list[dict[str, Any]] = Field(default_factory=list)
     pathways: list[dict[str, Any]] = Field(default_factory=list)
+    upstream_version: str | None = upstream_version_field("PANTHER", None)
 
 
 class OrthoDbOrthologs(BaseModel):
@@ -909,6 +946,15 @@ class OrthoDbOrthologs(BaseModel):
     members: list[dict[str, Any]] = Field(
         default_factory=list, description="Per-gene {organism, gene_id, xref, description}"
     )
+    target_organism: str | None = Field(
+        default=None,
+        description="Canonical organism the members were filtered to, when target_organism was passed",
+    )
+    member_count_all_organisms: int | None = Field(
+        default=None,
+        description="Whole-group member total (pre-filter, pre-cap); present only when filtered",
+    )
+    upstream_version: str | None = upstream_version_field("OrthoDB", None)
 
 
 class AraGwasAssociations(BaseModel):
@@ -929,6 +975,7 @@ class AraGwasAssociations(BaseModel):
     associations: list[dict[str, Any]] = Field(
         default_factory=list, description="Per-hit {score, maf, mac, snp{…}, study{…}}"
     )
+    upstream_version: str | None = upstream_version_field("AraGWAS", None)
 
 
 class ArabidopsisNaturalVariation(BaseModel):
@@ -992,6 +1039,17 @@ class GrameneHomologs(BaseModel):
         description="True when the row list was capped (< total); pass limit= to change the cap",
     )
     homologs: list[GrameneHomolog]
+    target_organism: str | None = Field(
+        default=None,
+        description="Canonical organism the rows were filtered to, when target_organism was passed",
+    )
+    total_all_organisms: int | None = Field(
+        default=None,
+        description="Homolog total before the organism filter; present only when filtered",
+    )
+    upstream_version: str | None = upstream_version_field(
+        "Gramene", "the release pinned in the request path (e.g. 'v69'); same value as release"
+    )
 
 
 class KeggPathway(BaseModel):
@@ -1021,6 +1079,7 @@ class KeggPathways(BaseModel):
         default_factory=list,
         description="Per-pathway step-2 failures (kept inline so the call doesn't abort)",
     )
+    upstream_version: str | None = upstream_version_field("KEGG", None)
 
 
 class BarGeneSummary(BaseModel):
@@ -1268,6 +1327,7 @@ class StringInteractions(BaseModel):
     accession: str = Field(description="UniProt accession actually queried at STRING")
     organism: str = Field(description="Plant organism canonical slug, e.g. arabidopsis_thaliana")
     partners: list[StringPartner]
+    upstream_version: str | None = upstream_version_field("STRING", None)
 
 
 class CoexNeighbor(BaseModel):
@@ -1299,13 +1359,19 @@ class AttedCoexpression(BaseModel):
         description="ATTED-II DB identifier, e.g. Ath-u.c4-0 (release version included)",
     )
     neighbors: list[CoexNeighbor]
+    upstream_version: str | None = upstream_version_field(
+        "ATTED-II", "the db= pinned in the request (e.g. 'Ath-u.c4-0'); same value as atted_release"
+    )
 
 
 class StepRow(BaseModel):
     """One backend call inside a synthesis envelope.
 
-    ``status="ok"`` populates ``result``; ``status="error"`` populates ``error``
-    with the existing ``[ExceptionClass] message`` wire format from
+    ``status="ok"`` populates ``result`` — unless the orchestrator carries the
+    payload elsewhere in the envelope (``gene_report`` keeps it once, under
+    ``result.sections``), in which case the row is the audit trail alone and
+    ``result`` is None. ``status="error"`` populates ``error`` with the
+    existing ``[ExceptionClass] message`` wire format from
     ``errors.PlantGenomicsError.__str__``. ``status="skipped"`` populates
     ``error`` with a human-readable skip reason (e.g. phase 1 failed).
     """
@@ -1318,10 +1384,10 @@ class StepRow(BaseModel):
     elapsed_s: float | None = Field(
         default=None,
         description=(
-            "Per-step wall time when separately measurable, else None. "
-            "Phase-2 gather rows and phase-0 pre-call validation failures "
-            "return None because their wall time can't be honestly attributed "
-            "per-step; SynthesisEnvelope.elapsed_s carries the authoritative total."
+            "Per-step wall time: every awaited backend call is timed on its own, "
+            "including inside a phase-2 gather. None only for rows that never "
+            "ran (skipped, or a phase-0 pre-call validation failure); "
+            "SynthesisEnvelope.elapsed_s carries the orchestrator total."
         ),
     )
     result: dict | list | None = Field(
@@ -1336,8 +1402,8 @@ class StepRow(BaseModel):
     @model_validator(mode="after")
     def _check_status_coherence(self) -> StepRow:
         if self.status == "ok":
-            if self.result is None or self.error is not None:
-                raise ValueError("status='ok' requires result is not None and error is None")
+            if self.error is not None:
+                raise ValueError("status='ok' requires error is None")
         elif self.status == "error":
             if self.error is None or self.result is not None:
                 raise ValueError("status='error' requires error is not None and result is None")

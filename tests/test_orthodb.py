@@ -186,3 +186,59 @@ def test_orthodb_limit_is_clamped() -> None:
     assert orthodb._resolve_limit(None) == orthodb.MAX_MEMBERS
     assert orthodb._resolve_limit(0) == 1
     assert orthodb._resolve_limit(10_000) == orthodb.MAX_MEMBERS
+
+
+# --- target_organism (#125) ---------------------------------------------------
+# Members come back ordered by organism name, so a cap of 100 over a
+# 1,986-member Viridiplantae group ends at 'Lupinus albus' and never reaches
+# Oryza or Triticum. ``target_organism`` filters the clusters BEFORE the cap.
+
+
+def _ortho_with(organisms_and_genes: list[tuple[str, int]]) -> dict:
+    data = []
+    n = 0
+    for org, k in organisms_and_genes:
+        genes = []
+        for _ in range(k):
+            n += 1
+            genes.append({"gene_id": {"id": str(n), "param": f"g{n}"}, "description": org})
+        data.append({"organism": {"name": org}, "genes": genes})
+    return {"status": "ok", "data": data}
+
+
+@pytest.mark.asyncio
+async def test_target_organism_filters_members_before_the_cap(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(orthodb, "MAX_MEMBERS", 3)
+    ortho = _ortho_with([("Abrus precatorius", 2), ("Lupinus albus", 2), ("Oryza sativa", 2)])
+    httpx_mock.add_response(url=_SEARCH_URL, json={"count": "1", "data": [_GID]})
+    httpx_mock.add_response(url=_GROUP_URL, json=_GROUP)
+    httpx_mock.add_response(url=_ORTHO_URL, json=ortho)
+    async with httpx.AsyncClient() as client:
+        r = await orthodb.lookup_locus(client, "AT1G01060", "arabidopsis", target_organism="rice")
+    assert [m["organism"] for m in r["members"]] == ["Oryza sativa", "Oryza sativa"]
+    assert r["target_organism"] == "oryza_sativa"
+    assert r["member_count"] == 2 and r["member_count_all_organisms"] == 6
+    assert r["organism_count"] == 3  # the group's true organism total is unchanged
+    assert r["truncated"] is False
+    # Positive control: without the filter the cap of 3 stops inside Lupinus.
+    orthodb._CACHE.clear()
+    httpx_mock.add_response(url=_SEARCH_URL, json={"count": "1", "data": [_GID]})
+    httpx_mock.add_response(url=_GROUP_URL, json=_GROUP)
+    httpx_mock.add_response(url=_ORTHO_URL, json=ortho)
+    async with httpx.AsyncClient() as client:
+        r0 = await orthodb.lookup_locus(client, "AT1G01060", "arabidopsis")
+    assert [m["organism"] for m in r0["members"]] == [
+        "Abrus precatorius",
+        "Abrus precatorius",
+        "Lupinus albus",
+    ]
+    assert r0["truncated"] is True and "target_organism" not in r0
+
+
+def test_organism_name_match_is_prefix_and_case_insensitive() -> None:
+    assert orthodb._organism_matches("Oryza sativa Japonica Group", "Oryza sativa")
+    assert orthodb._organism_matches("oryza sativa", "Oryza sativa")
+    assert not orthodb._organism_matches("Oryza brachyantha", "Oryza sativa")
+    assert not orthodb._organism_matches(None, "Oryza sativa")

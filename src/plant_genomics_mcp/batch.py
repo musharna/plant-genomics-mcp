@@ -260,11 +260,14 @@ async def batch_gramene_homologs(
     client: httpx.AsyncClient,
     loci: list[str],
     homology_type: str = "ortholog",
+    target_organism: str | int | None = None,
 ) -> dict[str, Any]:
     loci = _bound(loci)
     results, errors = await _gather(
         loci,
-        lambda locus: gramene.lookup_homologs(client, locus, homology_type=homology_type),
+        lambda locus: gramene.lookup_homologs(
+            client, locus, homology_type=homology_type, target_organism=target_organism
+        ),
     )
     return _envelope("gramene_homologs", loci, results, errors)
 

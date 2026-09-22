@@ -31,9 +31,11 @@ Stages, in order:
    a rejection — and the entries it carries, so the rejections are as
    checkable as the members.
 4. **Orthologs** (`gramene_homologs` with `homology_type="ortholog"` and
-   `orthodb_orthologs`): from every accepted member, keep hits that the
-   locus-id shape or OrthoDB's own `organism` field places in one of
-   `ORTHOLOG_ORGANISMS`; then close over in-species paralogs and
+   `orthodb_orthologs`, each called once per organism in
+   `ORTHOLOG_ORGANISMS` with `target_organism`, so the tool filters before
+   its row cap): from every accepted member, take the hits the tool returns
+   for that organism — a hit whose locus-id shape or OrthoDB `organism`
+   field says otherwise fails the run; then close over in-species paralogs and
    cross-species orthologs among those; verify each with
    `interpro_domains` in its organism. The two tools' per-organism sets are
    kept side by side in `ortholog_sources.tsv` — disagreement is data.
@@ -287,32 +289,47 @@ class Enumerator:
             "gramene_homologs": {o: set() for o in ORTHOLOG_ORGANISMS},
             "orthodb_orthologs": {o: set() for o in ORTHOLOG_ORGANISMS},
         }
-        elsewhere = {"gramene_homologs": 0, "orthodb_orthologs": 0}
-        res = await self.call("gramene_homologs", {"locus": locus, "homology_type": "ortholog"})
-        if res.ok:
-            for h in res.payload["homologs"]:
-                org = organism_of_locus(h["target_locus"])
-                if org in ORTHOLOG_ORGANISMS:
+        # One call per target organism, filtered by the tool itself
+        # (`target_organism`, #125): the filter runs before the tool's row cap,
+        # so a hub gene's other-species homologs can no longer push the rice or
+        # wheat ones past it. `hits_elsewhere` is what the tool reports beyond
+        # the target organisms, from its own pre-filter total.
+        totals: dict[str, dict[str, int]] = {t: {} for t in out}
+        all_orgs: dict[str, int] = {}
+        for org in ORTHOLOG_ORGANISMS:
+            res = await self.call(
+                "gramene_homologs",
+                {"locus": locus, "homology_type": "ortholog", "target_organism": org},
+            )
+            if res.ok:
+                for h in res.payload["homologs"]:
+                    if organism_of_locus(h["target_locus"]) != org:
+                        raise EnumerationError(
+                            f"gramene_homologs filtered to {org} returned {h['target_locus']}"
+                        )
                     out["gramene_homologs"][org].add(h["target_locus"])
-                else:
-                    elsewhere["gramene_homologs"] += 1
-        res = await self.call(
-            "orthodb_orthologs", {"locus": locus, "organism": organism_of_locus(locus)}
-        )
-        if res.ok:
-            for m in res.payload.get("members", []):
-                org = next(
-                    (
-                        o
-                        for o, name in ORTHODB_ORGANISMS.items()
-                        if m.get("organism", "").startswith(name)
-                    ),
-                    None,
-                )
-                if org in ORTHOLOG_ORGANISMS:
+                totals["gramene_homologs"][org] = res.payload["total"]
+                all_orgs["gramene_homologs"] = res.payload["total_all_organisms"]
+            res = await self.call(
+                "orthodb_orthologs",
+                {
+                    "locus": locus,
+                    "organism": organism_of_locus(locus),
+                    "target_organism": org,
+                },
+            )
+            # A locus with no ortholog group answers found=False with no
+            # members and none of the filter keys: nothing to take or count.
+            if res.ok and res.payload.get("found"):
+                for m in res.payload.get("members", []):
+                    if not m.get("organism", "").startswith(ORTHODB_ORGANISMS[org]):
+                        raise EnumerationError(
+                            f"orthodb_orthologs filtered to {org} returned {m.get('organism')!r}"
+                        )
                     out["orthodb_orthologs"][org].add(m["gene_id"])
-                else:
-                    elsewhere["orthodb_orthologs"] += 1
+                totals["orthodb_orthologs"][org] = res.payload["member_count"]
+                all_orgs["orthodb_orthologs"] = res.payload["member_count_all_organisms"]
+        elsewhere = {tool: all_orgs.get(tool, 0) - sum(totals[tool].values()) for tool in out}
         for tool, per_org in out.items():
             for org, hits in per_org.items():
                 self.ortholog_sources.append(

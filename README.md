@@ -63,7 +63,7 @@ Swap in any locus and pass `organism=` for cross-species — e.g. rice
 `Os01g0100100` (`oryza_sativa`) — and it routes to the right backends
 automatically.
 
-A worked 248-call run over 29 genes in two organisms, with the 49 gaps it turned up, is in [`examples/arf_family/PAGE.md`](examples/arf_family/PAGE.md).
+A worked 400-call run over 48 genes in two organisms, with the 49 gaps it logged (7 since closed), is in [`examples/arf_family/PAGE.md`](examples/arf_family/PAGE.md).
 
 ## 🛠️ Tools
 

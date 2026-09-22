@@ -296,6 +296,7 @@ def _empty(locus: str, accession: str, tax_id: int, names: list[str]) -> dict[st
         "truncated": False,
         "motifs": [],
         "name_only_matches": [],
+        "upstream_version": None,
     }
 
 
@@ -374,4 +375,7 @@ async def lookup_locus(
         "truncated": total > MAX_MOTIFS,
         "motifs": confirmed[:MAX_MOTIFS],
         "name_only_matches": name_only,
+        # Issue #121: uniform key; null because this backend states no release on
+        # the answering response (headers probed live 2026-09-22).
+        "upstream_version": None,
     }

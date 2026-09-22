@@ -107,9 +107,31 @@ def test_render_section_files_each_row_under_the_heading_for_its_origin() -> Non
     assert any("999999 bytes" in line for line in tool_lines)
 
     assert out.splitlines()[0] == SECTION_HEADING
-    assert "All 3 rows the run logged" in out
+    assert "All 3 open rows" in out
     # Every row rendered exactly once, under one heading or the other.
     assert len(tool_lines) + len(upstream_lines) == 3
+
+
+def test_a_closed_row_is_listed_last_with_both_observations() -> None:
+    closed = {
+        **HAND_TOOL_ROW,
+        "kind": "synthetic-closed-kind",
+        "closed": {"commit": "abc1234", "returned": "the synthetic answer now expected"},
+    }
+    out = render_section([HAND_TOOL_ROW, closed], [AUTO_ROW], TOOL_NAMES)
+    closed_lines = _section_of(render_gaps.CLOSED_HEADING, out)
+    tool_lines = _section_of(ORIGIN_HEADINGS["tool"], out)
+    # The closed row moves out of its origin heading; the open one stays.
+    assert len(closed_lines) == 1 and "synthetic-closed-kind" in closed_lines[0]
+    assert "was: a short synthetic answer" in closed_lines[0]
+    assert "now, at `abc1234`: the synthetic answer now expected" in closed_lines[0]
+    assert not any("synthetic-closed-kind" in line for line in tool_lines)
+    assert any("synthetic-tool-kind" in line for line in tool_lines)
+    assert "All 2 open rows" in out and "The 1 rows logged against an earlier run" in out
+    # Positive control: no closed rows, no closed heading, no closed sentence.
+    plain = render_section([HAND_TOOL_ROW], [AUTO_ROW], TOOL_NAMES)
+    assert render_gaps.CLOSED_HEADING not in plain and "earlier run" not in plain
+    assert "All 2 open rows" in plain
 
 
 def test_render_section_raises_on_an_origin_it_has_no_heading_for() -> None:
@@ -200,6 +222,31 @@ def test_every_gap_row_reaches_the_page() -> None:
 
     for row in hand:
         assert any(f"({row['kind']})" in line for line in bullets), row["kind"]
+
+
+def test_prose_counts_of_open_and_closed_rows_match_the_gap_log() -> None:
+    """The intro prose and both READMEs quote the open/closed split by hand.
+
+    The rendered section is pinned byte-for-byte, but the sentences above
+    it and the two READMEs are typed, and a typed count drifted (8 for 7)
+    the first time the log changed under it. Recount from the log.
+    """
+    hand = read_rows(render_gaps.GAPS_PATH)
+    auto = read_rows(render_gaps.GAPS_AUTO_PATH)
+    n_closed = sum(1 for row in hand if "closed" in row)
+    n_open = len(hand) + len(auto) - n_closed
+    assert 0 < n_closed < len(hand)  # positive control: the split is real
+
+    page = render_gaps.PAGE_PATH.read_text()
+    assert f"the {n_open} open rows" in page
+    assert f"the {n_closed} closed ones" in page
+    for readme in (
+        render_gaps.PAGE_PATH.parents[2] / "README.md",
+        render_gaps.PAGE_PATH.parents[1] / "README.md",
+    ):
+        text = readme.read_text()
+        assert f"{len(hand) + len(auto)} gaps it" in text, readme
+        assert f"({n_closed} since closed)" in text, readme
 
 
 def test_main_check_exits_zero_against_the_committed_page() -> None:

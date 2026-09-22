@@ -55,6 +55,7 @@ import csv
 import json
 import re
 import signal
+import subprocess
 import sys
 import time
 from collections import defaultdict
@@ -121,11 +122,35 @@ def _walltime_guard(*_: object) -> None:
     sys.exit(2)
 
 
+def server_commit() -> str:
+    """Short git commit of the checkout this runner (and the server it spawns
+    through `SERVER_CMD`) is run from.
+
+    The server reports its package version on `initialize`, and a re-run
+    against a fix branch reports the same version as the release it fixes;
+    the commit is what names the code that actually answered. Read off this
+    file's checkout, not the output directory (a test walks into a tmp dir).
+    Fails loud outside a git checkout rather than logging a blank.
+    """
+    return subprocess.run(
+        ["git", "rev-parse", "--short", "HEAD"],
+        cwd=HERE,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+
+
 class Runner:
-    def __init__(self, client: McpClient, here: Path, server_version: str) -> None:
+    def __init__(
+        self, client: McpClient, here: Path, server_version: str, server_commit: str
+    ) -> None:
         self.c = client
         self.here = here
         self.server_version = server_version
+        # The version alone cannot name unreleased code: a re-run against a
+        # fix branch reports the same version as the release it fixes.
+        self.server_commit = server_commit
         # Opened here and closed by `close()`: the log must be flushed row by
         # row through a walk that can take an hour, not held until exit.
         self.calls = open(here / "calls.jsonl", "w")  # noqa: SIM115
@@ -163,7 +188,11 @@ class Runner:
         return "error"
 
     def _log_call(self, **row) -> None:
-        row.update(server_version=self.server_version, ts=int(time.time()))
+        row.update(
+            server_version=self.server_version,
+            server_commit=self.server_commit,
+            ts=int(time.time()),
+        )
         self.calls.write(json.dumps(row) + "\n")
         self.calls.flush()
 
@@ -304,7 +333,7 @@ async def main(server_cmd: list[str] = SERVER_CMD, here: Path = HERE) -> int:
             raise RuntimeError(
                 f"the server's initialize response carried no version: {c.server_info!r}"
             )
-        runner = Runner(c, here, server_version)
+        runner = Runner(c, here, server_version, server_commit())
         try:
             for organism, loci in by_organism.items():
                 for tool, build in CHAIN:
