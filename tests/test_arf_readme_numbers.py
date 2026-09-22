@@ -9,12 +9,22 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 ARF = ROOT / "examples" / "arf_family"
 
 
 def _line_count(path: Path) -> int:
     return sum(1 for line in path.read_text().splitlines() if line.strip())
+
+
+def _check_sentence(text: str, calls: int, gaps: int, name: str) -> None:
+    sentence = next(
+        para for para in text.split("\n\n") if "arf_family/PAGE.md" in para
+    )  # exactly one paragraph links the page; StopIteration if none does
+    assert f"{calls}-call" in sentence, (name, sentence)
+    assert f"{gaps} gaps" in sentence, (name, sentence)
 
 
 def test_readme_sentences_carry_the_run_counts():
@@ -26,14 +36,13 @@ def test_readme_sentences_carry_the_run_counts():
     checked = 0
     for readme in (ROOT / "README.md", ROOT / "examples" / "README.md"):
         text = readme.read_text()
-        sentence = next(
-            para for para in text.split("\n\n") if "arf_family/PAGE.md" in para
-        )  # exactly one paragraph links the page; StopIteration if none does
-        assert f"{calls}-call" in sentence, (readme.name, sentence)
-        assert f"{gaps} gaps" in sentence, (readme.name, sentence)
+        _check_sentence(text, calls, gaps, readme.name)
         checked += 1
-    assert checked == 2
 
-    # Positive control: the same checks fire on the stale wording.
-    stale = "A worked 48-call run over three loci, with the 30 gaps it turned up"
-    assert f"{calls}-call" not in stale and f"{gaps} gaps" not in stale
+        # Positive control: the same check on the same README with the gap
+        # count off by one must fail, and the edit must really have landed.
+        stale = text.replace(f"{gaps} gaps", f"{gaps - 1} gaps")
+        assert stale != text
+        with pytest.raises(AssertionError, match=f"{gaps - 1} gaps"):
+            _check_sentence(stale, calls, gaps, readme.name)
+    assert checked == 2

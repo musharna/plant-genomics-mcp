@@ -42,6 +42,6 @@ Covers 5 rows of `gaps.jsonl`.
 ## `candidate-undecidable`
 
 - **Attempted:** decide 325 family candidates with interpro_domains, as enumerate_family.py stage 3
-- **Returned:** 2 of the 325 could not be decided: AT1G01335 and AT2G36920 answer 'InterPro entry/protein → HTTP 204: ' - an empty body from InterPro, surfaced as a failed call with no entry list. They are recorded as kept=undecided in family_candidates.tsv, not as rejected, and the 23-member count carries that margin; whether InterPro has no record for these proteins or answered empty this once cannot be told from the output. The 8 wheat loci are the same state for a different reason (wheat-locus-unresolvable).
+- **Returned:** 10 of the 325 could not be decided, 8 wheat and 2 Arabidopsis. The 2 Arabidopsis, AT1G01335 and AT2G36920, answer 'InterPro entry/protein → HTTP 204: ' - an empty body from InterPro, surfaced as a failed call with no entry list. They are recorded as kept=undecided in family_candidates.tsv, not as rejected, and the 23-member count carries that margin; whether InterPro has no record for these proteins or answered empty this once cannot be told from the output. The 8 wheat loci are undecided for a different reason: they never resolved to a protein (wheat-locus-unresolvable).
 - **Expected:** a found=false answer with a stated reason, so 'no record' and 'no answer' are different results
 - **Check:** `examples/arf_family/family_candidates.tsv, examples/arf_family/enumeration_calls.jsonl`

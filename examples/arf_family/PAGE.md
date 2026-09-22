@@ -21,9 +21,11 @@ errors, 3.9 minutes wall. The family itself came from a separate
 starting loci in [`genes.tsv`](genes.tsv), then every candidate the
 tools could reach, each decided by `interpro_domains` and recorded in
 [`family_candidates.tsv`](family_candidates.tsv) whether kept or not —
-325 candidates, of which 2 could not be decided (InterPro answered an
-empty body; `candidate-undecidable` below), so the 23 is 23 of a
-possible 25.
+325 candidates, of which 10 could not be decided — 8 wheat whose loci
+never resolved to a protein (`wheat-locus-unresolvable` below) and 2
+Arabidopsis for which InterPro answered an empty body
+(`candidate-undecidable` below) — so the 23 is 23 of a possible 25 in
+Arabidopsis and the 0 for wheat is 0 decided of 8.
 Chain [`chain.py`](chain.py), per-call log [`calls.jsonl`](calls.jsonl),
 captured responses [`raw/`](raw).
 
@@ -205,7 +207,7 @@ eight `result.sections` entries, read back from
 
 ## What 248 responses cost, and what they say about their source
 
-![Response size on the wire for each of the 248 MCP calls on a log10 axis, one row per tool called ordered by median size, offset and shaped by organism, coloured by whether the tool reports an upstream release under upstream_version, under another key, or not at all; hollow points are documented organism refusals; a dashed line marks the 200 kB oversize threshold, crossed by gene_report on 6 genes and by three batch calls](coverage.png)
+![Response size on the wire for each of the 248 MCP calls on a log10 axis, one row per tool called ordered by median size, offset and shaped by organism with exact ties drawn on one point, coloured by whether the tool reports an upstream release under upstream_version, under another key, or not at all; hollow points are documented organism refusals; a dashed line marks the 200 kB oversize threshold, crossed by gene_report on 6 genes and by three batch calls](coverage.png)
 
 Response sizes on the wire span 3,744×, from 174 B
 (`aragwas_associations` on ATMG00940) to 651 kB
@@ -220,9 +222,9 @@ scores those null too, and the remaining 10 carry no release at all.
 `gene_report` is over the runner's 200 kB oversize threshold on 6 of 29
 genes; three batch calls over the 23 Arabidopsis loci are over it too
 (`batch_gramene_homologs`, `batch_locus_go_annotations`,
-`batch_locus_literature`). The six hollow points are
-`aragwas_associations` refusing rice, which its description says it
-will. Per-tool table: [`coverage.tsv`](coverage.tsv).
+`batch_locus_literature`). Exact ties draw on one point: the hollow
+square on the `aragwas_associations` row is six 210 B refusals of rice,
+which its description says it will make. Per-tool table: [`coverage.tsv`](coverage.tsv).
 
 Every row below is one line of [`gaps.jsonl`](gaps.jsonl), rendered by
 [`render_gaps.py`](render_gaps.py) so the page cannot drift from the log.
@@ -289,7 +291,7 @@ All 49 rows the run logged, one line each: what was attempted, what came back, w
 - **`gramene_homologs`** (paralog-closure-empty) — total 0 and an empty homologs list for AT1G19850 and AT1G59750; 3 hits for AT2G28350 (AT4G30080, AT1G77850… — expected: the in-species paralogs of a locus, or a statement that the projection has none
 - **`interpro_domains`** (wheat-locus-unresolvable) — all 8 fail the same way: '[NotFoundError] UniProt has no entry for gene=TraesCS3A02G159200 organism_id=4565'… — expected: either a resolution path for IWGSC gene ids or an error that says the id form is not indexed
 - **`locus_literature`** (silent-empty-result) — hitCount 0, returned 0 and an empty hits list for 6 of the 23 loci in the run (AT1G19850, AT1G59750, AT2G46530… — expected: an upstream status on every answer, so an empty list carries whether the source answered
-- **`interpro_domains`** (candidate-undecidable) — 2 of the 325 could not be decided: AT1G01335 and AT2G36920 answer 'InterPro entry/protein → HTTP 204: ' - an empty… — expected: a found=false answer with a stated reason, so 'no record' and 'no answer' are different results
+- **`interpro_domains`** (candidate-undecidable) — 10 of the 325 could not be decided, 8 wheat and 2 Arabidopsis. The 2 Arabidopsis, AT1G01335 and AT2G36920, answer… — expected: a found=false answer with a stated reason, so 'no record' and 'no answer' are different results
 
 ## Cite
 

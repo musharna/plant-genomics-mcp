@@ -62,14 +62,11 @@ organisms_sorted <- sort(unique(calls$organism))
 stopifnot(length(organisms_sorted) <= 3)
 organism_offset <- setNames(c(-0.25, 0, 0.25)[seq_along(organisms_sorted)], organisms_sorted)
 calls$y <- as.numeric(calls$tool) + organism_offset[calls$organism]
-# Exact ties inside one organism — the same tool answering the same byte
-# count on several calls (e.g. six identical 210 B refusals) — would draw
-# as one point and make the page's counts unverifiable (the task-5 lesson,
-# regressed once when the per-gene offset became a per-organism one).
-# Each tied point gets a deterministic nudge by its rank within the tie.
-tie_key <- paste(calls$tool, calls$organism, calls$n_bytes)
-tie_rank <- ave(seq_along(tie_key), tie_key, FUN = seq_along) - 1
-calls$y <- calls$y + 0.08 * tie_rank  # 6 ties span 0.4 of a row; points are ~0.07 wide
+# Exact ties inside one organism (the same tool answering the same byte
+# count on several calls; the largest group here is 20) draw on ONE point.
+# A row is ~32 px tall and a glyph ~13 px, so no in-row nudge can separate
+# them, and pushing them out of the row would misattribute the tool. The
+# caption says so and PAGE.md gives the count for each tie it relies on.
 calls$organism <- factor(calls$organism, levels = organisms_sorted)
 if (is.null(calls$kind)) calls$kind <- ifelse(calls$ok, "ok", "error")
 calls$expected <- calls$kind == "expected"
@@ -147,7 +144,7 @@ p <- ggplot(calls, aes(x = n_bytes, y = y)) +
     caption = sprintf(
       paste0(
         "One point per MCP call: %d calls, %d genes, %d organisms; a batch_* call covers up to 50 loci.\n",
-        "Offset and shape by organism; hollow = documented organism refusal. Tools ordered by median size."
+        "Offset and shape by organism; exact ties draw on one point; hollow = documented organism refusal.\nTools ordered by median size."
       ),
       n_calls, n_genes, length(organisms_sorted)
     )

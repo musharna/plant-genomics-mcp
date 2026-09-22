@@ -210,6 +210,37 @@ def test_the_ortholog_disagreement_row_matches_a_recount_of_its_own_evidence():
     assert counts["orthodb_orthologs"] == 0
 
 
+def test_the_undecidable_row_matches_a_recount_of_family_candidates():
+    """The `candidate-undecidable` gap row says how many of the candidates
+    could not be decided and how they split by organism; the numbers are
+    re-derived from the TSV the row cites. Review round 2 found "2 of the
+    325" written where the file holds 10 (8 wheat + 2 Arabidopsis)."""
+    with open(ARF_DIR / "family_candidates.tsv") as f:
+        cands = list(csv.DictReader(f, delimiter="\t"))
+    undecided = [r for r in cands if r["kept"] == "undecided"]
+    by_org = {
+        org: sum(1 for r in undecided if r["organism"] == org)
+        for org in ("triticum_aestivum", "arabidopsis_thaliana")
+    }
+    rows = [json.loads(line) for line in (ARF_DIR / "gaps.jsonl").read_text().splitlines()]
+    row = next(r for r in rows if r["kind"] == "candidate-undecidable")
+    assert "family_candidates.tsv" in row["raw"]
+    m = re.search(
+        r"(\d+) of the (\d+) could not be decided, (\d+) wheat and (\d+) Arabidopsis",
+        row["returned"],
+    )
+    assert m, row["returned"]
+    total, pool, wheat, ath = (int(x) for x in m.groups())
+    assert pool == len(cands)
+    assert total == len(undecided)
+    assert wheat == by_org["triticum_aestivum"]
+    assert ath == by_org["arabidopsis_thaliana"]
+    assert wheat + ath == total
+    # Positive control for the recount: the undecided are a strict minority
+    # and both organisms contribute.
+    assert 0 < total < len(cands) and wheat > 0 and ath > 0
+
+
 def test_a_seed_without_the_family_entry_stops_the_run():
     bad_seed = {**SEED, "locus": "AT1G00030"}
     with pytest.raises(EnumerationError, match="AT1G00030 does not carry IPR010525"):
