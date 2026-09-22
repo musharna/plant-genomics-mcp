@@ -91,6 +91,23 @@ def test_the_preamble_quotes_the_size_of_the_run_it_was_written_from(draft: Path
 
 
 @pytest.mark.parametrize("draft", DRAFTS, ids=lambda p: p.name)
+def test_the_covers_line_counts_the_rows_the_draft_actually_quotes(draft: Path) -> None:
+    """One more typed number in text that gets filed on a public tracker.
+
+    Correct today; here so that splitting or merging a draft cannot leave it
+    claiming a coverage it no longer has.
+    """
+    text = draft.read_text()
+    sections = SECTION_RE.findall(text)
+    assert sections, f"no row sections parsed from {draft.name}"
+    match = re.search(r"Covers (\d+) rows? of", text)
+    assert match is not None, f"{draft.name} does not say how many rows it covers"
+    assert int(match.group(1)) == len(sections), (
+        f"{draft.name} says it covers {match.group(1)} rows and quotes {len(sections)}"
+    )
+
+
+@pytest.mark.parametrize("draft", DRAFTS, ids=lambda p: p.name)
 def test_every_row_a_draft_quotes_still_says_what_the_gap_log_says(draft: Path) -> None:
     """Each quoted observation, against the row it was copied from."""
     rows = _rows()
