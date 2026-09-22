@@ -1,11 +1,11 @@
 # Both ortholog tools cap at 100 rows with no target-organism filter, so rice and wheat never come back
 
-**Draft — not filed.** Written from the ARF family dossier run in
-[`examples/arf_family/`](../), server version `1.21.0`, 2026-09-21
-(29 genes x 16 tools, 248 MCP calls; the family itself from a 516-call
-enumeration through the same tools). Each section below is one row of
-[`gaps.jsonl`](../gaps.jsonl), quoted as logged; `Check` names the
-captured response to read it back from.
+**Filed as [#125](https://github.com/musharna/plant-genomics-mcp/issues/125) — fixed.** Both rows are closed at `967bc36`. Written from the ARF family dossier in
+[`examples/arf_family/`](../), re-run at server commit `967bc36`
+(release `1.21.0`): 400 MCP calls over 48 genes x 16 tools, the family
+itself from a 742-call enumeration through the same tools. Each section
+below is one row of [`gaps.jsonl`](../gaps.jsonl), quoted as logged;
+`Check` names the captured response to read it back from.
 
 From 23 Arabidopsis members the two ortholog tools were asked for rice and wheat orthologs. `gramene_homologs` reports totals of 177-340 per gene and returns 100 rows from other species first; `orthodb_orthologs` returns 100 of 1,986 members alphabetically by organism and never reaches Oryza or Triticum. The rice members in `genes.tsv` are the few that happened to fall inside Gramene's first 100; the wheat set is empty for a second reason (`issues/16`).
 

@@ -358,6 +358,16 @@ def resolve(query: str | int) -> OrganismRecord:
 
     Raises OrganismNotFound (with the full supported list) if no match.
     """
+    # Anything that is not a string or a taxid is "no match", not a crash.
+    # The annotation is the contract for in-process callers; this guard is
+    # for values that arrive from outside the process, where a float or a
+    # list used to reach ``_normalize`` and raise AttributeError/TypeError
+    # instead (issue #118). ``bool`` is excluded explicitly because
+    # ``isinstance(True, int)`` is true in Python and a boolean is never a
+    # taxid — the old code reached the same answer by accident.
+    if isinstance(query, bool) or not isinstance(query, str | int):
+        raise OrganismNotFound(query, supported=list(ORGANISMS.keys()))
+
     if isinstance(query, int):
         canonical = _TAXID_INDEX.get(query)
         if canonical is None:

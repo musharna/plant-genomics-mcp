@@ -1,11 +1,11 @@
 # Six genes with 22-91 papers came back with hitCount 0, ok=true, and nothing in the answer says the source did not respond
 
-**Draft — not filed.** Written from the ARF family dossier run in
-[`examples/arf_family/`](../), server version `1.21.0`, 2026-09-21
-(29 genes x 16 tools, 248 MCP calls; the family itself from a 516-call
-enumeration through the same tools). Each section below is one row of
-[`gaps.jsonl`](../gaps.jsonl), quoted as logged; `Check` names the
-captured response to read it back from.
+**Filed as [#141](https://github.com/musharna/plant-genomics-mcp/issues/141) — open.** Written from the ARF family dossier in
+[`examples/arf_family/`](../), re-run at server commit `967bc36`
+(release `1.21.0`): 400 MCP calls over 48 genes x 16 tools, the family
+itself from a 742-call enumeration through the same tools. Each section
+below is one row of [`gaps.jsonl`](../gaps.jsonl), quoted as logged;
+`Check` names the captured response to read it back from.
 
 The run captured empty literature for 6 of 23 Arabidopsis loci; re-asked later, every one has papers. The captured `gene_report` for AT1G19850 carries the same empty step. Whether Europe PMC returned zero or the server's cache served a bad answer cannot be told from the output — origin `unverified` — but the shape is the defect: an empty list with no upstream status is a silent failure.
 

@@ -2,11 +2,27 @@
 
 ## Unreleased
 
+- **Tool arguments are checked against the schema each tool advertises
+  (#118).** The mcp SDK hands a call's `arguments` to the handler without
+  validating them against its `inputSchema`, so the declared schema was
+  documentation only: a JSON value of the wrong type reached backends
+  annotated `str | int` and came back as whatever raw Python error it hit
+  first — `{"organism": 3.5}` returned the unlabelled text `'float' object
+has no attribute 'strip'` (the nightly fuzz found this one; `locus` and
+  `matrix_id` were equally exposed through `validators`). `server._call_tool`
+  now validates against the tool's own declared schema before dispatch and
+  refuses violations as `[InvalidArguments] <tool>: <field>: <reason>`,
+  which also covers a missing required argument (previously a bare
+  `KeyError` text) and a mistyped optional one (`organsim=` silently ran
+  against the default organism). `organisms.resolve` additionally honours
+  its documented `OrganismNotFound` contract for input of any type, for
+  in-process callers. `jsonschema>=4.20` is now a declared dependency — it
+  was already required by `mcp`, so this is not a new install.
 - **`examples/arf_family/` re-run at `967bc36`, the fixes below on the
   record.** 400 calls over 48 genes: the same 23 Arabidopsis members and
   25 rice (6 on the first run) once both ortholog tools filter by
   `target_organism`; wheat stays at 0 because none of the 56 IWGSC loci
-  queried resolves to a protein. 8 of the 40 hand-logged gap rows are
+  queried resolves to a protein. 7 of the 40 hand-logged gap rows are
   closed against the new run and listed last on the page with what the run
   returned instead (`render_gaps.py` renders a `closed` field;
   `run_dossier.py` logs the server commit beside its version, since a fix

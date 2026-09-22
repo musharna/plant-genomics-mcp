@@ -75,6 +75,8 @@ import json
 from typing import Any
 
 import httpx
+from jsonschema import Draft202012Validator
+from jsonschema.exceptions import best_match
 from mcp import types
 from mcp.server import Server, ServerRequestContext
 from mcp.server.stdio import stdio_server
@@ -112,6 +114,7 @@ from plant_genomics_mcp import (
     thalemine,
     uniprot,
 )
+from plant_genomics_mcp.errors import InvalidArguments
 from plant_genomics_mcp.models import (
     AlphaFoldStructure,
     ArabidopsisNaturalVariation,
@@ -2098,6 +2101,50 @@ TOOLS: list[types.Tool] = [
 ]
 
 
+# ---- argument validation ----------------------------------------------------
+# Every tool above declares a complete JSON Schema, and nothing enforced it:
+# the mcp SDK's lowlevel Server passes a call's `arguments` straight to the
+# handler, so `inputSchema` was documentation that clients were trusted to
+# have read. A JSON value of the wrong type therefore reached backends
+# annotated `str | int` and failed as whatever raw Python error they touched
+# first (issue #118, found by the nightly fuzz: `organism: 3.5` ->
+# `AttributeError: 'float' object has no attribute 'strip'` out of
+# organisms.resolve, with `locus` and `matrix_id` equally exposed through the
+# validators module).
+#
+# Validating here — one place, driven by each tool's own declared schema — is
+# what makes the advertised contract true for every tool at once, including
+# tools added later. The draft is pinned rather than inferred from `$schema`
+# (these schemas do not declare one) so a jsonschema upgrade cannot quietly
+# change which keywords bind.
+_TOOL_SCHEMAS: dict[str, dict[str, Any]] = {str(tool.name): tool.input_schema for tool in TOOLS}
+_TOOL_VALIDATORS: dict[str, Draft202012Validator] = {
+    name: Draft202012Validator(schema) for name, schema in _TOOL_SCHEMAS.items()
+}
+
+
+def _validate_arguments(name: str, arguments: dict[str, Any]) -> None:
+    """Refuse a tool call whose arguments violate the tool's declared schema.
+
+    An unknown tool name has no schema to check against and falls through
+    untouched: ``_dispatch`` owns that case (``unknown tool: <name>``) and
+    tests/test_server_dispatch.py pins the message.
+
+    ``best_match`` picks one error out of the iterator so the text is a single
+    stable sentence rather than a dump whose shape depends on how many
+    keywords the call violated.
+    """
+    validator = _TOOL_VALIDATORS.get(name)
+    if validator is None:
+        return
+    error = best_match(validator.iter_errors(arguments))
+    if error is None:
+        return
+    field = "/".join(str(part) for part in error.absolute_path)
+    detail = f"{field}: {error.message}" if field else error.message
+    raise InvalidArguments(f"{name}: {detail}")
+
+
 # mcp 2.x removed the @server.list_tools() / @server.call_tool() decorator
 # family. Handlers are constructor arguments now (see the Server(...) call at
 # the bottom of this module), they take (ctx, params) instead of unpacked
@@ -2551,6 +2598,11 @@ async def _call_tool(
     arguments = params.arguments or {}
     reporter = _build_reporter(ctx)
     try:
+        # Before dispatch: the arguments are untrusted JSON and the SDK has
+        # not checked them against the schema we advertise (see
+        # _validate_arguments). InvalidArguments is a PlantGenomicsError, so
+        # it leaves through the same labelled error path as everything else.
+        _validate_arguments(name, arguments)
         if reporter is None:
             payload = await _dispatch(name, arguments)
         else:

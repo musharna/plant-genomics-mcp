@@ -1,11 +1,11 @@
 # `locus_go_annotations` drops a row without a flag and ships a dedup the payload does not label
 
-**Draft — not filed.** Written from the ARF family dossier run in
-[`examples/arf_family/`](../), server version `1.21.0`, 2026-09-21
-(29 genes x 16 tools, 248 MCP calls; the family itself from a 516-call
-enumeration through the same tools). Each section below is one row of
-[`gaps.jsonl`](../gaps.jsonl), quoted as logged; `Check` names the
-captured response to read it back from.
+**Filed as [#132](https://github.com/musharna/plant-genomics-mcp/issues/132) — open.** Written from the ARF family dossier in
+[`examples/arf_family/`](../), re-run at server commit `967bc36`
+(release `1.21.0`): 400 MCP calls over 48 genes x 16 tools, the family
+itself from a 742-call enumeration through the same tools. Each section
+below is one row of [`gaps.jsonl`](../gaps.jsonl), quoted as logged;
+`Check` names the captured response to read it back from.
 
 One issue: both rows are about the same three numbers in the same payload — `numberOfHits` 51, `returned` 50, `by_aspect` 16 — and a reader holding only the response cannot tell which difference is a cap and which is a dedup.
 

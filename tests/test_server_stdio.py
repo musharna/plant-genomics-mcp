@@ -141,6 +141,37 @@ async def test_invalid_locus_surfaces_typed_error(
 
 
 @pytest.mark.asyncio
+async def test_a_schema_violating_argument_is_refused_over_the_wire(
+    server_params: StdioServerParameters,
+) -> None:
+    """The #118 crash driven through a real client over real stdio.
+
+    ``organism: 3.5`` is valid JSON-RPC and invalid against the tool's
+    advertised ``inputSchema``. The SDK does not check it, so before
+    ``server._validate_arguments`` it travelled all the way into
+    ``organisms.resolve`` and came back as the unlabelled text ``'float'
+    object has no attribute 'strip'``. Network-free: the refusal happens
+    before dispatch.
+    """
+    async with stdio_client(server_params) as (read, write):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
+            result = await session.call_tool(
+                "ensembl_plants_lookup_locus",
+                arguments={"locus": "AT1G01010", "organism": 3.5},
+            )
+            assert result.is_error, "expected error result for a schema violation"
+            assert result.content
+            block = result.content[0]
+            assert isinstance(block, TextContent)
+            text = block.text
+            assert "[InvalidArguments]" in text, f"missing typed prefix in: {text!r}"
+            assert "organism" in text, text
+            # The pre-fix wire text, named so this cannot pass on it again.
+            assert "strip" not in text, text
+
+
+@pytest.mark.asyncio
 async def test_list_prompts_advertises_all_prompts(
     server_params: StdioServerParameters,
 ) -> None:

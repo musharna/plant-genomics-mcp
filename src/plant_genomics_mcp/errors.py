@@ -60,6 +60,21 @@ class UpstreamUnavailableError(PlantGenomicsError):
     """
 
 
+class InvalidArguments(PlantGenomicsError):
+    """A tool call's arguments do not match the schema the server advertises.
+
+    Raised at the MCP boundary, before dispatch. The mcp SDK hands a tool
+    call's ``arguments`` to the handler untouched — it does not check them
+    against the tool's ``inputSchema`` — so without this the wrong JSON type
+    reached backends annotated ``str | int`` and surfaced as whatever raw
+    Python error they hit first (issue #118: ``organism: 3.5`` became
+    ``AttributeError: 'float' object has no attribute 'strip'``).
+
+    LLM clients should treat this as terminal for the given arguments and
+    re-read the tool's schema: the message names the tool and the field.
+    """
+
+
 class OrganismNotFound(PlantGenomicsError):
     """Input did not match any record in the organisms registry.
 
@@ -67,7 +82,10 @@ class OrganismNotFound(PlantGenomicsError):
     can pick a valid one without a second round trip.
     """
 
-    def __init__(self, query: str | int, *, supported: list[str]) -> None:
+    # ``query`` is ``object``, not ``str | int``: ``resolve`` raises this for
+    # input of any type, including the shapes that used to crash it, and the
+    # message only ever ``repr``s it.
+    def __init__(self, query: object, *, supported: list[str]) -> None:
         super().__init__(f"organism {query!r} not in registry; supported: {sorted(supported)}")
         self.query = query
         self.supported = sorted(supported)

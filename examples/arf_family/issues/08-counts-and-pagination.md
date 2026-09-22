@@ -1,11 +1,11 @@
 # Nine names for “how many exist upstream”, no cursor to reach the rest, and one count that counts chains
 
-**Draft — not filed.** Written from the ARF family dossier run in
-[`examples/arf_family/`](../), server version `1.21.0`, 2026-09-21
-(29 genes x 16 tools, 248 MCP calls; the family itself from a 516-call
-enumeration through the same tools). Each section below is one row of
-[`gaps.jsonl`](../gaps.jsonl), quoted as logged; `Check` names the
-captured response to read it back from.
+**Filed as [#123](https://github.com/musharna/plant-genomics-mcp/issues/123) — open.** Written from the ARF family dossier in
+[`examples/arf_family/`](../), re-run at server commit `967bc36`
+(release `1.21.0`): 400 MCP calls over 48 genes x 16 tools, the family
+itself from a 742-call enumeration through the same tools. Each section
+below is one row of [`gaps.jsonl`](../gaps.jsonl), quoted as logged;
+`Check` names the captured response to read it back from.
 
 One issue: writing a single “N of M, fetch the rest” helper against this surface is blocked by all three rows at once.
 
