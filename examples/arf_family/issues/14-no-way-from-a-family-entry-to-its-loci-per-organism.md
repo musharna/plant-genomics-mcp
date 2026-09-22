@@ -1,6 +1,6 @@
 # No way from an InterPro entry to its loci in an organism: the walk that stands in costs 52 region calls, 325 domain calls and 19 minutes
 
-**Draft — not filed.** Written from the ARF family dossier run in
+**Filed as [#124](https://github.com/musharna/plant-genomics-mcp/issues/124) — open.** Written from the ARF family dossier run in
 [`examples/arf_family/`](../), server version `1.21.0`, 2026-09-21
 (29 genes x 16 tools, 248 MCP calls; the family itself from a 516-call
 enumeration through the same tools). Each section below is one row of
@@ -41,7 +41,7 @@ Covers 5 rows of `gaps.jsonl`.
 
 ## `candidate-undecidable`
 
-- **Attempted:** decide 325 family candidates with interpro_domains, as enumerate_family.py stage 3
-- **Returned:** 10 of the 325 could not be decided, 8 wheat and 2 Arabidopsis. The 2 Arabidopsis, AT1G01335 and AT2G36920, answer 'InterPro entry/protein → HTTP 204: ' - an empty body from InterPro, surfaced as a failed call with no entry list. They are recorded as kept=undecided in family_candidates.tsv, not as rejected, and the 23-member count carries that margin; whether InterPro has no record for these proteins or answered empty this once cannot be told from the output. The 8 wheat loci are undecided for a different reason: they never resolved to a protein (wheat-locus-unresolvable).
+- **Attempted:** decide 560 family candidates with interpro_domains, as enumerate_family.py stage 3
+- **Returned:** 58 of the 560 could not be decided, 56 wheat and 2 Arabidopsis (first run: 10 of 325, 8 wheat and 2 Arabidopsis). The 2 Arabidopsis, AT1G01335 and AT2G36920, answer 'InterPro entry/protein → HTTP 204: ' - an empty body from InterPro, surfaced as a failed call with no entry list. They are recorded as kept=undecided in family_candidates.tsv, not as rejected, and the 23-member count carries that margin; whether InterPro has no record for these proteins or answered empty this once cannot be told from the output. The 56 wheat loci are undecided for a different reason: they never resolved to a protein (wheat-locus-unresolvable).
 - **Expected:** a found=false answer with a stated reason, so 'no record' and 'no answer' are different results
 - **Check:** `examples/arf_family/family_candidates.tsv, examples/arf_family/enumeration_calls.jsonl`

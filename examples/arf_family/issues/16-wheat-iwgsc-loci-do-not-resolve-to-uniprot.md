@@ -14,6 +14,6 @@ Covers 1 row of `gaps.jsonl`.
 ## `wheat-locus-unresolvable`
 
 - **Attempted:** verify each wheat locus the ortholog tool named with interpro_domains(locus, organism='triticum_aestivum')
-- **Returned:** all 8 fail the same way: '[NotFoundError] UniProt has no entry for gene=TraesCS3A02G159200 organism_id=4565'. interpro_domains, alphafold_structure, experimental_structures, tf_binding_motifs, locus_go_annotations and string_interactions all go through the same locus -> UniProt step, so no protein-level tool in the chain can answer for a wheat IWGSC locus. Whether UniProt indexes these genes under another name, or the query needs a different field, cannot be told from the output.
+- **Returned:** all 56 queried wheat loci fail the same way (8 of 8 on the first run): '[NotFoundError] UniProt has no entry for gene=TraesCS3A02G159200 organism_id=4565'. interpro_domains, alphafold_structure, experimental_structures, tf_binding_motifs, locus_go_annotations and string_interactions all go through the same locus -> UniProt step, so no protein-level tool in the chain can answer for a wheat IWGSC locus. Whether UniProt indexes these genes under another name, or the query needs a different field, cannot be told from the output.
 - **Expected:** either a resolution path for IWGSC gene ids or an error that says the id form is not indexed
 - **Check:** `examples/arf_family/family_candidates.tsv, examples/arf_family/enumeration_calls.jsonl`
