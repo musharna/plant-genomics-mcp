@@ -1,0 +1,26 @@
+{
+ "probe": "kegg_pathways vs batch_kegg_pathways on an organism KEGG does not cover",
+ "results": {
+  "batch_kegg_pathways": {
+   "ok": true,
+   "error": null,
+   "payload": {
+    "tool": "kegg_pathways",
+    "count": 1,
+    "results": {},
+    "errors": {
+     "Os01g0236300": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
+    }
+   },
+   "description": "Batch version of kegg_pathways. Up to 50 loci per call. v1.1.0: only arabidopsis_thaliana resolves \u2014 KEGG uses NCBI Entrez Gene IDs for other plants and our cross-backend locus contract can't produce those yet, so a non-ath organism= raises OrganismNotSupported before any HTTP fan-out.",
+   "organism_property_description": "Plant organism \u2014 only arabidopsis_thaliana is supported in v1.1.0; other plants raise OrganismNotSupported until an Entrez bridge lands"
+  },
+  "kegg_pathways": {
+   "ok": false,
+   "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']",
+   "payload": null,
+   "description": "Fetch KEGG pathway memberships for an Arabidopsis locus from rest.kegg.jp. Returns a list of pathway IDs + names + KEGG category classes the locus participates in. Pairs with locus_go_annotations for the GO-level functional view. Multi-organism caveat (v1.1.0): the organism= field accepts any plant in the matrix for symmetry with the other backends, but only arabidopsis_thaliana resolves \u2014 KEGG uses NCBI Entrez Gene IDs for rice/maize/etc. and our cross-backend locus contract can't produce those yet, so any other organism raises OrganismNotSupported before any HTTP call. KEGG v118+ is case-sensitive on the locus: pass AGI loci as uppercase.",
+   "organism_property_description": "Plant organism \u2014 only arabidopsis_thaliana is supported in v1.1.0; other plants raise OrganismNotSupported until an Entrez bridge lands"
+  }
+ }
+}

@@ -1,0 +1,3489 @@
+{
+ "tool": "gene_report",
+ "input": {
+  "locus": "AT1G59750",
+  "organism": "arabidopsis_thaliana",
+  "top_n": 10
+ },
+ "started_at": "2026-09-22T02:45:39Z",
+ "elapsed_s": 2.116864342999179,
+ "steps": [
+  {
+   "step": 1,
+   "tool": "ensembl_plants_lookup_locus",
+   "status": "ok",
+   "elapsed_s": null,
+   "result": {
+    "object_type": "Gene",
+    "biotype": "protein_coding",
+    "description": "auxin response factor 1 [Source:NCBI gene (formerly Entrezgene);Acc:842268]",
+    "canonical_transcript": "AT1G59750.1.",
+    "assembly_name": "TAIR10",
+    "seq_region_name": "1",
+    "logic_name": "araport11",
+    "db_type": "core",
+    "source": "araport11",
+    "display_name": "ARF1",
+    "strand": 1,
+    "start": 21979289,
+    "end": 21984433,
+    "id": "AT1G59750",
+    "organism": "arabidopsis_thaliana"
+   },
+   "error": null
+  },
+  {
+   "step": 2,
+   "tool": "resolve_locus_to_uniprot",
+   "status": "ok",
+   "elapsed_s": null,
+   "result": {
+    "locus_query": "AT1G59750",
+    "primaryAccession": "Q8L7G0",
+    "uniProtkbId": "ARFA_ARATH",
+    "entryType": "UniProtKB reviewed (Swiss-Prot)",
+    "reviewed": true,
+    "recommendedName": "Auxin response factor 1",
+    "geneNames": [
+     "ARF1"
+    ],
+    "organism": "Arabidopsis thaliana",
+    "taxonId": 3702,
+    "sequenceLength": 665,
+    "web_url": "https://www.uniprot.org/uniprotkb/Q8L7G0",
+    "upstream_version": "2026_03"
+   },
+   "error": null
+  },
+  {
+   "step": 3,
+   "tool": "get_gene_xrefs",
+   "status": "ok",
+   "elapsed_s": null,
+   "result": {
+    "locus": "AT1G59750",
+    "organism": "arabidopsis_thaliana",
+    "count": 9,
+    "xrefs": [
+     {
+      "synonyms": [],
+      "info_text": "",
+      "display_id": "AT1G59750-TAIR-G",
+      "primary_id": "AT1G59750",
+      "info_type": "DIRECT",
+      "db_display_name": "NASC Gene ID",
+      "version": "0",
+      "dbname": "NASC_GENE_ID",
+      "description": "auxin response factor 1"
+     },
+     {
+      "synonyms": [],
+      "info_text": "",
+      "display_id": "AT1G59750",
+      "primary_id": "AT1G59750",
+      "info_type": "DIRECT",
+      "version": "0",
+      "db_display_name": "TAIR",
+      "description": "auxin response factor 1",
+      "dbname": "TAIR_LOCUS"
+     },
+     {
+      "primary_id": "ARF1",
+      "info_type": "DIRECT",
+      "db_display_name": "TAIR Gene Name",
+      "version": "0",
+      "dbname": "TAIR_SYMBOL",
+      "description": "",
+      "synonyms": [],
+      "info_text": "",
+      "display_id": "ARF1"
+     },
+     {
+      "synonyms": [
+       "auxin response factor 1",
+       "F23H11.7",
+       "F23H11_7"
+      ],
+      "display_id": "ARF1",
+      "info_text": "",
+      "info_type": "DEPENDENT",
+      "primary_id": "842268",
+      "description": "auxin response factor 1",
+      "dbname": "EntrezGene",
+      "version": "0",
+      "db_display_name": "NCBI gene (formerly Entrezgene)"
+     },
+     {
+      "info_text": "",
+      "display_id": "AT1G59750",
+      "synonyms": [],
+      "db_display_name": "KNETMINER_ARA",
+      "version": "0",
+      "dbname": "KNETMINER_ARA",
+      "description": null,
+      "primary_id": "AT1G59750",
+      "info_type": "DEPENDENT"
+     },
+     {
+      "primary_id": "AT1G59750",
+      "info_type": "DIRECT",
+      "db_display_name": "Expression Atlas",
+      "version": "0",
+      "dbname": "ArrayExpress",
+      "description": null,
+      "synonyms": [],
+      "info_text": "",
+      "display_id": "AT1G59750"
+     },
+     {
+      "dbname": "Uniprot_gn",
+      "description": null,
+      "db_display_name": "UniProtKB Gene Name",
+      "version": null,
+      "info_type": "DEPENDENT",
+      "primary_id": "Q8L7G0",
+      "display_id": "ARF1",
+      "info_text": "",
+      "synonyms": []
+     },
+     {
+      "synonyms": [],
+      "info_text": "",
+      "display_id": "ARF1",
+      "primary_id": "842268",
+      "info_type": "DEPENDENT",
+      "db_display_name": "WikiGene",
+      "version": "0",
+      "dbname": "WikiGene",
+      "description": "auxin response factor 1"
+     },
+     {
+      "primary_id": "F4ID31",
+      "info_type": "DEPENDENT",
+      "db_display_name": "UniProtKB Gene Name",
+      "version": null,
+      "dbname": "Uniprot_gn",
+      "description": null,
+      "synonyms": [],
+      "info_text": "",
+      "display_id": "ARF1"
+     }
+    ],
+    "by_db": {
+     "NASC_GENE_ID": [
+      "AT1G59750"
+     ],
+     "TAIR_LOCUS": [
+      "AT1G59750"
+     ],
+     "TAIR_SYMBOL": [
+      "ARF1"
+     ],
+     "EntrezGene": [
+      "842268"
+     ],
+     "KNETMINER_ARA": [
+      "AT1G59750"
+     ],
+     "ArrayExpress": [
+      "AT1G59750"
+     ],
+     "Uniprot_gn": [
+      "Q8L7G0",
+      "F4ID31"
+     ],
+     "WikiGene": [
+      "842268"
+     ]
+    }
+   },
+   "error": null
+  },
+  {
+   "step": 4,
+   "tool": "kegg_pathways",
+   "status": "ok",
+   "elapsed_s": null,
+   "result": {
+    "locus": "AT1G59750",
+    "organism": "arabidopsis_thaliana",
+    "kegg_gene_id": "ath:AT1G59750",
+    "pathways": [
+     {
+      "id": "ath04075",
+      "name": "Plant hormone signal transduction - Arabidopsis thaliana (thale cress)",
+      "pathway_class": "Environmental Information Processing; Signal transduction"
+     }
+    ],
+    "errors": []
+   },
+   "error": null
+  },
+  {
+   "step": 5,
+   "tool": "string_interactions",
+   "status": "ok",
+   "elapsed_s": null,
+   "result": {
+    "query": "AT1G59750",
+    "accession": "Q8L7G0",
+    "organism": "arabidopsis_thaliana",
+    "partners": [
+     {
+      "string_id": "3702.Q9C5X0",
+      "accession": "3702.Q9C5X0",
+      "preferred_name": "IAA34",
+      "score": 0.903,
+      "escore": 0.45,
+      "dscore": 0.65,
+      "tscore": 0.54,
+      "pscore": 0
+     },
+     {
+      "string_id": "3702.O24409",
+      "accession": "3702.O24409",
+      "preferred_name": "IAA19",
+      "score": 0.9,
+      "escore": 0.292,
+      "dscore": 0.65,
+      "tscore": 0.632,
+      "pscore": 0
+     },
+     {
+      "string_id": "3702.Q38824",
+      "accession": "3702.Q38824",
+      "preferred_name": "IAA6",
+      "score": 0.897,
+      "escore": 0,
+      "dscore": 0.65,
+      "tscore": 0.72,
+      "pscore": 0
+     },
+     {
+      "string_id": "3702.P93830",
+      "accession": "3702.P93830",
+      "preferred_name": "IAA17",
+      "score": 0.893,
+      "escore": 0.392,
+      "dscore": 0.65,
+      "tscore": 0.541,
+      "pscore": 0
+     },
+     {
+      "string_id": "3702.O24408",
+      "accession": "3702.O24408",
+      "preferred_name": "IAA18",
+      "score": 0.849,
+      "escore": 0.45,
+      "dscore": 0.65,
+      "tscore": 0.28,
+      "pscore": 0
+     },
+     {
+      "string_id": "3702.P49678",
+      "accession": "3702.P49678",
+      "preferred_name": "IAA2",
+      "score": 0.843,
+      "escore": 0,
+      "dscore": 0.65,
+      "tscore": 0.572,
+      "pscore": 0
+     },
+     {
+      "string_id": "3702.O24407",
+      "accession": "3702.O24407",
+      "preferred_name": "IAA16",
+      "score": 0.829,
+      "escore": 0.076,
+      "dscore": 0.65,
+      "tscore": 0.513,
+      "pscore": 0
+     },
+     {
+      "string_id": "3702.Q9LQC8",
+      "accession": "3702.Q9LQC8",
+      "preferred_name": "ARF2-A",
+      "score": 0.804,
+      "escore": 0.089,
+      "dscore": 0.084,
+      "tscore": 0.785,
+      "pscore": 0
+     },
+     {
+      "string_id": "3702.Q96247",
+      "accession": "3702.Q96247",
+      "preferred_name": "AUX1",
+      "score": 0.795,
+      "escore": 0,
+      "dscore": 0,
+      "tscore": 0.795,
+      "pscore": 0
+     },
+     {
+      "string_id": "3702.Q38822",
+      "accession": "3702.Q38822",
+      "preferred_name": "IAA3",
+      "score": 0.793,
+      "escore": 0,
+      "dscore": 0.65,
+      "tscore": 0.435,
+      "pscore": 0
+     }
+    ]
+   },
+   "error": null
+  },
+  {
+   "step": 6,
+   "tool": "locus_literature",
+   "status": "ok",
+   "elapsed_s": null,
+   "result": {
+    "locus": "AT1G59750",
+    "organism": "arabidopsis_thaliana",
+    "query": "AT1G59750",
+    "hitCount": 0,
+    "returned": 0,
+    "abstracts_included": true,
+    "hits": []
+   },
+   "error": null
+  },
+  {
+   "step": 7,
+   "tool": "locus_go_annotations",
+   "status": "ok",
+   "elapsed_s": null,
+   "result": {
+    "uniprot_accession": "Q8L7G0",
+    "numberOfHits": 34,
+    "returned": 34,
+    "annotations": [
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "acts_upstream_of",
+      "goId": "GO:0008219",
+      "goName": "cell death",
+      "goAspect": "biological_process",
+      "goEvidence": "IMP",
+      "evidenceCode": "ECO:0000315",
+      "reference": "PMID:32446355",
+      "assignedBy": "UniProt",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20211015",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "acts_upstream_of",
+      "goId": "GO:0010150",
+      "goName": "leaf senescence",
+      "goAspect": "biological_process",
+      "goEvidence": "IMP",
+      "evidenceCode": "ECO:0000315",
+      "reference": "PMID:32446355",
+      "assignedBy": "UniProt",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20211015",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "acts_upstream_of_or_within",
+      "goId": "GO:0006355",
+      "goName": "regulation of DNA-templated transcription",
+      "goAspect": "biological_process",
+      "goEvidence": "TAS",
+      "evidenceCode": "ECO:0000304",
+      "reference": "PMID:9188533",
+      "assignedBy": "TIGR",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20030417",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "acts_upstream_of_or_within",
+      "goId": "GO:0009733",
+      "goName": "response to auxin",
+      "goAspect": "biological_process",
+      "goEvidence": "IEP",
+      "evidenceCode": "ECO:0000270",
+      "reference": "PMID:9188533",
+      "assignedBy": "TAIR",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20030328",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "acts_upstream_of_or_within",
+      "goId": "GO:0010150",
+      "goName": "leaf senescence",
+      "goAspect": "biological_process",
+      "goEvidence": "IGI",
+      "evidenceCode": "ECO:0000316",
+      "reference": "PMID:16176952",
+      "assignedBy": "TAIR",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20080822",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G62000"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "acts_upstream_of_or_within",
+      "goId": "GO:0045892",
+      "goName": "negative regulation of DNA-templated transcription",
+      "goAspect": "biological_process",
+      "goEvidence": "IEP",
+      "evidenceCode": "ECO:0000270",
+      "reference": "PMID:16176952",
+      "assignedBy": "TAIR",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20110321",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0000976",
+      "goName": "transcription cis-regulatory region binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19220"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19850"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G34310"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G34390"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G77850"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT2G33860"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT2G46530"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT3G61830"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT4G23980"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G37020"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G60450"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN000774836"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0003677",
+      "goName": "DNA binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000256",
+      "reference": "GO_REF:0000002",
+      "assignedBy": "InterPro",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR003340"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR044835"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0003677",
+      "goName": "DNA binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IDA",
+      "evidenceCode": "ECO:0000314",
+      "reference": "PMID:10476078",
+      "assignedBy": "TAIR",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20061004",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0003700",
+      "goName": "DNA-binding transcription factor activity",
+      "goAspect": "molecular_function",
+      "goEvidence": "ISS",
+      "evidenceCode": "ECO:0000250",
+      "reference": "PMID:11118137",
+      "assignedBy": "TAIR",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20030606",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0003700",
+      "goName": "DNA-binding transcription factor activity",
+      "goAspect": "molecular_function",
+      "goEvidence": "TAS",
+      "evidenceCode": "ECO:0000304",
+      "reference": "PMID:9188533",
+      "assignedBy": "TIGR",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20030417",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0005515",
+      "goName": "protein binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IPI",
+      "evidenceCode": "ECO:0000353",
+      "reference": "PMID:17675404",
+      "assignedBy": "IntAct",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260725",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q9SN12"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0005515",
+      "goName": "protein binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IPI",
+      "evidenceCode": "ECO:0000353",
+      "reference": "PMID:22096563",
+      "assignedBy": "IntAct",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260725",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q9C5W9"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0005515",
+      "goName": "protein binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IPI",
+      "evidenceCode": "ECO:0000353",
+      "reference": "PMID:22096563",
+      "assignedBy": "IntAct",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260725",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q9XED8"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0005515",
+      "goName": "protein binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IPI",
+      "evidenceCode": "ECO:0000353",
+      "reference": "PMID:28650476",
+      "assignedBy": "IntAct",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260725",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q94JM3"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0005515",
+      "goName": "protein binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IPI",
+      "evidenceCode": "ECO:0000353",
+      "reference": "PMID:28650476",
+      "assignedBy": "IntAct",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260725",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q9C5W9"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0005515",
+      "goName": "protein binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IPI",
+      "evidenceCode": "ECO:0000353",
+      "reference": "PMID:28650476",
+      "assignedBy": "IntAct",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260725",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q9C5X0"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0005515",
+      "goName": "protein binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IPI",
+      "evidenceCode": "ECO:0000353",
+      "reference": "PMID:28650476",
+      "assignedBy": "IntAct",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260725",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q9XED8"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0005515",
+      "goName": "protein binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IPI",
+      "evidenceCode": "ECO:0000353",
+      "reference": "PMID:32446355",
+      "assignedBy": "UniProt",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20211015",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q9SK71"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0042802",
+      "goName": "identical protein binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IPI",
+      "evidenceCode": "ECO:0000353",
+      "reference": "PMID:22096563",
+      "assignedBy": "IntAct",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260725",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q8L7G0"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0042802",
+      "goName": "identical protein binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IPI",
+      "evidenceCode": "ECO:0000353",
+      "reference": "PMID:24485461",
+      "assignedBy": "IntAct",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260725",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q8L7G0"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0043565",
+      "goName": "sequence-specific DNA binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IDA",
+      "evidenceCode": "ECO:0000314",
+      "reference": "PMID:9188533",
+      "assignedBy": "TAIR",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20210922",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "involved_in",
+      "goId": "GO:0006355",
+      "goName": "regulation of DNA-templated transcription",
+      "goAspect": "biological_process",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000256",
+      "reference": "GO_REF:0000002",
+      "assignedBy": "InterPro",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR044835"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "involved_in",
+      "goId": "GO:0006355",
+      "goName": "regulation of DNA-templated transcription",
+      "goAspect": "biological_process",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19850"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G59750"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G20730"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G62000"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN000774836"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "involved_in",
+      "goId": "GO:0009725",
+      "goName": "response to hormone",
+      "goAspect": "biological_process",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000256",
+      "reference": "GO_REF:0000002",
+      "assignedBy": "InterPro",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR044835"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "involved_in",
+      "goId": "GO:0009733",
+      "goName": "response to auxin",
+      "goAspect": "biological_process",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G59750"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN004817213"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "involved_in",
+      "goId": "GO:0010150",
+      "goName": "leaf senescence",
+      "goAspect": "biological_process",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G59750"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN004817213"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "is_active_in",
+      "goId": "GO:0005634",
+      "goName": "nucleus",
+      "goAspect": "cellular_component",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260529",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19220"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G30330"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G59750"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT2G33860"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT4G30080"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G20730"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G62000"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN000774836"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "K4DF01"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q2LAJ3"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "located_in",
+      "goId": "GO:0005634",
+      "goName": "nucleus",
+      "goAspect": "cellular_component",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000501",
+      "reference": "GO_REF:0000120",
+      "assignedBy": "UniProt",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB-SubCell",
+          "id": "SL-0191"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "located_in",
+      "goId": "GO:0005634",
+      "goName": "nucleus",
+      "goAspect": "cellular_component",
+      "goEvidence": "ISM",
+      "evidenceCode": "ECO:0000255",
+      "reference": "GO_REF:0000122",
+      "assignedBy": "TAIR",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20180831",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "located_in",
+      "goId": "GO:0005634",
+      "goName": "nucleus",
+      "goAspect": "cellular_component",
+      "goEvidence": "ISS",
+      "evidenceCode": "ECO:0000250",
+      "reference": "PMID:10318972",
+      "assignedBy": "TAIR",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20020501",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "located_in",
+      "goId": "GO:0005634",
+      "goName": "nucleus",
+      "goAspect": "cellular_component",
+      "goEvidence": "IDA",
+      "evidenceCode": "ECO:0000314",
+      "reference": "PMID:32446355",
+      "assignedBy": "UniProt",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20211015",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "located_in",
+      "goId": "GO:0005737",
+      "goName": "cytoplasm",
+      "goAspect": "cellular_component",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0007322",
+      "reference": "GO_REF:0000044",
+      "assignedBy": "UniProt",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB-SubCell",
+          "id": "SL-0086"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "located_in",
+      "goId": "GO:0005737",
+      "goName": "cytoplasm",
+      "goAspect": "cellular_component",
+      "goEvidence": "IDA",
+      "evidenceCode": "ECO:0000314",
+      "reference": "PMID:32446355",
+      "assignedBy": "UniProt",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20211015",
+      "withFrom": null
+     }
+    ],
+    "by_aspect": {
+     "biological_process": [
+      {
+       "goId": "GO:0008219",
+       "goName": "cell death"
+      },
+      {
+       "goId": "GO:0010150",
+       "goName": "leaf senescence"
+      },
+      {
+       "goId": "GO:0006355",
+       "goName": "regulation of DNA-templated transcription"
+      },
+      {
+       "goId": "GO:0009733",
+       "goName": "response to auxin"
+      },
+      {
+       "goId": "GO:0045892",
+       "goName": "negative regulation of DNA-templated transcription"
+      },
+      {
+       "goId": "GO:0009725",
+       "goName": "response to hormone"
+      }
+     ],
+     "molecular_function": [
+      {
+       "goId": "GO:0000976",
+       "goName": "transcription cis-regulatory region binding"
+      },
+      {
+       "goId": "GO:0003677",
+       "goName": "DNA binding"
+      },
+      {
+       "goId": "GO:0003700",
+       "goName": "DNA-binding transcription factor activity"
+      },
+      {
+       "goId": "GO:0005515",
+       "goName": "protein binding"
+      },
+      {
+       "goId": "GO:0042802",
+       "goName": "identical protein binding"
+      },
+      {
+       "goId": "GO:0043565",
+       "goName": "sequence-specific DNA binding"
+      }
+     ],
+     "cellular_component": [
+      {
+       "goId": "GO:0005634",
+       "goName": "nucleus"
+      },
+      {
+       "goId": "GO:0005737",
+       "goName": "cytoplasm"
+      }
+     ]
+    }
+   },
+   "error": null
+  },
+  {
+   "step": 8,
+   "tool": "interpro_domains",
+   "status": "ok",
+   "elapsed_s": null,
+   "result": {
+    "accession": "Q8L7G0",
+    "found": true,
+    "domain_count": 19,
+    "truncated": false,
+    "domains": [
+     {
+      "accession": "cd10017",
+      "name": "Plant-specific B3-DNA binding domain",
+      "type": "domain",
+      "source_database": "cdd",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 122,
+        "end": 224
+       }
+      ]
+     },
+     {
+      "accession": "G3DSA:2.30.30.1040",
+      "name": null,
+      "type": "homologous_superfamily",
+      "source_database": "cathgene3d",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 287,
+        "end": 360
+       }
+      ]
+     },
+     {
+      "accession": "G3DSA:2.40.330.10",
+      "name": "DNA-binding pseudobarrel domain",
+      "type": "homologous_superfamily",
+      "source_database": "cathgene3d",
+      "interpro": "IPR015300",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 121,
+        "end": 226
+       }
+      ]
+     },
+     {
+      "accession": "G3DSA:3.10.20.90",
+      "name": "Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1",
+      "type": "homologous_superfamily",
+      "source_database": "cathgene3d",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 537,
+        "end": 631
+       }
+      ]
+     },
+     {
+      "accession": "IPR003340",
+      "name": "B3 DNA binding domain",
+      "type": "domain",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": [
+       {
+        "identifier": "GO:0003677",
+        "name": "DNA binding",
+        "category": {
+         "code": "F",
+         "name": "molecular_function"
+        }
+       }
+      ],
+      "locations": [
+       {
+        "start": 122,
+        "end": 226
+       }
+      ]
+     },
+     {
+      "accession": "IPR010525",
+      "name": "Auxin response factor domain",
+      "type": "domain",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": [
+       {
+        "identifier": "GO:0003677",
+        "name": "DNA binding",
+        "category": {
+         "code": "F",
+         "name": "molecular_function"
+        }
+       },
+       {
+        "identifier": "GO:0006355",
+        "name": "regulation of DNA-templated transcription",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       },
+       {
+        "identifier": "GO:0009725",
+        "name": "response to hormone",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       },
+       {
+        "identifier": "GO:0005634",
+        "name": "nucleus",
+        "category": {
+         "code": "C",
+         "name": "cellular_component"
+        }
+       }
+      ],
+      "locations": [
+       {
+        "start": 273,
+        "end": 355
+       }
+      ]
+     },
+     {
+      "accession": "IPR015300",
+      "name": "DNA-binding pseudobarrel domain superfamily",
+      "type": "homologous_superfamily",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 113,
+        "end": 253
+       }
+      ]
+     },
+     {
+      "accession": "IPR033389",
+      "name": "AUX/IAA domain",
+      "type": "domain",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 535,
+        "end": 578
+       },
+       {
+        "start": 582,
+        "end": 632
+       }
+      ]
+     },
+     {
+      "accession": "IPR044835",
+      "name": "Auxin response factor",
+      "type": "family",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": [
+       {
+        "identifier": "GO:0003677",
+        "name": "DNA binding",
+        "category": {
+         "code": "F",
+         "name": "molecular_function"
+        }
+       },
+       {
+        "identifier": "GO:0006355",
+        "name": "regulation of DNA-templated transcription",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       },
+       {
+        "identifier": "GO:0009725",
+        "name": "response to hormone",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       }
+      ],
+      "locations": [
+       {
+        "start": 18,
+        "end": 631
+       }
+      ]
+     },
+     {
+      "accession": "IPR053793",
+      "name": "PB1-like domain",
+      "type": "domain",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 542,
+        "end": 635
+       }
+      ]
+     },
+     {
+      "accession": "PF02309",
+      "name": "AUX/IAA family",
+      "type": "family",
+      "source_database": "pfam",
+      "interpro": "IPR033389",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 535,
+        "end": 578
+       },
+       {
+        "start": 582,
+        "end": 632
+       }
+      ]
+     },
+     {
+      "accession": "PF02362",
+      "name": "B3 DNA binding domain",
+      "type": "domain",
+      "source_database": "pfam",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 124,
+        "end": 225
+       }
+      ]
+     },
+     {
+      "accession": "PF06507",
+      "name": "Auxin response factor ancillary domain",
+      "type": "domain",
+      "source_database": "pfam",
+      "interpro": "IPR010525",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 273,
+        "end": 355
+       }
+      ]
+     },
+     {
+      "accession": "PS50863",
+      "name": "B3 DNA-binding domain profile",
+      "type": "domain",
+      "source_database": "profile",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 124,
+        "end": 226
+       }
+      ]
+     },
+     {
+      "accession": "PS51745",
+      "name": "PB1 domain profile",
+      "type": "domain",
+      "source_database": "profile",
+      "interpro": "IPR053793",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 542,
+        "end": 635
+       }
+      ]
+     },
+     {
+      "accession": "PTHR31384",
+      "name": "AUXIN RESPONSE FACTOR 4-RELATED",
+      "type": "family",
+      "source_database": "panther",
+      "interpro": "IPR044835",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 18,
+        "end": 631
+       }
+      ]
+     },
+     {
+      "accession": "SM01019",
+      "name": "B3 DNA binding domain",
+      "type": "domain",
+      "source_database": "smart",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 124,
+        "end": 226
+       }
+      ]
+     },
+     {
+      "accession": "SSF101936",
+      "name": "DNA-binding pseudobarrel domain",
+      "type": "homologous_superfamily",
+      "source_database": "ssf",
+      "interpro": "IPR015300",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 113,
+        "end": 253
+       }
+      ]
+     },
+     {
+      "accession": "SSF54277",
+      "name": "CAD & PB1 domains",
+      "type": "homologous_superfamily",
+      "source_database": "ssf",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 544,
+        "end": 619
+       }
+      ]
+     }
+    ],
+    "count_by_type": {
+     "domain": 10,
+     "homologous_superfamily": 6,
+     "family": 3
+    },
+    "upstream_version": "110.0"
+   },
+   "error": null
+  }
+ ],
+ "result": {
+  "locus": "AT1G59750",
+  "organism": "arabidopsis_thaliana",
+  "canonical_gene_name": "ARF1",
+  "uniprot_accession": "Q8L7G0",
+  "markdown": "# ARF1 \u2014 `AT1G59750`\n\n*Arabidopsis thaliana* \u00b7 protein_coding \u00b7 1:21,979,289\u201321,984,433 (+) \u00b7 TAIR10\n\nauxin response factor 1 [Source:NCBI gene (formerly Entrezgene);Acc:842268]\n\n## Protein\n**Auxin response factor 1**\nARFA_ARATH \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 665 aa\nUniProt: [Q8L7G0](https://www.uniprot.org/uniprotkb/Q8L7G0)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [122\u2013224]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [287\u2013360]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [121\u2013226]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [537\u2013631]\n- **B3 DNA binding domain** (domain, interpro) [122\u2013226]\n- **Auxin response factor domain** (domain, interpro) [273\u2013355]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [113\u2013253]\n- **AUX/IAA domain** (domain, interpro) [535\u2013578, 582\u2013632]\n- **Auxin response factor** (family, interpro) [18\u2013631]\n- **PB1-like domain** (domain, interpro) [542\u2013635]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n- [GO:0003677] DNA binding (IDA)\n- [GO:0003700] DNA-binding transcription factor activity (ISS)\n- [GO:0003700] DNA-binding transcription factor activity (TAS)\n- [GO:0005515] protein binding (IPI)\n- [GO:0005515] protein binding (IPI)\n- [GO:0005515] protein binding (IPI)\n- [GO:0005515] protein binding (IPI)\n- [GO:0005515] protein binding (IPI)\n**Biological Process**\n- [GO:0008219] cell death (IMP)\n- [GO:0010150] leaf senescence (IMP)\n- [GO:0006355] regulation of DNA-templated transcription (TAS)\n- [GO:0009733] response to auxin (IEP)\n- [GO:0010150] leaf senescence (IGI)\n- [GO:0045892] negative regulation of DNA-templated transcription (IEP)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n- [GO:0009733] response to auxin (IBA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n- [GO:0005634] nucleus (ISM)\n- [GO:0005634] nucleus (ISS)\n- [GO:0005634] nucleus (IDA)\n- [GO:0005737] cytoplasm (IEA)\n- [GO:0005737] cytoplasm (IDA)\n\n## Pathways (KEGG)\n- `ath04075` Plant hormone signal transduction - Arabidopsis thaliana (thale cress) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| IAA34 | 0.903 |\n| IAA19 | 0.9 |\n| IAA6 | 0.897 |\n| IAA17 | 0.893 |\n| IAA18 | 0.849 |\n| IAA2 | 0.843 |\n| IAA16 | 0.829 |\n| ARF2-A | 0.804 |\n| AUX1 | 0.795 |\n| IAA3 | 0.793 |\n\n## Cross-references\n- NASC Gene ID: AT1G59750\n- TAIR: AT1G59750\n- TAIR Gene Name: ARF1\n- NCBI gene (formerly Entrezgene): 842268\n- KNETMINER_ARA: AT1G59750\n- Expression Atlas: AT1G59750\n- UniProtKB Gene Name: Q8L7G0\n- WikiGene: 842268\n- UniProtKB Gene Name: F4ID31\n\n## Literature\n_No literature found._\n",
+  "sections": {
+   "annotation": {
+    "object_type": "Gene",
+    "biotype": "protein_coding",
+    "description": "auxin response factor 1 [Source:NCBI gene (formerly Entrezgene);Acc:842268]",
+    "canonical_transcript": "AT1G59750.1.",
+    "assembly_name": "TAIR10",
+    "seq_region_name": "1",
+    "logic_name": "araport11",
+    "db_type": "core",
+    "source": "araport11",
+    "display_name": "ARF1",
+    "strand": 1,
+    "start": 21979289,
+    "end": 21984433,
+    "id": "AT1G59750",
+    "organism": "arabidopsis_thaliana"
+   },
+   "protein": {
+    "locus_query": "AT1G59750",
+    "primaryAccession": "Q8L7G0",
+    "uniProtkbId": "ARFA_ARATH",
+    "entryType": "UniProtKB reviewed (Swiss-Prot)",
+    "reviewed": true,
+    "recommendedName": "Auxin response factor 1",
+    "geneNames": [
+     "ARF1"
+    ],
+    "organism": "Arabidopsis thaliana",
+    "taxonId": 3702,
+    "sequenceLength": 665,
+    "web_url": "https://www.uniprot.org/uniprotkb/Q8L7G0",
+    "upstream_version": "2026_03"
+   },
+   "xrefs": {
+    "locus": "AT1G59750",
+    "organism": "arabidopsis_thaliana",
+    "count": 9,
+    "xrefs": [
+     {
+      "synonyms": [],
+      "info_text": "",
+      "display_id": "AT1G59750-TAIR-G",
+      "primary_id": "AT1G59750",
+      "info_type": "DIRECT",
+      "db_display_name": "NASC Gene ID",
+      "version": "0",
+      "dbname": "NASC_GENE_ID",
+      "description": "auxin response factor 1"
+     },
+     {
+      "synonyms": [],
+      "info_text": "",
+      "display_id": "AT1G59750",
+      "primary_id": "AT1G59750",
+      "info_type": "DIRECT",
+      "version": "0",
+      "db_display_name": "TAIR",
+      "description": "auxin response factor 1",
+      "dbname": "TAIR_LOCUS"
+     },
+     {
+      "primary_id": "ARF1",
+      "info_type": "DIRECT",
+      "db_display_name": "TAIR Gene Name",
+      "version": "0",
+      "dbname": "TAIR_SYMBOL",
+      "description": "",
+      "synonyms": [],
+      "info_text": "",
+      "display_id": "ARF1"
+     },
+     {
+      "synonyms": [
+       "auxin response factor 1",
+       "F23H11.7",
+       "F23H11_7"
+      ],
+      "display_id": "ARF1",
+      "info_text": "",
+      "info_type": "DEPENDENT",
+      "primary_id": "842268",
+      "description": "auxin response factor 1",
+      "dbname": "EntrezGene",
+      "version": "0",
+      "db_display_name": "NCBI gene (formerly Entrezgene)"
+     },
+     {
+      "info_text": "",
+      "display_id": "AT1G59750",
+      "synonyms": [],
+      "db_display_name": "KNETMINER_ARA",
+      "version": "0",
+      "dbname": "KNETMINER_ARA",
+      "description": null,
+      "primary_id": "AT1G59750",
+      "info_type": "DEPENDENT"
+     },
+     {
+      "primary_id": "AT1G59750",
+      "info_type": "DIRECT",
+      "db_display_name": "Expression Atlas",
+      "version": "0",
+      "dbname": "ArrayExpress",
+      "description": null,
+      "synonyms": [],
+      "info_text": "",
+      "display_id": "AT1G59750"
+     },
+     {
+      "dbname": "Uniprot_gn",
+      "description": null,
+      "db_display_name": "UniProtKB Gene Name",
+      "version": null,
+      "info_type": "DEPENDENT",
+      "primary_id": "Q8L7G0",
+      "display_id": "ARF1",
+      "info_text": "",
+      "synonyms": []
+     },
+     {
+      "synonyms": [],
+      "info_text": "",
+      "display_id": "ARF1",
+      "primary_id": "842268",
+      "info_type": "DEPENDENT",
+      "db_display_name": "WikiGene",
+      "version": "0",
+      "dbname": "WikiGene",
+      "description": "auxin response factor 1"
+     },
+     {
+      "primary_id": "F4ID31",
+      "info_type": "DEPENDENT",
+      "db_display_name": "UniProtKB Gene Name",
+      "version": null,
+      "dbname": "Uniprot_gn",
+      "description": null,
+      "synonyms": [],
+      "info_text": "",
+      "display_id": "ARF1"
+     }
+    ],
+    "by_db": {
+     "NASC_GENE_ID": [
+      "AT1G59750"
+     ],
+     "TAIR_LOCUS": [
+      "AT1G59750"
+     ],
+     "TAIR_SYMBOL": [
+      "ARF1"
+     ],
+     "EntrezGene": [
+      "842268"
+     ],
+     "KNETMINER_ARA": [
+      "AT1G59750"
+     ],
+     "ArrayExpress": [
+      "AT1G59750"
+     ],
+     "Uniprot_gn": [
+      "Q8L7G0",
+      "F4ID31"
+     ],
+     "WikiGene": [
+      "842268"
+     ]
+    }
+   },
+   "pathways": {
+    "locus": "AT1G59750",
+    "organism": "arabidopsis_thaliana",
+    "kegg_gene_id": "ath:AT1G59750",
+    "pathways": [
+     {
+      "id": "ath04075",
+      "name": "Plant hormone signal transduction - Arabidopsis thaliana (thale cress)",
+      "pathway_class": "Environmental Information Processing; Signal transduction"
+     }
+    ],
+    "errors": []
+   },
+   "interactions": {
+    "query": "AT1G59750",
+    "accession": "Q8L7G0",
+    "organism": "arabidopsis_thaliana",
+    "partners": [
+     {
+      "string_id": "3702.Q9C5X0",
+      "accession": "3702.Q9C5X0",
+      "preferred_name": "IAA34",
+      "score": 0.903,
+      "escore": 0.45,
+      "dscore": 0.65,
+      "tscore": 0.54,
+      "pscore": 0
+     },
+     {
+      "string_id": "3702.O24409",
+      "accession": "3702.O24409",
+      "preferred_name": "IAA19",
+      "score": 0.9,
+      "escore": 0.292,
+      "dscore": 0.65,
+      "tscore": 0.632,
+      "pscore": 0
+     },
+     {
+      "string_id": "3702.Q38824",
+      "accession": "3702.Q38824",
+      "preferred_name": "IAA6",
+      "score": 0.897,
+      "escore": 0,
+      "dscore": 0.65,
+      "tscore": 0.72,
+      "pscore": 0
+     },
+     {
+      "string_id": "3702.P93830",
+      "accession": "3702.P93830",
+      "preferred_name": "IAA17",
+      "score": 0.893,
+      "escore": 0.392,
+      "dscore": 0.65,
+      "tscore": 0.541,
+      "pscore": 0
+     },
+     {
+      "string_id": "3702.O24408",
+      "accession": "3702.O24408",
+      "preferred_name": "IAA18",
+      "score": 0.849,
+      "escore": 0.45,
+      "dscore": 0.65,
+      "tscore": 0.28,
+      "pscore": 0
+     },
+     {
+      "string_id": "3702.P49678",
+      "accession": "3702.P49678",
+      "preferred_name": "IAA2",
+      "score": 0.843,
+      "escore": 0,
+      "dscore": 0.65,
+      "tscore": 0.572,
+      "pscore": 0
+     },
+     {
+      "string_id": "3702.O24407",
+      "accession": "3702.O24407",
+      "preferred_name": "IAA16",
+      "score": 0.829,
+      "escore": 0.076,
+      "dscore": 0.65,
+      "tscore": 0.513,
+      "pscore": 0
+     },
+     {
+      "string_id": "3702.Q9LQC8",
+      "accession": "3702.Q9LQC8",
+      "preferred_name": "ARF2-A",
+      "score": 0.804,
+      "escore": 0.089,
+      "dscore": 0.084,
+      "tscore": 0.785,
+      "pscore": 0
+     },
+     {
+      "string_id": "3702.Q96247",
+      "accession": "3702.Q96247",
+      "preferred_name": "AUX1",
+      "score": 0.795,
+      "escore": 0,
+      "dscore": 0,
+      "tscore": 0.795,
+      "pscore": 0
+     },
+     {
+      "string_id": "3702.Q38822",
+      "accession": "3702.Q38822",
+      "preferred_name": "IAA3",
+      "score": 0.793,
+      "escore": 0,
+      "dscore": 0.65,
+      "tscore": 0.435,
+      "pscore": 0
+     }
+    ]
+   },
+   "literature": {
+    "locus": "AT1G59750",
+    "organism": "arabidopsis_thaliana",
+    "query": "AT1G59750",
+    "hitCount": 0,
+    "returned": 0,
+    "abstracts_included": true,
+    "hits": []
+   },
+   "go_annotations": {
+    "uniprot_accession": "Q8L7G0",
+    "numberOfHits": 34,
+    "returned": 34,
+    "annotations": [
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "acts_upstream_of",
+      "goId": "GO:0008219",
+      "goName": "cell death",
+      "goAspect": "biological_process",
+      "goEvidence": "IMP",
+      "evidenceCode": "ECO:0000315",
+      "reference": "PMID:32446355",
+      "assignedBy": "UniProt",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20211015",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "acts_upstream_of",
+      "goId": "GO:0010150",
+      "goName": "leaf senescence",
+      "goAspect": "biological_process",
+      "goEvidence": "IMP",
+      "evidenceCode": "ECO:0000315",
+      "reference": "PMID:32446355",
+      "assignedBy": "UniProt",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20211015",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "acts_upstream_of_or_within",
+      "goId": "GO:0006355",
+      "goName": "regulation of DNA-templated transcription",
+      "goAspect": "biological_process",
+      "goEvidence": "TAS",
+      "evidenceCode": "ECO:0000304",
+      "reference": "PMID:9188533",
+      "assignedBy": "TIGR",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20030417",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "acts_upstream_of_or_within",
+      "goId": "GO:0009733",
+      "goName": "response to auxin",
+      "goAspect": "biological_process",
+      "goEvidence": "IEP",
+      "evidenceCode": "ECO:0000270",
+      "reference": "PMID:9188533",
+      "assignedBy": "TAIR",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20030328",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "acts_upstream_of_or_within",
+      "goId": "GO:0010150",
+      "goName": "leaf senescence",
+      "goAspect": "biological_process",
+      "goEvidence": "IGI",
+      "evidenceCode": "ECO:0000316",
+      "reference": "PMID:16176952",
+      "assignedBy": "TAIR",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20080822",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G62000"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "acts_upstream_of_or_within",
+      "goId": "GO:0045892",
+      "goName": "negative regulation of DNA-templated transcription",
+      "goAspect": "biological_process",
+      "goEvidence": "IEP",
+      "evidenceCode": "ECO:0000270",
+      "reference": "PMID:16176952",
+      "assignedBy": "TAIR",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20110321",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0000976",
+      "goName": "transcription cis-regulatory region binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19220"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19850"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G34310"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G34390"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G77850"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT2G33860"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT2G46530"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT3G61830"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT4G23980"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G37020"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G60450"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN000774836"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0003677",
+      "goName": "DNA binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000256",
+      "reference": "GO_REF:0000002",
+      "assignedBy": "InterPro",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR003340"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR044835"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0003677",
+      "goName": "DNA binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IDA",
+      "evidenceCode": "ECO:0000314",
+      "reference": "PMID:10476078",
+      "assignedBy": "TAIR",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20061004",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0003700",
+      "goName": "DNA-binding transcription factor activity",
+      "goAspect": "molecular_function",
+      "goEvidence": "ISS",
+      "evidenceCode": "ECO:0000250",
+      "reference": "PMID:11118137",
+      "assignedBy": "TAIR",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20030606",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0003700",
+      "goName": "DNA-binding transcription factor activity",
+      "goAspect": "molecular_function",
+      "goEvidence": "TAS",
+      "evidenceCode": "ECO:0000304",
+      "reference": "PMID:9188533",
+      "assignedBy": "TIGR",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20030417",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0005515",
+      "goName": "protein binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IPI",
+      "evidenceCode": "ECO:0000353",
+      "reference": "PMID:17675404",
+      "assignedBy": "IntAct",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260725",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q9SN12"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0005515",
+      "goName": "protein binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IPI",
+      "evidenceCode": "ECO:0000353",
+      "reference": "PMID:22096563",
+      "assignedBy": "IntAct",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260725",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q9C5W9"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0005515",
+      "goName": "protein binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IPI",
+      "evidenceCode": "ECO:0000353",
+      "reference": "PMID:22096563",
+      "assignedBy": "IntAct",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260725",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q9XED8"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0005515",
+      "goName": "protein binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IPI",
+      "evidenceCode": "ECO:0000353",
+      "reference": "PMID:28650476",
+      "assignedBy": "IntAct",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260725",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q94JM3"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0005515",
+      "goName": "protein binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IPI",
+      "evidenceCode": "ECO:0000353",
+      "reference": "PMID:28650476",
+      "assignedBy": "IntAct",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260725",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q9C5W9"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0005515",
+      "goName": "protein binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IPI",
+      "evidenceCode": "ECO:0000353",
+      "reference": "PMID:28650476",
+      "assignedBy": "IntAct",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260725",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q9C5X0"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0005515",
+      "goName": "protein binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IPI",
+      "evidenceCode": "ECO:0000353",
+      "reference": "PMID:28650476",
+      "assignedBy": "IntAct",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260725",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q9XED8"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0005515",
+      "goName": "protein binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IPI",
+      "evidenceCode": "ECO:0000353",
+      "reference": "PMID:32446355",
+      "assignedBy": "UniProt",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20211015",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q9SK71"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0042802",
+      "goName": "identical protein binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IPI",
+      "evidenceCode": "ECO:0000353",
+      "reference": "PMID:22096563",
+      "assignedBy": "IntAct",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260725",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q8L7G0"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0042802",
+      "goName": "identical protein binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IPI",
+      "evidenceCode": "ECO:0000353",
+      "reference": "PMID:24485461",
+      "assignedBy": "IntAct",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260725",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q8L7G0"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "enables",
+      "goId": "GO:0043565",
+      "goName": "sequence-specific DNA binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IDA",
+      "evidenceCode": "ECO:0000314",
+      "reference": "PMID:9188533",
+      "assignedBy": "TAIR",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20210922",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "involved_in",
+      "goId": "GO:0006355",
+      "goName": "regulation of DNA-templated transcription",
+      "goAspect": "biological_process",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000256",
+      "reference": "GO_REF:0000002",
+      "assignedBy": "InterPro",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR044835"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "involved_in",
+      "goId": "GO:0006355",
+      "goName": "regulation of DNA-templated transcription",
+      "goAspect": "biological_process",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19850"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G59750"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G20730"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G62000"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN000774836"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "involved_in",
+      "goId": "GO:0009725",
+      "goName": "response to hormone",
+      "goAspect": "biological_process",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000256",
+      "reference": "GO_REF:0000002",
+      "assignedBy": "InterPro",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR044835"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "involved_in",
+      "goId": "GO:0009733",
+      "goName": "response to auxin",
+      "goAspect": "biological_process",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G59750"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN004817213"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "involved_in",
+      "goId": "GO:0010150",
+      "goName": "leaf senescence",
+      "goAspect": "biological_process",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G59750"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN004817213"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "is_active_in",
+      "goId": "GO:0005634",
+      "goName": "nucleus",
+      "goAspect": "cellular_component",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260529",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19220"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G30330"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G59750"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT2G33860"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT4G30080"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G20730"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G62000"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN000774836"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "K4DF01"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q2LAJ3"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "located_in",
+      "goId": "GO:0005634",
+      "goName": "nucleus",
+      "goAspect": "cellular_component",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000501",
+      "reference": "GO_REF:0000120",
+      "assignedBy": "UniProt",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB-SubCell",
+          "id": "SL-0191"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "located_in",
+      "goId": "GO:0005634",
+      "goName": "nucleus",
+      "goAspect": "cellular_component",
+      "goEvidence": "ISM",
+      "evidenceCode": "ECO:0000255",
+      "reference": "GO_REF:0000122",
+      "assignedBy": "TAIR",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20180831",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "located_in",
+      "goId": "GO:0005634",
+      "goName": "nucleus",
+      "goAspect": "cellular_component",
+      "goEvidence": "ISS",
+      "evidenceCode": "ECO:0000250",
+      "reference": "PMID:10318972",
+      "assignedBy": "TAIR",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20020501",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "located_in",
+      "goId": "GO:0005634",
+      "goName": "nucleus",
+      "goAspect": "cellular_component",
+      "goEvidence": "IDA",
+      "evidenceCode": "ECO:0000314",
+      "reference": "PMID:32446355",
+      "assignedBy": "UniProt",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20211015",
+      "withFrom": null
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "located_in",
+      "goId": "GO:0005737",
+      "goName": "cytoplasm",
+      "goAspect": "cellular_component",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0007322",
+      "reference": "GO_REF:0000044",
+      "assignedBy": "UniProt",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB-SubCell",
+          "id": "SL-0086"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:Q8L7G0",
+      "symbol": "ARF1",
+      "qualifier": "located_in",
+      "goId": "GO:0005737",
+      "goName": "cytoplasm",
+      "goAspect": "cellular_component",
+      "goEvidence": "IDA",
+      "evidenceCode": "ECO:0000314",
+      "reference": "PMID:32446355",
+      "assignedBy": "UniProt",
+      "taxonId": 3702,
+      "taxonName": "Arabidopsis thaliana",
+      "date": "20211015",
+      "withFrom": null
+     }
+    ],
+    "by_aspect": {
+     "biological_process": [
+      {
+       "goId": "GO:0008219",
+       "goName": "cell death"
+      },
+      {
+       "goId": "GO:0010150",
+       "goName": "leaf senescence"
+      },
+      {
+       "goId": "GO:0006355",
+       "goName": "regulation of DNA-templated transcription"
+      },
+      {
+       "goId": "GO:0009733",
+       "goName": "response to auxin"
+      },
+      {
+       "goId": "GO:0045892",
+       "goName": "negative regulation of DNA-templated transcription"
+      },
+      {
+       "goId": "GO:0009725",
+       "goName": "response to hormone"
+      }
+     ],
+     "molecular_function": [
+      {
+       "goId": "GO:0000976",
+       "goName": "transcription cis-regulatory region binding"
+      },
+      {
+       "goId": "GO:0003677",
+       "goName": "DNA binding"
+      },
+      {
+       "goId": "GO:0003700",
+       "goName": "DNA-binding transcription factor activity"
+      },
+      {
+       "goId": "GO:0005515",
+       "goName": "protein binding"
+      },
+      {
+       "goId": "GO:0042802",
+       "goName": "identical protein binding"
+      },
+      {
+       "goId": "GO:0043565",
+       "goName": "sequence-specific DNA binding"
+      }
+     ],
+     "cellular_component": [
+      {
+       "goId": "GO:0005634",
+       "goName": "nucleus"
+      },
+      {
+       "goId": "GO:0005737",
+       "goName": "cytoplasm"
+      }
+     ]
+    }
+   },
+   "domains": {
+    "accession": "Q8L7G0",
+    "found": true,
+    "domain_count": 19,
+    "truncated": false,
+    "domains": [
+     {
+      "accession": "cd10017",
+      "name": "Plant-specific B3-DNA binding domain",
+      "type": "domain",
+      "source_database": "cdd",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 122,
+        "end": 224
+       }
+      ]
+     },
+     {
+      "accession": "G3DSA:2.30.30.1040",
+      "name": null,
+      "type": "homologous_superfamily",
+      "source_database": "cathgene3d",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 287,
+        "end": 360
+       }
+      ]
+     },
+     {
+      "accession": "G3DSA:2.40.330.10",
+      "name": "DNA-binding pseudobarrel domain",
+      "type": "homologous_superfamily",
+      "source_database": "cathgene3d",
+      "interpro": "IPR015300",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 121,
+        "end": 226
+       }
+      ]
+     },
+     {
+      "accession": "G3DSA:3.10.20.90",
+      "name": "Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1",
+      "type": "homologous_superfamily",
+      "source_database": "cathgene3d",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 537,
+        "end": 631
+       }
+      ]
+     },
+     {
+      "accession": "IPR003340",
+      "name": "B3 DNA binding domain",
+      "type": "domain",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": [
+       {
+        "identifier": "GO:0003677",
+        "name": "DNA binding",
+        "category": {
+         "code": "F",
+         "name": "molecular_function"
+        }
+       }
+      ],
+      "locations": [
+       {
+        "start": 122,
+        "end": 226
+       }
+      ]
+     },
+     {
+      "accession": "IPR010525",
+      "name": "Auxin response factor domain",
+      "type": "domain",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": [
+       {
+        "identifier": "GO:0003677",
+        "name": "DNA binding",
+        "category": {
+         "code": "F",
+         "name": "molecular_function"
+        }
+       },
+       {
+        "identifier": "GO:0006355",
+        "name": "regulation of DNA-templated transcription",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       },
+       {
+        "identifier": "GO:0009725",
+        "name": "response to hormone",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       },
+       {
+        "identifier": "GO:0005634",
+        "name": "nucleus",
+        "category": {
+         "code": "C",
+         "name": "cellular_component"
+        }
+       }
+      ],
+      "locations": [
+       {
+        "start": 273,
+        "end": 355
+       }
+      ]
+     },
+     {
+      "accession": "IPR015300",
+      "name": "DNA-binding pseudobarrel domain superfamily",
+      "type": "homologous_superfamily",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 113,
+        "end": 253
+       }
+      ]
+     },
+     {
+      "accession": "IPR033389",
+      "name": "AUX/IAA domain",
+      "type": "domain",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 535,
+        "end": 578
+       },
+       {
+        "start": 582,
+        "end": 632
+       }
+      ]
+     },
+     {
+      "accession": "IPR044835",
+      "name": "Auxin response factor",
+      "type": "family",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": [
+       {
+        "identifier": "GO:0003677",
+        "name": "DNA binding",
+        "category": {
+         "code": "F",
+         "name": "molecular_function"
+        }
+       },
+       {
+        "identifier": "GO:0006355",
+        "name": "regulation of DNA-templated transcription",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       },
+       {
+        "identifier": "GO:0009725",
+        "name": "response to hormone",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       }
+      ],
+      "locations": [
+       {
+        "start": 18,
+        "end": 631
+       }
+      ]
+     },
+     {
+      "accession": "IPR053793",
+      "name": "PB1-like domain",
+      "type": "domain",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 542,
+        "end": 635
+       }
+      ]
+     },
+     {
+      "accession": "PF02309",
+      "name": "AUX/IAA family",
+      "type": "family",
+      "source_database": "pfam",
+      "interpro": "IPR033389",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 535,
+        "end": 578
+       },
+       {
+        "start": 582,
+        "end": 632
+       }
+      ]
+     },
+     {
+      "accession": "PF02362",
+      "name": "B3 DNA binding domain",
+      "type": "domain",
+      "source_database": "pfam",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 124,
+        "end": 225
+       }
+      ]
+     },
+     {
+      "accession": "PF06507",
+      "name": "Auxin response factor ancillary domain",
+      "type": "domain",
+      "source_database": "pfam",
+      "interpro": "IPR010525",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 273,
+        "end": 355
+       }
+      ]
+     },
+     {
+      "accession": "PS50863",
+      "name": "B3 DNA-binding domain profile",
+      "type": "domain",
+      "source_database": "profile",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 124,
+        "end": 226
+       }
+      ]
+     },
+     {
+      "accession": "PS51745",
+      "name": "PB1 domain profile",
+      "type": "domain",
+      "source_database": "profile",
+      "interpro": "IPR053793",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 542,
+        "end": 635
+       }
+      ]
+     },
+     {
+      "accession": "PTHR31384",
+      "name": "AUXIN RESPONSE FACTOR 4-RELATED",
+      "type": "family",
+      "source_database": "panther",
+      "interpro": "IPR044835",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 18,
+        "end": 631
+       }
+      ]
+     },
+     {
+      "accession": "SM01019",
+      "name": "B3 DNA binding domain",
+      "type": "domain",
+      "source_database": "smart",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 124,
+        "end": 226
+       }
+      ]
+     },
+     {
+      "accession": "SSF101936",
+      "name": "DNA-binding pseudobarrel domain",
+      "type": "homologous_superfamily",
+      "source_database": "ssf",
+      "interpro": "IPR015300",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 113,
+        "end": 253
+       }
+      ]
+     },
+     {
+      "accession": "SSF54277",
+      "name": "CAD & PB1 domains",
+      "type": "homologous_superfamily",
+      "source_database": "ssf",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 544,
+        "end": 619
+       }
+      ]
+     }
+    ],
+    "count_by_type": {
+     "domain": 10,
+     "homologous_superfamily": 6,
+     "family": 3
+    },
+    "upstream_version": "110.0"
+   }
+  }
+ }
+}

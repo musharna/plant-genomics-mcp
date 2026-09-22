@@ -1,0 +1,27 @@
+{
+ "tool": "kegg_pathways",
+ "count": 6,
+ "results": {
+  "Os04g0671900": {
+   "locus": "Os04g0671900",
+   "organism": "oryza_sativa",
+   "kegg_gene_id": "osa:4337363",
+   "pathways": [
+    {
+     "id": "osa04075",
+     "name": "Plant hormone signal transduction - Oryza sativa japonica (Japanese rice)",
+     "pathway_class": "Environmental Information Processing; Signal transduction"
+    }
+   ],
+   "errors": [],
+   "entrez_gene_id": "4337363"
+  }
+ },
+ "errors": {
+  "Os01g0236300": "[NotFoundError] KEGG: no pathway memberships for Os01g0236300 (queried as osa:4327785)",
+  "Os02g0141100": "[NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os02g0141100 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene",
+  "Os06g0196700": "[NotFoundError] KEGG: no pathway memberships for Os06g0196700 (queried as osa:9270361)",
+  "Os08g0520500": "[NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os08g0520500 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene",
+  "Os08g0520550": "[NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os08g0520550 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene"
+ }
+}
