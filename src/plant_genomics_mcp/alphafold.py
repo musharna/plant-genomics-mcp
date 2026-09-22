@@ -30,6 +30,13 @@ MAX_RETRIES = 3
 _CACHE = cache.TTLCache()
 
 
+def _version_str(value: Any) -> str | None:
+    """AlphaFold sends latestVersion as an int (6); the shared key is a string."""
+    if value is None or value == "":
+        return None
+    return str(value)
+
+
 def _empty(accession: str) -> dict[str, Any]:
     """Result for an accession with no predicted model (404 / empty array)."""
     return {
@@ -47,6 +54,7 @@ def _empty(accession: str) -> dict[str, Any]:
         "cif_url": None,
         "pdb_url": None,
         "pae_image_url": None,
+        "upstream_version": None,
     }
 
 
@@ -74,6 +82,10 @@ def _project(accession: str, entry: dict[str, Any]) -> dict[str, Any]:
         "cif_url": entry.get("cifUrl"),
         "pdb_url": entry.get("pdbUrl"),
         "pae_image_url": entry.get("paeImageUrl"),
+        # Issue #121: the entry's own latestVersion is the AlphaFold DB release
+        # of THIS model, stated by the answering payload; stringified so the
+        # key reads the same across tools.
+        "upstream_version": _version_str(entry.get("latestVersion")),
     }
 
 

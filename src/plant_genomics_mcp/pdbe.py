@@ -45,6 +45,7 @@ def _empty(accession: str) -> dict[str, Any]:
         "structure_count": 0,
         "truncated": False,
         "structures": [],
+        "upstream_version": None,
     }
 
 
@@ -114,6 +115,9 @@ async def lookup_by_uniprot(client: httpx.AsyncClient, accession: str) -> dict[s
         "structure_count": total,
         "truncated": total > MAX_STRUCTURES,
         "structures": structures,
+        # Issue #121: uniform key; null because this backend states no release on
+        # the answering response (headers probed live 2026-09-22).
+        "upstream_version": None,
     }
 
 

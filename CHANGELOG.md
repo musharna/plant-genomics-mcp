@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- **Every chain tool carries `upstream_version` (#121).** The ARF dossier
+  found the key on 3 of 16 tools and a release under a private key on three
+  more. Now `gramene_homologs` reports the release pinned in its request path
+  (`v69`), `atted_coexpression` the `db=` it asked for (`Ath-u.c4-0`) and
+  `alphafold_structure` the entry's own `latestVersion` (`'6'`), each keeping
+  its old key; the ten backends whose answering response states no release
+  (headers probed live 2026-09-22: Ensembl, Europe PMC, QuickGO, PDBe, JASPAR,
+  PANTHER, OrthoDB, AraGWAS, KEGG, STRING) carry the key as `null` rather
+  than omitting it, so one pass reads every tool. A separate `/info` call is
+  still never consulted — it can describe a different release than the one
+  that answered.
+- **Fixed: the `gramene_homologs` and `orthodb_orthologs` output schemas
+  contradicted their filtered results.** The `target_organism` keys added
+  above (#125) were missing from the `additionalProperties: false` output
+  models the server advertises; a client validating against `outputSchema`
+  would have rejected every filtered answer.
 - **`gramene_homologs`, `batch_gramene_homologs` and `orthodb_orthologs`
   take `target_organism` (#125).** The filter runs BEFORE the cap, so a hub
   gene's rice or wheat orthologs can no longer be pushed past `limit` by

@@ -138,4 +138,7 @@ async def lookup_coexpression(
         "locus": locus,
         "atted_release": release,
         "neighbors": neighbors,
+        # Issue #121: db= is pinned in the request, so this is the release that
+        # answered by construction; kept under atted_release too for callers.
+        "upstream_version": release,
     }

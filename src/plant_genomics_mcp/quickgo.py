@@ -140,4 +140,7 @@ async def lookup_by_uniprot(
         "returned": len(annotations),
         "annotations": annotations,
         "by_aspect": _rollup_by_aspect(annotations),
+        # Issue #121: uniform key; null because this backend states no release on
+        # the answering response (headers probed live 2026-09-22).
+        "upstream_version": None,
     }

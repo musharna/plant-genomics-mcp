@@ -140,6 +140,7 @@ def _empty(locus: str, organism: str) -> dict[str, Any]:
         "member_count": 0,
         "truncated": False,
         "members": [],
+        "upstream_version": None,
     }
 
 
@@ -192,6 +193,9 @@ async def lookup_locus(
             "member_count": member_total,
             "truncated": member_total > len(members),
             "members": members,
+            # Issue #121: uniform key; /current/ names no release and the
+            # response states none (headers probed live 2026-09-22).
+            "upstream_version": None,
         }
 
     wanted = [
@@ -213,4 +217,5 @@ async def lookup_locus(
         "member_count_all_organisms": all_total,
         "truncated": member_total > len(members),
         "members": members,
+        "upstream_version": None,
     }

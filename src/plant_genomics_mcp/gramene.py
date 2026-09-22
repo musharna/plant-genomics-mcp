@@ -269,6 +269,9 @@ async def lookup_homologs(
             "total": total,
             "truncated": total > len(rows),
             "homologs": rows,
+            # Issue #121: the release is pinned in the request path, so it is
+            # the release that answered by construction.
+            "upstream_version": GRAMENE_RELEASE,
         }
 
     species = await fetch_homolog_enrichment_batch(
@@ -288,4 +291,5 @@ async def lookup_homologs(
         "total_all_organisms": len(normalized),
         "truncated": len(kept) > len(rows),
         "homologs": rows,
+        "upstream_version": GRAMENE_RELEASE,
     }

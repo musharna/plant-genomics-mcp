@@ -261,6 +261,9 @@ async def lookup_pathways(
         "kegg_gene_id": gene_id,
         "pathways": pathways,
         "errors": errors,
+        # Issue #121: uniform key; null because this backend states no release on
+        # the answering response (headers probed live 2026-09-22).
+        "upstream_version": None,
     }
     if entrez_gene_id is not None:
         result["entrez_gene_id"] = entrez_gene_id

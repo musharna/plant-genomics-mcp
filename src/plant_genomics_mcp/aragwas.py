@@ -153,4 +153,7 @@ async def lookup_locus(
         # covers a null/absent upstream count where more pages remain (audit L3).
         "truncated": total > len(associations) or url is not None,
         "associations": associations,
+        # Issue #121: uniform key; null because this backend states no release on
+        # the answering response (headers probed live 2026-09-22).
+        "upstream_version": None,
     }

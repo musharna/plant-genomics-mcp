@@ -152,4 +152,7 @@ async def lookup_partners(
         "accession": canonical_accession,
         "organism": record.canonical,
         "partners": partners,
+        # Issue #121: uniform key; null because this backend states no release on
+        # the answering response (headers probed live 2026-09-22).
+        "upstream_version": None,
     }
