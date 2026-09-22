@@ -62,6 +62,14 @@ organisms_sorted <- sort(unique(calls$organism))
 stopifnot(length(organisms_sorted) <= 3)
 organism_offset <- setNames(c(-0.25, 0, 0.25)[seq_along(organisms_sorted)], organisms_sorted)
 calls$y <- as.numeric(calls$tool) + organism_offset[calls$organism]
+# Exact ties inside one organism — the same tool answering the same byte
+# count on several calls (e.g. six identical 210 B refusals) — would draw
+# as one point and make the page's counts unverifiable (the task-5 lesson,
+# regressed once when the per-gene offset became a per-organism one).
+# Each tied point gets a deterministic nudge by its rank within the tie.
+tie_key <- paste(calls$tool, calls$organism, calls$n_bytes)
+tie_rank <- ave(seq_along(tie_key), tie_key, FUN = seq_along) - 1
+calls$y <- calls$y + 0.08 * tie_rank  # 6 ties span 0.4 of a row; points are ~0.07 wide
 calls$organism <- factor(calls$organism, levels = organisms_sorted)
 if (is.null(calls$kind)) calls$kind <- ifelse(calls$ok, "ok", "error")
 calls$expected <- calls$kind == "expected"
@@ -82,7 +90,7 @@ title_line1 <- sprintf(
   fold, format(min_bytes, big.mark = ","), round(max_bytes / 1000)
 )
 title_line2 <- sprintf(
-  "only %d of %d chain tools name the release under upstream_version",
+  "%d of %d tools called name the release under upstream_version",
   n_upstream_field, n_chain
 )
 

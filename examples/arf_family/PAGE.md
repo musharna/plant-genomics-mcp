@@ -8,7 +8,7 @@ _Triticum aestivum_ members the tools could name and verify — in a
 single sitting: every response captured to [`raw/`](raw), and every
 place an answer came back unusable, inconsistent or silently short
 written down as it was found. It is a showcase and a defect list at the
-same time. The recipes below are what the tools do well; the 48 rows
+same time. The recipes below are what the tools do well; the 49 rows
 under **Known gaps** are what they do not.
 
 Provenance: run 2026-09-21 against server version `1.21.0` — 248 MCP
@@ -20,7 +20,10 @@ errors, 3.9 minutes wall. The family itself came from a separate
 [`enumeration_calls.jsonl`](enumeration_calls.jsonl)): the three
 starting loci in [`genes.tsv`](genes.tsv), then every candidate the
 tools could reach, each decided by `interpro_domains` and recorded in
-[`family_candidates.tsv`](family_candidates.tsv) whether kept or not.
+[`family_candidates.tsv`](family_candidates.tsv) whether kept or not —
+325 candidates, of which 2 could not be decided (InterPro answered an
+empty body; `candidate-undecidable` below), so the 23 is 23 of a
+possible 25.
 Chain [`chain.py`](chain.py), per-call log [`calls.jsonl`](calls.jsonl),
 captured responses [`raw/`](raw).
 
@@ -228,7 +231,7 @@ nowhere yet.
 
 ## Known gaps
 
-All 48 rows the run logged, one line each: what was attempted, what came back, what was expected instead. Full text and the raw response each row was read from are in [`gaps.jsonl`](gaps.jsonl) and [`gaps_auto.jsonl`](gaps_auto.jsonl).
+All 49 rows the run logged, one line each: what was attempted, what came back, what was expected instead. Full text and the raw response each row was read from are in [`gaps.jsonl`](gaps.jsonl) and [`gaps_auto.jsonl`](gaps_auto.jsonl).
 
 ### Defects in this tool
 
@@ -256,7 +259,7 @@ All 48 rows the run logged, one line each: what was attempted, what came back, w
 - **`interpro_domains`** (family-enumeration-cost) — 52 ensembl_region_query calls (5 chromosomes in 4 Mb windows, 8 of the 52 failed: HTTP 500 or ReadTimeout after the… — expected: a tool that takes IPR010525 (or PTHR31384) and an organism and returns the loci
 - **several tools** (no-assembly-metadata) — no tool reports seq-region names or lengths. The walk learns them from error text: region '6' answers HTTP 400 'No… — expected: a tool, or a field on ensembl_plants_lookup_locus, that lists an assembly's seq-regions and their lengths
 - **`gramene_homologs`** (ortholog-cap-hides-organisms) — gramene_homologs: total 177 / 211 / 340 for the three seeds, 100 returned, and zero rows shaped like a rice or wheat… — expected: a target-organism filter on both tools, or pagination, so a cap of 100 cannot silently exclude the organism asked for
-- **several tools** (ortholog-tools-disagree) — one disagreement class, not a per-gene one: gramene_homologs names a rice or wheat locus for 19 of 26 queries… — expected: both tools answering for the organism asked, so agreement is measurable
+- **several tools** (ortholog-tools-disagree) — one disagreement class, not a per-gene one: gramene_homologs names a rice or wheat locus for 16 of 26 queries… — expected: both tools answering for the organism asked, so agreement is measurable
 - **`kegg_pathways`** (batch-refusal-shape) — the single tool is an isError result: '[OrganismNotSupported] backend kegg has no ID for triticum_aestivum'. The batch… — expected: one refusal shape for the two forms of one tool, and descriptions that match the organism list the error prints
 - **`kegg_pathways`** (empty-as-error) — an empty answer is an error: kegg_pathways answers '[NotFoundError] KEGG: no pathway memberships for Os01g0236300… — expected: an ok result with an empty list and the count 0, the shape locus_literature already uses for hitCount 0
 - **`gramene_homologs`** (oversize) — 23 loci: over 200 kB on the wire (batch), largest 506333 bytes — expected: a usable answer within 200 kB
@@ -286,6 +289,7 @@ All 48 rows the run logged, one line each: what was attempted, what came back, w
 - **`gramene_homologs`** (paralog-closure-empty) — total 0 and an empty homologs list for AT1G19850 and AT1G59750; 3 hits for AT2G28350 (AT4G30080, AT1G77850… — expected: the in-species paralogs of a locus, or a statement that the projection has none
 - **`interpro_domains`** (wheat-locus-unresolvable) — all 8 fail the same way: '[NotFoundError] UniProt has no entry for gene=TraesCS3A02G159200 organism_id=4565'… — expected: either a resolution path for IWGSC gene ids or an error that says the id form is not indexed
 - **`locus_literature`** (silent-empty-result) — hitCount 0, returned 0 and an empty hits list for 6 of the 23 loci in the run (AT1G19850, AT1G59750, AT2G46530… — expected: an upstream status on every answer, so an empty list carries whether the source answered
+- **`interpro_domains`** (candidate-undecidable) — 2 of the 325 could not be decided: AT1G01335 and AT2G36920 answer 'InterPro entry/protein → HTTP 204: ' - an empty… — expected: a found=false answer with a stated reason, so 'no record' and 'no answer' are different results
 
 ## Cite
 

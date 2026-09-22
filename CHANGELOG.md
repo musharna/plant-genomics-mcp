@@ -9,7 +9,7 @@
   `interpro_domains` as the arbiter on 325 candidates), plus the 6 rice and
   0 wheat members the ortholog tools could name and verify — 248 MCP calls,
   every response captured under `raw/`, a per-tool coverage table and
-  figure, and 48 logged gaps rendered onto `PAGE.md` by `render_gaps.py`
+  figure, and 49 logged gaps rendered onto `PAGE.md` by `render_gaps.py`
   with 19 issue drafts (not filed). Findings that came out of scaling up:
   both ortholog tools cap at 100 rows with no target-organism filter, so
   rice and wheat never come back from OrthoDB and rarely from Gramene; no

@@ -1,6 +1,6 @@
 """`PAGE.md`'s gap list is generated, and these tests are what keeps it so.
 
-The page shows all 48 gap rows from the 248-call ARF family dossier run. Hand
+The page shows all 49 gap rows from the 248-call ARF family dossier run. Hand
 typing them would produce a page that is right the day it is written and
 silently wrong afterwards — `gaps.jsonl` has already been corrected once,
 four rows of it, after the first pass filed claims that turned out to be
@@ -192,7 +192,7 @@ def test_every_gap_row_reaches_the_page() -> None:
     """
     hand = read_rows(render_gaps.GAPS_PATH)
     auto = read_rows(render_gaps.GAPS_AUTO_PATH)
-    assert (len(hand), len(auto)) == (39, 9)
+    assert (len(hand), len(auto)) == (40, 9)
 
     section = extract_section(render_gaps.PAGE_PATH.read_text())
     bullets = [line for line in section.splitlines() if line.startswith("- **")]

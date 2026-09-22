@@ -21,6 +21,6 @@ Covers 2 rows of `gaps.jsonl`.
 ## `ortholog-tools-disagree`
 
 - **Attempted:** reconcile the two ortholog tools' answers per Arabidopsis member
-- **Returned:** one disagreement class, not a per-gene one: gramene_homologs names a rice or wheat locus for 19 of 26 queries; orthodb_orthologs names one for 0 of 26. Every disagreement is the cap-by-order effect above, so the union is gramene's answer alone and the table cannot say whether OrthoDB agrees.
+- **Returned:** one disagreement class, not a per-gene one: gramene_homologs names a rice or wheat locus for 16 of 26 queries; orthodb_orthologs names one for 0 of 26. Every disagreement is the cap-by-order effect above, so the union is gramene's answer alone and the table cannot say whether OrthoDB agrees.
 - **Expected:** both tools answering for the organism asked, so agreement is measurable
 - **Check:** `examples/arf_family/ortholog_sources.tsv`

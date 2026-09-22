@@ -9,7 +9,7 @@ captured response to read it back from.
 
 Task 7 of the dossier scaled the three starting loci to the whole family through the tools alone. The brief's route — close over `gramene_homologs` paralogs — stops at 6 loci because the paralog projection is empty for two of the three seeds (`paralog-closure-empty`, origin unverified from inside the MCP). What did work is a genome walk with `ensembl_region_query`, a free-text candidate filter, and `interpro_domains` as the arbiter on every candidate; the two rows below are what that route costs and what it needs that no tool provides. The free-text filter cannot be repeated in rice or wheat, where the description field is null (`free-text-null-outside-arabidopsis`, an upstream value).
 
-Covers 4 rows of `gaps.jsonl`.
+Covers 5 rows of `gaps.jsonl`.
 
 ## `family-enumeration-cost`
 
@@ -35,6 +35,13 @@ Covers 4 rows of `gaps.jsonl`.
 ## `free-text-null-outside-arabidopsis`
 
 - **Attempted:** repeat the region walk's candidate filter in rice and wheat
-- **Returned:** ensembl_region_query 1:1-1000000 on oryza_sativa returns 165 protein-coding genes with description on 1; 1A:1-1000000 on triticum_aestivum returns 17 protein-coding genes with description on 0. The free-text candidate filter that found 23 of 23 Arabidopsis members has nothing to read in either genome, so the walk cannot be repeated there without asking interpro_domains about every gene.
+- **Returned:** ensembl_region_query 1:1-1000000 on oryza_sativa returns 165 protein-coding genes with description on 1; 1A:1-1000000 on triticum_aestivum returns 17 protein-coding genes with description on 0. The free-text candidate filter that found 17 of the 23 Arabidopsis members (the other 6 came from the seeds and the paralog closure) has nothing to read in either genome, so the walk cannot be repeated there without asking interpro_domains about every gene.
 - **Expected:** a structured family or domain field per gene, the same in every organism
 - **Check:** `raw/_probe_region_descriptions.json`
+
+## `candidate-undecidable`
+
+- **Attempted:** decide 325 family candidates with interpro_domains, as enumerate_family.py stage 3
+- **Returned:** 2 of the 325 could not be decided: AT1G01335 and AT2G36920 answer 'InterPro entry/protein → HTTP 204: ' - an empty body from InterPro, surfaced as a failed call with no entry list. They are recorded as kept=undecided in family_candidates.tsv, not as rejected, and the 23-member count carries that margin; whether InterPro has no record for these proteins or answered empty this once cannot be told from the output. The 8 wheat loci are the same state for a different reason (wheat-locus-unresolvable).
+- **Expected:** a found=false answer with a stated reason, so 'no record' and 'no answer' are different results
+- **Check:** `examples/arf_family/family_candidates.tsv, examples/arf_family/enumeration_calls.jsonl`

@@ -57,6 +57,9 @@ FAMILY_GENOME: dict[str, list[dict]] = {
         {"gene_id": "AT1G00020", "biotype": "protein_coding", "description": "unrelated"},
         {"gene_id": "AT1G00030", "biotype": "protein_coding", "description": "B3 family"},
         {"gene_id": "AT1G00040", "biotype": "lncRNA", "description": "auxin lncRNA"},
+        # Matches the filter but has no InterPro fixture: its interpro_domains
+        # call FAILS, which must leave it undecided, not rejected.
+        {"gene_id": "AT1G00070", "biotype": "protein_coding", "description": "auxin, no record"},
     ],
     "2": [
         {"gene_id": "AT2G00010", "biotype": "protein_coding", "description": "B3 family protein"},

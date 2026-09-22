@@ -18,6 +18,7 @@ import asyncio
 import csv
 import io
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -91,6 +92,15 @@ def test_closure_reaches_members_by_paralog_and_by_scan_and_rejects_by_interpro(
         "interpro_entries": "IPR003340",
     }
     assert "AT1G00030" not in by_locus
+    # Third state, same run: a candidate whose interpro_domains call FAILED
+    # is neither kept nor rejected — `undecided`, with the error as its
+    # reason — beside the kept (AT1G00010) and rejected (AT1G00030) rows
+    # above, so the three values are shown to be distinct outcomes.
+    assert cand["AT1G00070"]["kept"] == "undecided"
+    assert cand["AT1G00070"]["interpro_entries"].startswith("call failed: [NotFoundError]")
+    assert cand["AT1G00010"]["kept"] == "true"
+    assert "AT1G00070" not in by_locus
+    assert {r["kept"] for r in candidates} == {"true", "false", "undecided"}
     # ...and a gene the candidate filter never matched, or that is not
     # protein-coding, was never sent to InterPro at all.
     assert "AT1G00020" not in cand
@@ -157,6 +167,47 @@ def test_closure_reaches_members_by_paralog_and_by_scan_and_rejects_by_interpro(
         if c["tool"] == "ensembl_region_query" and c["args"]["region"] == "2"
     ]
     assert windows == [("2", 4_000_000, False), ("2", 2_000_000, True), ("2", 2_000_000, False)]
+
+
+ARF_DIR = Path(__file__).parent.parent / "examples" / "arf_family"
+
+
+def _recount_ortholog_sources() -> dict[str, int]:
+    with open(ARF_DIR / "ortholog_sources.tsv") as f:
+        rows = list(csv.DictReader(f, delimiter="\t"))
+    out = {}
+    for tool in ("gramene_homologs", "orthodb_orthologs"):
+        mine = [r for r in rows if r["tool"] == tool]
+        out[tool] = len({r["query_locus"] for r in mine if r["hits"] != "none"})
+        out[f"{tool}_queries"] = len({r["query_locus"] for r in mine})
+    return out
+
+
+def test_the_ortholog_disagreement_row_matches_a_recount_of_its_own_evidence():
+    """The `ortholog-tools-disagree` gap row says "N of M queries" for each
+    tool; the numbers are re-derived here from the file the row cites.
+    Round 1 of review found 19 written where the file says 16 — a false
+    number in text drafted to become a public issue — because nothing
+    read the row against its evidence."""
+    rows = [json.loads(line) for line in (ARF_DIR / "gaps.jsonl").read_text().splitlines()]
+    row = next(r for r in rows if r["kind"] == "ortholog-tools-disagree")
+    assert "ortholog_sources.tsv" in row["raw"]
+    counts = _recount_ortholog_sources()
+    assert counts["gramene_homologs_queries"] == counts["orthodb_orthologs_queries"]
+    m = counts["gramene_homologs_queries"]
+    claims = dict(
+        re.findall(
+            r"(gramene_homologs|orthodb_orthologs) names (?:a rice or wheat locus|one) for (\d+) of",
+            row["returned"],
+        )
+    )
+    assert set(claims) == {"gramene_homologs", "orthodb_orthologs"}, row["returned"]
+    assert f"of {m} queries" in row["returned"]
+    assert int(claims["gramene_homologs"]) == counts["gramene_homologs"]
+    assert int(claims["orthodb_orthologs"]) == counts["orthodb_orthologs"]
+    # Positive control for the recount: it is not trivially zero or total.
+    assert 0 < counts["gramene_homologs"] < m
+    assert counts["orthodb_orthologs"] == 0
 
 
 def test_a_seed_without_the_family_entry_stops_the_run():

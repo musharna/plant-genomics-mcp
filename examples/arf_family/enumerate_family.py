@@ -25,9 +25,11 @@ Stages, in order:
    upward until a region name is unknown, and learns each length from the
    HTTP 400 Ensembl returns for a window past the end.
 3. **InterPro arbiter** (`interpro_domains`): a candidate is a member iff
-   its InterPro entries include `FAMILY_ENTRY`. Every candidate — kept or
-   rejected — is written to `family_candidates.tsv` with the entries it
-   carries, so the rejections are as checkable as the members.
+   its InterPro entries include `FAMILY_ENTRY`. Every candidate is written
+   to `family_candidates.tsv` with `kept` in `true` / `false` /
+   `undecided` — the last for a candidate whose call failed, which is not
+   a rejection — and the entries it carries, so the rejections are as
+   checkable as the members.
 4. **Orthologs** (`gramene_homologs` with `homology_type="ortholog"` and
    `orthodb_orthologs`): from every accepted member, keep hits that the
    locus-id shape or OrthoDB's own `organism` field places in one of
@@ -72,8 +74,8 @@ RETRY_PAUSE_S = 10.0
 WALLTIME_S = 3 * 3600
 
 # Free text is a candidate filter only (stage 2); InterPro decides (stage 3).
-# `B3` is included because every family member carries a B3 domain and
-# some descriptions name only that, not the family.
+# `B3` is included because some descriptions name only that, not the
+# family.
 CANDIDATE_RE = re.compile(r"auxin|\bARF|\bB3\b", re.IGNORECASE)
 
 # Locus-id shapes per organism, for classifying `gramene_homologs` rows,
@@ -247,11 +249,13 @@ class Enumerator:
         """Query InterPro for `locus`, record the candidate row, return kept."""
         res = await self.call("interpro_domains", {"locus": locus, "organism": organism})
         if not res.ok:
+            # A failed call is not a "no": the candidate stays undecided,
+            # and the member count carries that margin.
             self.candidates[locus] = {
                 "locus": locus,
                 "organism": organism,
                 "source": source,
-                "kept": "false",
+                "kept": "undecided",
                 "interpro_entries": f"call failed: {res.error}"[:300].strip(),
             }
             return False
