@@ -1,11 +1,11 @@
 # A refused organism is an isError on the single tool and an ok envelope on its batch form; both descriptions understate what KEGG covers
 
-**Filed as [#139](https://github.com/musharna/plant-genomics-mcp/issues/139) — open.** Written from the ARF family dossier run in
-[`examples/arf_family/`](../), server version `1.21.0`, 2026-09-21
-(29 genes x 16 tools, 248 MCP calls; the family itself from a 516-call
-enumeration through the same tools). Each section below is one row of
-[`gaps.jsonl`](../gaps.jsonl), quoted as logged; `Check` names the
-captured response to read it back from.
+**Filed as [#139](https://github.com/musharna/plant-genomics-mcp/issues/139) — open.** Written from the ARF family dossier in
+[`examples/arf_family/`](../), re-run at server commit `967bc36`
+(release `1.21.0`): 400 MCP calls over 48 genes x 16 tools, the family
+itself from a 742-call enumeration through the same tools. Each section
+below is one row of [`gaps.jsonl`](../gaps.jsonl), quoted as logged;
+`Check` names the captured response to read it back from.
 
 The runner classifies a documented organism refusal as `expected`, not a gap — but it had to learn two shapes for one refusal. The descriptions also name Arabidopsis as the only organism KEGG resolves, while the error text lists seven, and the rice run did resolve.
 

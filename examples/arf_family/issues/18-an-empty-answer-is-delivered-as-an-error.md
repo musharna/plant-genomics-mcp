@@ -1,11 +1,11 @@
 # KEGG and ATTED-II deliver 'nothing here' as a NotFoundError, so an empty result cannot be told from an unknown gene
 
-**Filed as [#140](https://github.com/musharna/plant-genomics-mcp/issues/140) — open.** Written from the ARF family dossier run in
-[`examples/arf_family/`](../), server version `1.21.0`, 2026-09-21
-(29 genes x 16 tools, 248 MCP calls; the family itself from a 516-call
-enumeration through the same tools). Each section below is one row of
-[`gaps.jsonl`](../gaps.jsonl), quoted as logged; `Check` names the
-captured response to read it back from.
+**Filed as [#140](https://github.com/musharna/plant-genomics-mcp/issues/140) — open.** Written from the ARF family dossier in
+[`examples/arf_family/`](../), re-run at server commit `967bc36`
+(release `1.21.0`): 400 MCP calls over 48 genes x 16 tools, the family
+itself from a 742-call enumeration through the same tools. Each section
+below is one row of [`gaps.jsonl`](../gaps.jsonl), quoted as logged;
+`Check` names the captured response to read it back from.
 
 16 of the 20 locus-level errors in the full-family run are of this kind. `locus_literature` already returns `hitCount: 0` with an empty list for the same situation; the two tools below raise instead.
 

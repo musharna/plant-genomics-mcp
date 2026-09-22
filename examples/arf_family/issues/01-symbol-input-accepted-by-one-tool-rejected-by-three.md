@@ -1,11 +1,11 @@
 # A gene symbol in a `locus` argument is answered by one tool and rejected by three
 
-**Filed as [#128](https://github.com/musharna/plant-genomics-mcp/issues/128) — open.** Written from the ARF family dossier run in
-[`examples/arf_family/`](../), server version `1.21.0`, 2026-09-21
-(29 genes x 16 tools, 248 MCP calls; the family itself from a 516-call
-enumeration through the same tools). Each section below is one row of
-[`gaps.jsonl`](../gaps.jsonl), quoted as logged; `Check` names the
-captured response to read it back from.
+**Filed as [#128](https://github.com/musharna/plant-genomics-mcp/issues/128) — open.** Written from the ARF family dossier in
+[`examples/arf_family/`](../), re-run at server commit `967bc36`
+(release `1.21.0`): 400 MCP calls over 48 genes x 16 tools, the family
+itself from a 742-call enumeration through the same tools. Each section
+below is one row of [`gaps.jsonl`](../gaps.jsonl), quoted as logged;
+`Check` names the captured response to read it back from.
 
 Both rows are the same input — a symbol where an AGI locus code is expected — and the same missing behaviour: nothing on the tool surface decides whether a symbol is a legal `locus` value.
 

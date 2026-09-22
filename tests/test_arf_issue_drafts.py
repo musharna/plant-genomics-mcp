@@ -68,6 +68,29 @@ def test_the_drafts_directory_is_where_the_test_thinks_it_is() -> None:
 
 
 @pytest.mark.parametrize("draft", DRAFTS, ids=lambda p: p.name)
+def test_the_preamble_quotes_the_size_of_the_run_it_was_written_from(draft: Path) -> None:
+    """Every draft opens by stating how big the run was. Recount it.
+
+    These three numbers were typed once, against the first run, and stayed
+    (`248 MCP calls`, `29 genes`, a `516-call` enumeration) through a re-run
+    that made all three wrong — the same class as the page's typed counts,
+    in a file the page's recount test does not read.
+    """
+    arf = GAPS_PATH.parent
+    calls = len([ln for ln in (arf / "calls.jsonl").read_text().splitlines() if ln.strip()])
+    enumeration = len(
+        [ln for ln in (arf / "enumeration_calls.jsonl").read_text().splitlines() if ln.strip()]
+    )
+    genes = len([ln for ln in (arf / "genes.tsv").read_text().splitlines() if ln.strip()]) - 1
+    assert calls and enumeration and genes  # positive control: the evidence is really there
+
+    preamble = draft.read_text().split("## ", 1)[0]
+    assert f"{calls} MCP calls" in preamble, draft.name
+    assert f"{genes} genes" in preamble, draft.name
+    assert f"{enumeration}-call" in preamble, draft.name
+
+
+@pytest.mark.parametrize("draft", DRAFTS, ids=lambda p: p.name)
 def test_every_row_a_draft_quotes_still_says_what_the_gap_log_says(draft: Path) -> None:
     """Each quoted observation, against the row it was copied from."""
     rows = _rows()

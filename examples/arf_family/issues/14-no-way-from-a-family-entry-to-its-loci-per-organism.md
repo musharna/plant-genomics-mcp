@@ -1,11 +1,11 @@
 # No way from an InterPro entry to its loci in an organism: the walk that stands in costs 52 region calls, 325 domain calls and 19 minutes
 
-**Filed as [#124](https://github.com/musharna/plant-genomics-mcp/issues/124) — open.** Written from the ARF family dossier run in
-[`examples/arf_family/`](../), server version `1.21.0`, 2026-09-21
-(29 genes x 16 tools, 248 MCP calls; the family itself from a 516-call
-enumeration through the same tools). Each section below is one row of
-[`gaps.jsonl`](../gaps.jsonl), quoted as logged; `Check` names the
-captured response to read it back from.
+**Filed as [#124](https://github.com/musharna/plant-genomics-mcp/issues/124) — open.** Written from the ARF family dossier in
+[`examples/arf_family/`](../), re-run at server commit `967bc36`
+(release `1.21.0`): 400 MCP calls over 48 genes x 16 tools, the family
+itself from a 742-call enumeration through the same tools. Each section
+below is one row of [`gaps.jsonl`](../gaps.jsonl), quoted as logged;
+`Check` names the captured response to read it back from.
 
 Task 7 of the dossier scaled the three starting loci to the whole family through the tools alone. The brief's route — close over `gramene_homologs` paralogs — stops at 6 loci because the paralog projection is empty for two of the three seeds (`paralog-closure-empty`, origin unverified from inside the MCP). What did work is a genome walk with `ensembl_region_query`, a free-text candidate filter, and `interpro_domains` as the arbiter on every candidate; the two rows below are what that route costs and what it needs that no tool provides. The free-text filter cannot be repeated in rice or wheat, where the description field is null (`free-text-null-outside-arabidopsis`, an upstream value).
 
