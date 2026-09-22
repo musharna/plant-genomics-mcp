@@ -22,7 +22,7 @@ has no attribute 'strip'` (the nightly fuzz found this one; `locus` and
   record.** 400 calls over 48 genes: the same 23 Arabidopsis members and
   25 rice (6 on the first run) once both ortholog tools filter by
   `target_organism`; wheat stays at 0 because none of the 56 IWGSC loci
-  queried resolves to a protein. 8 of the 40 hand-logged gap rows are
+  queried resolves to a protein. 7 of the 40 hand-logged gap rows are
   closed against the new run and listed last on the page with what the run
   returned instead (`render_gaps.py` renders a `closed` field;
   `run_dossier.py` logs the server commit beside its version, since a fix

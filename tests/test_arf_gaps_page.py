@@ -225,11 +225,15 @@ def test_every_gap_row_reaches_the_page() -> None:
 
 
 def test_prose_counts_of_open_and_closed_rows_match_the_gap_log() -> None:
-    """The intro prose and both READMEs quote the open/closed split by hand.
+    """Every file that types the open/closed split by hand, recounted.
 
     The rendered section is pinned byte-for-byte, but the sentences above
-    it and the two READMEs are typed, and a typed count drifted (8 for 7)
-    the first time the log changed under it. Recount from the log.
+    it are typed, and a typed count drifted (8 for 7) the first time the
+    log changed under it. The first version of this test read the page and
+    the two READMEs — and CHANGELOG.md, which quotes the same number in its
+    own words, kept the stale 8 for another week because it was outside the
+    list. The rule is the number, not the file: anything that states the
+    split gets recounted here.
     """
     hand = read_rows(render_gaps.GAPS_PATH)
     auto = read_rows(render_gaps.GAPS_AUTO_PATH)
@@ -247,6 +251,9 @@ def test_prose_counts_of_open_and_closed_rows_match_the_gap_log() -> None:
         text = readme.read_text()
         assert f"{len(hand) + len(auto)} gaps it" in text, readme
         assert f"({n_closed} since closed)" in text, readme
+
+    changelog = render_gaps.PAGE_PATH.parents[2] / "CHANGELOG.md"
+    assert f"{n_closed} of the {len(hand)} hand-logged gap rows" in changelog.read_text()
 
 
 def test_main_check_exits_zero_against_the_committed_page() -> None:
