@@ -1,6 +1,6 @@
 # A gene symbol in a `locus` argument is answered by one tool and rejected by three
 
-**Draft — not filed.** Written from the ARF family dossier run in
+**Filed as [#128](https://github.com/musharna/plant-genomics-mcp/issues/128) — open.** Written from the ARF family dossier run in
 [`examples/arf_family/`](../), server version `1.21.0`, 2026-09-21
 (29 genes x 16 tools, 248 MCP calls; the family itself from a 516-call
 enumeration through the same tools). Each section below is one row of

@@ -1,6 +1,6 @@
 # A refused organism is an isError on the single tool and an ok envelope on its batch form; both descriptions understate what KEGG covers
 
-**Draft — not filed.** Written from the ARF family dossier run in
+**Filed as [#139](https://github.com/musharna/plant-genomics-mcp/issues/139) — open.** Written from the ARF family dossier run in
 [`examples/arf_family/`](../), server version `1.21.0`, 2026-09-21
 (29 genes x 16 tools, 248 MCP calls; the family itself from a 516-call
 enumeration through the same tools). Each section below is one row of

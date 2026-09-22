@@ -1,6 +1,6 @@
 # 8 of the 16 chain tools have no `batch_` form
 
-**Draft — not filed.** Written from the ARF family dossier run in
+**Filed as [#131](https://github.com/musharna/plant-genomics-mcp/issues/131) — open.** Written from the ARF family dossier run in
 [`examples/arf_family/`](../), server version `1.21.0`, 2026-09-21
 (29 genes x 16 tools, 248 MCP calls; the family itself from a 516-call
 enumeration through the same tools). Each section below is one row of
