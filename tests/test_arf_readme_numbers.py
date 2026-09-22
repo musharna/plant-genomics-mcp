@@ -1,12 +1,15 @@
-"""The two README sentences that describe the ARF dossier run carry its
-numbers — call count and gap count — and nothing else in the suite reads
-them: after the full-family run they still said "48-call" and "30 gaps"
-(round 1 of the task-7 review). Both numbers are derived here from the
-committed artifacts and must appear in both sentences.
+"""Prose counts about the ARF dossier run are claims about committed files
+and are derived from them here: the two README sentences carry the call
+and gap counts, and the PAGE.md figure paragraph carries the per-tool
+range of distinct positions the figure draws. Nothing else in the suite
+reads these sentences, so a re-run that changes a count would otherwise
+leave stale numbers in public text.
 """
 
 from __future__ import annotations
 
+import json
+import re
 from pathlib import Path
 
 import pytest
@@ -39,10 +42,40 @@ def test_readme_sentences_carry_the_run_counts():
         _check_sentence(text, calls, gaps, readme.name)
         checked += 1
 
-        # Positive control: the same check on the same README with the gap
-        # count off by one must fail, and the edit must really have landed.
-        stale = text.replace(f"{gaps} gaps", f"{gaps - 1} gaps")
-        assert stale != text
-        with pytest.raises(AssertionError, match=f"{gaps - 1} gaps"):
-            _check_sentence(stale, calls, gaps, readme.name)
+        # Positive control: the same check on the same README with either
+        # count off by one must fail, and each edit must really have landed.
+        for old, new in (
+            (f"{gaps} gaps", f"{gaps - 1} gaps"),
+            (f"{calls}-call", f"{calls - 1}-call"),
+        ):
+            stale = text.replace(old, new)
+            assert stale != text, old
+            with pytest.raises(AssertionError, match=re.escape(new)):
+                _check_sentence(stale, calls, gaps, readme.name)
     assert checked == 2
+
+
+def _distinct_positions_per_tool() -> dict[str, int]:
+    seen: dict[str, set[tuple[str, int]]] = {}
+    for line in (ARF / "calls.jsonl").read_text().splitlines():
+        if not line.strip():
+            continue
+        r = json.loads(line)
+        seen.setdefault(r["tool"], set()).add((r["organism"], r["n_bytes"]))
+    return {tool: len(v) for tool, v in seen.items() if not tool.startswith("batch_")}
+
+
+def test_page_figure_paragraph_range_is_derived_from_the_calls_log():
+    """The figure draws exact ties on one point, so a per-locus tool draws
+    one point per distinct (organism, byte count); PAGE.md names the two
+    extremes of that range and they must match a recount of calls.jsonl."""
+    counts = _distinct_positions_per_tool()
+    assert len(counts) == 8, counts
+    lo_tool, lo = min(counts.items(), key=lambda kv: (kv[1], kv[0]))
+    hi_tool, hi = max(counts.items(), key=lambda kv: (kv[1], kv[0]))
+    assert lo < hi
+    text = (ARF / "PAGE.md").read_text().replace("\n", " ")
+    claim = f"from {lo} positions for `{lo_tool}` to {hi} for `{hi_tool}`"
+    assert claim in text, claim
+    # The sentence is about the tie rule, and says so.
+    assert "exact ties draw on one point" in text

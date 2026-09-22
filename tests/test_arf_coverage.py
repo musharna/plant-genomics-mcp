@@ -11,9 +11,9 @@ same test so a checker that only ever sees good input can't pass by
 accident), one never called at all (`status == "unused"`), and two that
 exercise `release_status`'s two "called but no `upstream_version`" branches
 — one in `release_under_another_key` (must read `RELEASE_UNDER_ANOTHER_KEY`)
-and one not (must read `RELEASE_ABSENT`), the exact distinction round 1 of
-the visual review caught missing: a null `upstream_version` was being read
-as "no release reported" for tools that do report one, under another key.
+and one not (must read `RELEASE_ABSENT`), the distinction that must not be
+lost: a null `upstream_version` is not "no release reported" for tools
+that report one under another key.
 """
 
 from __future__ import annotations

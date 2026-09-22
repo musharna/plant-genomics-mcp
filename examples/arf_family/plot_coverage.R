@@ -16,25 +16,21 @@
 # Colour (fill) is a per-TOOL property, `release_status` from
 # `coverage.tsv` — computed in coverage.py from calls.jsonl plus
 # gaps.jsonl's "version-under-another-key" row, never re-derived here —
-# so all three of a tool's points share one fill. Round 1 of the visual
-# review found two defects in the first version: (1) the two-level colour
-# ("reports upstream release" / "no release reported") asserted an absence
-# that gaps.jsonl's own hand-logged row contradicts for three tools, and
-# (2) random jitter plus solid points let identical byte counts (e.g.
-# kegg_pathways, 724 B on all three genes) draw as a single dot, hiding
-# 25 of 48 points. Both are fixed below: release_status is the real
-# three-level table column, and each point gets a deterministic offset
-# plus a white outline so ties stay countable.
+# so all of a tool's points share one fill. Two properties this figure
+# must keep: (1) the colour is the three-level table column, because a
+# two-level "reports a release / does not" would assert an absence that
+# gaps.jsonl's own row contradicts for the tools that report one under
+# another key; (2) every position is deterministic — no jitter — so the
+# same log draws the same figure and the page's counts can be checked
+# against it.
 #
-# Task 7 (full family, three organisms): one row of calls.jsonl is one MCP
-# call, and eight chain tools now go through their batch_ form (one call
-# per organism per 50 loci) while the other eight are still called once
-# per locus. So a point is one CALL, not one gene; the per-locus tools
-# draw a hundred-odd points per row and the batch tools draw three to six.
-# The per-gene offset (3 levels) became a per-ORGANISM offset (3 levels):
-# one point per gene per tool is no longer readable at this count, and the
-# organism is what the figure has to let the eye separate. The caption
-# says so. Calls of kind "expected" (a documented organism refusal, e.g.
+# One row of calls.jsonl is one MCP call. Eight chain tools go through
+# their batch_ form (one call per organism per 50 loci); the other eight
+# are called once per locus, so a per-locus tool draws up to a point per
+# locus per organism and a batch tool draws one per organism. The vertical
+# offset is per ORGANISM, not per gene: one point per gene per tool is not
+# readable at this count, and the organism is what the eye has to
+# separate. The caption says so. Calls of kind "expected" (a documented organism refusal, e.g.
 # kegg_pathways on wheat) are drawn hollow: they are answers, not data.
 
 library(ggplot2)
@@ -129,9 +125,8 @@ p <- ggplot(calls, aes(x = n_bytes, y = y)) +
   scale_fill_manual(
     values = pal_pgmcp, breaks = release_levels,
     # Two rows: the three release_status labels together don't fit one row
-    # at the figure's fixed 7in width without clipping (round 1 of the
-    # visual review caught "no release in the payload" truncating off the
-    # right edge). With `shape` mapped to organism the fill keys draw no
+    # at the figure's fixed 7in width without clipping ("no release in the
+    # payload" truncates off the right edge in one row). With `shape` mapped to organism the fill keys draw no
     # glyph unless a shape is forced onto them.
     guide = ggplot2::guide_legend(nrow = 2, override.aes = list(shape = 21))
   ) +
@@ -143,8 +138,8 @@ p <- ggplot(calls, aes(x = n_bytes, y = y)) +
     fill = NULL,
     caption = sprintf(
       paste0(
-        "One point per MCP call: %d calls, %d genes, %d organisms; a batch_* call covers up to 50 loci.\n",
-        "Offset and shape by organism; exact ties draw on one point; hollow = documented organism refusal.\nTools ordered by median size."
+        "%d calls, %d genes, %d organisms; a batch_* call covers up to 50 loci. Tools ordered by median size.\n",
+        "One point per distinct (organism, size) per tool; hollow = documented refusal."
       ),
       n_calls, n_genes, length(organisms_sorted)
     )

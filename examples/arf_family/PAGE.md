@@ -211,11 +211,13 @@ eight `result.sections` entries, read back from
 
 Response sizes on the wire span 3,744×, from 174 B
 (`aragwas_associations` on ATMG00940) to 651 kB
-(`batch_locus_go_annotations` over the 23 Arabidopsis loci). One point
-is one MCP call, so the eight tools with a `batch_` form draw two points
-each (one per organism) and the eight without draw 29; a 100-gene family
-is not readable one point per gene, so the vertical offset is by
-organism, not by gene. Only 3 of the 16 tools called put the upstream
+(`batch_locus_go_annotations` over the 23 Arabidopsis loci). The eight
+tools with a `batch_` form draw two points each (one per organism); the
+eight called per locus draw one point per distinct (organism, byte
+count), since exact ties draw on one point — from 6 positions for
+`experimental_structures` to 29 for `gene_report`. A 100-gene family is
+not readable one point per gene, so the vertical offset is by organism,
+not by gene. Only 3 of the 16 tools called put the upstream
 release in `upstream_version`; 3 more report one under a different key
 (`atted_release`, `release`, `latest_version`), so a single-key read
 scores those null too, and the remaining 10 carry no release at all.

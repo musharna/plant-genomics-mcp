@@ -213,8 +213,8 @@ def test_the_ortholog_disagreement_row_matches_a_recount_of_its_own_evidence():
 def test_the_undecidable_row_matches_a_recount_of_family_candidates():
     """The `candidate-undecidable` gap row says how many of the candidates
     could not be decided and how they split by organism; the numbers are
-    re-derived from the TSV the row cites. Review round 2 found "2 of the
-    325" written where the file holds 10 (8 wheat + 2 Arabidopsis)."""
+    re-derived from the TSV the row cites, so the row cannot carry a
+    count typed from an earlier state of the file."""
     with open(ARF_DIR / "family_candidates.tsv") as f:
         cands = list(csv.DictReader(f, delimiter="\t"))
     undecided = [r for r in cands if r["kept"] == "undecided"]

@@ -14,8 +14,7 @@ Three columns beyond the brief's original five:
   surface one under that specific key.
 - `median_elapsed_s` — wall-clock cost per tool, for spotting the slow
   ones without opening `calls.jsonl` by hand.
-- `release_status` — round 1 of the visual review on this table's first
-  figure caught that a null `upstream_version` does not mean "no release
+- `release_status` — a null `upstream_version` does not mean "no release
   reported": `gaps.jsonl`'s hand-logged `version-under-another-key` row
   says three tools (`atted_coexpression`, `gramene_homologs`,
   `alphafold_structure`) return a release under a different field name
@@ -113,9 +112,8 @@ def release_under_another_key_tools(gaps_path: Path, root: Path) -> set[str]:
     row itself is missing, this raises rather than quietly falling back to
     "no tool reports under another key" — the coverage table would then
     read as if the gap this row records had been fixed, when nobody fixed
-    it (round 1 of the visual review on this table's first figure: a null
-    `upstream_version` was read as "no release reported" when three tools
-    report one under a different key).
+    it (a null `upstream_version` would read as "no release reported"
+    when three tools report one under a different key).
     """
     row = None
     with open(gaps_path) as f:
