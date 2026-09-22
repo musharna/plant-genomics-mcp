@@ -252,7 +252,7 @@ class Enumerator:
                 "organism": organism,
                 "source": source,
                 "kept": "false",
-                "interpro_entries": f"call failed: {res.error}"[:300],
+                "interpro_entries": f"call failed: {res.error}"[:300].strip(),
             }
             return False
         entries = interpro_entries(res.payload)
