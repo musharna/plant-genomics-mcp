@@ -1,13 +1,12 @@
 # Response-size figure for the ARF dossier's 16 chain tools.
 #
-# The brief's original figure — calls per tool, all 50 tools — carries no
-# information: every chain tool was called exactly 3 times (one per gene)
-# and the other 34 were never called, so it would draw as 16 equal-height
-# bars and 34 blanks. `coverage.tsv` still has a row for all 50 (built by
+# A calls-per-tool figure over all 50 tools carries no information: the
+# 34 tools outside the chain were never called and the 16 inside it are
+# called by a fixed rule (once per locus, or once per organism through a
+# batch_ form). `coverage.tsv` still has a row for all 50 (built by
 # `coverage.py`); this figure instead plots the one thing that DOES vary
-# per call among the 16 chain tools — response size — at per-call
-# granularity, one point per gene call (3 per tool), from `calls.jsonl`
-# directly rather than from the aggregated table. `n_bytes` there is the
+# per call — response size — from `calls.jsonl` directly rather than from
+# the aggregated table. `n_bytes` there is the
 # length of the JSON-RPC response LINE, which carries each payload as both
 # `content[].text` and `structuredContent` — a transport figure, not the
 # size of the tool's own payload, so every size label on this figure says
@@ -30,8 +29,10 @@
 # locus per organism and a batch tool draws one per organism. The vertical
 # offset is per ORGANISM, not per gene: one point per gene per tool is not
 # readable at this count, and the organism is what the eye has to
-# separate. The caption says so. Calls of kind "expected" (a documented organism refusal, e.g.
-# kegg_pathways on wheat) are drawn hollow: they are answers, not data.
+# separate. The shape legend and the caption both name the organism
+# encoding. Calls of kind "expected" (a documented organism refusal,
+# e.g. kegg_pathways on wheat) are drawn hollow: they are answers, not
+# data.
 
 library(ggplot2)
 library(jsonlite)
@@ -60,9 +61,10 @@ organism_offset <- setNames(c(-0.25, 0, 0.25)[seq_along(organisms_sorted)], orga
 calls$y <- as.numeric(calls$tool) + organism_offset[calls$organism]
 # Exact ties inside one organism (the same tool answering the same byte
 # count on several calls; the largest group here is 20) draw on ONE point.
-# A row is ~32 px tall and a glyph ~13 px, so no in-row nudge can separate
-# them, and pushing them out of the row would misattribute the tool. The
-# caption says so and PAGE.md gives the count for each tie it relies on.
+# A glyph is about a third of a row's height, so a 20-way tie cannot be
+# separated inside its row, and pushing it out of the row would
+# misattribute the tool. The caption says so and PAGE.md gives the count
+# for each tie it relies on.
 calls$organism <- factor(calls$organism, levels = organisms_sorted)
 if (is.null(calls$kind)) calls$kind <- ifelse(calls$ok, "ok", "error")
 calls$expected <- calls$kind == "expected"
@@ -126,8 +128,9 @@ p <- ggplot(calls, aes(x = n_bytes, y = y)) +
     values = pal_pgmcp, breaks = release_levels,
     # Two rows: the three release_status labels together don't fit one row
     # at the figure's fixed 7in width without clipping ("no release in the
-    # payload" truncates off the right edge in one row). With `shape` mapped to organism the fill keys draw no
-    # glyph unless a shape is forced onto them.
+    # payload" truncates off the right edge in one row). With `shape`
+    # mapped to organism the fill keys draw no glyph unless a shape is
+    # forced onto them.
     guide = ggplot2::guide_legend(nrow = 2, override.aes = list(shape = 21))
   ) +
   scale_linetype_manual(name = NULL, values = c("200 kB oversize threshold" = "dashed")) +
