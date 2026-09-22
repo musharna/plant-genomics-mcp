@@ -1,0 +1,116 @@
+{
+ "server_version": "1.21.0",
+ "calls": [
+  {
+   "tool": "ensembl_plants_lookup_locus",
+   "args": {
+    "locus": "ARF1",
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": false,
+   "payload": null,
+   "error": "[NotFoundError] Ensembl Plants /lookup/id/ARF1 \u2192 HTTP 400 (not found): {\"error\":\"ID 'ARF1' not found\"}",
+   "n_bytes": 197
+  },
+  {
+   "tool": "resolve_locus_to_uniprot",
+   "args": {
+    "locus": "ARF1",
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": true,
+   "payload": {
+    "locus_query": "ARF1",
+    "primaryAccession": "Q8L7G0",
+    "uniProtkbId": "ARFA_ARATH",
+    "entryType": "UniProtKB reviewed (Swiss-Prot)",
+    "reviewed": true,
+    "recommendedName": "Auxin response factor 1",
+    "geneNames": [
+     "ARF1"
+    ],
+    "organism": "Arabidopsis thaliana",
+    "taxonId": 3702,
+    "sequenceLength": 665,
+    "web_url": "https://www.uniprot.org/uniprotkb/Q8L7G0",
+    "upstream_version": "2026_03"
+   },
+   "error": null,
+   "n_bytes": 888
+  },
+  {
+   "tool": "tair_locus_info",
+   "args": {
+    "locus": "ARF1"
+   },
+   "ok": false,
+   "payload": null,
+   "error": "BAR /thalemine/gene_information/ARF1 \u2192 HTTP 400: {\"wasSuccessful\": false, \"error\": \"Invalid gene id\"}\n",
+   "n_bytes": 200
+  },
+  {
+   "tool": "phytozome_lookup_locus",
+   "args": {
+    "locus": "ARF1",
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": false,
+   "payload": null,
+   "error": "[NotFoundError] Phytozome: locus ARF1 not found for organism_id 167",
+   "n_bytes": 156
+  },
+  {
+   "tool": "resolve_locus_to_uniprot",
+   "args": {
+    "locus": "AT1G23490",
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": true,
+   "payload": {
+    "locus_query": "AT1G23490",
+    "primaryAccession": "Q9LQC8",
+    "uniProtkbId": "ARF2A_ARATH",
+    "entryType": "UniProtKB reviewed (Swiss-Prot)",
+    "reviewed": true,
+    "recommendedName": "ADP-ribosylation factor 2-A",
+    "geneNames": [
+     "ARF2-A"
+    ],
+    "organism": "Arabidopsis thaliana",
+    "taxonId": 3702,
+    "sequenceLength": 181,
+    "web_url": "https://www.uniprot.org/uniprotkb/Q9LQC8",
+    "upstream_version": "2026_03"
+   },
+   "error": null,
+   "n_bytes": 912
+  },
+  {
+   "tool": "resolve_locus_to_uniprot",
+   "args": {
+    "locus": "AT2G47170",
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": true,
+   "payload": {
+    "locus_query": "AT2G47170",
+    "primaryAccession": "P36397",
+    "uniProtkbId": "ARF1_ARATH",
+    "entryType": "UniProtKB reviewed (Swiss-Prot)",
+    "reviewed": true,
+    "recommendedName": "ADP-ribosylation factor 1",
+    "geneNames": [
+     "ARF1"
+    ],
+    "organism": "Arabidopsis thaliana",
+    "taxonId": 3702,
+    "sequenceLength": 181,
+    "web_url": "https://www.uniprot.org/uniprotkb/P36397",
+    "upstream_version": "2026_03"
+   },
+   "error": null,
+   "n_bytes": 902
+  }
+ ],
+ "note": "Not part of the 48-call chain (calls.jsonl). One probe capture, kept so the shared-symbol gap in gaps.jsonl is checkable: what the tools do when the `locus` argument is handed a gene symbol instead of an AGI locus code."
+}

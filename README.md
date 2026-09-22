@@ -63,6 +63,8 @@ Swap in any locus and pass `organism=` for cross-species — e.g. rice
 `Os01g0100100` (`oryza_sativa`) — and it routes to the right backends
 automatically.
 
+A worked 48-call run over three loci, with the gaps it turned up, is in [`examples/arf_family/PAGE.md`](examples/arf_family/PAGE.md).
+
 ## 🛠️ Tools
 
 **50 tools across 23 backends** — Ensembl Plants, Phytozome BioMart,

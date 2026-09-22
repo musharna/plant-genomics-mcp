@@ -12,6 +12,9 @@ underlying client functions directly — the MCP envelope is identical to
 what the server serializes around these dicts, so going through stdio adds
 latency without showing anything new).
 
+A worked 48-call run of 16 tools over three loci, with the 30 gaps it
+turned up, is in [`arf_family/PAGE.md`](arf_family/PAGE.md).
+
 ## Transcripts
 
 ### Arabidopsis (single-locus v0.7 chains)
