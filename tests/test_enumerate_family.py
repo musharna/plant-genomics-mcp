@@ -23,6 +23,7 @@ from pathlib import Path
 
 import pytest
 
+from examples.arf_family import enumerate_family as enumerate_family_module
 from examples.arf_family.enumerate_family import (
     EnumerationError,
     enumerate_family,
@@ -44,6 +45,7 @@ SEED = {
 
 
 def _run(seeds: list[dict], **kw):
+    enumerate_family_module.RETRY_PAUSE_S = 0.0
     log = io.StringIO()
 
     async def go():
@@ -146,8 +148,15 @@ def test_closure_reaches_members_by_paralog_and_by_scan_and_rejects_by_interpro(
     # first unknown one, so the region list was learned, not typed.
     regions = [c["args"]["region"] for c in calls if c["tool"] == "ensembl_region_query"]
     # 5 Mb chromosome 1 in 4 Mb windows = two windows + the past-the-end
-    # probe; 1.5 Mb chromosome 2 = one window + the probe; "3" is unknown.
-    assert regions == ["1", "1", "1", "2", "2", "3"]
+    # probe; chromosome 2 times out at 4 Mb (logged as a failed call), is
+    # re-asked at 2 Mb, then the probe; "3" is unknown.
+    assert regions == ["1", "1", "1", "2", "2", "2", "3"]
+    windows = [
+        (c["args"]["region"], c["args"]["end"] - c["args"]["start"] + 1, c["ok"])
+        for c in calls
+        if c["tool"] == "ensembl_region_query" and c["args"]["region"] == "2"
+    ]
+    assert windows == [("2", 4_000_000, False), ("2", 2_000_000, True), ("2", 2_000_000, False)]
 
 
 def test_a_seed_without_the_family_entry_stops_the_run():

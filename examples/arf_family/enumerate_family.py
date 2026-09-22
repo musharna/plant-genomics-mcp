@@ -66,7 +66,9 @@ ORTHOLOG_SOURCES_TSV = HERE / "ortholog_sources.tsv"
 ENUM_CALLS = HERE / "enumeration_calls.jsonl"
 
 FAMILY_ENTRY = "IPR010525"
-WINDOW = 4_000_000  # bytes of genome per ensembl_region_query; 5 Mb 500s, 4 Mb answers
+WINDOW = 4_000_000  # bases per ensembl_region_query; 5 Mb 500s, 4 Mb answers
+MIN_WINDOW = 500_000  # the walk halves the window on an upstream timeout, down to this
+RETRY_PAUSE_S = 10.0
 WALLTIME_S = 3 * 3600
 
 # Free text is a candidate filter only (stage 2); InterPro decides (stage 3).
@@ -95,6 +97,7 @@ ORTHOLOG_SOURCE_FIELDS = ["query_locus", "tool", "organism", "hits", "hits_elsew
 
 _PAST_END_RE = re.compile(r"greater than (\d+) for ")
 _NO_SLICE_RE = re.compile(r"No slice found for location")
+_UNAVAILABLE_RE = re.compile(r"\[UpstreamUnavailableError\]")
 
 
 class EnumerationError(Exception):
@@ -199,16 +202,24 @@ class Enumerator:
         """Walk one chromosome. Returns False if `region` is not a
         seq-region of this assembly (the walk over region names stops)."""
         start = 1
+        window = WINDOW
         while True:
-            res = await self.region_window(organism, region, start, start + WINDOW - 1)
+            res = await self.region_window(organism, region, start, start + window - 1)
             if not res.ok:
                 m = _PAST_END_RE.search(res.error or "")
                 if m and start > int(m.group(1)):
                     return True  # walked off the end: chromosome done
                 if start == 1 and _NO_SLICE_RE.search(res.error or ""):
                     return False  # no such region name
+                if _UNAVAILABLE_RE.search(res.error or "") and window > MIN_WINDOW:
+                    # The tool already retried three times. A 25-minute walk
+                    # must not die on one upstream timeout: halve the window
+                    # and ask again; the failed call stays in the log.
+                    window //= 2
+                    await asyncio.sleep(RETRY_PAUSE_S)
+                    continue
                 raise EnumerationError(
-                    f"ensembl_region_query {organism} {region}:{start}-{start + WINDOW - 1}: "
+                    f"ensembl_region_query {organism} {region}:{start}-{start + window - 1}: "
                     f"{res.error}"
                 )
             for f in res.payload.get("features", []):
@@ -221,7 +232,7 @@ class Enumerator:
                 if locus in self.candidates:
                     continue
                 await self.decide(locus, organism, f"region:{region}:{start}")
-            start += WINDOW
+            start += window
 
     async def scan_genome(self, organism: str) -> None:
         region = 1

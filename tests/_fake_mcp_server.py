@@ -110,6 +110,12 @@ def _family_call(name: str, args: dict) -> dict:
                 f"HTTP 400: Cannot request a slice whose start ({start}) is greater than "
                 f"{FAMILY_LENGTHS[region]} for {region}."
             )
+        if region == "2" and end - start + 1 >= 4_000_000:
+            # Chromosome 2 times out at the full window and answers at a
+            # smaller one, so the walk's halve-and-retry is exercised.
+            return _error_result(
+                "[UpstreamUnavailableError] Ensembl Plants /overlap/region exhausted 3 retries"
+            )
         feats = FAMILY_GENOME[region] if start == 1 else []
         return _text_result({"region": region, "count": len(feats), "features": feats})
     if name == "interpro_domains":
@@ -220,6 +226,26 @@ ARF_FIXTURES: dict[str, dict[str, dict | list | None]] = {
             "subfamily_id": "PTHR31384:SF10",
         },
     },
+    # A rice-shaped locus that answers ONLY when the call names its
+    # organism (`ARF_FIXTURE_ORGANISM`): the live tools resolve a locus
+    # within the organism given, so a manifest row's organism must reach
+    # the call. Any other organism gets an isError result.
+    "Os01g0000100": {
+        "interpro_domains": {
+            "locus": "Os01g0000100",
+            "found": True,
+            "domain_count": 1,
+            "truncated": False,
+            "domains": [{"accession": "IPR010525", "interpro": "IPR010525"}],
+            "count_by_type": {},
+        },
+        "panther_family": {
+            "locus": "Os01g0000100",
+            "found": True,
+            "family_id": "PTHR31384",
+            "subfamily_id": "PTHR31384:SF50",
+        },
+    },
     "PANTHER_NON_DICT_PAYLOAD": {
         "interpro_domains": {
             "locus": "PANTHER_NON_DICT_PAYLOAD",
@@ -235,6 +261,9 @@ ARF_FIXTURES: dict[str, dict[str, dict | list | None]] = {
         "panther_family": ["not", "a", "dict"],
     },
 }
+
+
+ARF_FIXTURE_ORGANISM: dict[str, str] = {"Os01g0000100": "oryza_sativa"}
 
 
 def _respond(req_id: object, *, result: dict | None = None, error: dict | None = None) -> None:
@@ -338,7 +367,16 @@ def main() -> None:
             elif mode == "arf" and name in ("interpro_domains", "panther_family"):
                 locus = args.get("locus")
                 fixture = ARF_FIXTURES.get(locus, {}).get(name)
-                if fixture is None:
+                wanted = ARF_FIXTURE_ORGANISM.get(locus)
+                if wanted is not None and args.get("organism") != wanted:
+                    _respond(
+                        req_id,
+                        result=_error_result(
+                            f"[NotFoundError] fake: {locus} is not a locus of "
+                            f"{args.get('organism')!r}"
+                        ),
+                    )
+                elif fixture is None:
                     _respond(req_id, result=_error_result(f"no fixture for {name}({locus!r})"))
                 else:
                     _respond(req_id, result=_text_result(fixture))
