@@ -116,6 +116,22 @@ def test_verify_genes_passes_each_rows_organism_to_the_tools(tmp_path):
     assert "not ARF family" not in bad[0][2]
 
 
+def test_verify_genes_matches_an_empty_subfamily_only_to_a_live_null(tmp_path):
+    # An empty panther_subfamily cell is the declared form of "PANTHER
+    # returned null" and must verify clean (positive); the same cell on a
+    # locus PANTHER does classify must fail (negative), same run.
+    genes = _write_genes_tsv(
+        tmp_path,
+        [
+            _row("UNCLASSIFIED_ARF", "X", "", "false"),
+            _row("GOOD_ARF_PB1", "ARF5", "", "true"),
+        ],
+    )
+    bad = run(verify(genes, FAKE_ARF))
+    assert [locus for locus, _, _ in bad] == ["GOOD_ARF_PB1"]
+    assert "declared=None live='PTHR31384:SF10'" in bad[0][2]
+
+
 def _write_raw_tsv(tmp_path: Path, lines: list[str]) -> Path:
     # For malformed manifests _write_genes_tsv's DictWriter can't produce:
     # a bad/missing header, or a data row with fewer tab-separated fields

@@ -13,7 +13,7 @@ server's backend modules directly:
   The row's declared ``has_pb1_domain`` must match whether IPR033389 or
   PF02309 (the PB1 domain) is present.
 - ``panther_family``: the row's declared ``panther_subfamily`` must match
-  the live ``subfamily_id``.
+  the live ``subfamily_id``; an empty cell matches only a null.
 
 A failed call (``CallResult.ok is False``) is reported as its own failure
 reason — it is never treated as "the marker is absent", which would let a
@@ -112,7 +112,10 @@ async def verify(genes_path: Path, server_cmd: list[str]) -> list[tuple[str, str
         for row in to_check:
             locus, symbol, organism = row["locus"], row["symbol"], row["organism"]
             declared_pb1 = row["has_pb1_domain"].strip().lower() == "true"
-            declared_subfamily = row["panther_subfamily"]
+            # An empty cell means "PANTHER returned no subfamily_id" (the
+            # full-family run has members PANTHER does not classify); it
+            # must match a live null and nothing else.
+            declared_subfamily = row["panther_subfamily"] or None
             reasons: list[str] = []
 
             interpro_res = await c.call("interpro_domains", {"locus": locus, "organism": organism})

@@ -264,6 +264,11 @@ ARF_FIXTURES: dict[str, dict[str, dict | list | None]] = {
 
 
 ARF_FIXTURE_ORGANISM: dict[str, str] = {"Os01g0000100": "oryza_sativa"}
+# A member PANTHER does not classify: `subfamily_id` is null.
+ARF_FIXTURES["UNCLASSIFIED_ARF"] = {
+    "interpro_domains": ARF_FIXTURES["GOOD_ARF_NO_PB1"]["interpro_domains"],
+    "panther_family": {"locus": "UNCLASSIFIED_ARF", "found": False, "subfamily_id": None},
+}
 
 
 def _respond(req_id: object, *, result: dict | None = None, error: dict | None = None) -> None:
