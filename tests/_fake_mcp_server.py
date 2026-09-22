@@ -23,6 +23,11 @@ Modes:
                `tests/test_verify_genes.py`. Any other tool name, or a
                locus not in the fixture table, returns an ``isError``
                result.
+  family     — ``initialize`` succeeds. A toy two-chromosome genome
+               (``FAMILY_*`` tables below) behind ``ensembl_region_query``,
+               ``gramene_homologs``, ``interpro_domains``, ``panther_family``,
+               ``ensembl_plants_lookup_locus`` and an empty
+               ``orthodb_orthologs``, for `tests/test_enumerate_family.py`.
 
 An unrecognised mode string is a hard error (exit 2) at startup — it must
 never silently fall back to ``ok`` behaviour, which would let a typo in a
@@ -34,7 +39,95 @@ from __future__ import annotations
 import json
 import sys
 
-_MODES = {"ok", "init-error", "arf", "chain"}
+_MODES = {"ok", "init-error", "arf", "chain", "family"}
+
+# `family` mode: a two-chromosome toy genome for
+# `examples/arf_family/enumerate_family.py`'s closure test. Paralog edges
+# are deliberately incomplete (the seed reaches AT1G00050, which alone
+# reaches AT1G00060 — two hops, so a closure that stops after one round
+# misses it; AT2G00010 is reachable only through the region scan) so the test can tell "closed
+# over paralogs" from "found by scanning" — and AT1G00030 sits on
+# chromosome 1 with a matching description but no IPR010525, so the
+# InterPro arbiter has something to reject. `gramene_homologs(ortholog)`
+# on the seed names one rice-shaped and one wheat-shaped locus plus one
+# that is neither; the rice hit has a paralog that is not a member.
+FAMILY_GENOME: dict[str, list[dict]] = {
+    "1": [
+        {"gene_id": "AT1G00010", "biotype": "protein_coding", "description": "auxin thing"},
+        {"gene_id": "AT1G00020", "biotype": "protein_coding", "description": "unrelated"},
+        {"gene_id": "AT1G00030", "biotype": "protein_coding", "description": "B3 family"},
+        {"gene_id": "AT1G00040", "biotype": "lncRNA", "description": "auxin lncRNA"},
+    ],
+    "2": [
+        {"gene_id": "AT2G00010", "biotype": "protein_coding", "description": "B3 family protein"},
+    ],
+}
+FAMILY_LENGTHS = {"1": 5_000_000, "2": 1_500_000}
+FAMILY_PARALOGS: dict[str, list[str]] = {
+    "AT1G00010": ["AT1G00050"],
+    "AT1G00050": ["AT1G00010", "AT1G00060"],
+    "AT1G00060": ["AT1G00050"],
+    "Os01g0000100": ["Os01g0000200"],
+    "Os01g0000200": ["Os01g0000100"],
+}
+FAMILY_ORTHOLOGS: dict[str, list[str]] = {
+    "AT1G00010": ["Os01g0000100", "TraesCS1A02G000100", "Zm00001d000001"],
+}
+FAMILY_INTERPRO: dict[str, list[str]] = {
+    "AT1G00010": ["IPR010525", "IPR033389"],
+    "AT1G00050": ["IPR010525"],
+    "AT1G00060": ["IPR010525"],
+    "AT1G00030": ["IPR003340"],
+    "AT2G00010": ["IPR010525"],
+    "Os01g0000100": ["IPR010525"],
+    "Os01g0000200": ["IPR003340"],
+    "TraesCS1A02G000100": ["IPR010525", "IPR033389"],
+}
+
+
+def _family_call(name: str, args: dict) -> dict:
+    locus = args.get("locus")
+    if name == "gramene_homologs":
+        table = FAMILY_PARALOGS if args.get("homology_type") == "paralog" else FAMILY_ORTHOLOGS
+        hits = table.get(locus, [])
+        return _text_result(
+            {
+                "locus": locus,
+                "release": "fake",
+                "total": len(hits),
+                "truncated": False,
+                "homologs": [{"target_locus": h, "type": "x", "gene_tree_id": "f"} for h in hits],
+            }
+        )
+    if name == "orthodb_orthologs":
+        return _text_result({"locus": locus, "found": True, "members": []})
+    if name == "ensembl_region_query":
+        region, start, end = args["region"], args["start"], args["end"]
+        if region not in FAMILY_GENOME:
+            return _error_result(f"HTTP 400: No slice found for location {region}:{start}-{end}")
+        if start > FAMILY_LENGTHS[region]:
+            return _error_result(
+                f"HTTP 400: Cannot request a slice whose start ({start}) is greater than "
+                f"{FAMILY_LENGTHS[region]} for {region}."
+            )
+        feats = FAMILY_GENOME[region] if start == 1 else []
+        return _text_result({"region": region, "count": len(feats), "features": feats})
+    if name == "interpro_domains":
+        if locus not in FAMILY_INTERPRO:
+            return _error_result(f"[NotFoundError] fake: no InterPro record for {locus}")
+        return _text_result(
+            {
+                "locus": locus,
+                "found": True,
+                "domains": [{"accession": e, "interpro": e} for e in FAMILY_INTERPRO[locus]],
+            }
+        )
+    if name == "panther_family":
+        return _text_result({"locus": locus, "found": True, "subfamily_id": f"PTHR0:{locus}"})
+    if name == "ensembl_plants_lookup_locus":
+        return _text_result({"id": locus, "display_name": f"SYM_{locus}"})
+    return _error_result(f"unknown tool: {name}")
+
 
 # `chain` mode: every tools/call succeeds with a tiny stub echoing its
 # arguments, EXCEPT this one tool, which returns an isError result. The runner
@@ -42,6 +135,12 @@ _MODES = {"ok", "init-error", "arf", "chain"}
 # fifteen calls that produce none — so a test can assert both that a failure
 # IS logged and that a success is NOT, rather than only that some rows exist.
 CHAIN_FAILING_TOOL = "kegg_pathways"
+# ...and any chain-mode call whose `organism` is this string is refused
+# with the tag the live server uses for an organism a backend does not
+# cover, in both the single (isError) and the batch (per-locus `errors`)
+# shape — so the runner's "expected, not a gap" classification is testable.
+CHAIN_UNSUPPORTED_ORGANISM = "fake_unsupported"
+_UNSUPPORTED = "[OrganismNotSupported] backend 'fake' has no ID for 'fake_unsupported'"
 
 # Keyed by locus. Shapes mirror the real interpro_domains / panther_family
 # tool payloads closely enough for `verify_genes.py` to read: `domains` (list
@@ -198,8 +297,41 @@ def main() -> None:
             params = req.get("params", {})
             name = params.get("name")
             args = params.get("arguments", {})
-            if mode == "chain":
-                if name == CHAIN_FAILING_TOOL:
+            if mode == "family":
+                _respond(req_id, result=_family_call(name, args))
+            elif mode == "chain":
+                if name.startswith("batch_"):
+                    # A batch envelope: every locus succeeds, except that the
+                    # batch form of CHAIN_FAILING_TOOL puts every locus in
+                    # `errors`, the way the live batch tools report a
+                    # per-locus failure inside an ok envelope.
+                    base = name[len("batch_") :]
+                    loci = args.get("loci") or args.get("loci_or_accessions") or []
+                    if args.get("organism") == CHAIN_UNSUPPORTED_ORGANISM:
+                        envelope = {
+                            "tool": base,
+                            "count": len(loci),
+                            "results": {},
+                            "errors": {lo: _UNSUPPORTED for lo in loci},
+                        }
+                    elif base == CHAIN_FAILING_TOOL:
+                        envelope = {
+                            "tool": base,
+                            "count": len(loci),
+                            "results": {},
+                            "errors": {lo: f"fake chain failure for {base}" for lo in loci},
+                        }
+                    else:
+                        envelope = {
+                            "tool": base,
+                            "count": len(loci),
+                            "results": {lo: {"tool": base, "locus": lo} for lo in loci},
+                            "errors": {},
+                        }
+                    _respond(req_id, result=_text_result(envelope))
+                elif args.get("organism") == CHAIN_UNSUPPORTED_ORGANISM:
+                    _respond(req_id, result=_error_result(_UNSUPPORTED))
+                elif name == CHAIN_FAILING_TOOL:
                     _respond(req_id, result=_error_result(f"fake chain failure for {name}"))
                 else:
                     _respond(req_id, result=_text_result({"tool": name, "args": args}))
