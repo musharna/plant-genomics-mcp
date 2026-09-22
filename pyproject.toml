@@ -27,6 +27,11 @@ dependencies = [
     # longer import. The upper bound stays deliberate — a major SDK bump gets
     # opted into, not inherited silently by everyone who installs us.
     "mcp>=2,<3",
+    # Declared because server.py imports it directly to enforce each tool's
+    # advertised inputSchema at the call boundary. It is not a new install:
+    # mcp already requires jsonschema>=4.20, and the floor here matches that
+    # rather than widening past what the SDK guarantees is present.
+    "jsonschema>=4.20",
     "httpx>=0.27",
     "pydantic>=2.6",
     "starlette>=0.36",

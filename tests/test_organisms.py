@@ -88,6 +88,28 @@ def test_resolve_unknown_taxid_raises() -> None:
     assert excinfo.value.query == 99999999
 
 
+@pytest.mark.parametrize("query", [3.5, None, [1, 2], {"a": 1}, b"arabidopsis_thaliana", True])
+def test_resolve_refuses_input_that_is_neither_a_name_nor_a_taxid(query) -> None:
+    """The documented contract is OrganismNotFound for anything unrecognised.
+
+    Before this guard, only ``str`` and ``int`` honoured it: a float or a
+    list fell into ``_normalize`` and raised ``AttributeError: 'float' object
+    has no attribute 'strip'``, and ``bytes`` raised ``TypeError`` (issue
+    #118). ``True`` is included because it answered correctly by accident —
+    ``isinstance(True, int)`` is true, so it missed the taxid index rather
+    than being refused on purpose.
+
+    The two legitimate forms are asserted in the same test: a guard that
+    rejected everything would pass the half above on its own.
+    """
+    with pytest.raises(OrganismNotFound) as excinfo:
+        organisms.resolve(query)
+    assert "arabidopsis_thaliana" in excinfo.value.supported
+
+    assert organisms.resolve("arabidopsis_thaliana").canonical == "arabidopsis_thaliana"
+    assert organisms.resolve(3702).canonical == "arabidopsis_thaliana"
+
+
 def test_ensembl_slug_for_arabidopsis() -> None:
     assert organisms.ensembl_slug_for("arabidopsis_thaliana") == "arabidopsis_thaliana"
     assert organisms.ensembl_slug_for(3702) == "arabidopsis_thaliana"
