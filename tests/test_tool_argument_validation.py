@@ -35,7 +35,7 @@ import pytest
 from jsonschema import Draft202012Validator
 from mcp import types
 
-from plant_genomics_mcp import ensembl_plants, server
+from plant_genomics_mcp import batch, ensembl_plants, server, string_db
 from tests.test_progress_bridge import _Ctx, _params, _RecordingSession
 
 # The tool used for the behavioural tests: two declared properties, one
@@ -232,3 +232,57 @@ async def test_an_unknown_tool_still_reports_itself_as_unknown() -> None:
 
     assert err.is_error is True
     assert "unknown tool: not_a_real_tool" in _text(err)
+
+
+@pytest.mark.parametrize(
+    ("tool", "module", "attr", "new", "old", "value"),
+    [
+        (
+            "string_interactions",
+            string_db,
+            "lookup_partners",
+            "locus",
+            "locus_or_accession",
+            "AT1G19850",
+        ),
+        (
+            "batch_string_interactions",
+            batch,
+            "batch_string_interactions",
+            "loci",
+            "loci_or_accessions",
+            ["AT1G19850"],
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_string_takes_the_shared_name_and_still_its_deprecated_one(
+    tool: str,
+    module: Any,
+    attr: str,
+    new: str,
+    old: str,
+    value: Any,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """#129: ``locus`` / ``loci`` like every other tool, advertised as required;
+    the pre-#129 name is mapped onto it before validation, not advertised."""
+    calls: list[Any] = []
+
+    async def rec(client: Any, ident: Any, **kwargs: Any) -> dict[str, Any]:
+        calls.append(ident)
+        return {"stub": True}
+
+    monkeypatch.setattr(module, attr, rec)
+    schema = server._TOOL_SCHEMAS[tool]
+    assert schema["required"] == [new] and old not in schema["properties"]
+
+    for name in (new, old):
+        res = await _call(tool, {name: value})
+        assert not res.is_error, _text(res)
+    assert calls == [value, value]
+
+    err = await _call(tool, {new: value, old: value})
+    assert err.is_error is True
+    assert _text(err).startswith("[InvalidArguments] ") and "not both" in _text(err)
+    assert calls == [value, value]

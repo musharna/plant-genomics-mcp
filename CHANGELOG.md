@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **`string_interactions` takes `locus`, `batch_string_interactions` takes
+  `loci` (#129),** like every other tool; those are now the advertised,
+  required names. The old `locus_or_accession` / `loci_or_accessions` are
+  still accepted (mapped before validation) and deprecated; passing both
+  names is `InvalidArguments`.
+- **`string_interactions` partners: `accession` is described as what it is
+  (#133)** — always equal to `string_id`, a STRING id, not a UniProt
+  accession — and marked deprecated. The value is unchanged.
+
 - **New tool `entry_members` — from a family or domain to its genes (#124).**
   Given an InterPro, Pfam or PANTHER accession and an organism, it lists every
   UniProt protein carrying it, each with the locus the locus-keyed tools accept

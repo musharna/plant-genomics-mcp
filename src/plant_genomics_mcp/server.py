@@ -898,14 +898,16 @@ TOOLS: list[types.Tool] = [
             "plant species (slug, scientific/common name, or NCBI taxid). "
             "Returns first-neighbor partners with the combined STRING score "
             "plus per-channel sub-scores (experimental, database, "
-            "textmining, predicted)."
+            "textmining, predicted). The argument was called "
+            "locus_or_accession before #129; that name is still accepted, "
+            "deprecated."
         ),
         input_schema={
             "type": "object",
             "properties": {
-                "locus_or_accession": {
+                "locus": {
                     "type": "string",
-                    "description": "UniProt accession (Q0WV96) or locus (AT1G01010)",
+                    "description": "Locus (AT1G01010) or UniProt accession (Q0WV96)",
                 },
                 "limit": {
                     "type": "integer",
@@ -920,7 +922,7 @@ TOOLS: list[types.Tool] = [
                     "default": "arabidopsis_thaliana",
                 },
             },
-            "required": ["locus_or_accession"],
+            "required": ["locus"],
             "additionalProperties": False,
         },
         output_schema=StringInteractions.model_json_schema(),
@@ -1925,11 +1927,15 @@ TOOLS: list[types.Tool] = [
     types.Tool(
         name="batch_string_interactions",
         title="Batch: STRING Interactions",
-        description="Batch version of string_interactions. Up to 50 inputs per call.",
+        description=(
+            "Batch version of string_interactions. Up to 50 inputs per call. "
+            "The argument was called loci_or_accessions before #129; that "
+            "name is still accepted, deprecated."
+        ),
         input_schema={
             "type": "object",
             "properties": {
-                "loci_or_accessions": {
+                "loci": {
                     "type": "array",
                     "items": {"type": "string"},
                     "maxItems": 50,
@@ -1941,7 +1947,7 @@ TOOLS: list[types.Tool] = [
                     "default": "arabidopsis_thaliana",
                 },
             },
-            "required": ["loci_or_accessions"],
+            "required": ["loci"],
             "additionalProperties": False,
         },
         output_schema=BatchEnvelope.model_json_schema(),
@@ -2218,6 +2224,30 @@ def _validate_arguments(name: str, arguments: dict[str, Any]) -> None:
     field = "/".join(str(part) for part in error.absolute_path)
     detail = f"{field}: {error.message}" if field else error.message
     raise InvalidArguments(f"{name}: {detail}")
+
+
+# Renamed arguments (#129): old name -> the name the schema advertises. Mapped
+# before validation, so the schema lists only the new name (required, as every
+# other tool's is) while callers of the old one keep working.
+_DEPRECATED_ARGUMENTS: dict[str, dict[str, str]] = {
+    "string_interactions": {"locus_or_accession": "locus"},
+    "batch_string_interactions": {"loci_or_accessions": "loci"},
+}
+
+
+def _rename_deprecated_arguments(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+    """``arguments`` with each deprecated name moved to its current one."""
+    renames = _DEPRECATED_ARGUMENTS.get(name, {})
+    out = dict(arguments)
+    for old, new in renames.items():
+        if old not in out:
+            continue
+        if new in out:
+            raise InvalidArguments(
+                f"{name}: pass {new!r} or its deprecated alias {old!r}, not both"
+            )
+        out[new] = out.pop(old)
+    return out
 
 
 # mcp 2.x removed the @server.list_tools() / @server.call_tool() decorator
@@ -2560,7 +2590,7 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
             case "batch_string_interactions":
                 return await batch.batch_string_interactions(
                     client,
-                    args["loci_or_accessions"],
+                    args["loci"],
                     limit=args.get("limit", string_db.DEFAULT_LIMIT),
                     organism=args.get("organism", "arabidopsis_thaliana"),
                 )
@@ -2580,7 +2610,7 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
             case "string_interactions":
                 return await string_db.lookup_partners(
                     client,
-                    args["locus_or_accession"],
+                    args["locus"],
                     limit=args.get("limit", string_db.DEFAULT_LIMIT),
                     organism=args.get("organism", "arabidopsis_thaliana"),
                 )
@@ -2681,6 +2711,7 @@ async def _call_tool(
         # not checked them against the schema we advertise (see
         # _validate_arguments). InvalidArguments is a PlantGenomicsError, so
         # it leaves through the same labelled error path as everything else.
+        arguments = _rename_deprecated_arguments(name, arguments)
         _validate_arguments(name, arguments)
         if reporter is None:
             payload = await _dispatch(name, arguments)
