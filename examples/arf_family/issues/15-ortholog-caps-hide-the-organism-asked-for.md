@@ -1,6 +1,6 @@
 # Both ortholog tools cap at 100 rows with no target-organism filter, so rice and wheat never come back
 
-**Filed as [#125](https://github.com/musharna/plant-genomics-mcp/issues/125) — fixed.** Both rows are closed at `967bc36`. Written from the ARF family dossier in
+**Filed as [#125](https://github.com/musharna/plant-genomics-mcp/issues/125) — fixed.** `ortholog-cap-hides-organisms` is closed at `967bc36`. `ortholog-tools-disagree` is closed at `052e4ec`. Written from the ARF family dossier in
 [`examples/arf_family/`](../), re-run at server commit `052e4ec`
 (release `1.21.0`): 64 MCP calls over 114 genes x 16 tools, the family
 itself from a 1163-call enumeration through the same tools. Each section

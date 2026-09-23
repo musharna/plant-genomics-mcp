@@ -241,6 +241,15 @@ def test_the_undecidable_row_matches_a_recount_of_family_candidates():
     rows = [json.loads(line) for line in (ARF_DIR / "gaps.jsonl").read_text().splitlines()]
     row = next(r for r in rows if r["kind"] == "candidate-undecidable")
     assert "family_candidates.tsv" in row["raw"]
+    if row.get("closed"):
+        # Closed by a later run: its observation is the one to recount.
+        observed = row["closed"]["returned"]
+        closed = re.search(r"(\d+) of the (\d+) candidates are undecided", observed)
+        assert closed, observed
+        assert (int(closed.group(1)), int(closed.group(2))) == (len(undecided), len(cands))
+        # Positive control: the file really was read and really decides.
+        assert {r["kept"] for r in cands} >= {"true", "false"}
+        return
     m = re.search(
         r"(\d+) of the (\d+) could not be decided, (\d+) wheat and (\d+) Arabidopsis",
         row["returned"],
