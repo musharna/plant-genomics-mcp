@@ -366,6 +366,11 @@ def main() -> None:
                     # per-locus failure inside an ok envelope.
                     base = name[len("batch_") :]
                     loci = args.get("loci") or args.get("loci_or_accessions") or []
+                    if name == "batch_locus_call":
+                        # The generic form names its tool and nests the
+                        # shared arguments (#131).
+                        base = args.get("tool")
+                        args = args.get("args") or {}
                     if args.get("organism") == CHAIN_UNSUPPORTED_ORGANISM:
                         envelope = {
                             "tool": base,
