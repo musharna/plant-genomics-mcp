@@ -75,11 +75,16 @@ def test_page_figure_paragraph_range_is_derived_from_the_calls_log():
     that range and they must match a recount of calls.jsonl."""
     counts = _distinct_positions_per_tool()
     assert len(counts) == 16, counts  # one row per chain tool
-    lo_tool, lo = min(counts.items(), key=lambda kv: (kv[1], kv[0]))
-    hi_tool, hi = max(counts.items(), key=lambda kv: (kv[1], kv[0]))
+    lo, hi = min(counts.values()), max(counts.values())
     assert lo < hi
+    # Name every tool at the low end and count the rest, rather than one
+    # arbitrary example of each (a reviewer read the pick as meaningful).
+    lo_tools = sorted(t for t, n in counts.items() if n == lo)
+    rest = [t for t, n in counts.items() if n != lo]
+    assert all(counts[t] == hi for t in rest), counts  # the claim assumes two levels
     text = (ARF / "PAGE.md").read_text().replace("\n", " ")
-    claim = f"from {lo} positions for `{lo_tool}` to {hi} for `{hi_tool}`"
+    named = " and ".join(f"`{t}`" for t in lo_tools)
+    claim = f"{lo} positions for {named}, {hi} for the other {len(rest)}"
     assert claim in text, claim
     # The sentence is about the tie rule, and says so.
     assert "exact ties draw on one point" in text

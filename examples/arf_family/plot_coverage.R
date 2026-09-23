@@ -87,7 +87,7 @@ n_chain <- nrow(chain)
 
 title_line1 <- sprintf(
   "Response sizes on the wire span %s×, from %s B to %s kB",
-  fold, format(min_bytes, big.mark = ","), round(max_bytes / 1000)
+  format(fold, big.mark = ","), format(min_bytes, big.mark = ","), round(max_bytes / 1000)
 )
 title_line2 <- sprintf(
   "%d of %d tools called name the release under upstream_version",
@@ -109,9 +109,8 @@ p <- ggplot(calls, aes(x = n_bytes, y = y)) +
   ) +
   geom_point(
     data = calls[calls$expected, ],
-    aes(shape = organism),
+    aes(shape = organism, colour = "documented organism refusal"),
     fill = NA,
-    colour = pgmcp_refline_colour,
     stroke = pgmcp_point_stroke,
     size = pgmcp_point_size
   ) +
@@ -137,7 +136,18 @@ p <- ggplot(calls, aes(x = n_bytes, y = y)) +
     # payload" truncates off the right edge in one row). With `shape`
     # mapped to organism the fill keys draw no glyph unless a shape is
     # forced onto them.
-    guide = ggplot2::guide_legend(nrow = 2, override.aes = list(shape = 21))
+    # One row unless all three levels are present (see above); two rows
+    # for two keys left a gap that read as two separate legends.
+    guide = ggplot2::guide_legend(
+      nrow = if (length(unique(calls$release_status)) > 2) 2 else 1,
+      override.aes = list(shape = 21)
+    )
+  ) +
+  # The hollow refusals get their own key, not only a caption line.
+  scale_colour_manual(
+    name = NULL,
+    values = c("documented organism refusal" = pgmcp_refline_colour),
+    guide = ggplot2::guide_legend(override.aes = list(shape = 21, fill = NA))
   ) +
   scale_linetype_manual(name = NULL, values = c("200 kB oversize threshold" = "dashed")) +
   labs(

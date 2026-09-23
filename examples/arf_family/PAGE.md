@@ -19,8 +19,10 @@ and #151, plus this dossier's own change to call every chain tool
 through a batch form — 64 MCP calls over 114 genes × 16 tools, one call
 per organism per 50 loci: 8 tools through their own `batch_` form and 8
 through `batch_locus_call`. 39 calls ok, 7 expected refusals, 18 calls
-carrying 262 locus-level errors, 21 minutes wall. Two causes account
-for most of the errors. 87 are OrthoDB refusing the batch's eight-wide
+carrying 262 locus-level errors, 21 minutes wall. Three causes account
+for 218 of the errors. 68 are STRING: 66 wheat IWGSC ids it does not
+find (`wheat-string-unresolvable` below) and 2 rice genes with no
+partners. 87 are OrthoDB refusing the batch's eight-wide
 fan-out as "too high request rate" (`batch-fanout-rate-limit` below; the
 same batch answers in full one request at a time). 63 are PANTHER
 timeouts from an upstream outage between about 00:45 and 01:00 EDT,
@@ -256,8 +258,9 @@ Response sizes on the wire span 11,070×, from 318 B
 (`batch_locus_call` running `aragwas_associations` over the 23
 Arabidopsis loci). Every chain tool is called through a batch form, one
 call per organism per 50 loci — four calls, since wheat's 66 loci take
-two — and exact ties draw on one point: from 3 positions for
-`batch_atted_coexpression` to 4 for `batch_string_interactions`. The
+two — and exact ties draw on one point: 3 positions for
+`batch_atted_coexpression` and `batch_kegg_pathways`, 4 for the other 14
+(each of the two has a pair of wheat refusals that tie). The
 vertical offset is by organism. Six of the 16 tools called put the upstream release in
 `upstream_version`: `interpro_domains`, `resolve_locus_to_uniprot`,
 `gene_report`, and — since the fix pass (#121) — `gramene_homologs`,
