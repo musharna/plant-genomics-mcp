@@ -13,9 +13,11 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import contextlib
 import json
 import os
 import re
+import weakref
 from collections.abc import Callable, Mapping, Sized
 from typing import Any
 
@@ -114,6 +116,44 @@ def decode_cursor(tool: str, query: Mapping[str, Any], cursor: str | None) -> di
     return position
 
 
+class UpstreamLimit:
+    """At most ``n`` requests in flight to one upstream, across every tool (#153).
+
+    ``batch_locus_call`` fans out at one width for every backend; OrthoDB
+    refuses the excess as a rate limit, and so would any upstream that only
+    tolerates a few concurrent requests, however the calls reach it. A backend
+    module that needs a lower ceiling owns one of these and passes it as
+    ``limit=``. The slot is held for one HTTP exchange, not across a retry's
+    backoff, so a request that is waiting to retry does not block the rest.
+
+    One semaphore per running event loop: an ``asyncio.Semaphore`` binds to
+    the first loop it makes a caller wait on and raises ``RuntimeError`` on
+    any other, and a module-level limit outlives loops (pytest runs one per
+    test; a host may restart its loop).
+    """
+
+    def __init__(self, n: int) -> None:
+        if n < 1:
+            raise ValueError(f"UpstreamLimit needs n >= 1, got {n}")
+        self.n = n
+        self._per_loop: weakref.WeakKeyDictionary[asyncio.AbstractEventLoop, asyncio.Semaphore] = (
+            weakref.WeakKeyDictionary()
+        )
+
+    def _semaphore(self) -> asyncio.Semaphore:
+        loop = asyncio.get_running_loop()
+        sem = self._per_loop.get(loop)
+        if sem is None:
+            sem = self._per_loop[loop] = asyncio.Semaphore(self.n)
+        return sem
+
+    async def __aenter__(self) -> None:
+        await self._semaphore().acquire()
+
+    async def __aexit__(self, *_exc: object) -> None:
+        self._semaphore().release()
+
+
 def _too_large(service: str, detail: str) -> PlantGenomicsError:
     """Build the typed 'response too large' error (shared by both cap checks)."""
     return PlantGenomicsError(
@@ -200,6 +240,8 @@ async def request_with_retry(
     not_found_400_pattern: re.Pattern[str] | None = None,
     allow_html: bool = False,
     no_content_ok: bool = False,
+    retry_403_pattern: re.Pattern[str] | None = None,
+    limit: UpstreamLimit | None = None,
 ) -> httpx.Response | Any:
     """Issue ``method url`` with the shared retry + classification policy.
 
@@ -227,8 +269,19 @@ async def request_with_retry(
     for an upstream whose 204 is an answer: InterPro serves 204 with an empty
     body for a protein with no entries (live, 2026-09-22). Elsewhere it stays
     an error, since a caller that parses the body has nothing to parse.
+
+    ``retry_403_pattern=<compiled regex>`` covers upstreams that refuse an
+    excess request rate with 403 plus a body marker rather than 429: OrthoDB
+    serves an HTML page naming "too high request rate" (#153). A matching 403
+    is retried on the 429 backoff and, once the budget is spent, raises
+    ``RateLimitError`` quoting the page. Opt-in and body-matched, like
+    ``not_found_400_pattern``: any other 403 stays terminal.
+
+    ``limit=<UpstreamLimit>`` caps this upstream's requests in flight; see
+    :class:`UpstreamLimit`.
     """
     delay = 1.0
+    last_refusal: str | None = None
     last_status: int | None = None
     last_exc: httpx.TransportError | None = None
     last_html_media: str | None = None
@@ -238,15 +291,18 @@ async def request_with_retry(
             # a declared Content-Length over the cap is rejected without reading
             # the body at all; a chunked / no-Content-Length body is capped
             # mid-read. Bounds peak memory against a hostile/buggy upstream (L4).
-            async with client.stream(
-                method,
-                url,
-                params=params,
-                data=data,
-                json=json,
-                headers=headers,
-                timeout=timeout,
-            ) as streamed:
+            async with (
+                limit or contextlib.nullcontext(),
+                client.stream(
+                    method,
+                    url,
+                    params=params,
+                    data=data,
+                    json=json,
+                    headers=headers,
+                    timeout=timeout,
+                ) as streamed,
+            ):
                 declared = streamed.headers.get("content-length")
                 if declared and declared.isdigit() and int(declared) > _MAX_RESPONSE_BYTES:
                     raise _too_large(service, f"{declared} bytes (Content-Length)")
@@ -291,6 +347,7 @@ async def request_with_retry(
             last_exc = exc
             last_status = None
             last_html_media = None
+            last_refusal = None
             if attempt < max_retries - 1:
                 retry_after = min(delay, _RETRY_AFTER_CAP)
                 await progress.notify(
@@ -304,6 +361,7 @@ async def request_with_retry(
         last_exc = None
         last_status = resp.status_code
         last_html_media = None
+        last_refusal = None
 
         if resp.status_code == 200:
             if allow_html or not _is_interposed_html(resp):
@@ -333,7 +391,14 @@ async def request_with_retry(
         if resp.status_code == 404 and not_found_returns is not _RAISE:
             return not_found_returns
 
-        if resp.status_code in _RETRYABLE_STATUSES:
+        refused = (
+            resp.status_code == 403
+            and retry_403_pattern is not None
+            and retry_403_pattern.search(resp.text) is not None
+        )
+        if refused:
+            last_refusal = " ".join(resp.text.split())[:200]
+        if resp.status_code in _RETRYABLE_STATUSES or refused:
             if attempt < max_retries - 1:
                 retry_after_hdr = resp.headers.get("Retry-After")
                 try:
@@ -386,6 +451,10 @@ async def request_with_retry(
         ) from last_exc
     if last_status == 429:
         raise RateLimitError(f"{service} exhausted {max_retries} retries (HTTP 429)")
+    if last_refusal is not None:
+        raise RateLimitError(
+            f"{service} exhausted {max_retries} retries (HTTP 403: {last_refusal})"
+        )
     if last_html_media is not None:
         # Name the real problem. The pre-fix path let this body reach the
         # caller's parser, so the user saw an XML/JSON syntax error and would

@@ -16,6 +16,7 @@ Three-hop flow (each response cached independently):
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import httpx
@@ -26,6 +27,14 @@ from plant_genomics_mcp.errors import PlantGenomicsError
 BASE_URL = "https://data.orthodb.org"
 DEFAULT_TIMEOUT = 30.0
 MAX_RETRIES = 3
+
+# OrthoDB serves about one request a second per client and refuses the excess
+# with a 403 page naming "too high request rate" (#153). Live probe 2026-09-23,
+# 16 searches per width: widths 1 and 2 both ran at 1.0/s with no refusal
+# (width 2 only queued, doubling latency); width 4 had 11 of 16 refused and
+# width 8 had 12 of 16. One in flight loses nothing and refuses nothing.
+_LIMIT = _http.UpstreamLimit(1)
+REFUSED_403_RE = re.compile(r"too high request rate")
 
 # Viridiplantae — scope the ortholog search to green plants.
 LEVEL = "33090"
@@ -48,6 +57,8 @@ async def _get(client: httpx.AsyncClient, path: str, params: dict[str, Any]) -> 
         headers={"Accept": "application/json"},
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
+        retry_403_pattern=REFUSED_403_RE,
+        limit=_LIMIT,
     )
     if not isinstance(body, dict):
         raise PlantGenomicsError(

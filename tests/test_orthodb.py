@@ -8,13 +8,14 @@ Two tiers:
 
 from __future__ import annotations
 
+import asyncio
 import os
 
 import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from plant_genomics_mcp import orthodb
+from plant_genomics_mcp import _http, orthodb
 from plant_genomics_mcp.errors import PlantGenomicsError
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
@@ -258,3 +259,61 @@ def test_organism_name_match_is_prefix_and_case_insensitive() -> None:
     assert orthodb._organism_matches("oryza sativa", "Oryza sativa")
     assert not orthodb._organism_matches("Oryza brachyantha", "Oryza sativa")
     assert not orthodb._organism_matches(None, "Oryza sativa")
+
+
+def _crowd_refusing_transport(refused: list[str]) -> httpx.MockTransport:
+    """OrthoDB as probed live (2026-09-23): any request arriving while another
+    is in flight gets the 403 refusal page; alone, every request answers."""
+    in_flight = 0
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal in_flight
+        in_flight += 1
+        try:
+            crowded = in_flight > 1
+            await asyncio.sleep(0.01)
+            if crowded:
+                refused.append(request.url.path)
+                return httpx.Response(
+                    403, text="<html>Your query was rejected.<li> too high request rate</li>"
+                )
+            path = request.url.path
+            if path.endswith("/search"):
+                return httpx.Response(200, json={"count": "1", "data": [_GID]})
+            if path.endswith("/group"):
+                return httpx.Response(200, json=_GROUP)
+            return httpx.Response(200, json=_ORTHO)
+        finally:
+            in_flight -= 1
+
+    return httpx.MockTransport(handler)
+
+
+async def _eight_lookups() -> tuple[int, list[str]]:
+    orthodb._CACHE.clear()
+    refused: list[str] = []
+    loci = [f"AT1G0{i}060" for i in range(1, 9)]
+    async with httpx.AsyncClient(transport=_crowd_refusing_transport(refused)) as client:
+        out = await asyncio.gather(
+            *(orthodb.lookup_locus(client, locus, "arabidopsis") for locus in loci),
+            return_exceptions=True,
+        )
+    return sum(1 for r in out if isinstance(r, dict) and r["found"]), refused
+
+
+@pytest.mark.asyncio
+async def test_eight_parallel_lookups_stay_under_orthodb_rate_limit(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Issue #153: batch_locus_call ran eight OrthoDB lookups at once and
+    OrthoDB refused the excess. The client's own limit keeps it to one."""
+
+    answered, refused = await _eight_lookups()
+    assert (answered, refused) == (8, [])
+
+    # Positive control: the same eight with the limit widened to eight are
+    # refused by this transport, so the pass above is the limit's doing.
+    monkeypatch.setattr(orthodb, "_LIMIT", _http.UpstreamLimit(8))
+    monkeypatch.setattr(orthodb, "MAX_RETRIES", 1)
+    answered, refused = await _eight_lookups()
+    assert answered < 8 and refused

@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- **OrthoDB no longer refuses batched lookups as a rate limit (#153).**
+  `_http.UpstreamLimit` caps one upstream's requests in flight across
+  every tool, held per HTTP exchange and released during a retry's
+  backoff; OrthoDB takes one at a time (live, 2026-09-23: widths 1 and 2
+  both ran at 1.0 request/s, width 4 had 11 of 16 refused). A 403 whose
+  body matches `retry_403_pattern` is retried on the 429 backoff and
+  ends as `RateLimitError` quoting the page. `batch_locus_call` over
+  `orthodb_orthologs` at the default width of 8 went from 7, 8 and 6 of
+  23 Arabidopsis loci to 23 of 23 in three fresh-server runs, and 25 of
+  25 rice.
+
 - **`examples/arf_family/` re-run at `052e4ec` (`main` at `b05bb18`).**
   64 calls over 114 genes in three organisms: every chain tool now goes
   through a batch form, the 8 with no `batch_` form of their own through
