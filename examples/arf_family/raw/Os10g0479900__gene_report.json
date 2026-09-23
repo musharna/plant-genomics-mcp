@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-22T07:31:23Z",
- "elapsed_s": 2.891117879997182,
+ "started_at": "2026-09-23T04:54:33Z",
+ "elapsed_s": 27.73422560999461,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 2.5759569399961038,
+   "elapsed_s": 27.460953977002646,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.000717728995368816,
+   "elapsed_s": 0.000584898007218726,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 8.253399573732167e-05,
+   "elapsed_s": 8.453999180346727e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.002136996998160612,
+   "elapsed_s": 0.0018928790086647496,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.3144401800018386,
+   "elapsed_s": 0.2726756009942619,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 3.640599607024342e-05,
+   "elapsed_s": 0.0002010019961744547,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0004818699962925166,
+   "elapsed_s": 0.00034044899803120643,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00044826799421571195,
+   "elapsed_s": 0.00032705099147278816,
    "result": null,
    "error": null
   }
@@ -85,21 +85,21 @@
    ]
   },
   "uniprot_accession": "Q9AV47",
-  "markdown": "# OsARF22 (UniProt: ARF22) \u2014 `Os10g0479900`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 10:18,051,857\u201318,056,890 (+) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 22**\nARFV_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 698 aa\nUniProt: [Q9AV47](https://www.uniprot.org/uniprotkb/Q9AV47)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [127\u2013228]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [326\u2013398]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [126\u2013230]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [602\u2013686]\n- **B3 DNA binding domain** (domain, interpro) [127\u2013230]\n- **Auxin response factor domain** (domain, interpro) [311\u2013394]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [119\u2013232]\n- **Auxin response factor** (family, interpro) [11\u2013679]\n- **PB1-like domain** (domain, interpro) [603\u2013683]\n- **B3 DNA binding domain** (domain, pfam) [128\u2013229]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0007389] pattern specification process (IBA)\n- [GO:0007389] pattern specification process (IEA)\n- [GO:0009725] response to hormone (IEA)\n- [GO:0009733] response to auxin (IBA)\n- [GO:0048829] root cap development (IBA)\n- [GO:0048829] root cap development (IEA)\n- [GO:0051301] cell division (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n- `osa04075` Plant hormone signal transduction - Oryza sativa japonica (Japanese rice) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| Q2QMC4_ORYSJ | 0.516 |\n| Q7XK43_ORYSJ | 0.455 |\n| Q6ZH84_ORYSJ | 0.455 |\n| Q0J9G7_ORYSJ | 0.454 |\n\n## Cross-references\n- UniProtKB Gene Name: Q9AV47\n- WikiGene: 4348918\n- Expression Atlas: Os10g0479900\n- NCBI gene (formerly Entrezgene): 4348918\n\n## Literature\n_No literature found._\n",
+  "markdown": "# OsARF22 (UniProt: ARF22) \u2014 `Os10g0479900`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 10:18,051,857\u201318,056,890 (+) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 22**\nARFV_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 698 aa\nUniProt: [Q9AV47](https://www.uniprot.org/uniprotkb/Q9AV47)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [127\u2013228]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [326\u2013398]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [126\u2013230]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [602\u2013686]\n- **B3 DNA binding domain** (domain, interpro) [127\u2013230]\n- **Auxin response factor domain** (domain, interpro) [311\u2013394]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [119\u2013232]\n- **Auxin response factor** (family, interpro) [11\u2013679]\n- **PB1-like domain** (domain, interpro) [603\u2013683]\n- **B3 DNA binding domain** (domain, pfam) [128\u2013229]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0007389] pattern specification process (IBA)\n- [GO:0007389] pattern specification process (IEA)\n- [GO:0009725] response to hormone (IEA)\n- [GO:0009733] response to auxin (IBA)\n- [GO:0048829] root cap development (IBA)\n- [GO:0048829] root cap development (IEA)\n- [GO:0051301] cell division (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n- `osa04075` Plant hormone signal transduction - Oryza sativa japonica (Japanese rice) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| Q2QMC4_ORYSJ | 0.516 |\n| Q7XK43_ORYSJ | 0.455 |\n| Q6ZH84_ORYSJ | 0.455 |\n| Q0J9G7_ORYSJ | 0.454 |\n\n## Cross-references\n- UniProtKB Gene Name: Q9AV47\n- WikiGene: 4348918\n- Expression Atlas: Os10g0479900\n- NCBI gene (formerly Entrezgene): 4348918\n\n## Literature\n1 hits total; showing top 1.\n- **Quantitative Trait Loci Mapping Identified Candidate Genes Involved in Plant Height Regulation in Rice** \u2014 Park JR, Jang YH, Kim EG, Hur SS, Kim KM. (PMID:38069217; doi:10.3390/ijms242316895)\n",
   "sections": {
    "annotation": {
-    "biotype": "protein_coding",
-    "object_type": "Gene",
     "logic_name": "rapdb_genes",
-    "seq_region_name": "10",
-    "canonical_transcript": "Os10t0479900-01.",
-    "assembly_name": "IRGSP-1.0",
-    "source": "RAP2022-09-01",
-    "db_type": "core",
     "start": 18051857,
+    "source": "RAP2022-09-01",
+    "object_type": "Gene",
+    "assembly_name": "IRGSP-1.0",
+    "canonical_transcript": "Os10t0479900-01",
+    "db_type": "core",
     "end": 18056890,
+    "biotype": "protein_coding",
     "id": "Os10g0479900",
     "strand": 1,
+    "seq_region_name": "10",
     "display_name": "OsARF22",
     "organism": "oryza_sativa",
     "upstream_version": null
@@ -126,48 +126,48 @@
     "count": 4,
     "xrefs": [
      {
+      "synonyms": [],
+      "info_text": "",
+      "display_id": "ARF22",
+      "primary_id": "Q9AV47",
+      "info_type": "DEPENDENT",
       "version": null,
       "db_display_name": "UniProtKB Gene Name",
       "description": null,
-      "display_id": "ARF22",
-      "info_type": "DEPENDENT",
-      "info_text": "",
-      "dbname": "Uniprot_gn",
-      "synonyms": [],
-      "primary_id": "Q9AV47"
+      "dbname": "Uniprot_gn"
      },
      {
-      "primary_id": "4348918",
-      "synonyms": [],
-      "display_id": "LOC4348918",
+      "db_display_name": "WikiGene",
+      "version": "0",
       "dbname": "WikiGene",
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "version": "0",
       "description": "auxin response factor 22-like",
-      "db_display_name": "WikiGene"
-     },
-     {
-      "display_id": "Os10g0479900",
-      "info_type": "DIRECT",
-      "dbname": "ArrayExpress",
+      "primary_id": "4348918",
+      "info_type": "DEPENDENT",
       "info_text": "",
-      "version": "0",
-      "db_display_name": "Expression Atlas",
-      "description": null,
-      "primary_id": "Os10g0479900",
+      "display_id": "LOC4348918",
       "synonyms": []
      },
      {
+      "display_id": "Os10g0479900",
+      "info_text": "",
       "synonyms": [],
+      "dbname": "ArrayExpress",
+      "description": null,
+      "db_display_name": "Expression Atlas",
+      "version": "0",
+      "info_type": "DIRECT",
+      "primary_id": "Os10g0479900"
+     },
+     {
+      "synonyms": [],
+      "info_text": "",
+      "display_id": "LOC4348918",
       "primary_id": "4348918",
+      "info_type": "DEPENDENT",
+      "version": "0",
       "db_display_name": "NCBI gene (formerly Entrezgene)",
       "description": "auxin response factor 22-like",
-      "version": "0",
-      "info_type": "DEPENDENT",
-      "dbname": "EntrezGene",
-      "info_text": "",
-      "display_id": "LOC4348918"
+      "dbname": "EntrezGene"
      }
     ],
     "by_db": {
@@ -204,6 +204,9 @@
     "query": "Os10g0479900",
     "accession": "Q9AV47",
     "organism": "oryza_sativa",
+    "total": null,
+    "returned": 4,
+    "truncated": null,
     "partners": [
      {
       "string_id": "39947.Q2QMC4",
@@ -252,16 +255,40 @@
     "locus": "Os10g0479900",
     "organism": "oryza_sativa",
     "query": "Os10g0479900 AND rice",
-    "hitCount": 0,
-    "returned": 0,
+    "hitCount": 1,
+    "total": 1,
+    "returned": 1,
+    "truncated": false,
+    "next_cursor": null,
     "abstracts_included": true,
-    "hits": [],
+    "hits": [
+     {
+      "id": "38069217",
+      "source": "MED",
+      "pmid": "38069217",
+      "pmcid": "PMC10706376",
+      "doi": "10.3390/ijms242316895",
+      "title": "Quantitative Trait Loci Mapping Identified Candidate Genes Involved in Plant Height Regulation in Rice.",
+      "authorString": "Park JR, Jang YH, Kim EG, Hur SS, Kim KM.",
+      "journalTitle": "International journal of molecular sciences",
+      "pubYear": "2023",
+      "firstPublicationDate": "2023-11-29",
+      "citedByCount": 4,
+      "isOpenAccess": "Y",
+      "hasPDF": "Y",
+      "abstractText": "Rice plant height is an agricultural trait closely related to biomass, lodging tolerance, and yield. Identifying quantitative trait loci (QTL) regions related to plant height regulation and developing strategies to screen potential candidate genes can improve agricultural traits in rice. In this study, a double haploid population (CNDH), derived by crossing 'Cheongcheong' and 'Nagdong' individuals, was used, and a genetic map was constructed with 222 single-sequence repeat markers. In the RM3482-RM212 region on chromosome 1, <i>qPh1</i>, <i>qPh1-1</i>, <i>qPh1-3</i>, <i>qPh1-5</i>, and <i>qPh1-6</i> were identified for five consecutive years. The phenotypic variance explained ranged from 9.3% to 13.1%, and the LOD score ranged between 3.6 and 17.6. <i>OsPHq1</i>, a candidate gene related to plant height regulation, was screened in RM3482-RM212. <i>OsPHq1</i> is an ortholog of gibberellin 20 oxidase 2, and its haplotype was distinguished by nine SNPs. Plants were divided into two groups based on their height, and tall and short plants were distinguished and clustered according to the expression level of <i>OsPHq1</i>. QTLs and candidate genes related to plant height regulation, and thus, biomass regulation, were screened and identified in this study, but the molecular mechanism of the regulation remains poorly known. The information obtained in this study will help develop molecular markers for marker-assisted selection and breeding through rice plant height control.",
+      "web_url": "https://europepmc.org/article/PMC/PMC10706376"
+     }
+    ],
     "upstream_version": null
    },
    "go_annotations": {
     "uniprot_accession": "Q9AV47",
     "numberOfHits": 13,
+    "total": 13,
     "returned": 13,
+    "truncated": false,
+    "next_cursor": null,
     "annotations": [
      {
       "geneProductId": "UniProtKB:Q9AV47",
@@ -921,12 +948,15 @@
       }
      ]
     },
+    "by_aspect_deduped_on": "goId",
     "upstream_version": null
    },
    "domains": {
     "accession": "Q9AV47",
     "found": true,
     "domain_count": 16,
+    "total": 16,
+    "returned": 16,
     "truncated": false,
     "domains": [
      {

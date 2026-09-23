@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- **`examples/arf_family/` re-run at `052e4ec` (`main` at `b05bb18`).**
+  64 calls over 114 genes in three organisms: every chain tool now goes
+  through a batch form, the 8 with no `batch_` form of their own through
+  `batch_locus_call` (`run_dossier.LOCUS_BATCHED`, checked against the
+  live enum). Wheat goes from 0 members to 66 now that IWGSC loci resolve,
+  no enumeration candidate is left undecided, and the 23 Arabidopsis
+  members equal `entry_members(IPR010525)`.
+  27 of the 43 hand-logged gap rows are closed (20 by this run), each with what the run returned
+  instead; `probe_gaps.py` re-asks the rows the chain does not answer.
+  Three new rows: `batch_locus_call`'s eight-wide fan-out trips OrthoDB's
+  rate limit (87 of 114 loci refused with HTTP 403; none at width 1,
+  `probe_concurrency.py`), `gene_report` answers ok with an empty result
+  when its first step fails, and STRING answers 404 for every wheat
+  IWGSC id. `coverage.py` and the figure count a `batch_locus_call` call
+  under the tool it ran.
+
 Fixes from the 2026-09-22 bug audit:
 
 - **Fix: `string_interactions` sent a dotted locus as its prefix (H1).**

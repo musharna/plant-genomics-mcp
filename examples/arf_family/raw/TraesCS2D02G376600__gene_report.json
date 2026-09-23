@@ -1,0 +1,1247 @@
+{
+ "tool": "gene_report",
+ "input": {
+  "locus": "TraesCS2D02G376600",
+  "organism": "triticum_aestivum",
+  "top_n": 10
+ },
+ "started_at": "2026-09-23T05:00:42Z",
+ "elapsed_s": 7.510090377996676,
+ "steps": [
+  {
+   "step": 1,
+   "tool": "ensembl_plants_lookup_locus",
+   "status": "ok",
+   "elapsed_s": 1.1209535119996872,
+   "result": null,
+   "error": null
+  },
+  {
+   "step": 2,
+   "tool": "resolve_locus_to_uniprot",
+   "status": "ok",
+   "elapsed_s": 0.0004372929979581386,
+   "result": null,
+   "error": null
+  },
+  {
+   "step": 3,
+   "tool": "get_gene_xrefs",
+   "status": "ok",
+   "elapsed_s": 6.388789217991871,
+   "result": null,
+   "error": null
+  },
+  {
+   "step": 4,
+   "tool": "kegg_pathways",
+   "status": "skipped",
+   "elapsed_s": 1.595300273038447e-05,
+   "result": null,
+   "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
+  },
+  {
+   "step": 5,
+   "tool": "string_interactions",
+   "status": "error",
+   "elapsed_s": 0.3420024100050796,
+   "result": null,
+   "error": "[NotFoundError] STRING /api/json/interaction_partners \u2192 HTTP 404: [{ \"Error\" : \"not found\", \"ErrorMessage\" : \"<p>Sorry, STRING did not find a protein called 'TraesCS2D02G376600' in the taxon '4565'.</p><p>Generally, STRING understands a number of different names/sym"
+  },
+  {
+   "step": 6,
+   "tool": "locus_literature",
+   "status": "ok",
+   "elapsed_s": 3.942499461118132e-05,
+   "result": null,
+   "error": null
+  },
+  {
+   "step": 7,
+   "tool": "locus_go_annotations",
+   "status": "ok",
+   "elapsed_s": 0.000323398009641096,
+   "result": null,
+   "error": null
+  },
+  {
+   "step": 8,
+   "tool": "interpro_domains",
+   "status": "ok",
+   "elapsed_s": 0.00026875699404627085,
+   "result": null,
+   "error": null
+  }
+ ],
+ "result": {
+  "locus": "TraesCS2D02G376600",
+  "organism": "triticum_aestivum",
+  "canonical_gene_name": "LOC123053978",
+  "gene_names": {
+   "canonical": "LOC123053978",
+   "ensembl": null,
+   "uniprot": [
+    "LOC123053978"
+   ]
+  },
+  "uniprot_accession": "A0A3B6DG15",
+  "markdown": "# LOC123053978 \u2014 `TraesCS2D02G376600`\n\n*Triticum aestivum* \u00b7 protein_coding \u00b7 2D:480,775,965\u2013480,778,720 (-) \u00b7 IWGSC\n\n## Protein\n**Auxin response factor**\nA0A3B6DG15_WHEAT \u00b7 UniProtKB unreviewed (TrEMBL) \u00b7 714 aa\nUniProt: [A0A3B6DG15](https://www.uniprot.org/uniprotkb/A0A3B6DG15)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [129\u2013230]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [313\u2013387]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [128\u2013232]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [629\u2013712]\n- **B3 DNA binding domain** (domain, interpro) [129\u2013232]\n- **Auxin response factor domain** (domain, interpro) [299\u2013382]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [123\u2013246]\n- **Auxin response factor** (family, interpro) [24\u2013706]\n- **PB1-like domain** (domain, interpro) [628\u2013708]\n- **B3 DNA binding domain** (domain, pfam) [130\u2013231]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006351] DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0007389] pattern specification process (IBA)\n- [GO:0007389] pattern specification process (IEA)\n- [GO:0009725] response to hormone (IEA)\n- [GO:0009733] response to auxin (IBA)\n- [GO:0048829] root cap development (IBA)\n- [GO:0048829] root cap development (IEA)\n- [GO:0051301] cell division (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']_\n\n## Interaction partners (STRING, top 10)\n_Unavailable \u2014 [NotFoundError] STRING /api/json/interaction_partners \u2192 HTTP 404: [{ \"Error\" : \"not found\", \"ErrorMessage\" : \"<p>Sorry, STRING did not find a protein called 'TraesCS2D02G376600' in the taxon '4565'.</p><p>Generally, STRING understands a number of different names/sym_\n\n## Cross-references\n- WikiGene: 123053978\n- KNETMINER_WHEAT: TraesCS2D02G376600\n- Wheat Expression: TraesCS2D02G376600\n- NCBI gene (formerly Entrezgene): 123053978\n- Expression Atlas: TraesCS2D02G376600\n\n## Literature\n_No literature found._\n",
+  "sections": {
+   "annotation": {
+    "object_type": "Gene",
+    "seq_region_name": "2D",
+    "strand": -1,
+    "canonical_transcript": "TraesCS2D02G376600.1",
+    "source": "IWGSC",
+    "id": "TraesCS2D02G376600",
+    "db_type": "core",
+    "assembly_name": "IWGSC",
+    "logic_name": "iwgsc_high_conf",
+    "start": 480775965,
+    "biotype": "protein_coding",
+    "end": 480778720,
+    "organism": "triticum_aestivum",
+    "upstream_version": null
+   },
+   "protein": {
+    "locus_query": "TraesCS2D02G376600",
+    "primaryAccession": "A0A3B6DG15",
+    "uniProtkbId": "A0A3B6DG15_WHEAT",
+    "entryType": "UniProtKB unreviewed (TrEMBL)",
+    "reviewed": false,
+    "recommendedName": "Auxin response factor",
+    "geneNames": [
+     "LOC123053978"
+    ],
+    "organism": "Triticum aestivum",
+    "taxonId": 4565,
+    "sequenceLength": 714,
+    "web_url": "https://www.uniprot.org/uniprotkb/A0A3B6DG15",
+    "upstream_version": "2026_03"
+   },
+   "xrefs": {
+    "locus": "TraesCS2D02G376600",
+    "organism": "triticum_aestivum",
+    "count": 5,
+    "xrefs": [
+     {
+      "display_id": "LOC123053978",
+      "info_text": "",
+      "synonyms": [],
+      "description": "auxin response factor 8",
+      "dbname": "WikiGene",
+      "version": "0",
+      "db_display_name": "WikiGene",
+      "info_type": "DEPENDENT",
+      "primary_id": "123053978"
+     },
+     {
+      "synonyms": [],
+      "display_id": "TraesCS2D02G376600",
+      "info_text": "",
+      "info_type": "DEPENDENT",
+      "primary_id": "TraesCS2D02G376600",
+      "dbname": "KNETMINER_WHEAT",
+      "description": null,
+      "db_display_name": "KNETMINER_WHEAT",
+      "version": "0"
+     },
+     {
+      "version": "0",
+      "db_display_name": "Wheat Expression",
+      "description": null,
+      "dbname": "WHEATEXP_GENE",
+      "primary_id": "TraesCS2D02G376600",
+      "info_type": "DEPENDENT",
+      "info_text": "",
+      "display_id": "TraesCS2D02G376600",
+      "synonyms": []
+     },
+     {
+      "display_id": "LOC123053978",
+      "info_text": "",
+      "synonyms": [],
+      "description": "auxin response factor 8",
+      "dbname": "EntrezGene",
+      "version": "0",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "info_type": "DEPENDENT",
+      "primary_id": "123053978"
+     },
+     {
+      "synonyms": [],
+      "display_id": "TraesCS2D02G376600",
+      "info_text": "",
+      "info_type": "DIRECT",
+      "primary_id": "TraesCS2D02G376600",
+      "description": null,
+      "dbname": "ArrayExpress",
+      "version": "0",
+      "db_display_name": "Expression Atlas"
+     }
+    ],
+    "by_db": {
+     "WikiGene": [
+      "123053978"
+     ],
+     "KNETMINER_WHEAT": [
+      "TraesCS2D02G376600"
+     ],
+     "WHEATEXP_GENE": [
+      "TraesCS2D02G376600"
+     ],
+     "EntrezGene": [
+      "123053978"
+     ],
+     "ArrayExpress": [
+      "TraesCS2D02G376600"
+     ]
+    }
+   },
+   "pathways": null,
+   "interactions": null,
+   "literature": {
+    "locus": "TraesCS2D02G376600",
+    "organism": "triticum_aestivum",
+    "query": "TraesCS2D02G376600 AND wheat",
+    "hitCount": 0,
+    "total": 0,
+    "returned": 0,
+    "truncated": false,
+    "next_cursor": null,
+    "abstracts_included": true,
+    "hits": [],
+    "upstream_version": null
+   },
+   "go_annotations": {
+    "uniprot_accession": "A0A3B6DG15",
+    "numberOfHits": 14,
+    "total": 14,
+    "returned": 14,
+    "truncated": false,
+    "next_cursor": null,
+    "annotations": [
+     {
+      "geneProductId": "UniProtKB:A0A3B6DG15",
+      "symbol": "LOC123053978",
+      "qualifier": "enables",
+      "goId": "GO:0000976",
+      "goName": "transcription cis-regulatory region binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 4565,
+      "taxonName": "Triticum aestivum",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19220"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19850"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G34310"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G34390"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G77850"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT2G33860"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT2G46530"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT3G61830"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT4G23980"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G37020"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G60450"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN000774836"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A0A3B6DG15",
+      "symbol": "LOC123053978",
+      "qualifier": "enables",
+      "goId": "GO:0003677",
+      "goName": "DNA binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000501",
+      "reference": "GO_REF:0000120",
+      "assignedBy": "UniProt",
+      "taxonId": 4565,
+      "taxonName": "Triticum aestivum",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR003340"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR044835"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniRule",
+          "id": "UR000399996"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A0A3B6DG15",
+      "symbol": "LOC123053978",
+      "qualifier": "involved_in",
+      "goId": "GO:0006351",
+      "goName": "DNA-templated transcription",
+      "goAspect": "biological_process",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000256",
+      "reference": "GO_REF:0000104",
+      "assignedBy": "UniProt",
+      "taxonId": 4565,
+      "taxonName": "Triticum aestivum",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniRule",
+          "id": "UR000399996"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A0A3B6DG15",
+      "symbol": "LOC123053978",
+      "qualifier": "involved_in",
+      "goId": "GO:0006355",
+      "goName": "regulation of DNA-templated transcription",
+      "goAspect": "biological_process",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 4565,
+      "taxonName": "Triticum aestivum",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19850"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G59750"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G20730"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G62000"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN000774836"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A0A3B6DG15",
+      "symbol": "LOC123053978",
+      "qualifier": "involved_in",
+      "goId": "GO:0006355",
+      "goName": "regulation of DNA-templated transcription",
+      "goAspect": "biological_process",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000501",
+      "reference": "GO_REF:0000120",
+      "assignedBy": "UniProt",
+      "taxonId": 4565,
+      "taxonName": "Triticum aestivum",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR044835"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniRule",
+          "id": "UR000399996"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A0A3B6DG15",
+      "symbol": "LOC123053978",
+      "qualifier": "involved_in",
+      "goId": "GO:0007389",
+      "goName": "pattern specification process",
+      "goAspect": "biological_process",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 4565,
+      "taxonName": "Triticum aestivum",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT2G28350"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT4G30080"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN002046414"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A0A3B6DG15",
+      "symbol": "LOC123053978",
+      "qualifier": "involved_in",
+      "goId": "GO:0007389",
+      "goName": "pattern specification process",
+      "goAspect": "biological_process",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000256",
+      "reference": "GO_REF:0000117",
+      "assignedBy": "UniProt",
+      "taxonId": 4565,
+      "taxonName": "Triticum aestivum",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "ARBA",
+          "id": "ARBA00027400"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A0A3B6DG15",
+      "symbol": "LOC123053978",
+      "qualifier": "involved_in",
+      "goId": "GO:0009725",
+      "goName": "response to hormone",
+      "goAspect": "biological_process",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000501",
+      "reference": "GO_REF:0000120",
+      "assignedBy": "UniProt",
+      "taxonId": 4565,
+      "taxonName": "Triticum aestivum",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "ARBA",
+          "id": "ARBA00028745"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR044835"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A0A3B6DG15",
+      "symbol": "LOC123053978",
+      "qualifier": "involved_in",
+      "goId": "GO:0009733",
+      "goName": "response to auxin",
+      "goAspect": "biological_process",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 4565,
+      "taxonName": "Triticum aestivum",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT2G28350"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT4G30080"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN002046414"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A0A3B6DG15",
+      "symbol": "LOC123053978",
+      "qualifier": "involved_in",
+      "goId": "GO:0048829",
+      "goName": "root cap development",
+      "goAspect": "biological_process",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 4565,
+      "taxonName": "Triticum aestivum",
+      "date": "20250130",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT2G28350"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT4G30080"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN002046414"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A0A3B6DG15",
+      "symbol": "LOC123053978",
+      "qualifier": "involved_in",
+      "goId": "GO:0048829",
+      "goName": "root cap development",
+      "goAspect": "biological_process",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000256",
+      "reference": "GO_REF:0000117",
+      "assignedBy": "UniProt",
+      "taxonId": 4565,
+      "taxonName": "Triticum aestivum",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "ARBA",
+          "id": "ARBA00090561"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A0A3B6DG15",
+      "symbol": "LOC123053978",
+      "qualifier": "involved_in",
+      "goId": "GO:0051301",
+      "goName": "cell division",
+      "goAspect": "biological_process",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000256",
+      "reference": "GO_REF:0000117",
+      "assignedBy": "UniProt",
+      "taxonId": 4565,
+      "taxonName": "Triticum aestivum",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "ARBA",
+          "id": "ARBA00027793"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A0A3B6DG15",
+      "symbol": "LOC123053978",
+      "qualifier": "is_active_in",
+      "goId": "GO:0005634",
+      "goName": "nucleus",
+      "goAspect": "cellular_component",
+      "goEvidence": "IBA",
+      "evidenceCode": "ECO:0000318",
+      "reference": "GO_REF:0000033",
+      "assignedBy": "GO_Central",
+      "taxonId": 4565,
+      "taxonName": "Triticum aestivum",
+      "date": "20260529",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G19220"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G30330"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT1G59750"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT2G33860"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT4G30080"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G20730"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "AGI_LocusCode",
+          "id": "AT5G62000"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "PANTHER",
+          "id": "PTN000774836"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "K4DF01"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB",
+          "id": "Q2LAJ3"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A0A3B6DG15",
+      "symbol": "LOC123053978",
+      "qualifier": "located_in",
+      "goId": "GO:0005634",
+      "goName": "nucleus",
+      "goAspect": "cellular_component",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000501",
+      "reference": "GO_REF:0000120",
+      "assignedBy": "UniProt",
+      "taxonId": 4565,
+      "taxonName": "Triticum aestivum",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB-SubCell",
+          "id": "SL-0191"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniRule",
+          "id": "UR000399996"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "by_aspect": {
+     "molecular_function": [
+      {
+       "goId": "GO:0000976",
+       "goName": "transcription cis-regulatory region binding"
+      },
+      {
+       "goId": "GO:0003677",
+       "goName": "DNA binding"
+      }
+     ],
+     "biological_process": [
+      {
+       "goId": "GO:0006351",
+       "goName": "DNA-templated transcription"
+      },
+      {
+       "goId": "GO:0006355",
+       "goName": "regulation of DNA-templated transcription"
+      },
+      {
+       "goId": "GO:0007389",
+       "goName": "pattern specification process"
+      },
+      {
+       "goId": "GO:0009725",
+       "goName": "response to hormone"
+      },
+      {
+       "goId": "GO:0009733",
+       "goName": "response to auxin"
+      },
+      {
+       "goId": "GO:0048829",
+       "goName": "root cap development"
+      },
+      {
+       "goId": "GO:0051301",
+       "goName": "cell division"
+      }
+     ],
+     "cellular_component": [
+      {
+       "goId": "GO:0005634",
+       "goName": "nucleus"
+      }
+     ]
+    },
+    "by_aspect_deduped_on": "goId",
+    "upstream_version": null
+   },
+   "domains": {
+    "accession": "A0A3B6DG15",
+    "found": true,
+    "domain_count": 16,
+    "total": 16,
+    "returned": 16,
+    "truncated": false,
+    "domains": [
+     {
+      "accession": "cd10017",
+      "name": "Plant-specific B3-DNA binding domain",
+      "type": "domain",
+      "source_database": "cdd",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 129,
+        "end": 230
+       }
+      ]
+     },
+     {
+      "accession": "G3DSA:2.30.30.1040",
+      "name": null,
+      "type": "homologous_superfamily",
+      "source_database": "cathgene3d",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 313,
+        "end": 387
+       }
+      ]
+     },
+     {
+      "accession": "G3DSA:2.40.330.10",
+      "name": "DNA-binding pseudobarrel domain",
+      "type": "homologous_superfamily",
+      "source_database": "cathgene3d",
+      "interpro": "IPR015300",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 128,
+        "end": 232
+       }
+      ]
+     },
+     {
+      "accession": "G3DSA:3.10.20.90",
+      "name": "Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1",
+      "type": "homologous_superfamily",
+      "source_database": "cathgene3d",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 629,
+        "end": 712
+       }
+      ]
+     },
+     {
+      "accession": "IPR003340",
+      "name": "B3 DNA binding domain",
+      "type": "domain",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": [
+       {
+        "identifier": "GO:0003677",
+        "name": "DNA binding",
+        "category": {
+         "code": "F",
+         "name": "molecular_function"
+        }
+       }
+      ],
+      "locations": [
+       {
+        "start": 129,
+        "end": 232
+       }
+      ]
+     },
+     {
+      "accession": "IPR010525",
+      "name": "Auxin response factor domain",
+      "type": "domain",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": [
+       {
+        "identifier": "GO:0003677",
+        "name": "DNA binding",
+        "category": {
+         "code": "F",
+         "name": "molecular_function"
+        }
+       },
+       {
+        "identifier": "GO:0006355",
+        "name": "regulation of DNA-templated transcription",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       },
+       {
+        "identifier": "GO:0009725",
+        "name": "response to hormone",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       },
+       {
+        "identifier": "GO:0005634",
+        "name": "nucleus",
+        "category": {
+         "code": "C",
+         "name": "cellular_component"
+        }
+       }
+      ],
+      "locations": [
+       {
+        "start": 299,
+        "end": 382
+       }
+      ]
+     },
+     {
+      "accession": "IPR015300",
+      "name": "DNA-binding pseudobarrel domain superfamily",
+      "type": "homologous_superfamily",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 123,
+        "end": 246
+       }
+      ]
+     },
+     {
+      "accession": "IPR044835",
+      "name": "Auxin response factor",
+      "type": "family",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": [
+       {
+        "identifier": "GO:0003677",
+        "name": "DNA binding",
+        "category": {
+         "code": "F",
+         "name": "molecular_function"
+        }
+       },
+       {
+        "identifier": "GO:0006355",
+        "name": "regulation of DNA-templated transcription",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       },
+       {
+        "identifier": "GO:0009725",
+        "name": "response to hormone",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       }
+      ],
+      "locations": [
+       {
+        "start": 24,
+        "end": 706
+       }
+      ]
+     },
+     {
+      "accession": "IPR053793",
+      "name": "PB1-like domain",
+      "type": "domain",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 628,
+        "end": 708
+       }
+      ]
+     },
+     {
+      "accession": "PF02362",
+      "name": "B3 DNA binding domain",
+      "type": "domain",
+      "source_database": "pfam",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 130,
+        "end": 231
+       }
+      ]
+     },
+     {
+      "accession": "PF06507",
+      "name": "Auxin response factor ancillary domain",
+      "type": "domain",
+      "source_database": "pfam",
+      "interpro": "IPR010525",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 299,
+        "end": 382
+       }
+      ]
+     },
+     {
+      "accession": "PS50863",
+      "name": "B3 DNA-binding domain profile",
+      "type": "domain",
+      "source_database": "profile",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 130,
+        "end": 232
+       }
+      ]
+     },
+     {
+      "accession": "PS51745",
+      "name": "PB1 domain profile",
+      "type": "domain",
+      "source_database": "profile",
+      "interpro": "IPR053793",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 628,
+        "end": 708
+       }
+      ]
+     },
+     {
+      "accession": "PTHR31384",
+      "name": "AUXIN RESPONSE FACTOR 4-RELATED",
+      "type": "family",
+      "source_database": "panther",
+      "interpro": "IPR044835",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 24,
+        "end": 706
+       }
+      ]
+     },
+     {
+      "accession": "SM01019",
+      "name": "B3 DNA binding domain",
+      "type": "domain",
+      "source_database": "smart",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 130,
+        "end": 232
+       }
+      ]
+     },
+     {
+      "accession": "SSF101936",
+      "name": "DNA-binding pseudobarrel domain",
+      "type": "homologous_superfamily",
+      "source_database": "ssf",
+      "interpro": "IPR015300",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 123,
+        "end": 246
+       }
+      ]
+     }
+    ],
+    "count_by_type": {
+     "domain": 9,
+     "homologous_superfamily": 5,
+     "family": 2
+    },
+    "upstream_version": "110.0"
+   }
+  }
+ }
+}

@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-22T07:31:13Z",
- "elapsed_s": 1.50473838000471,
+ "started_at": "2026-09-23T04:54:33Z",
+ "elapsed_s": 29.231457318004686,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 1.1183006539940834,
+   "elapsed_s": 28.92612464899139,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0007737159976386465,
+   "elapsed_s": 0.0004010740085504949,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 7.641700358362868e-05,
+   "elapsed_s": 7.843300409149379e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.002327762995264493,
+   "elapsed_s": 0.0026875389885390177,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.3858007259987062,
+   "elapsed_s": 0.3032666470098775,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 4.866199742536992e-05,
+   "elapsed_s": 0.0008680879982421175,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.000383703998522833,
+   "elapsed_s": 0.00035823498910758644,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00038280100125120953,
+   "elapsed_s": 0.00031896799919195473,
    "result": null,
    "error": null
   }
@@ -85,22 +85,22 @@
    ]
   },
   "uniprot_accession": "Q653H7",
-  "markdown": "# OsARF10 (UniProt: ARF18) \u2014 `Os06g0685700`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 6:28,586,492\u201328,590,205 (+) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 18**\nARFR_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 700 aa\nUniProt: [Q653H7](https://www.uniprot.org/uniprotkb/Q653H7)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [127\u2013228]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [330\u2013403]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [126\u2013230]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [612\u2013698]\n- **B3 DNA binding domain** (domain, interpro) [127\u2013230]\n- **Auxin response factor domain** (domain, interpro) [315\u2013398]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [124\u2013230]\n- **Auxin response factor** (family, interpro) [18\u2013692]\n- **PB1-like domain** (domain, interpro) [614\u2013697]\n- **B3 DNA binding domain** (domain, pfam) [128\u2013229]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0007389] pattern specification process (IBA)\n- [GO:0007389] pattern specification process (IEA)\n- [GO:0009725] response to hormone (IEA)\n- [GO:0009733] response to auxin (IBA)\n- [GO:0048829] root cap development (IBA)\n- [GO:0048829] root cap development (IEA)\n- [GO:0051301] cell division (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n- `osa04075` Plant hormone signal transduction - Oryza sativa japonica (Japanese rice) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| IAA19 | 0.581 |\n| Q0J9G7_ORYSJ | 0.509 |\n| ARF | 0.509 |\n| IAA10 | 0.465 |\n| Q7XK43_ORYSJ | 0.455 |\n| Q6ZH84_ORYSJ | 0.455 |\n| GAMYB | 0.431 |\n| IAA11 | 0.411 |\n\n## Cross-references\n- UniProtKB Gene Name: Q653H7\n- WikiGene: 4341882\n- Expression Atlas: Os06g0685700\n- NCBI gene (formerly Entrezgene): 4341882\n\n## Literature\n_No literature found._\n",
+  "markdown": "# OsARF10 (UniProt: ARF18) \u2014 `Os06g0685700`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 6:28,586,492\u201328,590,205 (+) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 18**\nARFR_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 700 aa\nUniProt: [Q653H7](https://www.uniprot.org/uniprotkb/Q653H7)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [127\u2013228]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [330\u2013403]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [126\u2013230]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [612\u2013698]\n- **B3 DNA binding domain** (domain, interpro) [127\u2013230]\n- **Auxin response factor domain** (domain, interpro) [315\u2013398]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [124\u2013230]\n- **Auxin response factor** (family, interpro) [18\u2013692]\n- **PB1-like domain** (domain, interpro) [614\u2013697]\n- **B3 DNA binding domain** (domain, pfam) [128\u2013229]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0007389] pattern specification process (IBA)\n- [GO:0007389] pattern specification process (IEA)\n- [GO:0009725] response to hormone (IEA)\n- [GO:0009733] response to auxin (IBA)\n- [GO:0048829] root cap development (IBA)\n- [GO:0048829] root cap development (IEA)\n- [GO:0051301] cell division (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n- `osa04075` Plant hormone signal transduction - Oryza sativa japonica (Japanese rice) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| IAA19 | 0.581 |\n| Q0J9G7_ORYSJ | 0.509 |\n| ARF | 0.509 |\n| IAA10 | 0.465 |\n| Q7XK43_ORYSJ | 0.455 |\n| Q6ZH84_ORYSJ | 0.455 |\n| GAMYB | 0.431 |\n| IAA11 | 0.411 |\n\n## Cross-references\n- UniProtKB Gene Name: Q653H7\n- WikiGene: 4341882\n- Expression Atlas: Os06g0685700\n- NCBI gene (formerly Entrezgene): 4341882\n\n## Literature\n5 hits total; showing top 5.\n- **Multiple areas investigation reveals the genes related to vascular bundles in rice** \u2014 Fei C, Geng X, Xu Z, Xu Q. (PMID:30900100; doi:10.1186/s12284-019-0278-x)\n- **QTL mapping and candidate gene analysis of peduncle vascular bundle related traits in rice by genome-wide association study** \u2014 Zhai L, Zheng T, Wang X, Wang Y, Chen K, Wang S, Wang Y, Xu J, Li Z. (PMID:29511908; doi:10.1186/s12284-018-0204-7)\n- **Transcriptional repressor RST1 controls salt tolerance and grain yield in rice by regulating gene expression of asparagine synthetase** \u2014 Deng P, Jing W, Cao C, Sun M, Chi W, Zhao S, Dai J, Shi X, Wu Q, Zhang B, Jin Z, Guo C, Tian Q, Shen L, Yu J, Jiang L, Wang C, Chin JH, Yuan J, Zhang Q, Zhang W. (PMID:36472959; doi:10.1073/pnas.2210338119)\n- **Identification of QTNs and their candidate genes for flowering time and plant height in soybean using multi-locus genome-wide association studies** \u2014 Han X, Xu ZR, Zhou L, Han CY, Zhang YM. (PMID:37309439; doi:10.1007/s11032-021-01230-3)\n- **Multi-Locus GWAS of Quality Traits in Bread Wheat: Mining More Candidate Genes and Possible Regulatory Network** \u2014 Yang Y, Chai Y, Zhang X, Lu S, Zhao Z, Wei D, Chen L, Hu YG. (PMID:32849679; doi:10.3389/fpls.2020.01091)\n",
   "sections": {
    "annotation": {
+    "strand": 1,
+    "display_name": "OsARF10",
+    "canonical_transcript": "Os06t0685700-01",
+    "id": "Os06g0685700",
     "logic_name": "rapdb_genes",
+    "db_type": "core",
+    "object_type": "Gene",
+    "source": "RAP2022-09-01",
+    "assembly_name": "IRGSP-1.0",
     "biotype": "protein_coding",
+    "seq_region_name": "6",
     "start": 28586492,
     "end": 28590205,
-    "object_type": "Gene",
-    "seq_region_name": "6",
-    "canonical_transcript": "Os06t0685700-01.",
-    "strand": 1,
-    "db_type": "core",
-    "source": "RAP2022-09-01",
-    "display_name": "OsARF10",
-    "id": "Os06g0685700",
-    "assembly_name": "IRGSP-1.0",
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -126,48 +126,48 @@
     "count": 4,
     "xrefs": [
      {
-      "info_type": "DEPENDENT",
       "db_display_name": "UniProtKB Gene Name",
+      "info_text": "",
+      "synonyms": [],
       "dbname": "Uniprot_gn",
-      "info_text": "",
-      "description": null,
-      "primary_id": "Q653H7",
-      "version": null,
       "display_id": "ARF18",
-      "synonyms": []
-     },
-     {
-      "info_text": "",
-      "description": "auxin response factor 18-like",
-      "primary_id": "4341882",
-      "version": "0",
-      "display_id": "LOC4341882",
-      "synonyms": [],
+      "version": null,
       "info_type": "DEPENDENT",
-      "db_display_name": "WikiGene",
-      "dbname": "WikiGene"
-     },
-     {
       "description": null,
-      "version": "0",
-      "primary_id": "Os06g0685700",
-      "display_id": "Os06g0685700",
-      "synonyms": [],
-      "info_text": "",
-      "dbname": "ArrayExpress",
-      "info_type": "DIRECT",
-      "db_display_name": "Expression Atlas"
+      "primary_id": "Q653H7"
      },
      {
       "info_type": "DEPENDENT",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "dbname": "EntrezGene",
-      "info_text": "",
       "description": "auxin response factor 18-like",
       "primary_id": "4341882",
+      "display_id": "LOC4341882",
+      "version": "0",
+      "synonyms": [],
+      "dbname": "WikiGene",
+      "db_display_name": "WikiGene",
+      "info_text": ""
+     },
+     {
+      "info_text": "",
+      "db_display_name": "Expression Atlas",
+      "dbname": "ArrayExpress",
+      "synonyms": [],
+      "version": "0",
+      "display_id": "Os06g0685700",
+      "primary_id": "Os06g0685700",
+      "description": null,
+      "info_type": "DIRECT"
+     },
+     {
       "version": "0",
       "display_id": "LOC4341882",
-      "synonyms": []
+      "primary_id": "4341882",
+      "description": "auxin response factor 18-like",
+      "info_type": "DEPENDENT",
+      "info_text": "",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "synonyms": [],
+      "dbname": "EntrezGene"
      }
     ],
     "by_db": {
@@ -204,6 +204,9 @@
     "query": "Os06g0685700",
     "accession": "Q653H7",
     "organism": "oryza_sativa",
+    "total": null,
+    "returned": 8,
+    "truncated": null,
     "partners": [
      {
       "string_id": "39947.Q6AT33",
@@ -292,16 +295,108 @@
     "locus": "Os06g0685700",
     "organism": "oryza_sativa",
     "query": "Os06g0685700 AND rice",
-    "hitCount": 0,
-    "returned": 0,
+    "hitCount": 5,
+    "total": 5,
+    "returned": 5,
+    "truncated": false,
+    "next_cursor": null,
     "abstracts_included": true,
-    "hits": [],
+    "hits": [
+     {
+      "id": "30900100",
+      "source": "MED",
+      "pmid": "30900100",
+      "pmcid": "PMC6428884",
+      "doi": "10.1186/s12284-019-0278-x",
+      "title": "Multiple areas investigation reveals the genes related to vascular bundles in rice.",
+      "authorString": "Fei C, Geng X, Xu Z, Xu Q.",
+      "journalTitle": "Rice (New York, N.Y.)",
+      "pubYear": "2019",
+      "firstPublicationDate": "2019-03-21",
+      "citedByCount": 14,
+      "isOpenAccess": "Y",
+      "hasPDF": "Y",
+      "abstractText": "<h4>Background</h4>The vascular bundle in the panicle neck is a crucial trait in rice (Oryza sativa) production that differs between the indica and japonica subspecies. However, the effect of indica/japonica genetic background on the vascular bundles remains unknown.<h4>Results</h4>A series of recombinant inbred lines (RILs) derived from a cross between japonica and indica were planted in three areas. High-throughput sequencing was conducted to determine the indica pedigree percentage and for quantitative trait locus (QTL) analysis. The indica pedigree affected the number of large vascular bundles (LVBs), but not the number of small vascular bundles (SVBs). QTL analysis identified a locus (qLVB9) that was pleiotropic for both LVBs and SVBs in all three areas, and qLVB9 appeared synonymous with DENSE AND ERECT PANICLE 1 (DEP1). Using CRISPR/Cas9 gene editing and gene overexpression technology, we confirmed that the truncated dep1 allele increased the number of LVBs, and resulted in LVBs more closely associated to the indica pedigree. RNA sequencing showed that the truncated dep1 allele downregulated the AP2-like gene family. The double mutant for the DEP1 and AP2-like genes (OsAP2-39) showed decreased endogenous abscisic acid (ABA) level and insensitivity to exogenous ABA treatment, confirming that both DEP1 and OsAP2-39 are involved in the ABA response mechanism.<h4>Conclusions</h4>The present study showed the qLVB9/DEP1 affects LVBs, and involved in ABA signaling via regulating the AP2-like gene family. These results offer new insights into the function of qLVB9/DEP1 in rice.",
+      "web_url": "https://europepmc.org/article/PMC/PMC6428884"
+     },
+     {
+      "id": "29511908",
+      "source": "MED",
+      "pmid": "29511908",
+      "pmcid": "PMC5840110",
+      "doi": "10.1186/s12284-018-0204-7",
+      "title": "QTL mapping and candidate gene analysis of peduncle vascular bundle related traits in rice by genome-wide association study.",
+      "authorString": "Zhai L, Zheng T, Wang X, Wang Y, Chen K, Wang S, Wang Y, Xu J, Li Z.",
+      "journalTitle": "Rice (New York, N.Y.)",
+      "pubYear": "2018",
+      "firstPublicationDate": "2018-03-06",
+      "citedByCount": 30,
+      "isOpenAccess": "Y",
+      "hasPDF": "Y",
+      "abstractText": "<h4>Background</h4>The vascular bundle especially in the peduncle is one of crucial limiting factors of rice yield, and it determines how plants efficiently transport photosynthetic products, mineral nutrients and water from leaf and root to panicle. However, the genetic base of rice vascular bundle related traits in the peduncle still remains unknown.<h4>Results</h4>The 423 panel showed substantial natural variations of peduncle vascular bundle. In total, 48 quantitative trait loci/locus (QTL) affecting the eight traits were identified throughout the genome by applying a significance threshold of P\u2009<\u20091.0\u2009\u00d7\u200910<sup>-\u20094</sup>. Combined determining linkage disequilibrium (LD) blocks associated with significant SNPs and haplotype analyses allowed us to shortlist six candidate genes for four important QTL regions affecting the peduncle vascular bundle traits, including one cloned gene (NAL1) and three newly identified QTL (qLVN6, qSVN7, and qSVA8.1). Further the most likely candidate genes for each important QTL were also discussed based on functional annotation.<h4>Conclusions</h4>Genetic base on peduncle vascular bundle related traits in rice was systematically dissected, and most likely candidate genes of the known gene NAL1 and the three newly identified QTL (qLVN6, qSVN7, and qSVA8.1) were analyzed. The results provided valuable information for future functional characterization and rice breeding for high yield through optimizing transportation efficiency of photosynthetic products by marker-assisted selection.",
+      "web_url": "https://europepmc.org/article/PMC/PMC5840110"
+     },
+     {
+      "id": "36472959",
+      "source": "MED",
+      "pmid": "36472959",
+      "pmcid": "PMC9897482",
+      "doi": "10.1073/pnas.2210338119",
+      "title": "Transcriptional repressor RST1 controls salt tolerance and grain yield in rice by regulating gene expression of asparagine synthetase.",
+      "authorString": "Deng P, Jing W, Cao C, Sun M, Chi W, Zhao S, Dai J, Shi X, Wu Q, Zhang B, Jin Z, Guo C, Tian Q, Shen L, Yu J, Jiang L, Wang C, Chin JH, Yuan J, Zhang Q, Zhang W.",
+      "journalTitle": "Proceedings of the National Academy of Sciences of the United States of America",
+      "pubYear": "2022",
+      "firstPublicationDate": "2022-12-06",
+      "citedByCount": 61,
+      "isOpenAccess": "Y",
+      "hasPDF": "Y",
+      "abstractText": "Salt stress impairs nutrient metabolism in plant cells, leading to growth and yield penalties. However, the mechanism by which plants alter their nutrient metabolism processes in response to salt stress remains elusive. In this study, we identified and characterized the rice (<i>Oryza sativa</i>) <i>rice salt tolerant 1\u00a0</i>(<i>rst1</i>) mutant, which displayed improved salt tolerance and grain yield. Map-based cloning revealed that the gene <i>RST1</i> encoded an auxin response factor (OsARF18). Molecular analyses showed that RST1 directly repressed the expression of the gene encoding asparagine synthetase 1 (OsAS1). Loss of <i>RST1</i> function increased the expression of <i>OsAS1</i> and improved nitrogen (N) utilization by promoting asparagine production and avoiding excess ammonium (NH<sub>4</sub><sup>+</sup>) accumulation. <i>RST1</i> was undergoing directional selection during domestication. The superior haplotype RST1<sup>Hap III</sup> decreased its transcriptional repression activity and contributed to salt tolerance and grain\u00a0weight. Together, our findings unravel a synergistic regulator of growth and salt tolerance associated with N metabolism and provide a new strategy for the development of tolerant cultivars.",
+      "web_url": "https://europepmc.org/article/PMC/PMC9897482"
+     },
+     {
+      "id": "37309439",
+      "source": "MED",
+      "pmid": "37309439",
+      "pmcid": "PMC10236079",
+      "doi": "10.1007/s11032-021-01230-3",
+      "title": "Identification of QTNs and their candidate genes for flowering time and plant height in soybean using multi-locus genome-wide association studies.",
+      "authorString": "Han X, Xu ZR, Zhou L, Han CY, Zhang YM.",
+      "journalTitle": "Molecular breeding : new strategies in plant improvement",
+      "pubYear": "2021",
+      "firstPublicationDate": "2021-06-10",
+      "citedByCount": 10,
+      "isOpenAccess": "N",
+      "hasPDF": "Y",
+      "abstractText": "Flowering time (FT) and plant height (PH) are important agronomic traits in soybean. However, their genetic foundations are not fully understood. Thus, in this study, a total of 106,013 single nucleotide polymorphisms in 286 soybean accessions were used to associate with the first and full FT (FT1 and FT2) and PH in 4 environments and their BLUP values using 6 multi-locus genome-wide association study methods. As a result, 38, 43, and 27 stable quantitative trait nucleotides (QTNs) were identified, respectively, for FT1, FT2, and PH across at least 3 methods and/or environments. Among these QTNs for FT1, FT2, and PH, 31, 36, and 21 were found to have significant phenotype differences across 2 alleles; 22, 18, and 13 were consistent with the corresponding loci in previous studies; 13 and 8 genes, with more than average expression level, around 64 FT and 27 PH QTNs were predicted as their corresponding candidate genes. Among these candidate genes, <i>GmPRR3b</i>, and <i>GmGIa</i> for FT, and <i>GmTFL1b</i> for PH were known, while some were new, e.g., <i>GmPHYA4</i>, <i>GmVRN5</i>, <i>GmFPA</i>, and <i>GmSPA1</i> for FT, and <i>Glyma.02g300200</i>, <i>GmFPA</i>, and <i>Glyma.13g339800</i> for PH. All the validated QTNs were used to design the best cross-combinations in 2 FT directions. In each FT direction, the best 5 cross-combinations were predicted, such as Heihe 54\u2009\u00d7\u2009Qincha 1 for early FT, and Yingdejiadou\u2009\u00d7\u2009Wuhuabayuehuang for late FT. This study provides solid foundations for genetic basis, molecular biology, and breeding by design of soybean FT and PH.<h4>Supplementary information</h4>The online version contains supplementary material available at 10.1007/s11032-021-01230-3.",
+      "web_url": "https://europepmc.org/article/PMC/PMC10236079"
+     },
+     {
+      "id": "32849679",
+      "source": "MED",
+      "pmid": "32849679",
+      "pmcid": "PMC7411135",
+      "doi": "10.3389/fpls.2020.01091",
+      "title": "Multi-Locus GWAS of Quality Traits in Bread Wheat: Mining More Candidate Genes and Possible Regulatory Network.",
+      "authorString": "Yang Y, Chai Y, Zhang X, Lu S, Zhao Z, Wei D, Chen L, Hu YG.",
+      "journalTitle": "Frontiers in plant science",
+      "pubYear": "2020",
+      "firstPublicationDate": "2020-07-31",
+      "citedByCount": 61,
+      "isOpenAccess": "Y",
+      "hasPDF": "Y",
+      "abstractText": "In wheat breeding, improved quality traits, including grain quality and dough rheological properties, have long been a critical goal. To understand the genetic basis of key quality traits of wheat, two single-locus and five multi-locus GWAS models were performed for six grain quality traits and three dough rheological properties based on 19, 254 SNPs in 267 bread wheat accessions. As a result, 299 quantitative trait nucleotides (QTNs) within 105 regions were identified to be associated with these quality traits in four environments. Of which, 40 core QTN regions were stably detected in at least three environments, 19 of which were novel. Compared with the previous studies, these novel QTN regions explained smaller phenotypic variation, which verified the advantages of the multi-locus GWAS models in detecting important small effect QTNs associated with complex traits. After characterization of the function and expression in-depth, 67 core candidate genes involved in protein/sugar synthesis, histone modification and the regulation of transcription factor were observed to be associated with the formation of grain quality, which showed that multi-level regulations influenced wheat grain quality. Finally, a preliminary network of gene regulation that may affect wheat quality formation was inferred. This study verified the power and reliability of multi-locus GWAS methods in wheat quality trait research, and increased the understanding of wheat quality formation mechanisms. The detected QTN regions and candidate genes in this study could be further used for gene cloning and marker-assisted selection in high-quality breeding of bread wheat.",
+      "web_url": "https://europepmc.org/article/PMC/PMC7411135"
+     }
+    ],
     "upstream_version": null
    },
    "go_annotations": {
     "uniprot_accession": "Q653H7",
     "numberOfHits": 13,
+    "total": 13,
     "returned": 13,
+    "truncated": false,
+    "next_cursor": null,
     "annotations": [
      {
       "geneProductId": "UniProtKB:Q653H7",
@@ -961,12 +1056,15 @@
       }
      ]
     },
+    "by_aspect_deduped_on": "goId",
     "upstream_version": null
    },
    "domains": {
     "accession": "Q653H7",
     "found": true,
     "domain_count": 16,
+    "total": 16,
+    "returned": 16,
     "truncated": false,
     "domains": [
      {

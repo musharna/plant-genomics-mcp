@@ -14,6 +14,8 @@ from pathlib import Path
 
 import pytest
 
+from examples.arf_family.coverage import call_key
+
 ROOT = Path(__file__).resolve().parents[1]
 ARF = ROOT / "examples" / "arf_family"
 
@@ -33,8 +35,9 @@ def _check_sentence(text: str, calls: int, gaps: int, name: str) -> None:
 def test_readme_sentences_carry_the_run_counts():
     calls = _line_count(ARF / "calls.jsonl")
     gaps = _line_count(ARF / "gaps.jsonl") + _line_count(ARF / "gaps_auto.jsonl")
-    # The counts really came from the run, not from empty files.
-    assert calls > 100 and gaps > 30, (calls, gaps)
+    # The counts really came from the run, not from empty files. Every chain
+    # tool goes through a batch form now, so a 114-gene run is 64 calls.
+    assert calls > 50 and gaps > 30, (calls, gaps)
 
     checked = 0
     for readme in (ROOT / "README.md", ROOT / "examples" / "README.md"):
@@ -61,21 +64,27 @@ def _distinct_positions_per_tool() -> dict[str, int]:
         if not line.strip():
             continue
         r = json.loads(line)
-        seen.setdefault(r["tool"], set()).add((r["organism"], r["n_bytes"]))
-    return {tool: len(v) for tool, v in seen.items() if not tool.startswith("batch_")}
+        # One figure row per tool run, as coverage.call_key keys it.
+        seen.setdefault(call_key(r), set()).add((r["organism"], r["n_bytes"]))
+    return {tool: len(v) for tool, v in seen.items()}
 
 
 def test_page_figure_paragraph_range_is_derived_from_the_calls_log():
-    """The figure draws exact ties on one point, so a per-locus tool draws
-    one point per distinct (organism, byte count); PAGE.md names the two
-    extremes of that range and they must match a recount of calls.jsonl."""
+    """The figure draws exact ties on one point, so a tool draws one point
+    per distinct (organism, byte count); PAGE.md names the two extremes of
+    that range and they must match a recount of calls.jsonl."""
     counts = _distinct_positions_per_tool()
-    assert len(counts) == 8, counts
-    lo_tool, lo = min(counts.items(), key=lambda kv: (kv[1], kv[0]))
-    hi_tool, hi = max(counts.items(), key=lambda kv: (kv[1], kv[0]))
+    assert len(counts) == 16, counts  # one row per chain tool
+    lo, hi = min(counts.values()), max(counts.values())
     assert lo < hi
+    # Name every tool at the low end and count the rest, rather than one
+    # arbitrary example of each (a reviewer read the pick as meaningful).
+    lo_tools = sorted(t for t, n in counts.items() if n == lo)
+    rest = [t for t, n in counts.items() if n != lo]
+    assert all(counts[t] == hi for t in rest), counts  # the claim assumes two levels
     text = (ARF / "PAGE.md").read_text().replace("\n", " ")
-    claim = f"from {lo} positions for `{lo_tool}` to {hi} for `{hi_tool}`"
+    named = " and ".join(f"`{t}`" for t in lo_tools)
+    claim = f"{lo} positions for {named}, {hi} for the other {len(rest)}"
     assert claim in text, claim
     # The sentence is about the tie rule, and says so.
     assert "exact ties draw on one point" in text

@@ -1,9 +1,9 @@
 # Family, entry and gene-tree accessions come back from tools that nothing can take them into
 
-**Filed as [#130](https://github.com/musharna/plant-genomics-mcp/issues/130) — open.** Written from the ARF family dossier in
-[`examples/arf_family/`](../), re-run at server commit `967bc36`
-(release `1.21.0`): 400 MCP calls over 48 genes x 16 tools, the family
-itself from a 742-call enumeration through the same tools. Each section
+**Filed as [#130](https://github.com/musharna/plant-genomics-mcp/issues/130) — open.** `no-family-enumeration` is closed at `052e4ec`. `identifier-with-no-tool` stays open. Written from the ARF family dossier in
+[`examples/arf_family/`](../), re-run at server commit `052e4ec`
+(release `1.21.0`): 64 MCP calls over 114 genes x 16 tools, the family
+itself from a 1163-call enumeration through the same tools. Each section
 below is one row of [`gaps.jsonl`](../gaps.jsonl), quoted as logged;
 `Check` names the captured response to read it back from.
 
@@ -21,6 +21,6 @@ Covers 2 rows of `gaps.jsonl`.
 ## `identifier-with-no-tool`
 
 - **Attempted:** follow a gramene_homologs gene_tree_id without leaving the tools
-- **Returned:** each homolog is {target_locus, type, gene_tree_id} - e.g. {'C5167_014531', 'ortholog_one2many', 'EPlGT00940000167082'}. The missing taxon is documented ('The fl=homology projection does not carry per-row taxon, identity, or protein ID; pair with resolve_locus_to_uniprot'), and the server already has fetch_homolog_enrichment_batch (src/plant_genomics_mcp/gramene.py:131) returning a species slug per locus, but only synthesis.consensus_homologs uses it. The gene_tree_id has no dereferencing tool at all: no input in the live 50-tool list takes one.
+- **Returned:** each homolog is {target_locus, type, gene_tree_id} - e.g. {'C5167_014531', 'ortholog_one2many', 'EPlGT00940000167082'}, and with_organism=true now adds the species the server already computes ('papaver_somniferum' for that row; raw/_probe_rerun.json). The gene_tree_id still has no dereferencing tool: no input among the live 52 tools takes one.
 - **Expected:** a tool that takes a gene_tree_id, and the species enrichment the server already computes surfaced on this tool
 - **Check:** `raw/AT1G19850__gramene_homologs.json, raw/AT1G19850__orthodb_orthologs.json`

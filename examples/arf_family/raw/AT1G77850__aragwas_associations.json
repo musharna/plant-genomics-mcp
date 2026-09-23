@@ -3,8 +3,10 @@
  "organism": "arabidopsis_thaliana",
  "found": true,
  "association_count": 92,
+ "total": 92,
  "returned": 92,
  "truncated": false,
+ "next_cursor": null,
  "associations": [
   {
    "score": 18.790403247692062,
@@ -26,10 +28,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('Mean(TLRL)_ABA_raw_Full imputed genotype_amm',)",
+    "name": "Mean(TLRL)_ABA_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "Mean(TLRL) ABA",
-    "phenotype_description": "After 3 days of treatment, plates were scanned with CCD flatbed scanners (EPSON Perfection V600 Photo, Seiko Epson, Nagano, Japan), and images used to quantify root parameters with FIJI, by using the tool \u2018segmented line\u2019 (Schindelin et al., 2012) as described in Ristova and Busch (2017). In particular, we quantified: primary root length on day 10 (P), growth rate of P after treatment (P2), branching zone or the length of P between the first and last visible lateral root (R), average lateral root length (LRL), and visible lateral root number (LR.No)."
+    "phenotype_description": "After 3 days of treatment, plates were scanned with CCD flatbed scanners (EPSON Perfection V600 Photo, Seiko Epson, Nagano, Japan), and images used to quantify root parameters with FIJI, by using the tool \u2018segmented line\u2019 (Schindelin et al., 2012) as described in Ristova and Busch (2017). In particular, we quantified: primary root length on day 10 (P), growth rate of P after treatment (P2), branching zone or the length of P between the first and last visible lateral root (R), average lateral root length (LRL), and visible lateral root number (LR.No).",
+    "thresholds": {
+     "bonferroni_threshold05": 7.955588086811639,
+     "bonferroni_threshold01": 8.654558091147658,
+     "bh_threshold": 4.403145648457192,
+     "total_associations": 4513964,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -52,10 +61,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('Mean(LRR)_ABA_raw_Full imputed genotype_amm',)",
+    "name": "Mean(LRR)_ABA_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "Mean(LRR) ABA",
-    "phenotype_description": "After 3 days of treatment, plates were scanned with CCD flatbed scanners (EPSON Perfection V600 Photo, Seiko Epson, Nagano, Japan), and images used to quantify root parameters with FIJI, by using the tool \u2018segmented line\u2019 (Schindelin et al., 2012) as described in Ristova and Busch (2017). In particular, we quantified: primary root length on day 10 (P), growth rate of P after treatment (P2), branching zone or the length of P between the first and last visible lateral root (R), average lateral root length (LRL), and visible lateral root number (LR.No)."
+    "phenotype_description": "After 3 days of treatment, plates were scanned with CCD flatbed scanners (EPSON Perfection V600 Photo, Seiko Epson, Nagano, Japan), and images used to quantify root parameters with FIJI, by using the tool \u2018segmented line\u2019 (Schindelin et al., 2012) as described in Ristova and Busch (2017). In particular, we quantified: primary root length on day 10 (P), growth rate of P after treatment (P2), branching zone or the length of P between the first and last visible lateral root (R), average lateral root length (LRL), and visible lateral root number (LR.No).",
+    "thresholds": {
+     "bonferroni_threshold05": 7.955588086811639,
+     "bonferroni_threshold01": 8.654558091147658,
+     "bh_threshold": 4.357477748607804,
+     "total_associations": 4513964,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -78,10 +94,17 @@
     "transcript": null
    },
    "study": {
-    "name": "('LRLpMRL1225_raw_Full imputed genotype_amm',)",
+    "name": "LRLpMRL1225_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "LRLpMRL1225",
-    "phenotype_description": "Ratio of Lateral Root Length (cummulative) and Main Root Length at 125 mM NaCl"
+    "phenotype_description": "Ratio of Lateral Root Length (cummulative) and Main Root Length at 125 mM NaCl",
+    "thresholds": {
+     "bonferroni_threshold05": 8.016987819510897,
+     "bonferroni_threshold01": 8.715957823846914,
+     "bh_threshold": 4.701844540874826,
+     "total_associations": 5199455,
+     "permutation_threshold": 14.363525163164503
+    }
    }
   },
   {
@@ -104,10 +127,17 @@
     "transcript": null
    },
    "study": {
-    "name": "('aLRL125_raw_Full imputed genotype_amm',)",
+    "name": "aLRL125_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "aLRL125",
-    "phenotype_description": "EZ-Rhizo - average lateral root length at 125 mM NaCl"
+    "phenotype_description": "EZ-Rhizo - average lateral root length at 125 mM NaCl",
+    "thresholds": {
+     "bonferroni_threshold05": 8.016987819510897,
+     "bonferroni_threshold01": 8.715957823846914,
+     "bh_threshold": 4.477450528812916,
+     "total_associations": 5199455,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -130,10 +160,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('Mean(LRD_P)_ABA_raw_Full imputed genotype_amm',)",
+    "name": "Mean(LRD_P)_ABA_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "Mean(LRD P) ABA",
-    "phenotype_description": "After 3 days of treatment, plates were scanned with CCD flatbed scanners (EPSON Perfection V600 Photo, Seiko Epson, Nagano, Japan), and images used to quantify root parameters with FIJI, by using the tool \u2018segmented line\u2019 (Schindelin et al., 2012) as described in Ristova and Busch (2017). In particular, we quantified: primary root length on day 10 (P), growth rate of P after treatment (P2), branching zone or the length of P between the first and last visible lateral root (R), average lateral root length (LRL), and visible lateral root number (LR.No)."
+    "phenotype_description": "After 3 days of treatment, plates were scanned with CCD flatbed scanners (EPSON Perfection V600 Photo, Seiko Epson, Nagano, Japan), and images used to quantify root parameters with FIJI, by using the tool \u2018segmented line\u2019 (Schindelin et al., 2012) as described in Ristova and Busch (2017). In particular, we quantified: primary root length on day 10 (P), growth rate of P after treatment (P2), branching zone or the length of P between the first and last visible lateral root (R), average lateral root length (LRL), and visible lateral root number (LR.No).",
+    "thresholds": {
+     "bonferroni_threshold05": 7.955588086811639,
+     "bonferroni_threshold01": 8.654558091147658,
+     "bh_threshold": 4.4813018030140785,
+     "total_associations": 4513964,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -156,10 +193,17 @@
     "transcript": null
    },
    "study": {
-    "name": "('LRL125_raw_Full imputed genotype_amm',)",
+    "name": "LRL125_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "LRL125",
-    "phenotype_description": "EZ-Rhizo - cummulative lateral root length at 125 mM NaCl"
+    "phenotype_description": "EZ-Rhizo - cummulative lateral root length at 125 mM NaCl",
+    "thresholds": {
+     "bonferroni_threshold05": 8.016987819510897,
+     "bonferroni_threshold01": 8.715957823846914,
+     "bh_threshold": 4.829458439723098,
+     "total_associations": 5199455,
+     "permutation_threshold": 11.255402672882752
+    }
    }
   },
   {
@@ -182,10 +226,17 @@
     "transcript": null
    },
    "study": {
-    "name": "('clim-prec10_raw_Full imputed genotype_amm',)",
+    "name": "clim-prec10_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-prec10",
-    "phenotype_description": "Precipitation of October (mm)"
+    "phenotype_description": "Precipitation of October (mm)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.42832079989837,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -208,10 +259,17 @@
     "transcript": null
    },
    "study": {
-    "name": "('clim-prec9_raw_Full imputed genotype_amm',)",
+    "name": "clim-prec9_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-prec9",
-    "phenotype_description": "Precipitation of September (mm)"
+    "phenotype_description": "Precipitation of September (mm)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.448492164418547,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -234,10 +292,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('Mean(LR.no)_ABA_raw_Full imputed genotype_amm',)",
+    "name": "Mean(LR.no)_ABA_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "Mean(LR.no) ABA",
-    "phenotype_description": "After 3 days of treatment, plates were scanned with CCD flatbed scanners (EPSON Perfection V600 Photo, Seiko Epson, Nagano, Japan), and images used to quantify root parameters with FIJI, by using the tool \u2018segmented line\u2019 (Schindelin et al., 2012) as described in Ristova and Busch (2017). In particular, we quantified: primary root length on day 10 (P), growth rate of P after treatment (P2), branching zone or the length of P between the first and last visible lateral root (R), average lateral root length (LRL), and visible lateral root number (LR.No)."
+    "phenotype_description": "After 3 days of treatment, plates were scanned with CCD flatbed scanners (EPSON Perfection V600 Photo, Seiko Epson, Nagano, Japan), and images used to quantify root parameters with FIJI, by using the tool \u2018segmented line\u2019 (Schindelin et al., 2012) as described in Ristova and Busch (2017). In particular, we quantified: primary root length on day 10 (P), growth rate of P after treatment (P2), branching zone or the length of P between the first and last visible lateral root (R), average lateral root length (LRL), and visible lateral root number (LR.No).",
+    "thresholds": {
+     "bonferroni_threshold05": 7.955588086811639,
+     "bonferroni_threshold01": 8.654558091147658,
+     "bh_threshold": 4.8619933833145135,
+     "total_associations": 4513964,
+     "permutation_threshold": 14.449439791871095
+    }
    }
   },
   {
@@ -260,10 +325,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-gs5_raw_Full imputed genotype_amm',)",
+    "name": "clim-gs5_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-gs5",
-    "phenotype_description": "Growing season includes May (yes/no)"
+    "phenotype_description": "Growing season includes May (yes/no)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 3.951728127778849,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -286,10 +358,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('rSeeds_mli_raw_Full imputed genotype_amm',)",
+    "name": "rSeeds_mli_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "rSeeds mli",
-    "phenotype_description": "relative seed production (# offspring, excluding plants that died) in Madrid low precipitation treatment and individual (low density) replicate"
+    "phenotype_description": "relative seed production (# offspring, excluding plants that died) in Madrid low precipitation treatment and individual (low density) replicate",
+    "thresholds": {
+     "bonferroni_threshold05": 8.232820579317845,
+     "bonferroni_threshold01": 8.931790583653864,
+     "bh_threshold": 4.504367103747168,
+     "total_associations": 8546545,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -312,10 +391,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('rSeeds_mli_raw_Full imputed genotype_amm',)",
+    "name": "rSeeds_mli_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "rSeeds mli",
-    "phenotype_description": "relative seed production (# offspring, excluding plants that died) in Madrid low precipitation treatment and individual (low density) replicate"
+    "phenotype_description": "relative seed production (# offspring, excluding plants that died) in Madrid low precipitation treatment and individual (low density) replicate",
+    "thresholds": {
+     "bonferroni_threshold05": 8.232820579317845,
+     "bonferroni_threshold01": 8.931790583653864,
+     "bh_threshold": 4.504367103747168,
+     "total_associations": 8546545,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -338,10 +424,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-bio12_raw_Full imputed genotype_amm',)",
+    "name": "clim-bio12_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-bio12",
-    "phenotype_description": "Annual Precipitation (mm)"
+    "phenotype_description": "Annual Precipitation (mm)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.793205195180655,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -364,10 +457,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-prec12_raw_Full imputed genotype_amm',)",
+    "name": "clim-prec12_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-prec12",
-    "phenotype_description": "Precipitation of December (mm)"
+    "phenotype_description": "Precipitation of December (mm)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.713310544170579,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -390,10 +490,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('Zn66_raw_Full imputed genotype_amm',)",
+    "name": "Zn66_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "Zn66",
-    "phenotype_description": "Zinc concentrations in leaves"
+    "phenotype_description": "Zinc concentrations in leaves",
+    "thresholds": {
+     "bonferroni_threshold05": 8.023918991285525,
+     "bonferroni_threshold01": 8.722888995621544,
+     "bh_threshold": 4.797609146257635,
+     "total_associations": 5283102,
+     "permutation_threshold": 10.32369530475879
+    }
    }
   },
   {
@@ -416,10 +523,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-prec2_raw_Full imputed genotype_amm',)",
+    "name": "clim-prec2_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-prec2",
-    "phenotype_description": "Mean Temperature of Warmest Quarter (_C)"
+    "phenotype_description": "Mean Temperature of Warmest Quarter (_C)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.200689429788377,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -442,10 +556,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-prec1_raw_Full imputed genotype_amm',)",
+    "name": "clim-prec1_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-prec1",
-    "phenotype_description": "Mean Temperature of Driest Quarter (_C)"
+    "phenotype_description": "Mean Temperature of Driest Quarter (_C)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.226292735226703,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -468,10 +589,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-prec10_raw_Full imputed genotype_amm',)",
+    "name": "clim-prec10_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-prec10",
-    "phenotype_description": "Precipitation of October (mm)"
+    "phenotype_description": "Precipitation of October (mm)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.42832079989837,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -494,10 +622,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-prec3_raw_Full imputed genotype_amm',)",
+    "name": "clim-prec3_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-prec3",
-    "phenotype_description": "Mean Temperature of Coldest Quarter (_C)"
+    "phenotype_description": "Mean Temperature of Coldest Quarter (_C)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.234289749948678,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -520,10 +655,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('Mean(LRD_R)_ABA_raw_Full imputed genotype_amm',)",
+    "name": "Mean(LRD_R)_ABA_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "Mean(LRD R) ABA",
-    "phenotype_description": "After 3 days of treatment, plates were scanned with CCD flatbed scanners (EPSON Perfection V600 Photo, Seiko Epson, Nagano, Japan), and images used to quantify root parameters with FIJI, by using the tool \u2018segmented line\u2019 (Schindelin et al., 2012) as described in Ristova and Busch (2017). In particular, we quantified: primary root length on day 10 (P), growth rate of P after treatment (P2), branching zone or the length of P between the first and last visible lateral root (R), average lateral root length (LRL), and visible lateral root number (LR.No)."
+    "phenotype_description": "After 3 days of treatment, plates were scanned with CCD flatbed scanners (EPSON Perfection V600 Photo, Seiko Epson, Nagano, Japan), and images used to quantify root parameters with FIJI, by using the tool \u2018segmented line\u2019 (Schindelin et al., 2012) as described in Ristova and Busch (2017). In particular, we quantified: primary root length on day 10 (P), growth rate of P after treatment (P2), branching zone or the length of P between the first and last visible lateral root (R), average lateral root length (LRL), and visible lateral root number (LR.No).",
+    "thresholds": {
+     "bonferroni_threshold05": 7.955588086811639,
+     "bonferroni_threshold01": 8.654558091147658,
+     "bh_threshold": 4.451733628536273,
+     "total_associations": 4513964,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -546,10 +688,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('Mean(LRD_R)_ABA_raw_Full imputed genotype_amm',)",
+    "name": "Mean(LRD_R)_ABA_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "Mean(LRD R) ABA",
-    "phenotype_description": "After 3 days of treatment, plates were scanned with CCD flatbed scanners (EPSON Perfection V600 Photo, Seiko Epson, Nagano, Japan), and images used to quantify root parameters with FIJI, by using the tool \u2018segmented line\u2019 (Schindelin et al., 2012) as described in Ristova and Busch (2017). In particular, we quantified: primary root length on day 10 (P), growth rate of P after treatment (P2), branching zone or the length of P between the first and last visible lateral root (R), average lateral root length (LRL), and visible lateral root number (LR.No)."
+    "phenotype_description": "After 3 days of treatment, plates were scanned with CCD flatbed scanners (EPSON Perfection V600 Photo, Seiko Epson, Nagano, Japan), and images used to quantify root parameters with FIJI, by using the tool \u2018segmented line\u2019 (Schindelin et al., 2012) as described in Ristova and Busch (2017). In particular, we quantified: primary root length on day 10 (P), growth rate of P after treatment (P2), branching zone or the length of P between the first and last visible lateral root (R), average lateral root length (LRL), and visible lateral root number (LR.No).",
+    "thresholds": {
+     "bonferroni_threshold05": 7.955588086811639,
+     "bonferroni_threshold01": 8.654558091147658,
+     "bh_threshold": 4.451733628536273,
+     "total_associations": 4513964,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -572,10 +721,17 @@
     "transcript": null
    },
    "study": {
-    "name": "('PC3sc125_raw_Full imputed genotype_amm',)",
+    "name": "PC3sc125_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "PC3sc125",
-    "phenotype_description": "3rd Principal Component - pulled using all RSA traits with prior scaling at 125 mM NaCl"
+    "phenotype_description": "3rd Principal Component - pulled using all RSA traits with prior scaling at 125 mM NaCl",
+    "thresholds": {
+     "bonferroni_threshold05": 8.016100191219895,
+     "bonferroni_threshold01": 8.715070195555914,
+     "bh_threshold": 4.576786491915582,
+     "total_associations": 5188839,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -598,10 +754,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-prec9_raw_Full imputed genotype_amm',)",
+    "name": "clim-prec9_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-prec9",
-    "phenotype_description": "Precipitation of September (mm)"
+    "phenotype_description": "Precipitation of September (mm)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.448492164418547,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -624,10 +787,17 @@
     "transcript": null
    },
    "study": {
-    "name": "('clim-aet10_raw_Full imputed genotype_amm',)",
+    "name": "clim-aet10_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-aet10",
-    "phenotype_description": "Actual evapotranspiration of October (mm)"
+    "phenotype_description": "Actual evapotranspiration of October (mm)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.683567348478684,
+     "total_associations": 8901946,
+     "permutation_threshold": 7.973728044660004
+    }
    }
   },
   {
@@ -650,10 +820,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-bio19_raw_Full imputed genotype_amm',)",
+    "name": "clim-bio19_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-bio19",
-    "phenotype_description": "Mean Temperature of Wettest Quarter (_C)"
+    "phenotype_description": "Mean Temperature of Wettest Quarter (_C)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.228304754039863,
+     "total_associations": 8901946,
+     "permutation_threshold": 14.875408524143376
+    }
    }
   },
   {
@@ -676,10 +853,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('FLC_raw_Full imputed genotype_amm',)",
+    "name": "FLC_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "FLC",
-    "phenotype_description": "RNA was extracted from leaves after 4 wks of growth. FLC gene expression levels were determined by Northern hybridization quantified relative to $Beta;-TUBULIN expression"
+    "phenotype_description": "RNA was extracted from leaves after 4 wks of growth. FLC gene expression levels were determined by Northern hybridization quantified relative to $Beta;-TUBULIN expression",
+    "thresholds": {
+     "bonferroni_threshold05": 7.966296642598945,
+     "bonferroni_threshold01": 8.665266646934965,
+     "bh_threshold": 4.244267672644011,
+     "total_associations": 4626650,
+     "permutation_threshold": 10.816268121406248
+    }
    }
   },
   {
@@ -702,10 +886,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('FLC_raw_Full imputed genotype_amm',)",
+    "name": "FLC_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "FLC",
-    "phenotype_description": "RNA was extracted from leaves after 4 wks of growth. FLC gene expression levels were determined by Northern hybridization quantified relative to $Beta;-TUBULIN expression"
+    "phenotype_description": "RNA was extracted from leaves after 4 wks of growth. FLC gene expression levels were determined by Northern hybridization quantified relative to $Beta;-TUBULIN expression",
+    "thresholds": {
+     "bonferroni_threshold05": 7.966296642598945,
+     "bonferroni_threshold01": 8.665266646934965,
+     "bh_threshold": 4.244267672644011,
+     "total_associations": 4626650,
+     "permutation_threshold": 10.816268121406248
+    }
    }
   },
   {
@@ -728,10 +919,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-bio16_raw_Full imputed genotype_amm',)",
+    "name": "clim-bio16_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-bio16",
-    "phenotype_description": "Max Temperature of Warmest Month (_C)"
+    "phenotype_description": "Max Temperature of Warmest Month (_C)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.4886535413183974,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -754,10 +952,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-gs5_raw_Full imputed genotype_amm',)",
+    "name": "clim-gs5_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-gs5",
-    "phenotype_description": "Growing season includes May (yes/no)"
+    "phenotype_description": "Growing season includes May (yes/no)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 3.951728127778849,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -780,10 +985,17 @@
     "transcript": null
    },
    "study": {
-    "name": "('clim-gs10_raw_Full imputed genotype_amm',)",
+    "name": "clim-gs10_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-gs10",
-    "phenotype_description": "Growing season includes October (yes/no)"
+    "phenotype_description": "Growing season includes October (yes/no)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.199110318940283,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -806,10 +1018,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-bio13_raw_Full imputed genotype_amm',)",
+    "name": "clim-bio13_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-bio13",
-    "phenotype_description": "Precipitation of Wettest Month (mm)"
+    "phenotype_description": "Precipitation of Wettest Month (mm)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.136670642871471,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -832,10 +1051,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-prec1_raw_Full imputed genotype_amm',)",
+    "name": "clim-prec1_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-prec1",
-    "phenotype_description": "Mean Temperature of Driest Quarter (_C)"
+    "phenotype_description": "Mean Temperature of Driest Quarter (_C)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.226292735226703,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -858,10 +1084,17 @@
     "transcript": null
    },
    "study": {
-    "name": "('clim-gs5_raw_Full imputed genotype_amm',)",
+    "name": "clim-gs5_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-gs5",
-    "phenotype_description": "Growing season includes May (yes/no)"
+    "phenotype_description": "Growing season includes May (yes/no)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 3.951728127778849,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -884,10 +1117,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-gs5_raw_Full imputed genotype_amm',)",
+    "name": "clim-gs5_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-gs5",
-    "phenotype_description": "Growing season includes May (yes/no)"
+    "phenotype_description": "Growing season includes May (yes/no)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 3.951728127778849,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -910,10 +1150,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-gs_prec_raw_Full imputed genotype_amm',)",
+    "name": "clim-gs_prec_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-gs prec",
-    "phenotype_description": "Precipitation within growing season (mm)"
+    "phenotype_description": "Precipitation within growing season (mm)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.6290935674467315,
+     "total_associations": 8901946,
+     "permutation_threshold": 10.453904682975717
+    }
    }
   },
   {
@@ -936,10 +1183,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('Na23_raw_Full imputed genotype_amm',)",
+    "name": "Na23_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "Na23",
-    "phenotype_description": "odium concentrations in leaves"
+    "phenotype_description": "odium concentrations in leaves",
+    "thresholds": {
+     "bonferroni_threshold05": 8.023918991285525,
+     "bonferroni_threshold01": 8.722888995621544,
+     "bh_threshold": 4.71932300082964,
+     "total_associations": 5283102,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -962,10 +1216,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('Na23_raw_Full imputed genotype_amm',)",
+    "name": "Na23_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "Na23",
-    "phenotype_description": "odium concentrations in leaves"
+    "phenotype_description": "odium concentrations in leaves",
+    "thresholds": {
+     "bonferroni_threshold05": 8.023918991285525,
+     "bonferroni_threshold01": 8.722888995621544,
+     "bh_threshold": 4.71932300082964,
+     "total_associations": 5283102,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -988,10 +1249,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-prec11_raw_Full imputed genotype_amm',)",
+    "name": "clim-prec11_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-prec11",
-    "phenotype_description": "Precipitation of November (mm)"
+    "phenotype_description": "Precipitation of November (mm)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.53589357765311,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.352529778863037
+    }
    }
   },
   {
@@ -1014,10 +1282,17 @@
     "transcript": null
    },
    "study": {
-    "name": "('clim-prec11_raw_Full imputed genotype_amm',)",
+    "name": "clim-prec11_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-prec11",
-    "phenotype_description": "Precipitation of November (mm)"
+    "phenotype_description": "Precipitation of November (mm)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.53589357765311,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.352529778863037
+    }
    }
   },
   {
@@ -1040,10 +1315,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('F-mean_Total_length_day003_raw_Full imputed genotype_amm',)",
+    "name": "F-mean_Total_length_day003_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "F-mean Total length day003",
-    "phenotype_description": "individual root growth was measured as the mean of 3 Arabidopsis seedlings."
+    "phenotype_description": "individual root growth was measured as the mean of 3 Arabidopsis seedlings.",
+    "thresholds": {
+     "bonferroni_threshold05": 7.993143898241384,
+     "bonferroni_threshold01": 8.692113902577402,
+     "bh_threshold": 7.692113902577403,
+     "total_associations": 4921686,
+     "permutation_threshold": 8.279225286558779
+    }
    }
   },
   {
@@ -1066,10 +1348,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-pet12_raw_Full imputed genotype_amm',)",
+    "name": "clim-pet12_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-pet12",
-    "phenotype_description": "Potential evapotranspiration of December (mm)"
+    "phenotype_description": "Potential evapotranspiration of December (mm)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.219345437689526,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -1092,10 +1381,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-bio19_raw_Full imputed genotype_amm',)",
+    "name": "clim-bio19_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-bio19",
-    "phenotype_description": "Mean Temperature of Wettest Quarter (_C)"
+    "phenotype_description": "Mean Temperature of Wettest Quarter (_C)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.228304754039863,
+     "total_associations": 8901946,
+     "permutation_threshold": 14.875408524143376
+    }
    }
   },
   {
@@ -1118,10 +1414,17 @@
     "transcript": null
    },
    "study": {
-    "name": "('clim-bio13_raw_Full imputed genotype_amm',)",
+    "name": "clim-bio13_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-bio13",
-    "phenotype_description": "Precipitation of Wettest Month (mm)"
+    "phenotype_description": "Precipitation of Wettest Month (mm)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.136670642871471,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -1144,10 +1447,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('Na23_raw_Full imputed genotype_amm',)",
+    "name": "Na23_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "Na23",
-    "phenotype_description": "odium concentrations in leaves"
+    "phenotype_description": "odium concentrations in leaves",
+    "thresholds": {
+     "bonferroni_threshold05": 8.023918991285525,
+     "bonferroni_threshold01": 8.722888995621544,
+     "bh_threshold": 4.71932300082964,
+     "total_associations": 5283102,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -1170,10 +1480,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('Na23_raw_Full imputed genotype_amm',)",
+    "name": "Na23_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "Na23",
-    "phenotype_description": "odium concentrations in leaves"
+    "phenotype_description": "odium concentrations in leaves",
+    "thresholds": {
+     "bonferroni_threshold05": 8.023918991285525,
+     "bonferroni_threshold01": 8.722888995621544,
+     "bh_threshold": 4.71932300082964,
+     "total_associations": 5283102,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -1196,10 +1513,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('Na23_raw_Full imputed genotype_amm',)",
+    "name": "Na23_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "Na23",
-    "phenotype_description": "odium concentrations in leaves"
+    "phenotype_description": "odium concentrations in leaves",
+    "thresholds": {
+     "bonferroni_threshold05": 8.023918991285525,
+     "bonferroni_threshold01": 8.722888995621544,
+     "bh_threshold": 4.71932300082964,
+     "total_associations": 5283102,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -1222,10 +1546,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('Na23_raw_Full imputed genotype_amm',)",
+    "name": "Na23_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "Na23",
-    "phenotype_description": "odium concentrations in leaves"
+    "phenotype_description": "odium concentrations in leaves",
+    "thresholds": {
+     "bonferroni_threshold05": 8.023918991285525,
+     "bonferroni_threshold01": 8.722888995621544,
+     "bh_threshold": 4.71932300082964,
+     "total_associations": 5283102,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -1248,10 +1579,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-prec3_raw_Full imputed genotype_amm',)",
+    "name": "clim-prec3_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-prec3",
-    "phenotype_description": "Mean Temperature of Coldest Quarter (_C)"
+    "phenotype_description": "Mean Temperature of Coldest Quarter (_C)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.234289749948678,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -1274,10 +1612,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-pet1_raw_Full imputed genotype_amm',)",
+    "name": "clim-pet1_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-pet1",
-    "phenotype_description": "Potential evapotranspiration of January (mm)"
+    "phenotype_description": "Potential evapotranspiration of January (mm)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.237817095723023,
+     "total_associations": 8901946,
+     "permutation_threshold": 12.058615037831938
+    }
    }
   },
   {
@@ -1300,10 +1645,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('Li7_raw_Full imputed genotype_amm',)",
+    "name": "Li7_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "Li7",
-    "phenotype_description": "Lithium concentrations in leaves"
+    "phenotype_description": "Lithium concentrations in leaves",
+    "thresholds": {
+     "bonferroni_threshold05": 8.023918991285525,
+     "bonferroni_threshold01": 8.722888995621544,
+     "bh_threshold": 8.023918991285527,
+     "total_associations": 5283102,
+     "permutation_threshold": 7.41755693324315
+    }
    }
   },
   {
@@ -1326,10 +1678,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('Li7_raw_Full imputed genotype_amm',)",
+    "name": "Li7_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "Li7",
-    "phenotype_description": "Lithium concentrations in leaves"
+    "phenotype_description": "Lithium concentrations in leaves",
+    "thresholds": {
+     "bonferroni_threshold05": 8.023918991285525,
+     "bonferroni_threshold01": 8.722888995621544,
+     "bh_threshold": 8.023918991285527,
+     "total_associations": 5283102,
+     "permutation_threshold": 7.41755693324315
+    }
    }
   },
   {
@@ -1352,10 +1711,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('rosetteDM_raw_Full imputed genotype_amm',)",
+    "name": "rosetteDM_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "rosetteDM",
-    "phenotype_description": "Rosette dry mass (mg) measured at the end of the life cycle, at fruit ripening"
+    "phenotype_description": "Rosette dry mass (mg) measured at the end of the life cycle, at fruit ripening",
+    "thresholds": {
+     "bonferroni_threshold05": 8.191104614538022,
+     "bonferroni_threshold01": 8.89007461887404,
+     "bh_threshold": 4.51137155109173,
+     "total_associations": 7763805,
+     "permutation_threshold": 10.857756199738903
+    }
    }
   },
   {
@@ -1378,10 +1744,17 @@
     "transcript": null
    },
    "study": {
-    "name": "('clim-gs_prec_raw_Full imputed genotype_amm',)",
+    "name": "clim-gs_prec_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-gs prec",
-    "phenotype_description": "Precipitation within growing season (mm)"
+    "phenotype_description": "Precipitation within growing season (mm)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.6290935674467315,
+     "total_associations": 8901946,
+     "permutation_threshold": 10.453904682975717
+    }
    }
   },
   {
@@ -1404,10 +1777,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-bio15_raw_Full imputed genotype_amm',)",
+    "name": "clim-bio15_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-bio15",
-    "phenotype_description": "Precipitation Seasonality (Coefficient of Variation)"
+    "phenotype_description": "Precipitation Seasonality (Coefficient of Variation)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.131644072740144,
+     "total_associations": 8901946,
+     "permutation_threshold": 12.088361522811354
+    }
    }
   },
   {
@@ -1430,10 +1810,17 @@
     "transcript": null
    },
    "study": {
-    "name": "('TRS125_raw_Full imputed genotype_amm',)",
+    "name": "TRS125_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "TRS125",
-    "phenotype_description": "EZ-Rhizo - Total Root Size (length) at 125 mM NaCl"
+    "phenotype_description": "EZ-Rhizo - Total Root Size (length) at 125 mM NaCl",
+    "thresholds": {
+     "bonferroni_threshold05": 8.016987819510897,
+     "bonferroni_threshold01": 8.715957823846914,
+     "bh_threshold": 7.591019087238616,
+     "total_associations": 5199455,
+     "permutation_threshold": 8.85943217451999
+    }
    }
   },
   {
@@ -1456,10 +1843,17 @@
     "transcript": null
    },
    "study": {
-    "name": "('clim-bio16_raw_Full imputed genotype_amm',)",
+    "name": "clim-bio16_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-bio16",
-    "phenotype_description": "Max Temperature of Warmest Month (_C)"
+    "phenotype_description": "Max Temperature of Warmest Month (_C)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.4886535413183974,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -1482,10 +1876,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('rSurvival_fruit_mlp_raw_Full imputed genotype_amm',)",
+    "name": "rSurvival_fruit_mlp_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "rSurvival fruit mlp",
-    "phenotype_description": "relative survival to reproduction (proportion of plants or 1/0 alive/dead) in Madrid low precipitation treatment and population (high density) replicate"
+    "phenotype_description": "relative survival to reproduction (proportion of plants or 1/0 alive/dead) in Madrid low precipitation treatment and population (high density) replicate",
+    "thresholds": {
+     "bonferroni_threshold05": 8.25540050660051,
+     "bonferroni_threshold01": 8.95437051093653,
+     "bh_threshold": 6.901823268511541,
+     "total_associations": 9002653,
+     "permutation_threshold": 10.323119619604064
+    }
    }
   },
   {
@@ -1508,10 +1909,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-aet11_raw_Full imputed genotype_amm',)",
+    "name": "clim-aet11_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-aet11",
-    "phenotype_description": "Actual evapotranspiration of November (mm)"
+    "phenotype_description": "Actual evapotranspiration of November (mm)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.9732256544017215,
+     "total_associations": 8901946,
+     "permutation_threshold": 7.947269671338874
+    }
    }
   },
   {
@@ -1534,10 +1942,17 @@
     "transcript": null
    },
    "study": {
-    "name": "('aLRLpMRL125_raw_Full imputed genotype_amm',)",
+    "name": "aLRLpMRL125_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "aLRLpMRL125",
-    "phenotype_description": "EZ-Rhizo - the average length of lateral root per main root length at 125 mM NaCl"
+    "phenotype_description": "EZ-Rhizo - the average length of lateral root per main root length at 125 mM NaCl",
+    "thresholds": {
+     "bonferroni_threshold05": 8.016987819510897,
+     "bonferroni_threshold01": 8.715957823846914,
+     "bh_threshold": 4.431333264203341,
+     "total_associations": 5199455,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -1560,10 +1975,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('Seed_Dormancy_raw_Full imputed genotype_amm',)",
+    "name": "Seed_Dormancy_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "Seed Dormancy",
-    "phenotype_description": "Number of days of seed dry storage required to reach 50&#37 germination, or DSDS50 value (Alonso-Blanco et al., 2003). The measurement for each genotype was calculated as the average value across all available replicates"
+    "phenotype_description": "Number of days of seed dry storage required to reach 50&#37 germination, or DSDS50 value (Alonso-Blanco et al., 2003). The measurement for each genotype was calculated as the average value across all available replicates",
+    "thresholds": {
+     "bonferroni_threshold05": 7.878600604756186,
+     "bonferroni_threshold01": 8.577570609092206,
+     "bh_threshold": 6.0873862951701225,
+     "total_associations": 3780686,
+     "permutation_threshold": 8.892584859619834
+    }
    }
   },
   {
@@ -1586,10 +2008,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('Seed_Dormancy_raw_Full imputed genotype_amm',)",
+    "name": "Seed_Dormancy_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "Seed Dormancy",
-    "phenotype_description": "Number of days of seed dry storage required to reach 50&#37 germination, or DSDS50 value (Alonso-Blanco et al., 2003). The measurement for each genotype was calculated as the average value across all available replicates"
+    "phenotype_description": "Number of days of seed dry storage required to reach 50&#37 germination, or DSDS50 value (Alonso-Blanco et al., 2003). The measurement for each genotype was calculated as the average value across all available replicates",
+    "thresholds": {
+     "bonferroni_threshold05": 7.878600604756186,
+     "bonferroni_threshold01": 8.577570609092206,
+     "bh_threshold": 6.0873862951701225,
+     "total_associations": 3780686,
+     "permutation_threshold": 8.892584859619834
+    }
    }
   },
   {
@@ -1612,10 +2041,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-gs10_raw_Full imputed genotype_amm',)",
+    "name": "clim-gs10_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-gs10",
-    "phenotype_description": "Growing season includes October (yes/no)"
+    "phenotype_description": "Growing season includes October (yes/no)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.199110318940283,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -1638,10 +2074,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-prec2_raw_Full imputed genotype_amm',)",
+    "name": "clim-prec2_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-prec2",
-    "phenotype_description": "Mean Temperature of Warmest Quarter (_C)"
+    "phenotype_description": "Mean Temperature of Warmest Quarter (_C)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.200689429788377,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -1664,10 +2107,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-bio13_raw_Full imputed genotype_amm',)",
+    "name": "clim-bio13_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-bio13",
-    "phenotype_description": "Precipitation of Wettest Month (mm)"
+    "phenotype_description": "Precipitation of Wettest Month (mm)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.136670642871471,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -1690,10 +2140,17 @@
     "transcript": null
    },
    "study": {
-    "name": "('clim-aet11_raw_Full imputed genotype_amm',)",
+    "name": "clim-aet11_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-aet11",
-    "phenotype_description": "Actual evapotranspiration of November (mm)"
+    "phenotype_description": "Actual evapotranspiration of November (mm)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.9732256544017215,
+     "total_associations": 8901946,
+     "permutation_threshold": 7.947269671338874
+    }
    }
   },
   {
@@ -1716,10 +2173,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('rSeeds_tlp_raw_Full imputed genotype_amm',)",
+    "name": "rSeeds_tlp_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "rSeeds tlp",
-    "phenotype_description": "relative seed production (# offspring, excluding plants that died) in Tuebingen low precipitation treatment and population (high density) replicate"
+    "phenotype_description": "relative seed production (# offspring, excluding plants that died) in Tuebingen low precipitation treatment and population (high density) replicate",
+    "thresholds": {
+     "bonferroni_threshold05": 8.219558174374452,
+     "bonferroni_threshold01": 8.91852817871047,
+     "bh_threshold": 5.090122596606041,
+     "total_associations": 8289497,
+     "permutation_threshold": 12.997941190985797
+    }
    }
   },
   {
@@ -1742,10 +2206,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('rSeeds_tlp_raw_Full imputed genotype_amm',)",
+    "name": "rSeeds_tlp_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "rSeeds tlp",
-    "phenotype_description": "relative seed production (# offspring, excluding plants that died) in Tuebingen low precipitation treatment and population (high density) replicate"
+    "phenotype_description": "relative seed production (# offspring, excluding plants that died) in Tuebingen low precipitation treatment and population (high density) replicate",
+    "thresholds": {
+     "bonferroni_threshold05": 8.219558174374452,
+     "bonferroni_threshold01": 8.91852817871047,
+     "bh_threshold": 5.090122596606041,
+     "total_associations": 8289497,
+     "permutation_threshold": 12.997941190985797
+    }
    }
   },
   {
@@ -1768,10 +2239,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('rSeeds_tlp_raw_Full imputed genotype_amm',)",
+    "name": "rSeeds_tlp_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "rSeeds tlp",
-    "phenotype_description": "relative seed production (# offspring, excluding plants that died) in Tuebingen low precipitation treatment and population (high density) replicate"
+    "phenotype_description": "relative seed production (# offspring, excluding plants that died) in Tuebingen low precipitation treatment and population (high density) replicate",
+    "thresholds": {
+     "bonferroni_threshold05": 8.219558174374452,
+     "bonferroni_threshold01": 8.91852817871047,
+     "bh_threshold": 5.090122596606041,
+     "total_associations": 8289497,
+     "permutation_threshold": 12.997941190985797
+    }
    }
   },
   {
@@ -1794,10 +2272,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-bio17_raw_Full imputed genotype_amm',)",
+    "name": "clim-bio17_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-bio17",
-    "phenotype_description": "Min Temperature of Coldest Month (_C)"
+    "phenotype_description": "Min Temperature of Coldest Month (_C)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 5.0630849543651335,
+     "total_associations": 8901946,
+     "permutation_threshold": 10.077524381365025
+    }
    }
   },
   {
@@ -1820,10 +2305,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-pet11_raw_Full imputed genotype_amm',)",
+    "name": "clim-pet11_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-pet11",
-    "phenotype_description": "Potential evapotranspiration of November (mm)"
+    "phenotype_description": "Potential evapotranspiration of November (mm)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.274926458179251,
+     "total_associations": 8901946,
+     "permutation_threshold": 10.188827364330251
+    }
    }
   },
   {
@@ -1846,10 +2338,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-bio14_raw_Full imputed genotype_amm',)",
+    "name": "clim-bio14_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-bio14",
-    "phenotype_description": "Precipitation of Driest Month (mm)"
+    "phenotype_description": "Precipitation of Driest Month (mm)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 5.092691114196877,
+     "total_associations": 8901946,
+     "permutation_threshold": 11.04560640294137
+    }
    }
   },
   {
@@ -1872,10 +2371,17 @@
     "transcript": null
    },
    "study": {
-    "name": "('Mean(LRD_R)_ABA_raw_Full imputed genotype_amm',)",
+    "name": "Mean(LRD_R)_ABA_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "Mean(LRD R) ABA",
-    "phenotype_description": "After 3 days of treatment, plates were scanned with CCD flatbed scanners (EPSON Perfection V600 Photo, Seiko Epson, Nagano, Japan), and images used to quantify root parameters with FIJI, by using the tool \u2018segmented line\u2019 (Schindelin et al., 2012) as described in Ristova and Busch (2017). In particular, we quantified: primary root length on day 10 (P), growth rate of P after treatment (P2), branching zone or the length of P between the first and last visible lateral root (R), average lateral root length (LRL), and visible lateral root number (LR.No)."
+    "phenotype_description": "After 3 days of treatment, plates were scanned with CCD flatbed scanners (EPSON Perfection V600 Photo, Seiko Epson, Nagano, Japan), and images used to quantify root parameters with FIJI, by using the tool \u2018segmented line\u2019 (Schindelin et al., 2012) as described in Ristova and Busch (2017). In particular, we quantified: primary root length on day 10 (P), growth rate of P after treatment (P2), branching zone or the length of P between the first and last visible lateral root (R), average lateral root length (LRL), and visible lateral root number (LR.No).",
+    "thresholds": {
+     "bonferroni_threshold05": 7.955588086811639,
+     "bonferroni_threshold01": 8.654558091147658,
+     "bh_threshold": 4.451733628536273,
+     "total_associations": 4513964,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -1898,10 +2404,17 @@
     "transcript": null
    },
    "study": {
-    "name": "('clim-gs_tmin_raw_Full imputed genotype_amm',)",
+    "name": "clim-gs_tmin_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-gs tmin",
-    "phenotype_description": "Minimum temperature average within growing season (_C)"
+    "phenotype_description": "Minimum temperature average within growing season (_C)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.553475160679959,
+     "total_associations": 8901946,
+     "permutation_threshold": 12.923181305939378
+    }
    }
   },
   {
@@ -1924,10 +2437,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-gs_tmin_raw_Full imputed genotype_amm',)",
+    "name": "clim-gs_tmin_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-gs tmin",
-    "phenotype_description": "Minimum temperature average within growing season (_C)"
+    "phenotype_description": "Minimum temperature average within growing season (_C)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.553475160679959,
+     "total_associations": 8901946,
+     "permutation_threshold": 12.923181305939378
+    }
    }
   },
   {
@@ -1950,10 +2470,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-gs1_raw_Full imputed genotype_amm',)",
+    "name": "clim-gs1_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-gs1",
-    "phenotype_description": "Growing season includes January (yes/no)"
+    "phenotype_description": "Growing season includes January (yes/no)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 6.780486772361377,
+     "total_associations": 8901946,
+     "permutation_threshold": 8.607594202535328
+    }
    }
   },
   {
@@ -1976,10 +2503,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-gs1_raw_Full imputed genotype_amm',)",
+    "name": "clim-gs1_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-gs1",
-    "phenotype_description": "Growing season includes January (yes/no)"
+    "phenotype_description": "Growing season includes January (yes/no)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 6.780486772361377,
+     "total_associations": 8901946,
+     "permutation_threshold": 8.607594202535328
+    }
    }
   },
   {
@@ -2002,10 +2536,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('rSurvival_fruit_mhp_raw_Full imputed genotype_amm',)",
+    "name": "rSurvival_fruit_mhp_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "rSurvival fruit mhp",
-    "phenotype_description": "relative survival to reproduction (proportion of plants or 1/0 alive/dead) in Madrid high precipitation treatment and population (high density) replicate"
+    "phenotype_description": "relative survival to reproduction (proportion of plants or 1/0 alive/dead) in Madrid high precipitation treatment and population (high density) replicate",
+    "thresholds": {
+     "bonferroni_threshold05": 8.25540050660051,
+     "bonferroni_threshold01": 8.95437051093653,
+     "bh_threshold": 7.127812446536604,
+     "total_associations": 9002653,
+     "permutation_threshold": 10.133967360826
+    }
    }
   },
   {
@@ -2028,10 +2569,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-bio16_raw_Full imputed genotype_amm',)",
+    "name": "clim-bio16_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-bio16",
-    "phenotype_description": "Max Temperature of Warmest Month (_C)"
+    "phenotype_description": "Max Temperature of Warmest Month (_C)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.4886535413183974,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -2054,10 +2602,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('Mean(LRD_P)_IAA_raw_Full imputed genotype_amm',)",
+    "name": "Mean(LRD_P)_IAA_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "Mean(LRD P) IAA",
-    "phenotype_description": "After 3 days of treatment, plates were scanned with CCD flatbed scanners (EPSON Perfection V600 Photo, Seiko Epson, Nagano, Japan), and images used to quantify root parameters with FIJI, by using the tool \u2018segmented line\u2019 (Schindelin et al., 2012) as described in Ristova and Busch (2017). In particular, we quantified: primary root length on day 10 (P), growth rate of P after treatment (P2), branching zone or the length of P between the first and last visible lateral root (R), average lateral root length (LRL), and visible lateral root number (LR.No)."
+    "phenotype_description": "After 3 days of treatment, plates were scanned with CCD flatbed scanners (EPSON Perfection V600 Photo, Seiko Epson, Nagano, Japan), and images used to quantify root parameters with FIJI, by using the tool \u2018segmented line\u2019 (Schindelin et al., 2012) as described in Ristova and Busch (2017). In particular, we quantified: primary root length on day 10 (P), growth rate of P after treatment (P2), branching zone or the length of P between the first and last visible lateral root (R), average lateral root length (LRL), and visible lateral root number (LR.No).",
+    "thresholds": {
+     "bonferroni_threshold05": 7.955516980817771,
+     "bonferroni_threshold01": 8.65448698515379,
+     "bh_threshold": 6.235759495840265,
+     "total_associations": 4513225,
+     "permutation_threshold": 9.29477060824059
+    }
    }
   },
   {
@@ -2080,10 +2635,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('Mean(LRD_P)_IAA_raw_Full imputed genotype_amm',)",
+    "name": "Mean(LRD_P)_IAA_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "Mean(LRD P) IAA",
-    "phenotype_description": "After 3 days of treatment, plates were scanned with CCD flatbed scanners (EPSON Perfection V600 Photo, Seiko Epson, Nagano, Japan), and images used to quantify root parameters with FIJI, by using the tool \u2018segmented line\u2019 (Schindelin et al., 2012) as described in Ristova and Busch (2017). In particular, we quantified: primary root length on day 10 (P), growth rate of P after treatment (P2), branching zone or the length of P between the first and last visible lateral root (R), average lateral root length (LRL), and visible lateral root number (LR.No)."
+    "phenotype_description": "After 3 days of treatment, plates were scanned with CCD flatbed scanners (EPSON Perfection V600 Photo, Seiko Epson, Nagano, Japan), and images used to quantify root parameters with FIJI, by using the tool \u2018segmented line\u2019 (Schindelin et al., 2012) as described in Ristova and Busch (2017). In particular, we quantified: primary root length on day 10 (P), growth rate of P after treatment (P2), branching zone or the length of P between the first and last visible lateral root (R), average lateral root length (LRL), and visible lateral root number (LR.No).",
+    "thresholds": {
+     "bonferroni_threshold05": 7.955516980817771,
+     "bonferroni_threshold01": 8.65448698515379,
+     "bh_threshold": 6.235759495840265,
+     "total_associations": 4513225,
+     "permutation_threshold": 9.29477060824059
+    }
    }
   },
   {
@@ -2106,10 +2668,17 @@
     "transcript": null
    },
    "study": {
-    "name": "('clim-gs10_raw_Full imputed genotype_amm',)",
+    "name": "clim-gs10_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-gs10",
-    "phenotype_description": "Growing season includes October (yes/no)"
+    "phenotype_description": "Growing season includes October (yes/no)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.199110318940283,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -2132,10 +2701,17 @@
     "transcript": null
    },
    "study": {
-    "name": "('clim-aet9_raw_Full imputed genotype_amm',)",
+    "name": "clim-aet9_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-aet9",
-    "phenotype_description": "Actual evapotranspiration of September (mm)"
+    "phenotype_description": "Actual evapotranspiration of September (mm)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 5.49180878293865,
+     "total_associations": 8901946,
+     "permutation_threshold": 7.696237539464084
+    }
    }
   },
   {
@@ -2158,10 +2734,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-gs5_raw_Full imputed genotype_amm',)",
+    "name": "clim-gs5_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-gs5",
-    "phenotype_description": "Growing season includes May (yes/no)"
+    "phenotype_description": "Growing season includes May (yes/no)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 3.951728127778849,
+     "total_associations": 8901946,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -2184,10 +2767,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('rSeeds_mli_raw_Full imputed genotype_amm',)",
+    "name": "rSeeds_mli_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "rSeeds mli",
-    "phenotype_description": "relative seed production (# offspring, excluding plants that died) in Madrid low precipitation treatment and individual (low density) replicate"
+    "phenotype_description": "relative seed production (# offspring, excluding plants that died) in Madrid low precipitation treatment and individual (low density) replicate",
+    "thresholds": {
+     "bonferroni_threshold05": 8.232820579317845,
+     "bonferroni_threshold01": 8.931790583653864,
+     "bh_threshold": 4.504367103747168,
+     "total_associations": 8546545,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -2210,10 +2800,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('rSeeds_mli_raw_Full imputed genotype_amm',)",
+    "name": "rSeeds_mli_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "rSeeds mli",
-    "phenotype_description": "relative seed production (# offspring, excluding plants that died) in Madrid low precipitation treatment and individual (low density) replicate"
+    "phenotype_description": "relative seed production (# offspring, excluding plants that died) in Madrid low precipitation treatment and individual (low density) replicate",
+    "thresholds": {
+     "bonferroni_threshold05": 8.232820579317845,
+     "bonferroni_threshold01": 8.931790583653864,
+     "bh_threshold": 4.504367103747168,
+     "total_associations": 8546545,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -2236,10 +2833,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('aLRL75_raw_Full imputed genotype_amm',)",
+    "name": "aLRL75_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "aLRL75",
-    "phenotype_description": "EZ-Rhizo - average lateral root length at 75 mM NaCl"
+    "phenotype_description": "EZ-Rhizo - average lateral root length at 75 mM NaCl",
+    "thresholds": {
+     "bonferroni_threshold05": 8.016987819510897,
+     "bonferroni_threshold01": 8.715957823846914,
+     "bh_threshold": 5.0722473866852305,
+     "total_associations": 5199455,
+     "permutation_threshold": 11.523306438383742
+    }
    }
   },
   {
@@ -2262,10 +2866,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('aLRL75_raw_Full imputed genotype_amm',)",
+    "name": "aLRL75_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "aLRL75",
-    "phenotype_description": "EZ-Rhizo - average lateral root length at 75 mM NaCl"
+    "phenotype_description": "EZ-Rhizo - average lateral root length at 75 mM NaCl",
+    "thresholds": {
+     "bonferroni_threshold05": 8.016987819510897,
+     "bonferroni_threshold01": 8.715957823846914,
+     "bh_threshold": 5.0722473866852305,
+     "total_associations": 5199455,
+     "permutation_threshold": 11.523306438383742
+    }
    }
   },
   {
@@ -2288,10 +2899,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('rFitness_mlp_raw_Full imputed genotype_amm',)",
+    "name": "rFitness_mlp_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "rFitness mlp",
-    "phenotype_description": "relative lifetime fitness (# offspring including 0 when plant died) in Madrid low precipitation treatment and population (high density) replicate"
+    "phenotype_description": "relative lifetime fitness (# offspring including 0 when plant died) in Madrid low precipitation treatment and population (high density) replicate",
+    "thresholds": {
+     "bonferroni_threshold05": 8.25540050660051,
+     "bonferroni_threshold01": 8.95437051093653,
+     "bh_threshold": 5.008868401641496,
+     "total_associations": 9002653,
+     "permutation_threshold": 15.954589770191001
+    }
    }
   },
   {
@@ -2314,10 +2932,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('Mean(P2)_ABA_raw_Full imputed genotype_amm',)",
+    "name": "Mean(P2)_ABA_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "Mean(P2) ABA",
-    "phenotype_description": "After 3 days of treatment, plates were scanned with CCD flatbed scanners (EPSON Perfection V600 Photo, Seiko Epson, Nagano, Japan), and images used to quantify root parameters with FIJI, by using the tool \u2018segmented line\u2019 (Schindelin et al., 2012) as described in Ristova and Busch (2017). In particular, we quantified: primary root length on day 10 (P), growth rate of P after treatment (P2), branching zone or the length of P between the first and last visible lateral root (R), average lateral root length (LRL), and visible lateral root number (LR.No)."
+    "phenotype_description": "After 3 days of treatment, plates were scanned with CCD flatbed scanners (EPSON Perfection V600 Photo, Seiko Epson, Nagano, Japan), and images used to quantify root parameters with FIJI, by using the tool \u2018segmented line\u2019 (Schindelin et al., 2012) as described in Ristova and Busch (2017). In particular, we quantified: primary root length on day 10 (P), growth rate of P after treatment (P2), branching zone or the length of P between the first and last visible lateral root (R), average lateral root length (LRL), and visible lateral root number (LR.No).",
+    "thresholds": {
+     "bonferroni_threshold05": 7.955588086811639,
+     "bonferroni_threshold01": 8.654558091147658,
+     "bh_threshold": 7.955588086811641,
+     "total_associations": 4513964,
+     "permutation_threshold": 7.143396596549594
+    }
    }
   },
   {
@@ -2340,10 +2965,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('clim-pet2_raw_Full imputed genotype_amm',)",
+    "name": "clim-pet2_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "clim-pet2",
-    "phenotype_description": "Potential evapotranspiration of February (mm)"
+    "phenotype_description": "Potential evapotranspiration of February (mm)",
+    "thresholds": {
+     "bonferroni_threshold05": 8.250514951149334,
+     "bonferroni_threshold01": 8.949484955485353,
+     "bh_threshold": 4.509229268618318,
+     "total_associations": 8901946,
+     "permutation_threshold": 7.259637310505756
+    }
    }
   },
   {
@@ -2366,10 +2998,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('P-mean_Total_length_day003_raw_Full imputed genotype_amm',)",
+    "name": "P-mean_Total_length_day003_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "P-mean Total length day003",
-    "phenotype_description": "individual root growth was measured as the mean of 3 Arabidopsis seedlings."
+    "phenotype_description": "individual root growth was measured as the mean of 3 Arabidopsis seedlings.",
+    "thresholds": {
+     "bonferroni_threshold05": 7.9831575554414265,
+     "bonferroni_threshold01": 8.682127559777447,
+     "bh_threshold": 7.983157555441428,
+     "total_associations": 4809806,
+     "permutation_threshold": 7.654673063595742
+    }
    }
   },
   {
@@ -2392,10 +3031,17 @@
     "transcript": "AT1G77850.1"
    },
    "study": {
-    "name": "('PF-mean_Total_length_day003_raw_Full imputed genotype_amm',)",
+    "name": "PF-mean_Total_length_day003_raw_Full imputed genotype_amm",
     "method": "amm",
     "phenotype": "PF-mean Total length day003",
-    "phenotype_description": "individual root growth was measured as the mean of 3 Arabidopsis seedlings."
+    "phenotype_description": "individual root growth was measured as the mean of 3 Arabidopsis seedlings.",
+    "thresholds": {
+     "bonferroni_threshold05": 7.9909522065721035,
+     "bonferroni_threshold01": 8.689922210908122,
+     "bh_threshold": 7.990952206572104,
+     "total_associations": 4896911,
+     "permutation_threshold": 7.943819537334921
+    }
    }
   }
  ],

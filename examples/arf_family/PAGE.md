@@ -1,38 +1,52 @@
-# One family, 400 calls: a worked run of plant-genomics-mcp
+# One family, 64 calls: a worked run of plant-genomics-mcp
 
-`plant-genomics-mcp` publishes 50 MCP tools over 23 free, public
+`plant-genomics-mcp` publishes 52 MCP tools over free, public
 plant-genomics backends. This page is what happened when 16 of them were
 run end to end over a whole gene family — 23 _Arabidopsis thaliana_
-members found through the tools alone, and the 25 _Oryza sativa_ and 0
+members found through the tools alone, and the 25 _Oryza sativa_ and 66
 _Triticum aestivum_ members the tools could name and verify — in a
 single sitting: every response captured to [`raw/`](raw), and every
 place an answer came back unusable, inconsistent or silently short
 written down as it was found. It is a showcase and a defect list at the
-same time. The recipes below are what the tools do well; the 42 open rows
-under **Known gaps** are what they do not, and the 7 closed ones are what
-a fix pass between the two runs did about it.
+same time. The recipes below are what the tools do well; the 33 open rows
+under **Known gaps** are what they do not, and the 27 closed ones are what
+the fix passes between the runs did about it.
 
-Provenance: run 2026-09-22 against server version `1.21.0` at commit
-`967bc36` — the version is the last release, the commit carries the
-unreleased fixes for #121, #122 and #125 that this run was made to
-check — 400 MCP calls over 48 genes × 16 tools (8 tools through their
-`batch_` form, 50 loci per call; 8 per locus), 369 ok, 25 expected
-refusals (`aragwas_associations` on rice), 6 calls carrying 47
-locus-level errors, 6.7 minutes wall. The first run of this page,
-2026-09-21 against `1.21.0` as released, made 248 calls over 29 genes: 23
-Arabidopsis and the 6 rice members the ortholog tools could then name.
+Provenance: run 2026-09-23 against server version `1.21.0` at commit
+`052e4ec` — the version is the last release; the commit is `main` at
+`b05bb18`, which carries the unreleased fixes for #123, #124, #128–#141
+and #151, plus this dossier's own change to call every chain tool
+through a batch form — 64 MCP calls over 114 genes × 16 tools, one call
+per organism per 50 loci: 8 tools through their own `batch_` form and 8
+through `batch_locus_call`. 39 calls ok, 7 expected refusals, 18 calls
+carrying 262 locus-level errors, 21 minutes wall. Three causes account
+for 218 of the errors. 68 are STRING: 66 wheat IWGSC ids it does not
+find (`wheat-string-unresolvable` below) and 2 rice genes with no
+partners. 87 are OrthoDB refusing the batch's eight-wide
+fan-out as "too high request rate" (`batch-fanout-rate-limit` below; the
+same batch answers in full one request at a time). 63 are PANTHER
+timeouts from an upstream outage between about 00:45 and 01:00 EDT,
+which also cost 18 `gene_report`s their Ensembl step
+(`failed-step-empties-report` below); neither failure recurred when the
+same batches were asked again ten minutes later
+([`probe_concurrency.py`](probe_concurrency.py),
+[`raw/_probe_batch_concurrency.json`](raw/_probe_batch_concurrency.json)).
+The earlier runs: 2026-09-22 at `967bc36`, 400 calls over 48 genes;
+2026-09-21 against `1.21.0` as released, 248 calls over 29 genes. The
+rows below that the chain does not answer were asked again by
+[`probe_gaps.py`](probe_gaps.py) ([`raw/_probe_rerun.json`](raw/_probe_rerun.json)).
 The family itself came from a separate
-742-call, 34-minute enumeration ([`enumerate_family.py`](enumerate_family.py),
+1163-call, 25-minute enumeration ([`enumerate_family.py`](enumerate_family.py),
 [`enumeration_calls.jsonl`](enumeration_calls.jsonl)): the three
 starting loci in [`genes.tsv`](genes.tsv), then every candidate the
 tools could reach, each decided by `interpro_domains` and recorded in
 [`family_candidates.tsv`](family_candidates.tsv) whether kept or not —
-560 candidates, of which 58 could not be decided — 56 wheat whose loci
-never resolved to a protein (`wheat-locus-unresolvable` below) and 2
-Arabidopsis for which InterPro answered an empty body
-(`candidate-undecidable` below) — so the 23 is 23 of a possible 25 in
-Arabidopsis and the 0 for wheat is 0 decided of the 56 wheat loci queried
-(48 more wheat candidates were ids of another namespace and never queried).
+577 candidates, none undecided (58 of 560 on the previous run), so the
+23 Arabidopsis members are all of those the walk reached, and they are
+the 23 that `entry_members` returns for the ARF domain IPR010525 in one
+call. Wheat goes from 0 to 66 now that IWGSC loci resolve (71 queried;
+50 more wheat candidates were ids of another namespace and never
+queried).
 Chain [`chain.py`](chain.py), per-call log [`calls.jsonl`](calls.jsonl),
 captured responses [`raw/`](raw).
 
@@ -134,13 +148,16 @@ does not (see the figure).
 `locus_go_annotations` does locus → UniProt → QuickGO in one call.
 Trimmed from `raw/AT1G19850__locus_go_annotations.json`: the `by_aspect`
 rollup's `molecular_function` in full, with the 50-entry `annotations`
-list and the other two aspects dropped.
+list, `next_cursor` and the other two aspects dropped.
 
 ```json
 {
   "uniprot_accession": "P93024",
   "numberOfHits": 51,
+  "total": 51,
   "returned": 50,
+  "truncated": true,
+  "by_aspect_deduped_on": "goId",
   "by_aspect": {
     "molecular_function": [
       {
@@ -159,10 +176,12 @@ list and the other two aspects dropped.
 }
 ```
 
-Read the two counts before the terms: `numberOfHits` is 51 and
-`returned` is 50, so one annotation did not come back — and this tool has
-no `truncated` field to say so, though five other tools in the chain
-carry one. That is the `silent-truncation` row below.
+Read the counts before the terms: `total` is 51 and `returned` is 50,
+so one annotation did not come back, and `truncated` says so; the
+`next_cursor` dropped from the trim above fetches it. On the first run
+this tool had no `truncated` field and no cursor — the `silent-truncation`
+and `no-pagination` rows below, both closed — and `by_aspect_deduped_on`
+now says in the payload that the rollup is deduplicated.
 
 ### I have a locus, I want one dossier — and this is where it disappoints
 
@@ -176,17 +195,17 @@ characters.
 
 ```json
 {
-  "elapsed_s": 3.7683510970018688,
+  "elapsed_s": 1.4431032200081972,
   "steps": [
     {
       "tool": "ensembl_plants_lookup_locus",
-      "elapsed_s": 3.3594275700015714,
+      "elapsed_s": 0.5729172790015582,
       "result": null,
       "error": null
     },
     {
       "tool": "resolve_locus_to_uniprot",
-      "elapsed_s": 0.0019355689946678467,
+      "elapsed_s": 0.0010724299936555326,
       "result": null,
       "error": null
     }
@@ -207,101 +226,103 @@ as in the first recipe — read `Auxin response factor 5`: one report, two
 names, neither labelled by source; it now carries `gene_names` with each
 name by source, and the title shows both when they differ.
 `steps[].elapsed_s` was `null` for all 8 steps on all 29 genes; it is a
-number on all 384 steps of the 48. And every sub-tool payload was carried
-twice — under `steps[].result` and again under `result.sections` — so 6
-of 29 responses were over 200 kB; `steps[].result` is now `null`, `steps`
-is the audit trail, and this gene's response is 133,895 bytes on the
-wire, none of the 48 over 200 kB. It is still the weakest answer here for
-parsing: use `gene_report` for the rendered `result.markdown`; go to the
-individual tools for anything you intend to parse. Its literature step
-answered this time (`hitCount` 91); on the first run it was empty (150 B,
-`hitCount` 0) for the same gene, with nothing in the answer to say the
-source had not responded — the `silent-empty-result` row below.
+number on every step that ran, 804 of the 912 in this run (the other 108
+were skipped, and a skipped step has no time to report). And every
+sub-tool payload was carried twice — under `steps[].result` and again
+under `result.sections` — so 6 of 29 responses were over 200 kB;
+`steps[].result` is now `null` and `steps` is the audit trail. It is
+still the weakest answer here for parsing: use `gene_report` for the
+rendered `result.markdown`; go to the individual tools for anything you
+intend to parse. Its literature step answered (`hitCount` 91); on the
+first run it was empty (150 B, `hitCount` 0) for the same gene, with
+nothing in the answer to say the source had not responded — the
+`silent-empty-result` row below, now closed. This run found a new
+weakness: where the first step failed (18 genes, in the outage window),
+the answer is ok with an empty `result`, not the degraded dossier the
+description promises — `failed-step-empties-report` below.
 
 Sizes are bytes of the JSON-RPC response line, which carries each payload
 as both text and `structuredContent`; the files in `raw/` are the parsed
-payload, re-indented. The 133,895 B is the wire line for this gene; its
-parsed payload is 65,583 B by `json.dumps`, of which `result.sections` is
-58,350 B, read back from `raw/AT1G19850__gene_report.json`.
+payload, re-indented. A batch call's line carries every locus in it —
+2,315,501 B for the 23 Arabidopsis `gene_report`s — so one gene's size is
+its parsed payload: 66,322 B by `json.dumps` for this gene, of which
+`result.sections` is 59,090 B, read back from
+`raw/AT1G19850__gene_report.json`.
 
-## What 400 responses cost, and what they say about their source
+## What 64 responses cost, and what they say about their source
 
-![Response size on the wire for each of the 400 MCP calls on a log10 axis, one row per tool called ordered by median size, offset and shaped by organism with exact ties drawn on one point, coloured by whether the tool reports an upstream release under upstream_version or not at all; hollow points are documented organism refusals; a dashed line marks the 200 kB oversize threshold, crossed by three batch calls in each organism](coverage.png)
+![Response size on the wire for each of the 64 MCP calls on a log10 axis, one row per chain tool and the batch form that ran it, ordered by median size, offset and shaped by organism with exact ties drawn on one point, coloured by whether the tool reports an upstream release under upstream_version or not at all; hollow points are documented organism refusals; a dashed line marks the 200 kB oversize threshold, crossed by 19 calls of 7 tools](coverage.png)
 
-Response sizes on the wire span 4,412×, from 174 B
-(`aragwas_associations` on ATMG00940) to 768 kB
-(`batch_locus_literature` over the 23 Arabidopsis loci). The eight
-tools with a `batch_` form draw two points each (one per organism); the
-eight called per locus draw one point per distinct (organism, byte
-count), since exact ties draw on one point — from 6 positions for
-`experimental_structures` to 48 for `gene_report`. A 100-gene family is
-not readable one point per gene, so the vertical offset is by organism,
-not by gene. Six of the 16 tools called put the upstream release in
+Response sizes on the wire span 11,070×, from 318 B
+(`batch_atted_coexpression` refusing the wheat loci) to 3,520 kB
+(`batch_locus_call` running `aragwas_associations` over the 23
+Arabidopsis loci). Every chain tool is called through a batch form, one
+call per organism per 50 loci — four calls, since wheat's 66 loci take
+two — and exact ties draw on one point: 3 positions for
+`batch_atted_coexpression` and `batch_kegg_pathways`, 4 for the other 14
+(each of the two has a pair of wheat refusals that tie). The
+vertical offset is by organism. Six of the 16 tools called put the upstream release in
 `upstream_version`: `interpro_domains`, `resolve_locus_to_uniprot`,
 `gene_report`, and — since the fix pass (#121) — `gramene_homologs`,
 `atted_coexpression` and `alphafold_structure`, which on the first run
 reported it under `release`, `atted_release` and `latest_version`. The
 remaining 10 carry the key as `null`, each saying in its description
-that its backend states no release on its responses. No `gene_report`
-response is over the runner's 200 kB oversize threshold (6 of 29 were on
-the first run); three batch calls are over it in each organism
-(`batch_gramene_homologs`, `batch_locus_go_annotations`,
-`batch_locus_literature`). Exact ties draw on one point: the hollow
-square on the `aragwas_associations` row is 25 210 B refusals of rice,
-which its description says it will make. Per-tool table: [`coverage.tsv`](coverage.tsv).
+that its backend states no release on its responses. A batch answer
+carries up to 50 payloads, so its size grows with the loci in it: 19
+calls of 7 tools are over the runner's 200 kB oversize threshold, all 4
+of `gene_report`, `batch_gramene_homologs` and
+`batch_locus_go_annotations` among them. The hollow points are the
+refusals the descriptions say the tools will make:
+`aragwas_associations` on rice and wheat, `atted_coexpression` and
+`kegg_pathways` on wheat. Per-tool table: [`coverage.tsv`](coverage.tsv).
 
 Every row below is one line of [`gaps.jsonl`](gaps.jsonl), rendered by
 [`render_gaps.py`](render_gaps.py) so the page cannot drift from the log.
 The hand-logged rows were written against the first run (29 genes,
-`1.21.0` as released) and read again against this one; those this run no
+`1.21.0` as released) or, the last three, against this one, and read
+again against each later run; those this run no
 longer reproduces are listed last, with what it returned instead.
-Drafted issue text, grouped by theme, is in [`issues/`](issues) — filed
-nowhere yet.
+Drafted issue text, grouped by theme, is in [`issues/`](issues): drafts
+01–19 were filed as #121–#141, and each says which of its rows are
+closed; 20–22, from this run's new rows, are not filed yet.
 
 ## Known gaps
 
-All 42 open rows, one line each: what was attempted, what came back, what was expected instead. The 7 rows logged against an earlier run that a later run no longer reproduces are listed last, with what it returned instead. Full text and the raw response each row was read from are in [`gaps.jsonl`](gaps.jsonl) and [`gaps_auto.jsonl`](gaps_auto.jsonl).
+All 33 open rows, one line each: what was attempted, what came back, what was expected instead. The 27 rows logged against an earlier run that a later run no longer reproduces are listed last, with what it returned instead. Full text and the raw response each row was read from are in [`gaps.jsonl`](gaps.jsonl) and [`gaps_auto.jsonl`](gaps_auto.jsonl).
 
 ### Defects in this tool
 
-- **`resolve_locus_to_uniprot`** (shared-symbol) — ok=true and one scalar answer: primaryAccession Q8L7G0 / uniProtkbId ARFA_ARATH / recommendedName 'Auxin response… — expected: either the loci the symbol matches, or a refusal; a single ok=true accession is indistinguishable from an unambiguous hit
-- **several tools** (symbol-rejected-elsewhere) — three reject it, verbatim: [NotFoundError] Ensembl Plants /lookup/id/ARF1 → HTTP 400 (not found): {"error":"ID 'ARF1'… — expected: one behaviour for a symbol in a `locus` argument across tools that share the argument name
-- **`string_interactions`** (argument-name) — the call works, but string_interactions is the only one of the chain's 16 tools whose locus argument is not called… — expected: one argument name for the same kind of value across the tool surface
-- **several tools** (no-family-enumeration) — no tool on the live server takes a family or entry accession as input. Of 50 tools, every input is a locus, a list of… — expected: a tool that takes PTHR31384 or IPR010525 and returns its members
-- **several tools** (no-batch-form) — 8 of the 16 chain tools have no batch\_ form on the live server: interpro_domains, alphafold_structure… — expected: a batch\_ form for every tool that takes a single locus, so a multi-locus call list collapses
-- **several tools** (provenance-null-rate) — 250 of 400 rows are null (62%; 188 of 248, 76%, on the first run). 6 of the 16 tools called carry the field… — expected: every response carries the upstream release it came from
-- **several tools** (silent-truncation) — locus_go_annotations reports numberOfHits 51 and returned 50, and the annotations list holds 50. There is no… — expected: a truncation flag wherever the returned count is below the upstream count
-- **`locus_go_annotations`** (dedup-not-in-payload) — by_aspect holds 16 entries (biological_process 10, molecular_function 5, cellular_component 1) beside 50 annotations… — expected: the payload to mark by_aspect as deduplicated, as the description already does
-- **several tools** (count-field-names) — nine different field names for the upstream total across ten tools - domain_count (interpro_domains), structure_count… — expected: one pair of field names for 'how many exist upstream' and 'how many came back'
-- **several tools** (no-pagination) — orthodb_orthologs returns 100 of member_count 1986; gramene_homologs 100 of total 177; aragwas_associations 100 of… — expected: an offset or cursor on any tool that reports more rows upstream than it returns
+- **several tools** (symbol-rejected-elsewhere) — all four refuse ARF1 now, for two different reasons: ensembl_plants_lookup_locus ('[NotFoundError] Ensembl Plants… — expected: one behaviour for a symbol in a `locus` argument across tools that share the argument name
+- **several tools** (provenance-null-rate) — 42 of 64 calls carry no upstream_version (66%; 250 of 400, 62%, at 967bc36; 188 of 248, 76%, on the first run). The… — expected: every response carries the upstream release it came from
 - **`string_interactions`** (misleading-field-name) — `accession` is byte-identical to `string_id` on every partner ('3702.P93830', '3702.Q38830') - a STRING internal id… — expected: either the UniProt accession or a field name that does not collide with the other tools' meaning of 'accession'
-- **`locus_literature`** (promised-field-always-null) — journalTitle is JSON null in all 160 hits across the 29 genes - never a string… — expected: the journal the description promises, and one type per kind of value
-- **`experimental_structures`** (count-counts-rows) — AT1G19850: structure_count 10, structures list 10 rows, 3 distinct pdb_ids (4chk, 4ldu, 6l5k) - 4chk appears as chain… — expected: a name that matches what is counted (entry_count / chain_count), or a distinct pdb count beside it
-- **`alphafold_structure`** (undefined-bands) — four fractions named very_low / low / confident / very_high (0.516 / 0.027 / 0.120 / 0.338 for AT1G19850) beside… — expected: the numeric cutoffs alongside the fractions
+- **`locus_literature`** (promised-field-always-null) — journalTitle is a string on 350 of the 351 hits across the 114 genes (null on all 160 on the first run), so the… — expected: the journal the description promises, and one type per kind of value
 - **`gramene_homologs`** (identifier-with-no-tool) — each homolog is {target_locus, type, gene_tree_id} - e.g. {'C5167_014531', 'ortholog_one2many'… — expected: a tool that takes a gene_tree_id, and the species enrichment the server already computes surfaced on this tool
 - **several tools** (browser-needed-assets) — the only pointers to a structure, a PAE plot or a motif logo are URLs the tools cannot dereference: cif_url / pdb_url… — expected: a tool that fetches the asset, or an explicit statement that these are browser-only
-- **`interpro_domains`** (family-enumeration-cost) — 52 ensembl_region_query calls (5 chromosomes in 4 Mb windows, 8 of the 52 failed: HTTP 500 or ReadTimeout after the… — expected: a tool that takes IPR010525 (or PTHR31384) and an organism and returns the loci
 - **several tools** (no-assembly-metadata) — no tool reports seq-region names or lengths. The walk learns them from error text: region '6' answers HTTP 400 'No… — expected: a tool, or a field on ensembl_plants_lookup_locus, that lists an assembly's seq-regions and their lengths
-- **`kegg_pathways`** (batch-refusal-shape) — the single tool is an isError result: '[OrganismNotSupported] backend kegg has no ID for triticum_aestivum'. The batch… — expected: one refusal shape for the two forms of one tool, and descriptions that match the organism list the error prints
-- **`kegg_pathways`** (empty-as-error) — an empty answer is an error: kegg_pathways answers '[NotFoundError] KEGG: no pathway memberships for Os01g0236300… — expected: an ok result with an empty list and the count 0, the shape locus_literature already uses for hitCount 0
-- **`gramene_homologs`** (oversize) — 48 loci: over 200 kB on the wire (batch), largest 527487 bytes — expected: a usable answer within 200 kB
-- **`atted_coexpression`** (error) — 31 loci: [NotFoundError] ATTED-II: no co-expression neighbors for <locus> — expected: a usable answer
+- **`orthodb_orthologs`** (batch-fanout-rate-limit) — 87 of the 114 loci fail with '[...] OrthoDB /current/search → HTTP 403: Your query was rejected. The reason can be any… — expected: a fan-out that stays under each backend's rate limit, or a rate-limit refusal that is retried rather than returned as a per-locus error
+- **`gene_report`** (failed-step-empties-report) — for 17 rice loci and 1 wheat locus the first step (ensembl_plants_lookup_locus) failed with an upstream HTTP 500… — expected: the documented degraded dossier: the Ensembl section marked Unavailable and the rest rendered from the steps that can run without it, or an error rather than ok with an empty result
+- **`interpro_domains`** (oversize) — 98 loci: over 200 kB on the wire (batch), largest 466038 bytes — expected: a usable answer within 200 kB
+- **`panther_family`** (error) — 63 loci: [UpstreamUnavailableError] PANTHER geneinfo exhausted N retries (ReadTimeout: ) — expected: a usable answer
+- **`orthodb_orthologs`** (error) — 87 loci: OrthoDB /current/search → HTTP N: <html> Your query was rejected. The reason can be any of the N below: <ul>… — expected: a usable answer
+- **`gramene_homologs`** (oversize) — 114 loci: over 200 kB on the wire (batch), largest 1114370 bytes — expected: a usable answer within 200 kB
+- **`atted_coexpression`** (error) — 8 loci: [NotFoundError] ATTED-II: <locus> is not in the Ath-u.cN-N co-expression release (no neighbour ranking exists… — expected: a usable answer
 - **`aragwas_associations`** (error) — ATMG00940: [UpstreamUnavailableError] AraGWAS associations exhausted N retries (last HTTP N) — expected: a usable answer
-- **`locus_go_annotations`** (oversize) — 48 loci: over 200 kB on the wire (batch), largest 651444 bytes — expected: a usable answer within 200 kB
-- **`kegg_pathways`** (error) — ATMG00940: [NotFoundError] KEGG: no pathway memberships for <locus> (queried as ath:<locus>) — expected: a usable answer
-- **`locus_literature`** (oversize) — 48 loci: over 200 kB on the wire (batch), largest 767608 bytes — expected: a usable answer within 200 kB
-- **`string_interactions`** (error) — 2 loci: [NotFoundError] STRING: no interaction partners for <locus> — expected: a usable answer
-- **`kegg_pathways`** (error) — 5 loci: [NotFoundError] KEGG: no pathway memberships for <locus> (queried as osa:N) — expected: a usable answer
+- **`aragwas_associations`** (oversize) — 23 loci: over 200 kB on the wire (batch), largest 3520158 bytes — expected: a usable answer within 200 kB
+- **`locus_go_annotations`** (oversize) — 114 loci: over 200 kB on the wire (batch), largest 657583 bytes — expected: a usable answer within 200 kB
+- **`kegg_pathways`** (error) — ATMG00940: [NotFoundError] KEGG: no gene record for <locus> (queried as ath:<locus>); /list/ath:<locus> is empty — expected: a usable answer
+- **`locus_literature`** (oversize) — 48 loci: over 200 kB on the wire (batch), largest 870337 bytes — expected: a usable answer within 200 kB
+- **`gene_report`** (oversize) — 114 loci: over 200 kB on the wire (batch), largest 2315501 bytes — expected: a usable answer within 200 kB
+- **`atted_coexpression`** (error) — 23 loci: [NotFoundError] ATTED-II: <locus> is not in the Osa-u.cN-N co-expression release (no neighbour ranking exists… — expected: a usable answer
+- **`string_interactions`** (error) — 2 loci: [NotFoundError] STRING: no interaction partners for <locus> (queried as <locus>) — expected: a usable answer
 - **`kegg_pathways`** (error) — 7 loci: [NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for <locus>… — expected: a usable answer
+- **`locus_literature`** (error) — 4 loci: [UpstreamUnavailableError] Europe PMC /search answered N twice without a readable result (no integer hitCount… — expected: a usable answer
+- **`orthodb_orthologs`** (oversize) — 50 loci: over 200 kB on the wire (batch), largest 237443 bytes — expected: a usable answer within 200 kB
+- **`string_interactions`** (error) — 66 loci: [NotFoundError] STRING /api/json/interaction_partners → HTTP N: [{ "Error" : "not found", "ErrorMessage"… — expected: a usable answer
 
 ### Upstream values passed through unchanged
 
 - **`ensembl_plants_lookup_locus`** (free-text-not-a-label) — AT1G19850: 'Transcriptional factor B3 family protein / auxin-responsive factor AUX/IAA-like protein [Source:NCBI gene… — expected: a structured family field; the free text cannot be matched or grepped consistently even within one family
-- **`atted_coexpression`** (locus-case) — 396 of the 400 neighbour loci across the 16 genes ATTED-II answers for come back mixed-case ('At2g44830', 'At2g21050'… — expected: one locus spelling across tools
 - **`atted_coexpression`** (enrichment-ask) — each of the 25 neighbours is {locus, entrez_gene_id, z_score} - no symbol, no description. The shape is documented… — expected: a symbol per neighbour, as string_interactions does
-- **`aragwas_associations`** (normalise-upstream-repr) — study.name is "('As75_raw_Full imputed genotype_amm',)" - a Python tuple repr, parentheses, quotes and trailing comma… — expected: the tool to normalise a value it knows is a repr, or to say in its description that study.name is upstream's raw string
-- **`aragwas_associations`** (thresholds-undocumented) — score is 33.078925771081366 on the top association, beside maf 0.0058 and mac 2. The tool description does name it… — expected: the scale of score and the thresholds behind the three booleans
-- **`ensembl_plants_lookup_locus`** (normalise-upstream-id) — 'AT1G19850.1.' - a trailing period, on all 29 genes in both organisms ('AT1G59750.1.', 'Os01t0236300-01.'). This is… — expected: one transcript-id spelling across tools, or a note that this field is Ensembl's raw value
 - **several tools** (free-text-null-outside-arabidopsis) — ensembl_region_query 1:1-1000000 on oryza_sativa returns 165 protein-coding genes with description on 1; 1A:1-1000000… — expected: a structured family or domain field per gene, the same in every organism
 - **`panther_family`** (unclassified-member) — 3 of the 29 members have no subfamily_id: ATMG00940 (found true, subfamily_id null), Os02g0141100 and Os08g0520500… — expected: a null that the schema documents, so an empty cell in a manifest is a defined value
 - **`atted_coexpression`** (null-score) — every one of the 25 neighbours of Os08g0520550 has z_score null, while all 375 Arabidopsis neighbours carry a number… — expected: the score the description promises, or a per-organism note that ATTED-II's rice table has none
@@ -309,19 +330,37 @@ All 42 open rows, one line each: what was attempted, what came back, what was ex
 ### Not attributable from inside the MCP
 
 - **`gramene_homologs`** (paralog-closure-empty) — total 0 and an empty homologs list for AT1G19850 and AT1G59750; 3 hits for AT2G28350 (AT4G30080, AT1G77850… — expected: the in-species paralogs of a locus, or a statement that the projection has none
-- **`interpro_domains`** (wheat-locus-unresolvable) — all 56 queried wheat loci fail the same way (8 of 8 on the first run): '[NotFoundError] UniProt has no entry for… — expected: either a resolution path for IWGSC gene ids or an error that says the id form is not indexed
-- **`locus_literature`** (silent-empty-result) — hitCount 0, returned 0 and an empty hits list for 6 of the 23 loci in the run (AT1G19850, AT1G59750, AT2G46530… — expected: an upstream status on every answer, so an empty list carries whether the source answered
-- **`interpro_domains`** (candidate-undecidable) — 58 of the 560 could not be decided, 56 wheat and 2 Arabidopsis (first run: 10 of 325, 8 wheat and 2 Arabidopsis). The… — expected: a found=false answer with a stated reason, so 'no record' and 'no answer' are different results
+- **`string_interactions`** (wheat-string-unresolvable) — all 66 fail the same way: '[NotFoundError] STRING /api/json/interaction_partners → HTTP 404: [{ "Error" : "not found"… — expected: either a mapping from IWGSC gene ids to the identifier STRING indexes, or an error that says the id form is not indexed
 
 ### Closed by a later run
 
+- **`resolve_locus_to_uniprot`** (shared-symbol) — was: ok=true and one scalar answer: primaryAccession Q8L7G0 / uniProtkbId ARFA_ARATH / recommendedName 'Auxin response… — now, at `052e4ec`: resolve_locus_to_uniprot('ARF1') is an isError refusal naming the loci: "[InvalidArguments] 'ARF1' is not a locus id…
+- **`string_interactions`** (argument-name) — was: the call works, but string_interactions is the only one of the chain's 16 tools whose locus argument is not called… — now, at `052e4ec`: string_interactions requires `locus` and batch_string_interactions `loci`, the names every other chain tool uses (live…
+- **several tools** (no-family-enumeration) — was: no tool on the live server takes a family or entry accession as input. Of 50 tools, every input is a locus, a list of… — now, at `052e4ec`: entry_members takes an InterPro, Pfam or PANTHER accession: entry_members('IPR010525', arabidopsis_thaliana) answers…
+- **several tools** (no-batch-form) — was: 8 of the 16 chain tools have no batch\_ form on the live server: interpro_domains, alphafold_structure… — now, at `052e4ec`: every chain tool went through a batch form: 64 calls for 114 genes in three organisms, one per organism per 50 loci…
 - **several tools** (version-under-another-key) — was: three tools do report a release but not as `upstream_version`, so a single-key pass reads them as null… — now, at `967bc36`: atted_coexpression, gramene_homologs and alphafold_structure carry the release as upstream_version ('Ath-u.c4-0'…
 - **`gene_report`** (payload-duplicated) — was: every sub-tool payload appears twice in one envelope: for AT1G19850 the eight steps[].result payloads total 36,021 B… — now, at `967bc36`: steps[].result is null on all 384 steps of the 48 genes; each sub-tool payload appears once, under result.sections…
 - **`gene_report`** (null-field) — was: steps[].elapsed_s is null for all 8 steps of all 29 genes (232/232), while the envelope's own top-level elapsed_s is… — now, at `967bc36`: steps[].elapsed_s is a number on all 384 steps of the 48 genes (0/384 null); 3.36 s for the ensembl step and 0.002 s…
 - **`gene_report`** (inconsistent-name) — was: result.canonical_gene_name is 'MP' for AT1G19850 (taken from Ensembl display_name) and the markdown title reads '# MP… — now, at `967bc36`: result.gene_names labels each name by source ({'canonical': 'MP', 'ensembl': 'MP', 'uniprot': ['ARF5']} for AT1G19850)…
 - **`gene_report`** (duplicate-rendering) — was: 23 GO bullets, 20 distinct lines, 14 distinct GO ids. '- [GO:0005515] protein binding (IPI)' appears 3 times… — now, at `967bc36`: AT1G19850 renders 21 GO bullets, 21 distinct; 0 repeated bullets across the 48 genes
+- **several tools** (silent-truncation) — was: locus_go_annotations reports numberOfHits 51 and returned 50, and the annotations list holds 50. There is no… — now, at `052e4ec`: locus_go_annotations carries truncated: AT1G19850 answers total 51, returned 50, truncated true and a next_cursor for…
+- **`locus_go_annotations`** (dedup-not-in-payload) — was: by_aspect holds 16 entries (biological_process 10, molecular_function 5, cellular_component 1) beside 50 annotations… — now, at `052e4ec`: the payload says so itself: by_aspect_deduped_on 'goId' beside by_aspect on every locus_go_annotations answer
+- **several tools** (count-field-names) — was: nine different field names for the upstream total across ten tools - domain_count (interpro_domains), structure_count… — now, at `052e4ec`: every list-returning chain tool carries total / returned / truncated beside its own count field: interpro_domains 19 /…
+- **several tools** (no-pagination) — was: orthodb_orthologs returns 100 of member_count 1986; gramene_homologs 100 of total 177; aragwas_associations 100 of… — now, at `052e4ec`: a capped list carries next_cursor, and passing it back returns the rest: gramene_homologs AT1G19850 answers 100 of 177…
+- **`atted_coexpression`** (locus-case) — was: 396 of the 400 neighbour loci across the 16 genes ATTED-II answers for come back mixed-case ('At2g44830', 'At2g21050'… — now, at `052e4ec`: the Arabidopsis neighbours come back upper case (0 of the 375 across the 15 Arabidopsis genes ATTED-II answers for are…
+- **`aragwas_associations`** (normalise-upstream-repr) — was: study.name is "('As75_raw_Full imputed genotype_amm',)" - a Python tuple repr, parentheses, quotes and trailing comma… — now, at `052e4ec`: study.name is 'As75_raw_Full imputed genotype_amm', the tuple repr unwrapped
+- **`aragwas_associations`** (thresholds-undocumented) — was: score is 33.078925771081366 on the top association, beside maf 0.0058 and mac 2. The tool description does name it… — now, at `052e4ec`: the description gives score as -log10 p, and each association's study carries study.thresholds on that scale, which…
+- **`ensembl_plants_lookup_locus`** (normalise-upstream-id) — was: 'AT1G19850.1.' - a trailing period, on all 29 genes in both organisms ('AT1G59750.1.', 'Os01t0236300-01.'). This is… — now, at `052e4ec`: canonical_transcript has no trailing period on any of the 114 genes ('AT1G19850.1', the spelling aragwas_associations…
+- **`experimental_structures`** (count-counts-rows) — was: AT1G19850: structure_count 10, structures list 10 rows, 3 distinct pdb_ids (4chk, 4ldu, 6l5k) - 4chk appears as chain… — now, at `052e4ec`: experimental_structures carries entry_count beside structure_count: AT1G19850 answers structure_count 10 and…
+- **`alphafold_structure`** (undefined-bands) — was: four fractions named very_low / low / confident / very_high (0.516 / 0.027 / 0.120 / 0.338 for AT1G19850) beside… — now, at `052e4ec`: plddt_band_ranges gives the cutoffs beside the fractions: very_low [0, 50], low [50, 70], confident [70, 90]…
+- **`interpro_domains`** (family-enumeration-cost) — was: 52 ensembl_region_query calls (5 chromosomes in 4 Mb windows, 8 of the 52 failed: HTTP 500 or ReadTimeout after the… — now, at `052e4ec`: entry_members answers it in one call: 23 loci for IPR010525 in Arabidopsis, set-equal to the 23 the walk finds. The…
 - **`gramene_homologs`** (ortholog-cap-hides-organisms) — was: gramene_homologs: total 177 / 211 / 340 for the three seeds, 100 returned, and zero rows shaped like a rice or wheat… — now, at `967bc36`: with target_organism on both tools the filter runs before the cap: over the 41 member queries gramene_homologs names a…
-- **several tools** (ortholog-tools-disagree) — was: one disagreement class, not a per-gene one: gramene_homologs names a rice or wheat locus for 16 of 26 queries… — now, at `967bc36`: both tools answer for the organism asked: gramene_homologs names a rice or wheat locus for 36 of 41 queries…
+- **several tools** (ortholog-tools-disagree) — was: one disagreement class, not a per-gene one: gramene_homologs names a rice or wheat locus for 16 of 26 queries… — now, at `052e4ec`: both tools answer for the organism asked: gramene_homologs names a rice or wheat locus for 88 of 93 queries…
+- **`interpro_domains`** (wheat-locus-unresolvable) — was: all 56 queried wheat loci fail the same way (8 of 8 on the first run): '[NotFoundError] UniProt has no entry for… — now, at `052e4ec`: every wheat locus resolves: all 71 queried are decided (66 kept, 5 not), and resolve_locus_to_uniprot answers all 66…
+- **`kegg_pathways`** (batch-refusal-shape) — was: the single tool is an isError result: '[OrganismNotSupported] backend kegg has no ID for triticum_aestivum'. The batch… — now, at `052e4ec`: both forms are the same isError refusal before any request, "[OrganismNotSupported] backend 'kegg' has no ID for…
+- **`kegg_pathways`** (empty-as-error) — was: an empty answer is an error: kegg_pathways answers '[NotFoundError] KEGG: no pathway memberships for Os01g0236300… — now, at `052e4ec`: kegg_pathways answers a gene with no pathway as ok with pathways [] (5 rice genes, Os01g0236300 among them) and keeps…
+- **`locus_literature`** (silent-empty-result) — was: hitCount 0, returned 0 and an empty hits list for 6 of the 23 loci in the run (AT1G19850, AT1G59750, AT2G46530… — now, at `052e4ec`: a Europe PMC answer with no hit count is an error that says so ('[UpstreamUnavailableError] Europe PMC /search…
+- **`interpro_domains`** (candidate-undecidable) — was: 58 of the 560 could not be decided, 56 wheat and 2 Arabidopsis (first run: 10 of 325, 8 wheat and 2 Arabidopsis). The… — now, at `052e4ec`: 0 of the 577 candidates are undecided (58 of 560 at 967bc36): AT1G01335 and AT2G36920 decide as carrying no ARF entry…
 
 ## Cite
 

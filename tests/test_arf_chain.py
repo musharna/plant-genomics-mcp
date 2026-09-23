@@ -147,6 +147,21 @@ def test_chain_arguments_match_the_live_tool_schemas():
     assert live_batch_forms == {b for b, _, _ in BATCH_FORMS.values()}
     assert schema_violations("batch_kegg_pathways", {"locus": [LOCUS]}, schemas) != []
 
+    # #131: the chain tools with no dedicated batch form go through the one
+    # generic form, and LOCUS_BATCHED must be exactly the ones the live
+    # server accepts there — one it gains later would otherwise stay on one
+    # round trip per locus. The shared `args` are checked against the chain
+    # tool's own schema too, which is what the server does before fanning out.
+    locus_batch = schemas[run_dossier.LOCUS_BATCH]["properties"]
+    assert locus_batch["loci"]["maxItems"] == run_dossier.BATCH_MAX
+    generic = set(locus_batch["tool"]["enum"])
+    assert (set(dict(CHAIN)) - set(BATCH_FORMS)) & generic == run_dossier.LOCUS_BATCHED
+    for chain_tool in run_dossier.LOCUS_BATCHED:
+        args = run_dossier.locus_batch_args(chain_tool, [LOCUS], ORGANISM)
+        assert schema_violations(run_dossier.LOCUS_BATCH, args, schemas) == [], args
+        inner = {**args["args"], "locus": LOCUS}
+        assert schema_violations(chain_tool, inner, schemas) == [], (chain_tool, inner)
+
 
 def _run_once(tmp_path: Path) -> None:
     """Drive the real runner against the fake server, writing into tmp_path."""
@@ -193,10 +208,15 @@ def test_a_rerun_rewrites_auto_gaps_and_never_touches_the_hand_logged_file(tmp_p
         "the runner did not walk the whole chain"
     )
     # Every chain tool with a batch form went through it, with the one
-    # locus in `loci`; every other tool was called by its own name.
+    # locus in `loci` — its dedicated batch_ form, else batch_locus_call
+    # naming it; every other tool was called by its own name.
     for c in calls:
         if c["chain_tool"] in BATCH_FORMS:
             assert c["tool"] == BATCH_FORMS[c["chain_tool"]][0]
+            assert c["loci"] == ["AT1G19850"] and c["locus"] is None
+        elif c["chain_tool"] in run_dossier.LOCUS_BATCHED:
+            assert c["tool"] == run_dossier.LOCUS_BATCH
+            assert c["args"]["tool"] == c["chain_tool"]
             assert c["loci"] == ["AT1G19850"] and c["locus"] is None
         else:
             assert c["tool"] == c["chain_tool"]

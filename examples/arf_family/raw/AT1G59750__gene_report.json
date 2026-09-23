@@ -5,14 +5,14 @@
   "organism": "arabidopsis_thaliana",
   "top_n": 10
  },
- "started_at": "2026-09-22T07:27:45Z",
- "elapsed_s": 3.8124362630042015,
+ "started_at": "2026-09-23T04:46:36Z",
+ "elapsed_s": 1.0910648760036565,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 1.9649145350049366,
+   "elapsed_s": 0.5824741700052982,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.001745290996041149,
+   "elapsed_s": 0.0007169070013333112,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 1.8469441970009939,
+   "elapsed_s": 0.19031736699980684,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.004649392001738306,
+   "elapsed_s": 0.003271954003139399,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.3152051090000896,
+   "elapsed_s": 0.444373964011902,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0023044529953040183,
+   "elapsed_s": 0.0018078019929816946,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0005994550010655075,
+   "elapsed_s": 0.0004316609993111342,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0004855719962506555,
+   "elapsed_s": 0.00024567799118813127,
    "result": null,
    "error": null
   }
@@ -85,23 +85,23 @@
    ]
   },
   "uniprot_accession": "Q8L7G0",
-  "markdown": "# ARF1 \u2014 `AT1G59750`\n\n*Arabidopsis thaliana* \u00b7 protein_coding \u00b7 1:21,979,289\u201321,984,433 (+) \u00b7 TAIR10\n\nauxin response factor 1 [Source:NCBI gene (formerly Entrezgene);Acc:842268]\n\n## Protein\n**Auxin response factor 1**\nARFA_ARATH \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 665 aa\nUniProt: [Q8L7G0](https://www.uniprot.org/uniprotkb/Q8L7G0)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [122\u2013224]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [287\u2013360]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [121\u2013226]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [537\u2013631]\n- **B3 DNA binding domain** (domain, interpro) [122\u2013226]\n- **Auxin response factor domain** (domain, interpro) [273\u2013355]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [113\u2013253]\n- **AUX/IAA domain** (domain, interpro) [535\u2013578, 582\u2013632]\n- **Auxin response factor** (family, interpro) [18\u2013631]\n- **PB1-like domain** (domain, interpro) [542\u2013635]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n- [GO:0003677] DNA binding (IDA)\n- [GO:0003700] DNA-binding transcription factor activity (ISS)\n- [GO:0003700] DNA-binding transcription factor activity (TAS)\n- [GO:0005515] protein binding (IPI)\n- [GO:0042802] identical protein binding (IPI)\n- [GO:0043565] sequence-specific DNA binding (IDA)\n**Biological Process**\n- [GO:0008219] cell death (IMP)\n- [GO:0010150] leaf senescence (IMP)\n- [GO:0006355] regulation of DNA-templated transcription (TAS)\n- [GO:0009733] response to auxin (IEP)\n- [GO:0010150] leaf senescence (IGI)\n- [GO:0045892] negative regulation of DNA-templated transcription (IEP)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n- [GO:0009733] response to auxin (IBA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n- [GO:0005634] nucleus (ISM)\n- [GO:0005634] nucleus (ISS)\n- [GO:0005634] nucleus (IDA)\n- [GO:0005737] cytoplasm (IEA)\n- [GO:0005737] cytoplasm (IDA)\n\n## Pathways (KEGG)\n- `ath04075` Plant hormone signal transduction - Arabidopsis thaliana (thale cress) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| IAA34 | 0.903 |\n| IAA19 | 0.9 |\n| IAA6 | 0.897 |\n| IAA17 | 0.893 |\n| IAA18 | 0.849 |\n| IAA2 | 0.843 |\n| IAA16 | 0.829 |\n| ARF2-A | 0.804 |\n| AUX1 | 0.795 |\n| IAA3 | 0.793 |\n\n## Cross-references\n- NASC Gene ID: AT1G59750\n- TAIR: AT1G59750\n- TAIR Gene Name: ARF1\n- NCBI gene (formerly Entrezgene): 842268\n- KNETMINER_ARA: AT1G59750\n- Expression Atlas: AT1G59750\n- UniProtKB Gene Name: Q8L7G0\n- WikiGene: 842268\n- UniProtKB Gene Name: F4ID31\n\n## Literature\n34 hits total; showing top 10.\n- **Genetic tango: unveiling maize's endosperm filling regulation orchestrated by NAKED ENDOSPERM1, NAKED ENDOSPERM2, and OPAQUE2** \u2014 Rahmati Ishka M. (PMID:37757450; doi:10.1093/plcell/koad245)\n- **Arabidopsis Transcription Regulatory Factor Domain/Domain Interaction Analysis Tool-Liquid/Liquid Phase Separation, Oligomerization, GO Analysis: A Toolkit for Interaction Data-Based Domain Analysis** \u2014 Kang JE, Jun JH, Kwon JH, Lee JH, Hwang K, Kim S, Jeong N. (PMID:37510380; doi:10.3390/genes14071476)\n- **Identification of the Auxin Response Factor gene family in kernel consumption apricot and association analysis of related genes regulating fruit size in distant hybridization** \u2014 Han C, Zhang W, Chen S, Zhang Y, Guo H, Yu L, Liu L, Liu P, Wang L, Zhao H. (PMID:41555233; doi:10.1186/s12870-025-08030-3)\n- **Quantitative proteomics reveals extensive lysine ubiquitination and transcription factor stability states in Arabidopsis** \u2014 Song G, Montes C, Olatunji D, Malik S, Ji C, Clark NM, Pu Y, Kelley DR, Walley JW. (PMID:39570863; doi:10.1093/plcell/koae310)\n- **NAKED ENDOSPERM1, NAKED ENDOSPERM2, and OPAQUE2 interact to regulate gene networks in maize endosperm development** \u2014 Wu H, Galli M, Spears CJ, Zhan J, Liu P, Yadegari R, Dannenhoffer JM, Gallavotti A, Becraft PW. (PMID:37795691; doi:10.1093/plcell/koad247)\n- **The miR7125-MdARF1 module enhances the resistance of apple to Colletotrichum gloeosporioides by promoting lignin synthesis in response to salicylic acid signalling** \u2014 Liu X, Dai H, Zhang F, Wang J, Shi J, Chen J, He P, Wang F, Ma Y. (PMID:38852059; doi:10.1111/pbi.14401)\n- **How meristems shape plant architecture in cereals-Cereal Stem Cell Systems (CSCS) Consortium** \u2014 Dresselhaus T, Balboni M, Berg L, Dolata A, Hochholdinger F, Huang Y, Jiang G, von Korff M, Ku JC, van der Linde K, Maika J, Mondragon CL, Raissig MT, Schnittger A, Schnurbusch T, Simon R, Stahl Y, Timmermans M, Thirulogachandar V, Zhao S, Zhou Y. (PMID:40578304; doi:10.1093/plcell/koaf150)\n- **Large-scale analysis of the ARF and Aux/IAA gene families in 406 horticultural and other plants** \u2014 Feng S, Li N, Chen H, Liu Z, Li C, Zhou R, Zhang Y, Cao R, Ma X, Song X. (PMID:38589963; doi:10.1186/s43897-024-00090-7)\n- **Identification of ARF gene family and functional analysis of CqARF05 under drought and salt stress in quinoa** \u2014 Wang B, Zhu X, Song X, Zhao Y, Yang D, Wang W, Liu W, Wei X. (PMID:39934301; doi:10.1038/s41598-025-89198-4)\n- **Genome-wide identification and expression profiling of B3 transcription factor genes in &lt;i&gt;Populus alba \u00d7 Populus glandulosa&lt;/i&gt;** \u2014 Wei M, Li H, Wang Q, Liu R, Yang L, Li Q. (PMID:37324718; doi:10.3389/fpls.2023.1193065)\n",
+  "markdown": "# ARF1 \u2014 `AT1G59750`\n\n*Arabidopsis thaliana* \u00b7 protein_coding \u00b7 1:21,979,289\u201321,984,433 (+) \u00b7 TAIR10\n\nauxin response factor 1 [Source:NCBI gene (formerly Entrezgene);Acc:842268]\n\n## Protein\n**Auxin response factor 1**\nARFA_ARATH \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 665 aa\nUniProt: [Q8L7G0](https://www.uniprot.org/uniprotkb/Q8L7G0)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [122\u2013224]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [287\u2013360]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [121\u2013226]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [537\u2013631]\n- **B3 DNA binding domain** (domain, interpro) [122\u2013226]\n- **Auxin response factor domain** (domain, interpro) [273\u2013355]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [113\u2013253]\n- **AUX/IAA domain** (domain, interpro) [535\u2013578, 582\u2013632]\n- **Auxin response factor** (family, interpro) [18\u2013631]\n- **PB1-like domain** (domain, interpro) [542\u2013635]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n- [GO:0003677] DNA binding (IDA)\n- [GO:0003700] DNA-binding transcription factor activity (ISS)\n- [GO:0003700] DNA-binding transcription factor activity (TAS)\n- [GO:0005515] protein binding (IPI)\n- [GO:0042802] identical protein binding (IPI)\n- [GO:0043565] sequence-specific DNA binding (IDA)\n**Biological Process**\n- [GO:0008219] cell death (IMP)\n- [GO:0010150] leaf senescence (IMP)\n- [GO:0006355] regulation of DNA-templated transcription (TAS)\n- [GO:0009733] response to auxin (IEP)\n- [GO:0010150] leaf senescence (IGI)\n- [GO:0045892] negative regulation of DNA-templated transcription (IEP)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n- [GO:0009733] response to auxin (IBA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n- [GO:0005634] nucleus (ISM)\n- [GO:0005634] nucleus (ISS)\n- [GO:0005634] nucleus (IDA)\n- [GO:0005737] cytoplasm (IEA)\n- [GO:0005737] cytoplasm (IDA)\n\n## Pathways (KEGG)\n- `ath04075` Plant hormone signal transduction - Arabidopsis thaliana (thale cress) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| IAA34 | 0.903 |\n| IAA19 | 0.9 |\n| IAA6 | 0.897 |\n| IAA17 | 0.893 |\n| IAA18 | 0.849 |\n| IAA2 | 0.843 |\n| IAA16 | 0.829 |\n| ARF2-A | 0.804 |\n| AUX1 | 0.795 |\n| IAA3 | 0.793 |\n\n## Cross-references\n- NASC Gene ID: AT1G59750\n- TAIR: AT1G59750\n- TAIR Gene Name: ARF1\n- NCBI gene (formerly Entrezgene): 842268\n- KNETMINER_ARA: AT1G59750\n- Expression Atlas: AT1G59750\n- UniProtKB Gene Name: Q8L7G0\n- WikiGene: 842268\n- UniProtKB Gene Name: F4ID31\n\n## Literature\n34 hits total; showing top 10.\n- **Genetic tango: unveiling maize's endosperm filling regulation orchestrated by NAKED ENDOSPERM1, NAKED ENDOSPERM2, and OPAQUE2** \u2014 Rahmati Ishka M. (PMID:37757450; doi:10.1093/plcell/koad245)\n- **Arabidopsis Transcription Regulatory Factor Domain/Domain Interaction Analysis Tool-Liquid/Liquid Phase Separation, Oligomerization, GO Analysis: A Toolkit for Interaction Data-Based Domain Analysis** \u2014 Kang JE, Jun JH, Kwon JH, Lee JH, Hwang K, Kim S, Jeong N. (PMID:37510380; doi:10.3390/genes14071476)\n- **Identification of the Auxin Response Factor gene family in kernel consumption apricot and association analysis of related genes regulating fruit size in distant hybridization** \u2014 Han C, Zhang W, Chen S, Zhang Y, Guo H, Yu L, Liu L, Liu P, Wang L, Zhao H. (PMID:41555233; doi:10.1186/s12870-025-08030-3)\n- **Quantitative proteomics reveals extensive lysine ubiquitination and transcription factor stability states in Arabidopsis** \u2014 Song G, Montes C, Olatunji D, Malik S, Ji C, Clark NM, Pu Y, Kelley DR, Walley JW. (PMID:39570863; doi:10.1093/plcell/koae310)\n- **NAKED ENDOSPERM1, NAKED ENDOSPERM2, and OPAQUE2 interact to regulate gene networks in maize endosperm development** \u2014 Wu H, Galli M, Spears CJ, Zhan J, Liu P, Yadegari R, Dannenhoffer JM, Gallavotti A, Becraft PW. (PMID:37795691; doi:10.1093/plcell/koad247)\n- **The miR7125-MdARF1 module enhances the resistance of apple to Colletotrichum gloeosporioides by promoting lignin synthesis in response to salicylic acid signalling** \u2014 Liu X, Dai H, Zhang F, Wang J, Shi J, Chen J, He P, Wang F, Ma Y. (PMID:38852059; doi:10.1111/pbi.14401)\n- **How meristems shape plant architecture in cereals-Cereal Stem Cell Systems (CSCS) Consortium** \u2014 Dresselhaus T, Balboni M, Berg L, Dolata A, Hochholdinger F, Huang Y, Jiang G, von Korff M, Ku JC, van der Linde K, Maika J, Mondragon CL, Raissig MT, Schnittger A, Schnurbusch T, Simon R, Stahl Y, Timmermans M, Thirulogachandar V, Zhao S, Zhou Y. (PMID:40578304; doi:10.1093/plcell/koaf150)\n- **Large-scale analysis of the ARF and Aux/IAA gene families in 406 horticultural and other plants** \u2014 Feng S, Li N, Chen H, Liu Z, Li C, Zhou R, Zhang Y, Cao R, Ma X, Song X. (PMID:38589963; doi:10.1186/s43897-024-00090-7)\n- **Genome-wide identification and expression profiling of B3 transcription factor genes in &lt;i&gt;Populus alba \u00d7 Populus glandulosa&lt;/i&gt;** \u2014 Wei M, Li H, Wang Q, Liu R, Yang L, Li Q. (PMID:37324718; doi:10.3389/fpls.2023.1193065)\n- **Identification of ARF gene family and functional analysis of CqARF05 under drought and salt stress in quinoa** \u2014 Wang B, Zhu X, Song X, Zhao Y, Yang D, Wang W, Liu W, Wei X. (PMID:39934301; doi:10.1038/s41598-025-89198-4)\n",
   "sections": {
    "annotation": {
-    "start": 21979289,
-    "logic_name": "araport11",
-    "source": "araport11",
-    "assembly_name": "TAIR10",
-    "object_type": "Gene",
-    "canonical_transcript": "AT1G59750.1.",
     "biotype": "protein_coding",
+    "assembly_name": "TAIR10",
+    "seq_region_name": "1",
     "description": "auxin response factor 1 [Source:NCBI gene (formerly Entrezgene);Acc:842268]",
     "end": 21984433,
-    "id": "AT1G59750",
-    "db_type": "core",
+    "start": 21979289,
     "strand": 1,
-    "seq_region_name": "1",
     "display_name": "ARF1",
+    "id": "AT1G59750",
+    "canonical_transcript": "AT1G59750.1",
+    "logic_name": "araport11",
+    "db_type": "core",
+    "source": "araport11",
+    "object_type": "Gene",
     "organism": "arabidopsis_thaliana",
     "upstream_version": null
    },
@@ -127,107 +127,107 @@
     "count": 9,
     "xrefs": [
      {
-      "info_text": "",
       "info_type": "DIRECT",
-      "dbname": "NASC_GENE_ID",
       "version": "0",
-      "description": "auxin response factor 1",
+      "synonyms": [],
+      "info_text": "",
       "display_id": "AT1G59750-TAIR-G",
       "db_display_name": "NASC Gene ID",
       "primary_id": "AT1G59750",
+      "dbname": "NASC_GENE_ID",
+      "description": "auxin response factor 1"
+     },
+     {
+      "dbname": "TAIR_LOCUS",
+      "description": "auxin response factor 1",
+      "db_display_name": "TAIR",
+      "display_id": "AT1G59750",
+      "primary_id": "AT1G59750",
+      "info_type": "DIRECT",
+      "info_text": "",
+      "version": "0",
       "synonyms": []
      },
      {
-      "description": "auxin response factor 1",
-      "display_id": "AT1G59750",
-      "db_display_name": "TAIR",
-      "primary_id": "AT1G59750",
-      "synonyms": [],
       "info_text": "",
-      "info_type": "DIRECT",
-      "dbname": "TAIR_LOCUS",
-      "version": "0"
-     },
-     {
-      "description": "",
-      "display_id": "ARF1",
-      "db_display_name": "TAIR Gene Name",
-      "primary_id": "ARF1",
-      "synonyms": [],
       "version": "0",
-      "info_text": "",
+      "synonyms": [],
       "info_type": "DIRECT",
-      "dbname": "TAIR_SYMBOL"
+      "primary_id": "ARF1",
+      "db_display_name": "TAIR Gene Name",
+      "display_id": "ARF1",
+      "dbname": "TAIR_SYMBOL",
+      "description": ""
      },
      {
-      "display_id": "ARF1",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "version": "0",
       "synonyms": [
        "auxin response factor 1",
        "F23H11.7",
        "F23H11_7"
       ],
+      "info_text": "",
+      "info_type": "DEPENDENT",
       "primary_id": "842268",
+      "display_id": "ARF1",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
       "description": "auxin response factor 1",
+      "dbname": "EntrezGene"
+     },
+     {
+      "description": null,
+      "dbname": "KNETMINER_ARA",
+      "primary_id": "AT1G59750",
+      "display_id": "AT1G59750",
+      "db_display_name": "KNETMINER_ARA",
       "version": "0",
-      "dbname": "EntrezGene",
+      "synonyms": [],
       "info_text": "",
       "info_type": "DEPENDENT"
      },
      {
-      "synonyms": [],
       "primary_id": "AT1G59750",
+      "db_display_name": "Expression Atlas",
       "display_id": "AT1G59750",
-      "db_display_name": "KNETMINER_ARA",
-      "description": null,
-      "dbname": "KNETMINER_ARA",
-      "info_type": "DEPENDENT",
-      "info_text": "",
-      "version": "0"
-     },
-     {
-      "version": "0",
-      "info_type": "DIRECT",
-      "info_text": "",
       "dbname": "ArrayExpress",
       "description": null,
-      "primary_id": "AT1G59750",
+      "info_text": "",
       "synonyms": [],
-      "display_id": "AT1G59750",
-      "db_display_name": "Expression Atlas"
+      "version": "0",
+      "info_type": "DIRECT"
      },
      {
-      "version": null,
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "dbname": "Uniprot_gn",
       "description": null,
+      "dbname": "Uniprot_gn",
       "display_id": "ARF1",
       "db_display_name": "UniProtKB Gene Name",
+      "primary_id": "Q8L7G0",
+      "info_type": "DEPENDENT",
+      "version": null,
       "synonyms": [],
-      "primary_id": "Q8L7G0"
+      "info_text": ""
      },
      {
-      "description": "auxin response factor 1",
-      "synonyms": [],
-      "primary_id": "842268",
-      "db_display_name": "WikiGene",
-      "display_id": "ARF1",
-      "version": "0",
       "info_type": "DEPENDENT",
       "info_text": "",
-      "dbname": "WikiGene"
+      "version": "0",
+      "synonyms": [],
+      "dbname": "WikiGene",
+      "description": "auxin response factor 1",
+      "db_display_name": "WikiGene",
+      "display_id": "ARF1",
+      "primary_id": "842268"
      },
      {
+      "info_text": "",
+      "version": null,
       "synonyms": [],
+      "info_type": "DEPENDENT",
       "primary_id": "F4ID31",
       "db_display_name": "UniProtKB Gene Name",
       "display_id": "ARF1",
-      "description": null,
-      "version": null,
       "dbname": "Uniprot_gn",
-      "info_type": "DEPENDENT",
-      "info_text": ""
+      "description": null
      }
     ],
     "by_db": {
@@ -276,6 +276,9 @@
     "query": "AT1G59750",
     "accession": "Q8L7G0",
     "organism": "arabidopsis_thaliana",
+    "total": null,
+    "returned": 10,
+    "truncated": null,
     "partners": [
      {
       "string_id": "3702.Q9C5X0",
@@ -385,7 +388,10 @@
     "organism": "arabidopsis_thaliana",
     "query": "AT1G59750",
     "hitCount": 34,
+    "total": 34,
     "returned": 10,
+    "truncated": true,
+    "next_cursor": "eyJwIjogeyJtYXJrIjogIkFvSUlQMWFRd1NnMU1qUXdPREkwT0E9PSIsICJvZmZzZXQiOiAxMH0sICJxIjogeyJxdWVyeSI6ICJBVDFHNTk3NTAiLCAic2l6ZSI6IDEwfSwgInQiOiAibG9jdXNfbGl0ZXJhdHVyZSJ9",
     "abstracts_included": true,
     "hits": [
      {
@@ -396,7 +402,7 @@
       "doi": "10.1093/plcell/koad245",
       "title": "Genetic tango: unveiling maize's endosperm filling regulation orchestrated by NAKED ENDOSPERM1, NAKED ENDOSPERM2, and OPAQUE2.",
       "authorString": "Rahmati Ishka M.",
-      "journalTitle": null,
+      "journalTitle": "The Plant cell",
       "pubYear": "2023",
       "firstPublicationDate": "2023-12-01",
       "citedByCount": 1,
@@ -413,7 +419,7 @@
       "doi": "10.3390/genes14071476",
       "title": "Arabidopsis Transcription Regulatory Factor Domain/Domain Interaction Analysis Tool-Liquid/Liquid Phase Separation, Oligomerization, GO Analysis: A Toolkit for Interaction Data-Based Domain Analysis.",
       "authorString": "Kang JE, Jun JH, Kwon JH, Lee JH, Hwang K, Kim S, Jeong N.",
-      "journalTitle": null,
+      "journalTitle": "Genes",
       "pubYear": "2023",
       "firstPublicationDate": "2023-07-19",
       "citedByCount": 0,
@@ -430,7 +436,7 @@
       "doi": "10.1186/s12870-025-08030-3",
       "title": "Identification of the Auxin Response Factor gene family in kernel consumption apricot and association analysis of related genes regulating fruit size in distant hybridization.",
       "authorString": "Han C, Zhang W, Chen S, Zhang Y, Guo H, Yu L, Liu L, Liu P, Wang L, Zhao H.",
-      "journalTitle": null,
+      "journalTitle": "BMC plant biology",
       "pubYear": "2026",
       "firstPublicationDate": "2026-01-20",
       "citedByCount": 1,
@@ -447,7 +453,7 @@
       "doi": "10.1093/plcell/koae310",
       "title": "Quantitative proteomics reveals extensive lysine ubiquitination and transcription factor stability states in Arabidopsis.",
       "authorString": "Song G, Montes C, Olatunji D, Malik S, Ji C, Clark NM, Pu Y, Kelley DR, Walley JW.",
-      "journalTitle": null,
+      "journalTitle": "The Plant cell",
       "pubYear": "2024",
       "firstPublicationDate": "2024-12-01",
       "citedByCount": 14,
@@ -464,7 +470,7 @@
       "doi": "10.1093/plcell/koad247",
       "title": "NAKED ENDOSPERM1, NAKED ENDOSPERM2, and OPAQUE2 interact to regulate gene networks in maize endosperm development.",
       "authorString": "Wu H, Galli M, Spears CJ, Zhan J, Liu P, Yadegari R, Dannenhoffer JM, Gallavotti A, Becraft PW.",
-      "journalTitle": null,
+      "journalTitle": "The Plant cell",
       "pubYear": "2023",
       "firstPublicationDate": "2023-12-01",
       "citedByCount": 25,
@@ -481,7 +487,7 @@
       "doi": "10.1111/pbi.14401",
       "title": "The miR7125-MdARF1 module enhances the resistance of apple to Colletotrichum gloeosporioides by promoting lignin synthesis in response to salicylic acid signalling.",
       "authorString": "Liu X, Dai H, Zhang F, Wang J, Shi J, Chen J, He P, Wang F, Ma Y.",
-      "journalTitle": null,
+      "journalTitle": "Plant biotechnology journal",
       "pubYear": "2024",
       "firstPublicationDate": "2024-06-09",
       "citedByCount": 24,
@@ -498,7 +504,7 @@
       "doi": "10.1093/plcell/koaf150",
       "title": "How meristems shape plant architecture in cereals-Cereal Stem Cell Systems (CSCS) Consortium.",
       "authorString": "Dresselhaus T, Balboni M, Berg L, Dolata A, Hochholdinger F, Huang Y, Jiang G, von Korff M, Ku JC, van der Linde K, Maika J, Mondragon CL, Raissig MT, Schnittger A, Schnurbusch T, Simon R, Stahl Y, Timmermans M, Thirulogachandar V, Zhao S, Zhou Y.",
-      "journalTitle": null,
+      "journalTitle": "The Plant cell",
       "pubYear": "2025",
       "firstPublicationDate": "2025-07-01",
       "citedByCount": 15,
@@ -515,7 +521,7 @@
       "doi": "10.1186/s43897-024-00090-7",
       "title": "Large-scale analysis of the ARF and Aux/IAA gene families in 406 horticultural and other plants.",
       "authorString": "Feng S, Li N, Chen H, Liu Z, Li C, Zhou R, Zhang Y, Cao R, Ma X, Song X.",
-      "journalTitle": null,
+      "journalTitle": "Molecular horticulture",
       "pubYear": "2024",
       "firstPublicationDate": "2024-04-09",
       "citedByCount": 22,
@@ -525,23 +531,6 @@
       "web_url": "https://europepmc.org/article/PMC/PMC11003162"
      },
      {
-      "id": "39934301",
-      "source": "MED",
-      "pmid": "39934301",
-      "pmcid": "PMC11814284",
-      "doi": "10.1038/s41598-025-89198-4",
-      "title": "Identification of ARF gene family and functional analysis of CqARF05 under drought and salt stress in quinoa.",
-      "authorString": "Wang B, Zhu X, Song X, Zhao Y, Yang D, Wang W, Liu W, Wei X.",
-      "journalTitle": null,
-      "pubYear": "2025",
-      "firstPublicationDate": "2025-02-11",
-      "citedByCount": 6,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
-      "abstractText": "The ARF gene family is crucial for regulating plant growth, development, and responses to various signaling pathways. In this study, 26 quinoa ARF genes (CqARF01-CqARF26) were identified, with encoded proteins varying in length from 553 to 1092 amino acids, molecular weights from 60.66 to 111.71\u00a0kDa, and isoelectric points from 5.15 to 8.21. The proteins were found in either the nucleus (13 CqARFs) or cytoplasm (11 CqARFs). Phylogenetic analysis classified ARF proteins into five groups. All CqARFs contained seven conserved motifs (Motif1, Motif2, Motif4, Motif6, Motif8, Motif9, and Motif10), indicating conserved positions and functional similarities. Gene structure analysis showed that most CqARF genes had UTR regions at both ends, with similar structures within subgroups. Conserved sequence analysis revealed that motif composition within subgroups was relatively conserved. The presence of four classes of cis-regulatory elements in quinoa ARF genes suggests involvement in light, hormone, tissue-specific expression, and other responses. Expression analysis indicated that the most genes (CqARF05, CqARF07, CqARF15 and CqARF24) were highly expressed under drought and salt stress treatment. Overexpression of CqARF05 gene in Arabidopsis enhanced drought and salt resistance in transgenic lines. These findings provide valuable insights into the role of the ARF gene family.",
-      "web_url": "https://europepmc.org/article/PMC/PMC11814284"
-     },
-     {
       "id": "37324718",
       "source": "MED",
       "pmid": "37324718",
@@ -549,7 +538,7 @@
       "doi": "10.3389/fpls.2023.1193065",
       "title": "Genome-wide identification and expression profiling of B3 transcription factor genes in &lt;i&gt;Populus alba \u00d7 Populus glandulosa&lt;/i&gt;.",
       "authorString": "Wei M, Li H, Wang Q, Liu R, Yang L, Li Q.",
-      "journalTitle": null,
+      "journalTitle": "Frontiers in plant science",
       "pubYear": "2023",
       "firstPublicationDate": "2023-05-30",
       "citedByCount": 21,
@@ -557,6 +546,23 @@
       "hasPDF": "Y",
       "abstractText": "B3-domain containing transcription factors (TFs) are well known to play important roles in various developmental processes, including embryogenesis, seed germination, etc. Characterizations and functional studies of the B3 TF superfamily in poplar are still limited, especially on their roles in wood formation. In this study, we conducted comprehensive bioinformatics and expression analysis of B3 TF genes in <i>Populus alba \u00d7 Populus glandulosa</i>. A total of 160 B3 TF genes were identified in the genome of this hybrid poplar, and their chromosomal locations, syntenic relationships, gene structures, and promoter cis-acting elements were analyzed. Through domain structure and phylogenetic relationship analyses, these proteins were classified into four families LAV, RAV, ARF, and REM. Domain and conservation analyses revealed different gene numbers and different DNA-binding domains among families. Syntenic relationship analysis suggested that approximately 87% of the genes resulted from genome duplication (segmental or tandem), contributing to the expansion of the B3 family in <i>P. alba \u00d7 P. glandulosa</i>. Phylogeny in seven species revealed the evolutionary relationship of B3 TF genes across different species. B3 domains among the eighteen proteins that were highly expressed in differentiating xylem had a high synteny, suggesting a common ancestor for these seven species. We performed co-expression analysis on the representative genes in two different ages of poplar, followed by pathways analysis. Among those genes co-expressed with four B3 genes, 14 were involved in lignin synthases and secondary cell walls biosynthesis, including <i>PagCOMT2</i>, <i>PagCAD1</i>, <i>PagCCR2</i>, <i>PagCAD1</i>, <i>PagCCoAOMT1</i>, <i>PagSND2</i>, and <i>PagNST1</i>. Our results provide valuable information for the B3 TF family in poplar and show the potential of B3 TF genes in engineering to improve wood properties.",
       "web_url": "https://europepmc.org/article/PMC/PMC10262750"
+     },
+     {
+      "id": "39934301",
+      "source": "MED",
+      "pmid": "39934301",
+      "pmcid": "PMC11814284",
+      "doi": "10.1038/s41598-025-89198-4",
+      "title": "Identification of ARF gene family and functional analysis of CqARF05 under drought and salt stress in quinoa.",
+      "authorString": "Wang B, Zhu X, Song X, Zhao Y, Yang D, Wang W, Liu W, Wei X.",
+      "journalTitle": "Scientific reports",
+      "pubYear": "2025",
+      "firstPublicationDate": "2025-02-11",
+      "citedByCount": 6,
+      "isOpenAccess": "Y",
+      "hasPDF": "Y",
+      "abstractText": "The ARF gene family is crucial for regulating plant growth, development, and responses to various signaling pathways. In this study, 26 quinoa ARF genes (CqARF01-CqARF26) were identified, with encoded proteins varying in length from 553 to 1092 amino acids, molecular weights from 60.66 to 111.71\u00a0kDa, and isoelectric points from 5.15 to 8.21. The proteins were found in either the nucleus (13 CqARFs) or cytoplasm (11 CqARFs). Phylogenetic analysis classified ARF proteins into five groups. All CqARFs contained seven conserved motifs (Motif1, Motif2, Motif4, Motif6, Motif8, Motif9, and Motif10), indicating conserved positions and functional similarities. Gene structure analysis showed that most CqARF genes had UTR regions at both ends, with similar structures within subgroups. Conserved sequence analysis revealed that motif composition within subgroups was relatively conserved. The presence of four classes of cis-regulatory elements in quinoa ARF genes suggests involvement in light, hormone, tissue-specific expression, and other responses. Expression analysis indicated that the most genes (CqARF05, CqARF07, CqARF15 and CqARF24) were highly expressed under drought and salt stress treatment. Overexpression of CqARF05 gene in Arabidopsis enhanced drought and salt resistance in transgenic lines. These findings provide valuable insights into the role of the ARF gene family.",
+      "web_url": "https://europepmc.org/article/PMC/PMC11814284"
      }
     ],
     "upstream_version": null
@@ -564,7 +570,10 @@
    "go_annotations": {
     "uniprot_accession": "Q8L7G0",
     "numberOfHits": 34,
+    "total": 34,
     "returned": 34,
+    "truncated": false,
+    "next_cursor": null,
     "annotations": [
      {
       "geneProductId": "UniProtKB:Q8L7G0",
@@ -1612,12 +1621,15 @@
       }
      ]
     },
+    "by_aspect_deduped_on": "goId",
     "upstream_version": null
    },
    "domains": {
     "accession": "Q8L7G0",
     "found": true,
     "domain_count": 19,
+    "total": 19,
+    "returned": 19,
     "truncated": false,
     "domains": [
      {

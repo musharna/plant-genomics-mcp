@@ -5,14 +5,14 @@
   "organism": "arabidopsis_thaliana",
   "top_n": 10
  },
- "started_at": "2026-09-22T07:28:28Z",
- "elapsed_s": 1.5144426209953963,
+ "started_at": "2026-09-23T04:46:40Z",
+ "elapsed_s": 2.8181824589992175,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 1.2188564429961843,
+   "elapsed_s": 1.56379103299696,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.001361320995783899,
+   "elapsed_s": 0.0005724449874833226,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.16400335599610116,
+   "elapsed_s": 1.2539264070073841,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.004522901996097062,
+   "elapsed_s": 0.007281785990926437,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.2944070239973371,
+   "elapsed_s": 0.29677200700098183,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0020311150001361966,
+   "elapsed_s": 0.0029020450019743294,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0008194710026145913,
+   "elapsed_s": 0.0015343870036303997,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00044139500096207485,
+   "elapsed_s": 0.0005928290047449991,
    "result": null,
    "error": null
   }
@@ -89,19 +89,19 @@
   "sections": {
    "annotation": {
     "logic_name": "araport11",
-    "start": 12451143,
-    "biotype": "protein_coding",
-    "end": 12455369,
-    "seq_region_name": "4",
-    "object_type": "Gene",
-    "description": "auxin response factor 9 [Source:NCBI gene (formerly Entrezgene);Acc:828498]",
-    "canonical_transcript": "AT4G23980.1.",
-    "strand": 1,
     "db_type": "core",
-    "source": "araport11",
+    "object_type": "Gene",
+    "canonical_transcript": "AT4G23980.1",
+    "seq_region_name": "4",
     "display_name": "ARF9",
-    "id": "AT4G23980",
+    "biotype": "protein_coding",
+    "source": "araport11",
     "assembly_name": "TAIR10",
+    "description": "auxin response factor 9 [Source:NCBI gene (formerly Entrezgene);Acc:828498]",
+    "start": 12451143,
+    "id": "AT4G23980",
+    "strand": 1,
+    "end": 12455369,
     "organism": "arabidopsis_thaliana",
     "upstream_version": null
    },
@@ -127,96 +127,96 @@
     "count": 8,
     "xrefs": [
      {
-      "version": "0",
       "dbname": "NASC_GENE_ID",
-      "info_type": "DIRECT",
-      "info_text": "",
-      "primary_id": "AT4G23980",
       "synonyms": [],
-      "display_id": "AT4G23980-TAIR-G",
       "db_display_name": "NASC Gene ID",
-      "description": "auxin response factor 9"
+      "info_text": "",
+      "info_type": "DIRECT",
+      "description": "auxin response factor 9",
+      "primary_id": "AT4G23980",
+      "display_id": "AT4G23980-TAIR-G",
+      "version": "0"
      },
      {
-      "dbname": "TAIR_LOCUS",
-      "info_text": "",
+      "description": "auxin response factor 9",
+      "primary_id": "AT4G23980",
       "info_type": "DIRECT",
       "version": "0",
       "display_id": "AT4G23980",
-      "db_display_name": "TAIR",
-      "primary_id": "AT4G23980",
+      "dbname": "TAIR_LOCUS",
       "synonyms": [],
-      "description": "auxin response factor 9"
+      "info_text": "",
+      "db_display_name": "TAIR"
      },
      {
-      "display_id": "ARF9",
-      "db_display_name": "TAIR Gene Name",
+      "dbname": "TAIR_SYMBOL",
       "synonyms": [],
+      "info_text": "",
+      "db_display_name": "TAIR Gene Name",
       "primary_id": "ARF9",
       "description": "",
-      "version": "0",
-      "dbname": "TAIR_SYMBOL",
-      "info_text": "",
-      "info_type": "DIRECT"
-     },
-     {
-      "version": "0",
       "info_type": "DIRECT",
-      "info_text": "",
-      "dbname": "ArrayExpress",
-      "description": null,
-      "primary_id": "AT4G23980",
-      "synonyms": [],
-      "display_id": "AT4G23980",
-      "db_display_name": "Expression Atlas"
+      "version": "0",
+      "display_id": "ARF9"
      },
      {
-      "version": "0",
-      "info_type": "DEPENDENT",
-      "info_text": "",
-      "dbname": "KNETMINER_ARA",
-      "description": null,
-      "primary_id": "AT4G23980",
       "synonyms": [],
+      "dbname": "ArrayExpress",
+      "info_text": "",
+      "db_display_name": "Expression Atlas",
+      "primary_id": "AT4G23980",
+      "description": null,
+      "info_type": "DIRECT",
+      "version": "0",
+      "display_id": "AT4G23980"
+     },
+     {
+      "primary_id": "AT4G23980",
+      "description": null,
+      "info_type": "DEPENDENT",
+      "version": "0",
       "display_id": "AT4G23980",
+      "dbname": "KNETMINER_ARA",
+      "synonyms": [],
+      "info_text": "",
       "db_display_name": "KNETMINER_ARA"
      },
      {
       "info_type": "DEPENDENT",
-      "info_text": "",
-      "dbname": "Uniprot_gn",
-      "version": null,
-      "description": null,
-      "synonyms": [],
       "primary_id": "Q9XED8",
+      "description": null,
       "display_id": "ARF9",
-      "db_display_name": "UniProtKB Gene Name"
-     },
-     {
-      "description": "auxin response factor 9",
-      "db_display_name": "WikiGene",
-      "display_id": "ARF9",
-      "primary_id": "828498",
+      "version": null,
+      "dbname": "Uniprot_gn",
       "synonyms": [],
-      "version": "0",
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "dbname": "WikiGene"
+      "db_display_name": "UniProtKB Gene Name",
+      "info_text": ""
      },
      {
+      "dbname": "WikiGene",
+      "synonyms": [],
+      "info_text": "",
+      "db_display_name": "WikiGene",
+      "primary_id": "828498",
       "description": "auxin response factor 9",
+      "info_type": "DEPENDENT",
+      "version": "0",
+      "display_id": "ARF9"
+     },
+     {
+      "primary_id": "828498",
+      "description": "auxin response factor 9",
+      "info_type": "DEPENDENT",
+      "version": "0",
+      "display_id": "ARF9",
       "synonyms": [
        "auxin response factor 9",
        "T32A16.150",
        "T32A16_150"
       ],
-      "primary_id": "828498",
-      "display_id": "ARF9",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "info_type": "DEPENDENT",
-      "info_text": "",
       "dbname": "EntrezGene",
-      "version": "0"
+      "info_text": "",
+      "db_display_name": "NCBI gene (formerly Entrezgene)"
      }
     ],
     "by_db": {
@@ -264,6 +264,9 @@
     "query": "AT4G23980",
     "accession": "Q9XED8",
     "organism": "arabidopsis_thaliana",
+    "total": null,
+    "returned": 10,
+    "truncated": null,
     "partners": [
      {
       "string_id": "3702.Q9ZSY8",
@@ -373,7 +376,10 @@
     "organism": "arabidopsis_thaliana",
     "query": "AT4G23980",
     "hitCount": 24,
+    "total": 24,
     "returned": 10,
+    "truncated": true,
+    "next_cursor": "eyJwIjogeyJtYXJrIjogIkFvSUlQc0xuc1Nnek5qZzNNemt5T1E9PSIsICJvZmZzZXQiOiAxMH0sICJxIjogeyJxdWVyeSI6ICJBVDRHMjM5ODAiLCAic2l6ZSI6IDEwfSwgInQiOiAibG9jdXNfbGl0ZXJhdHVyZSJ9",
     "abstracts_included": true,
     "hits": [
      {
@@ -384,7 +390,7 @@
       "doi": "10.1093/plcell/koaf124",
       "title": "Conservation and divergence of regulatory architecture in nitrate-responsive plant gene circuits.",
       "authorString": "Bian C, Demirer GS, Oz MT, Cai YM, Witham S, Mason GA, Di Z, Deligne F, Zhang P, Shen R, Gaudinier A, Brady SM, Patron NJ.",
-      "journalTitle": null,
+      "journalTitle": "The Plant cell",
       "pubYear": "2025",
       "firstPublicationDate": "2025-06-01",
       "citedByCount": 11,
@@ -401,7 +407,7 @@
       "doi": "10.1111/pbi.14401",
       "title": "The miR7125-MdARF1 module enhances the resistance of apple to Colletotrichum gloeosporioides by promoting lignin synthesis in response to salicylic acid signalling.",
       "authorString": "Liu X, Dai H, Zhang F, Wang J, Shi J, Chen J, He P, Wang F, Ma Y.",
-      "journalTitle": null,
+      "journalTitle": "Plant biotechnology journal",
       "pubYear": "2024",
       "firstPublicationDate": "2024-06-09",
       "citedByCount": 24,
@@ -418,7 +424,7 @@
       "doi": "10.1186/s12870-025-08030-3",
       "title": "Identification of the Auxin Response Factor gene family in kernel consumption apricot and association analysis of related genes regulating fruit size in distant hybridization.",
       "authorString": "Han C, Zhang W, Chen S, Zhang Y, Guo H, Yu L, Liu L, Liu P, Wang L, Zhao H.",
-      "journalTitle": null,
+      "journalTitle": "BMC plant biology",
       "pubYear": "2026",
       "firstPublicationDate": "2026-01-20",
       "citedByCount": 1,
@@ -435,7 +441,7 @@
       "doi": "10.3390/ijms26104547",
       "title": "Genome-Wide Identification of &lt;i&gt;GmARF9b&lt;/i&gt;/&lt;i&gt;GmARF2a&lt;/i&gt; Negatively Regulate Root Growth in Soybean.",
       "authorString": "Li D, Miao T, Liao H, Zhong Y.",
-      "journalTitle": null,
+      "journalTitle": "International journal of molecular sciences",
       "pubYear": "2025",
       "firstPublicationDate": "2025-05-09",
       "citedByCount": 1,
@@ -452,7 +458,7 @@
       "doi": "10.3389/fpls.2018.01280",
       "title": "Identification of Major QTLs Associated With First Pod Height and Candidate Gene Mining in Soybean.",
       "authorString": "Jiang H, Li Y, Qin H, Li Y, Qi H, Li C, Wang N, Li R, Zhao Y, Huang S, Yu J, Wang X, Zhu R, Liu C, Hu Z, Qi Z, Xin D, Wu X, Chen Q.",
-      "journalTitle": null,
+      "journalTitle": "Frontiers in plant science",
       "pubYear": "2018",
       "firstPublicationDate": "2018-09-19",
       "citedByCount": 24,
@@ -469,7 +475,7 @@
       "doi": "10.3389/fpls.2022.878267",
       "title": "Identification of QTLs Associated With Agronomic Traits in Tobacco <i>via</i> a Biparental Population and an Eight-Way MAGIC Population.",
       "authorString": "Liu Y, Yuan G, Si H, Sun Y, Jiang Z, Liu D, Jiang C, Pan X, Yang J, Luo Z, Zhang J, Ren M, Pan Y, Sun K, Meng H, Wen L, Xiao Z, Feng Q, Yang A, Cheng L.",
-      "journalTitle": null,
+      "journalTitle": "Frontiers in plant science",
       "pubYear": "2022",
       "firstPublicationDate": "2022-06-06",
       "citedByCount": 12,
@@ -486,7 +492,7 @@
       "doi": "10.1186/1471-2229-11-136",
       "title": "BRAD, the genetics and genomics database for Brassica plants.",
       "authorString": "Cheng F, Liu S, Wu J, Fang L, Sun S, Liu B, Li P, Hua W, Wang X.",
-      "journalTitle": null,
+      "journalTitle": "BMC plant biology",
       "pubYear": "2011",
       "firstPublicationDate": "2011-10-13",
       "citedByCount": 324,
@@ -503,7 +509,7 @@
       "doi": "10.3389/fpls.2023.1279823",
       "title": "Making watercress (<i>Nasturtium officinale</i>) cropping sustainable: genomic insights into enhanced phosphorus use efficiency in an aquatic crop.",
       "authorString": "Hibbert LE, Qian Y, Smith HK, Milner S, Katz E, Kliebenstein DJ, Taylor G.",
-      "journalTitle": null,
+      "journalTitle": "Frontiers in plant science",
       "pubYear": "2023",
       "firstPublicationDate": "2023-11-07",
       "citedByCount": 3,
@@ -520,7 +526,7 @@
       "doi": "10.3389/fpls.2021.697872",
       "title": "Genetic Dissection of Root Angle of <i>Brassica napus</i> in Response to Low Phosphorus.",
       "authorString": "Duan X, Wang X, Jin K, Wang W, Liu H, Liu L, Zhang Y, Hammond JP, White PJ, Ding G, Xu F, Shi L.",
-      "journalTitle": null,
+      "journalTitle": "Frontiers in plant science",
       "pubYear": "2021",
       "firstPublicationDate": "2021-07-29",
       "citedByCount": 10,
@@ -537,7 +543,7 @@
       "doi": "10.3389/fpls.2017.00999",
       "title": "The Multitalented MEDIATOR25.",
       "authorString": "Kazan K.",
-      "journalTitle": null,
+      "journalTitle": "Frontiers in plant science",
       "pubYear": "2017",
       "firstPublicationDate": "2017-06-12",
       "citedByCount": 36,
@@ -552,7 +558,10 @@
    "go_annotations": {
     "uniprot_accession": "Q9XED8",
     "numberOfHits": 29,
+    "total": 29,
     "returned": 29,
+    "truncated": false,
+    "next_cursor": null,
     "annotations": [
      {
       "geneProductId": "UniProtKB:Q9XED8",
@@ -2217,12 +2226,15 @@
       }
      ]
     },
+    "by_aspect_deduped_on": "goId",
     "upstream_version": null
    },
    "domains": {
     "accession": "Q9XED8",
     "found": true,
     "domain_count": 19,
+    "total": 19,
+    "returned": 19,
     "truncated": false,
     "domains": [
      {

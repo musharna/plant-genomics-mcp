@@ -1,9 +1,9 @@
 # Every wheat IWGSC locus fails the locus-to-UniProt step, so no protein-level tool can answer for wheat
 
-**Filed as [#138](https://github.com/musharna/plant-genomics-mcp/issues/138) — open.** Written from the ARF family dossier in
-[`examples/arf_family/`](../), re-run at server commit `967bc36`
-(release `1.21.0`): 400 MCP calls over 48 genes x 16 tools, the family
-itself from a 742-call enumeration through the same tools. Each section
+**Filed as [#138](https://github.com/musharna/plant-genomics-mcp/issues/138) — fixed.** The row is closed at `052e4ec`. Written from the ARF family dossier in
+[`examples/arf_family/`](../), re-run at server commit `052e4ec`
+(release `1.21.0`): 64 MCP calls over 114 genes x 16 tools, the family
+itself from a 1163-call enumeration through the same tools. Each section
 below is one row of [`gaps.jsonl`](../gaps.jsonl), quoted as logged;
 `Check` names the captured response to read it back from.
 

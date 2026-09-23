@@ -1,0 +1,92 @@
+{
+ "tool": "gene_report",
+ "input": {
+  "locus": "TraesCS3A02G449300",
+  "organism": "triticum_aestivum",
+  "top_n": 10
+ },
+ "started_at": "2026-09-23T05:00:49Z",
+ "elapsed_s": 4.5458196149993455,
+ "steps": [
+  {
+   "step": 1,
+   "tool": "ensembl_plants_lookup_locus",
+   "status": "error",
+   "elapsed_s": 4.54552928400517,
+   "result": null,
+   "error": "[UpstreamUnavailableError] Ensembl Plants /lookup/id/TraesCS3A02G449300 exhausted 3 retries (last HTTP 500)"
+  },
+  {
+   "step": 2,
+   "tool": "resolve_locus_to_uniprot",
+   "status": "ok",
+   "elapsed_s": 0.0025944640074158087,
+   "result": {
+    "locus_query": "TraesCS3A02G449300",
+    "primaryAccession": "A0A3B6EQF8",
+    "uniProtkbId": "A0A3B6EQF8_WHEAT",
+    "entryType": "UniProtKB unreviewed (TrEMBL)",
+    "reviewed": false,
+    "recommendedName": "Auxin response factor",
+    "geneNames": [
+     "LOC123063246"
+    ],
+    "organism": "Triticum aestivum",
+    "taxonId": 4565,
+    "sequenceLength": 829,
+    "web_url": "https://www.uniprot.org/uniprotkb/A0A3B6EQF8",
+    "upstream_version": "2026_03"
+   },
+   "error": null
+  },
+  {
+   "step": 3,
+   "tool": "get_gene_xrefs",
+   "status": "skipped",
+   "elapsed_s": null,
+   "result": null,
+   "error": "phase-1 ensembl lookup failed; skipped"
+  },
+  {
+   "step": 4,
+   "tool": "kegg_pathways",
+   "status": "skipped",
+   "elapsed_s": null,
+   "result": null,
+   "error": "phase-1 ensembl lookup failed; skipped"
+  },
+  {
+   "step": 5,
+   "tool": "string_interactions",
+   "status": "skipped",
+   "elapsed_s": null,
+   "result": null,
+   "error": "phase-1 ensembl lookup failed; skipped"
+  },
+  {
+   "step": 6,
+   "tool": "locus_literature",
+   "status": "skipped",
+   "elapsed_s": null,
+   "result": null,
+   "error": "phase-1 ensembl lookup failed; skipped"
+  },
+  {
+   "step": 7,
+   "tool": "locus_go_annotations",
+   "status": "skipped",
+   "elapsed_s": null,
+   "result": null,
+   "error": "phase-1 ensembl lookup failed; skipped"
+  },
+  {
+   "step": 8,
+   "tool": "interpro_domains",
+   "status": "skipped",
+   "elapsed_s": null,
+   "result": null,
+   "error": "phase-1 ensembl lookup failed; skipped"
+  }
+ ],
+ "result": null
+}

@@ -15,7 +15,10 @@ walk is per organism, then per chain tool, then per locus:
   back into one `raw/<locus>__<chain_tool>.json` per locus, so the
   per-gene evidence has one layout whichever way the call went; the
   envelope itself is kept too, as `raw/_batch__<batch_tool>__<organism>__<n>.json`.
-- The other chain tools are called once per locus.
+- A chain tool with no dedicated form but accepted by the generic
+  `batch_locus_call` (#131; `LOCUS_BATCHED`) is called through that, the
+  same way; its envelope is `raw/_batch__batch_locus_call__<chain_tool>__<organism>__<n>.json`.
+- Any other chain tool is called once per locus.
 
 Outputs, all next to this file:
 
@@ -43,9 +46,12 @@ runner that appended to it would duplicate its own rows on a re-run, and
 one that truncated it would delete the hand-written ones. Writing to a
 separate file opened `"w"` makes a re-run idempotent in both directions.
 
-Calls are sequential on purpose: the tools sit in front of public APIs
-(Ensembl Plants, InterPro, STRING, KEGG, ...) that should not be hit in
-parallel from a demo.
+The runner's own calls are sequential on purpose: the tools sit in front
+of public APIs (Ensembl Plants, InterPro, STRING, KEGG, ...) that should
+not be hit in parallel from a demo. A batch call still fans out inside
+the server, at its one concurrency width for every backend
+(PLANT_GENOMICS_MCP_BATCH_CONCURRENCY, default 8) — wide enough that
+OrthoDB refuses part of it (`gaps.jsonl`, `batch-fanout-rate-limit`).
 """
 
 from __future__ import annotations
@@ -84,6 +90,31 @@ BATCH_FORMS: dict[str, tuple[str, str, bool]] = {
     "kegg_pathways": ("batch_kegg_pathways", "loci", True),
     "locus_literature": ("batch_locus_literature", "loci", True),
 }
+
+# The chain tools with no dedicated batch form, called through the generic
+# one (#131) with the chain's own arguments minus `locus` as the shared
+# `args`. Checked against the live `tool` enum by `tests/test_arf_chain.py`.
+LOCUS_BATCH = "batch_locus_call"
+LOCUS_BATCHED = frozenset(
+    {
+        "interpro_domains",
+        "alphafold_structure",
+        "experimental_structures",
+        "tf_binding_motifs",
+        "panther_family",
+        "orthodb_orthologs",
+        "aragwas_associations",
+        "gene_report",
+    }
+)
+
+
+def locus_batch_args(chain_tool: str, loci: list[str], organism: str) -> dict:
+    """`batch_locus_call` arguments running `chain_tool` over `loci`."""
+    shared = dict(CHAIN)[chain_tool](loci[0], organism)
+    del shared["locus"]
+    return {"tool": chain_tool, "loci": loci, "args": shared}
+
 
 # An error carrying one of these tags is the tool refusing an organism it
 # documents as unsupported — recorded as `expected`, not as a gap.
@@ -221,12 +252,18 @@ class Runner:
         print(f"{locus} {chain_tool}: {kind} {res.n_bytes}B", file=sys.stderr)
 
     async def batch(self, loci: list[str], organism: str, chain_tool: str) -> None:
-        batch_tool, list_arg, takes_organism = BATCH_FORMS[chain_tool]
-        args = {list_arg: loci, "organism": organism} if takes_organism else {list_arg: loci}
+        if chain_tool in LOCUS_BATCHED:
+            batch_tool = LOCUS_BATCH
+            args = locus_batch_args(chain_tool, loci, organism)
+            stem = f"{LOCUS_BATCH}__{chain_tool}"
+        else:
+            batch_tool, list_arg, takes_organism = BATCH_FORMS[chain_tool]
+            args = {list_arg: loci, "organism": organism} if takes_organism else {list_arg: loci}
+            stem = batch_tool
         res = await self.c.call(batch_tool, args)
-        self.batch_seq[batch_tool] += 1
-        n = self.batch_seq[batch_tool]
-        (self.here / "raw" / f"_batch__{batch_tool}__{organism}__{n}.json").write_text(
+        self.batch_seq[stem] += 1
+        n = self.batch_seq[stem]
+        (self.here / "raw" / f"_batch__{stem}__{organism}__{n}.json").write_text(
             json.dumps(res.payload if res.ok else {"ok": False, "error": res.error}, indent=1)
             + "\n"
         )
@@ -337,7 +374,7 @@ async def main(server_cmd: list[str] = SERVER_CMD, here: Path = HERE) -> int:
         try:
             for organism, loci in by_organism.items():
                 for tool, build in CHAIN:
-                    if tool in BATCH_FORMS:
+                    if tool in BATCH_FORMS or tool in LOCUS_BATCHED:
                         for i in range(0, len(loci), BATCH_MAX):
                             await runner.batch(loci[i : i + BATCH_MAX], organism, tool)
                     else:

@@ -28,6 +28,7 @@ from examples.arf_family.coverage import (
     RELEASE_UNUSED,
     RELEASE_UPSTREAM_FIELD,
     build_rows,
+    expand_tool_names,
     load_calls,
     release_under_another_key_tools,
 )
@@ -195,6 +196,48 @@ def test_build_rows_counts_loci_locus_errors_and_expected_refusals():
     assert rows["y"][8:] == ["ok", 2, 0, 1]  # the refusal is neither ok nor error
     assert rows["z"][1:4] == [1, 0, 1]
     assert rows["z"][8:] == ["error", 1, 1, 0]
+
+
+def test_a_generic_batch_call_is_counted_under_the_tool_it_ran(tmp_path):
+    # batch_locus_call runs whichever tool its `tool` argument names (#131).
+    # Keyed by the called name alone, eight chain tools would pool into one
+    # row — their sizes and release status mixed — and each of the eight
+    # would read as `unused`. Each call is keyed by the tool it ran instead,
+    # and the one tools/list name expands into one row per tool it served.
+    calls = tmp_path / "calls.jsonl"
+    rows = [
+        {"tool": "batch_locus_call", "chain_tool": "a", "args": {"tool": "a"}},
+        {"tool": "batch_locus_call", "chain_tool": "b", "args": {"tool": "b"}},
+        {"tool": "batch_locus_call", "chain_tool": "a", "args": {"tool": "a"}},
+        {"tool": "batch_kegg_pathways", "chain_tool": "kegg_pathways", "args": {}},
+    ]
+    calls.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    by_tool = load_calls(calls)
+    assert {k: len(v) for k, v in by_tool.items()} == {
+        "batch_locus_call:a": 2,
+        "batch_locus_call:b": 1,
+        "batch_kegg_pathways": 1,  # positive control: a dedicated form is keyed as before
+    }
+    names = ["a", "b", "batch_kegg_pathways", "batch_locus_call", "zz"]
+    assert expand_tool_names(names, by_tool) == [
+        "a",
+        "b",
+        "batch_kegg_pathways",
+        "batch_locus_call:a",
+        "batch_locus_call:b",
+        "zz",
+    ]
+    # Never called: the name stays, one `unused` row.
+    assert expand_tool_names(names, {}) == names
+    # The generic form inherits its tool's release-under-another-key status,
+    # as a dedicated batch_ form does.
+    for r in (*by_tool["batch_locus_call:a"], *by_tool["batch_locus_call:b"]):
+        r.update(ok=True, kind="ok", n_bytes=1, elapsed_s=0.1, upstream_version=None)
+    out = {
+        r[0]: r for r in build_rows(["batch_locus_call:a", "batch_locus_call:b"], by_tool, {"a"})
+    }
+    assert out["batch_locus_call:a"][7] == RELEASE_UNDER_ANOTHER_KEY
+    assert out["batch_locus_call:b"][7] == RELEASE_ABSENT
 
 
 def _write_gaps_jsonl(tmp_path, raw_field, extra_rows=()):

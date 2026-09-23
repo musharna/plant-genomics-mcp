@@ -1,0 +1,187 @@
+{
+ "locus": "TraesCS2A02G380300",
+ "accession": "A0A3B6B2J8",
+ "found": true,
+ "domain_count": 8,
+ "total": 8,
+ "returned": 8,
+ "truncated": false,
+ "domains": [
+  {
+   "accession": "G3DSA:2.30.30.1040",
+   "name": null,
+   "type": "homologous_superfamily",
+   "source_database": "cathgene3d",
+   "interpro": null,
+   "go_terms": null,
+   "locations": [
+    {
+     "start": 5,
+     "end": 78
+    }
+   ]
+  },
+  {
+   "accession": "G3DSA:3.10.20.90",
+   "name": "Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1",
+   "type": "homologous_superfamily",
+   "source_database": "cathgene3d",
+   "interpro": null,
+   "go_terms": null,
+   "locations": [
+    {
+     "start": 317,
+     "end": 402
+    }
+   ]
+  },
+  {
+   "accession": "IPR010525",
+   "name": "Auxin response factor domain",
+   "type": "domain",
+   "source_database": "interpro",
+   "interpro": null,
+   "go_terms": [
+    {
+     "identifier": "GO:0003677",
+     "name": "DNA binding",
+     "category": {
+      "code": "F",
+      "name": "molecular_function"
+     }
+    },
+    {
+     "identifier": "GO:0006355",
+     "name": "regulation of DNA-templated transcription",
+     "category": {
+      "code": "P",
+      "name": "biological_process"
+     }
+    },
+    {
+     "identifier": "GO:0009725",
+     "name": "response to hormone",
+     "category": {
+      "code": "P",
+      "name": "biological_process"
+     }
+    },
+    {
+     "identifier": "GO:0005634",
+     "name": "nucleus",
+     "category": {
+      "code": "C",
+      "name": "cellular_component"
+     }
+    }
+   ],
+   "locations": [
+    {
+     "start": 1,
+     "end": 73
+    }
+   ]
+  },
+  {
+   "accession": "IPR044835",
+   "name": "Auxin response factor",
+   "type": "family",
+   "source_database": "interpro",
+   "interpro": null,
+   "go_terms": [
+    {
+     "identifier": "GO:0003677",
+     "name": "DNA binding",
+     "category": {
+      "code": "F",
+      "name": "molecular_function"
+     }
+    },
+    {
+     "identifier": "GO:0006355",
+     "name": "regulation of DNA-templated transcription",
+     "category": {
+      "code": "P",
+      "name": "biological_process"
+     }
+    },
+    {
+     "identifier": "GO:0009725",
+     "name": "response to hormone",
+     "category": {
+      "code": "P",
+      "name": "biological_process"
+     }
+    }
+   ],
+   "locations": [
+    {
+     "start": 1,
+     "end": 396
+    }
+   ]
+  },
+  {
+   "accession": "IPR053793",
+   "name": "PB1-like domain",
+   "type": "domain",
+   "source_database": "interpro",
+   "interpro": null,
+   "go_terms": null,
+   "locations": [
+    {
+     "start": 318,
+     "end": 398
+    }
+   ]
+  },
+  {
+   "accession": "PF06507",
+   "name": "Auxin response factor ancillary domain",
+   "type": "domain",
+   "source_database": "pfam",
+   "interpro": "IPR010525",
+   "go_terms": null,
+   "locations": [
+    {
+     "start": 1,
+     "end": 73
+    }
+   ]
+  },
+  {
+   "accession": "PS51745",
+   "name": "PB1 domain profile",
+   "type": "domain",
+   "source_database": "profile",
+   "interpro": "IPR053793",
+   "go_terms": null,
+   "locations": [
+    {
+     "start": 318,
+     "end": 398
+    }
+   ]
+  },
+  {
+   "accession": "PTHR31384",
+   "name": "AUXIN RESPONSE FACTOR 4-RELATED",
+   "type": "family",
+   "source_database": "panther",
+   "interpro": "IPR044835",
+   "go_terms": null,
+   "locations": [
+    {
+     "start": 1,
+     "end": 396
+    }
+   ]
+  }
+ ],
+ "count_by_type": {
+  "homologous_superfamily": 2,
+  "domain": 4,
+  "family": 2
+ },
+ "upstream_version": "110.0"
+}

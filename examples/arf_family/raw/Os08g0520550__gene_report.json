@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-22T07:31:18Z",
- "elapsed_s": 4.913438842995674,
+ "started_at": "2026-09-23T04:54:33Z",
+ "elapsed_s": 4.8112595550046535,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 4.579191934004484,
+   "elapsed_s": 4.483091907008202,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0006879939974169247,
+   "elapsed_s": 0.00048520800191909075,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 5.752200377173722e-05,
+   "elapsed_s": 5.138800770509988e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "error",
-   "elapsed_s": 4.566300049191341e-05,
+   "elapsed_s": 3.5949997254647315e-05,
    "result": null,
    "error": "[NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os08g0520550 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.3336474300012924,
+   "elapsed_s": 0.32753311599662993,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 4.655500379158184e-05,
+   "elapsed_s": 3.913599357474595e-05,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00029537999944295734,
+   "elapsed_s": 0.00020801099890377373,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0003478459984762594,
+   "elapsed_s": 0.0002522430004319176,
    "result": null,
    "error": null
   }
@@ -86,18 +86,18 @@
   "markdown": "# Os08g0520550 \u2014 `Os08g0520550`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 8:25,873,389\u201325,877,678 (-) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor**\nA0A0P0XIX0_ORYSJ \u00b7 UniProtKB unreviewed (TrEMBL) \u00b7 637 aa\nUniProt: [A0A0P0XIX0](https://www.uniprot.org/uniprotkb/A0A0P0XIX0)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [131\u2013221]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [296\u2013366]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [129\u2013233]\n- **B3 DNA binding domain** (domain, interpro) [131\u2013234]\n- **Auxin response factor domain** (domain, interpro) [281\u2013364]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [122\u2013261]\n- **Auxin response factor** (family, interpro) [21\u2013616]\n- **B3 DNA binding domain** (domain, pfam) [132\u2013233]\n- **Auxin response factor ancillary domain** (domain, pfam) [281\u2013364]\n- **B3 DNA-binding domain profile** (domain, profile) [132\u2013234]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006351] DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os08g0520550 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| C7J1U6_ORYSJ | 0.849 |\n| Q0JCJ0_ORYSJ | 0.677 |\n| PES | 0.67 |\n| BOP1 | 0.624 |\n| WDR12 | 0.617 |\n| Q651Y0_ORYSJ | 0.61 |\n| Q5JNF8_ORYSJ | 0.61 |\n| Q2QWN0_ORYSJ | 0.61 |\n| Q0D724_ORYSJ | 0.61 |\n| Q5VRY2_ORYSJ | 0.558 |\n\n## Cross-references\n- Expression Atlas: Os08g0520550\n\n## Literature\n_No literature found._\n",
   "sections": {
    "annotation": {
+    "biotype": "protein_coding",
+    "object_type": "Gene",
     "seq_region_name": "8",
-    "canonical_transcript": "Os08t0520550-01.",
+    "canonical_transcript": "Os08t0520550-01",
+    "assembly_name": "IRGSP-1.0",
     "logic_name": "rapdb_genes",
-    "start": 25873389,
+    "db_type": "core",
     "source": "RAP2022-09-01",
     "strand": -1,
-    "db_type": "core",
-    "assembly_name": "IRGSP-1.0",
-    "biotype": "protein_coding",
-    "id": "Os08g0520550",
     "end": 25877678,
-    "object_type": "Gene",
+    "start": 25873389,
+    "id": "Os08g0520550",
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -121,13 +121,13 @@
     "count": 1,
     "xrefs": [
      {
-      "version": "0",
-      "db_display_name": "Expression Atlas",
       "description": null,
-      "display_id": "Os08g0520550",
-      "info_type": "DIRECT",
-      "info_text": "",
+      "db_display_name": "Expression Atlas",
+      "version": "0",
       "dbname": "ArrayExpress",
+      "info_text": "",
+      "info_type": "DIRECT",
+      "display_id": "Os08g0520550",
       "synonyms": [],
       "primary_id": "Os08g0520550"
      }
@@ -143,6 +143,9 @@
     "query": "Os08g0520550",
     "accession": "A0A0P0XIX0",
     "organism": "oryza_sativa",
+    "total": null,
+    "returned": 10,
+    "truncated": null,
     "partners": [
      {
       "string_id": "39947.C7J1U6",
@@ -252,7 +255,10 @@
     "organism": "oryza_sativa",
     "query": "Os08g0520550 AND rice",
     "hitCount": 0,
+    "total": 0,
     "returned": 0,
+    "truncated": false,
+    "next_cursor": null,
     "abstracts_included": true,
     "hits": [],
     "upstream_version": null
@@ -260,7 +266,10 @@
    "go_annotations": {
     "uniprot_accession": "A0A0P0XIX0",
     "numberOfHits": 8,
+    "total": 8,
     "returned": 8,
+    "truncated": false,
+    "next_cursor": null,
     "annotations": [
      {
       "geneProductId": "UniProtKB:A0A0P0XIX0",
@@ -751,12 +760,15 @@
       }
      ]
     },
+    "by_aspect_deduped_on": "goId",
     "upstream_version": null
    },
    "domains": {
     "accession": "A0A0P0XIX0",
     "found": true,
     "domain_count": 13,
+    "total": 13,
+    "returned": 13,
     "truncated": false,
     "domains": [
      {

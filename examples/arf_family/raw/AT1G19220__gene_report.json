@@ -5,14 +5,14 @@
   "organism": "arabidopsis_thaliana",
   "top_n": 10
  },
- "started_at": "2026-09-22T07:27:54Z",
- "elapsed_s": 4.4084262830001535,
+ "started_at": "2026-09-23T04:46:36Z",
+ "elapsed_s": 3.0844891799933976,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.6407697889953852,
+   "elapsed_s": 1.7085135029919911,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0013446080047287978,
+   "elapsed_s": 0.0005905409925617278,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 3.7671256769972388,
+   "elapsed_s": 1.3337142819946166,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.0047384159988723695,
+   "elapsed_s": 0.002830558005371131,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.2931831460009562,
+   "elapsed_s": 0.2832930880103959,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0020347829995444044,
+   "elapsed_s": 0.001392365011270158,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0007946330006234348,
+   "elapsed_s": 0.0005312699940986931,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00044022200017934665,
+   "elapsed_s": 0.00023369801056105644,
    "result": null,
    "error": null
   }
@@ -89,19 +89,19 @@
   "sections": {
    "annotation": {
     "display_name": "ARF19",
-    "strand": -1,
-    "db_type": "core",
-    "assembly_name": "TAIR10",
-    "source": "araport11",
+    "seq_region_name": "1",
+    "canonical_transcript": "AT1G19220.1",
     "object_type": "Gene",
-    "biotype": "protein_coding",
+    "db_type": "core",
+    "logic_name": "araport11",
     "end": 6633133,
     "id": "AT1G19220",
-    "seq_region_name": "1",
-    "logic_name": "araport11",
+    "strand": -1,
     "start": 6627683,
     "description": "auxin response factor 19 [Source:NCBI gene (formerly Entrezgene);Acc:838505]",
-    "canonical_transcript": "AT1G19220.1.",
+    "assembly_name": "TAIR10",
+    "source": "araport11",
+    "biotype": "protein_coding",
     "organism": "arabidopsis_thaliana",
     "upstream_version": null
    },
@@ -127,83 +127,88 @@
     "count": 10,
     "xrefs": [
      {
-      "description": "auxin response factor 19",
-      "dbname": "NASC_GENE_ID",
-      "primary_id": "AT1G19220",
+      "info_type": "DIRECT",
+      "version": "0",
+      "synonyms": [],
+      "info_text": "",
       "display_id": "AT1G19220-TAIR-G",
       "db_display_name": "NASC Gene ID",
-      "version": "0",
-      "synonyms": [],
-      "info_text": "",
-      "info_type": "DIRECT"
+      "primary_id": "AT1G19220",
+      "dbname": "NASC_GENE_ID",
+      "description": "auxin response factor 19"
      },
      {
-      "dbname": "TAIR_LOCUS",
       "description": "auxin response factor 19",
+      "dbname": "TAIR_LOCUS",
+      "display_id": "AT1G19220",
       "db_display_name": "TAIR",
-      "display_id": "AT1G19220",
       "primary_id": "AT1G19220",
       "info_type": "DIRECT",
-      "info_text": "",
-      "synonyms": [],
-      "version": "0"
-     },
-     {
-      "db_display_name": "TAIR Gene Name",
-      "display_id": "ARF19",
-      "primary_id": "ARF19",
-      "description": "",
-      "dbname": "TAIR_SYMBOL",
-      "info_type": "DIRECT",
-      "info_text": "",
-      "version": "0",
-      "synonyms": []
-     },
-     {
-      "version": "0",
-      "synonyms": [],
-      "info_text": "Generated via direct",
-      "info_type": "DIRECT",
-      "primary_id": "R-ATH-5608208",
-      "display_id": "R-ATH-5608208",
-      "db_display_name": "Plant Reactome Reaction ID",
-      "dbname": "Plant_Reactome_Reaction",
-      "description": "ARF inactivation by AUX/IAA"
-     },
-     {
-      "description": "Auxin signalling",
-      "dbname": "Plant_Reactome_Pathway",
-      "primary_id": "R-ATH-5608118",
-      "display_id": "R-ATH-5608118",
-      "db_display_name": "Plant Reactome Pathway ID",
-      "version": "0",
-      "synonyms": [],
-      "info_text": "Generated via direct",
-      "info_type": "DIRECT"
-     },
-     {
-      "primary_id": "AT1G19220",
-      "db_display_name": "Expression Atlas",
-      "display_id": "AT1G19220",
-      "description": null,
-      "dbname": "ArrayExpress",
-      "info_text": "",
-      "version": "0",
-      "synonyms": [],
-      "info_type": "DIRECT"
-     },
-     {
-      "display_id": "AT1G19220",
-      "db_display_name": "KNETMINER_ARA",
-      "primary_id": "AT1G19220",
-      "dbname": "KNETMINER_ARA",
-      "description": null,
-      "info_type": "DEPENDENT",
       "version": "0",
       "synonyms": [],
       "info_text": ""
      },
      {
+      "version": "0",
+      "synonyms": [],
+      "info_text": "",
+      "info_type": "DIRECT",
+      "primary_id": "ARF19",
+      "display_id": "ARF19",
+      "db_display_name": "TAIR Gene Name",
+      "description": "",
+      "dbname": "TAIR_SYMBOL"
+     },
+     {
+      "primary_id": "R-ATH-5608208",
+      "db_display_name": "Plant Reactome Reaction ID",
+      "display_id": "R-ATH-5608208",
+      "dbname": "Plant_Reactome_Reaction",
+      "description": "ARF inactivation by AUX/IAA",
+      "info_text": "Generated via direct",
+      "version": "0",
+      "synonyms": [],
+      "info_type": "DIRECT"
+     },
+     {
+      "version": "0",
+      "synonyms": [],
+      "info_text": "Generated via direct",
+      "info_type": "DIRECT",
+      "description": "Auxin signalling",
+      "dbname": "Plant_Reactome_Pathway",
+      "primary_id": "R-ATH-5608118",
+      "display_id": "R-ATH-5608118",
+      "db_display_name": "Plant Reactome Pathway ID"
+     },
+     {
+      "description": null,
+      "dbname": "ArrayExpress",
+      "primary_id": "AT1G19220",
+      "display_id": "AT1G19220",
+      "db_display_name": "Expression Atlas",
+      "synonyms": [],
+      "version": "0",
+      "info_text": "",
+      "info_type": "DIRECT"
+     },
+     {
+      "synonyms": [],
+      "version": "0",
+      "info_text": "",
+      "info_type": "DEPENDENT",
+      "dbname": "KNETMINER_ARA",
+      "description": null,
+      "primary_id": "AT1G19220",
+      "display_id": "AT1G19220",
+      "db_display_name": "KNETMINER_ARA"
+     },
+     {
+      "dbname": "EntrezGene",
+      "description": "auxin response factor 19",
+      "primary_id": "838505",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "display_id": "ARF19",
       "info_text": "",
       "version": "0",
       "synonyms": [
@@ -215,34 +220,29 @@
        "T29M8.9",
        "T29M8_9"
       ],
-      "info_type": "DEPENDENT",
-      "description": "auxin response factor 19",
-      "dbname": "EntrezGene",
-      "primary_id": "838505",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "display_id": "ARF19"
+      "info_type": "DEPENDENT"
      },
      {
-      "info_type": "DEPENDENT",
+      "info_text": "",
       "version": null,
       "synonyms": [],
-      "info_text": "",
-      "display_id": "ARF19",
-      "db_display_name": "UniProtKB Gene Name",
+      "info_type": "DEPENDENT",
       "primary_id": "Q8RYC8",
-      "description": null,
-      "dbname": "Uniprot_gn"
+      "db_display_name": "UniProtKB Gene Name",
+      "display_id": "ARF19",
+      "dbname": "Uniprot_gn",
+      "description": null
      },
      {
-      "dbname": "WikiGene",
-      "description": "auxin response factor 19",
-      "primary_id": "838505",
       "db_display_name": "WikiGene",
       "display_id": "ARF19",
+      "primary_id": "838505",
+      "dbname": "WikiGene",
+      "description": "auxin response factor 19",
+      "info_type": "DEPENDENT",
       "info_text": "",
       "version": "0",
-      "synonyms": [],
-      "info_type": "DEPENDENT"
+      "synonyms": []
      }
     ],
     "by_db": {
@@ -296,6 +296,9 @@
     "query": "AT1G19220",
     "accession": "Q8RYC8",
     "organism": "arabidopsis_thaliana",
+    "total": null,
+    "returned": 10,
+    "truncated": null,
     "partners": [
      {
       "string_id": "3702.Q38832",
@@ -405,7 +408,10 @@
     "organism": "arabidopsis_thaliana",
     "query": "AT1G19220",
     "hitCount": 73,
+    "total": 73,
     "returned": 10,
+    "truncated": true,
+    "next_cursor": "eyJwIjogeyJtYXJrIjogIkFvSUlQNGRvWUNnME9UZ3dOVFkwTlE9PSIsICJvZmZzZXQiOiAxMH0sICJxIjogeyJxdWVyeSI6ICJBVDFHMTkyMjAiLCAic2l6ZSI6IDEwfSwgInQiOiAibG9jdXNfbGl0ZXJhdHVyZSJ9",
     "abstracts_included": true,
     "hits": [
      {
@@ -416,7 +422,7 @@
       "doi": "10.1093/plcell/koae079",
       "title": "UnERFing auxin-mediated degradation in the emerging lateral root.",
       "authorString": "Osborne R.",
-      "journalTitle": null,
+      "journalTitle": "The Plant cell",
       "pubYear": "2024",
       "firstPublicationDate": "2024-09-01",
       "citedByCount": 0,
@@ -433,7 +439,7 @@
       "doi": "10.1093/plcell/koaf108",
       "title": "A timeline of discovery and innovation in Arabidopsis.",
       "authorString": "Freed C, Ashraf A, Eckardt NA, Roeder AHK, Friesner JD.",
-      "journalTitle": null,
+      "journalTitle": "The Plant cell",
       "pubYear": "2025",
       "firstPublicationDate": "2025-05-01",
       "citedByCount": 1,
@@ -450,7 +456,7 @@
       "doi": "10.1093/plphys/kiae065",
       "title": "WOX11-mediated plant resilience: nematodes cut and adventitious lateral roots surge.",
       "authorString": "Safi A.",
-      "journalTitle": null,
+      "journalTitle": "Plant physiology",
       "pubYear": "2024",
       "firstPublicationDate": "2024-04-01",
       "citedByCount": 1,
@@ -467,7 +473,7 @@
       "doi": "10.1093/plphys/kiaf602",
       "title": "MONOPTEROS isoform MP11ir plays a role during somatic embryogenesis in Arabidopsis thaliana.",
       "authorString": "W\u00f3jcikowska B, Belaidi S, Mironova V, Citerne S, Robert HS.",
-      "journalTitle": null,
+      "journalTitle": "Plant physiology",
       "pubYear": "2025",
       "firstPublicationDate": "2025-11-01",
       "citedByCount": 2,
@@ -484,7 +490,7 @@
       "doi": "10.1111/nph.70843",
       "title": "Pathogenic fungus Ustilago maydis exploits the lateral root regulators to induce pluripotency in maize shoots.",
       "authorString": "Khan M, Nagarajan N, Schneewolf K, Marcon C, Wang D, Hochholdinger F, Yu P, Djamei A.",
-      "journalTitle": null,
+      "journalTitle": "The New phytologist",
       "pubYear": "2026",
       "firstPublicationDate": "2025-12-26",
       "citedByCount": 0,
@@ -501,7 +507,7 @@
       "doi": "10.1093/plphys/kiae053",
       "title": "Transcription factor WOX11 modulates tolerance to cyst nematodes via adventitious lateral root formation.",
       "authorString": "Willig JJ, Guarneri N, van Loon T, Wahyuni S, Astudillo-Est\u00e9vez IE, Xu L, Willemsen V, Goverse A, Sterken MG, Lozano-Torres JL, Bakker J, Smant G.",
-      "journalTitle": null,
+      "journalTitle": "Plant physiology",
       "pubYear": "2024",
       "firstPublicationDate": "2024-04-01",
       "citedByCount": 11,
@@ -518,7 +524,7 @@
       "doi": "10.17912/micropub.biology.000708",
       "title": "ARF19 Condensation in the Arabidopsis Stomatal Lineage.",
       "authorString": "Kuan C, Strader LC, Morffy N.",
-      "journalTitle": null,
+      "journalTitle": "microPublication biology",
       "pubYear": "2023",
       "firstPublicationDate": "2023-02-04",
       "citedByCount": 1,
@@ -535,7 +541,7 @@
       "doi": "10.1093/plphys/kiad548",
       "title": "Age-dependent analysis dissects the stepwise control of auxin-mediated lateral root development in rice.",
       "authorString": "Yamauchi T, Tanaka A, Nakazono M, Inukai Y.",
-      "journalTitle": null,
+      "journalTitle": "Plant physiology",
       "pubYear": "2024",
       "firstPublicationDate": "2024-01-01",
       "citedByCount": 13,
@@ -552,7 +558,7 @@
       "doi": "10.1093/plphys/kiae090",
       "title": "Synthetically derived BiAux modulates auxin co-receptor activity to stimulate lateral root formation.",
       "authorString": "Gonz\u00e1lez-Garc\u00eda MP, S\u00e1ez A, Lanza M, Hoyos P, Bustillo-Avenda\u00f1o E, Pacios LF, Gradillas A, Moreno-Risueno MA, Hernaiz MJ, Del Pozo JC.",
-      "journalTitle": null,
+      "journalTitle": "Plant physiology",
       "pubYear": "2024",
       "firstPublicationDate": "2024-05-01",
       "citedByCount": 7,
@@ -569,7 +575,7 @@
       "doi": "10.1093/plcell/koad317",
       "title": "Root branching under high salinity requires auxin-independent modulation of LATERAL ORGAN BOUNDARY DOMAIN 16 function.",
       "authorString": "Zhang Y, Li Y, de Zeeuw T, Duijts K, Kawa D, Lamers J, Munzert KS, Li H, Zou Y, Meyer AJ, Yan J, Verstappen F, Wang Y, Gijsberts T, Wang J, Gigli-Bisceglia N, Engelsdorf T, van Dijk ADJ, Testerink C.",
-      "journalTitle": null,
+      "journalTitle": "The Plant cell",
       "pubYear": "2024",
       "firstPublicationDate": "2024-03-01",
       "citedByCount": 35,
@@ -584,7 +590,10 @@
    "go_annotations": {
     "uniprot_accession": "Q8RYC8",
     "numberOfHits": 82,
+    "total": 82,
     "returned": 50,
+    "truncated": true,
+    "next_cursor": "eyJwIjogeyJwYWdlIjogMn0sICJxIjogeyJhY2Nlc3Npb24iOiAiUThSWUM4IiwgImxpbWl0IjogNTB9LCAidCI6ICJsb2N1c19nb19hbm5vdGF0aW9ucyJ9",
     "annotations": [
      {
       "geneProductId": "UniProtKB:Q8RYC8",
@@ -1949,12 +1958,15 @@
       }
      ]
     },
+    "by_aspect_deduped_on": "goId",
     "upstream_version": null
    },
    "domains": {
     "accession": "Q8RYC8",
     "found": true,
     "domain_count": 19,
+    "total": 19,
+    "returned": 19,
     "truncated": false,
     "domains": [
      {

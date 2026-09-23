@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-22T07:31:15Z",
- "elapsed_s": 2.6869428070058348,
+ "started_at": "2026-09-23T04:54:33Z",
+ "elapsed_s": 29.950759282990475,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 2.3868080180036486,
+   "elapsed_s": 29.651899171003606,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.000778724999690894,
+   "elapsed_s": 0.0004396580043248832,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.00013095600297674537,
+   "elapsed_s": 6.648599810432643e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "error",
-   "elapsed_s": 9.38360026339069e-05,
+   "elapsed_s": 4.0700993849895895e-05,
    "result": null,
    "error": "[NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os08g0520500 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.29922464200353716,
+   "elapsed_s": 0.29692708399670664,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.000262679997831583,
+   "elapsed_s": 0.0002854970080079511,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00023848999990150332,
+   "elapsed_s": 0.00025031898985616863,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.000495913001941517,
+   "elapsed_s": 0.0004088120040250942,
    "result": null,
    "error": null
   }
@@ -89,18 +89,18 @@
   "sections": {
    "annotation": {
     "end": 25871444,
-    "logic_name": "rapdb_genes",
-    "biotype": "protein_coding",
     "start": 25870837,
+    "biotype": "protein_coding",
+    "logic_name": "rapdb_genes",
+    "assembly_name": "IRGSP-1.0",
     "source": "RAP2022-09-01",
+    "db_type": "core",
     "display_name": "OsARF7b",
     "id": "Os08g0520500",
-    "db_type": "core",
-    "assembly_name": "IRGSP-1.0",
-    "object_type": "Gene",
-    "seq_region_name": "8",
-    "canonical_transcript": "Os08t0520500-01.",
     "strand": -1,
+    "canonical_transcript": "Os08t0520500-01",
+    "seq_region_name": "8",
+    "object_type": "Gene",
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -126,15 +126,15 @@
     "count": 1,
     "xrefs": [
      {
-      "dbname": "ArrayExpress",
       "synonyms": [],
-      "db_display_name": "Expression Atlas",
+      "display_id": "Os08g0520500",
       "info_text": "",
       "info_type": "DIRECT",
-      "description": null,
       "primary_id": "Os08g0520500",
-      "display_id": "Os08g0520500",
-      "version": "0"
+      "description": null,
+      "dbname": "ArrayExpress",
+      "version": "0",
+      "db_display_name": "Expression Atlas"
      }
     ],
     "by_db": {
@@ -148,6 +148,9 @@
     "query": "Os08g0520500",
     "accession": "Q6YZW0",
     "organism": "oryza_sativa",
+    "total": null,
+    "returned": 10,
+    "truncated": null,
     "partners": [
      {
       "string_id": "39947.C7J1U6",
@@ -257,7 +260,10 @@
     "organism": "oryza_sativa",
     "query": "Os08g0520500 AND rice",
     "hitCount": 1,
+    "total": 1,
     "returned": 1,
+    "truncated": false,
+    "next_cursor": null,
     "abstracts_included": true,
     "hits": [
      {
@@ -268,7 +274,7 @@
       "doi": "10.3390/ijms20102543",
       "title": "Gene Expression Profiles Deciphering the Pathways of Coronatine Alleviating Water Stress in Rice (<i>Oryza sativa</i> L.) Cultivar Nipponbare (Japonica).",
       "authorString": "Gao W, Yu C, Ai L, Zhou Y, Duan L, Duan L.",
-      "journalTitle": null,
+      "journalTitle": "International journal of molecular sciences",
       "pubYear": "2019",
       "firstPublicationDate": "2019-05-23",
       "citedByCount": 4,
@@ -283,7 +289,10 @@
    "go_annotations": {
     "uniprot_accession": "Q6YZW0",
     "numberOfHits": 7,
+    "total": 7,
     "returned": 7,
+    "truncated": false,
+    "next_cursor": null,
     "annotations": [
      {
       "geneProductId": "UniProtKB:Q6YZW0",
@@ -721,12 +730,15 @@
       }
      ]
     },
+    "by_aspect_deduped_on": "goId",
     "upstream_version": null
    },
    "domains": {
     "accession": "Q6YZW0",
     "found": true,
     "domain_count": 19,
+    "total": 19,
+    "returned": 19,
     "truncated": false,
     "domains": [
      {

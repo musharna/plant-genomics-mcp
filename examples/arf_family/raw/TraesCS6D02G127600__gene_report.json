@@ -1,0 +1,864 @@
+{
+ "tool": "gene_report",
+ "input": {
+  "locus": "TraesCS6D02G127600",
+  "organism": "triticum_aestivum",
+  "top_n": 10
+ },
+ "started_at": "2026-09-23T05:01:11Z",
+ "elapsed_s": 0.8562116490065819,
+ "steps": [
+  {
+   "step": 1,
+   "tool": "ensembl_plants_lookup_locus",
+   "status": "ok",
+   "elapsed_s": 0.5817041429982055,
+   "result": null,
+   "error": null
+  },
+  {
+   "step": 2,
+   "tool": "resolve_locus_to_uniprot",
+   "status": "ok",
+   "elapsed_s": 0.004188300998066552,
+   "result": null,
+   "error": null
+  },
+  {
+   "step": 3,
+   "tool": "get_gene_xrefs",
+   "status": "ok",
+   "elapsed_s": 0.193792399004451,
+   "result": null,
+   "error": null
+  },
+  {
+   "step": 4,
+   "tool": "kegg_pathways",
+   "status": "skipped",
+   "elapsed_s": 1.7640995793044567e-05,
+   "result": null,
+   "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
+  },
+  {
+   "step": 5,
+   "tool": "string_interactions",
+   "status": "error",
+   "elapsed_s": 0.27366407999943476,
+   "result": null,
+   "error": "[NotFoundError] STRING /api/json/interaction_partners \u2192 HTTP 404: [{ \"Error\" : \"not found\", \"ErrorMessage\" : \"<p>Sorry, STRING did not find a protein called 'TraesCS6D02G127600' in the taxon '4565'.</p><p>Generally, STRING understands a number of different names/sym"
+  },
+  {
+   "step": 6,
+   "tool": "locus_literature",
+   "status": "ok",
+   "elapsed_s": 0.00024919000861700624,
+   "result": null,
+   "error": null
+  },
+  {
+   "step": 7,
+   "tool": "locus_go_annotations",
+   "status": "ok",
+   "elapsed_s": 0.00035602200659923255,
+   "result": null,
+   "error": null
+  },
+  {
+   "step": 8,
+   "tool": "interpro_domains",
+   "status": "ok",
+   "elapsed_s": 0.0006976860022405162,
+   "result": null,
+   "error": null
+  }
+ ],
+ "result": {
+  "locus": "TraesCS6D02G127600",
+  "organism": "triticum_aestivum",
+  "canonical_gene_name": "LOC123143962",
+  "gene_names": {
+   "canonical": "LOC123143962",
+   "ensembl": null,
+   "uniprot": [
+    "LOC123143962"
+   ]
+  },
+  "uniprot_accession": "A0A3B6QEX9",
+  "markdown": "# LOC123143962 \u2014 `TraesCS6D02G127600`\n\n*Triticum aestivum* \u00b7 protein_coding \u00b7 6D:91,516,586\u201391,522,540 (+) \u00b7 IWGSC\n\n## Protein\n**Auxin response factor**\nA0A3B6QEX9_WHEAT \u00b7 UniProtKB unreviewed (TrEMBL) \u00b7 922 aa\nUniProt: [A0A3B6QEX9](https://www.uniprot.org/uniprotkb/A0A3B6QEX9)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [135\u2013231]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [295\u2013368]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [134\u2013232]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [786\u2013879]\n- **B3 DNA binding domain** (domain, interpro) [135\u2013233]\n- **Auxin response factor domain** (domain, interpro) [280\u2013363]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [121\u2013260]\n- **AUX/IAA domain** (domain, interpro) [783\u2013876]\n- **Auxin response factor** (family, interpro) [26\u2013879]\n- **PB1-like domain** (domain, interpro) [790\u2013874]\n\n## GO annotations\n**Molecular Function**\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006351] DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']_\n\n## Interaction partners (STRING, top 10)\n_Unavailable \u2014 [NotFoundError] STRING /api/json/interaction_partners \u2192 HTTP 404: [{ \"Error\" : \"not found\", \"ErrorMessage\" : \"<p>Sorry, STRING did not find a protein called 'TraesCS6D02G127600' in the taxon '4565'.</p><p>Generally, STRING understands a number of different names/sym_\n\n## Cross-references\n- UniProtKB Gene Name: A0A3B6QEX9\n- UniProtKB Gene Name: A0A3B6QC06\n- KNETMINER_WHEAT: TraesCS6D02G127600\n- Wheat Expression: TraesCS6D02G127600\n- WikiGene: 123143962\n- WikiGene: 123132397\n- NCBI gene (formerly Entrezgene): 123143962\n- NCBI gene (formerly Entrezgene): 123132397\n- Expression Atlas: TraesCS6D02G127600\n\n## Literature\n1 hits total; showing top 1.\n- **Stage-specific transcriptomic responses of wheat to heat, drought, and combined stress: AP2/ERF regulatory networks and functional characterization of TaEREBP1-L** \u2014 Han J, Xia J, Wang C, Wang Z, Zhao Z, Wang Z, Zhang Y. (PMID:41254527; doi:10.1186/s12870-025-07615-2)\n",
+  "sections": {
+   "annotation": {
+    "end": 91522540,
+    "start": 91516586,
+    "assembly_name": "IWGSC",
+    "biotype": "protein_coding",
+    "seq_region_name": "6D",
+    "canonical_transcript": "TraesCS6D02G127600.2",
+    "id": "TraesCS6D02G127600",
+    "logic_name": "iwgsc_high_conf",
+    "db_type": "core",
+    "source": "IWGSC",
+    "object_type": "Gene",
+    "strand": 1,
+    "organism": "triticum_aestivum",
+    "upstream_version": null
+   },
+   "protein": {
+    "locus_query": "TraesCS6D02G127600",
+    "primaryAccession": "A0A3B6QEX9",
+    "uniProtkbId": "A0A3B6QEX9_WHEAT",
+    "entryType": "UniProtKB unreviewed (TrEMBL)",
+    "reviewed": false,
+    "recommendedName": "Auxin response factor",
+    "geneNames": [
+     "LOC123143962"
+    ],
+    "organism": "Triticum aestivum",
+    "taxonId": 4565,
+    "sequenceLength": 922,
+    "web_url": "https://www.uniprot.org/uniprotkb/A0A3B6QEX9",
+    "upstream_version": "2026_03"
+   },
+   "xrefs": {
+    "locus": "TraesCS6D02G127600",
+    "organism": "triticum_aestivum",
+    "count": 9,
+    "xrefs": [
+     {
+      "dbname": "Uniprot_gn",
+      "description": null,
+      "primary_id": "A0A3B6QEX9",
+      "display_id": "LOC123143962",
+      "db_display_name": "UniProtKB Gene Name",
+      "version": null,
+      "synonyms": [],
+      "info_text": "",
+      "info_type": "DEPENDENT"
+     },
+     {
+      "description": null,
+      "dbname": "Uniprot_gn",
+      "primary_id": "A0A3B6QC06",
+      "display_id": "LOC123143962",
+      "db_display_name": "UniProtKB Gene Name",
+      "version": null,
+      "synonyms": [],
+      "info_text": "",
+      "info_type": "DEPENDENT"
+     },
+     {
+      "info_type": "DEPENDENT",
+      "version": "0",
+      "synonyms": [],
+      "info_text": "",
+      "display_id": "TraesCS6D02G127600",
+      "db_display_name": "KNETMINER_WHEAT",
+      "primary_id": "TraesCS6D02G127600",
+      "dbname": "KNETMINER_WHEAT",
+      "description": null
+     },
+     {
+      "dbname": "WHEATEXP_GENE",
+      "description": null,
+      "primary_id": "TraesCS6D02G127600",
+      "db_display_name": "Wheat Expression",
+      "display_id": "TraesCS6D02G127600",
+      "info_text": "",
+      "version": "0",
+      "synonyms": [],
+      "info_type": "DEPENDENT"
+     },
+     {
+      "description": "auxin response factor 6",
+      "dbname": "WikiGene",
+      "db_display_name": "WikiGene",
+      "display_id": "LOC123143962",
+      "primary_id": "123143962",
+      "info_type": "DEPENDENT",
+      "info_text": "",
+      "synonyms": [],
+      "version": "0"
+     },
+     {
+      "display_id": "LOC123132397",
+      "db_display_name": "WikiGene",
+      "primary_id": "123132397",
+      "dbname": "WikiGene",
+      "description": "auxin response factor 6",
+      "info_type": "DEPENDENT",
+      "synonyms": [],
+      "version": "0",
+      "info_text": ""
+     },
+     {
+      "info_type": "DEPENDENT",
+      "info_text": "",
+      "version": "0",
+      "synonyms": [],
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "display_id": "LOC123143962",
+      "primary_id": "123143962",
+      "description": "auxin response factor 6",
+      "dbname": "EntrezGene"
+     },
+     {
+      "info_type": "DEPENDENT",
+      "version": "0",
+      "synonyms": [],
+      "info_text": "",
+      "display_id": "LOC123132397",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "primary_id": "123132397",
+      "description": "auxin response factor 6",
+      "dbname": "EntrezGene"
+     },
+     {
+      "info_text": "",
+      "synonyms": [],
+      "version": "0",
+      "info_type": "DIRECT",
+      "primary_id": "TraesCS6D02G127600",
+      "db_display_name": "Expression Atlas",
+      "display_id": "TraesCS6D02G127600",
+      "description": null,
+      "dbname": "ArrayExpress"
+     }
+    ],
+    "by_db": {
+     "Uniprot_gn": [
+      "A0A3B6QEX9",
+      "A0A3B6QC06"
+     ],
+     "KNETMINER_WHEAT": [
+      "TraesCS6D02G127600"
+     ],
+     "WHEATEXP_GENE": [
+      "TraesCS6D02G127600"
+     ],
+     "WikiGene": [
+      "123143962",
+      "123132397"
+     ],
+     "EntrezGene": [
+      "123143962",
+      "123132397"
+     ],
+     "ArrayExpress": [
+      "TraesCS6D02G127600"
+     ]
+    }
+   },
+   "pathways": null,
+   "interactions": null,
+   "literature": {
+    "locus": "TraesCS6D02G127600",
+    "organism": "triticum_aestivum",
+    "query": "TraesCS6D02G127600 AND wheat",
+    "hitCount": 1,
+    "total": 1,
+    "returned": 1,
+    "truncated": false,
+    "next_cursor": null,
+    "abstracts_included": true,
+    "hits": [
+     {
+      "id": "41254527",
+      "source": "MED",
+      "pmid": "41254527",
+      "pmcid": "PMC12625192",
+      "doi": "10.1186/s12870-025-07615-2",
+      "title": "Stage-specific transcriptomic responses of wheat to heat, drought, and combined stress: AP2/ERF regulatory networks and functional characterization of TaEREBP1-L.",
+      "authorString": "Han J, Xia J, Wang C, Wang Z, Zhao Z, Wang Z, Zhang Y.",
+      "journalTitle": "BMC plant biology",
+      "pubYear": "2025",
+      "firstPublicationDate": "2025-11-18",
+      "citedByCount": 0,
+      "isOpenAccess": "Y",
+      "hasPDF": "Y",
+      "abstractText": "Wheat (Triticum aestivum L.) production is increasingly constrained by drought, heat, and their combination, especially in arid regions like Xinjiang, China. While previous studies have focused on single-stress responses, the molecular mechanisms underlying wheat adaptation to combined drought and heat stress (HD) remain elusive. Here, we performed transcriptome profiling at three key spike developmental stages-Jointing Stage (JS), Stamen and Pistil Primordial Differentiation Stage (SPDS), and Tetrad Stage (TS)-under drought (DS), heat (HS), and combined HD conditions. Comparative analysis revealed that HD triggered the most extensive transcriptional reprogramming, with 3,884, 5,230, and 2,793 stage-specific upregulated genes across JS, SPDS, and TS, respectively. Notably, the overlap between HS- and HD-responsive genes was higher than that between DS and HD during early stages, indicating stress-specific transcriptional shifts. Functional enrichment highlighted pathways related to osmotic adjustment, oxidative defense, and phytohormone signaling, particularly ABA and JA biosynthesis. Among stress-responsive transcription factors, the AP2/ERF family showed prominent enrichment, with TaEREBP1-L (TraesCS5A02G215900) identified as a central regulator. Dual-luciferase reporter assays confirmed that TaEREBP1-L directly activated the promoters of ABA- and JA-pathway genes (AAO3, AOC2). Co-expression analysis further revealed its coordination with membrane transporters (e.g., ABC and MATE families), suggesting an integrative regulatory function under HD conditions. Transgenic Arabidopsis overexpressing TaEREBP1-L displayed significantly enhanced drought and heat tolerance, evidenced by increased proline content, antioxidant enzyme activity (SOD, CAT), and elevated ABA/JA levels. These results demonstrate that TaEREBP1-L confers broad-spectrum stress tolerance by orchestrating hormonal and physiological pathways. Our findings provide valuable insights into combinatorial stress adaptation and identify TaEREBP1-L as a promising target for improving wheat resilience under climate-related challenges.",
+      "web_url": "https://europepmc.org/article/PMC/PMC12625192"
+     }
+    ],
+    "upstream_version": null
+   },
+   "go_annotations": {
+    "uniprot_accession": "A0A3B6QEX9",
+    "numberOfHits": 5,
+    "total": 5,
+    "returned": 5,
+    "truncated": false,
+    "next_cursor": null,
+    "annotations": [
+     {
+      "geneProductId": "UniProtKB:A0A3B6QEX9",
+      "symbol": "LOC123143962",
+      "qualifier": "enables",
+      "goId": "GO:0003677",
+      "goName": "DNA binding",
+      "goAspect": "molecular_function",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000501",
+      "reference": "GO_REF:0000120",
+      "assignedBy": "UniProt",
+      "taxonId": 4565,
+      "taxonName": "Triticum aestivum",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR003340"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR044835"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniRule",
+          "id": "UR000399996"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A0A3B6QEX9",
+      "symbol": "LOC123143962",
+      "qualifier": "involved_in",
+      "goId": "GO:0006351",
+      "goName": "DNA-templated transcription",
+      "goAspect": "biological_process",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000256",
+      "reference": "GO_REF:0000104",
+      "assignedBy": "UniProt",
+      "taxonId": 4565,
+      "taxonName": "Triticum aestivum",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniRule",
+          "id": "UR000399996"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A0A3B6QEX9",
+      "symbol": "LOC123143962",
+      "qualifier": "involved_in",
+      "goId": "GO:0006355",
+      "goName": "regulation of DNA-templated transcription",
+      "goAspect": "biological_process",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000501",
+      "reference": "GO_REF:0000120",
+      "assignedBy": "UniProt",
+      "taxonId": 4565,
+      "taxonName": "Triticum aestivum",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR044835"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniRule",
+          "id": "UR000399996"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A0A3B6QEX9",
+      "symbol": "LOC123143962",
+      "qualifier": "involved_in",
+      "goId": "GO:0009725",
+      "goName": "response to hormone",
+      "goAspect": "biological_process",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000256",
+      "reference": "GO_REF:0000002",
+      "assignedBy": "InterPro",
+      "taxonId": 4565,
+      "taxonName": "Triticum aestivum",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR044835"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "geneProductId": "UniProtKB:A0A3B6QEX9",
+      "symbol": "LOC123143962",
+      "qualifier": "located_in",
+      "goId": "GO:0005634",
+      "goName": "nucleus",
+      "goAspect": "cellular_component",
+      "goEvidence": "IEA",
+      "evidenceCode": "ECO:0000501",
+      "reference": "GO_REF:0000120",
+      "assignedBy": "UniProt",
+      "taxonId": 4565,
+      "taxonName": "Triticum aestivum",
+      "date": "20260727",
+      "withFrom": [
+       {
+        "connectedXrefs": [
+         {
+          "db": "InterPro",
+          "id": "IPR010525"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniProtKB-SubCell",
+          "id": "SL-0191"
+         }
+        ]
+       },
+       {
+        "connectedXrefs": [
+         {
+          "db": "UniRule",
+          "id": "UR000399996"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "by_aspect": {
+     "molecular_function": [
+      {
+       "goId": "GO:0003677",
+       "goName": "DNA binding"
+      }
+     ],
+     "biological_process": [
+      {
+       "goId": "GO:0006351",
+       "goName": "DNA-templated transcription"
+      },
+      {
+       "goId": "GO:0006355",
+       "goName": "regulation of DNA-templated transcription"
+      },
+      {
+       "goId": "GO:0009725",
+       "goName": "response to hormone"
+      }
+     ],
+     "cellular_component": [
+      {
+       "goId": "GO:0005634",
+       "goName": "nucleus"
+      }
+     ]
+    },
+    "by_aspect_deduped_on": "goId",
+    "upstream_version": null
+   },
+   "domains": {
+    "accession": "A0A3B6QEX9",
+    "found": true,
+    "domain_count": 19,
+    "total": 19,
+    "returned": 19,
+    "truncated": false,
+    "domains": [
+     {
+      "accession": "cd10017",
+      "name": "Plant-specific B3-DNA binding domain",
+      "type": "domain",
+      "source_database": "cdd",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 135,
+        "end": 231
+       }
+      ]
+     },
+     {
+      "accession": "G3DSA:2.30.30.1040",
+      "name": null,
+      "type": "homologous_superfamily",
+      "source_database": "cathgene3d",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 295,
+        "end": 368
+       }
+      ]
+     },
+     {
+      "accession": "G3DSA:2.40.330.10",
+      "name": "DNA-binding pseudobarrel domain",
+      "type": "homologous_superfamily",
+      "source_database": "cathgene3d",
+      "interpro": "IPR015300",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 134,
+        "end": 232
+       }
+      ]
+     },
+     {
+      "accession": "G3DSA:3.10.20.90",
+      "name": "Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1",
+      "type": "homologous_superfamily",
+      "source_database": "cathgene3d",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 786,
+        "end": 879
+       }
+      ]
+     },
+     {
+      "accession": "IPR003340",
+      "name": "B3 DNA binding domain",
+      "type": "domain",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": [
+       {
+        "identifier": "GO:0003677",
+        "name": "DNA binding",
+        "category": {
+         "code": "F",
+         "name": "molecular_function"
+        }
+       }
+      ],
+      "locations": [
+       {
+        "start": 135,
+        "end": 233
+       }
+      ]
+     },
+     {
+      "accession": "IPR010525",
+      "name": "Auxin response factor domain",
+      "type": "domain",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": [
+       {
+        "identifier": "GO:0003677",
+        "name": "DNA binding",
+        "category": {
+         "code": "F",
+         "name": "molecular_function"
+        }
+       },
+       {
+        "identifier": "GO:0006355",
+        "name": "regulation of DNA-templated transcription",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       },
+       {
+        "identifier": "GO:0009725",
+        "name": "response to hormone",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       },
+       {
+        "identifier": "GO:0005634",
+        "name": "nucleus",
+        "category": {
+         "code": "C",
+         "name": "cellular_component"
+        }
+       }
+      ],
+      "locations": [
+       {
+        "start": 280,
+        "end": 363
+       }
+      ]
+     },
+     {
+      "accession": "IPR015300",
+      "name": "DNA-binding pseudobarrel domain superfamily",
+      "type": "homologous_superfamily",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 121,
+        "end": 260
+       }
+      ]
+     },
+     {
+      "accession": "IPR033389",
+      "name": "AUX/IAA domain",
+      "type": "domain",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 783,
+        "end": 876
+       }
+      ]
+     },
+     {
+      "accession": "IPR044835",
+      "name": "Auxin response factor",
+      "type": "family",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": [
+       {
+        "identifier": "GO:0003677",
+        "name": "DNA binding",
+        "category": {
+         "code": "F",
+         "name": "molecular_function"
+        }
+       },
+       {
+        "identifier": "GO:0006355",
+        "name": "regulation of DNA-templated transcription",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       },
+       {
+        "identifier": "GO:0009725",
+        "name": "response to hormone",
+        "category": {
+         "code": "P",
+         "name": "biological_process"
+        }
+       }
+      ],
+      "locations": [
+       {
+        "start": 26,
+        "end": 879
+       }
+      ]
+     },
+     {
+      "accession": "IPR053793",
+      "name": "PB1-like domain",
+      "type": "domain",
+      "source_database": "interpro",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 790,
+        "end": 874
+       }
+      ]
+     },
+     {
+      "accession": "PF02309",
+      "name": "AUX/IAA family",
+      "type": "family",
+      "source_database": "pfam",
+      "interpro": "IPR033389",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 783,
+        "end": 876
+       }
+      ]
+     },
+     {
+      "accession": "PF02362",
+      "name": "B3 DNA binding domain",
+      "type": "domain",
+      "source_database": "pfam",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 136,
+        "end": 232
+       }
+      ]
+     },
+     {
+      "accession": "PF06507",
+      "name": "Auxin response factor ancillary domain",
+      "type": "domain",
+      "source_database": "pfam",
+      "interpro": "IPR010525",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 280,
+        "end": 363
+       }
+      ]
+     },
+     {
+      "accession": "PS50863",
+      "name": "B3 DNA-binding domain profile",
+      "type": "domain",
+      "source_database": "profile",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 136,
+        "end": 233
+       }
+      ]
+     },
+     {
+      "accession": "PS51745",
+      "name": "PB1 domain profile",
+      "type": "domain",
+      "source_database": "profile",
+      "interpro": "IPR053793",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 790,
+        "end": 874
+       }
+      ]
+     },
+     {
+      "accession": "PTHR31384",
+      "name": "AUXIN RESPONSE FACTOR 4-RELATED",
+      "type": "family",
+      "source_database": "panther",
+      "interpro": "IPR044835",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 26,
+        "end": 879
+       }
+      ]
+     },
+     {
+      "accession": "SM01019",
+      "name": "B3 DNA binding domain",
+      "type": "domain",
+      "source_database": "smart",
+      "interpro": "IPR003340",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 136,
+        "end": 233
+       }
+      ]
+     },
+     {
+      "accession": "SSF101936",
+      "name": "DNA-binding pseudobarrel domain",
+      "type": "homologous_superfamily",
+      "source_database": "ssf",
+      "interpro": "IPR015300",
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 121,
+        "end": 260
+       }
+      ]
+     },
+     {
+      "accession": "SSF54277",
+      "name": "CAD & PB1 domains",
+      "type": "homologous_superfamily",
+      "source_database": "ssf",
+      "interpro": null,
+      "go_terms": null,
+      "locations": [
+       {
+        "start": 780,
+        "end": 866
+       }
+      ]
+     }
+    ],
+    "count_by_type": {
+     "domain": 10,
+     "homologous_superfamily": 6,
+     "family": 3
+    },
+    "upstream_version": "110.0"
+   }
+  }
+ }
+}
