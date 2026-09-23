@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **One cache path for every backend (#96).** The 14 per-backend `_get`
+  copies now call `_http.cached_get`, which owns the cache key, hit, fetch,
+  parse and store. Fix: six of them (Ensembl Plants, Ensembl variation,
+  Gramene, OrthoDB, QuickGO, InterPro) let a non-JSON 200 escape as a raw
+  `JSONDecodeError`; every backend now raises the typed `PlantGenomicsError`
+  ("returned non-JSON") and caches nothing. `tests/test_cache_contract.py`
+  asserts the contract for all 14.
+
 - **Rows past the cap are reachable (#123).** `orthodb_orthologs`,
   `gramene_homologs`, `aragwas_associations`, `arabidopsis_natural_variation`,
   `locus_literature` and `locus_go_annotations` take `cursor` and return
