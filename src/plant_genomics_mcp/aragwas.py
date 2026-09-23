@@ -127,7 +127,7 @@ async def lookup_locus(
     pages = 0
     while url and pages < MAX_PAGES:
         page = await _get(client, url)
-        total = int(page.get("count") or 0)
+        total = _http.stated_count(page, "count", service="AraGWAS associations")
         for assoc in page.get("results") or []:
             if isinstance(assoc, dict):
                 associations.append(_project(assoc, locus))

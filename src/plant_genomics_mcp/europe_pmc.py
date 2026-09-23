@@ -13,6 +13,7 @@ https://europepmc.org/RestfulWebService.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 import httpx
@@ -20,6 +21,7 @@ import httpx
 from plant_genomics_mcp import _http, cache, organisms
 from plant_genomics_mcp.errors import (
     PlantGenomicsError,
+    UpstreamUnavailableError,
 )
 
 BASE_URL = "https://www.ebi.ac.uk/europepmc/webservices/rest"
@@ -53,32 +55,67 @@ _HIT_FIELDS = (
 )
 
 
+def _search_shape_problem(raw: Any) -> str | None:
+    """Why a /search body cannot be read as an answer, or None if it can.
+
+    Issue #141: Europe PMC intermittently answers 200 with ``{"version":"6.9"}``
+    and nothing else. Read with defaults, that is hitCount 0 and no hits — a
+    false "no papers" — so a body is an answer only if it states its count.
+    A genuine zero states ``"hitCount": 0`` and an empty ``resultList``.
+    """
+    if not isinstance(raw, dict):
+        return f"non-dict payload: {type(raw).__name__}"
+    hit_count = raw.get("hitCount")
+    if isinstance(hit_count, bool) or not isinstance(hit_count, int):
+        return f"no integer hitCount in {str(raw)[:120]}"
+    result_list = raw.get("resultList")
+    if not isinstance(result_list, dict) or not isinstance(result_list.get("result"), list):
+        return f"no resultList.result list in {str(raw)[:120]}"
+    return None
+
+
 async def _get(
     client: httpx.AsyncClient,
     path: str,
     params: dict[str, Any] | None = None,
+    shape_problem: Callable[[Any], str | None] | None = None,
 ) -> Any:
-    """GET an Europe PMC endpoint with retry on 429/5xx."""
+    """GET an Europe PMC endpoint with retry on 429/5xx.
+
+    With ``shape_problem``, a body it rejects is asked for once more, then
+    raised as :class:`UpstreamUnavailableError` — and is never cached, so one
+    malformed answer cannot be served as the answer for the cache TTL.
+    """
     key = cache.make_key("GET", BASE_URL, path, params)
     cached = _CACHE.get(key)
     if cached is not None:
         return cached
-    resp = await _http.request_with_retry(
-        client,
-        "GET",
-        f"{BASE_URL}{path}",
-        service=f"Europe PMC {path}",
-        params=params,
-        headers={"Accept": "application/json"},
-        timeout=DEFAULT_TIMEOUT,
-        max_retries=MAX_RETRIES,
+    problem: str | None = None
+    for _attempt in range(2):
+        resp = await _http.request_with_retry(
+            client,
+            "GET",
+            f"{BASE_URL}{path}",
+            service=f"Europe PMC {path}",
+            params=params,
+            headers={"Accept": "application/json"},
+            timeout=DEFAULT_TIMEOUT,
+            max_retries=MAX_RETRIES,
+        )
+        try:
+            result = resp.json()
+        except ValueError as e:
+            raise PlantGenomicsError(
+                f"Europe PMC {path} returned non-JSON: {resp.text[:200]}"
+            ) from e
+        problem = shape_problem(result) if shape_problem else None
+        if problem is None:
+            _CACHE.set(key, result)
+            return result
+    raise UpstreamUnavailableError(
+        f"Europe PMC {path} answered 200 twice without a readable result ({problem}); "
+        "this is not a count of zero"
     )
-    try:
-        result = resp.json()
-    except ValueError as e:
-        raise PlantGenomicsError(f"Europe PMC {path} returned non-JSON: {resp.text[:200]}") from e
-    _CACHE.set(key, result)
-    return result
 
 
 def _normalize(hit: dict[str, Any], include_abstract: bool = True) -> dict[str, Any]:
@@ -89,6 +126,10 @@ def _normalize(hit: dict[str, Any], include_abstract: bool = True) -> dict[str, 
     is observable in the wire payload.
     """
     normalized: dict[str, Any] = {k: hit.get(k) for k in _HIT_FIELDS}
+    # Issue #134: resultType=core carries the journal under journalInfo; the
+    # flat journalTitle is a lite-only field and was null on every real hit.
+    journal = (hit.get("journalInfo") or {}).get("journal") or {}
+    normalized["journalTitle"] = hit.get("journalTitle") or journal.get("title")
     if not include_abstract:
         # Measured on AT3G51240: abstractText is 10,968 of 16,360 bytes — 67% of
         # the payload at the default page size.
@@ -139,23 +180,16 @@ async def lookup_locus(
         "resultType": "core",
         "pageSize": size,
     }
-    raw = await _get(client, "/search", params=params)
-    if not isinstance(raw, dict):
-        raise PlantGenomicsError(
-            f"Europe PMC /search returned non-dict payload: {type(raw).__name__}"
-        )
-    result_list = raw.get("resultList") or {}
-    results = result_list.get("result") or []
-    if not isinstance(results, list):
-        raise PlantGenomicsError(
-            f"Europe PMC /search resultList.result is not a list: {type(results).__name__}"
-        )
+    raw = await _get(client, "/search", params=params, shape_problem=_search_shape_problem)
+    # _search_shape_problem has vouched for both: no defaults here, because a
+    # defaulted missing count is exactly how #141's false zeros were made.
+    results = raw["resultList"]["result"]
     hits = [_normalize(r, include_abstract) for r in results if isinstance(r, dict)]
     return {
         "locus": locus,
         "organism": record.canonical,
         "query": query,
-        "hitCount": int(raw.get("hitCount", 0)),
+        "hitCount": raw["hitCount"],
         "returned": len(hits),
         # Makes the payload self-describing: without this, a null abstractText
         # is ambiguous between "not requested" and "this article has none", and

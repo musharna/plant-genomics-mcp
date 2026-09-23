@@ -134,7 +134,7 @@ async def lookup_by_uniprot(
             f"QuickGO /annotation/search results is not a list: {type(results).__name__}"
         )
     annotations = [_normalize(r) for r in results if isinstance(r, dict)]
-    total = int(raw.get("numberOfHits", 0))
+    total = _http.stated_count(raw, "numberOfHits", service="QuickGO /annotation/search")
     return {
         "uniprot_accession": accession,
         "numberOfHits": total,

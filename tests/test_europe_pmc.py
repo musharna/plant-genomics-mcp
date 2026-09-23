@@ -21,7 +21,13 @@ live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 t
 
 
 def _one_result(**overrides):
-    """Synthetic Europe PMC result row shaped like the resultType=core wire format."""
+    """Synthetic Europe PMC result row shaped like the resultType=core wire format.
+
+    ``core`` carries the journal under ``journalInfo.journal.title``; the flat
+    ``journalTitle`` is a ``lite``-only field (live record, 2026-09-22). This
+    fixture used to carry ``journalTitle``, which is how the projection's
+    lite-shaped key survived: no test could see it was null on every real hit.
+    """
     base = {
         "id": "12345678",
         "source": "MED",
@@ -30,7 +36,11 @@ def _one_result(**overrides):
         "doi": "10.1000/example.001",
         "title": "Functional analysis of NAC001 in Arabidopsis thaliana.",
         "authorString": "Doe J, Smith A.",
-        "journalTitle": "Plant Cell",
+        "journalInfo": {
+            "volume": "36",
+            "yearOfPublication": 2024,
+            "journal": {"title": "The Plant cell", "medlineAbbreviation": "Plant Cell"},
+        },
         "pubYear": "2024",
         "firstPublicationDate": "2024-03-15",
         "citedByCount": 7,
@@ -243,3 +253,95 @@ async def test_response_says_which_mode_produced_it(httpx_mock: HTTPXMock) -> No
         full = await europe_pmc.lookup_locus(client, "AT3G51240")
     assert full["abstracts_included"] is True
     assert full["hits"][0]["abstractText"] == "long text"
+
+
+# ---------- issue #134: the journal the description promises ----------
+
+_AT1G01010_URL = (
+    "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
+    "?query=AT1G01010&format=json&resultType=core&pageSize=10"
+)
+
+
+@pytest.mark.asyncio
+async def test_the_journal_is_read_from_where_a_core_record_carries_it(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """journalTitle was null on all 160 hits of the dossier run (#134)."""
+    httpx_mock.add_response(
+        url=_AT1G01010_URL,
+        json={
+            "hitCount": 2,
+            "resultList": {
+                "result": [_one_result(), _one_result(id="2", journalInfo=None, pmid="2")]
+            },
+        },
+    )
+    async with httpx.AsyncClient() as client:
+        result = await europe_pmc.lookup_locus(client, "AT1G01010")
+    assert result["hits"][0]["journalTitle"] == "The Plant cell"
+    # A record without journalInfo (a preprint) still reads as no journal.
+    assert result["hits"][1]["journalTitle"] is None
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_hits_carry_a_journal() -> None:
+    """Real execution: the key the projection reads exists on real records."""
+    async with httpx.AsyncClient() as client:
+        result = await europe_pmc.lookup_locus(client, "AT1G19850", size=5)
+    assert result["returned"] > 0
+    assert any(isinstance(h["journalTitle"], str) for h in result["hits"])
+
+
+# ---------- issue #141: an answer without a count is not a count of zero ----------
+
+_EMPTY_BODY = {"version": "6.9"}  # verbatim, 200 from /search, caught live 2026-09-22
+
+
+@pytest.mark.asyncio
+async def test_a_body_with_no_count_is_asked_again_and_never_cached_as_zero(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """Europe PMC intermittently answers 200 with only a version (#141).
+
+    It was read as hitCount 0 and cached for the TTL, so genes with 22-91
+    papers came back empty and ok=true. One fresh request recovers it.
+    """
+    httpx_mock.add_response(url=_AT1G01010_URL, json=_EMPTY_BODY)
+    httpx_mock.add_response(
+        url=_AT1G01010_URL, json={"hitCount": 61, "resultList": {"result": [_one_result()]}}
+    )
+    async with httpx.AsyncClient() as client:
+        result = await europe_pmc.lookup_locus(client, "AT1G01010")
+    assert (result["hitCount"], result["returned"]) == (61, 1)
+    assert len(httpx_mock.get_requests()) == 2
+
+
+@pytest.mark.asyncio
+async def test_a_body_with_no_count_twice_is_an_upstream_error_and_is_not_cached(
+    httpx_mock: HTTPXMock,
+) -> None:
+    from plant_genomics_mcp.errors import UpstreamUnavailableError
+
+    httpx_mock.add_response(url=_AT1G01010_URL, json=_EMPTY_BODY, is_reusable=True)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError, match="hitCount"):
+            await europe_pmc.lookup_locus(client, "AT1G01010")
+    assert europe_pmc._CACHE.stats()["size"] == 0  # the bad body was not kept
+
+
+@pytest.mark.asyncio
+async def test_a_real_zero_is_still_a_zero(httpx_mock: HTTPXMock) -> None:
+    """Positive control for the two tests above: a genuine empty answer."""
+    httpx_mock.add_response(
+        url=_AT1G01010_URL,
+        json={"version": "6.9", "hitCount": 0, "request": {}, "resultList": {"result": []}},
+    )
+    async with httpx.AsyncClient() as client:
+        result = await europe_pmc.lookup_locus(client, "AT1G01010")
+    assert (result["hitCount"], result["returned"], result["hits"]) == (0, 0, [])
+    assert len(httpx_mock.get_requests()) == 1
+    # The cache is live in this suite: a valid body IS kept, so the size-0
+    # assertion above is a claim about the bad body, not about a dead cache.
+    assert europe_pmc._CACHE.stats()["size"] == 1

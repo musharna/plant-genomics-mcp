@@ -112,7 +112,7 @@ async def lookup_by_uniprot(client: httpx.AsyncClient, accession: str) -> dict[s
         page = await _get(client, url)
         if version is None:
             version = page.get("_upstream_version")
-        total = int(page.get("count") or 0)
+        total = _http.stated_count(page, "count", service="InterPro entry/protein")
         for result in page.get("results") or []:
             if isinstance(result, dict):
                 domains.append(_project(result))

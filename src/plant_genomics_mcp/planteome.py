@@ -173,7 +173,9 @@ async def lookup_locus(
         "locus": locus,
         "organism": record.canonical,
         "taxon": taxon,
-        "numberOfHits": int(response.get("numFound", 0)),
+        "numberOfHits": _http.stated_count(
+            response, "numFound", service=f"Planteome {SELECT_PATH}"
+        ),
         "returned": len(annotations),
         "annotations": annotations,
         "by_ontology": _rollup_by_ontology(annotations),
