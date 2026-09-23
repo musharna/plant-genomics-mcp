@@ -275,6 +275,11 @@ async def lookup_locus(
     wire-format query field stays ``organism_id:<taxid>`` — UniProt's
     REST API has not renamed it.
 
+    A gene *symbol* (``ARF1``) matches through ``gene:`` too. When the hits
+    of the pass that answers name more than one locus and none of them is
+    the input, the symbol is shared and ``InvalidArguments`` lists the loci
+    instead of answering with whichever hit UniProt ranked first (#128).
+
     Raises ``NotFoundError`` if the search/fetch returns zero hits.
     """
     if _looks_like_uniprot_accession(locus):
@@ -287,13 +292,43 @@ async def lookup_locus(
     # Arabidopsis and rice still answer through `gene:` (ordered-locus names).
     base = f"(gene:{locus} OR xref:ensemblplants-{locus}) AND organism_id:{taxid}"
     # Pass 1: reviewed only (Swiss-Prot).
-    results = await _search(client, f"{base} AND reviewed:true", size=1)
+    results = await _search(client, f"{base} AND reviewed:true", size=SYMBOL_PROBE_SIZE)
     if not results:
         # Pass 2: drop the reviewed filter; TrEMBL is acceptable.
-        results = await _search(client, base, size=1)
+        results = await _search(client, base, size=SYMBOL_PROBE_SIZE)
     if not results:
         raise NotFoundError(f"UniProt has no entry for gene={locus} organism_id={taxid}")
+    _refuse_shared_symbol(locus, taxid, results)
     return _normalize(results[0], locus_query=locus)
+
+
+# Issue #128: `size=1` returned UniProt's first hit for a symbol and hid the
+# rest; ARF1 names two reviewed Arabidopsis genes (AT1G59750 auxin response
+# factor 1, AT2G47170 ADP-ribosylation factor 1; live, 2026-09-23).
+SYMBOL_PROBE_SIZE = 25
+
+
+def _refuse_shared_symbol(query: str, taxid: int, hits: list[dict[str, Any]]) -> None:
+    """Raise when ``hits`` span several loci and ``query`` is none of them.
+
+    A locus query is recognised by appearing among its hits' loci, so an
+    entry that lists the queried locus beside another (a tandem duplicate)
+    still answers. A symbol whose hits are all one locus (ARF5: two entries,
+    both AT1G19850) is unambiguous and answers too.
+    """
+    loci: list[str] = []
+    for hit in hits:
+        for value in _member_loci(hit)[0]:
+            if value.upper() == query.upper():
+                return
+            if value not in loci:
+                loci.append(value)
+    if len(loci) > 1:
+        more = " (first page of hits only)" if len(hits) >= SYMBOL_PROBE_SIZE else ""
+        raise InvalidArguments(
+            f"{query!r} is not a locus id and UniProt matches it to {len(loci)} loci in "
+            f"organism_id={taxid}{more}: {', '.join(loci)}. Pass one of them as `locus`."
+        )
 
 
 # ---- issue #124: entry -> member loci ---------------------------------------
