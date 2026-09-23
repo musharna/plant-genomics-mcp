@@ -26,8 +26,9 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import _http, cache, organisms
+from plant_genomics_mcp import _http, cache, organisms, validators
 from plant_genomics_mcp.errors import (
+    InvalidArguments,
     NotFoundError,
     PlantGenomicsError,
 )
@@ -293,3 +294,186 @@ async def lookup_locus(
     if not results:
         raise NotFoundError(f"UniProt has no entry for gene={locus} organism_id={taxid}")
     return _normalize(results[0], locus_query=locus)
+
+
+# ---- issue #124: entry -> member loci ---------------------------------------
+
+# The entry accessions UniProt can filter on as a cross-reference, and the
+# xref database each one lives in. PANTHER subfamilies (PTHR31384:SF10) are
+# left out: the colon is Lucene syntax in a query term.
+_ENTRY_XREF_DB: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"^IPR\d{6}\Z"), "interpro"),
+    (re.compile(r"^PF\d{5}\Z"), "pfam"),
+    (re.compile(r"^PTHR\d{5}\Z"), "panther"),
+)
+ENTRY_MEMBERS_DEFAULT_PAGE = 100
+ENTRY_MEMBERS_MAX_PAGE = 500  # UniProt's documented /search page ceiling
+_MEMBER_FIELDS = (
+    "accession,reviewed,gene_primary,gene_oln,protein_name,"
+    "xref_ensemblplants,xref_araport,xref_tair"
+)
+_NEXT_LINK = re.compile(r'<([^<>]*)>;\s*rel="next"')
+
+
+def _entry_xref_db(entry: str) -> str:
+    for pattern, db in _ENTRY_XREF_DB:
+        if pattern.match(entry):
+            return db
+    raise InvalidArguments(
+        f"entry_members: {entry!r} is not an InterPro (IPR000000), Pfam (PF00000) or "
+        "PANTHER family (PTHR00000) accession"
+    )
+
+
+def _member_loci(hit: dict[str, Any]) -> tuple[list[str], str | None]:
+    """The member's locus ids, and which cross-reference they came from.
+
+    Preference is the id the server's own locus tools accept: an EnsemblPlants
+    xref's GeneId (rice Os04g0664400, wheat TraesCS1A02G156600), else the
+    Araport / TAIR AGI Arabidopsis carries instead, else UniProt's
+    ordered-locus name (AGIs recased, as every other tool spells them).
+    """
+    xrefs = [x for x in hit.get("uniProtKBCrossReferences") or [] if isinstance(x, dict)]
+
+    def _ids(database: str, *, gene_id: bool = False) -> list[str]:
+        found: list[str] = []
+        for x in xrefs:
+            if x.get("database") != database:
+                continue
+            value = x.get("id")
+            if gene_id:
+                props = {p.get("key"): p.get("value") for p in x.get("properties") or []}
+                value = props.get("GeneId")
+            if isinstance(value, str) and value and value not in found:
+                found.append(value)
+        return found
+
+    for source, loci in (
+        ("EnsemblPlants", _ids("EnsemblPlants", gene_id=True)),
+        ("Araport", _ids("Araport")),
+        ("TAIR", _ids("TAIR")),
+    ):
+        if loci:
+            return loci, source
+    ordered: list[str] = []
+    for gene in hit.get("genes") or []:
+        for name in gene.get("orderedLocusNames") or []:
+            value = name.get("value")
+            if isinstance(value, str) and value:
+                value = value.upper() if validators.AGI_RE.match(value) else value
+                if value not in ordered:
+                    ordered.append(value)
+    return (ordered, "ordered_locus_name") if ordered else ([], None)
+
+
+def _member(hit: dict[str, Any]) -> dict[str, Any]:
+    genes = hit.get("genes") or [{}]
+    description = hit.get("proteinDescription") or {}
+    name = (description.get("recommendedName") or {}).get("fullName") or {}
+    if not name:
+        submitted = description.get("submissionNames") or [{}]
+        name = submitted[0].get("fullName") or {}
+    loci, source = _member_loci(hit)
+    return {
+        "accession": hit.get("primaryAccession"),
+        "reviewed": "reviewed" in str(hit.get("entryType", "")).lower()
+        and "unreviewed" not in str(hit.get("entryType", "")).lower(),
+        "symbol": (genes[0].get("geneName") or {}).get("value"),
+        "protein_name": name.get("value"),
+        "locus": loci[0] if loci else None,
+        "loci": loci,
+        "locus_source": source,
+    }
+
+
+def _next_cursor(link_header: str | None) -> str | None:
+    """The cursor UniProt's ``Link: <...>; rel="next"`` carries, or None at the end.
+
+    Only the cursor parameter is kept: the next request is rebuilt against
+    BASE_URL, so an upstream link can never redirect this server elsewhere.
+    """
+    if not link_header:
+        return None
+    match = _NEXT_LINK.search(link_header)
+    if not match:
+        return None
+    values = httpx.URL(match.group(1)).params.get_list("cursor")
+    return values[0] if values else None
+
+
+async def entry_members(
+    client: httpx.AsyncClient,
+    entry: str,
+    organism: str | int = organisms.DEFAULT_ORGANISM,
+    *,
+    reviewed_only: bool = True,
+    page_size: int = ENTRY_MEMBERS_DEFAULT_PAGE,
+    cursor: str | None = None,
+) -> dict[str, Any]:
+    """UniProt proteins cross-referenced to ``entry`` in ``organism``, with loci.
+
+    Issue #124: nothing on this server went from a family or domain accession
+    back to genes. One UniProt query, ``xref:<db>-<entry> AND organism_id``,
+    answers it with each member's locus inline. ``total`` is UniProt's own
+    count for the query; a page that cannot hold it returns ``next_cursor``,
+    passed back unchanged to continue.
+    """
+    db = _entry_xref_db(entry)
+    taxid = organisms.ncbi_taxid_for(organism)
+    page_size = max(1, min(page_size, ENTRY_MEMBERS_MAX_PAGE))
+    query = f"xref:{db}-{entry} AND organism_id:{taxid}"
+    if reviewed_only:
+        query += " AND reviewed:true"
+    params: dict[str, Any] = {
+        "query": query,
+        "format": "json",
+        "fields": _MEMBER_FIELDS,
+        "size": str(page_size),
+    }
+    if cursor is not None:
+        params["cursor"] = cursor
+    key = cache.make_key("GET", BASE_URL, "/uniprotkb/search#members", params)
+    page = _CACHE.get(key)
+    if page is None:
+        resp = await _http.request_with_retry(
+            client,
+            "GET",
+            f"{BASE_URL}/uniprotkb/search",
+            service="UniProt search (entry members)",
+            params=params,
+            headers={"Accept": "application/json"},
+            timeout=DEFAULT_TIMEOUT,
+            max_retries=MAX_RETRIES,
+        )
+        header = resp.headers.get("x-total-results")
+        stated = int(header) if header is not None and header.isdigit() else header
+        total = _http.stated_count(
+            {"x-total-results": stated}, "x-total-results", service="UniProt search"
+        )
+        results = resp.json().get("results")
+        if not isinstance(results, list):
+            raise PlantGenomicsError(
+                f"UniProt search results is not a list: {type(results).__name__}"
+            )
+        page = {
+            "total": total,
+            "results": results,
+            "next_cursor": _next_cursor(resp.headers.get("link")),
+            "upstream_version": _http.upstream_version(resp),
+        }
+        _CACHE.set(key, page)
+    members = [_member(hit) for hit in page["results"] if isinstance(hit, dict)]
+    return {
+        "entry": entry,
+        "entry_database": db,
+        "organism": organisms.resolve(organism).canonical,
+        "taxid": taxid,
+        "reviewed_only": reviewed_only,
+        "query": query,
+        "total": page["total"],
+        "returned": len(members),
+        "truncated": page["next_cursor"] is not None,
+        "next_cursor": page["next_cursor"],
+        "members": members,
+        "upstream_version": page["upstream_version"],
+    }

@@ -1,6 +1,6 @@
 # 🌱 plant-genomics-mcp
 
-> **50 tools** for plant-genomics locus lookup over the Model Context Protocol —
+> **51 tools** for plant-genomics locus lookup over the Model Context Protocol —
 > 28 single-locus + 1 motif lookup + 1 region query + 1 variant annotator + 1 gene-set enrichment + 1 BLAST search + 12 parallel-batch + 5 cross-source synthesis variants.
 > Free, public sources: Ensembl Plants, Phytozome BioMart, UniProtKB,
 > Europe PMC, QuickGO, Planteome, PlantCyc/PMN, g:Profiler, NCBI BLAST,
@@ -67,7 +67,7 @@ A worked 400-call run over 48 genes in two organisms, with the 49 gaps it logged
 
 ## 🛠️ Tools
 
-**50 tools across 23 backends** — Ensembl Plants, Phytozome BioMart,
+**51 tools across 23 backends** — Ensembl Plants, Phytozome BioMart,
 UniProtKB, Europe PMC, QuickGO, Planteome, PlantCyc/PMN, g:Profiler,
 AlphaFold DB, PDBe, InterPro, JASPAR, PANTHER, OrthoDB, AraGWAS, 1001 Genomes, NCBI BLAST,
 Gramene, KEGG, STRING-DB, ATTED-II, ThaleMine, BAR.
@@ -121,6 +121,7 @@ hosts can surface them without a destructive-action confirmation prompt.
 | 34  | Batch (live)            | `batch_*` (twelve variants)             | Parallel per-locus fanout for tools 1–6, 8–12, 14. Up to 50 loci per call.                                                                                                                                                                                                                                                                                            |
 | 35  | Synthesis (live)        | `*_synth` / `consensus_homologs` (four) | Compose 2–5 backends in parallel, return a `SynthesisEnvelope` with per-step status.                                                                                                                                                                                                                                                                                  |
 | 36  | Synthesis (live)        | `gene_report`                           | One-shot "tell me about this gene" dossier — annotation + xrefs + protein + domains + GO + KEGG + STRING + literature composed into a rendered Markdown `result.markdown` (+ structured `result.sections`).                                                                                                                                                           |
+| 37  | Families (live)         | `entry_members`                         | Every protein in one organism carrying an InterPro / Pfam / PANTHER entry, with the locus each maps to (entry → genes; the reverse of tools 23 and 30). UniProt `total` + cursor paging; reviewed-only by default. |
 
 </details>
 

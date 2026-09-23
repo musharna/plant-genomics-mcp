@@ -34,6 +34,7 @@ synthesis tools that compose the live backends:
   - ``locus_variants``                    — Ensembl natural variants overlapping a locus (live, EVA/dbSNP; 12 organisms)
   - ``vep_annotate``                      — Ensembl VEP variant-consequence prediction (live, region+allele; SIFT/PolyPhen)
   - ``panther_family``                    — PANTHER protein family/subfamily + GO + protein class (live, 12 organisms)
+  - ``entry_members``                     — every protein carrying an InterPro/Pfam/PANTHER entry in one organism, with loci (live, UniProt)
   - ``orthodb_orthologs``                 — OrthoDB ortholog group + cross-species members (live, Viridiplantae; 12 organisms)
   - ``aragwas_associations``              — AraGWAS GWAS hits per locus (live, Arabidopsis-only)
   - ``arabidopsis_natural_variation``     — 1001 Genomes natural-variation SNP effects per locus (live, Arabidopsis-only)
@@ -129,6 +130,7 @@ from plant_genomics_mcp.models import (
     EnsemblPlantsLocus,
     EnsemblRegionFeatures,
     EnsemblSequence,
+    EntryMembers,
     ExperimentalInteractions,
     ExperimentalStructures,
     GeneRifs,
@@ -1369,6 +1371,59 @@ TOOLS: list[types.Tool] = [
         _meta=_EDAM,
     ),
     types.Tool(
+        name="entry_members",
+        title="Family / Domain Members",
+        description=(
+            "List every protein in one organism that carries an InterPro, Pfam or "
+            "PANTHER entry, with the gene locus each maps to — the reverse of "
+            "interpro_domains / panther_family (entry -> genes, not gene -> "
+            "entries). One UniProt query (rest.uniprot.org; free, no key). Each "
+            "member gives accession, symbol and locus; locus is the id the "
+            "locus-keyed tools accept, or null when UniProt links the protein to "
+            "no gene (e.g. an old cDNA submission). reviewed_only=true (default) "
+            "keeps Swiss-Prot entries: complete for Arabidopsis and rice, empty "
+            "for most other crops, so pass reviewed_only=false there. total is "
+            "UniProt's count across all pages; when truncated=true, pass "
+            "next_cursor back as cursor= for the next page. An entry absent from "
+            "the organism is ok with total 0. Defaults to arabidopsis_thaliana."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "entry": {
+                    "type": "string",
+                    "pattern": "^(IPR\\d{6}|PF\\d{5}|PTHR\\d{5})$",
+                    "description": "InterPro (IPR010525), Pfam (PF06507) or PANTHER family (PTHR31384)",
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
+                },
+                "reviewed_only": {
+                    "type": "boolean",
+                    "description": "Only Swiss-Prot (curated) proteins",
+                    "default": True,
+                },
+                "page_size": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 500,
+                    "default": 100,
+                },
+                "cursor": {
+                    "type": "string",
+                    "description": "next_cursor from the previous page; omit for the first",
+                },
+            },
+            "required": ["entry"],
+            "additionalProperties": False,
+        },
+        output_schema=EntryMembers.model_json_schema(),
+        annotations=_READ_ONLY,
+        _meta=_EDAM,
+    ),
+    types.Tool(
         name="orthodb_orthologs",
         title="OrthoDB: Orthologs",
         description=(
@@ -2398,6 +2453,15 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     client,
                     args["locus"],
                     organism=args.get("organism", "arabidopsis_thaliana"),
+                )
+            case "entry_members":
+                return await uniprot.entry_members(
+                    client,
+                    args["entry"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                    reviewed_only=args.get("reviewed_only", True),
+                    page_size=args.get("page_size", uniprot.ENTRY_MEMBERS_DEFAULT_PAGE),
+                    cursor=args.get("cursor"),
                 )
             case "orthodb_orthologs":
                 return await orthodb.lookup_locus(
