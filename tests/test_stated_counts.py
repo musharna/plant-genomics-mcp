@@ -16,7 +16,7 @@ from typing import Any
 import httpx
 import pytest
 
-from plant_genomics_mcp import aragwas, interpro, planteome, quickgo
+from plant_genomics_mcp import _http, aragwas, interpro, planteome, quickgo
 from plant_genomics_mcp.errors import UpstreamUnavailableError
 
 CASES = [
@@ -79,3 +79,10 @@ async def test_a_body_without_its_count_raises_and_one_with_it_answers(
         served.append(_without(body, count_path))
         with pytest.raises(UpstreamUnavailableError, match=count_path[-1]):
             await call(client)
+
+
+def test_counted_is_one_definition_of_total_returned_truncated() -> None:
+    """#123: every list tool spreads these three keys; a null total is unknown."""
+    assert _http.counted(3, [1, 2]) == {"total": 3, "returned": 2, "truncated": True}
+    assert _http.counted(2, [1, 2]) == {"total": 2, "returned": 2, "truncated": False}
+    assert _http.counted(None, [1, 2]) == {"total": None, "returned": 2, "truncated": None}

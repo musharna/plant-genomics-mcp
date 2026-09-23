@@ -43,7 +43,8 @@ def _empty(accession: str) -> dict[str, Any]:
         "accession": accession,
         "found": False,
         "structure_count": 0,
-        "truncated": False,
+        "entry_count": 0,
+        **_http.counted(0, []),
         "structures": [],
         "upstream_version": None,
     }
@@ -112,8 +113,11 @@ async def lookup_by_uniprot(client: httpx.AsyncClient, accession: str) -> dict[s
     return {
         "accession": accession,
         "found": True,
+        # PDBe best_structures rows are per CHAIN (4chk chains A and B are two
+        # rows); entry_count is the distinct PDB entries among them (#123).
         "structure_count": total,
-        "truncated": total > MAX_STRUCTURES,
+        "entry_count": len({s.get("pdb_id") for s in valid}),
+        **_http.counted(total, structures),
         "structures": structures,
         # Issue #121: uniform key; null because this backend states no release on
         # the answering response (headers probed live 2026-09-22).

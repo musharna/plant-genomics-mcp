@@ -406,6 +406,8 @@ async def blast_sequence(
         "database": db,
         "status": "READY",
         "hitCount": len(hits),
+        # BLAST states no total beyond the hitlist it was asked for.
+        **_http.counted(None, hits),
         "hits": hits,
         "raw_report_excerpt": raw_excerpt,
         "raw_report_truncated": truncated,

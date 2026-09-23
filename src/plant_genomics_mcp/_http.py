@@ -14,7 +14,7 @@ from __future__ import annotations
 import asyncio
 import os
 import re
-from collections.abc import Mapping
+from collections.abc import Mapping, Sized
 from typing import Any
 
 import httpx
@@ -61,6 +61,22 @@ def stated_count(body: Mapping[str, Any], key: str, *, service: str) -> int:
             f"(got {value!r}); this is not a count of zero"
         )
     return value
+
+
+def counted(total: int | None, rows: Sized) -> dict[str, Any]:
+    """The count fields every list-returning tool carries (issue #123).
+
+    ``total`` is how many exist upstream for the query as asked, ``returned``
+    how many rows this payload holds, ``truncated`` whether the two differ.
+    A backend whose upstream states no total (a ranked top-N such as STRING or
+    ATTED) passes ``None``: then ``total`` and ``truncated`` are null, meaning
+    unknown, never guessed from the page size.
+    """
+    return {
+        "total": total,
+        "returned": len(rows),
+        "truncated": None if total is None else total > len(rows),
+    }
 
 
 def _too_large(service: str, detail: str) -> PlantGenomicsError:

@@ -190,7 +190,7 @@ async def lookup_locus(
         "organism": record.canonical,
         "query": query,
         "hitCount": raw["hitCount"],
-        "returned": len(hits),
+        **_http.counted(raw["hitCount"], hits),
         # Makes the payload self-describing: without this, a null abstractText
         # is ambiguous between "not requested" and "this article has none", and
         # only the original caller would know which.

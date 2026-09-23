@@ -169,14 +169,13 @@ async def lookup_locus(
         )
 
     annotations = [_normalize(d) for d in docs if isinstance(d, dict)]
+    total = _http.stated_count(response, "numFound", service=f"Planteome {SELECT_PATH}")
     return {
         "locus": locus,
         "organism": record.canonical,
         "taxon": taxon,
-        "numberOfHits": _http.stated_count(
-            response, "numFound", service=f"Planteome {SELECT_PATH}"
-        ),
-        "returned": len(annotations),
+        "numberOfHits": total,
+        **_http.counted(total, annotations),
         "annotations": annotations,
         "by_ontology": _rollup_by_ontology(annotations),
     }

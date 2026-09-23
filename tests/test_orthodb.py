@@ -107,6 +107,22 @@ async def test_lookup_truncates(httpx_mock: HTTPXMock, monkeypatch: pytest.Monke
     # holds 2 members, so the true pre-cap total is 2 while 1 row comes back.
     assert r["member_count"] == 2
     assert len(r["members"]) == 1
+    # #123: the schema said member_count was "returned (post-cap)" and COUNT_SPECS
+    # agreed, while the code above reports the pre-cap total. Run the three-way
+    # check on this capped payload, which a live sweep only sees by chance.
+    import sys
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+    from semantic_invariants import COUNT_SPECS, Verdict, check_count_semantics
+
+    from plant_genomics_mcp.models import OrthoDbOrthologs
+
+    props = OrthoDbOrthologs.model_json_schema()["properties"]
+    specs = [s for s in COUNT_SPECS if s.tool == "orthodb_orthologs" and s.list_field]
+    results = [check_count_semantics(s, r, props[s.field]["description"]) for s in specs]
+    assert {s.field for s in specs} == {"member_count", "total", "returned"}
+    assert all(x.verdict is Verdict.PASS for x in results), [x.detail for x in results]
 
 
 @pytest.mark.asyncio

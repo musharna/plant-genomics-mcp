@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- **One pair of count names on every list tool (#123).** 16 tools now carry
+  `total` (how many exist upstream, all pages), `returned` (rows in this
+  payload) and `truncated` (`total > returned`), from one helper
+  (`_http.counted`). The old names (`domain_count`, `hitCount`,
+  `numberOfHits`, `member_count`, …) stay. `atted_coexpression`,
+  `string_interactions` and `blast_sequence` rank a top-N and state no total:
+  their `total` and `truncated` are null, meaning unknown. `locus_literature`
+  and `locus_plant_ontology` gain the `truncated` flag they lacked.
+- **`experimental_structures.entry_count`** counts distinct PDB entries;
+  `structure_count` counts per-chain rows and now says so (#123).
+- **Fix: `orthodb_orthologs.member_count` was documented as "returned
+  (post-cap)"** while the code has reported the pre-cap total since the
+  count fix it describes; the schema now says pre-cap.
+
 - **`string_interactions` takes `locus`, `batch_string_interactions` takes
   `loci` (#129),** like every other tool; those are now the advertised,
   required names. The old `locus_or_accession` / `loci_or_accessions` are
