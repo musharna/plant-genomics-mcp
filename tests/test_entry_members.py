@@ -152,17 +152,56 @@ async def test_a_page_that_cannot_hold_the_set_hands_back_a_cursor(httpx_mock: H
             page_size=2,
             cursor=first["next_cursor"],
         )
-    assert (first["returned"], first["truncated"], first["next_cursor"]) == (
-        2,
-        True,
-        "82giuzutyxte42km",
-    )
+    assert (first["returned"], first["truncated"]) == (2, True)
+    assert first["next_cursor"] is not None
     assert (second["returned"], second["truncated"], second["next_cursor"]) == (1, False, None)
     first_req, second_req = httpx_mock.get_requests()
     assert first_req.url.params["query"] == "xref:panther-PTHR31384 AND organism_id:3702"
     assert "cursor" not in first_req.url.params
+    # UniProt's own cursor is what goes back on the wire, inside ours.
     assert second_req.url.params["cursor"] == "82giuzutyxte42km"
     assert second_req.url.host == "rest.uniprot.org"  # the cursor is a parameter, never a URL
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "other",
+    [
+        {"entry": "IPR010525"},  # another family
+        {"organism": "oryza_sativa"},  # another organism
+        {"reviewed_only": True},  # another filter
+        {"page_size": 3},  # another page size
+    ],
+    ids=["entry", "organism", "reviewed_only", "page_size"],
+)
+async def test_a_cursor_continues_only_the_query_it_came_from(
+    httpx_mock: HTTPXMock, other: dict[str, Any]
+) -> None:
+    """Audit 2026-09-22 M5: entry_members handed back UniProt's raw cursor, and
+    UniProt's cursor does not carry the query, so passing it with another
+    entry or organism silently paged a DIFFERENT list from an offset into it.
+    The six other cursor tools (#123) bind the cursor to tool + query; this
+    one now does too."""
+    httpx_mock.add_response(
+        url=SEARCH, json={"results": [ATH, RICE]}, headers={"x-total-results": "3", "link": NEXT}
+    )
+    httpx_mock.add_response(
+        url=SEARCH, json={"results": [OLN_ONLY]}, headers={"x-total-results": "3"}
+    )
+    base: dict[str, Any] = {
+        "entry": "PTHR31384",
+        "organism": "arabidopsis_thaliana",
+        "reviewed_only": False,
+        "page_size": 2,
+    }
+    async with httpx.AsyncClient() as client:
+        first = await uniprot.entry_members(client, **base)
+        with pytest.raises(InvalidArguments, match="entry_members: cursor continues"):
+            await uniprot.entry_members(client, **{**base, **other}, cursor=first["next_cursor"])
+        # Positive control: the query it came from continues.
+        second = await uniprot.entry_members(client, **base, cursor=first["next_cursor"])
+    assert second["returned"] == 1
+    assert len(httpx_mock.get_requests()) == 2  # the refused call never reached UniProt
 
 
 @pytest.mark.asyncio

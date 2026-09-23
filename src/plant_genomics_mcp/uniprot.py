@@ -282,6 +282,10 @@ async def lookup_locus(
 
     Raises ``NotFoundError`` if the search/fetch returns zero hits.
     """
+    # Audit 2026-09-22 L8: the locus is spliced into a Lucene query; unchecked,
+    # "X) OR (reviewed:true" rewrote the search. Validated first, as every
+    # other locus-keyed backend is (and an AGI recased).
+    locus = validators.assert_valid_locus(locus, backend="UniProt")
     if _looks_like_uniprot_accession(locus):
         record = await _fetch_by_accession(client, locus)
         return _normalize(record, locus_query=locus)
@@ -435,8 +439,19 @@ async def entry_members(
         "fields": _MEMBER_FIELDS,
         "size": str(page_size),
     }
-    if cursor is not None:
-        params["cursor"] = cursor
+    # Audit 2026-09-22 M5: UniProt's cursor is a position with no query in it.
+    # Bound to entry + organism + filter + page size through the codec the six
+    # other cursor tools use (#123), so one passed with another query is refused
+    # instead of paging a different list.
+    bound = {
+        "entry": entry,
+        "taxid": taxid,
+        "reviewed_only": reviewed_only,
+        "page_size": page_size,
+    }
+    upstream_cursor = _http.decode_cursor("entry_members", bound, cursor).get("cursor")
+    if upstream_cursor is not None:
+        params["cursor"] = upstream_cursor
     key = cache.make_key("GET", BASE_URL, "/uniprotkb/search#members", params)
     page = _CACHE.get(key)
     if page is None:
@@ -468,6 +483,11 @@ async def entry_members(
         }
         _CACHE.set(key, page)
     members = [_member(hit) for hit in page["results"] if isinstance(hit, dict)]
+    next_cursor = (
+        _http.encode_cursor("entry_members", bound, {"cursor": page["next_cursor"]})
+        if page["next_cursor"] is not None
+        else None
+    )
     return {
         "entry": entry,
         "entry_database": db,
@@ -477,8 +497,8 @@ async def entry_members(
         "query": query,
         "total": page["total"],
         "returned": len(members),
-        "truncated": page["next_cursor"] is not None,
-        "next_cursor": page["next_cursor"],
+        "truncated": next_cursor is not None,
+        "next_cursor": next_cursor,
         "members": members,
         "upstream_version": page["upstream_version"],
     }
