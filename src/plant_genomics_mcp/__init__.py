@@ -40,4 +40,4 @@ Bioinformatics paid subscription). See ``server.py`` for the full tool
 catalog.
 """
 
-__version__ = "1.21.0"
+__version__ = "1.22.0"

@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v1.22.0 — 2026-09-23
+
+**52 tools / 23 backends** — two new tools, `batch_locus_call` (#131) and `entry_members` (#124). A minor release rather than a patch: besides the new tools, several answers change shape or meaning (the entries marked **Behaviour change** below).
 
 - **OrthoDB no longer refuses batched lookups as a rate limit (#153).**
   `_http.UpstreamLimit` caps one upstream's requests in flight across
