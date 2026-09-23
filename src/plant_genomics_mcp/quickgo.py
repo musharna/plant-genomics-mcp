@@ -59,13 +59,9 @@ async def _get(
     params: dict[str, Any] | None = None,
 ) -> Any:
     """GET a QuickGO endpoint with retry on 429/5xx."""
-    key = cache.make_key("GET", BASE_URL, path, params)
-    cached = _CACHE.get(key)
-    if cached is not None:
-        return cached
-    resp = await _http.request_with_retry(
+    return await _http.cached_get(
         client,
-        "GET",
+        _CACHE,
         f"{BASE_URL}{path}",
         service=f"QuickGO {path}",
         params=params,
@@ -73,9 +69,6 @@ async def _get(
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
     )
-    result = resp.json()
-    _CACHE.set(key, result)
-    return result
 
 
 def _normalize(row: dict[str, Any]) -> dict[str, Any]:

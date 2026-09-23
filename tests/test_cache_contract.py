@@ -26,7 +26,7 @@ import httpx
 import pytest
 
 from plant_genomics_mcp import _http
-from plant_genomics_mcp.errors import UpstreamUnavailableError
+from plant_genomics_mcp.errors import PlantGenomicsError, UpstreamUnavailableError
 
 BACKENDS_PATH_PARAMS = [
     "atted",
@@ -117,3 +117,31 @@ async def test_a_failure_is_not_cached(backend: Any) -> None:
         answer = await mod._get(c, *base)
         assert await mod._get(c, *base) == answer
     assert len(upstream.calls) == 2
+
+
+@pytest.mark.parametrize("name", BACKENDS_PATH_PARAMS + BACKENDS_URL)
+@pytest.mark.asyncio
+async def test_a_body_that_is_not_json_is_a_typed_error_and_not_cached(
+    name: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Six copies (Ensembl Plants and variation, Gramene, OrthoDB, QuickGO,
+    InterPro) called ``resp.json()`` bare and leaked ``JSONDecodeError``."""
+    mod = importlib.import_module(f"plant_genomics_mcp.{name}")
+    mod._CACHE.clear()
+    bodies = [b"<not json>", b'{"n": 1}']
+
+    async def upstream(client: Any, method: str, url: str, **kw: Any) -> httpx.Response:
+        return httpx.Response(200, content=bodies.pop(0), request=httpx.Request(method, url))
+
+    monkeypatch.setattr(_http, "request_with_retry", upstream)
+    base = _requests(name)[0]
+    async with httpx.AsyncClient() as c:
+        with pytest.raises(PlantGenomicsError, match="returned non-JSON") as err:
+            await mod._get(c, *base)
+        assert not isinstance(err.value, ValueError)
+        # Positive control: the next answer is JSON, fetched fresh, and served.
+        answer = await mod._get(c, *base)
+        answer.pop("_upstream_version", None)  # InterPro stamps its release
+        assert answer == {"n": 1}
+    assert bodies == []
+    mod._CACHE.clear()

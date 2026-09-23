@@ -40,13 +40,9 @@ _CACHE = cache.TTLCache()
 
 async def _get(client: httpx.AsyncClient, path: str, params: dict[str, Any] | None = None) -> Any:
     """GET an Ensembl REST endpoint (own cache), returning parsed JSON."""
-    key = cache.make_key("GET", BASE_URL, path, params)
-    cached = _CACHE.get(key)
-    if cached is not None:
-        return cached
-    resp = await _http.request_with_retry(
+    return await _http.cached_get(
         client,
-        "GET",
+        _CACHE,
         f"{BASE_URL}{path}",
         service=f"Ensembl variation {path}",
         params=params,
@@ -57,9 +53,6 @@ async def _get(client: httpx.AsyncClient, path: str, params: dict[str, Any] | No
         # than re-declared so there is one pattern to keep correct.
         not_found_400_pattern=ensembl_plants.NOT_FOUND_400_RE,
     )
-    result = resp.json()
-    _CACHE.set(key, result)
-    return result
 
 
 def _project_variant(v: dict[str, Any]) -> dict[str, Any]:

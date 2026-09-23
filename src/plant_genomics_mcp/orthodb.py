@@ -39,26 +39,21 @@ _CACHE = cache.TTLCache()
 
 async def _get(client: httpx.AsyncClient, path: str, params: dict[str, Any]) -> dict[str, Any]:
     """GET an OrthoDB endpoint (own cache), returning the parsed dict."""
-    key = cache.make_key("GET", BASE_URL, path, params)
-    cached = _CACHE.get(key)
-    if cached is None:
-        resp = await _http.request_with_retry(
-            client,
-            "GET",
-            f"{BASE_URL}{path}",
-            service=f"OrthoDB {path}",
-            params=params,
-            headers={"Accept": "application/json"},
-            timeout=DEFAULT_TIMEOUT,
-            max_retries=MAX_RETRIES,
-        )
-        cached = resp.json()
-        _CACHE.set(key, cached)
-    if not isinstance(cached, dict):
+    body = await _http.cached_get(
+        client,
+        _CACHE,
+        f"{BASE_URL}{path}",
+        service=f"OrthoDB {path}",
+        params=params,
+        headers={"Accept": "application/json"},
+        timeout=DEFAULT_TIMEOUT,
+        max_retries=MAX_RETRIES,
+    )
+    if not isinstance(body, dict):
         raise PlantGenomicsError(
-            f"OrthoDB {path} returned unexpected payload: {type(cached).__name__}"
+            f"OrthoDB {path} returned unexpected payload: {type(body).__name__}"
         )
-    return cached
+    return body
 
 
 def _project_group(data: dict[str, Any]) -> dict[str, Any]:
