@@ -117,22 +117,16 @@ async def _get(client: httpx.AsyncClient, path: str) -> str:
     KEGG also returns 404 with an empty body for unknown IDs; we treat
     that as "no record" and return "" rather than raising NotFoundError.
     """
-    key = cache.make_key("GET", BASE_URL, path)
-    cached = _CACHE.get(key)
-    if cached is not None:
-        return cached
-    result = await _http.request_with_retry(
+    return await _http.cached_get(
         client,
-        "GET",
+        _CACHE,
         f"{BASE_URL}{path}",
         service=f"KEGG {path}",
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
+        parse=lambda r: r if isinstance(r, str) else r.text,
         not_found_returns="",
     )
-    body = result if isinstance(result, str) else result.text
-    _CACHE.set(key, body)
-    return body
 
 
 def _parse_link_pathway(body: str, gene_id: str) -> list[str]:

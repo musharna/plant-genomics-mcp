@@ -475,3 +475,61 @@ async def test_enrichment_chunk_asks_for_as_many_rows_as_it_sends(httpx_mock: HT
     assert [r.url.params.get("rows") for r in reqs] == ["100", "50"]
     # Positive control: the join is total over the input and every id resolved.
     assert len(out) == 150 and all(v["system_name"] == "x" for v in out.values())
+
+
+# ---------- #130: organism per row without filtering ----------
+
+
+@pytest.mark.asyncio
+async def test_with_organism_labels_the_page_it_returns_and_nothing_else(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    loci = ["Os01g0100100", "Zm00001d000001", "C5167_014531"]
+    species = {"Os01g0100100": "oryza_sativa", "Zm00001d000001": "zea_mays"}
+    asked: list[str] = []
+
+    async def fake(client: object, path: str, **kw: object) -> list[dict]:
+        params = kw["params"]
+        assert isinstance(params, dict)
+        if params["fl"] == "homology":
+            homologs = {"ortholog_one2many": loci}
+            return [{"homology": {"gene_tree": {"id": "T"}, "homologous_genes": homologs}}]
+        asked.append(params["idList"])
+        return [
+            {"_id": i, "system_name": species[i]}
+            for i in params["idList"].split(",")
+            if i in species
+        ]
+
+    monkeypatch.setattr(gramene, "_get", fake)
+    async with httpx.AsyncClient() as c:
+        plain = await gramene.lookup_homologs(c, "AT1G19850", limit=2)
+        labelled = await gramene.lookup_homologs(c, "AT1G19850", limit=2, with_organism=True)
+        last = await gramene.lookup_homologs(
+            c, "AT1G19850", limit=2, with_organism=True, cursor=labelled["next_cursor"]
+        )
+    # Positive control: the default makes no enrichment call and adds no key.
+    assert all("organism" not in row for row in plain["homologs"])
+    assert [row["organism"] for row in labelled["homologs"]] == ["oryza_sativa", "zea_mays"]
+    assert [{k: v for k, v in r.items() if k != "organism"} for r in labelled["homologs"]] == plain[
+        "homologs"
+    ]
+    # A locus Gramene does not know is kept, with a null organism.
+    assert [(r["target_locus"], r["organism"]) for r in last["homologs"]] == [
+        ("C5167_014531", None)
+    ]
+    # Only the returned page is resolved, not the whole homology set.
+    assert asked == ["Os01g0100100,Zm00001d000001", "C5167_014531"]
+
+
+@pytest.mark.skipif(os.environ.get("PLANT_GENOMICS_MCP_LIVE") != "1", reason="live")
+@pytest.mark.asyncio
+async def test_live_with_organism_names_the_species_of_arf5_orthologs() -> None:
+    async with httpx.AsyncClient() as c:
+        page = await gramene.lookup_homologs(c, "AT1G19850", with_organism=True)
+    slugs = [row["organism"] for row in page["homologs"]]
+    # Rice is not on the first page: Gramene lists other species first (#125).
+    assert len(set(slugs)) > 3 and all(
+        s is None or re.fullmatch(r"[a-z0-9_]+", s) for s in slugs
+    ), slugs
+    assert slugs.count(None) < len(slugs) / 2, slugs

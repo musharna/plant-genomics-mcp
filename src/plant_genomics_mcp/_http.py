@@ -16,12 +16,12 @@ import base64
 import json
 import os
 import re
-from collections.abc import Mapping, Sized
+from collections.abc import Callable, Mapping, Sized
 from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import progress
+from plant_genomics_mcp import cache, progress
 from plant_genomics_mcp.errors import (
     InvalidArguments,
     NotFoundError,
@@ -398,4 +398,59 @@ async def request_with_retry(
         )
     raise UpstreamUnavailableError(
         f"{service} exhausted {max_retries} retries (last HTTP {last_status})"
+    )
+
+
+def json_body(resp: httpx.Response, service: str) -> Any:
+    """``resp`` parsed as JSON; a body that is not JSON is a typed error."""
+    try:
+        return resp.json()
+    except ValueError as e:
+        raise PlantGenomicsError(f"{service} returned non-JSON: {resp.text[:200]}") from e
+
+
+async def cached_get(
+    client: httpx.AsyncClient,
+    store: cache.TTLCache,
+    url: str,
+    *,
+    service: str,
+    params: Mapping[str, Any] | None = None,
+    headers: Mapping[str, str] | None = None,
+    parse: Callable[[Any], Any] | None = None,
+    reject: Callable[[Any], str | None] | None = None,
+    **retry: Any,
+) -> Any:
+    """GET ``url`` through ``store``: the one cache contract every backend uses (#96).
+
+    A hit is returned as stored. A miss goes through :func:`request_with_retry`
+    (``retry`` carries its timeout, retry budget and not-found options), is
+    parsed (``parse``, default :func:`json_body`) and stored under a key made
+    of the URL and params. Nothing is stored on a failure.
+
+    ``reject`` names what is wrong with a parsed body that must not be served
+    as an answer (#141): such a body is asked for once more, never stored, and
+    a second rejection is :class:`UpstreamUnavailableError`.
+
+    Fourteen backends carried their own copy of these lines; the copies drifted
+    (six leaked a raw ``JSONDecodeError`` on a non-JSON body) and no test
+    observed their keys. tests/test_cache_contract.py holds this contract.
+    """
+    key = cache.make_key("GET", url, "", dict(params) if params else None)
+    hit = store.get(key)
+    if hit is not None:
+        return hit
+    problem: str | None = None
+    for _attempt in range(2 if reject else 1):
+        resp = await request_with_retry(
+            client, "GET", url, service=service, params=params, headers=headers, **retry
+        )
+        value = parse(resp) if parse else json_body(resp, service)
+        problem = reject(value) if reject else None
+        if problem is None:
+            store.set(key, value)
+            return value
+    raise UpstreamUnavailableError(
+        f"{service} answered 200 twice without a readable result ({problem}); "
+        "this is not a count of zero"
     )

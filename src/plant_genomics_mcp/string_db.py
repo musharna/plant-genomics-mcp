@@ -90,13 +90,9 @@ async def _get(
     path: str,
     params: dict[str, Any] | None = None,
 ) -> Any:
-    key = cache.make_key("GET", BASE_URL, path, params)
-    cached = _CACHE.get(key)
-    if cached is not None:
-        return cached
-    resp = await _http.request_with_retry(
+    return await _http.cached_get(
         client,
-        "GET",
+        _CACHE,
         f"{BASE_URL}{path}",
         service=f"STRING {path}",
         params=params,
@@ -104,12 +100,6 @@ async def _get(
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
     )
-    try:
-        result = resp.json()
-    except ValueError as e:
-        raise PlantGenomicsError(f"STRING {path} returned non-JSON: {resp.text[:200]}") from e
-    _CACHE.set(key, result)
-    return result
 
 
 def _normalize(row: dict[str, Any], query_accession: str) -> dict[str, Any]:

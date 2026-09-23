@@ -15,7 +15,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import uniprot
-from plant_genomics_mcp.errors import NotFoundError
+from plant_genomics_mcp.errors import InvalidArguments, NotFoundError
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
@@ -58,7 +58,7 @@ async def test_lookup_locus_at1g01010_returns_q0wv96(httpx_mock: HTTPXMock) -> N
         url=(
             "https://rest.uniprot.org/uniprotkb/search"
             "?query=%28gene%3AAT1G01010+OR+xref%3Aensemblplants-AT1G01010%29+AND+organism_id%3A3702+AND+reviewed%3Atrue"
-            "&format=json&size=1"
+            "&format=json&size=25"
         ),
         json=_one_hit(),
     )
@@ -84,7 +84,7 @@ async def test_lookup_locus_falls_back_to_unreviewed(httpx_mock: HTTPXMock) -> N
         url=(
             "https://rest.uniprot.org/uniprotkb/search"
             "?query=%28gene%3AOs01g0100100+OR+xref%3Aensemblplants-Os01g0100100%29+AND+organism_id%3A39947+AND+reviewed%3Atrue"
-            "&format=json&size=1"
+            "&format=json&size=25"
         ),
         json={"results": []},
     )
@@ -93,7 +93,7 @@ async def test_lookup_locus_falls_back_to_unreviewed(httpx_mock: HTTPXMock) -> N
         url=(
             "https://rest.uniprot.org/uniprotkb/search"
             "?query=%28gene%3AOs01g0100100+OR+xref%3Aensemblplants-Os01g0100100%29+AND+organism_id%3A39947"
-            "&format=json&size=1"
+            "&format=json&size=25"
         ),
         json=_one_hit(
             accession="Q0JRI1",
@@ -121,7 +121,7 @@ async def test_lookup_locus_raises_not_found_when_both_passes_empty(
         url=(
             "https://rest.uniprot.org/uniprotkb/search"
             "?query=%28gene%3ANOTREAL+OR+xref%3Aensemblplants-NOTREAL%29+AND+organism_id%3A3702+AND+reviewed%3Atrue"
-            "&format=json&size=1"
+            "&format=json&size=25"
         ),
         json={"results": []},
     )
@@ -129,7 +129,7 @@ async def test_lookup_locus_raises_not_found_when_both_passes_empty(
         url=(
             "https://rest.uniprot.org/uniprotkb/search"
             "?query=%28gene%3ANOTREAL+OR+xref%3Aensemblplants-NOTREAL%29+AND+organism_id%3A3702"
-            "&format=json&size=1"
+            "&format=json&size=25"
         ),
         json={"results": []},
     )
@@ -143,7 +143,7 @@ async def test_lookup_locus_retries_on_429_then_succeeds(httpx_mock: HTTPXMock) 
     url = (
         "https://rest.uniprot.org/uniprotkb/search"
         "?query=%28gene%3AAT1G01010+OR+xref%3Aensemblplants-AT1G01010%29+AND+organism_id%3A3702+AND+reviewed%3Atrue"
-        "&format=json&size=1"
+        "&format=json&size=25"
     )
     httpx_mock.add_response(url=url, status_code=429, headers={"Retry-After": "0"})
     httpx_mock.add_response(url=url, json=_one_hit())
@@ -196,7 +196,7 @@ async def test_lookup_locus_refuses_a_query_fragment_before_any_request(
         url=(
             "https://rest.uniprot.org/uniprotkb/search"
             "?query=%28gene%3AAT1G01010+OR+xref%3Aensemblplants-AT1G01010%29+AND+organism_id%3A3702+AND+reviewed%3Atrue"
-            "&format=json&size=1"
+            "&format=json&size=25"
         ),
         json=_one_hit(),
     )
@@ -388,3 +388,55 @@ async def test_live_wheat_iwgsc_locus_resolves_and_the_other_organisms_still_do(
     assert (wheat["primaryAccession"], wheat["taxonId"]) == ("A0A3B6EER4", 4565)
     assert ath["primaryAccession"] == "P93024"
     assert rice["primaryAccession"] == "Q5NB85"
+
+
+# ---------- issue #128: a symbol shared by several loci ----------
+
+
+def _hit(accession: str, *loci: str) -> dict:
+    return {
+        "primaryAccession": accession,
+        "entryType": "UniProtKB reviewed (Swiss-Prot)",
+        "genes": [{"geneName": {"value": "ARF1"}}],
+        "organism": {"scientificName": "Arabidopsis thaliana", "taxonId": 3702},
+        "uniProtKBCrossReferences": [{"database": "Araport", "id": x} for x in loci],
+    }
+
+
+@pytest.mark.parametrize(
+    ("query", "hits", "answer"),
+    [
+        # The #128 case: two reviewed genes share the name ARF1.
+        ("ARF1", [_hit("Q8L7G0", "AT1G59750"), _hit("P36397", "AT2G47170")], None),
+        # Positive controls: a symbol whose entries are all one gene, and a
+        # locus query whose first entry also lists a tandem duplicate.
+        ("ARF5", [_hit("P93024", "AT1G19850"), _hit("A0A1P8AQ60", "AT1G19850")], "P93024"),
+        ("at1g19850", [_hit("X1", "AT1G19850", "AT1G19860"), _hit("X2", "AT1G19860")], "X1"),
+    ],
+)
+@pytest.mark.asyncio
+async def test_a_symbol_naming_several_loci_is_refused_with_the_loci(
+    query: str, hits: list[dict], answer: str | None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async def fake(client: object, q: str, *, size: int = 1) -> list[dict]:
+        return hits
+
+    monkeypatch.setattr(uniprot, "_search", fake)
+    async with httpx.AsyncClient() as client:
+        if answer is None:
+            with pytest.raises(InvalidArguments, match=r"2 loci .*AT1G59750, AT2G47170"):
+                await uniprot.lookup_locus(client, query)
+        else:
+            assert (await uniprot.lookup_locus(client, query))["primaryAccession"] == answer
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_arf1_is_refused_and_arf5_still_answers() -> None:
+    """The dossier's own probe (#128): ARF1 is two Arabidopsis genes."""
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(InvalidArguments) as refused:
+            await uniprot.lookup_locus(client, "ARF1")
+        assert "AT1G59750" in str(refused.value) and "AT2G47170" in str(refused.value)
+        assert (await uniprot.lookup_locus(client, "ARF5"))["primaryAccession"] == "P93024"
+        assert (await uniprot.lookup_locus(client, "AT2G47170"))["primaryAccession"] == "P36397"

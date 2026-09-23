@@ -7,6 +7,7 @@ KEGG returns plain text (TSV-like), not JSON. Each test mocks both calls
 from __future__ import annotations
 
 import os
+import re
 
 import httpx
 import pytest
@@ -779,17 +780,19 @@ async def test_live_kegg_barley_bridge_fires_via_chr1_first_gene():
     """Barley HORVU.MOREX.r3.1HG0000090 (chr1-first-gene) — v1.5 probe pass.
     Real Ensembl /xrefs + KEGG /link/pathway round-trip. Probe found 0
     KEGG pathway annotations for this locus, so kegg.lookup_pathways
-    raises NotFoundError with the bridge-constructed ``hvg:<entrez>``
+    answers ok with an empty list and the bridge-constructed ``hvg:<entrez>``
     gene_id in the message. The assertion proves the bridge fired
     (Ensembl → Entrez → KEGG gene_id). See
     scripts/probe_kegg_bridge_candidates.json.
     """
     async with httpx.AsyncClient() as client:
-        with pytest.raises(NotFoundError, match=r"queried as hvg:\d+") as excinfo:
-            await kegg.lookup_pathways(
-                client, "HORVU.MOREX.r3.1HG0000090", organism="hordeum_vulgare"
-            )
-    assert "HORVU.MOREX.r3.1HG0000090" in str(excinfo.value)
+        # #140: a gene KEGG knows with no pathways is an ok, empty answer; the
+        # bridge (Ensembl -> Entrez -> KEGG gene id) shows in kegg_gene_id.
+        result = await kegg.lookup_pathways(
+            client, "HORVU.MOREX.r3.1HG0000090", organism="hordeum_vulgare"
+        )
+    assert re.fullmatch(r"hvg:\d+", result["kegg_gene_id"]), result
+    assert result["locus"] == "HORVU.MOREX.r3.1HG0000090" and result["pathways"] == []
 
 
 @pytest.mark.skipif(
@@ -801,17 +804,19 @@ async def test_live_kegg_poplar_bridge_fires_via_chr1_first_gene():
     """Poplar Potri.001G006600.v4.1 (chr1-first-gene) — v1.5 probe pass.
     Real Ensembl /xrefs + KEGG /link/pathway round-trip. Probe found 0
     KEGG pathway annotations for this locus, so kegg.lookup_pathways
-    raises NotFoundError with the bridge-constructed ``pop:<entrez>``
+    answers ok with an empty list and the bridge-constructed ``pop:<entrez>``
     gene_id in the message. The assertion proves the bridge fired
     (Ensembl → Entrez → KEGG gene_id). See
     scripts/probe_kegg_bridge_candidates.json.
     """
     async with httpx.AsyncClient() as client:
-        with pytest.raises(NotFoundError, match=r"queried as pop:\d+") as excinfo:
-            await kegg.lookup_pathways(
-                client, "Potri.001G006600.v4.1", organism="populus_trichocarpa"
-            )
-    assert "Potri.001G006600.v4.1" in str(excinfo.value)
+        # #140: a gene KEGG knows with no pathways is an ok, empty answer; the
+        # bridge (Ensembl -> Entrez -> KEGG gene id) shows in kegg_gene_id.
+        result = await kegg.lookup_pathways(
+            client, "Potri.001G006600.v4.1", organism="populus_trichocarpa"
+        )
+    assert re.fullmatch(r"pop:\d+", result["kegg_gene_id"]), result
+    assert result["locus"] == "Potri.001G006600.v4.1" and result["pathways"] == []
 
 
 @pytest.mark.skipif(
@@ -823,17 +828,19 @@ async def test_live_kegg_brachypodium_bridge_fires_via_chr1_first_gene():
     """Brachypodium BRADI_1g00485v3 (chr1-first-gene) — v1.5 probe pass.
     Real Ensembl /xrefs + KEGG /link/pathway round-trip. Probe found 0
     KEGG pathway annotations for this locus, so kegg.lookup_pathways
-    raises NotFoundError with the bridge-constructed ``bdi:<entrez>``
+    answers ok with an empty list and the bridge-constructed ``bdi:<entrez>``
     gene_id in the message. The assertion proves the bridge fired
     (Ensembl → Entrez → KEGG gene_id). See
     scripts/probe_kegg_bridge_candidates.json.
     """
     async with httpx.AsyncClient() as client:
-        with pytest.raises(NotFoundError, match=r"queried as bdi:\d+") as excinfo:
-            await kegg.lookup_pathways(
-                client, "BRADI_1g00485v3", organism="brachypodium_distachyon"
-            )
-    assert "BRADI_1g00485v3" in str(excinfo.value)
+        # #140: a gene KEGG knows with no pathways is an ok, empty answer; the
+        # bridge (Ensembl -> Entrez -> KEGG gene id) shows in kegg_gene_id.
+        result = await kegg.lookup_pathways(
+            client, "BRADI_1g00485v3", organism="brachypodium_distachyon"
+        )
+    assert re.fullmatch(r"bdi:\d+", result["kegg_gene_id"]), result
+    assert result["locus"] == "BRADI_1g00485v3" and result["pathways"] == []
 
 
 # ---------- issue #140: a known gene with no pathways is an answer ----------

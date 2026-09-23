@@ -37,13 +37,9 @@ async def _get(
     params: dict[str, Any] | None = None,
 ) -> Any:
     """GET a Gramene endpoint with retry on 429/5xx and per-call caching."""
-    key = cache.make_key("GET", BASE_URL, path, params)
-    cached = _CACHE.get(key)
-    if cached is not None:
-        return cached
-    resp = await _http.request_with_retry(
+    return await _http.cached_get(
         client,
-        "GET",
+        _CACHE,
         f"{BASE_URL}{path}",
         service=f"Gramene {path}",
         params=params,
@@ -51,9 +47,6 @@ async def _get(
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
     )
-    result = resp.json()
-    _CACHE.set(key, result)
-    return result
 
 
 # Gramene homology categories as KEYS of homologous_genes.
@@ -195,6 +188,7 @@ async def lookup_homologs(
     limit: int | None = None,
     target_organism: str | int | None = None,
     cursor: str | None = None,
+    with_organism: bool = False,
 ) -> dict[str, Any]:
     """Fetch Gramene compara homologs for a plant locus.
 
@@ -215,6 +209,10 @@ async def lookup_homologs(
     (``genes?idList=...&fl=system_name``, chunks of 100), and every returned
     row then carries ``organism``. ``total`` counts the filtered set and
     ``total_all_organisms`` the pre-filter one.
+
+    ``with_organism`` adds that same ``organism`` to every row without
+    filtering (#130): only the returned page is resolved, one call per 100
+    rows. ``organism`` is null where Gramene has no record for the locus.
 
     ``homology_type`` is one of ``"ortholog"``, ``"paralog"``, ``"all"``.
     Unknown values default to ``"all"`` — we prefer permissive filtering
@@ -275,6 +273,13 @@ async def lookup_homologs(
     if target_slug is None:
         total = len(normalized)
         rows = normalized[offset : offset + cap]
+        if with_organism:
+            species = await fetch_homolog_enrichment_batch(
+                client, [row["target_locus"] for row in rows]
+            )
+            rows = [
+                {**row, "organism": species[row["target_locus"]]["system_name"]} for row in rows
+            ]
         return {
             "locus": locus,
             "release": GRAMENE_RELEASE,

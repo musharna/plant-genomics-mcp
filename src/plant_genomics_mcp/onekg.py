@@ -60,28 +60,18 @@ _CACHE = cache.TTLCache()
 
 async def _get(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
     """GET a 1001 Genomes endpoint (cached by full URL), returning the parsed dict."""
-    key = cache.make_key("GET", url, "", None)
-    cached = _CACHE.get(key)
-    if cached is None:
-        resp = await _http.request_with_retry(
-            client,
-            "GET",
-            url,
-            service="1001 Genomes",
-            headers={"Accept": "application/json"},
-            timeout=DEFAULT_TIMEOUT,
-            max_retries=MAX_RETRIES,
-        )
-        try:
-            cached = resp.json()
-        except ValueError as e:
-            raise PlantGenomicsError(f"1001 Genomes returned non-JSON: {resp.text[:200]}") from e
-        _CACHE.set(key, cached)
-    if not isinstance(cached, dict):
-        raise PlantGenomicsError(
-            f"1001 Genomes returned unexpected payload: {type(cached).__name__}"
-        )
-    return cached
+    body = await _http.cached_get(
+        client,
+        _CACHE,
+        url,
+        service="1001 Genomes",
+        headers={"Accept": "application/json"},
+        timeout=DEFAULT_TIMEOUT,
+        max_retries=MAX_RETRIES,
+    )
+    if not isinstance(body, dict):
+        raise PlantGenomicsError(f"1001 Genomes returned unexpected payload: {type(body).__name__}")
+    return body
 
 
 def _project_effect(row: Any) -> dict[str, Any] | None:

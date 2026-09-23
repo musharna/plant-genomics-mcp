@@ -28,7 +28,11 @@ from tests.test_server_dispatch import DISPATCH_SPECS, Spec, _Env, _make_recorde
 
 # Properties the dispatcher consumes itself or renames before the backend call.
 # Each entry is a fact about server.py, not an exemption: keep it short.
-_CONSUMED: dict[str, set[str]] = {}
+_CONSUMED: dict[str, set[str]] = {
+    # The inner tool is called once per locus with `args` spread; its routing
+    # is asserted by the batch_locus_call spec in test_server_dispatch.py.
+    "batch_locus_call": {"tool", "loci", "args"},
+}
 _RENAMED: dict[str, dict[str, str]] = {}
 # Arms that forward ``limit=None`` on purpose and let the backend resolve it:
 # the invariant is then "the backend's resolution of None IS the schema default".
@@ -69,6 +73,8 @@ def _positional_checks(spec: Spec, args: tuple[Any, ...], kwargs: dict[str, Any]
             f"{spec.tool}: first positional must be the AsyncClient, got {args[:1]!r}"
         )
     for name in _schema(spec.tool).get("required", []):
+        if name in _CONSUMED.get(spec.tool, set()):
+            continue
         value = spec.args[name]
         assert value in args or kwargs.get(name) == value, (
             f"{spec.tool}: required {name}={value!r} did not reach the backend: {args!r} {kwargs!r}"

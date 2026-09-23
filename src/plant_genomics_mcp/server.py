@@ -52,6 +52,7 @@ synthesis tools that compose the live backends:
   - ``batch_atted_coexpression``          — gather over atted_coexpression
   - ``batch_bar_gene_summary``            — gather over bar_gene_summary
   - ``batch_bar_aiv_interactions``        — gather over bar_aiv_interactions
+  - ``batch_locus_call``                  — gather over any locus-keyed tool (#131)
   - ``analyze_locus_synth``               — v0.8 synthesis: Ensembl + Phytozome + UniProt + xrefs in one envelope
   - ``find_homologs_synth``               — v0.8 synthesis: BLAST + per-hit UniProt resolution
   - ``biological_context_synth``          — v0.8 synthesis: GO + literature + KEGG + STRING + ATTED + consensus_partners
@@ -479,7 +480,9 @@ TOOLS: list[types.Tool] = [
             "when no curated record exists (common for non-Arabidopsis plants). "
             "organism accepts a canonical slug, scientific/common name, or "
             "NCBI taxid (default arabidopsis_thaliana; e.g. oryza_sativa, "
-            "zea_mays). "
+            "zea_mays). A gene symbol answers only when it names one locus; a "
+            "symbol shared by several loci (ARF1) is InvalidArguments listing "
+            "them. "
             "Returns primaryAccession, uniProtkbId, entryType, recommendedName, "
             "geneNames, organism, taxonId, sequenceLength, web_url. This is "
             "the protein-side entry point — pair with InterPro / AlphaFold / "
@@ -720,8 +723,9 @@ TOOLS: list[types.Tool] = [
             "(data.gramene.org v69). Default homology_type='ortholog'; pass "
             "'paralog' for in-species duplicates or 'all' for everything. "
             "Returns target_locus + homology category (type) + shared gene_tree_id "
-            "per hit. Rows carry no taxon unless target_organism is given, which "
-            "filters to one organism before the cap and adds 'organism' per row; "
+            "per hit. Rows carry no taxon unless with_organism=true (adds "
+            "'organism' per row) or target_organism is given, which filters to "
+            "one organism before the cap and adds 'organism' per row; "
             "pair with resolve_locus_to_uniprot for protein-level enrichment and "
             "with blast_sequence for sequence similarity discovery."
         ),
@@ -745,6 +749,14 @@ TOOLS: list[types.Tool] = [
                         "name, or NCBI taxid), filtered BEFORE the cap so a hub gene's "
                         "rice or wheat orthologs cannot be pushed past 'limit' by other "
                         "species. Adds 'organism' to every row and 'total_all_organisms'."
+                    ),
+                },
+                "with_organism": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": (
+                        "Add 'organism' (Gramene species slug, null when unknown) to "
+                        "every row without filtering; one extra call per 100 rows (#130)"
                     ),
                 },
                 "limit": {
@@ -1865,6 +1877,14 @@ TOOLS: list[types.Tool] = [
                         "species. Adds 'organism' to every row and 'total_all_organisms'."
                     ),
                 },
+                "with_organism": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": (
+                        "Add 'organism' (Gramene species slug, null when unknown) to "
+                        "every row without filtering; one extra call per 100 rows (#130)"
+                    ),
+                },
             },
             "required": ["loci"],
             "additionalProperties": False,
@@ -2209,6 +2229,64 @@ TOOLS: list[types.Tool] = [
         _meta=_EDAM_SYNTHESIS,
     ),
 ]
+
+# #131: one batch form for every tool keyed by a single locus, rather than a
+# batch_* per tool. Derived from the schemas above, so a locus tool added
+# later is batchable without touching this.
+BATCHABLE_LOCUS_TOOLS: tuple[str, ...] = tuple(
+    sorted(
+        str(tool.name)
+        for tool in TOOLS
+        if tool.input_schema.get("required") == ["locus"]
+        and not str(tool.name).startswith("batch_")
+    )
+)
+# Refused inside `args`: the batch supplies `locus`, and a cursor continues
+# one locus's list, so it cannot apply to every locus in the batch.
+_BATCH_CALL_RESERVED = ("locus", "cursor")
+
+TOOLS.append(
+    types.Tool(
+        name="batch_locus_call",
+        title="Batch: Any Locus Tool",
+        description=(
+            "Run one locus-keyed tool over up to 50 loci in one call (#131). "
+            "'tool' names any tool whose only required argument is 'locus' "
+            "(interpro_domains, alphafold_structure, panther_family, "
+            "orthodb_orthologs, gene_report, ...); 'args' holds that tool's "
+            "other arguments, shared by every locus and checked against its "
+            "schema once before any call. Returns the standard batch envelope: "
+            "results keyed by locus, each exactly what the single tool returns, "
+            "and per-locus errors. The dedicated batch_* tools remain."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "tool": {"type": "string", "enum": list(BATCHABLE_LOCUS_TOOLS)},
+                "loci": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "minItems": 1,
+                    "maxItems": batch.MAX_BATCH,
+                    "description": f"Locus identifiers (max {batch.MAX_BATCH})",
+                },
+                "args": {
+                    "type": "object",
+                    "default": {},
+                    "description": (
+                        "The tool's arguments other than 'locus' (and not 'cursor'), "
+                        'e.g. {"organism": "oryza_sativa"}'
+                    ),
+                },
+            },
+            "required": ["tool", "loci"],
+            "additionalProperties": False,
+        },
+        output_schema=BatchEnvelope.model_json_schema(),
+        annotations=_READ_ONLY,
+        _meta=_EDAM,
+    )
+)
 
 
 # ---- argument validation ----------------------------------------------------
@@ -2635,6 +2713,7 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     args["loci"],
                     homology_type=args.get("homology_type", "ortholog"),
                     target_organism=args.get("target_organism"),
+                    with_organism=args.get("with_organism", False),
                 )
             case "kegg_pathways":
                 return await kegg.lookup_pathways(
@@ -2671,6 +2750,7 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     limit=args.get("limit"),
                     target_organism=args.get("target_organism"),
                     cursor=args.get("cursor"),
+                    with_organism=args.get("with_organism", False),
                 )
             case "analyze_locus_synth":
                 env = await synthesis.analyze_locus_synth(
@@ -2711,8 +2791,31 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     top_n=args.get("top_n", 10),
                 )
                 return env.model_dump()
+            case "batch_locus_call":
+                return await _batch_locus_call(args["tool"], args["loci"], args.get("args") or {})
             case _:
                 raise ValueError(f"unknown tool: {name}")
+
+
+async def _batch_locus_call(tool: str, loci: list[str], shared: dict[str, Any]) -> dict[str, Any]:
+    """``tool`` once per locus through the same path a single call takes.
+
+    The shared arguments are renamed and validated against ``tool``'s own
+    schema before the fan-out, so a bad argument is one refusal, not one
+    copied error per locus (the #139 lesson for batch forms).
+    """
+    if tool not in BATCHABLE_LOCUS_TOOLS:
+        raise InvalidArguments(f"batch_locus_call: {tool!r} is not a locus-keyed tool")
+    reserved = [key for key in _BATCH_CALL_RESERVED if key in shared]
+    if reserved:
+        raise InvalidArguments(f"batch_locus_call: args may not carry {', '.join(reserved)}")
+    loci = batch._bound(loci)
+    calls = {
+        locus: _rename_deprecated_arguments(tool, {**shared, "locus": locus}) for locus in loci
+    }
+    _validate_arguments(tool, calls[loci[0]])
+    results, errors = await batch._gather(loci, lambda locus: _dispatch(tool, calls[locus]))
+    return batch._envelope(tool, loci, results, errors)
 
 
 async def _call_tool(
