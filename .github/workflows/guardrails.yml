@@ -45,6 +45,25 @@ jobs:
           if [ -f requirements-dev.txt ]; then uv pip install -r requirements-dev.txt; fi
           if [ -x .venv/bin/ruff ]; then echo "repo ruff: "; .venv/bin/ruff check .
           else echo "template ruff 0.16.7"; uvx ruff@0.16.7 check .; fi
+      # The verify-half of "CI verifies, local fixes". ruff-format is SKIPped
+      # below because an auto-fixing hook rewrites files in CI and reports that
+      # as failure; --check rewrites nothing, so the contract keeps both halves.
+      #
+      # PINNED, and deliberately NOT the "repo's own ruff" pattern above. A
+      # linter reports violations of rules, so a repo may reasonably hold its own
+      # baseline; a FORMATTER is a canonicaliser, and two minors disagree about
+      # what canonical means. plant-genomics-mcp resolves ruff 0.15.13 in uv.lock
+      # while .pre-commit-config.yaml pins 0.16.7: the same tree reads clean under
+      # one and dirty under the other. Checking format with a version other than
+      # the one that WRITES it fails correctly-formatted code. This pin must equal
+      # the ruff-pre-commit rev in .pre-commit-config.yaml; the sync selftest
+      # asserts that, because nothing else would notice them drifting apart.
+      #
+      # --exclude '*.md': 0.16.7 also formats fenced code blocks in Markdown and
+      # 0.15.13 does not. Gating READMEs across the fleet is a bigger change than
+      # gating Python, so this stays Python-only until that is asked for.
+      - name: ruff format --check (the formatter's output is the code)
+        run: uvx ruff@0.16.7 format --check . --exclude '*.md'
       - name: pre-commit non-modifying hooks + house rules (all files)
         env:
           SKIP: ruff-check,ruff-format,end-of-file-fixer,trailing-whitespace
