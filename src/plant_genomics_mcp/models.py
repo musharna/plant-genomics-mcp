@@ -76,6 +76,10 @@ def unstated_total_field(counts: str) -> Any:
 
 
 RETURNED_DESCRIPTION = "Rows in this payload (#123)"
+NEXT_CURSOR_DESCRIPTION = (
+    "Pass back as cursor= to get the rows after this page; null on the last page. "
+    "Opaque, and bound to this tool and query (#123)"
+)
 TRUNCATED_DESCRIPTION = "True when total > returned: more exist upstream than came back (#123)"
 UNKNOWN_TRUNCATED_DESCRIPTION = "Always null: without a stated total, truncation is unknown (#123)"
 
@@ -296,6 +300,7 @@ class LocusLiterature(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    next_cursor: str | None = Field(default=None, description=NEXT_CURSOR_DESCRIPTION)
     total: int = total_field("papers (Europe PMC hitCount)")
     truncated: bool = Field(description=TRUNCATED_DESCRIPTION)
 
@@ -359,6 +364,7 @@ class LocusGoAnnotations(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    next_cursor: str | None = Field(default=None, description=NEXT_CURSOR_DESCRIPTION)
     total: int = total_field("GO annotations (QuickGO numberOfHits)")
 
     locus: str
@@ -1051,6 +1057,7 @@ class OrthoDbOrthologs(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    next_cursor: str | None = Field(default=None, description=NEXT_CURSOR_DESCRIPTION)
     total: int = total_field("members (all organisms, or target_organism when given)")
     returned: int = Field(description=RETURNED_DESCRIPTION)
 
@@ -1096,6 +1103,7 @@ class AraGwasAssociations(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    next_cursor: str | None = Field(default=None, description=NEXT_CURSOR_DESCRIPTION)
     total: int = total_field("associations")
 
     locus: str
@@ -1124,6 +1132,7 @@ class ArabidopsisNaturalVariation(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    next_cursor: str | None = Field(default=None, description=NEXT_CURSOR_DESCRIPTION)
     total: int = total_field("variant effects")
 
     locus: str
@@ -1171,6 +1180,7 @@ class GrameneHomologs(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    next_cursor: str | None = Field(default=None, description=NEXT_CURSOR_DESCRIPTION)
     returned: int = Field(description=RETURNED_DESCRIPTION)
 
     locus: str

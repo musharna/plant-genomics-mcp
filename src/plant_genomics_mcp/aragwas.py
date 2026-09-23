@@ -140,8 +140,12 @@ async def lookup_locus(
     client: httpx.AsyncClient,
     locus: str,
     organism: str | int = organisms.DEFAULT_ORGANISM,
+    cursor: str | None = None,
 ) -> dict[str, Any]:
     """Fetch AraGWAS GWAS associations for an Arabidopsis locus.
+
+    ``cursor`` is a ``next_cursor`` from the previous call (#123); it resumes
+    at AraGWAS's own ``offset``.
 
     Raises ``OrganismNotSupported`` for any non-Arabidopsis organism (the panel
     is *A. thaliana* only). Follows pagination up to ``MAX_PAGES``;
@@ -153,7 +157,10 @@ async def lookup_locus(
             backend="aragwas", organism=canonical, supported=["arabidopsis_thaliana"]
         )
     validators.assert_valid_agi(locus, backend="AraGWAS")
-    url: str | None = f"{BASE_URL}/api/genes/{locus}/associations/"
+    query = {"locus": locus}
+    offset = int(_http.decode_cursor("aragwas_associations", query, cursor).get("offset", 0))
+    first = f"{BASE_URL}/api/genes/{locus}/associations/"
+    url: str | None = f"{first}?offset={offset}" if offset else first
     associations: list[dict[str, Any]] = []
     total = 0
     pages = 0
@@ -180,10 +187,15 @@ async def lookup_locus(
         "organism": canonical,
         "found": True,
         "association_count": total,
-        **_http.counted(total, associations),
-        # total>returned covers the count-known case; a still-set next link
-        # covers a null/absent upstream count where more pages remain (audit L3).
-        "truncated": total > len(associations) or url is not None,
+        **_http.counted(total, associations, offset=offset),
+        # total>offset+returned covers the count-known case; a still-set next
+        # link covers a null/absent upstream count where more pages remain (audit L3).
+        "truncated": total > offset + len(associations) or url is not None,
+        "next_cursor": _http.encode_cursor(
+            "aragwas_associations", query, {"offset": offset + len(associations)}
+        )
+        if total > offset + len(associations) or url is not None
+        else None,
         "associations": associations,
         # Issue #121: uniform key; null because this backend states no release on
         # the answering response (headers probed live 2026-09-22).

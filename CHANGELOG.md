@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **Rows past the cap are reachable (#123).** `orthodb_orthologs`,
+  `gramene_homologs`, `aragwas_associations`, `arabidopsis_natural_variation`,
+  `locus_literature` and `locus_go_annotations` take `cursor` and return
+  `next_cursor` (null on the last page). Europe PMC, QuickGO and AraGWAS resume
+  at their own `cursorMark` / `page` / `offset`; OrthoDB, Gramene and 1001
+  Genomes answer with the whole set, so a page is an offset into it. Cursors
+  are opaque and bound to the tool and query: one passed to another tool, or
+  with another locus or page size, is `InvalidArguments`. On later pages
+  `truncated` means more rows remain after this one.
+
 - **One pair of count names on every list tool (#123).** 16 tools now carry
   `total` (how many exist upstream, all pages), `returned` (rows in this
   payload) and `truncated` (`total > returned`), from one helper

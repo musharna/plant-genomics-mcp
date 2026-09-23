@@ -150,14 +150,26 @@ def _normalize(hit: dict[str, Any], include_abstract: bool = True) -> dict[str, 
     return normalized
 
 
+def _next_cursor(bound: dict[str, Any], raw: dict[str, Any], end: int) -> str | None:
+    """The cursor after this page: Europe PMC's nextCursorMark while hits remain."""
+    mark = raw.get("nextCursorMark")
+    if raw["hitCount"] <= end or not isinstance(mark, str) or not mark:
+        return None
+    return _http.encode_cursor("locus_literature", bound, {"mark": mark, "offset": end})
+
+
 async def lookup_locus(
     client: httpx.AsyncClient,
     locus: str,
     organism: str | int = organisms.DEFAULT_ORGANISM,
     size: int = DEFAULT_PAGE_SIZE,
     include_abstract: bool = True,
+    cursor: str | None = None,
 ) -> dict[str, Any]:
     """Search Europe PMC for literature mentioning a plant locus.
+
+    ``cursor`` is a ``next_cursor`` from the previous page (#123); it carries
+    Europe PMC's own ``cursorMark`` and how many hits came before.
 
     ``size`` is clamped to [1, MAX_PAGE_SIZE] to bound the wire payload.
     ``include_abstract=False`` nulls ``abstractText``, which is ~67% of the
@@ -174,12 +186,19 @@ async def lookup_locus(
     suffix = organisms.europe_pmc_slug_for(organism)
     if suffix:
         query = f"{locus} AND {suffix}"
+    bound = {"query": query, "size": size}
+    position = _http.decode_cursor("locus_literature", bound, cursor)
+    offset = int(position.get("offset", 0))
     params: dict[str, Any] = {
         "query": query,
         "format": "json",
         "resultType": "core",
         "pageSize": size,
     }
+    # The first page is the same with or without cursorMark=* (live
+    # 2026-09-23: same ids, same nextCursorMark), so it is sent only to continue.
+    if "mark" in position:
+        params["cursorMark"] = position["mark"]
     raw = await _get(client, "/search", params=params, shape_problem=_search_shape_problem)
     # _search_shape_problem has vouched for both: no defaults here, because a
     # defaulted missing count is exactly how #141's false zeros were made.
@@ -190,7 +209,8 @@ async def lookup_locus(
         "organism": record.canonical,
         "query": query,
         "hitCount": raw["hitCount"],
-        **_http.counted(raw["hitCount"], hits),
+        **_http.counted(raw["hitCount"], hits, offset=offset),
+        "next_cursor": _next_cursor(bound, raw, offset + len(hits)),
         # Makes the payload self-describing: without this, a null abstractText
         # is ambiguous between "not requested" and "this article has none", and
         # only the original caller would know which.
