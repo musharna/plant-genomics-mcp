@@ -16,6 +16,18 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+# Issue #136: structures, logos and entry pages are URLs no tool dereferences;
+# every URL-valued output field says so (tests/test_link_fields.py).
+LINK_NOTE = "a link for the client to open or fetch; no tool on this server dereferences it"
+
+
+def link_field(what: str, *, optional: bool = True) -> Any:
+    """A URL-valued output field, described as the link it is (issue #136)."""
+    description = f"{what} — {LINK_NOTE}"
+    if optional:
+        return Field(default=None, description=description)
+    return Field(description=description)
+
 
 def upstream_version_field(source: str, stated_by: str | None) -> Any:
     """The ``upstream_version`` field every chain tool carries (issue #121).
@@ -198,7 +210,7 @@ class UniProtLocus(BaseModel):
     organism: str | None = Field(default=None, description="Scientific name")
     taxonId: int | None = Field(default=None, description="NCBI taxonomy ID")
     sequenceLength: int | None = Field(default=None, description="Protein length in residues")
-    web_url: str | None = Field(default=None, description="Browser URL for the UniProt entry")
+    web_url: str | None = link_field("Browser URL for the UniProt entry")
     upstream_version: str | None = Field(
         default=None,
         description=(
@@ -253,7 +265,7 @@ class LiteratureHit(BaseModel):
     isOpenAccess: str | None = Field(default=None, description='"Y" or "N"')
     hasPDF: str | None = Field(default=None, description='"Y" or "N"')
     abstractText: str | None = Field(default=None)
-    web_url: str | None = Field(default=None, description="europepmc.org article URL")
+    web_url: str | None = link_field("europepmc.org article URL")
 
 
 class LocusLiterature(BaseModel):
@@ -589,9 +601,9 @@ class AlphaFoldStructure(BaseModel):
     organism: str | None = Field(default=None, description="Organism scientific name")
     gene: str | None = Field(default=None, description="Gene name from UniProt")
     description: str | None = Field(default=None, description="UniProt protein description")
-    cif_url: str | None = Field(default=None, description="mmCIF model download URL")
-    pdb_url: str | None = Field(default=None, description="PDB model download URL")
-    pae_image_url: str | None = Field(default=None, description="Predicted-aligned-error image URL")
+    cif_url: str | None = link_field("mmCIF model download URL")
+    pdb_url: str | None = link_field("PDB model download URL")
+    pae_image_url: str | None = link_field("Predicted-aligned-error image URL")
     upstream_version: str | None = upstream_version_field(
         "AlphaFold DB", "the entry's own latestVersion (e.g. '6')"
     )
@@ -700,8 +712,8 @@ class TfBindingMotif(BaseModel):
         default_factory=list, description="UniProt accessions JASPAR attributes the profile to"
     )
     pubmed_ids: list[str] = Field(default_factory=list, description="Supporting PubMed IDs")
-    sequence_logo: str | None = Field(default=None, description="URL of the SVG sequence logo")
-    web_url: str | None = Field(default=None, description="JASPAR profile page")
+    sequence_logo: str | None = link_field("URL of the SVG sequence logo")
+    web_url: str | None = link_field("JASPAR profile page")
 
 
 class TfBindingMotifs(BaseModel):
@@ -813,7 +825,7 @@ class ExperimentalInteractions(BaseModel):
     partners: list[InteractionPartner] = Field(
         default_factory=list, description="Partners ordered by evidence count, descending"
     )
-    source_url: str = Field(description="ThaleMine gene report page")
+    source_url: str = link_field("ThaleMine gene report page", optional=False)
 
 
 class GeneRif(BaseModel):
@@ -846,7 +858,7 @@ class GeneRifs(BaseModel):
     gene_rifs: list[GeneRif] = Field(
         default_factory=list, description="Curated statements in upstream order"
     )
-    source_url: str = Field(description="ThaleMine gene report page")
+    source_url: str = link_field("ThaleMine gene report page", optional=False)
 
 
 class LocusVariants(BaseModel):
@@ -1151,7 +1163,7 @@ class BarGeneSummary(BaseModel):
         ),
     )
     species: Literal["arabidopsis_thaliana"]
-    source_url: str = Field(description="ThaleMine endpoint URL for traceability")
+    source_url: str = link_field("ThaleMine endpoint URL for traceability", optional=False)
 
 
 class BarEfpEcotype(BaseModel):
@@ -1212,7 +1224,7 @@ class BarEfpExpression(BaseModel):
     ecotype_count: int = Field(description="Number of ecotype rows in `ecotypes`")
     ecotypes: list[BarEfpEcotype]
     species: Literal["arabidopsis_thaliana"]
-    source_url: str = Field(description="BAR world-eFP endpoint URL for traceability")
+    source_url: str = link_field("BAR world-eFP endpoint URL for traceability", optional=False)
 
 
 class BarAIVPaper(BaseModel):
@@ -1229,10 +1241,7 @@ class BarAIVPaper(BaseModel):
     source_id: int | None = Field(default=None, description="BAR internal study ID")
     pmid: str | None = Field(default=None, description='PubMed ID, e.g. "29462363"')
     title: str | None = Field(default=None, description="Study title with citation")
-    image_url: str | None = Field(
-        default=None,
-        description="BAR-hosted thumbnail of the GRN network diagram",
-    )
+    image_url: str | None = link_field("BAR-hosted thumbnail of the GRN network diagram")
     comments: str | None = Field(default=None, description="BAR curator commentary on the study")
     cyjs_layout: str | None = Field(
         default=None,
@@ -1307,7 +1316,7 @@ class BarAIVInteractions(BaseModel):
         default_factory=list,
         description="PPI predictions (populated when kind=ppi_predictions)",
     )
-    source_url: str = Field(description="BAR AIV endpoint URL for traceability")
+    source_url: str = link_field("BAR AIV endpoint URL for traceability", optional=False)
 
 
 class StringPartner(BaseModel):
