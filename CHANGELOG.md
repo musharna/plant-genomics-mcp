@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **`gramene_homologs` can name each homolog's species without filtering
+  (#130).** `with_organism=true` adds `organism` (Gramene species slug, null
+  when Gramene has no record) to every returned row, using the enrichment
+  `target_organism` and `consensus_homologs` already ran. Only the returned
+  page is resolved (one call per 100 rows). Also on `batch_gramene_homologs`.
+  Default off; output unchanged without it.
+
 - **A symbol shared by several loci is refused, not answered with the first
   hit (#128).** `resolve_locus_to_uniprot` (and every tool that resolves a
   locus through UniProt) searched with `size=1` and answered with UniProt's

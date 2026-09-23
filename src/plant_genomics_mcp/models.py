@@ -1173,6 +1173,13 @@ class GrameneHomolog(BaseModel):
         default=None,
         description="Gramene gene-tree ID (shared across all homologs in the record)",
     )
+    organism: str | None = Field(
+        default=None,
+        description=(
+            "Gramene species slug of target_locus; present with with_organism or "
+            "target_organism, null when Gramene has no record for the locus"
+        ),
+    )
 
 
 class GrameneHomologs(BaseModel):
