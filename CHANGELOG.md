@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- **New tool `entry_members` — from a family or domain to its genes (#124).**
+  Given an InterPro, Pfam or PANTHER accession and an organism, it lists every
+  UniProt protein carrying it, each with the locus the locus-keyed tools accept
+  (EnsemblPlants GeneId, else Araport / TAIR, else UniProt's ordered-locus
+  name; null when UniProt links the protein to no gene). `total` is UniProt's
+  count across pages; `truncated` + `next_cursor` page the rest. ARF
+  (IPR010525): Arabidopsis 23 = the dossier's 23, rice 24, wheat 132
+  unreviewed. The dossier enumerated its family through 742 locus-level
+  calls; this is one call per organism and page.
+  51 tools.
+
 - **A missing upstream count is an error, not zero (#141).** Europe PMC
   intermittently answers `/search` with HTTP 200 and `{"version":"6.9"}`
   alone; `locus_literature` read that as `hitCount 0` and cached it, so genes

@@ -33,8 +33,9 @@ README = Path(__file__).resolve().parents[1] / "README.md"
 # `git show origin/main:README.md | wc -l` = 340, + 2 for
 # examples/arf_family/PAGE.md: the link line and the blank line that must
 # precede it (a link line glued to the previous paragraph renders as part
-# of that paragraph).
-BUDGET = 342
+# of that paragraph). +1 (#124): the tool-matrix row for `entry_members`;
+# a new tool's row is the one addition the matrix exists to carry.
+BUDGET = 343
 
 TITLE_LINE = "# 🌱 plant-genomics-mcp"
 

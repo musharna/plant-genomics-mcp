@@ -933,6 +933,52 @@ class PantherFamily(BaseModel):
     upstream_version: str | None = upstream_version_field("PANTHER", None)
 
 
+class EntryMember(BaseModel):
+    """One UniProt protein carrying an InterPro / Pfam / PANTHER entry."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    accession: str = Field(description="UniProt accession, e.g. Q84WU6")
+    reviewed: bool = Field(description="True if Swiss-Prot (curated)")
+    symbol: str | None = Field(default=None, description="First gene symbol, e.g. ARF1")
+    protein_name: str | None = Field(default=None)
+    locus: str | None = Field(
+        default=None,
+        description=(
+            "The gene locus this server's locus tools accept (AGI, RAP, IWGSC …). "
+            "null when UniProt cross-references the protein to no gene, e.g. an "
+            "old cDNA submission; never guessed from the symbol."
+        ),
+    )
+    loci: list[str] = Field(default_factory=list, description="Every locus from the winning source")
+    locus_source: Literal["EnsemblPlants", "Araport", "TAIR", "ordered_locus_name"] | None = Field(
+        default=None, description="UniProt field the locus came from"
+    )
+
+
+class EntryMembers(BaseModel):
+    """Every protein in one organism that carries a family/domain entry."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    entry: str = Field(description="The entry asked about, e.g. IPR010525")
+    entry_database: Literal["interpro", "pfam", "panther"]
+    organism: str
+    taxid: int
+    reviewed_only: bool
+    query: str = Field(description="The UniProt query that produced this answer")
+    total: int = Field(description="UniProt's own count of matching proteins, all pages")
+    returned: int = Field(description="Members on this page")
+    truncated: bool = Field(description="True when more members follow next_cursor")
+    next_cursor: str | None = Field(
+        default=None, description="Pass back as cursor= for the next page; null on the last"
+    )
+    members: list[EntryMember]
+    upstream_version: str | None = upstream_version_field(
+        "UniProt", "its X-UniProt-Release header (e.g. '2026_02')"
+    )
+
+
 class OrthoDbOrthologs(BaseModel):
     """OrthoDB ortholog group + cross-species member genes for a locus.
 

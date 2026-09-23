@@ -120,6 +120,9 @@ DISPATCH_SPECS: list[Spec] = [
         _DEFAULT_ORG,
     ),
     Spec("panther_family", panther, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
+    Spec(
+        "entry_members", uniprot, "entry_members", {"entry": "IPR010525"}, "IPR010525", _DEFAULT_ORG
+    ),
     Spec("orthodb_orthologs", orthodb, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec("aragwas_associations", aragwas, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec("arabidopsis_natural_variation", onekg, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
