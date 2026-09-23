@@ -138,9 +138,8 @@ async def lookup_by_uniprot(
     return {
         "uniprot_accession": accession,
         "numberOfHits": total,
-        "returned": len(annotations),
         # Issue #132: 51 upstream / 50 returned shipped with no flag.
-        "truncated": total > len(annotations),
+        **_http.counted(total, annotations),
         "annotations": annotations,
         "by_aspect": _rollup_by_aspect(annotations),
         # Issue #132: the rollup is a dedup of annotations[], not a cut of it;

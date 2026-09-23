@@ -57,6 +57,29 @@ def upstream_version_field(source: str, stated_by: str | None) -> Any:
     )
 
 
+def total_field(counts: str) -> Any:
+    """``total``: how many exist upstream (issue #123, one name on every list tool)."""
+    return Field(
+        description=f"How many {counts} exist upstream for this query, all pages (pre-cap) (#123)"
+    )
+
+
+def unstated_total_field(counts: str) -> Any:
+    """``total`` for an upstream that ranks a top-N and states no total."""
+    return Field(
+        default=None,
+        description=(
+            f"Always null: the upstream returns the top {counts} asked for and states "
+            "no total; null means unknown, never zero (#123)"
+        ),
+    )
+
+
+RETURNED_DESCRIPTION = "Rows in this payload (#123)"
+TRUNCATED_DESCRIPTION = "True when total > returned: more exist upstream than came back (#123)"
+UNKNOWN_TRUNCATED_DESCRIPTION = "Always null: without a stated total, truncation is unknown (#123)"
+
+
 class EnsemblPlantsLocus(BaseModel):
     """Ensembl Plants ``/lookup/id/{locus}`` response.
 
@@ -273,11 +296,14 @@ class LocusLiterature(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    total: int = total_field("papers (Europe PMC hitCount)")
+    truncated: bool = Field(description=TRUNCATED_DESCRIPTION)
+
     locus: str
     organism: str
     query: str = Field(description="Final query string sent to Europe PMC")
     hitCount: int = Field(description="Total hits available upstream (may exceed returned)")
-    returned: int = Field(description="Number of hits actually in hits[]")
+    returned: int = Field(description=RETURNED_DESCRIPTION)
     abstracts_included: bool = Field(
         default=True,
         description=(
@@ -333,10 +359,12 @@ class LocusGoAnnotations(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    total: int = total_field("GO annotations (QuickGO numberOfHits)")
+
     locus: str
     uniprot_accession: str = Field(description="UniProt accession used to query QuickGO")
     numberOfHits: int = Field(description="Total annotations available upstream")
-    returned: int = Field(description="Number of annotations in annotations[]")
+    returned: int = Field(description=RETURNED_DESCRIPTION)
     truncated: bool = Field(description="True when numberOfHits exceeds returned (raise `limit`)")
     annotations: list[GoAnnotation]
     by_aspect: dict[str, list[dict[str, str]]] = Field(
@@ -382,11 +410,14 @@ class LocusPlantOntology(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    total: int = total_field("annotations (Planteome numFound)")
+    truncated: bool = Field(description=TRUNCATED_DESCRIPTION)
+
     locus: str
     organism: str = Field(description="Canonical organism slug")
     taxon: str = Field(description="NCBI taxon filter applied, e.g. NCBITaxon:3702")
     numberOfHits: int = Field(description="Total annotations available upstream")
-    returned: int = Field(description="Number of annotations in annotations[]")
+    returned: int = Field(description=RETURNED_DESCRIPTION)
     annotations: list[PlantOntologyAnnotation]
     by_ontology: dict[str, list[dict[str, str]]] = Field(
         description="namespace → [{term_id, term_name}, ...], deduped on term_id",
@@ -478,6 +509,10 @@ class BlastResult(BaseModel):
     """
 
     model_config = ConfigDict(extra="forbid")
+
+    total: int | None = unstated_total_field("hits")
+    returned: int = Field(description=RETURNED_DESCRIPTION)
+    truncated: bool | None = Field(default=None, description=UNKNOWN_TRUNCATED_DESCRIPTION)
 
     rid: str = Field(description="NCBI BLAST request ID — re-usable via fetch_result()")
     program: str = Field(description="blastn | blastp | blastx | tblastn | tblastx")
@@ -643,6 +678,9 @@ class InterProDomains(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    total: int = total_field("InterPro entries on this protein")
+    returned: int = Field(description=RETURNED_DESCRIPTION)
+
     locus: str
     accession: str = Field(description="Resolved UniProt accession")
     found: bool = Field(description="True once the locus resolved to a UniProt entry")
@@ -669,15 +707,24 @@ class ExperimentalStructures(BaseModel):
     mapping is queried (ranked best-first). ``found=False`` (empty list) means no
     deposited structure — the common plant case (a 404), not an error.
     Complements ``AlphaFoldStructure`` (the predicted view). ``structure_count``
-    is the true total even when the list is capped.
+    (= ``total``) counts per-chain rows before the cap; ``entry_count`` counts
+    distinct PDB entries.
     """
 
     model_config = ConfigDict(extra="forbid")
 
+    total: int = total_field("PDBe best_structures rows (one per chain)")
+    returned: int = Field(description=RETURNED_DESCRIPTION)
+    entry_count: int = Field(
+        description="Distinct PDB entries among the rows; structure_count counts chains (#123)"
+    )
+
     locus: str
     accession: str = Field(description="Resolved UniProt accession")
     found: bool = Field(description="True if any experimental structure is deposited")
-    structure_count: int = Field(description="Total deposited structures (pre-cap)")
+    structure_count: int = Field(
+        description="PDBe rows, pre-cap — one per CHAIN, not per entry (see entry_count)"
+    )
     truncated: bool = Field(description="True if the structure list was capped")
     structures: list[dict[str, Any]] = Field(
         default_factory=list,
@@ -728,6 +775,9 @@ class TfBindingMotifs(BaseModel):
     """
 
     model_config = ConfigDict(extra="forbid")
+
+    total: int = total_field("UniProt-confirmed JASPAR profiles")
+    returned: int = Field(description=RETURNED_DESCRIPTION)
 
     locus: str
     accession: str = Field(description="Resolved UniProt accession")
@@ -810,6 +860,9 @@ class ExperimentalInteractions(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    total: int = total_field("interaction partners")
+    returned: int = Field(description=RETURNED_DESCRIPTION)
+
     locus: str
     gene_symbol: str | None = Field(default=None, description="Gene symbol from ThaleMine")
     organism: str = Field(description="Canonical organism slug (Arabidopsis only)")
@@ -849,6 +902,9 @@ class GeneRifs(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    total: int = total_field("GeneRIFs")
+    returned: int = Field(description=RETURNED_DESCRIPTION)
+
     locus: str
     gene_symbol: str | None = Field(default=None, description="Gene symbol from ThaleMine")
     organism: str = Field(description="Canonical organism slug (Arabidopsis only)")
@@ -870,6 +926,9 @@ class LocusVariants(BaseModel):
     """
 
     model_config = ConfigDict(extra="forbid")
+
+    total: int = total_field("variants overlapping the gene")
+    returned: int = Field(description=RETURNED_DESCRIPTION)
 
     locus: str
     organism: str = Field(description="Resolved Ensembl species slug")
@@ -967,8 +1026,8 @@ class EntryMembers(BaseModel):
     taxid: int
     reviewed_only: bool
     query: str = Field(description="The UniProt query that produced this answer")
-    total: int = Field(description="UniProt's own count of matching proteins, all pages")
-    returned: int = Field(description="Members on this page")
+    total: int = total_field("proteins matching the UniProt query")
+    returned: int = Field(description=RETURNED_DESCRIPTION)
     truncated: bool = Field(description="True when more members follow next_cursor")
     next_cursor: str | None = Field(
         default=None, description="Pass back as cursor= for the next page; null on the last"
@@ -992,6 +1051,9 @@ class OrthoDbOrthologs(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    total: int = total_field("members (all organisms, or target_organism when given)")
+    returned: int = Field(description=RETURNED_DESCRIPTION)
+
     locus: str
     organism: str = Field(
         description=(
@@ -1009,7 +1071,7 @@ class OrthoDbOrthologs(BaseModel):
             "— the true cluster total, unaffected by the member cap below"
         )
     )
-    member_count: int = Field(description="Member genes returned (post-cap)")
+    member_count: int = Field(description="Member genes before the cap (pre-cap; = total)")
     truncated: bool = Field(description="True if the member list was capped")
     members: list[dict[str, Any]] = Field(
         default_factory=list, description="Per-gene {organism, gene_id, xref, description}"
@@ -1033,6 +1095,8 @@ class AraGwasAssociations(BaseModel):
     """
 
     model_config = ConfigDict(extra="forbid")
+
+    total: int = total_field("associations")
 
     locus: str
     organism: str = Field(description="Always arabidopsis_thaliana")
@@ -1059,6 +1123,8 @@ class ArabidopsisNaturalVariation(BaseModel):
     """
 
     model_config = ConfigDict(extra="forbid")
+
+    total: int = total_field("variant effects")
 
     locus: str
     organism: str = Field(description="Always arabidopsis_thaliana")
@@ -1105,9 +1171,11 @@ class GrameneHomologs(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    returned: int = Field(description=RETURNED_DESCRIPTION)
+
     locus: str
     release: str = Field(description="Gramene release identifier, e.g. v69")
-    total: int = Field(description="Number of homologs after filtering, BEFORE the row cap")
+    total: int = total_field("homologs (after any target_organism filter)")
     truncated: bool = Field(
         default=False,
         description="True when the row list was capped (< total); pass limit= to change the cap",
@@ -1397,6 +1465,10 @@ class StringInteractions(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    total: int | None = unstated_total_field("partners")
+    returned: int = Field(description=RETURNED_DESCRIPTION)
+    truncated: bool | None = Field(default=None, description=UNKNOWN_TRUNCATED_DESCRIPTION)
+
     query: str = Field(description="The locus or accession the user passed")
     accession: str = Field(description="UniProt accession actually queried at STRING")
     organism: str = Field(description="Plant organism canonical slug, e.g. arabidopsis_thaliana")
@@ -1427,6 +1499,10 @@ class AttedCoexpression(BaseModel):
     """ATTED-II coexpression response wrapper."""
 
     model_config = ConfigDict(extra="forbid")
+
+    total: int | None = unstated_total_field("coexpression neighbours")
+    returned: int = Field(description=RETURNED_DESCRIPTION)
+    truncated: bool | None = Field(default=None, description=UNKNOWN_TRUNCATED_DESCRIPTION)
 
     locus: str
     atted_release: str = Field(

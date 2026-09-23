@@ -293,7 +293,7 @@ def _empty(locus: str, accession: str, tax_id: int, names: list[str]) -> dict[st
         "gene_names_searched": names,
         "found": False,
         "motif_count": 0,
-        "truncated": False,
+        **_http.counted(0, []),
         "motifs": [],
         "name_only_matches": [],
         "upstream_version": None,
@@ -372,7 +372,7 @@ async def lookup_locus(
         "gene_names_searched": names,
         "found": total > 0,
         "motif_count": total,
-        "truncated": total > MAX_MOTIFS,
+        **_http.counted(total, confirmed[:MAX_MOTIFS]),
         "motifs": confirmed[:MAX_MOTIFS],
         "name_only_matches": name_only,
         # Issue #121: uniform key; null because this backend states no release on

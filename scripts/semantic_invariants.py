@@ -91,11 +91,37 @@ COUNT_SPECS: tuple[CountSpec, ...] = (
     CountSpec("arabidopsis_natural_variation", "variant_count", CountKind.PRE_CAP, "variants"),
     CountSpec("aragwas_associations", "association_count", CountKind.PRE_CAP, "associations"),
     CountSpec("orthodb_orthologs", "organism_count", CountKind.PRE_CAP, None),
-    CountSpec("orthodb_orthologs", "member_count", CountKind.RETURNED, "members"),
+    CountSpec("orthodb_orthologs", "member_count", CountKind.PRE_CAP, "members"),
     CountSpec("plantcyc_locus_info", "pathway_count", CountKind.PRE_CAP, "pathways"),
     CountSpec("plantcyc_locus_info", "reaction_count", CountKind.PRE_CAP, "reactions"),
     # Aggregate over nested partner records, not a top-level list length.
     CountSpec("experimental_interactions", "evidence_count", CountKind.PRE_CAP, None),
+    # #123: one pair of names on every list tool. ``total`` is left out where the
+    # upstream states none (atted, string, blast): it is null there by design.
+    *(
+        spec
+        for tool, rows, stated in (
+            ("interpro_domains", "domains", True),
+            ("experimental_structures", "structures", True),
+            ("tf_binding_motifs", "motifs", True),
+            ("orthodb_orthologs", "members", True),
+            ("gramene_homologs", "homologs", True),
+            ("aragwas_associations", "associations", True),
+            ("locus_go_annotations", "annotations", True),
+            ("locus_literature", "hits", True),
+            ("locus_variants", "variants", True),
+            ("experimental_interactions", "partners", True),
+            ("locus_gene_rifs", "gene_rifs", True),
+            ("arabidopsis_natural_variation", "variants", True),
+            ("locus_plant_ontology", "annotations", True),
+            ("entry_members", "members", True),
+            ("atted_coexpression", "neighbors", False),
+            ("string_interactions", "partners", False),
+            ("blast_sequence", "hits", False),
+        )
+        for spec in ((CountSpec(tool, "total", CountKind.PRE_CAP, rows),) if stated else ())
+        + (CountSpec(tool, "returned", CountKind.RETURNED, rows),)
+    ),
 )
 
 _PRE_CAP_MARKERS = ("pre-cap", "true total", "total available", "before cap")

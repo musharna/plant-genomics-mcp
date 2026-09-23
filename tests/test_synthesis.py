@@ -549,6 +549,7 @@ def test_find_homologs_synth_test_fixtures_match_real_blast_result_shape():
             "database": "swissprot",
             "status": "READY",
             "hitCount": 2,
+            "returned": 2,
             "hits": [
                 {
                     "accession": "Q0WV96.1",
@@ -872,6 +873,7 @@ def test_biological_context_synth_fixtures_match_real_response_shapes():
             "locus": "AT1G01010",
             "release": "v69",
             "total": 1,
+            "returned": 1,
             "homologs": [
                 {
                     "target_locus": "Os01g0100100",
@@ -905,6 +907,7 @@ def test_biological_context_synth_fixtures_match_real_response_shapes():
             "query": "Q0WV96",
             "accession": "Q0WV96",
             "organism": "arabidopsis_thaliana",
+            "returned": 1,
             "partners": [
                 {
                     "string_id": "3702.AT3G15500.1",
@@ -925,6 +928,7 @@ def test_biological_context_synth_fixtures_match_real_response_shapes():
         {
             "locus": "AT1G01010",
             "atted_release": "Ath-u.c4-0",
+            "returned": 1,
             "neighbors": [{"locus": "AT4G36990", "entrez_gene_id": 842367, "z_score": 7.0}],
         }
     )
@@ -1252,6 +1256,7 @@ def test_consensus_homologs_fixtures_match_real_response_shapes():
             "locus": "AT1G01010",
             "release": "v69",
             "total": len(gramene_homologs),
+            "returned": len(gramene_homologs),
             "homologs": gramene_homologs,
         }
     )
@@ -1263,6 +1268,7 @@ def test_consensus_homologs_fixtures_match_real_response_shapes():
             "database": "swissprot",
             "status": "READY",
             "hitCount": 1,
+            "returned": 1,
             "hits": [
                 {
                     "accession": "sp|Q5VMS9.1|Y_ORYSJ",

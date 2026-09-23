@@ -151,6 +151,8 @@ async def lookup_partners(
         "query": query,
         "accession": canonical_accession,
         "organism": record.canonical,
+        # STRING's network API returns the top `limit` partners and states no total.
+        **_http.counted(None, partners),
         "partners": partners,
         # Issue #121: uniform key; null because this backend states no release on
         # the answering response (headers probed live 2026-09-22).

@@ -266,8 +266,7 @@ async def lookup_homologs(
             "release": GRAMENE_RELEASE,
             # ``total`` is the true pre-cap count, so a capped answer still reports
             # how much exists rather than quietly implying it returned everything.
-            "total": total,
-            "truncated": total > len(rows),
+            **_http.counted(total, rows),
             "homologs": rows,
             # Issue #121: the release is pinned in the request path, so it is
             # the release that answered by construction.
@@ -287,9 +286,8 @@ async def lookup_homologs(
         "locus": locus,
         "release": GRAMENE_RELEASE,
         "target_organism": target_slug,
-        "total": len(kept),
+        **_http.counted(len(kept), rows),
         "total_all_organisms": len(normalized),
-        "truncated": len(kept) > len(rows),
         "homologs": rows,
         "upstream_version": GRAMENE_RELEASE,
     }

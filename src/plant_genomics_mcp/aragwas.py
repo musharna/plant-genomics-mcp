@@ -180,7 +180,7 @@ async def lookup_locus(
         "organism": canonical,
         "found": True,
         "association_count": total,
-        "returned": len(associations),
+        **_http.counted(total, associations),
         # total>returned covers the count-known case; a still-set next link
         # covers a null/absent upstream count where more pages remain (audit L3).
         "truncated": total > len(associations) or url is not None,

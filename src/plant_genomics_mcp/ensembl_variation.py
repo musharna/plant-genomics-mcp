@@ -135,7 +135,7 @@ async def locus_variants(
         # during projection, so a list shortened by malformed rows could come
         # back flagged untruncated. The count and the flag must agree with what
         # the caller is holding.
-        "truncated": total > len(rows),
+        **_http.counted(total, rows),
         "variants": rows,
     }
 

@@ -150,6 +150,8 @@ async def lookup_coexpression(
     return {
         "locus": locus,
         "atted_release": release,
+        # A top-N ranking over the whole release: ATTED states no total.
+        **_http.counted(None, neighbors),
         "neighbors": neighbors,
         # Issue #121: db= is pinned in the request, so this is the release that
         # answered by construction; kept under atted_release too for callers.

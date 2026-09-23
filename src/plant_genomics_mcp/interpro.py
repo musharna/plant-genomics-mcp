@@ -123,7 +123,7 @@ async def lookup_by_uniprot(client: httpx.AsyncClient, accession: str) -> dict[s
         "accession": accession,
         "found": True,
         "domain_count": total,
-        "truncated": total > len(domains),
+        **_http.counted(total, domains),
         "domains": domains,
         "count_by_type": dict(by_type),
         # None means InterPro did not state a release on this response, never

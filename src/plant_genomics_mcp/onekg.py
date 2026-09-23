@@ -127,7 +127,6 @@ async def lookup_locus(
         "transcript": tx,
         "region": region,
         "variant_count": total,
-        "returned": len(variants),
-        "truncated": total > MAX_EFFECTS,
+        **_http.counted(total, variants),
         "variants": variants,
     }

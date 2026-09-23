@@ -260,7 +260,7 @@ async def lookup_interactions(
         "found": total > 0,
         "partner_count": total,
         "evidence_count": len(data),
-        "truncated": total > MAX_PARTNERS,
+        **_http.counted(total, partners[:MAX_PARTNERS]),
         "partners": partners[:MAX_PARTNERS],
         "source_url": _report_url(locus),
     }
@@ -302,7 +302,7 @@ async def lookup_gene_rifs(
         "organism": canonical,
         "found": total > 0,
         "rif_count": total,
-        "truncated": total > MAX_RIFS,
+        **_http.counted(total, rifs[:MAX_RIFS]),
         "gene_rifs": rifs[:MAX_RIFS],
         "source_url": _report_url(locus),
     }

@@ -138,7 +138,7 @@ def _empty(locus: str, organism: str) -> dict[str, Any]:
         "group": None,
         "organism_count": 0,
         "member_count": 0,
-        "truncated": False,
+        **_http.counted(0, []),
         "members": [],
         "upstream_version": None,
     }
@@ -191,7 +191,7 @@ async def lookup_locus(
             "organism_count": len(clusters),
             # TRUE pre-cap total, so a truncated answer still says how much exists.
             "member_count": member_total,
-            "truncated": member_total > len(members),
+            **_http.counted(member_total, members),
             "members": members,
             # Issue #121: uniform key; /current/ names no release and the
             # response states none (headers probed live 2026-09-22).
@@ -215,7 +215,7 @@ async def lookup_locus(
         "organism_count": len(clusters),
         "member_count": member_total,
         "member_count_all_organisms": all_total,
-        "truncated": member_total > len(members),
+        **_http.counted(member_total, members),
         "members": members,
         "upstream_version": None,
     }
