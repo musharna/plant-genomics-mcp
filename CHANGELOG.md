@@ -12,6 +12,22 @@
   each result exactly what the single tool returns. The list is derived from
   the schemas, so a locus tool added later is batchable. 52 tools.
 
+- **`gramene_homologs` can name each homolog's species without filtering
+  (#130).** `with_organism=true` adds `organism` (Gramene species slug, null
+  when Gramene has no record) to every returned row, using the enrichment
+  `target_organism` and `consensus_homologs` already ran. Only the returned
+  page is resolved (one call per 100 rows). Also on `batch_gramene_homologs`.
+  Default off; output unchanged without it.
+
+- **A symbol shared by several loci is refused, not answered with the first
+  hit (#128).** `resolve_locus_to_uniprot` (and every tool that resolves a
+  locus through UniProt) searched with `size=1` and answered with UniProt's
+  top hit: `ARF1` returned auxin response factor 1 (AT1G59750) and hid
+  ADP-ribosylation factor 1 (AT2G47170). When the hits of the answering pass
+  name more than one locus and none is the input, the call is now
+  `InvalidArguments` listing the loci. A symbol naming one locus (`ARF5`) and
+  every locus id answer as before. Behaviour change.
+
 - **Rows past the cap are reachable (#123).** `orthodb_orthologs`,
   `gramene_homologs`, `aragwas_associations`, `arabidopsis_natural_variation`,
   `locus_literature` and `locus_go_annotations` take `cursor` and return

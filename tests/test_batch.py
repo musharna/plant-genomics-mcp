@@ -661,7 +661,7 @@ async def test_batch_ensembl_400_not_found_body_is_a_typed_not_found(
             batch.batch_gramene_homologs,
             "gramene",
             "lookup_homologs",
-            {"homology_type": "paralog", "target_organism": "rice"},
+            {"homology_type": "paralog", "target_organism": "rice", "with_organism": True},
         ),
         (batch.batch_kegg_pathways, "kegg", "lookup_pathways", {"organism": "rice"}),
         (batch.batch_bar_gene_summary, "bar", "gene_summary", {}),

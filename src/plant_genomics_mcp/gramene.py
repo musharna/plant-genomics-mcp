@@ -195,6 +195,7 @@ async def lookup_homologs(
     limit: int | None = None,
     target_organism: str | int | None = None,
     cursor: str | None = None,
+    with_organism: bool = False,
 ) -> dict[str, Any]:
     """Fetch Gramene compara homologs for a plant locus.
 
@@ -215,6 +216,10 @@ async def lookup_homologs(
     (``genes?idList=...&fl=system_name``, chunks of 100), and every returned
     row then carries ``organism``. ``total`` counts the filtered set and
     ``total_all_organisms`` the pre-filter one.
+
+    ``with_organism`` adds that same ``organism`` to every row without
+    filtering (#130): only the returned page is resolved, one call per 100
+    rows. ``organism`` is null where Gramene has no record for the locus.
 
     ``homology_type`` is one of ``"ortholog"``, ``"paralog"``, ``"all"``.
     Unknown values default to ``"all"`` — we prefer permissive filtering
@@ -275,6 +280,13 @@ async def lookup_homologs(
     if target_slug is None:
         total = len(normalized)
         rows = normalized[offset : offset + cap]
+        if with_organism:
+            species = await fetch_homolog_enrichment_batch(
+                client, [row["target_locus"] for row in rows]
+            )
+            rows = [
+                {**row, "organism": species[row["target_locus"]]["system_name"]} for row in rows
+            ]
         return {
             "locus": locus,
             "release": GRAMENE_RELEASE,
