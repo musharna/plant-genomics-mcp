@@ -243,14 +243,9 @@ async def batch_locus_go_annotations(
         up = await uniprot.lookup_locus(client, locus, organism=organism)
         accession = up["primaryAccession"]
         go = await quickgo.lookup_by_uniprot(client, accession, limit=limit)
-        return {
-            "locus": locus,
-            "uniprot_accession": accession,
-            "numberOfHits": go["numberOfHits"],
-            "returned": go["returned"],
-            "annotations": go["annotations"],
-            "by_aspect": go["by_aspect"],
-        }
+        # Issue #132: pass QuickGO's answer through whole. A hand-copied key
+        # list here dropped every field added to it later (upstream_version).
+        return {"locus": locus, **go}
 
     results, errors = await _gather(loci, _one)
     return _envelope("locus_go_annotations", loci, results, errors)

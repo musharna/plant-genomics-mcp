@@ -325,9 +325,13 @@ class LocusGoAnnotations(BaseModel):
     uniprot_accession: str = Field(description="UniProt accession used to query QuickGO")
     numberOfHits: int = Field(description="Total annotations available upstream")
     returned: int = Field(description="Number of annotations in annotations[]")
+    truncated: bool = Field(description="True when numberOfHits exceeds returned (raise `limit`)")
     annotations: list[GoAnnotation]
     by_aspect: dict[str, list[dict[str, str]]] = Field(
-        description="aspect → [{goId, goName}, ...], deduped on goId",
+        description="aspect → [{goId, goName}, ...], deduped on goId, over annotations[] only",
+    )
+    by_aspect_deduped_on: Literal["goId"] = Field(
+        description="The key by_aspect collapses annotations[] on: a dedup, not a truncation",
     )
     upstream_version: str | None = upstream_version_field("QuickGO", None)
 

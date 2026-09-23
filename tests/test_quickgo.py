@@ -165,3 +165,87 @@ async def test_live_lookup_q0wv96_returns_annotations() -> None:
     # NAC001 is a transcription factor — molecular_function and
     # biological_process are both expected.
     assert "molecular_function" in aspects or "biological_process" in aspects
+
+
+# ---------- issue #132: the payload says what it cut and what it collapsed ----------
+
+_SEARCH_URL = (
+    "https://www.ebi.ac.uk/QuickGO/services/annotation/search"
+    "?geneProductId=Q0WV96&limit=50&includeFields=goName%2CtaxonName"
+)
+
+
+@pytest.mark.asyncio
+async def test_a_capped_answer_is_flagged_truncated_and_a_whole_one_is_not(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """numberOfHits 51 / returned 50 used to ship with no flag (issue #132)."""
+    rows = [_ann("GO:0006355", "biological_process"), _ann("GO:0005634", "cellular_component")]
+    httpx_mock.add_response(url=_SEARCH_URL, json={"numberOfHits": 3, "results": rows})
+    httpx_mock.add_response(url=_SEARCH_URL, json={"numberOfHits": 2, "results": rows})
+    async with httpx.AsyncClient() as client:
+        capped = await quickgo.lookup_by_uniprot(client, "Q0WV96")
+        quickgo._CACHE.clear()
+        whole = await quickgo.lookup_by_uniprot(client, "Q0WV96")
+    assert (capped["numberOfHits"], capped["returned"], capped["truncated"]) == (3, 2, True)
+    # Positive control: everything upstream has was returned.
+    assert (whole["numberOfHits"], whole["returned"], whole["truncated"]) == (2, 2, False)
+
+
+@pytest.mark.asyncio
+async def test_the_payload_names_the_key_by_aspect_is_deduplicated_on(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """16 rollup terms beside 50 annotations read as a cut, not a dedup (#132)."""
+    httpx_mock.add_response(
+        url=_SEARCH_URL,
+        json={
+            "numberOfHits": 2,
+            "results": [
+                _ann("GO:0006355", "biological_process"),
+                _ann("GO:0006355", "biological_process", goEvidence="IDA"),
+            ],
+        },
+    )
+    async with httpx.AsyncClient() as client:
+        result = await quickgo.lookup_by_uniprot(client, "Q0WV96")
+    assert result["by_aspect_deduped_on"] == "goId"
+    # The dedup it names is the one it did: two rows, one term.
+    assert result["returned"] == 2 and len(result["by_aspect"]["biological_process"]) == 1
+
+
+@pytest.mark.asyncio
+async def test_both_tool_forms_ship_every_field_the_output_schema_declares(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The single and batch wrappers used to re-list QuickGO's keys by hand.
+
+    Each copy dropped whatever was added to QuickGO's answer after it was
+    written — ``upstream_version`` (issue #121) never reached either form's
+    payload although the output schema declares it. Driven through the real
+    projection, with only UniProt resolution stubbed and QuickGO's HTTP mocked.
+    """
+    from plant_genomics_mcp import batch, server, uniprot
+    from plant_genomics_mcp.models import LocusGoAnnotations
+
+    async def _resolved(client, locus, organism="arabidopsis_thaliana"):
+        return {"primaryAccession": "Q0WV96"}
+
+    monkeypatch.setattr(uniprot, "lookup_locus", _resolved)
+    rows = [_ann("GO:0006355", "biological_process")]
+    httpx_mock.add_response(
+        url=_SEARCH_URL, json={"numberOfHits": 2, "results": rows}, is_reusable=True
+    )
+    declared = set(LocusGoAnnotations.model_fields)
+
+    async with httpx.AsyncClient() as client:
+        single = await server._resolve_then_go_annotations(
+            client, "AT1G01010", "arabidopsis_thaliana", 50
+        )
+        env = await batch.batch_locus_go_annotations(client, ["AT1G01010"])
+
+    for form, payload in (("single", single), ("batch", env["results"]["AT1G01010"])):
+        assert set(payload) == declared, (form, declared ^ set(payload))
+        LocusGoAnnotations.model_validate(payload)  # extra="forbid": nothing undeclared
+        assert payload["truncated"] is True and payload["upstream_version"] is None, form
+    assert env["errors"] == {}  # positive control: the batch call itself succeeded

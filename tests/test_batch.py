@@ -332,6 +332,7 @@ async def test_batch_locus_go_annotations_mixed(monkeypatch: pytest.MonkeyPatch)
     ) -> dict[str, Any]:
         if accession == "Q0WV96":
             return {
+                "uniprot_accession": accession,  # the real function always returns it
                 "numberOfHits": 1,
                 "returned": 1,
                 "annotations": [{"goId": "GO:0003677"}],
@@ -734,6 +735,7 @@ async def test_batch_locus_go_annotations_forwards_both_stages(
     ) -> dict[str, Any]:
         seen["quickgo"] = (client, accession, kwargs)
         return {
+            "uniprot_accession": accession,  # the real function always returns it
             "numberOfHits": 1,
             "returned": 1,
             "annotations": [{"goId": "GO:1"}],

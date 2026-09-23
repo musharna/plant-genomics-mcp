@@ -548,7 +548,9 @@ TOOLS: list[types.Tool] = [
             "with goId/goName/goAspect/qualifier/evidence + a by_aspect rollup "
             "({molecular_function: [{goId, goName}, ...], biological_process: "
             "[...], cellular_component: [...]}) deduped on goId so the "
-            "high-level term set is one read away."
+            "high-level term set is one read away; by_aspect_deduped_on "
+            "names that key in the payload. truncated is true when "
+            "numberOfHits exceeds returned — raise limit (max 100)."
         ),
         input_schema={
             "type": "object",
@@ -2228,14 +2230,9 @@ async def _resolve_then_go_annotations(
     up = await uniprot.lookup_locus(client, locus, organism=organism)
     accession = up["primaryAccession"]
     go = await quickgo.lookup_by_uniprot(client, accession, limit=limit)
-    return {
-        "locus": locus,
-        "uniprot_accession": accession,
-        "numberOfHits": go["numberOfHits"],
-        "returned": go["returned"],
-        "annotations": go["annotations"],
-        "by_aspect": go["by_aspect"],
-    }
+    # Issue #132: pass QuickGO's answer through whole. A hand-copied key
+    # list here dropped every field added to it later (upstream_version).
+    return {"locus": locus, **go}
 
 
 async def _dispatch(name: str, args: dict[str, Any]) -> Any:
