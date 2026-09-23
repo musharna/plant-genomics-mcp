@@ -259,7 +259,8 @@ async def lookup_locus(
     Two input shapes are accepted:
 
     * **Gene/locus name** (TAIR ``AT1G01010``, rice ``Os01g0100100``, …) —
-      searches ``/uniprotkb/search`` with ``gene:{locus} AND organism_id``.
+      searches ``/uniprotkb/search`` with ``(gene:{locus} OR
+      xref:ensemblplants-{locus}) AND organism_id``.
       Prefers reviewed (Swiss-Prot) hits, falls back to unreviewed (TrEMBL).
     * **UniProt accession** (``Q9LIV2``, ``A0A1B2C3D4``, optionally with a
       trailing ``.N`` version suffix from a BLAST text report) — bypasses
@@ -279,7 +280,11 @@ async def lookup_locus(
         record = await _fetch_by_accession(client, locus)
         return _normalize(record, locus_query=locus)
     taxid = organisms.ncbi_taxid_for(organism)
-    base = f"gene:{locus} AND organism_id:{taxid}"
+    # Issue #138: UniProt carries wheat IWGSC ids (TraesCS3A02G159200) only as
+    # EnsemblPlants cross-references, never as gene names, so `gene:` alone
+    # missed every wheat locus (live, 2026-09-22: gene: 0 hits, xref: 1).
+    # Arabidopsis and rice still answer through `gene:` (ordered-locus names).
+    base = f"(gene:{locus} OR xref:ensemblplants-{locus}) AND organism_id:{taxid}"
     # Pass 1: reviewed only (Swiss-Prot).
     results = await _search(client, f"{base} AND reviewed:true", size=1)
     if not results:
