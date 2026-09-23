@@ -224,7 +224,7 @@ def _render_biological_context(locus: str, organism: str | int, top_n: int) -> s
         "— fetch the canonical UniProt accession (needed for STRING)."
     )
     steps.append(
-        "`string_interactions` with locus_or_accession=<accession from the "
+        "`string_interactions` with locus=<accession from the "
         f"previous step>, organism={canonical!r}, limit={top_n} — fetch "
         "first-neighbor protein-protein interactors (STRING combined + "
         "per-channel sub-scores)."

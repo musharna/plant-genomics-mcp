@@ -79,7 +79,7 @@ BATCH_FORMS: dict[str, tuple[str, str, bool]] = {
     "resolve_locus_to_uniprot": ("batch_resolve_locus_to_uniprot", "loci", True),
     "gramene_homologs": ("batch_gramene_homologs", "loci", False),
     "atted_coexpression": ("batch_atted_coexpression", "loci", True),
-    "string_interactions": ("batch_string_interactions", "loci_or_accessions", True),
+    "string_interactions": ("batch_string_interactions", "loci", True),
     "locus_go_annotations": ("batch_locus_go_annotations", "loci", True),
     "kegg_pathways": ("batch_kegg_pathways", "loci", True),
     "locus_literature": ("batch_locus_literature", "loci", True),

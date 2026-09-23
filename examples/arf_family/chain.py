@@ -6,12 +6,13 @@ names are checked against the server's live `tools/list` by
 `tests/test_arf_chain.py` — this table is hand-written and nothing else
 stops it drifting.
 
-Two rows do not take the `{"locus", "organism"}` pair that the other
-fourteen take, and both are recorded as gaps rather than smoothed over
-here:
+One row does not take the `{"locus", "organism"}` pair that the other
+fifteen take, and it is recorded as a gap rather than smoothed over here:
 
 - `gramene_homologs` has no `organism` property at all.
-- `string_interactions` calls its locus argument `locus_or_accession`.
+
+(`string_interactions` called its locus argument `locus_or_accession`
+until #129; the old name is a deprecated alias now.)
 """
 
 from __future__ import annotations
@@ -36,7 +37,7 @@ CHAIN: list[tuple[str, Callable[[str, str], dict]]] = [
     ("atted_coexpression", _lo),
     (
         "string_interactions",
-        lambda locus, organism: {"locus_or_accession": locus, "organism": organism},
+        lambda locus, organism: {"locus": locus, "organism": organism},
     ),
     ("aragwas_associations", _lo),
     ("locus_go_annotations", _lo),
