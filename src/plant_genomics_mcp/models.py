@@ -995,7 +995,13 @@ class AraGwasAssociations(BaseModel):
     returned: int = Field(description="Associations returned (post page-cap)")
     truncated: bool = Field(description="True if pagination was capped")
     associations: list[dict[str, Any]] = Field(
-        default_factory=list, description="Per-hit {score, maf, mac, snp{…}, study{…}}"
+        default_factory=list,
+        description=(
+            "Per-hit {score, maf, mac, over_bonferroni, over_fdr, over_permutation, snp{…}, "
+            "study{…, thresholds}}. score is -log10(p); study.thresholds holds that study's "
+            "bonferroni_threshold05/01, bh_threshold and permutation_threshold on the same "
+            "scale, which over_bonferroni / over_fdr / over_permutation compare score against"
+        ),
     )
     upstream_version: str | None = upstream_version_field("AraGWAS", None)
 

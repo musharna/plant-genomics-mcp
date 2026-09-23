@@ -17,6 +17,7 @@ Endpoint (paginated via ``links.next``):
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import httpx
@@ -70,6 +71,36 @@ def _annotation_for(snp: dict[str, Any], locus: str) -> dict[str, Any]:
     return anns[0] if anns else {}
 
 
+# Issue #137: AraGWAS stores study.name as a one-element Python tuple repr,
+# "('As75_raw_Full imputed genotype_amm',)" (live, 2026-09-22). Anchored,
+# no nested quantifiers: one quote, anything but that quote, the same quote.
+_TUPLE_REPR = re.compile(r"^\((['\"])([^'\"]*)\1,\)$")
+
+
+def _study_name(name: Any) -> Any:
+    """Unwrap AraGWAS's tuple-repr study name; anything else comes back as sent."""
+    if isinstance(name, str):
+        match = _TUPLE_REPR.match(name)
+        if match:
+            return match.group(2)
+    return name
+
+
+def _thresholds(study: dict[str, Any]) -> dict[str, Any]:
+    """The study's own significance thresholds, keyed by AraGWAS's names.
+
+    Same -log10(p) scale as ``score``: bonferroni_threshold05 is
+    -log10(0.05 / total_associations) (checked live against the study's own
+    total). over_bonferroni / over_fdr / over_permutation are ``score`` against
+    bonferroni_threshold05 / bh_threshold / permutation_threshold.
+    """
+    out: dict[str, Any] = {}
+    for item in study.get("thresholds") or []:
+        if isinstance(item, dict) and isinstance(item.get("name"), str):
+            out[item["name"]] = item.get("value")
+    return out
+
+
 def _project(assoc: dict[str, Any], locus: str) -> dict[str, Any]:
     """Project one AraGWAS association to the surfaced field set."""
     snp = assoc.get("snp") or {}
@@ -96,10 +127,11 @@ def _project(assoc: dict[str, Any], locus: str) -> dict[str, Any]:
             "transcript": ann.get("transcriptId"),
         },
         "study": {
-            "name": study.get("name"),
+            "name": _study_name(study.get("name")),
             "method": study.get("method"),
             "phenotype": pheno.get("name"),
             "phenotype_description": pheno.get("description"),
+            "thresholds": _thresholds(study),
         },
     }
 
