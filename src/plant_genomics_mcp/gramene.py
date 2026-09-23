@@ -182,14 +182,23 @@ async def fetch_homolog_enrichment_batch(
     return result
 
 
+def _next(query: dict[str, Any], total: int, offset: int, rows: list[Any]) -> str | None:
+    """The cursor for the rows after this page, or None when none remain."""
+    end = offset + len(rows)
+    return _http.encode_cursor("gramene_homologs", query, {"offset": end}) if total > end else None
+
+
 async def lookup_homologs(
     client: httpx.AsyncClient,
     locus: str,
     homology_type: str = "ortholog",
     limit: int | None = None,
     target_organism: str | int | None = None,
+    cursor: str | None = None,
 ) -> dict[str, Any]:
     """Fetch Gramene compara homologs for a plant locus.
+
+    ``cursor`` is a ``next_cursor`` from the previous page (#123).
 
     ``limit`` caps the returned rows (default ``MAX_HOMOLOGS``); ``total``
     always reports the true pre-cap count and ``truncated`` says whether the
@@ -224,6 +233,11 @@ async def lookup_homologs(
     validators.assert_valid_locus(locus, backend="Gramene")
     # Resolve the target first so a typo fails before any upstream call.
     target_slug = organisms.resolve(target_organism).canonical if target_organism else None
+    # #123: Gramene answers with the whole homology set, so a page is an offset
+    # into it; the cursor is bound to everything that shapes that set.
+    cap = _resolve_limit(limit)
+    query = {"locus": locus, "type": homology_type, "target": target_slug, "limit": cap}
+    offset = int(_http.decode_cursor("gramene_homologs", query, cursor).get("offset", 0))
     raw = await _get(
         client,
         f"/{GRAMENE_RELEASE}/genes",
@@ -260,13 +274,14 @@ async def lookup_homologs(
                 normalized.append(_normalize(category, target_locus, gene_tree_id))
     if target_slug is None:
         total = len(normalized)
-        rows = normalized[: _resolve_limit(limit)]
+        rows = normalized[offset : offset + cap]
         return {
             "locus": locus,
             "release": GRAMENE_RELEASE,
             # ``total`` is the true pre-cap count, so a capped answer still reports
             # how much exists rather than quietly implying it returned everything.
-            **_http.counted(total, rows),
+            **_http.counted(total, rows, offset=offset),
+            "next_cursor": _next(query, total, offset, rows),
             "homologs": rows,
             # Issue #121: the release is pinned in the request path, so it is
             # the release that answered by construction.
@@ -281,12 +296,13 @@ async def lookup_homologs(
         slug = species[row["target_locus"]]["system_name"]
         if slug == target_slug:
             kept.append({**row, "organism": slug})
-    rows = kept[: _resolve_limit(limit)]
+    rows = kept[offset : offset + cap]
     return {
         "locus": locus,
         "release": GRAMENE_RELEASE,
         "target_organism": target_slug,
-        **_http.counted(len(kept), rows),
+        **_http.counted(len(kept), rows, offset=offset),
+        "next_cursor": _next(query, len(kept), offset, rows),
         "total_all_organisms": len(normalized),
         "homologs": rows,
         "upstream_version": GRAMENE_RELEASE,

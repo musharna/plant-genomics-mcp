@@ -12,6 +12,8 @@ returning ``Retry-After: 3600`` cannot pin the agent for an hour.
 from __future__ import annotations
 
 import asyncio
+import base64
+import json
 import os
 import re
 from collections.abc import Mapping, Sized
@@ -21,6 +23,7 @@ import httpx
 
 from plant_genomics_mcp import progress
 from plant_genomics_mcp.errors import (
+    InvalidArguments,
     NotFoundError,
     PlantGenomicsError,
     RateLimitError,
@@ -63,20 +66,52 @@ def stated_count(body: Mapping[str, Any], key: str, *, service: str) -> int:
     return value
 
 
-def counted(total: int | None, rows: Sized) -> dict[str, Any]:
+def counted(total: int | None, rows: Sized, *, offset: int = 0) -> dict[str, Any]:
     """The count fields every list-returning tool carries (issue #123).
 
     ``total`` is how many exist upstream for the query as asked, ``returned``
-    how many rows this payload holds, ``truncated`` whether the two differ.
-    A backend whose upstream states no total (a ranked top-N such as STRING or
-    ATTED) passes ``None``: then ``total`` and ``truncated`` are null, meaning
-    unknown, never guessed from the page size.
+    how many rows this payload holds, ``truncated`` whether more exist AFTER
+    this page (``offset`` rows came before it). A backend whose upstream states
+    no total (a ranked top-N such as STRING or ATTED) passes ``None``: then
+    ``total`` and ``truncated`` are null, meaning unknown, never guessed from
+    the page size.
     """
     return {
         "total": total,
         "returned": len(rows),
-        "truncated": None if total is None else total > len(rows),
+        "truncated": None if total is None else total > offset + len(rows),
     }
+
+
+def encode_cursor(tool: str, query: Mapping[str, Any], position: Mapping[str, Any]) -> str:
+    """An opaque cursor for the page after this one (issue #123).
+
+    It carries the tool and the query it continues, so a cursor passed back
+    to another tool, or with another locus or page size, is refused by
+    ``decode_cursor`` instead of silently paging a different list.
+    """
+    raw = json.dumps({"t": tool, "q": dict(query), "p": dict(position)}, sort_keys=True)
+    return base64.urlsafe_b64encode(raw.encode()).decode().rstrip("=")
+
+
+def decode_cursor(tool: str, query: Mapping[str, Any], cursor: str | None) -> dict[str, Any]:
+    """The position ``cursor`` encodes, or ``{}`` for the first page."""
+    if cursor is None:
+        return {}
+    try:
+        padded = cursor + "=" * (-len(cursor) % 4)
+        state = json.loads(base64.urlsafe_b64decode(padded.encode()))
+        ok = isinstance(state, dict) and isinstance(state.get("p"), dict)
+    except (ValueError, TypeError):
+        ok = False
+    if not ok:
+        raise InvalidArguments(f"{tool}: cursor is not one this server issued")
+    if state.get("t") != tool or state.get("q") != dict(query):
+        raise InvalidArguments(
+            f"{tool}: cursor continues {state.get('t')} {state.get('q')}, not {tool} {dict(query)}"
+        )
+    position: dict[str, Any] = state["p"]
+    return position
 
 
 def _too_large(service: str, detail: str) -> PlantGenomicsError:

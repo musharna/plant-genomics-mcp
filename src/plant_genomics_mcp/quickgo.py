@@ -110,19 +110,27 @@ async def lookup_by_uniprot(
     client: httpx.AsyncClient,
     accession: str,
     limit: int = DEFAULT_LIMIT,
+    cursor: str | None = None,
 ) -> dict[str, Any]:
     """Fetch GO annotations for a UniProt accession.
+
+    ``cursor`` is a ``next_cursor`` from the previous page (#123); it resumes
+    at QuickGO's own 1-based ``page``. ``by_aspect`` rolls up THIS page.
 
     ``limit`` is clamped to [1, MAX_LIMIT]. Returns a dict with raw
     ``annotations[]`` plus a ``by_aspect`` rollup keyed on GO aspect
     (molecular_function / biological_process / cellular_component).
     """
     limit = max(1, min(limit, MAX_LIMIT))
+    query = {"accession": accession, "limit": limit}
+    page = int(_http.decode_cursor("locus_go_annotations", query, cursor).get("page", 1))
     params: dict[str, Any] = {
         "geneProductId": accession,
         "limit": limit,
         "includeFields": "goName,taxonName",
     }
+    if page > 1:
+        params["page"] = page
     raw = await _get(client, "/annotation/search", params=params)
     if not isinstance(raw, dict):
         raise PlantGenomicsError(
@@ -139,7 +147,10 @@ async def lookup_by_uniprot(
         "uniprot_accession": accession,
         "numberOfHits": total,
         # Issue #132: 51 upstream / 50 returned shipped with no flag.
-        **_http.counted(total, annotations),
+        **_http.counted(total, annotations, offset=(page - 1) * limit),
+        "next_cursor": _http.encode_cursor("locus_go_annotations", query, {"page": page + 1})
+        if total > (page - 1) * limit + len(annotations)
+        else None,
         "annotations": annotations,
         "by_aspect": _rollup_by_aspect(annotations),
         # Issue #132: the rollup is a dedup of annotations[], not a cut of it;

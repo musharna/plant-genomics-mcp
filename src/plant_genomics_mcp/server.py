@@ -546,6 +546,10 @@ TOOLS: list[types.Tool] = [
                         "abstract is not mistaken for an article that has none."
                     ),
                 },
+                "cursor": {
+                    "type": "string",
+                    "description": "next_cursor from the previous page; omit for the first (#123)",
+                },
             },
             "required": ["locus"],
             "additionalProperties": False,
@@ -587,6 +591,10 @@ TOOLS: list[types.Tool] = [
                     "default": quickgo.DEFAULT_LIMIT,
                     "minimum": 1,
                     "maximum": quickgo.MAX_LIMIT,
+                },
+                "cursor": {
+                    "type": "string",
+                    "description": "next_cursor from the previous page; omit for the first (#123)",
                 },
             },
             "required": ["locus"],
@@ -748,6 +756,10 @@ TOOLS: list[types.Tool] = [
                         "Max homolog rows to return. 'total' always reports the true "
                         "pre-cap count and 'truncated' says whether the cap bit."
                     ),
+                },
+                "cursor": {
+                    "type": "string",
+                    "description": "next_cursor from the previous page; omit for the first (#123)",
                 },
             },
             "required": ["locus"],
@@ -1474,6 +1486,10 @@ TOOLS: list[types.Tool] = [
                         "total and 'truncated' says whether the cap bit."
                     ),
                 },
+                "cursor": {
+                    "type": "string",
+                    "description": "next_cursor from the previous page; omit for the first (#123)",
+                },
             },
             "required": ["locus"],
             "additionalProperties": False,
@@ -1510,6 +1526,10 @@ TOOLS: list[types.Tool] = [
                     "description": "Arabidopsis only (the 1001 Genomes panel is A. thaliana)",
                     "default": "arabidopsis_thaliana",
                 },
+                "cursor": {
+                    "type": "string",
+                    "description": "next_cursor from the previous page; omit for the first (#123)",
+                },
             },
             "required": ["locus"],
             "additionalProperties": False,
@@ -1541,6 +1561,10 @@ TOOLS: list[types.Tool] = [
                     "type": ["string", "integer"],
                     "description": "Arabidopsis only (the 1001 Genomes panel is A. thaliana)",
                     "default": "arabidopsis_thaliana",
+                },
+                "cursor": {
+                    "type": "string",
+                    "description": "next_cursor from the previous page; omit for the first (#123)",
                 },
             },
             "required": ["locus"],
@@ -2323,6 +2347,7 @@ async def _resolve_then_go_annotations(
     locus: str,
     organism: str | int,
     limit: int,
+    cursor: str | None = None,
 ) -> dict[str, Any]:
     """Locus → UniProt accession → QuickGO annotations.
 
@@ -2332,7 +2357,7 @@ async def _resolve_then_go_annotations(
     """
     up = await uniprot.lookup_locus(client, locus, organism=organism)
     accession = up["primaryAccession"]
-    go = await quickgo.lookup_by_uniprot(client, accession, limit=limit)
+    go = await quickgo.lookup_by_uniprot(client, accession, limit=limit, cursor=cursor)
     # Issue #132: pass QuickGO's answer through whole. A hand-copied key
     # list here dropped every field added to it later (upstream_version).
     return {"locus": locus, **go}
@@ -2398,6 +2423,7 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     organism=args.get("organism", "arabidopsis_thaliana"),
                     size=args.get("size", europe_pmc.DEFAULT_PAGE_SIZE),
                     include_abstract=args.get("include_abstract", True),
+                    cursor=args.get("cursor"),
                 )
             case "locus_go_annotations":
                 return await _resolve_then_go_annotations(
@@ -2405,6 +2431,7 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     args["locus"],
                     organism=args.get("organism", "arabidopsis_thaliana"),
                     limit=args.get("limit", quickgo.DEFAULT_LIMIT),
+                    cursor=args.get("cursor"),
                 )
             case "locus_plant_ontology":
                 return await planteome.lookup_locus(
@@ -2500,18 +2527,21 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     organism=args.get("organism", "arabidopsis_thaliana"),
                     limit=args.get("limit"),
                     target_organism=args.get("target_organism"),
+                    cursor=args.get("cursor"),
                 )
             case "aragwas_associations":
                 return await aragwas.lookup_locus(
                     client,
                     args["locus"],
                     organism=args.get("organism", "arabidopsis_thaliana"),
+                    cursor=args.get("cursor"),
                 )
             case "arabidopsis_natural_variation":
                 return await onekg.lookup_locus(
                     client,
                     args["locus"],
                     organism=args.get("organism", "arabidopsis_thaliana"),
+                    cursor=args.get("cursor"),
                 )
             case "batch_ensembl_plants_lookup_locus":
                 return await batch.batch_ensembl_plants_lookup_locus(
@@ -2635,6 +2665,7 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     homology_type=args.get("homology_type", "ortholog"),
                     limit=args.get("limit"),
                     target_organism=args.get("target_organism"),
+                    cursor=args.get("cursor"),
                 )
             case "analyze_locus_synth":
                 env = await synthesis.analyze_locus_synth(

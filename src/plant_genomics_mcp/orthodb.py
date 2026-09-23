@@ -95,7 +95,13 @@ def _organism_matches(name: str | None, scientific: str) -> bool:
     return n == s or n.startswith(s + " ")
 
 
-def _members(clusters: list[Any], cap: int) -> tuple[list[dict[str, Any]], int]:
+def _next(query: dict[str, Any], total: int, offset: int, rows: list[Any]) -> str | None:
+    """The cursor for the rows after this page, or None when none remain."""
+    end = offset + len(rows)
+    return _http.encode_cursor("orthodb_orthologs", query, {"offset": end}) if total > end else None
+
+
+def _members(clusters: list[Any], cap: int, offset: int = 0) -> tuple[list[dict[str, Any]], int]:
     """Flatten ortholog clusters to ``[{organism, gene_id, xref, description}]``.
 
     Returns the capped rows AND the TRUE total member count. The loop no longer
@@ -116,7 +122,7 @@ def _members(clusters: list[Any], cap: int) -> tuple[list[dict[str, Any]], int]:
             if not isinstance(gene, dict):
                 continue
             total += 1
-            if len(out) >= cap:
+            if total <= offset or len(out) >= cap:
                 continue
             gid = gene.get("gene_id") or {}
             out.append(
@@ -139,6 +145,7 @@ def _empty(locus: str, organism: str) -> dict[str, Any]:
         "organism_count": 0,
         "member_count": 0,
         **_http.counted(0, []),
+        "next_cursor": None,
         "members": [],
         "upstream_version": None,
     }
@@ -150,8 +157,12 @@ async def lookup_locus(
     organism: str | int = organisms.DEFAULT_ORGANISM,
     limit: int | None = None,
     target_organism: str | int | None = None,
+    cursor: str | None = None,
 ) -> dict[str, Any]:
     """Resolve a locus to its OrthoDB ortholog group and cross-species members.
+
+    ``cursor`` is a ``next_cursor`` from the previous page (#123): OrthoDB
+    answers with the whole group, so pages are offsets into that one answer.
 
     ``organism`` is validated/echoed (the OrthoDB search keys on the gene id at
     the Viridiplantae level, not a species id). Returns ``found=False`` when the
@@ -171,6 +182,14 @@ async def lookup_locus(
     canonical = organisms.resolve(organism).canonical
     target = organisms.resolve(target_organism) if target_organism else None
     validators.assert_valid_locus(locus, backend="OrthoDB")
+    cap = _resolve_limit(limit)
+    query = {
+        "locus": locus,
+        "organism": canonical,
+        "target": target.canonical if target else None,
+        "limit": cap,
+    }
+    offset = int(_http.decode_cursor("orthodb_orthologs", query, cursor).get("offset", 0))
     search = await _get(client, "/current/search", {"query": locus, "level": LEVEL, "limit": 1})
     ids = search.get("data")
     if not isinstance(ids, list) or not ids:
@@ -182,7 +201,7 @@ async def lookup_locus(
     clusters = ortho.get("data")
     clusters = clusters if isinstance(clusters, list) else []
     if target is None:
-        members, member_total = _members(clusters, _resolve_limit(limit))
+        members, member_total = _members(clusters, cap, offset)
         return {
             "locus": locus,
             "organism": canonical,
@@ -191,7 +210,8 @@ async def lookup_locus(
             "organism_count": len(clusters),
             # TRUE pre-cap total, so a truncated answer still says how much exists.
             "member_count": member_total,
-            **_http.counted(member_total, members),
+            **_http.counted(member_total, members, offset=offset),
+            "next_cursor": _next(query, member_total, offset, members),
             "members": members,
             # Issue #121: uniform key; /current/ names no release and the
             # response states none (headers probed live 2026-09-22).
@@ -204,7 +224,7 @@ async def lookup_locus(
         if isinstance(c, dict)
         and _organism_matches((c.get("organism") or {}).get("name"), target.scientific)
     ]
-    members, member_total = _members(wanted, _resolve_limit(limit))
+    members, member_total = _members(wanted, cap, offset)
     _, all_total = _members(clusters, 0)
     return {
         "locus": locus,
@@ -215,7 +235,8 @@ async def lookup_locus(
         "organism_count": len(clusters),
         "member_count": member_total,
         "member_count_all_organisms": all_total,
-        **_http.counted(member_total, members),
+        **_http.counted(member_total, members, offset=offset),
+        "next_cursor": _next(query, member_total, offset, members),
         "members": members,
         "upstream_version": None,
     }

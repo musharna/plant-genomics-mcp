@@ -95,8 +95,12 @@ async def lookup_locus(
     client: httpx.AsyncClient,
     locus: str,
     organism: str | int = organisms.DEFAULT_ORGANISM,
+    cursor: str | None = None,
 ) -> dict[str, Any]:
     """Fetch 1001 Genomes natural-variation effects for an Arabidopsis locus.
+
+    ``cursor`` is a ``next_cursor`` from the previous page (#123): the effects
+    arrive as one list, so a page is an offset into it.
 
     Raises ``OrganismNotSupported`` for any non-Arabidopsis organism. A bare AGI
     is transcript-scoped to ``{AGI}.1``. ``variant_count`` is the true row total;
@@ -109,6 +113,10 @@ async def lookup_locus(
         )
     validators.assert_valid_agi(locus, backend="1001genomes")
     tx = locus if "." in locus else f"{locus}.1"
+    query = {"locus": locus}
+    offset = int(
+        _http.decode_cursor("arabidopsis_natural_variation", query, cursor).get("offset", 0)
+    )
 
     coords = await _get(client, f"{BASE_URL}/api/v2/gi2coords/{ANNOTATION}/{tx}")
     regions = coords.get("regions") or []
@@ -118,7 +126,9 @@ async def lookup_locus(
     data = eff.get("data")
     data = data if isinstance(data, list) else []
     total = len(data)
-    variants = [p for row in data[:MAX_EFFECTS] if (p := _project_effect(row)) is not None]
+    page = data[offset : offset + MAX_EFFECTS]
+    variants = [p for row in page if (p := _project_effect(row)) is not None]
+    end = offset + len(page)
 
     return {
         "locus": locus,
@@ -127,6 +137,12 @@ async def lookup_locus(
         "transcript": tx,
         "region": region,
         "variant_count": total,
-        **_http.counted(total, variants),
+        **_http.counted(total, variants, offset=offset),
+        "next_cursor": _http.encode_cursor("arabidopsis_natural_variation", query, {"offset": end})
+        if total > end
+        else None,
+        # Past the page, not past the projected rows: a malformed effect row is
+        # dropped, not withheld, so it must not read as more to fetch.
+        "truncated": total > end,
         "variants": variants,
     }
