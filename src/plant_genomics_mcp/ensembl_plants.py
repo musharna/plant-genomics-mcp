@@ -105,6 +105,19 @@ def project_lookup(raw: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
+def wire_id(locus: str, organism: str | int) -> str:
+    """The id Ensembl indexes ``locus`` under in ``organism`` — the one projection.
+
+    Validates ``locus`` (canonical case) and prepends the registry's wire-only
+    stable-id prefix (tomato SL4.0: ``gene-``). Every Ensembl call keyed on a
+    user locus goes through this, the batch POST included: the batch used to
+    send the bare locus, so every tomato batch lookup was NotFound while the
+    single lookup answered (audit 2026-09-22 H2).
+    """
+    locus = validators.assert_valid_locus(locus, backend="Ensembl Plants")
+    return organisms.ensembl_id_prefix_for(organism) + locus
+
+
 async def lookup_locus(
     client: httpx.AsyncClient,
     locus: str,
@@ -119,11 +132,11 @@ async def lookup_locus(
     or NCBI taxid the resolver understands; we translate to the Ensembl
     slug before hitting the wire.
     """
-    validators.assert_valid_locus(locus, backend="Ensembl Plants")
+    locus = validators.assert_valid_locus(locus, backend="Ensembl Plants")
     slug = organisms.ensembl_slug_for(organism)
-    wire_id = organisms.ensembl_id_prefix_for(organism) + locus
+    wire = wire_id(locus, organism)
     params: dict[str, Any] = {"species": slug, "expand": 0}
-    raw = await _get(client, f"/lookup/id/{wire_id}", params=params)
+    raw = await _get(client, f"/lookup/id/{wire}", params=params)
     if isinstance(raw, dict) and "species" in raw:
         return project_lookup(raw)
     return raw
@@ -144,11 +157,11 @@ async def lookup_xrefs(
     NCBI taxid the resolver understands; we translate to the Ensembl
     slug before hitting the wire.
     """
-    validators.assert_valid_locus(locus, backend="Ensembl Plants")
+    locus = validators.assert_valid_locus(locus, backend="Ensembl Plants")
     slug = organisms.ensembl_slug_for(organism)
-    wire_id = organisms.ensembl_id_prefix_for(organism) + locus
+    wire = wire_id(locus, organism)
     params: dict[str, Any] = {"species": slug}
-    raw = await _get(client, f"/xrefs/id/{wire_id}", params=params)
+    raw = await _get(client, f"/xrefs/id/{wire}", params=params)
     if not isinstance(raw, list):
         raise PlantGenomicsError(
             f"Ensembl /xrefs/id/{locus} returned non-list payload: {type(raw).__name__}"
@@ -173,6 +186,33 @@ async def lookup_xrefs(
 SEQUENCE_TYPES = ("genomic", "cds", "cdna", "protein")
 
 
+async def _product_id(client: httpx.AsyncClient, locus: str, organism: str | int) -> str:
+    """The Ensembl id whose cds / cdna / protein ``get_sequence`` returns.
+
+    A protein, CDS or cDNA belongs to a transcript, not a gene: asked for one
+    on a gene id, Ensembl answers 400 ("N sequences detected ... specify the
+    multiple_sequences parameter") whenever the gene has more than one
+    transcript — most real genes (audit 2026-09-22 M3). A gene resolves to
+    its canonical transcript, through the same lookup and projection
+    ``ensembl_plants_lookup_locus`` returns; a transcript id is used as given.
+    """
+    record = await lookup_locus(client, locus, organism=organism)
+    if record.get("object_type") != "Gene":
+        target = record.get("id")
+    else:
+        target = record.get("canonical_transcript")
+        if not target:
+            raise NotFoundError(
+                f"Ensembl Plants: {locus} has no canonical transcript, so no cds/cdna/protein"
+            )
+    if not isinstance(target, str):
+        raise PlantGenomicsError(
+            f"Ensembl Plants /lookup/id/{locus} returned no usable id: {target!r}"
+        )
+    # Upstream data spliced into a path: held to the same shape as user input.
+    return validators.assert_valid_locus(target, backend="Ensembl Plants")
+
+
 async def get_sequence(
     client: httpx.AsyncClient,
     locus: str,
@@ -189,13 +229,15 @@ async def get_sequence(
     ``blastp``, ``cds``/``cdna`` for ``blastn``). ``organism=`` accepts any
     alias or NCBI taxid the resolver understands.
     """
-    validators.assert_valid_locus(locus, backend="Ensembl Plants")
+    locus = validators.assert_valid_locus(locus, backend="Ensembl Plants")
     if seq_type not in SEQUENCE_TYPES:
         raise ValueError(f"seq_type {seq_type!r} not in {list(SEQUENCE_TYPES)}")
     slug = organisms.ensembl_slug_for(organism)
-    wire_id = organisms.ensembl_id_prefix_for(organism) + locus
+    wire = wire_id(locus, organism)
+    if seq_type != "genomic":
+        wire = await _product_id(client, locus, organism)
     params: dict[str, Any] = {"species": slug, "type": seq_type}
-    raw = await _get(client, f"/sequence/id/{wire_id}", params=params)
+    raw = await _get(client, f"/sequence/id/{wire}", params=params)
     if not isinstance(raw, dict) or "seq" not in raw:
         raise PlantGenomicsError(
             f"Ensembl /sequence/id/{locus} (type={seq_type}) returned unexpected payload: "

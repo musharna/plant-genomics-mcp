@@ -811,3 +811,83 @@ def test_both_forms_state_the_organisms_the_registry_covers(tools: tuple, field:
     by_name = {t.name: t for t in server.TOOLS}
     for name in tools:
         assert f"Covers: {', '.join(covered)}." in (by_name[name].description or ""), name
+
+
+# ---------- audit 2026-09-22 H2: the batch lookup sends the single form's wire id ----------
+
+_TOMATO = "solanum_lycopersicum"
+_TOMATO_SLUG = "solanum_lycopersicum_gca000188115v5cm"
+# Ensembl's record for tomato SL4.0, shape as served live (2026-09-22): the
+# stable id carries the NCBI-GFF ``gene-`` prefix the user never types.
+_TOMATO_RECORD = {
+    "id": "gene-Solyc01g005610.4",
+    "display_name": "Solyc01g005610.4",
+    "species": _TOMATO_SLUG,
+    "object_type": "Gene",
+    "biotype": "protein_coding",
+    "canonical_transcript": "rna-NM_001247062.2.",
+    "version": None,
+}
+
+
+@pytest.mark.asyncio
+async def test_batch_lookup_equals_single_lookup_for_a_prefixed_assembly(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """The single tool asked Ensembl for ``gene-Solyc...``; the batch sent the
+    bare ``Solyc...``, which Ensembl answers with null, so every tomato batch
+    lookup was NotFound. LESSONS 2026-09-22: a batch form is compared row for
+    row with the single form on the same input."""
+    locus = "Solyc01g005610.4"
+    url = f"{ensembl_plants.BASE_URL}/lookup/id"
+    httpx_mock.add_response(
+        url=f"{url}/gene-{locus}?species={_TOMATO_SLUG}&expand=0", json=_TOMATO_RECORD
+    )
+
+    def _batch_answer(request: httpx.Request) -> httpx.Response:
+        import json as _json
+
+        ids = _json.loads(request.content)["ids"]
+        # Ensembl keys its answer by the ids sent and nulls the ones it lacks.
+        return httpx.Response(
+            200, json={i: (_TOMATO_RECORD if i == f"gene-{locus}" else None) for i in ids}
+        )
+
+    httpx_mock.add_callback(_batch_answer, url=url, method="POST")
+    async with httpx.AsyncClient() as client:
+        single = await ensembl_plants.lookup_locus(client, locus, organism=_TOMATO)
+        env = await batch.batch_ensembl_plants_lookup_locus(client, [locus], organism=_TOMATO)
+    assert env["errors"] == {}, env["errors"]
+    # Keyed by what the caller passed, valued exactly as the single tool answers.
+    assert env["results"] == {locus: single}
+
+
+@pytest.mark.asyncio
+async def test_batch_lookup_unprefixed_assembly_is_unchanged(httpx_mock: HTTPXMock) -> None:
+    """Positive control: where the registry has no prefix, ids go as given."""
+    url = f"{ensembl_plants.BASE_URL}/lookup/id"
+    httpx_mock.add_response(
+        url=url,
+        method="POST",
+        json={"AT1G01010": {"id": "AT1G01010", "species": "arabidopsis_thaliana"}},
+    )
+    async with httpx.AsyncClient() as client:
+        env = await batch.batch_ensembl_plants_lookup_locus(client, ["AT1G01010", "bad/id"])
+    req = httpx_mock.get_request(url=url, method="POST")
+    # The shared projection validates too: a locus the single tool refuses is
+    # refused per locus and never sent, while its neighbour still resolves.
+    assert req is not None and b'"ids": ["AT1G01010"]' in req.read()
+    assert set(env["results"]) == {"AT1G01010"}
+    assert env["errors"]["bad/id"].startswith("[NotFoundError] Ensembl Plants: invalid locus")
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_batch_tomato_lookup_resolves() -> None:
+    """Real execution for H2: the old batch answered NotFound for every tomato id."""
+    async with httpx.AsyncClient() as client:
+        env = await batch.batch_ensembl_plants_lookup_locus(
+            client, ["Solyc01g005610.4"], organism=_TOMATO
+        )
+    assert env["errors"] == {}, env["errors"]
+    assert env["results"]["Solyc01g005610.4"]["id"] == "gene-Solyc01g005610.4"

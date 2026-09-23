@@ -134,7 +134,22 @@ async def batch_ensembl_plants_lookup_locus(
     """
     loci = _bound(loci)
     slug = organisms.ensembl_slug_for(organism)
-    payload: dict[str, Any] = {"ids": loci, "species": slug, "expand": 0}
+    # The single lookup's own id projection (audit 2026-09-22 H2): a batch that
+    # builds its wire ids separately is a fork, and this one dropped the prefix.
+    # A locus the single tool would refuse is refused here per locus, as the
+    # gather-based batches do, instead of failing the whole batch.
+    results: dict[str, dict[str, Any]] = {}
+    errors: dict[str, str] = {}
+    wire: dict[str, str] = {}
+    for locus in loci:
+        try:
+            wire[locus] = ensembl_plants.wire_id(locus, organism)
+        except PlantGenomicsError as e:
+            errors[locus] = str(e)
+    if not wire:
+        return _envelope("ensembl_plants_lookup_locus", loci, results, errors)
+    ids = list(dict.fromkeys(wire.values()))
+    payload: dict[str, Any] = {"ids": ids, "species": slug, "expand": 0}
     resp = await _http.request_with_retry(
         client,
         "POST",
@@ -156,10 +171,10 @@ async def batch_ensembl_plants_lookup_locus(
         raise PlantGenomicsError(
             f"Ensembl Plants /lookup/id (batch) returned non-dict payload: {type(raw).__name__}"
         )
-    results: dict[str, dict[str, Any]] = {}
-    errors: dict[str, str] = {}
     for locus in loci:
-        record = raw.get(locus)
+        if locus not in wire:
+            continue
+        record = raw.get(wire[locus])
         if record is None:
             errors[locus] = f"[NotFoundError] Ensembl Plants /lookup/id: no record for {locus}"
         elif isinstance(record, dict):
