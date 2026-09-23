@@ -63,13 +63,9 @@ async def _get(
     helper. The retry/cap/error-classification policy is shared with the
     other 8 backends.
     """
-    key = cache.make_key("GET", BASE_URL, path, params)
-    cached = _CACHE.get(key)
-    if cached is not None:
-        return cached
-    resp = await _http.request_with_retry(
+    return await _http.cached_get(
         client,
-        "GET",
+        _CACHE,
         f"{BASE_URL}{path}",
         service=f"Ensembl Plants {path}",
         params=params,
@@ -78,9 +74,6 @@ async def _get(
         max_retries=MAX_RETRIES,
         not_found_400_pattern=NOT_FOUND_400_RE,
     )
-    result = resp.json()
-    _CACHE.set(key, result)
-    return result
 
 
 def project_lookup(raw: dict[str, Any]) -> dict[str, Any]:

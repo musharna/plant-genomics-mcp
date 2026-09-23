@@ -19,10 +19,6 @@ from typing import Any
 import httpx
 
 from plant_genomics_mcp import _http, cache, organisms
-from plant_genomics_mcp.errors import (
-    PlantGenomicsError,
-    UpstreamUnavailableError,
-)
 
 BASE_URL = "https://www.ebi.ac.uk/europepmc/webservices/rest"
 DEFAULT_TIMEOUT = 30.0
@@ -86,35 +82,16 @@ async def _get(
     raised as :class:`UpstreamUnavailableError` — and is never cached, so one
     malformed answer cannot be served as the answer for the cache TTL.
     """
-    key = cache.make_key("GET", BASE_URL, path, params)
-    cached = _CACHE.get(key)
-    if cached is not None:
-        return cached
-    problem: str | None = None
-    for _attempt in range(2):
-        resp = await _http.request_with_retry(
-            client,
-            "GET",
-            f"{BASE_URL}{path}",
-            service=f"Europe PMC {path}",
-            params=params,
-            headers={"Accept": "application/json"},
-            timeout=DEFAULT_TIMEOUT,
-            max_retries=MAX_RETRIES,
-        )
-        try:
-            result = resp.json()
-        except ValueError as e:
-            raise PlantGenomicsError(
-                f"Europe PMC {path} returned non-JSON: {resp.text[:200]}"
-            ) from e
-        problem = shape_problem(result) if shape_problem else None
-        if problem is None:
-            _CACHE.set(key, result)
-            return result
-    raise UpstreamUnavailableError(
-        f"Europe PMC {path} answered 200 twice without a readable result ({problem}); "
-        "this is not a count of zero"
+    return await _http.cached_get(
+        client,
+        _CACHE,
+        f"{BASE_URL}{path}",
+        service=f"Europe PMC {path}",
+        params=params,
+        headers={"Accept": "application/json"},
+        timeout=DEFAULT_TIMEOUT,
+        max_retries=MAX_RETRIES,
+        reject=shape_problem,
     )
 
 
