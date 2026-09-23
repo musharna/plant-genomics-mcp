@@ -1,0 +1,5358 @@
+{
+ "server_version": "1.21.0",
+ "server_commit": "052e4ec",
+ "tool_count": 52,
+ "tools": {
+  "string_interactions": {
+   "_meta": {
+    "edam": {
+     "operation": [
+      "operation_2422"
+     ],
+     "topic": [
+      "topic_0780",
+      "topic_0114"
+     ]
+    }
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true
+   },
+   "description": "Fetch protein-protein interaction partners from STRING-DB (string-db.org). Accepts either a UniProt accession or a locus identifier \u2014 the latter is resolved via UniProt first. Defaults to arabidopsis_thaliana; pass organism= for other plant species (slug, scientific/common name, or NCBI taxid). Returns first-neighbor partners with the combined STRING score plus per-channel sub-scores (experimental, database, textmining, predicted). The argument was called locus_or_accession before #129; that name is still accepted, deprecated.",
+   "inputSchema": {
+    "properties": {
+     "locus": {
+      "type": "string",
+      "description": "Locus (AT1G01010) or UniProt accession (Q0WV96)"
+     },
+     "limit": {
+      "type": "integer",
+      "description": "Number of partners to return",
+      "default": 20,
+      "minimum": 1,
+      "maximum": 500
+     },
+     "organism": {
+      "type": [
+       "string",
+       "integer"
+      ],
+      "description": "Plant organism \u2014 accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+      "default": "arabidopsis_thaliana"
+     }
+    },
+    "required": [
+     "locus"
+    ],
+    "type": "object",
+    "additionalProperties": false
+   },
+   "name": "string_interactions",
+   "outputSchema": {
+    "properties": {
+     "total": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Always null: the upstream returns the top partners asked for and states no total; null means unknown, never zero (#123)",
+      "title": "Total"
+     },
+     "returned": {
+      "description": "Rows in this payload (#123)",
+      "title": "Returned",
+      "type": "integer"
+     },
+     "truncated": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Always null: without a stated total, truncation is unknown (#123)",
+      "title": "Truncated"
+     },
+     "query": {
+      "description": "The locus or accession the user passed",
+      "title": "Query",
+      "type": "string"
+     },
+     "accession": {
+      "description": "UniProt accession actually queried at STRING",
+      "title": "Accession",
+      "type": "string"
+     },
+     "organism": {
+      "description": "Plant organism canonical slug, e.g. arabidopsis_thaliana",
+      "title": "Organism",
+      "type": "string"
+     },
+     "partners": {
+      "items": {
+       "$ref": "#/$defs/StringPartner"
+      },
+      "title": "Partners",
+      "type": "array"
+     },
+     "upstream_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "STRING release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means STRING did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "title": "Upstream Version"
+     }
+    },
+    "required": [
+     "returned",
+     "query",
+     "accession",
+     "organism",
+     "partners"
+    ],
+    "type": "object",
+    "$defs": {
+     "StringPartner": {
+      "additionalProperties": true,
+      "description": "One STRING interaction-partner row.",
+      "properties": {
+       "string_id": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "e.g. \"3702.AT3G15500.1\"",
+        "title": "String Id"
+       },
+       "accession": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Deprecated (#133): always equal to string_id, a STRING id \u2014 NOT the UniProt accession other tools mean by 'accession'. Read string_id.",
+        "title": "Accession"
+       },
+       "preferred_name": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Human-readable gene symbol",
+        "title": "Preferred Name"
+       },
+       "score": {
+        "anyOf": [
+         {
+          "type": "number"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Combined STRING confidence [0,1]",
+        "title": "Score"
+       },
+       "escore": {
+        "anyOf": [
+         {
+          "type": "number"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Experimental sub-score",
+        "title": "Escore"
+       },
+       "dscore": {
+        "anyOf": [
+         {
+          "type": "number"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Database sub-score",
+        "title": "Dscore"
+       },
+       "tscore": {
+        "anyOf": [
+         {
+          "type": "number"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Textmining sub-score",
+        "title": "Tscore"
+       },
+       "pscore": {
+        "anyOf": [
+         {
+          "type": "number"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Predicted (homology) sub-score",
+        "title": "Pscore"
+       }
+      },
+      "title": "StringPartner",
+      "type": "object"
+     }
+    },
+    "additionalProperties": false,
+    "description": "STRING interaction-partners response wrapper.",
+    "title": "StringInteractions"
+   },
+   "title": "STRING: Interaction Network"
+  },
+  "batch_string_interactions": {
+   "_meta": {
+    "edam": {
+     "operation": [
+      "operation_2422"
+     ],
+     "topic": [
+      "topic_0780",
+      "topic_0114"
+     ]
+    }
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true
+   },
+   "description": "Batch version of string_interactions. Up to 50 inputs per call. The argument was called loci_or_accessions before #129; that name is still accepted, deprecated.",
+   "inputSchema": {
+    "properties": {
+     "loci": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "minItems": 1,
+      "maxItems": 50
+     },
+     "limit": {
+      "type": "integer",
+      "default": 20,
+      "minimum": 1,
+      "maximum": 500
+     },
+     "organism": {
+      "type": [
+       "string",
+       "integer"
+      ],
+      "description": "Plant organism \u2014 accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+      "default": "arabidopsis_thaliana"
+     }
+    },
+    "required": [
+     "loci"
+    ],
+    "type": "object",
+    "additionalProperties": false
+   },
+   "name": "batch_string_interactions",
+   "outputSchema": {
+    "properties": {
+     "tool": {
+      "description": "The batch tool name, e.g. batch_resolve_locus_to_uniprot",
+      "title": "Tool",
+      "type": "string"
+     },
+     "count": {
+      "description": "Number of distinct loci queried, returned (== len(results) + len(errors)). The input list is de-duplicated first, so this is LOWER than the number of loci you sent if you sent a duplicate \u2014 that is de-duplication, not a dropped locus.",
+      "title": "Count",
+      "type": "integer"
+     },
+     "results": {
+      "additionalProperties": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "description": "locus \u2192 per-locus result dict (same shape as the single-locus tool)",
+      "title": "Results",
+      "type": "object"
+     },
+     "errors": {
+      "additionalProperties": {
+       "type": "string"
+      },
+      "description": "locus \u2192 '[ClassName] message' for PlantGenomicsError failures",
+      "title": "Errors",
+      "type": "object"
+     }
+    },
+    "required": [
+     "tool",
+     "count",
+     "results",
+     "errors"
+    ],
+    "type": "object",
+    "additionalProperties": false,
+    "description": "Shared response shape for every ``batch_*`` tool.\n\nAll batch tools fan out per-locus calls and produce the same envelope:\nsuccesses land in ``results`` keyed on the input locus; PlantGenomicsError\nfailures land in ``errors`` with the ``[ClassName] message`` prefix the\nsingle-locus tools already use. ``count`` is the input cardinality\n(``len(loci)``), not ``len(results) + len(errors)`` \u2014 those two add up\nto ``count`` by construction.",
+    "title": "BatchEnvelope"
+   },
+   "title": "Batch: STRING Interactions"
+  },
+  "alphafold_structure": {
+   "_meta": {
+    "edam": {
+     "operation": [
+      "operation_2422"
+     ],
+     "topic": [
+      "topic_0780",
+      "topic_0114"
+     ]
+    }
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true
+   },
+   "description": "Fetch the AlphaFold DB predicted-structure summary for a locus (alphafold.ebi.ac.uk; free, no key). Resolves the locus \u2192 UniProt accession, then returns the predicted model's global mean pLDDT confidence, the per-band pLDDT distribution with each band's pLDDT range (plddt_band_ranges), modelled residue span, latest model version, and mmCIF / PDB / PAE download URLs \u2014 links for the client to fetch; no tool on this server retrieves them. A valid protein with no deposited model returns found=false (a normal outcome, not an error); a locus with no UniProt entry raises a typed NotFoundError. Works for all 12 organisms (UniProt-keyed). Complements resolve_locus_to_uniprot (sequence-level) with the structure-level view. Defaults to arabidopsis_thaliana; pass organism= for other species.",
+   "inputSchema": {
+    "properties": {
+     "locus": {
+      "type": "string",
+      "description": "e.g. AT4G09760 (Arabidopsis), Os01g0100100 (rice RAP-DB)"
+     },
+     "organism": {
+      "type": [
+       "string",
+       "integer"
+      ],
+      "description": "Plant organism \u2014 accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+      "default": "arabidopsis_thaliana"
+     }
+    },
+    "required": [
+     "locus"
+    ],
+    "type": "object",
+    "additionalProperties": false
+   },
+   "name": "alphafold_structure",
+   "outputSchema": {
+    "properties": {
+     "locus": {
+      "title": "Locus",
+      "type": "string"
+     },
+     "accession": {
+      "description": "Resolved UniProt accession",
+      "title": "Accession",
+      "type": "string"
+     },
+     "found": {
+      "description": "True if a predicted model exists",
+      "title": "Found",
+      "type": "boolean"
+     },
+     "model_entity_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "e.g. AF-Q9SZ92-F1",
+      "title": "Model Entity Id"
+     },
+     "mean_plddt": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Global mean pLDDT confidence (0\u2013100)",
+      "title": "Mean Plddt"
+     },
+     "plddt_bands": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "anyOf": [
+          {
+           "type": "number"
+          },
+          {
+           "type": "null"
+          }
+         ]
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Fraction of residues per confidence band",
+      "title": "Plddt Bands"
+     },
+     "plddt_band_ranges": {
+      "additionalProperties": {
+       "items": {
+        "type": "integer"
+       },
+       "type": "array"
+      },
+      "description": "Band -> [lower, upper] pLDDT on the 0-100 scale, per EMBL-EBI: very_low <50, low 50-70, confident 70-90, very_high >90",
+      "title": "Plddt Band Ranges",
+      "type": "object"
+     },
+     "latest_version": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Latest AlphaFold model version",
+      "title": "Latest Version"
+     },
+     "model_created": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Model creation date (ISO 8601)",
+      "title": "Model Created"
+     },
+     "residue_range": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "anyOf": [
+          {
+           "type": "integer"
+          },
+          {
+           "type": "null"
+          }
+         ]
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Modelled residue span {start, end}",
+      "title": "Residue Range"
+     },
+     "organism": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Organism scientific name",
+      "title": "Organism"
+     },
+     "gene": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Gene name from UniProt",
+      "title": "Gene"
+     },
+     "description": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "UniProt protein description",
+      "title": "Description"
+     },
+     "cif_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "mmCIF model download URL \u2014 a link for the client to open or fetch; no tool on this server dereferences it",
+      "title": "Cif Url"
+     },
+     "pdb_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "PDB model download URL \u2014 a link for the client to open or fetch; no tool on this server dereferences it",
+      "title": "Pdb Url"
+     },
+     "pae_image_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Predicted-aligned-error image URL \u2014 a link for the client to open or fetch; no tool on this server dereferences it",
+      "title": "Pae Image Url"
+     },
+     "upstream_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "AlphaFold DB release that produced THIS response, as stated by the entry's own latestVersion (e.g. '6'). null means AlphaFold DB did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "title": "Upstream Version"
+     }
+    },
+    "required": [
+     "locus",
+     "accession",
+     "found",
+     "plddt_band_ranges"
+    ],
+    "type": "object",
+    "additionalProperties": false,
+    "description": "AlphaFold DB predicted-structure summary for a locus (via UniProt).\n\nThe locus is resolved to a UniProt accession, then AlphaFold's prediction\nAPI is queried. ``found=False`` (with null fields) means the accession has\nno deposited model \u2014 a normal outcome, not an error. The full model\ncoordinates are not inlined; ``cif_url`` / ``pdb_url`` link to them.",
+    "title": "AlphaFoldStructure"
+   },
+   "title": "AlphaFold: Predicted Structure"
+  },
+  "tf_binding_motifs": {
+   "_meta": {
+    "edam": {
+     "operation": [
+      "operation_2422"
+     ],
+     "topic": [
+      "topic_0780",
+      "topic_0114"
+     ]
+    }
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true
+   },
+   "description": "Fetch curated transcription-factor DNA binding motifs for a locus from JASPAR (jaspar.elixir.no; free, no key) \u2014 the cis-regulatory view. Resolves the locus \u2192 UniProt accession + gene symbol, searches JASPAR by symbol scoped to the organism's taxid, then CONFIRMS each candidate by matching the accession against the profile's uniprot_ids. Returns per motif the JASPAR matrix id, TF class/family, assay type (SELEX / ChIP-seq / PBM / DAP-seq), an IUPAC consensus derived from the position-frequency matrix (e.g. CACGTG, the G-box/ABRE core), motif length, PubMed refs, and an SVG sequence-logo URL. IMPORTANT: JASPAR's name search is fuzzy, so name-similarity hits belonging to a DIFFERENT gene are returned separately in name_only_matches and must NOT be attributed to this locus; only `motifs` is UniProt-confirmed. found=false means the gene has no curated profile (not a TF, or its family is unprofiled for that species) \u2014 a normal outcome, not an error. Use jaspar_motif to retrieve the raw matrix for any matrix_id. Coverage is Arabidopsis-heavy (1236 profiles) and thin elsewhere (maize 131, soybean 91, wheat 58, tomato 51, rice 10; Brachypodium and sorghum have none). Defaults to arabidopsis_thaliana; pass organism= for other species.",
+   "inputSchema": {
+    "properties": {
+     "locus": {
+      "type": "string",
+      "description": "e.g. AT2G46830 (Arabidopsis CCA1), Os01g0100100 (rice RAP-DB)"
+     },
+     "organism": {
+      "type": [
+       "string",
+       "integer"
+      ],
+      "description": "Plant organism \u2014 accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+      "default": "arabidopsis_thaliana"
+     }
+    },
+    "required": [
+     "locus"
+    ],
+    "type": "object",
+    "additionalProperties": false
+   },
+   "name": "tf_binding_motifs",
+   "outputSchema": {
+    "properties": {
+     "total": {
+      "description": "How many UniProt-confirmed JASPAR profiles exist upstream for this query, all pages (pre-cap) (#123)",
+      "title": "Total",
+      "type": "integer"
+     },
+     "returned": {
+      "description": "Rows in this payload (#123)",
+      "title": "Returned",
+      "type": "integer"
+     },
+     "locus": {
+      "title": "Locus",
+      "type": "string"
+     },
+     "accession": {
+      "description": "Resolved UniProt accession",
+      "title": "Accession",
+      "type": "string"
+     },
+     "tax_id": {
+      "description": "NCBI taxid the JASPAR search was scoped to",
+      "title": "Tax Id",
+      "type": "integer"
+     },
+     "gene_names_searched": {
+      "description": "Gene symbols used as JASPAR search keys",
+      "items": {
+       "type": "string"
+      },
+      "title": "Gene Names Searched",
+      "type": "array"
+     },
+     "found": {
+      "description": "True if any profile was UniProt-confirmed for this locus",
+      "title": "Found",
+      "type": "boolean"
+     },
+     "motif_count": {
+      "description": "Total confirmed profiles (pre-cap)",
+      "title": "Motif Count",
+      "type": "integer"
+     },
+     "truncated": {
+      "description": "True if the motif list was capped",
+      "title": "Truncated",
+      "type": "boolean"
+     },
+     "motifs": {
+      "description": "UniProt-confirmed binding profiles",
+      "items": {
+       "$ref": "#/$defs/TfBindingMotif"
+      },
+      "title": "Motifs",
+      "type": "array"
+     },
+     "name_only_matches": {
+      "description": "Name-similarity hits belonging to a DIFFERENT gene [{matrix_id, name, uniprot_ids}] \u2014 not this locus's motifs",
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "title": "Name Only Matches",
+      "type": "array"
+     },
+     "upstream_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "JASPAR release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means JASPAR did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "title": "Upstream Version"
+     }
+    },
+    "required": [
+     "total",
+     "returned",
+     "locus",
+     "accession",
+     "tax_id",
+     "found",
+     "motif_count",
+     "truncated"
+    ],
+    "type": "object",
+    "$defs": {
+     "TfBindingMotif": {
+      "additionalProperties": true,
+      "description": "One JASPAR transcription-factor binding profile.",
+      "properties": {
+       "matrix_id": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "JASPAR profile id, e.g. MA0570.1",
+        "title": "Matrix Id"
+       },
+       "name": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "TF name as curated by JASPAR",
+        "title": "Name"
+       },
+       "collection": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "CORE / PBM / UNVALIDATED / \u2026",
+        "title": "Collection"
+       },
+       "base_id": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Version-less profile id, e.g. MA0570",
+        "title": "Base Id"
+       },
+       "version": {
+        "anyOf": [
+         {
+          "type": "integer"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "JASPAR release version of the profile",
+        "title": "Version"
+       },
+       "tf_class": {
+        "anyOf": [
+         {
+          "items": {
+           "type": "string"
+          },
+          "type": "array"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Structural class, e.g. ['Basic leucine zipper factors (bZIP)']",
+        "title": "Tf Class"
+       },
+       "tf_family": {
+        "anyOf": [
+         {
+          "items": {
+           "type": "string"
+          },
+          "type": "array"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "TF family, e.g. ['MYB-related']",
+        "title": "Tf Family"
+       },
+       "data_type": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Assay the profile derives from: SELEX / ChIP-seq / PBM / DAP-seq",
+        "title": "Data Type"
+       },
+       "consensus": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "IUPAC consensus derived from the PFM, e.g. 'AAATATCT' (the Evening Element)",
+        "title": "Consensus"
+       },
+       "length": {
+        "anyOf": [
+         {
+          "type": "integer"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Motif width in bases",
+        "title": "Length"
+       },
+       "uniprot_ids": {
+        "description": "UniProt accessions JASPAR attributes the profile to",
+        "items": {
+         "type": "string"
+        },
+        "title": "Uniprot Ids",
+        "type": "array"
+       },
+       "pubmed_ids": {
+        "description": "Supporting PubMed IDs",
+        "items": {
+         "type": "string"
+        },
+        "title": "Pubmed Ids",
+        "type": "array"
+       },
+       "sequence_logo": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "URL of the SVG sequence logo \u2014 a link for the client to open or fetch; no tool on this server dereferences it",
+        "title": "Sequence Logo"
+       },
+       "web_url": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "JASPAR profile page \u2014 a link for the client to open or fetch; no tool on this server dereferences it",
+        "title": "Web Url"
+       }
+      },
+      "title": "TfBindingMotif",
+      "type": "object"
+     }
+    },
+    "additionalProperties": false,
+    "description": "JASPAR TF binding motifs for a locus (via UniProt).\n\nJASPAR is indexed by TF *name* and its search is fuzzy, so candidates are\nretrieved by gene symbol and then identity-checked against the resolved\nUniProt accession. Only confirmed profiles appear in ``motifs``; fuzzy hits\nthat belong to a *different* gene are quarantined in ``name_only_matches``\nand must not be attributed to this locus. ``found=False`` means no curated\nprofile \u2014 the gene is not a TF, or its family is unprofiled for the species.",
+    "title": "TfBindingMotifs"
+   },
+   "title": "JASPAR: TF Binding Motifs"
+  },
+  "resolve_locus_to_uniprot": {
+   "_meta": {
+    "edam": {
+     "operation": [
+      "operation_2422"
+     ],
+     "topic": [
+      "topic_0780",
+      "topic_0114"
+     ]
+    }
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true
+   },
+   "description": "Resolve a plant locus to its canonical UniProtKB record. Prefers reviewed (Swiss-Prot) entries; falls back to unreviewed (TrEMBL) when no curated record exists (common for non-Arabidopsis plants). organism accepts a canonical slug, scientific/common name, or NCBI taxid (default arabidopsis_thaliana; e.g. oryza_sativa, zea_mays). A gene symbol answers only when it names one locus; a symbol shared by several loci (ARF1) is InvalidArguments listing them. Returns primaryAccession, uniProtkbId, entryType, recommendedName, geneNames, organism, taxonId, sequenceLength, web_url. This is the protein-side entry point \u2014 pair with InterPro / AlphaFold / Reactome / structural-bio tools.",
+   "inputSchema": {
+    "properties": {
+     "locus": {
+      "type": "string",
+      "description": "e.g. AT1G01010 (Arabidopsis), Os01g0100100 (rice)"
+     },
+     "organism": {
+      "type": [
+       "string",
+       "integer"
+      ],
+      "description": "Plant organism \u2014 accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+      "default": "arabidopsis_thaliana"
+     }
+    },
+    "required": [
+     "locus"
+    ],
+    "type": "object",
+    "additionalProperties": false
+   },
+   "name": "resolve_locus_to_uniprot",
+   "outputSchema": {
+    "properties": {
+     "locus_query": {
+      "description": "The locus identifier the user asked about",
+      "title": "Locus Query",
+      "type": "string"
+     },
+     "primaryAccession": {
+      "description": "UniProt accession, e.g. Q0WV96",
+      "title": "Primaryaccession",
+      "type": "string"
+     },
+     "uniProtkbId": {
+      "description": "UniProtKB ID, e.g. NAC1_ARATH",
+      "title": "Uniprotkbid",
+      "type": "string"
+     },
+     "entryType": {
+      "description": "e.g. 'UniProtKB reviewed (Swiss-Prot)' or '... (TrEMBL)'",
+      "title": "Entrytype",
+      "type": "string"
+     },
+     "reviewed": {
+      "description": "True if Swiss-Prot (curated)",
+      "title": "Reviewed",
+      "type": "boolean"
+     },
+     "recommendedName": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Recommended protein name",
+      "title": "Recommendedname"
+     },
+     "geneNames": {
+      "description": "Gene symbols, e.g. ['NAC001']",
+      "items": {
+       "type": "string"
+      },
+      "title": "Genenames",
+      "type": "array"
+     },
+     "organism": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Scientific name",
+      "title": "Organism"
+     },
+     "taxonId": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "NCBI taxonomy ID",
+      "title": "Taxonid"
+     },
+     "sequenceLength": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Protein length in residues",
+      "title": "Sequencelength"
+     },
+     "web_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Browser URL for the UniProt entry \u2014 a link for the client to open or fetch; no tool on this server dereferences it",
+      "title": "Web Url"
+     },
+     "upstream_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "UniProt release that produced THIS record, as stated by the upstream's own header (e.g. '2026_02'). null means UniProt did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "title": "Upstream Version"
+     }
+    },
+    "required": [
+     "locus_query",
+     "primaryAccession",
+     "uniProtkbId",
+     "entryType",
+     "reviewed"
+    ],
+    "type": "object",
+    "additionalProperties": false,
+    "description": "Normalized UniProtKB record for a single locus.\n\nMirrors the dict shape returned by ``uniprot.lookup_locus`` /\n``uniprot._normalize``. We model only the fields we surface \u2014 the\nfull upstream record is not echoed, since clients can re-fetch\n``https://rest.uniprot.org/uniprotkb/{accession}.json`` if needed.",
+    "title": "UniProtLocus"
+   },
+   "title": "Resolve Locus \u2192 UniProt"
+  },
+  "locus_literature": {
+   "_meta": {
+    "edam": {
+     "operation": [
+      "operation_2422"
+     ],
+     "topic": [
+      "topic_0780",
+      "topic_3068"
+     ]
+    }
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true
+   },
+   "description": "Search Europe PMC for literature mentioning a plant locus. Free, no API key. Returns up to `size` results (default 10, capped at 25) with title, authors, journal, year, DOI, PMID, open-access status, citation count, and abstract. For non-Arabidopsis species the species common name is appended to the query to disambiguate locus IDs (rice, maize, ...). Pair with resolve_locus_to_uniprot or ensembl_plants_lookup_locus to ground the locus before fanning out to the literature.",
+   "inputSchema": {
+    "properties": {
+     "locus": {
+      "type": "string",
+      "description": "e.g. AT1G01010 (Arabidopsis), Os01g0100100 (rice)"
+     },
+     "organism": {
+      "type": [
+       "string",
+       "integer"
+      ],
+      "description": "Plant organism \u2014 accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+      "default": "arabidopsis_thaliana"
+     },
+     "size": {
+      "type": "integer",
+      "description": "Max results (1\u201325, default 10)",
+      "default": 10,
+      "minimum": 1,
+      "maximum": 25
+     },
+     "include_abstract": {
+      "type": "boolean",
+      "default": true,
+      "description": "Set false to null out abstractText, which is ~67% of this payload. The response echoes 'abstracts_included' so a null abstract is not mistaken for an article that has none."
+     },
+     "cursor": {
+      "type": "string",
+      "description": "next_cursor from the previous page; omit for the first (#123)"
+     }
+    },
+    "required": [
+     "locus"
+    ],
+    "type": "object",
+    "additionalProperties": false
+   },
+   "name": "locus_literature",
+   "outputSchema": {
+    "properties": {
+     "next_cursor": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Pass back as cursor= to get the rows after this page; null on the last page. Opaque, and bound to this tool and query (#123)",
+      "title": "Next Cursor"
+     },
+     "total": {
+      "description": "How many papers (Europe PMC hitCount) exist upstream for this query, all pages (pre-cap) (#123)",
+      "title": "Total",
+      "type": "integer"
+     },
+     "truncated": {
+      "description": "True when total > returned: more exist upstream than came back (#123)",
+      "title": "Truncated",
+      "type": "boolean"
+     },
+     "locus": {
+      "title": "Locus",
+      "type": "string"
+     },
+     "organism": {
+      "title": "Organism",
+      "type": "string"
+     },
+     "query": {
+      "description": "Final query string sent to Europe PMC",
+      "title": "Query",
+      "type": "string"
+     },
+     "hitCount": {
+      "description": "Total hits available upstream (may exceed returned)",
+      "title": "Hitcount",
+      "type": "integer"
+     },
+     "returned": {
+      "description": "Rows in this payload (#123)",
+      "title": "Returned",
+      "type": "integer"
+     },
+     "abstracts_included": {
+      "default": true,
+      "description": "False when include_abstract=False was passed, in which case every abstractText is null because it was not requested \u2014 not because the article lacks one. Abstracts are ~67% of this payload.",
+      "title": "Abstracts Included",
+      "type": "boolean"
+     },
+     "hits": {
+      "items": {
+       "$ref": "#/$defs/LiteratureHit"
+      },
+      "title": "Hits",
+      "type": "array"
+     },
+     "upstream_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Europe PMC release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means Europe PMC did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "title": "Upstream Version"
+     }
+    },
+    "required": [
+     "total",
+     "truncated",
+     "locus",
+     "organism",
+     "query",
+     "hitCount",
+     "returned",
+     "hits"
+    ],
+    "type": "object",
+    "$defs": {
+     "LiteratureHit": {
+      "additionalProperties": true,
+      "description": "One Europe PMC ``/search`` result row, projected to a fixed field set.\n\nEurope PMC's ``resultType=core`` rows carry ~50 fields; we surface the\nsubset useful for LLM clients (identifiers, citation, OA status, abstract).\n``extra=\"allow\"`` keeps any new upstream field from raising on validation.",
+      "properties": {
+       "id": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Europe PMC record ID",
+        "title": "Id"
+       },
+       "source": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "MED, PMC, PPR, AGR, ...",
+        "title": "Source"
+       },
+       "pmid": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Pmid"
+       },
+       "pmcid": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Pmcid"
+       },
+       "doi": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Doi"
+       },
+       "title": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Title"
+       },
+       "authorString": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Comma-separated author list",
+        "title": "Authorstring"
+       },
+       "journalTitle": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Journaltitle"
+       },
+       "pubYear": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "String \u2014 wire format is untyped",
+        "title": "Pubyear"
+       },
+       "firstPublicationDate": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "ISO date",
+        "title": "Firstpublicationdate"
+       },
+       "citedByCount": {
+        "anyOf": [
+         {
+          "type": "integer"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Citedbycount"
+       },
+       "isOpenAccess": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "\"Y\" or \"N\"",
+        "title": "Isopenaccess"
+       },
+       "hasPDF": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "\"Y\" or \"N\"",
+        "title": "Haspdf"
+       },
+       "abstractText": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Abstracttext"
+       },
+       "web_url": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "europepmc.org article URL \u2014 a link for the client to open or fetch; no tool on this server dereferences it",
+        "title": "Web Url"
+       }
+      },
+      "title": "LiteratureHit",
+      "type": "object"
+     }
+    },
+    "additionalProperties": false,
+    "description": "Europe PMC ``/search`` wrapper for a locus query.",
+    "title": "LocusLiterature"
+   },
+   "title": "Literature (Europe PMC)"
+  },
+  "kegg_pathways": {
+   "_meta": {
+    "edam": {
+     "operation": [
+      "operation_2422"
+     ],
+     "topic": [
+      "topic_0780",
+      "topic_0114"
+     ]
+    }
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true
+   },
+   "description": "Fetch KEGG pathway memberships for a plant locus from rest.kegg.jp. Returns a list of pathway IDs + names + KEGG category classes the locus participates in. Pairs with locus_go_annotations for the GO-level functional view. Covers: arabidopsis_thaliana, brachypodium_distachyon, glycine_max, hordeum_vulgare, oryza_sativa, populus_trichocarpa, zea_mays. Any other organism raises OrganismNotSupported before any request (both the single and batch forms). Non-Arabidopsis loci are bridged to the NCBI Entrez Gene ID KEGG indexes (returned as entrez_gene_id). A gene KEGG knows with no pathway memberships is an ok answer with pathways=[]; a gene KEGG has no record of raises NotFoundError. KEGG v118+ is case-sensitive on the locus: pass AGI loci as uppercase.",
+   "inputSchema": {
+    "properties": {
+     "locus": {
+      "type": "string",
+      "description": "Arabidopsis AGI locus, e.g. AT1G01010 (case preserved verbatim \u2014 KEGG v118+ is case-sensitive)"
+     },
+     "organism": {
+      "type": [
+       "string",
+       "integer"
+      ],
+      "description": "Plant organism \u2014 accepts canonical slug, scientific or common name, or NCBI taxid; see the tool description for which KEGG covers",
+      "default": "arabidopsis_thaliana"
+     }
+    },
+    "required": [
+     "locus"
+    ],
+    "type": "object",
+    "additionalProperties": false
+   },
+   "name": "kegg_pathways",
+   "outputSchema": {
+    "properties": {
+     "locus": {
+      "title": "Locus",
+      "type": "string"
+     },
+     "organism": {
+      "description": "Resolved canonical organism slug, e.g. arabidopsis_thaliana",
+      "title": "Organism",
+      "type": "string"
+     },
+     "kegg_gene_id": {
+      "description": "e.g. \"ath:at1g01010\"",
+      "title": "Kegg Gene Id",
+      "type": "string"
+     },
+     "entrez_gene_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Entrez Gene ID from the non-Arabidopsis KEGG\u2194Entrez bridge; absent for ath.",
+      "title": "Entrez Gene Id"
+     },
+     "pathways": {
+      "items": {
+       "$ref": "#/$defs/KeggPathway"
+      },
+      "title": "Pathways",
+      "type": "array"
+     },
+     "errors": {
+      "description": "Per-pathway step-2 failures (kept inline so the call doesn't abort)",
+      "items": {
+       "type": "string"
+      },
+      "title": "Errors",
+      "type": "array"
+     },
+     "upstream_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "KEGG release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means KEGG did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "title": "Upstream Version"
+     }
+    },
+    "required": [
+     "locus",
+     "organism",
+     "kegg_gene_id",
+     "pathways"
+    ],
+    "type": "object",
+    "$defs": {
+     "KeggPathway": {
+      "additionalProperties": false,
+      "description": "One KEGG pathway entry.",
+      "properties": {
+       "id": {
+        "description": "KEGG pathway ID, e.g. ath04075",
+        "title": "Id",
+        "type": "string"
+       },
+       "name": {
+        "description": "Pathway name from KEGG NAME line",
+        "title": "Name",
+        "type": "string"
+       },
+       "pathway_class": {
+        "description": "Hierarchical category from KEGG CLASS line",
+        "title": "Pathway Class",
+        "type": "string"
+       }
+      },
+      "required": [
+       "id",
+       "name",
+       "pathway_class"
+      ],
+      "title": "KeggPathway",
+      "type": "object"
+     }
+    },
+    "additionalProperties": false,
+    "description": "KEGG pathway-membership response wrapper.",
+    "title": "KeggPathways"
+   },
+   "title": "KEGG Pathways"
+  },
+  "batch_kegg_pathways": {
+   "_meta": {
+    "edam": {
+     "operation": [
+      "operation_2422"
+     ],
+     "topic": [
+      "topic_0780",
+      "topic_0114"
+     ]
+    }
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true
+   },
+   "description": "Batch version of kegg_pathways. Up to 50 loci per call. Covers: arabidopsis_thaliana, brachypodium_distachyon, glycine_max, hordeum_vulgare, oryza_sativa, populus_trichocarpa, zea_mays. Any other organism raises OrganismNotSupported before any request (both the single and batch forms).",
+   "inputSchema": {
+    "properties": {
+     "loci": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "minItems": 1,
+      "maxItems": 50
+     },
+     "organism": {
+      "type": [
+       "string",
+       "integer"
+      ],
+      "description": "Plant organism \u2014 accepts canonical slug, scientific or common name, or NCBI taxid; see the tool description for which KEGG covers",
+      "default": "arabidopsis_thaliana"
+     }
+    },
+    "required": [
+     "loci"
+    ],
+    "type": "object",
+    "additionalProperties": false
+   },
+   "name": "batch_kegg_pathways",
+   "outputSchema": {
+    "properties": {
+     "tool": {
+      "description": "The batch tool name, e.g. batch_resolve_locus_to_uniprot",
+      "title": "Tool",
+      "type": "string"
+     },
+     "count": {
+      "description": "Number of distinct loci queried, returned (== len(results) + len(errors)). The input list is de-duplicated first, so this is LOWER than the number of loci you sent if you sent a duplicate \u2014 that is de-duplication, not a dropped locus.",
+      "title": "Count",
+      "type": "integer"
+     },
+     "results": {
+      "additionalProperties": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "description": "locus \u2192 per-locus result dict (same shape as the single-locus tool)",
+      "title": "Results",
+      "type": "object"
+     },
+     "errors": {
+      "additionalProperties": {
+       "type": "string"
+      },
+      "description": "locus \u2192 '[ClassName] message' for PlantGenomicsError failures",
+      "title": "Errors",
+      "type": "object"
+     }
+    },
+    "required": [
+     "tool",
+     "count",
+     "results",
+     "errors"
+    ],
+    "type": "object",
+    "additionalProperties": false,
+    "description": "Shared response shape for every ``batch_*`` tool.\n\nAll batch tools fan out per-locus calls and produce the same envelope:\nsuccesses land in ``results`` keyed on the input locus; PlantGenomicsError\nfailures land in ``errors`` with the ``[ClassName] message`` prefix the\nsingle-locus tools already use. ``count`` is the input cardinality\n(``len(loci)``), not ``len(results) + len(errors)`` \u2014 those two add up\nto ``count`` by construction.",
+    "title": "BatchEnvelope"
+   },
+   "title": "Batch: KEGG Pathways"
+  },
+  "aragwas_associations": {
+   "_meta": {
+    "edam": {
+     "operation": [
+      "operation_2422"
+     ],
+     "topic": [
+      "topic_0780",
+      "topic_0114"
+     ]
+    }
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true
+   },
+   "description": "Fetch AraGWAS genome-wide association study hits for an Arabidopsis locus (aragwas.1001genomes.org; free, no key). Returns each significant SNP association overlapping the gene with its score (-log10 p), minor-allele frequency, the SNP's predicted molecular effect (impact, amino-acid change), and the phenotype/study it came from, including the study's own significance thresholds on the score's scale (study.thresholds), which the over_bonferroni / over_fdr / over_permutation flags are taken against. association_count is the true total even when page-capped. ARABIDOPSIS-ONLY \u2014 any other organism raises OrganismNotSupported. Defaults to arabidopsis_thaliana.",
+   "inputSchema": {
+    "properties": {
+     "locus": {
+      "type": "string",
+      "description": "Arabidopsis AGI locus, e.g. AT1G01060"
+     },
+     "organism": {
+      "type": [
+       "string",
+       "integer"
+      ],
+      "description": "Arabidopsis only (the 1001 Genomes panel is A. thaliana)",
+      "default": "arabidopsis_thaliana"
+     },
+     "cursor": {
+      "type": "string",
+      "description": "next_cursor from the previous page; omit for the first (#123)"
+     }
+    },
+    "required": [
+     "locus"
+    ],
+    "type": "object",
+    "additionalProperties": false
+   },
+   "name": "aragwas_associations",
+   "outputSchema": {
+    "properties": {
+     "next_cursor": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Pass back as cursor= to get the rows after this page; null on the last page. Opaque, and bound to this tool and query (#123)",
+      "title": "Next Cursor"
+     },
+     "total": {
+      "description": "How many associations exist upstream for this query, all pages (pre-cap) (#123)",
+      "title": "Total",
+      "type": "integer"
+     },
+     "locus": {
+      "title": "Locus",
+      "type": "string"
+     },
+     "organism": {
+      "description": "Always arabidopsis_thaliana",
+      "title": "Organism",
+      "type": "string"
+     },
+     "found": {
+      "description": "True once the associations endpoint returned 200",
+      "title": "Found",
+      "type": "boolean"
+     },
+     "association_count": {
+      "description": "Total associations (pre-cap)",
+      "title": "Association Count",
+      "type": "integer"
+     },
+     "returned": {
+      "description": "Associations returned (post page-cap)",
+      "title": "Returned",
+      "type": "integer"
+     },
+     "truncated": {
+      "description": "True if pagination was capped",
+      "title": "Truncated",
+      "type": "boolean"
+     },
+     "associations": {
+      "description": "Per-hit {score, maf, mac, over_bonferroni, over_fdr, over_permutation, snp{\u2026}, study{\u2026, thresholds}}. score is -log10(p); study.thresholds holds that study's bonferroni_threshold05/01, bh_threshold and permutation_threshold on the same scale, which over_bonferroni / over_fdr / over_permutation compare score against",
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "title": "Associations",
+      "type": "array"
+     },
+     "upstream_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "AraGWAS release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means AraGWAS did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "title": "Upstream Version"
+     }
+    },
+    "required": [
+     "total",
+     "locus",
+     "organism",
+     "found",
+     "association_count",
+     "returned",
+     "truncated"
+    ],
+    "type": "object",
+    "additionalProperties": false,
+    "description": "AraGWAS GWAS associations for an Arabidopsis locus.\n\nArabidopsis-only. ``association_count`` is the true total even when the row\nlist is page-capped.",
+    "title": "AraGwasAssociations"
+   },
+   "title": "AraGWAS: GWAS Associations"
+  },
+  "ensembl_plants_lookup_locus": {
+   "_meta": {
+    "edam": {
+     "operation": [
+      "operation_2422"
+     ],
+     "topic": [
+      "topic_0780",
+      "topic_0114"
+     ]
+    }
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true
+   },
+   "description": "Fetch metadata for a plant locus identifier from Ensembl Plants. Defaults to arabidopsis_thaliana; pass organism= for other plant species (oryza_sativa, zea_mays, ...). Locus is the TAIR-style identifier (e.g. AT1G01010 for Arabidopsis NAC001).",
+   "inputSchema": {
+    "properties": {
+     "locus": {
+      "type": "string",
+      "description": "e.g. AT1G01010 (Arabidopsis), Os01g0100100 (rice)"
+     },
+     "organism": {
+      "type": [
+       "string",
+       "integer"
+      ],
+      "description": "Plant organism \u2014 accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+      "default": "arabidopsis_thaliana"
+     }
+    },
+    "required": [
+     "locus"
+    ],
+    "type": "object",
+    "additionalProperties": false
+   },
+   "name": "ensembl_plants_lookup_locus",
+   "outputSchema": {
+    "properties": {
+     "id": {
+      "description": "Locus identifier, e.g. AT1G01010",
+      "title": "Id",
+      "type": "string"
+     },
+     "organism": {
+      "description": "Plant organism canonical slug, e.g. arabidopsis_thaliana",
+      "title": "Organism",
+      "type": "string"
+     },
+     "object_type": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Usually \"Gene\"",
+      "title": "Object Type"
+     },
+     "biotype": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "protein_coding, lncRNA, miRNA, ...",
+      "title": "Biotype"
+     },
+     "display_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Human-readable gene symbol",
+      "title": "Display Name"
+     },
+     "description": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Description"
+     },
+     "seq_region_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Chromosome / contig name",
+      "title": "Seq Region Name"
+     },
+     "start": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Start"
+     },
+     "end": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "End"
+     },
+     "strand": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "1 forward, -1 reverse",
+      "title": "Strand"
+     },
+     "assembly_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "e.g. TAIR10",
+      "title": "Assembly Name"
+     },
+     "db_type": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Usually \"core\"",
+      "title": "Db Type"
+     },
+     "logic_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Source annotation pipeline",
+      "title": "Logic Name"
+     },
+     "source": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Source"
+     },
+     "canonical_transcript": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Canonical Transcript"
+     },
+     "upstream_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Ensembl Plants release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means Ensembl Plants did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "title": "Upstream Version"
+     }
+    },
+    "required": [
+     "id",
+     "organism"
+    ],
+    "type": "object",
+    "additionalProperties": true,
+    "description": "Ensembl Plants ``/lookup/id/{locus}`` response.\n\nEnsembl returns a documented core set plus engine-internal fields that\nvary by assembly. We model the stable ones and let the rest through so\na future Ensembl release that adds a field doesn't break clients.",
+    "title": "EnsemblPlantsLocus"
+   },
+   "title": "Ensembl Plants: Locus Metadata"
+  },
+  "experimental_structures": {
+   "_meta": {
+    "edam": {
+     "operation": [
+      "operation_2422"
+     ],
+     "topic": [
+      "topic_0780",
+      "topic_0114"
+     ]
+    }
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true
+   },
+   "description": "Fetch experimentally-solved (X-ray / cryo-EM / NMR) protein structures for a locus from PDBe (www.ebi.ac.uk/pdbe; free, no key). Resolves the locus \u2192 UniProt accession, then returns PDBe's best_structures mapping ranked best-first: per entry the PDB id, chain, experimental method, resolution, coverage, and modelled residue span. Most plant proteins have NO deposited structure \u2014 that returns found=false (a normal outcome, not an error); a locus with no UniProt entry raises a typed NotFoundError. structure_count is the true total even when the list is capped. Complements alphafold_structure (the predicted view). Works for all 12 organisms (UniProt-keyed). Defaults to arabidopsis_thaliana; pass organism= for other species.",
+   "inputSchema": {
+    "properties": {
+     "locus": {
+      "type": "string",
+      "description": "e.g. AT4G09760 (Arabidopsis), Os01g0100100 (rice RAP-DB)"
+     },
+     "organism": {
+      "type": [
+       "string",
+       "integer"
+      ],
+      "description": "Plant organism \u2014 accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+      "default": "arabidopsis_thaliana"
+     }
+    },
+    "required": [
+     "locus"
+    ],
+    "type": "object",
+    "additionalProperties": false
+   },
+   "name": "experimental_structures",
+   "outputSchema": {
+    "properties": {
+     "total": {
+      "description": "How many PDBe best_structures rows (one per chain) exist upstream for this query, all pages (pre-cap) (#123)",
+      "title": "Total",
+      "type": "integer"
+     },
+     "returned": {
+      "description": "Rows in this payload (#123)",
+      "title": "Returned",
+      "type": "integer"
+     },
+     "entry_count": {
+      "description": "Distinct PDB entries among the rows; structure_count counts chains (#123)",
+      "title": "Entry Count",
+      "type": "integer"
+     },
+     "locus": {
+      "title": "Locus",
+      "type": "string"
+     },
+     "accession": {
+      "description": "Resolved UniProt accession",
+      "title": "Accession",
+      "type": "string"
+     },
+     "found": {
+      "description": "True if any experimental structure is deposited",
+      "title": "Found",
+      "type": "boolean"
+     },
+     "structure_count": {
+      "description": "PDBe rows, pre-cap \u2014 one per CHAIN, not per entry (see entry_count)",
+      "title": "Structure Count",
+      "type": "integer"
+     },
+     "truncated": {
+      "description": "True if the structure list was capped",
+      "title": "Truncated",
+      "type": "boolean"
+     },
+     "structures": {
+      "description": "Best-first {pdb_id, chain_id, experimental_method, resolution, coverage, \u2026}",
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "title": "Structures",
+      "type": "array"
+     },
+     "upstream_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "PDBe release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means PDBe did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "title": "Upstream Version"
+     }
+    },
+    "required": [
+     "total",
+     "returned",
+     "entry_count",
+     "locus",
+     "accession",
+     "found",
+     "structure_count",
+     "truncated"
+    ],
+    "type": "object",
+    "additionalProperties": false,
+    "description": "PDBe experimentally-solved structures for a locus (via UniProt).\n\nThe locus is resolved to a UniProt accession, then PDBe's ``best_structures``\nmapping is queried (ranked best-first). ``found=False`` (empty list) means no\ndeposited structure \u2014 the common plant case (a 404), not an error.\nComplements ``AlphaFoldStructure`` (the predicted view). ``structure_count``\n(= ``total``) counts per-chain rows before the cap; ``entry_count`` counts\ndistinct PDB entries.",
+    "title": "ExperimentalStructures"
+   },
+   "title": "PDBe: Experimental Structures"
+  },
+  "locus_go_annotations": {
+   "_meta": {
+    "edam": {
+     "operation": [
+      "operation_2422"
+     ],
+     "topic": [
+      "topic_0780",
+      "topic_0085"
+     ]
+    }
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true
+   },
+   "description": "Fetch Gene Ontology annotations for a plant locus from QuickGO (EBI). Free, no API key. The locus is first resolved to a UniProt accession via the same logic as resolve_locus_to_uniprot, then QuickGO is queried by geneProductId. Returns annotations[] with goId/goName/goAspect/qualifier/evidence + a by_aspect rollup ({molecular_function: [{goId, goName}, ...], biological_process: [...], cellular_component: [...]}) deduped on goId so the high-level term set is one read away; by_aspect_deduped_on names that key in the payload. truncated is true when numberOfHits exceeds returned \u2014 raise limit (max 100).",
+   "inputSchema": {
+    "properties": {
+     "locus": {
+      "type": "string",
+      "description": "e.g. AT1G01010 (Arabidopsis), Os01g0100100 (rice)"
+     },
+     "organism": {
+      "type": [
+       "string",
+       "integer"
+      ],
+      "description": "Plant organism \u2014 accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+      "default": "arabidopsis_thaliana"
+     },
+     "limit": {
+      "type": "integer",
+      "description": "Max annotations from QuickGO (1\u2013100, default 50)",
+      "default": 50,
+      "minimum": 1,
+      "maximum": 100
+     },
+     "cursor": {
+      "type": "string",
+      "description": "next_cursor from the previous page; omit for the first (#123)"
+     }
+    },
+    "required": [
+     "locus"
+    ],
+    "type": "object",
+    "additionalProperties": false
+   },
+   "name": "locus_go_annotations",
+   "outputSchema": {
+    "properties": {
+     "next_cursor": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Pass back as cursor= to get the rows after this page; null on the last page. Opaque, and bound to this tool and query (#123)",
+      "title": "Next Cursor"
+     },
+     "total": {
+      "description": "How many GO annotations (QuickGO numberOfHits) exist upstream for this query, all pages (pre-cap) (#123)",
+      "title": "Total",
+      "type": "integer"
+     },
+     "locus": {
+      "title": "Locus",
+      "type": "string"
+     },
+     "uniprot_accession": {
+      "description": "UniProt accession used to query QuickGO",
+      "title": "Uniprot Accession",
+      "type": "string"
+     },
+     "numberOfHits": {
+      "description": "Total annotations available upstream",
+      "title": "Numberofhits",
+      "type": "integer"
+     },
+     "returned": {
+      "description": "Rows in this payload (#123)",
+      "title": "Returned",
+      "type": "integer"
+     },
+     "truncated": {
+      "description": "True when numberOfHits exceeds returned (raise `limit`)",
+      "title": "Truncated",
+      "type": "boolean"
+     },
+     "annotations": {
+      "items": {
+       "$ref": "#/$defs/GoAnnotation"
+      },
+      "title": "Annotations",
+      "type": "array"
+     },
+     "by_aspect": {
+      "additionalProperties": {
+       "items": {
+        "additionalProperties": {
+         "type": "string"
+        },
+        "type": "object"
+       },
+       "type": "array"
+      },
+      "description": "aspect \u2192 [{goId, goName}, ...], deduped on goId, over annotations[] only",
+      "title": "By Aspect",
+      "type": "object"
+     },
+     "by_aspect_deduped_on": {
+      "const": "goId",
+      "description": "The key by_aspect collapses annotations[] on: a dedup, not a truncation",
+      "title": "By Aspect Deduped On",
+      "type": "string"
+     },
+     "upstream_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "QuickGO release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means QuickGO did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "title": "Upstream Version"
+     }
+    },
+    "required": [
+     "total",
+     "locus",
+     "uniprot_accession",
+     "numberOfHits",
+     "returned",
+     "truncated",
+     "annotations",
+     "by_aspect",
+     "by_aspect_deduped_on"
+    ],
+    "type": "object",
+    "$defs": {
+     "GoAnnotation": {
+      "additionalProperties": true,
+      "description": "One QuickGO ``/annotation/search`` row, projected to a fixed field set.\n\n``extra=\"allow\"`` keeps any new QuickGO field from raising on validation\n(the upstream record has ~18 fields; we drop verbose ones).",
+      "properties": {
+       "geneProductId": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "e.g. UniProtKB:Q0WV96",
+        "title": "Geneproductid"
+       },
+       "symbol": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Gene symbol, e.g. NAC001",
+        "title": "Symbol"
+       },
+       "qualifier": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "enables, involved_in, located_in, ...",
+        "title": "Qualifier"
+       },
+       "goId": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "GO term ID, e.g. GO:0000976",
+        "title": "Goid"
+       },
+       "goName": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Human-readable GO term name",
+        "title": "Goname"
+       },
+       "goAspect": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "molecular_function | biological_process | cellular_component",
+        "title": "Goaspect"
+       },
+       "goEvidence": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "3-letter code, e.g. IPI, IDA",
+        "title": "Goevidence"
+       },
+       "evidenceCode": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "ECO ontology ID",
+        "title": "Evidencecode"
+       },
+       "reference": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "e.g. PMID:30356219",
+        "title": "Reference"
+       },
+       "assignedBy": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Source DB, e.g. TAIR, UniProt",
+        "title": "Assignedby"
+       },
+       "taxonId": {
+        "anyOf": [
+         {
+          "type": "integer"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "NCBI taxonomy ID",
+        "title": "Taxonid"
+       },
+       "taxonName": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Scientific name",
+        "title": "Taxonname"
+       },
+       "date": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "YYYYMMDD string",
+        "title": "Date"
+       },
+       "withFrom": {
+        "anyOf": [
+         {
+          "items": {
+           "additionalProperties": true,
+           "type": "object"
+          },
+          "type": "array"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Connected cross-refs from QuickGO",
+        "title": "Withfrom"
+       }
+      },
+      "title": "GoAnnotation",
+      "type": "object"
+     }
+    },
+    "additionalProperties": false,
+    "description": "QuickGO annotation search wrapper for a plant locus.\n\nThe locus is first resolved to a UniProt accession via the same logic\nas ``resolve_locus_to_uniprot``, then handed to QuickGO. ``by_aspect``\ngroups annotations by GO aspect with goId-level dedup so a chain\nconsumer can see the high-level term set without the per-evidence\nrepetition.",
+    "title": "LocusGoAnnotations"
+   },
+   "title": "GO Annotations"
+  },
+  "gramene_homologs": {
+   "_meta": {
+    "edam": {
+     "operation": [
+      "operation_2422"
+     ],
+     "topic": [
+      "topic_0780",
+      "topic_0114"
+     ]
+    }
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true
+   },
+   "description": "Fetch orthologs and paralogs for a plant locus from Gramene compara (data.gramene.org v69). Default homology_type='ortholog'; pass 'paralog' for in-species duplicates or 'all' for everything. Returns target_locus + homology category (type) + shared gene_tree_id per hit. Rows carry no taxon unless with_organism=true (adds 'organism' per row) or target_organism is given, which filters to one organism before the cap and adds 'organism' per row; pair with resolve_locus_to_uniprot for protein-level enrichment and with blast_sequence for sequence similarity discovery.",
+   "inputSchema": {
+    "properties": {
+     "locus": {
+      "type": "string",
+      "description": "e.g. AT1G01010 (Arabidopsis), Os01g0100100 (rice)"
+     },
+     "homology_type": {
+      "type": "string",
+      "enum": [
+       "ortholog",
+       "paralog",
+       "all"
+      ],
+      "description": "Filter on homology kind",
+      "default": "ortholog"
+     },
+     "target_organism": {
+      "type": [
+       "string",
+       "integer"
+      ],
+      "description": "Keep only homologs in this organism (slug, scientific/common name, or NCBI taxid), filtered BEFORE the cap so a hub gene's rice or wheat orthologs cannot be pushed past 'limit' by other species. Adds 'organism' to every row and 'total_all_organisms'."
+     },
+     "with_organism": {
+      "type": "boolean",
+      "default": false,
+      "description": "Add 'organism' (Gramene species slug, null when unknown) to every row without filtering; one extra call per 100 rows (#130)"
+     },
+     "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 100,
+      "description": "Max homolog rows to return. 'total' always reports the true pre-cap count and 'truncated' says whether the cap bit."
+     },
+     "cursor": {
+      "type": "string",
+      "description": "next_cursor from the previous page; omit for the first (#123)"
+     }
+    },
+    "required": [
+     "locus"
+    ],
+    "type": "object",
+    "additionalProperties": false
+   },
+   "name": "gramene_homologs",
+   "outputSchema": {
+    "properties": {
+     "next_cursor": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Pass back as cursor= to get the rows after this page; null on the last page. Opaque, and bound to this tool and query (#123)",
+      "title": "Next Cursor"
+     },
+     "returned": {
+      "description": "Rows in this payload (#123)",
+      "title": "Returned",
+      "type": "integer"
+     },
+     "locus": {
+      "title": "Locus",
+      "type": "string"
+     },
+     "release": {
+      "description": "Gramene release identifier, e.g. v69",
+      "title": "Release",
+      "type": "string"
+     },
+     "total": {
+      "description": "How many homologs (after any target_organism filter) exist upstream for this query, all pages (pre-cap) (#123)",
+      "title": "Total",
+      "type": "integer"
+     },
+     "truncated": {
+      "default": false,
+      "description": "True when the row list was capped (< total); pass limit= to change the cap",
+      "title": "Truncated",
+      "type": "boolean"
+     },
+     "homologs": {
+      "items": {
+       "$ref": "#/$defs/GrameneHomolog"
+      },
+      "title": "Homologs",
+      "type": "array"
+     },
+     "target_organism": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Canonical organism the rows were filtered to, when target_organism was passed",
+      "title": "Target Organism"
+     },
+     "total_all_organisms": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Homolog total before the organism filter; present only when filtered",
+      "title": "Total All Organisms"
+     },
+     "upstream_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Gramene release that produced THIS response, as stated by the release pinned in the request path (e.g. 'v69'); same value as release. null means Gramene did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "title": "Upstream Version"
+     }
+    },
+    "required": [
+     "returned",
+     "locus",
+     "release",
+     "total",
+     "homologs"
+    ],
+    "type": "object",
+    "$defs": {
+     "GrameneHomolog": {
+      "additionalProperties": true,
+      "description": "One ortholog/paralog entry from Gramene compara.\n\nGramene's ``fl=homology`` projection groups homologs by category and\nonly emits target loci (as strings), plus a single gene_tree_id at the\nrecord level. Per-row taxon, identity, protein ID, dn/ds, and\ngoc_score are NOT exposed by this endpoint, so we deliberately omit\nthose fields rather than carry always-None placeholders.",
+      "properties": {
+       "target_locus": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Target Locus"
+       },
+       "type": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Homology category: ortholog_one2one | ortholog_one2many | ortholog_many2many | within_species_paralog | between_species_paralog",
+        "title": "Type"
+       },
+       "gene_tree_id": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Gramene gene-tree ID (shared across all homologs in the record)",
+        "title": "Gene Tree Id"
+       },
+       "organism": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Gramene species slug of target_locus; present with with_organism or target_organism, null when Gramene has no record for the locus",
+        "title": "Organism"
+       }
+      },
+      "title": "GrameneHomolog",
+      "type": "object"
+     }
+    },
+    "additionalProperties": false,
+    "description": "Gramene compara homology response wrapper.",
+    "title": "GrameneHomologs"
+   },
+   "title": "Gramene Homologs"
+  },
+  "entry_members": {
+   "_meta": {
+    "edam": {
+     "operation": [
+      "operation_2422"
+     ],
+     "topic": [
+      "topic_0780",
+      "topic_0114"
+     ]
+    }
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true
+   },
+   "description": "List every protein in one organism that carries an InterPro, Pfam or PANTHER entry, with the gene locus each maps to \u2014 the reverse of interpro_domains / panther_family (entry -> genes, not gene -> entries). One UniProt query (rest.uniprot.org; free, no key). Each member gives accession, symbol and locus; locus is the id the locus-keyed tools accept, or null when UniProt links the protein to no gene (e.g. an old cDNA submission). reviewed_only=true (default) keeps Swiss-Prot entries: complete for Arabidopsis and rice, empty for most other crops, so pass reviewed_only=false there. total is UniProt's count across all pages; when truncated=true, pass next_cursor back as cursor= for the next page. An entry absent from the organism is ok with total 0. Defaults to arabidopsis_thaliana.",
+   "inputSchema": {
+    "properties": {
+     "entry": {
+      "type": "string",
+      "pattern": "^(IPR\\d{6}|PF\\d{5}|PTHR\\d{5})$",
+      "description": "InterPro (IPR010525), Pfam (PF06507) or PANTHER family (PTHR31384)"
+     },
+     "organism": {
+      "type": [
+       "string",
+       "integer"
+      ],
+      "description": "Plant organism \u2014 accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+      "default": "arabidopsis_thaliana"
+     },
+     "reviewed_only": {
+      "type": "boolean",
+      "description": "Only Swiss-Prot (curated) proteins",
+      "default": true
+     },
+     "page_size": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 500,
+      "default": 100
+     },
+     "cursor": {
+      "type": "string",
+      "description": "next_cursor from the previous page; omit for the first"
+     }
+    },
+    "required": [
+     "entry"
+    ],
+    "type": "object",
+    "additionalProperties": false
+   },
+   "name": "entry_members",
+   "outputSchema": {
+    "properties": {
+     "entry": {
+      "description": "The entry asked about, e.g. IPR010525",
+      "title": "Entry",
+      "type": "string"
+     },
+     "entry_database": {
+      "enum": [
+       "interpro",
+       "pfam",
+       "panther"
+      ],
+      "title": "Entry Database",
+      "type": "string"
+     },
+     "organism": {
+      "title": "Organism",
+      "type": "string"
+     },
+     "taxid": {
+      "title": "Taxid",
+      "type": "integer"
+     },
+     "reviewed_only": {
+      "title": "Reviewed Only",
+      "type": "boolean"
+     },
+     "query": {
+      "description": "The UniProt query that produced this answer",
+      "title": "Query",
+      "type": "string"
+     },
+     "total": {
+      "description": "How many proteins matching the UniProt query exist upstream for this query, all pages (pre-cap) (#123)",
+      "title": "Total",
+      "type": "integer"
+     },
+     "returned": {
+      "description": "Rows in this payload (#123)",
+      "title": "Returned",
+      "type": "integer"
+     },
+     "truncated": {
+      "description": "True when more members follow next_cursor",
+      "title": "Truncated",
+      "type": "boolean"
+     },
+     "next_cursor": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Pass back as cursor= for the next page; null on the last",
+      "title": "Next Cursor"
+     },
+     "members": {
+      "items": {
+       "$ref": "#/$defs/EntryMember"
+      },
+      "title": "Members",
+      "type": "array"
+     },
+     "upstream_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "UniProt release that produced THIS response, as stated by its X-UniProt-Release header (e.g. '2026_02'). null means UniProt did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "title": "Upstream Version"
+     }
+    },
+    "required": [
+     "entry",
+     "entry_database",
+     "organism",
+     "taxid",
+     "reviewed_only",
+     "query",
+     "total",
+     "returned",
+     "truncated",
+     "members"
+    ],
+    "type": "object",
+    "$defs": {
+     "EntryMember": {
+      "additionalProperties": false,
+      "description": "One UniProt protein carrying an InterPro / Pfam / PANTHER entry.",
+      "properties": {
+       "accession": {
+        "description": "UniProt accession, e.g. Q84WU6",
+        "title": "Accession",
+        "type": "string"
+       },
+       "reviewed": {
+        "description": "True if Swiss-Prot (curated)",
+        "title": "Reviewed",
+        "type": "boolean"
+       },
+       "symbol": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "First gene symbol, e.g. ARF1",
+        "title": "Symbol"
+       },
+       "protein_name": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Protein Name"
+       },
+       "locus": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "The gene locus this server's locus tools accept (AGI, RAP, IWGSC \u2026). null when UniProt cross-references the protein to no gene, e.g. an old cDNA submission; never guessed from the symbol.",
+        "title": "Locus"
+       },
+       "loci": {
+        "description": "Every locus from the winning source",
+        "items": {
+         "type": "string"
+        },
+        "title": "Loci",
+        "type": "array"
+       },
+       "locus_source": {
+        "anyOf": [
+         {
+          "enum": [
+           "EnsemblPlants",
+           "Araport",
+           "TAIR",
+           "ordered_locus_name"
+          ],
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "UniProt field the locus came from",
+        "title": "Locus Source"
+       }
+      },
+      "required": [
+       "accession",
+       "reviewed"
+      ],
+      "title": "EntryMember",
+      "type": "object"
+     }
+    },
+    "additionalProperties": false,
+    "description": "Every protein in one organism that carries a family/domain entry.",
+    "title": "EntryMembers"
+   },
+   "title": "Family / Domain Members"
+  },
+  "batch_locus_call": {
+   "_meta": {
+    "edam": {
+     "operation": [
+      "operation_2422"
+     ],
+     "topic": [
+      "topic_0780",
+      "topic_0114"
+     ]
+    }
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true
+   },
+   "description": "Run one locus-keyed tool over up to 50 loci in one call (#131). 'tool' names any tool whose only required argument is 'locus' (interpro_domains, alphafold_structure, panther_family, orthodb_orthologs, gene_report, ...); 'args' holds that tool's other arguments, shared by every locus and checked against its schema once before any call. Returns the standard batch envelope: results keyed by locus, each exactly what the single tool returns, and per-locus errors. The dedicated batch_* tools remain.",
+   "inputSchema": {
+    "properties": {
+     "tool": {
+      "type": "string",
+      "enum": [
+       "alphafold_structure",
+       "analyze_locus_synth",
+       "arabidopsis_natural_variation",
+       "aragwas_associations",
+       "atted_coexpression",
+       "bar_aiv_interactions",
+       "bar_efp_expression",
+       "bar_gene_summary",
+       "biological_context_synth",
+       "consensus_homologs",
+       "ensembl_plants_lookup_locus",
+       "experimental_interactions",
+       "experimental_structures",
+       "gene_report",
+       "get_gene_xrefs",
+       "get_sequence",
+       "gramene_homologs",
+       "interpro_domains",
+       "kegg_pathways",
+       "locus_gene_rifs",
+       "locus_go_annotations",
+       "locus_literature",
+       "locus_plant_ontology",
+       "locus_variants",
+       "orthodb_orthologs",
+       "panther_family",
+       "phytozome_lookup_locus",
+       "plantcyc_locus_info",
+       "resolve_locus_to_uniprot",
+       "string_interactions",
+       "tair_locus_info",
+       "tf_binding_motifs"
+      ]
+     },
+     "loci": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "minItems": 1,
+      "maxItems": 50,
+      "description": "Locus identifiers (max 50)"
+     },
+     "args": {
+      "type": "object",
+      "default": {},
+      "description": "The tool's arguments other than 'locus' (and not 'cursor'), e.g. {\"organism\": \"oryza_sativa\"}"
+     }
+    },
+    "required": [
+     "tool",
+     "loci"
+    ],
+    "type": "object",
+    "additionalProperties": false
+   },
+   "name": "batch_locus_call",
+   "outputSchema": {
+    "properties": {
+     "tool": {
+      "description": "The batch tool name, e.g. batch_resolve_locus_to_uniprot",
+      "title": "Tool",
+      "type": "string"
+     },
+     "count": {
+      "description": "Number of distinct loci queried, returned (== len(results) + len(errors)). The input list is de-duplicated first, so this is LOWER than the number of loci you sent if you sent a duplicate \u2014 that is de-duplication, not a dropped locus.",
+      "title": "Count",
+      "type": "integer"
+     },
+     "results": {
+      "additionalProperties": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "description": "locus \u2192 per-locus result dict (same shape as the single-locus tool)",
+      "title": "Results",
+      "type": "object"
+     },
+     "errors": {
+      "additionalProperties": {
+       "type": "string"
+      },
+      "description": "locus \u2192 '[ClassName] message' for PlantGenomicsError failures",
+      "title": "Errors",
+      "type": "object"
+     }
+    },
+    "required": [
+     "tool",
+     "count",
+     "results",
+     "errors"
+    ],
+    "type": "object",
+    "additionalProperties": false,
+    "description": "Shared response shape for every ``batch_*`` tool.\n\nAll batch tools fan out per-locus calls and produce the same envelope:\nsuccesses land in ``results`` keyed on the input locus; PlantGenomicsError\nfailures land in ``errors`` with the ``[ClassName] message`` prefix the\nsingle-locus tools already use. ``count`` is the input cardinality\n(``len(loci)``), not ``len(results) + len(errors)`` \u2014 those two add up\nto ``count`` by construction.",
+    "title": "BatchEnvelope"
+   },
+   "title": "Batch: Any Locus Tool"
+  }
+ },
+ "missing_tools": [],
+ "calls": [
+  {
+   "row": "shared-symbol",
+   "tool": "resolve_locus_to_uniprot",
+   "args": {
+    "locus": "ARF1",
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": false,
+   "payload": null,
+   "error": "[InvalidArguments] 'ARF1' is not a locus id and UniProt matches it to 2 loci in organism_id=3702: AT1G59750, AT2G47170. Pass one of them as `locus`.",
+   "n_bytes": 237
+  },
+  {
+   "row": "shared-symbol",
+   "tool": "resolve_locus_to_uniprot",
+   "args": {
+    "locus": "ARF5",
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": true,
+   "payload": {
+    "locus_query": "ARF5",
+    "primaryAccession": "P93024",
+    "uniProtkbId": "ARFE_ARATH",
+    "entryType": "UniProtKB reviewed (Swiss-Prot)",
+    "reviewed": true,
+    "recommendedName": "Auxin response factor 5",
+    "geneNames": [
+     "ARF5"
+    ],
+    "organism": "Arabidopsis thaliana",
+    "taxonId": 3702,
+    "sequenceLength": 902,
+    "web_url": "https://www.uniprot.org/uniprotkb/P93024",
+    "upstream_version": "2026_03"
+   },
+   "error": null,
+   "n_bytes": 888
+  },
+  {
+   "row": "symbol-rejected-elsewhere",
+   "tool": "ensembl_plants_lookup_locus",
+   "args": {
+    "locus": "ARF1",
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": false,
+   "payload": null,
+   "error": "[NotFoundError] Ensembl Plants /lookup/id/ARF1 \u2192 HTTP 400 (not found): {\"error\":\"ID 'ARF1' not found\"}",
+   "n_bytes": 197
+  },
+  {
+   "row": "symbol-rejected-elsewhere",
+   "tool": "tair_locus_info",
+   "args": {
+    "locus": "ARF1"
+   },
+   "ok": false,
+   "payload": null,
+   "error": "BAR /thalemine/gene_information/ARF1 \u2192 HTTP 400: {\"wasSuccessful\": false, \"error\": \"Invalid gene id\"}\n",
+   "n_bytes": 200
+  },
+  {
+   "row": "symbol-rejected-elsewhere",
+   "tool": "phytozome_lookup_locus",
+   "args": {
+    "locus": "ARF1",
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": false,
+   "payload": null,
+   "error": "[NotFoundError] Phytozome: locus ARF1 not found for organism_id 167",
+   "n_bytes": 156
+  },
+  {
+   "row": "no-family-enumeration",
+   "tool": "entry_members",
+   "args": {
+    "entry": "IPR010525",
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": true,
+   "payload": {
+    "entry": "IPR010525",
+    "entry_database": "interpro",
+    "organism": "arabidopsis_thaliana",
+    "taxid": 3702,
+    "reviewed_only": true,
+    "query": "xref:interpro-IPR010525 AND organism_id:3702 AND reviewed:true",
+    "total": 23,
+    "returned": 23,
+    "truncated": false,
+    "next_cursor": null,
+    "members": [
+     {
+      "accession": "Q84WU6",
+      "reviewed": true,
+      "symbol": "ARF17",
+      "protein_name": "Auxin response factor 17",
+      "locus": "AT1G77850",
+      "loci": [
+       "AT1G77850"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q8L7G0",
+      "reviewed": true,
+      "symbol": "ARF1",
+      "protein_name": "Auxin response factor 1",
+      "locus": "AT1G59750",
+      "loci": [
+       "AT1G59750"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9FGV1",
+      "reviewed": true,
+      "symbol": "ARF8",
+      "protein_name": "Auxin response factor 8",
+      "locus": "AT5G37020",
+      "loci": [
+       "AT5G37020"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "O23661",
+      "reviewed": true,
+      "symbol": "ARF3",
+      "protein_name": "Auxin response factor 3",
+      "locus": "AT2G33860",
+      "loci": [
+       "AT2G33860"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "P93024",
+      "reviewed": true,
+      "symbol": "ARF5",
+      "protein_name": "Auxin response factor 5",
+      "locus": "AT1G19850",
+      "loci": [
+       "AT1G19850"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q94JM3",
+      "reviewed": true,
+      "symbol": "ARF2",
+      "protein_name": "Auxin response factor 2",
+      "locus": "AT5G62000",
+      "loci": [
+       "AT5G62000"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q93YR9",
+      "reviewed": true,
+      "symbol": "ARF16",
+      "protein_name": "Auxin response factor 16",
+      "locus": "AT4G30080",
+      "loci": [
+       "AT4G30080"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9C5W9",
+      "reviewed": true,
+      "symbol": "ARF18",
+      "protein_name": "Auxin response factor 18",
+      "locus": "AT3G61830",
+      "loci": [
+       "AT3G61830"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9XED8",
+      "reviewed": true,
+      "symbol": "ARF9",
+      "protein_name": "Auxin response factor 9",
+      "locus": "AT4G23980",
+      "loci": [
+       "AT4G23980"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9ZTX8",
+      "reviewed": true,
+      "symbol": "ARF6",
+      "protein_name": "Auxin response factor 6",
+      "locus": "AT1G30330",
+      "loci": [
+       "AT1G30330"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "P93022",
+      "reviewed": true,
+      "symbol": "ARF7",
+      "protein_name": "Auxin response factor 7",
+      "locus": "AT5G20730",
+      "loci": [
+       "AT5G20730"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q8RYC8",
+      "reviewed": true,
+      "symbol": "ARF19",
+      "protein_name": "Auxin response factor 19",
+      "locus": "AT1G19220",
+      "loci": [
+       "AT1G19220"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9SKN5",
+      "reviewed": true,
+      "symbol": "ARF10",
+      "protein_name": "Auxin response factor 10",
+      "locus": "AT2G28350",
+      "loci": [
+       "AT2G28350"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9ZPY6",
+      "reviewed": true,
+      "symbol": "ARF11",
+      "protein_name": "Auxin response factor 11",
+      "locus": "AT2G46530",
+      "loci": [
+       "AT2G46530"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9ZTX9",
+      "reviewed": true,
+      "symbol": "ARF4",
+      "protein_name": "Auxin response factor 4",
+      "locus": "AT5G60450",
+      "loci": [
+       "AT5G60450"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9C8N7",
+      "reviewed": true,
+      "symbol": "ARF22",
+      "protein_name": "Auxin response factor 22",
+      "locus": "AT1G34390",
+      "loci": [
+       "AT1G34390"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9XID4",
+      "reviewed": true,
+      "symbol": "ARF12",
+      "protein_name": "Auxin response factor 12",
+      "locus": "AT1G34310",
+      "loci": [
+       "AT1G34310"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9LQE8",
+      "reviewed": true,
+      "symbol": "ARF14",
+      "protein_name": "Putative auxin response factor 14",
+      "locus": "AT1G35540",
+      "loci": [
+       "AT1G35540"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9C8N9",
+      "reviewed": true,
+      "symbol": "ARF21",
+      "protein_name": "Putative auxin response factor 21",
+      "locus": "AT1G34410",
+      "loci": [
+       "AT1G34410"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9C7I9",
+      "reviewed": true,
+      "symbol": "ARF20",
+      "protein_name": "Auxin response factor 20",
+      "locus": "AT1G35240",
+      "loci": [
+       "AT1G35240"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9FX25",
+      "reviewed": true,
+      "symbol": "ARF13",
+      "protein_name": "Auxin response factor 13",
+      "locus": "AT1G34170",
+      "loci": [
+       "AT1G34170"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9LQE3",
+      "reviewed": true,
+      "symbol": "ARF15",
+      "protein_name": "Putative auxin response factor 15",
+      "locus": "AT1G35520",
+      "loci": [
+       "AT1G35520"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "P92530",
+      "reviewed": true,
+      "symbol": null,
+      "protein_name": "Uncharacterized mitochondrial protein AtMg00940",
+      "locus": "ATMG00940",
+      "loci": [
+       "ATMG00940"
+      ],
+      "locus_source": "Araport"
+     }
+    ],
+    "upstream_version": "2026_03"
+   },
+   "error": null,
+   "n_bytes": 9273
+  },
+  {
+   "row": "no-family-enumeration",
+   "tool": "entry_members",
+   "args": {
+    "entry": "PTHR31384",
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": true,
+   "payload": {
+    "entry": "PTHR31384",
+    "entry_database": "panther",
+    "organism": "arabidopsis_thaliana",
+    "taxid": 3702,
+    "reviewed_only": true,
+    "query": "xref:panther-PTHR31384 AND organism_id:3702 AND reviewed:true",
+    "total": 24,
+    "returned": 24,
+    "truncated": false,
+    "next_cursor": null,
+    "members": [
+     {
+      "accession": "Q84WU6",
+      "reviewed": true,
+      "symbol": "ARF17",
+      "protein_name": "Auxin response factor 17",
+      "locus": "AT1G77850",
+      "loci": [
+       "AT1G77850"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q8L7G0",
+      "reviewed": true,
+      "symbol": "ARF1",
+      "protein_name": "Auxin response factor 1",
+      "locus": "AT1G59750",
+      "loci": [
+       "AT1G59750"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9FGV1",
+      "reviewed": true,
+      "symbol": "ARF8",
+      "protein_name": "Auxin response factor 8",
+      "locus": "AT5G37020",
+      "loci": [
+       "AT5G37020"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q94JM3",
+      "reviewed": true,
+      "symbol": "ARF2",
+      "protein_name": "Auxin response factor 2",
+      "locus": "AT5G62000",
+      "loci": [
+       "AT5G62000"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "O23661",
+      "reviewed": true,
+      "symbol": "ARF3",
+      "protein_name": "Auxin response factor 3",
+      "locus": "AT2G33860",
+      "loci": [
+       "AT2G33860"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "P93024",
+      "reviewed": true,
+      "symbol": "ARF5",
+      "protein_name": "Auxin response factor 5",
+      "locus": "AT1G19850",
+      "loci": [
+       "AT1G19850"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q93YR9",
+      "reviewed": true,
+      "symbol": "ARF16",
+      "protein_name": "Auxin response factor 16",
+      "locus": "AT4G30080",
+      "loci": [
+       "AT4G30080"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9C5W9",
+      "reviewed": true,
+      "symbol": "ARF18",
+      "protein_name": "Auxin response factor 18",
+      "locus": "AT3G61830",
+      "loci": [
+       "AT3G61830"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9XED8",
+      "reviewed": true,
+      "symbol": "ARF9",
+      "protein_name": "Auxin response factor 9",
+      "locus": "AT4G23980",
+      "loci": [
+       "AT4G23980"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9ZTX8",
+      "reviewed": true,
+      "symbol": "ARF6",
+      "protein_name": "Auxin response factor 6",
+      "locus": "AT1G30330",
+      "loci": [
+       "AT1G30330"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "P93022",
+      "reviewed": true,
+      "symbol": "ARF7",
+      "protein_name": "Auxin response factor 7",
+      "locus": "AT5G20730",
+      "loci": [
+       "AT5G20730"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q8RYC8",
+      "reviewed": true,
+      "symbol": "ARF19",
+      "protein_name": "Auxin response factor 19",
+      "locus": "AT1G19220",
+      "loci": [
+       "AT1G19220"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9SKN5",
+      "reviewed": true,
+      "symbol": "ARF10",
+      "protein_name": "Auxin response factor 10",
+      "locus": "AT2G28350",
+      "loci": [
+       "AT2G28350"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9ZTX9",
+      "reviewed": true,
+      "symbol": "ARF4",
+      "protein_name": "Auxin response factor 4",
+      "locus": "AT5G60450",
+      "loci": [
+       "AT5G60450"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9ZPY6",
+      "reviewed": true,
+      "symbol": "ARF11",
+      "protein_name": "Auxin response factor 11",
+      "locus": "AT2G46530",
+      "loci": [
+       "AT2G46530"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9C8N7",
+      "reviewed": true,
+      "symbol": "ARF22",
+      "protein_name": "Auxin response factor 22",
+      "locus": "AT1G34390",
+      "loci": [
+       "AT1G34390"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9XID4",
+      "reviewed": true,
+      "symbol": "ARF12",
+      "protein_name": "Auxin response factor 12",
+      "locus": "AT1G34310",
+      "loci": [
+       "AT1G34310"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9LP07",
+      "reviewed": true,
+      "symbol": "ARF23",
+      "protein_name": "Putative auxin response factor 23",
+      "locus": "AT1G43950",
+      "loci": [
+       "AT1G43950"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9LQE8",
+      "reviewed": true,
+      "symbol": "ARF14",
+      "protein_name": "Putative auxin response factor 14",
+      "locus": "AT1G35540",
+      "loci": [
+       "AT1G35540"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9C8N9",
+      "reviewed": true,
+      "symbol": "ARF21",
+      "protein_name": "Putative auxin response factor 21",
+      "locus": "AT1G34410",
+      "loci": [
+       "AT1G34410"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9C7I9",
+      "reviewed": true,
+      "symbol": "ARF20",
+      "protein_name": "Auxin response factor 20",
+      "locus": "AT1G35240",
+      "loci": [
+       "AT1G35240"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9FX25",
+      "reviewed": true,
+      "symbol": "ARF13",
+      "protein_name": "Auxin response factor 13",
+      "locus": "AT1G34170",
+      "loci": [
+       "AT1G34170"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "Q9LQE3",
+      "reviewed": true,
+      "symbol": "ARF15",
+      "protein_name": "Putative auxin response factor 15",
+      "locus": "AT1G35520",
+      "loci": [
+       "AT1G35520"
+      ],
+      "locus_source": "Araport"
+     },
+     {
+      "accession": "P92530",
+      "reviewed": true,
+      "symbol": null,
+      "protein_name": "Uncharacterized mitochondrial protein AtMg00940",
+      "locus": "ATMG00940",
+      "loci": [
+       "ATMG00940"
+      ],
+      "locus_source": "Araport"
+     }
+    ],
+    "upstream_version": "2026_03"
+   },
+   "error": null,
+   "n_bytes": 9655
+  },
+  {
+   "row": "batch-refusal-shape",
+   "tool": "kegg_pathways",
+   "args": {
+    "locus": "Os01g0236300",
+    "organism": "triticum_aestivum"
+   },
+   "ok": false,
+   "payload": null,
+   "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']",
+   "n_bytes": 320
+  },
+  {
+   "row": "batch-refusal-shape",
+   "tool": "batch_kegg_pathways",
+   "args": {
+    "loci": [
+     "Os01g0236300"
+    ],
+    "organism": "triticum_aestivum"
+   },
+   "ok": false,
+   "payload": null,
+   "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']",
+   "n_bytes": 320
+  },
+  {
+   "row": "identifier-with-no-tool",
+   "tool": "gramene_homologs",
+   "args": {
+    "locus": "AT1G19850",
+    "with_organism": true
+   },
+   "ok": true,
+   "payload": {
+    "locus": "AT1G19850",
+    "release": "v69",
+    "total": 177,
+    "returned": 100,
+    "truncated": true,
+    "next_cursor": "eyJwIjogeyJvZmZzZXQiOiAxMDB9LCAicSI6IHsibGltaXQiOiAxMDAsICJsb2N1cyI6ICJBVDFHMTk4NTAiLCAidGFyZ2V0IjogbnVsbCwgInR5cGUiOiAib3J0aG9sb2cifSwgInQiOiAiZ3JhbWVuZV9ob21vbG9ncyJ9",
+    "homologs": [
+     {
+      "target_locus": "C5167_014531",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "papaver_somniferum"
+     },
+     {
+      "target_locus": "C5167_020472",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "papaver_somniferum"
+     },
+     {
+      "target_locus": "Potri.005G236700.v4.1",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "populus_trichocarpa"
+     },
+     {
+      "target_locus": "Potri.002G024700.v4.1",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "populus_trichocarpa"
+     },
+     {
+      "target_locus": "gene1048",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "medicago_truncatula"
+     },
+     {
+      "target_locus": "gene1046",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "medicago_truncatula"
+     },
+     {
+      "target_locus": "gene1047",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "medicago_truncatula"
+     },
+     {
+      "target_locus": "T459_35349",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "capsicum_annuum"
+     },
+     {
+      "target_locus": "T459_13352",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "capsicum_annuum"
+     },
+     {
+      "target_locus": "MD15G0012200",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "malus_domestica_golden"
+     },
+     {
+      "target_locus": "MD08G0014100",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "malus_domestica_golden"
+     },
+     {
+      "target_locus": "arahy.Tifrunner.gnm2.ann2.Ah11g196300",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "arachis_hypogaea"
+     },
+     {
+      "target_locus": "arahy.Tifrunner.gnm2.ann2.Ah17g360400",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "arachis_hypogaea"
+     },
+     {
+      "target_locus": "arahy.Tifrunner.gnm2.ann2.Ah08g017500",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "arachis_hypogaea"
+     },
+     {
+      "target_locus": "arahy.Tifrunner.gnm2.ann2.Ah16g010100",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "arachis_hypogaea"
+     },
+     {
+      "target_locus": "arahy.Tifrunner.gnm2.ann2.Ah06g158100",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "arachis_hypogaea"
+     },
+     {
+      "target_locus": "arahy.Tifrunner.gnm2.ann2.Ah02g194300",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "arachis_hypogaea"
+     },
+     {
+      "target_locus": "arahy.Tifrunner.gnm2.ann2.Ah16g010400",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "arachis_hypogaea"
+     },
+     {
+      "target_locus": "arahy.Tifrunner.gnm2.ann2.Ah06g158300",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "arachis_hypogaea"
+     },
+     {
+      "target_locus": "gene-LSAT_9X46321",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "lactuca_sativa"
+     },
+     {
+      "target_locus": "gene-LSAT_2X12381",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "lactuca_sativa"
+     },
+     {
+      "target_locus": "KYUSg_chr5.39506",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "lolium_perenne"
+     },
+     {
+      "target_locus": "KYUSg_chr2.52074",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "lolium_perenne"
+     },
+     {
+      "target_locus": "TanjilG_31042",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "lupinus_angustifolius"
+     },
+     {
+      "target_locus": "TanjilG_17061",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "lupinus_angustifolius"
+     },
+     {
+      "target_locus": "TanjilG_08164",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "lupinus_angustifolius"
+     },
+     {
+      "target_locus": "B456_002G124400",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "gossypium_raimondii"
+     },
+     {
+      "target_locus": "B456_009G196100",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "gossypium_raimondii"
+     },
+     {
+      "target_locus": "Pav_sc0004359.1_g050.1.br",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "prunus_avium"
+     },
+     {
+      "target_locus": "Pav_sc0002080.1_g180.1.mk",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "prunus_avium"
+     },
+     {
+      "target_locus": "AVESA.00010b.r2.2AG0244870",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "avena_sativa_sang"
+     },
+     {
+      "target_locus": "AVESA.00010b.r2.2DG0358550",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "avena_sativa_sang"
+     },
+     {
+      "target_locus": "AVESA.00010b.r2.2CG0323630",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "avena_sativa_sang"
+     },
+     {
+      "target_locus": "TuG1812S0002799300.01",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "triticum_urartu"
+     },
+     {
+      "target_locus": "TuG1812G0200005381.01",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "triticum_urartu"
+     },
+     {
+      "target_locus": "TuG1812G0200005380.01",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "triticum_urartu"
+     },
+     {
+      "target_locus": "GSBRNA2T00030648001",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "brassica_napus"
+     },
+     {
+      "target_locus": "GSBRNA2T00112376001",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "brassica_napus"
+     },
+     {
+      "target_locus": "GSBRNA2T00139470001",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "brassica_napus"
+     },
+     {
+      "target_locus": "GSBRNA2T00042975001",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "brassica_napus"
+     },
+     {
+      "target_locus": "GSBRNA2T00036420001",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "brassica_napus"
+     },
+     {
+      "target_locus": "GSBRNA2T00067779001",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "brassica_napus"
+     },
+     {
+      "target_locus": "LOC114393714",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "glycine_soja"
+     },
+     {
+      "target_locus": "LOC114385190",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "glycine_soja"
+     },
+     {
+      "target_locus": "Zm00001eb433020",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "zea_mays"
+     },
+     {
+      "target_locus": "Zm00001eb067270",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "zea_mays"
+     },
+     {
+      "target_locus": "Jr11_20160",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "juglans_regia"
+     },
+     {
+      "target_locus": "Jr11_20170",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "juglans_regia"
+     },
+     {
+      "target_locus": "Vfaba.Hedin2.R1.1g487960",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "vicia_faba"
+     },
+     {
+      "target_locus": "Vfaba.Hedin2.R1.3g236120",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "vicia_faba"
+     },
+     {
+      "target_locus": "GLYMA_17G256500",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "glycine_max"
+     },
+     {
+      "target_locus": "GLYMA_12G153700",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "glycine_max"
+     },
+     {
+      "target_locus": "GLYMA_14G217700",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "glycine_max"
+     },
+     {
+      "target_locus": "FRAEX38873_v2_000083000",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "fraxinus_excelsior"
+     },
+     {
+      "target_locus": "FRAEX38873_v2_000309970",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "fraxinus_excelsior"
+     },
+     {
+      "target_locus": "HanXRQr2_Chr05g0213851",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "helianthus_annuus"
+     },
+     {
+      "target_locus": "HanXRQr2_Chr06g0275011",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "helianthus_annuus"
+     },
+     {
+      "target_locus": "HanXRQr2_Chr14g0624761",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "helianthus_annuus"
+     },
+     {
+      "target_locus": "Et_1B_012651",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "eragrostis_tef"
+     },
+     {
+      "target_locus": "Et_7A_051318",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "eragrostis_tef"
+     },
+     {
+      "target_locus": "Et_7B_053981",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "eragrostis_tef"
+     },
+     {
+      "target_locus": "SIN_1002371",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "sesamum_indicum"
+     },
+     {
+      "target_locus": "SIN_1009079",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "sesamum_indicum"
+     },
+     {
+      "target_locus": "Kaladp0003s0067.v1.1",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "kalanchoe_fedtschenkoi"
+     },
+     {
+      "target_locus": "Kaladp0100s0015.v1.1",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "kalanchoe_fedtschenkoi"
+     },
+     {
+      "target_locus": "scaffold19.149",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "echinochloa_crusgalli"
+     },
+     {
+      "target_locus": "scaffold120.215",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "echinochloa_crusgalli"
+     },
+     {
+      "target_locus": "CEY00_Acc23580",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "actinidia_chinensis"
+     },
+     {
+      "target_locus": "CEY00_Acc04567",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "actinidia_chinensis"
+     },
+     {
+      "target_locus": "Ma01_g13290",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "musa_acuminata"
+     },
+     {
+      "target_locus": "Ma01_g13260",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "musa_acuminata"
+     },
+     {
+      "target_locus": "Ma06_g38940",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "musa_acuminata"
+     },
+     {
+      "target_locus": "Ma05_g19130",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "musa_acuminata"
+     },
+     {
+      "target_locus": "Ma01_g13320",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "musa_acuminata"
+     },
+     {
+      "target_locus": "DCAR_022437",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "daucus_carota"
+     },
+     {
+      "target_locus": "DCAR_017496",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "daucus_carota"
+     },
+     {
+      "target_locus": "AVESA.00001b.r3.2Ag0002328",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "avena_sativa_ot3098"
+     },
+     {
+      "target_locus": "AVESA.00001b.r3.2Dg0002248",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "avena_sativa_ot3098"
+     },
+     {
+      "target_locus": "AVESA.00001b.r3.2Cg0003034",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "avena_sativa_ot3098"
+     },
+     {
+      "target_locus": "Csa17g025660",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "camelina_sativa"
+     },
+     {
+      "target_locus": "Csa17g025650",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "camelina_sativa"
+     },
+     {
+      "target_locus": "Bo5g027930",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "brassica_oleracea"
+     },
+     {
+      "target_locus": "Bo8g069820",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "brassica_oleracea"
+     },
+     {
+      "target_locus": "Bo7g062090",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "brassica_oleracea"
+     },
+     {
+      "target_locus": "Dexi7A01G0021970",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "digitaria_exilis"
+     },
+     {
+      "target_locus": "Dexi7B01G0022720",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "digitaria_exilis"
+     },
+     {
+      "target_locus": "A06p017600.1_BraROA",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "brassica_rapa_ro18"
+     },
+     {
+      "target_locus": "A08p038220.1_BraROA",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "brassica_rapa_ro18"
+     },
+     {
+      "target_locus": "A07p021650.1_BraROA",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "brassica_rapa_ro18"
+     },
+     {
+      "target_locus": "TRIDC2BG074990",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "triticum_dicoccoides"
+     },
+     {
+      "target_locus": "TRIDC7BG002410",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "triticum_dicoccoides"
+     },
+     {
+      "target_locus": "TRIDC1BG021080",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "triticum_dicoccoides"
+     },
+     {
+      "target_locus": "Tritim_EIv0.3_1529040",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "triticum_timopheevii"
+     },
+     {
+      "target_locus": "Tritim_EIv0.3_0293910",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "triticum_timopheevii"
+     },
+     {
+      "target_locus": "Tritim_EIv0.3_0428290",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "triticum_timopheevii"
+     },
+     {
+      "target_locus": "Tritim_EIv0.3_0293900",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "triticum_timopheevii"
+     },
+     {
+      "target_locus": "DRNTG_21844",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "dioscorea_rotundata"
+     },
+     {
+      "target_locus": "DRNTG_22201",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "dioscorea_rotundata"
+     },
+     {
+      "target_locus": "AET2Gv21082600",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "aegilops_tauschii"
+     },
+     {
+      "target_locus": "AET2Gv21082000",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082",
+      "organism": "aegilops_tauschii"
+     }
+    ],
+    "upstream_version": "v69"
+   },
+   "error": null,
+   "n_bytes": 29570
+  },
+  {
+   "row": "no-pagination",
+   "tool": "gramene_homologs",
+   "args": {
+    "locus": "AT1G19850"
+   },
+   "ok": true,
+   "payload": {
+    "locus": "AT1G19850",
+    "release": "v69",
+    "total": 177,
+    "returned": 100,
+    "truncated": true,
+    "next_cursor": "eyJwIjogeyJvZmZzZXQiOiAxMDB9LCAicSI6IHsibGltaXQiOiAxMDAsICJsb2N1cyI6ICJBVDFHMTk4NTAiLCAidGFyZ2V0IjogbnVsbCwgInR5cGUiOiAib3J0aG9sb2cifSwgInQiOiAiZ3JhbWVuZV9ob21vbG9ncyJ9",
+    "homologs": [
+     {
+      "target_locus": "C5167_014531",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "C5167_020472",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Potri.005G236700.v4.1",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Potri.002G024700.v4.1",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "gene1048",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "gene1046",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "gene1047",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "T459_35349",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "T459_13352",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "MD15G0012200",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "MD08G0014100",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "arahy.Tifrunner.gnm2.ann2.Ah11g196300",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "arahy.Tifrunner.gnm2.ann2.Ah17g360400",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "arahy.Tifrunner.gnm2.ann2.Ah08g017500",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "arahy.Tifrunner.gnm2.ann2.Ah16g010100",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "arahy.Tifrunner.gnm2.ann2.Ah06g158100",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "arahy.Tifrunner.gnm2.ann2.Ah02g194300",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "arahy.Tifrunner.gnm2.ann2.Ah16g010400",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "arahy.Tifrunner.gnm2.ann2.Ah06g158300",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "gene-LSAT_9X46321",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "gene-LSAT_2X12381",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "KYUSg_chr5.39506",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "KYUSg_chr2.52074",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "TanjilG_31042",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "TanjilG_17061",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "TanjilG_08164",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "B456_002G124400",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "B456_009G196100",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Pav_sc0004359.1_g050.1.br",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Pav_sc0002080.1_g180.1.mk",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "AVESA.00010b.r2.2AG0244870",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "AVESA.00010b.r2.2DG0358550",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "AVESA.00010b.r2.2CG0323630",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "TuG1812S0002799300.01",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "TuG1812G0200005381.01",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "TuG1812G0200005380.01",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "GSBRNA2T00030648001",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "GSBRNA2T00112376001",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "GSBRNA2T00139470001",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "GSBRNA2T00042975001",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "GSBRNA2T00036420001",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "GSBRNA2T00067779001",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "LOC114393714",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "LOC114385190",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Zm00001eb433020",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Zm00001eb067270",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Jr11_20160",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Jr11_20170",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Vfaba.Hedin2.R1.1g487960",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Vfaba.Hedin2.R1.3g236120",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "GLYMA_17G256500",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "GLYMA_12G153700",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "GLYMA_14G217700",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "FRAEX38873_v2_000083000",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "FRAEX38873_v2_000309970",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "HanXRQr2_Chr05g0213851",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "HanXRQr2_Chr06g0275011",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "HanXRQr2_Chr14g0624761",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Et_1B_012651",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Et_7A_051318",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Et_7B_053981",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "SIN_1002371",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "SIN_1009079",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Kaladp0003s0067.v1.1",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Kaladp0100s0015.v1.1",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "scaffold19.149",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "scaffold120.215",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "CEY00_Acc23580",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "CEY00_Acc04567",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Ma01_g13290",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Ma01_g13260",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Ma06_g38940",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Ma05_g19130",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Ma01_g13320",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "DCAR_022437",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "DCAR_017496",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "AVESA.00001b.r3.2Ag0002328",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "AVESA.00001b.r3.2Dg0002248",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "AVESA.00001b.r3.2Cg0003034",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Csa17g025660",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Csa17g025650",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Bo5g027930",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Bo8g069820",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Bo7g062090",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Dexi7A01G0021970",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Dexi7B01G0022720",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "A06p017600.1_BraROA",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "A08p038220.1_BraROA",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "A07p021650.1_BraROA",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "TRIDC2BG074990",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "TRIDC7BG002410",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "TRIDC1BG021080",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Tritim_EIv0.3_1529040",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Tritim_EIv0.3_0293910",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Tritim_EIv0.3_0428290",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Tritim_EIv0.3_0293900",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "DRNTG_21844",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "DRNTG_22201",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "AET2Gv21082600",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "AET2Gv21082000",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     }
+    ],
+    "upstream_version": "v69"
+   },
+   "error": null,
+   "n_bytes": 22914
+  },
+  {
+   "row": "no-pagination",
+   "tool": "gramene_homologs",
+   "args": {
+    "locus": "AT1G19850",
+    "cursor": "eyJwIjogeyJvZmZzZXQiOiAxMDB9LCAicSI6IHsibGltaXQiOiAxMDAsICJsb2N1cyI6ICJBVDFHMTk4NTAiLCAidGFyZ2V0IjogbnVsbCwgInR5cGUiOiAib3J0aG9sb2cifSwgInQiOiAiZ3JhbWVuZV9ob21vbG9ncyJ9"
+   },
+   "ok": true,
+   "payload": {
+    "locus": "AT1G19850",
+    "release": "v69",
+    "total": 177,
+    "returned": 77,
+    "truncated": false,
+    "next_cursor": null,
+    "homologs": [
+     {
+      "target_locus": "AET2Gv21082200",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "AET2Gv21082400",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "OE9A070555",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "OE9A020465",
+      "type": "ortholog_one2many",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "evm.TU.01.2980",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "FCD_00003481",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "BVRB_1g022070",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "TCM_034194",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Cla97C05G099830",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "MELO3C003768.2",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Csa_3G866510",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "PRUPE_1G368300",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "C.cajan_32145",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Solyc04g081235.1",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Vradi06g16730",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "LR48_Vigan07g283500",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "OPUNC04G26100",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "OB04G35570",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Manes.18G015400.v8.1",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "PHAVU_001G008200g",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "SETIT_021121mg",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "KN538740.1_FG017",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "itb01g35000",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "ONIVA04G27140",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "BRADI_5g25157v3",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "GSCOC_T00024683001",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Vitis18g01221",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "SEVIR_3G028900v2",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "AeUmb.TA1851.r1.2UG0034600",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "TRITD2Av1G268360",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "TRITD2Bv1G232020",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Aco025401.1.path1",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Prudul26B021243",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "A4U43_C07F31010",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "OMERI04G24170",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "PGSC0003DMG400003771",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Ccrd_014311",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "BGIOSGA014158",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "CICLE_v10000183mg",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "EVM0031148",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "LPERR04G24160",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "fgenesh2_kg.1__2164__AT1G19850.1",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "gene-CFP56_51475",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "SORBI_3006G255300",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "OGLUM04G28480",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Tp57577_TGAC_v2_gene34351",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "SECCE2Rv1G0129000",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "EUTSA_v10006748mg",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "AMTR_s00211p00025860",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "TraesCS2D02G491200",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "TraesCS2A02G491000",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "TraesCS2B02G519200",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "NC2G0286500",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "ORGLA04G0248600",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "EUGRSUZ_F02090",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "OBART04G28590",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "HORVU.MOREX.r3.2HG0200970",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "QL02p011050",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Vigun08g008700.v1.2",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "TraesTSP2D01G537800",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "TraesTSP2B01G557200",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "TraesTSP2A01G527100",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "g13864",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "AALP_AA3G079400",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Csa03g023700",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Csa14g025130",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "CCACVL1_09034",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "TRIDC2AG069310",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "EJB05_40031",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "AUR62035726",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "gene-BT93_J0358",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "GQ55_7G319600",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "A4A49_07736",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "ORUFI04G30260",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "gene-AYBTSS11_LOCUS24570",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "RchiOBHm_Chr6g0302551",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     },
+     {
+      "target_locus": "Os04g0664400",
+      "type": "ortholog_one2one",
+      "gene_tree_id": "EPlGT00940000167082"
+     }
+    ],
+    "upstream_version": "v69"
+   },
+   "error": null,
+   "n_bytes": 16940
+  }
+ ]
+}
