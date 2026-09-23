@@ -22,7 +22,12 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import batch, ensembl_plants
-from plant_genomics_mcp.errors import NotFoundError, PlantGenomicsError, RateLimitError
+from plant_genomics_mcp.errors import (
+    NotFoundError,
+    OrganismNotSupported,
+    PlantGenomicsError,
+    RateLimitError,
+)
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
@@ -297,6 +302,8 @@ async def test_batch_kegg_pathways_mixed(httpx_mock: HTTPXMock):
         url="https://rest.kegg.jp/link/pathway/ath:ATNOPE",
         text="",
     )
+    # An empty /link is checked against /list (issue #140); unknown -> 404.
+    httpx_mock.add_response(url="https://rest.kegg.jp/list/ath:ATNOPE", status_code=404, text="")
     async with httpx.AsyncClient() as client:
         env = await batch.batch_kegg_pathways(client, ["AT1G01010", "ATNOPE"])
     assert env["tool"] == "kegg_pathways"
@@ -754,3 +761,53 @@ async def test_batch_locus_go_annotations_forwards_both_stages(
     assert env["tool"] == "locus_go_annotations"
     assert env["results"]["AT1G01010"]["uniprot_accession"] == "Q9LFT1"
     assert env["results"]["AT1G01010"]["annotations"] == [{"goId": "GO:1"}]
+
+
+# ---------- issue #139: one refusal shape for the two forms of one tool ----------
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("batch_fn", "single_gate", "field"),
+    [
+        (batch.batch_kegg_pathways, "kegg_org_code_for", "kegg_org_code"),
+        (batch.batch_atted_coexpression, "atted_release_for", "atted_release"),
+    ],
+    ids=["kegg", "atted"],
+)
+async def test_a_batch_refuses_an_uncovered_organism_before_any_request(
+    batch_fn: Any, single_gate: str, field: str, httpx_mock: HTTPXMock
+) -> None:
+    """The single tool raised OrganismNotSupported; its batch form answered
+    ok=true with the refusal copied into errors per locus, although its
+    description promised a raise before any HTTP fan-out."""
+    from plant_genomics_mcp import organisms
+
+    uncovered = next(c for c, r in organisms.ORGANISMS.items() if getattr(r, field) is None)
+    covered = next(c for c, r in organisms.ORGANISMS.items() if getattr(r, field) is not None)
+    # Positive control: the same gate the single form uses accepts `covered`.
+    getattr(organisms, single_gate)(covered)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(OrganismNotSupported):
+            await batch_fn(client, ["AT1G01010", "AT1G01020"], organism=uncovered)
+    assert httpx_mock.get_requests() == []
+
+
+@pytest.mark.parametrize(
+    ("tools", "field"),
+    [
+        (("kegg_pathways", "batch_kegg_pathways"), "kegg_org_code"),
+        (("atted_coexpression", "batch_atted_coexpression"), "atted_release"),
+    ],
+    ids=["kegg", "atted"],
+)
+def test_both_forms_state_the_organisms_the_registry_covers(tools: tuple, field: str) -> None:
+    """kegg_pathways said 'only arabidopsis_thaliana resolves' while the
+    refusal it raises listed seven organisms and rice answered (#139)."""
+    from plant_genomics_mcp import organisms, server
+
+    covered = sorted(organisms._supported_for(field))
+    assert len(covered) > 1  # positive control: a real list, not one default
+    by_name = {t.name: t for t in server.TOOLS}
+    for name in tools:
+        assert f"Covers: {', '.join(covered)}." in (by_name[name].description or ""), name

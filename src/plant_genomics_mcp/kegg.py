@@ -229,11 +229,17 @@ async def lookup_pathways(
             raise type(e)(f"KEGG bridge (Ensembl Plants /xrefs): {e}") from e
         gene_id = f"{org_code}:{entrez_gene_id}"
     body = await _get(client, f"/link/pathway/{gene_id}")
-    if not body.strip():
-        raise NotFoundError(f"KEGG: no pathway memberships for {locus} (queried as {gene_id})")
-    pathway_ids = _parse_link_pathway(body, gene_id)
+    pathway_ids = _parse_link_pathway(body, gene_id) if body.strip() else []
     if not pathway_ids:
-        raise NotFoundError(f"KEGG: response had no pathway IDs for {locus} (queried as {gene_id})")
+        # Issue #140: /link/pathway answers the same empty 200 for a gene with
+        # no pathways and for a gene KEGG has never heard of (live, 2026-09-22).
+        # /list tells them apart: a record for a known gene, 404 for an unknown
+        # one. A known gene with no pathways is an answer, not an error.
+        record = await _get(client, f"/list/{gene_id}")
+        if not record.strip():
+            raise NotFoundError(
+                f"KEGG: no gene record for {locus} (queried as {gene_id}); /list/{gene_id} is empty"
+            )
 
     pathways: list[dict[str, Any]] = []
     errors: list[str] = []

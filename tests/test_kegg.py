@@ -104,6 +104,8 @@ async def test_lookup_pathways_empty_link_raises_not_found(httpx_mock: HTTPXMock
         url="https://rest.kegg.jp/link/pathway/ath:ATNOPE",
         text="",
     )
+    # KEGG answers /list for an unknown gene with 404 (live, 2026-09-22).
+    httpx_mock.add_response(url="https://rest.kegg.jp/list/ath:ATNOPE", status_code=404, text="")
     async with httpx.AsyncClient() as client:
         with pytest.raises(NotFoundError) as exc:
             await kegg.lookup_pathways(client, "ATNOPE", organism="arabidopsis_thaliana")
@@ -136,6 +138,7 @@ async def test_lookup_pathways_404_treated_as_empty(httpx_mock: HTTPXMock):
         status_code=404,
         text="",
     )
+    httpx_mock.add_response(url="https://rest.kegg.jp/list/ath:ATNOPE", status_code=404, text="")
     async with httpx.AsyncClient() as client:
         with pytest.raises(NotFoundError):
             await kegg.lookup_pathways(client, "ATNOPE", organism="arabidopsis_thaliana")
@@ -788,3 +791,29 @@ async def test_live_kegg_brachypodium_bridge_fires_via_chr1_first_gene():
                 client, "BRADI_1g00485v3", organism="brachypodium_distachyon"
             )
     assert "BRADI_1g00485v3" in str(excinfo.value)
+
+
+# ---------- issue #140: a known gene with no pathways is an answer ----------
+
+
+@pytest.mark.asyncio
+async def test_a_gene_kegg_knows_with_no_pathways_is_ok_and_an_unknown_one_is_not(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """/link/pathway answers the same 1-byte 200 for both (live, 2026-09-22):
+    osa:4327785 is 'ARF1, ARF16, OsARF16' in /list and has no pathways;
+    ath:ATMG00940 is a 404 in /list. Only /list tells them apart.
+    """
+    httpx_mock.add_response(url="https://rest.kegg.jp/link/pathway/ath:AT1G01010", text="\n")
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/list/ath:AT1G01010",
+        text="ath:AT1G01010\tNAC001; NAC domain containing protein 1\n",
+    )
+    httpx_mock.add_response(url="https://rest.kegg.jp/link/pathway/ath:ATMG00940", text="\n")
+    httpx_mock.add_response(url="https://rest.kegg.jp/list/ath:ATMG00940", status_code=404, text="")
+    async with httpx.AsyncClient() as client:
+        known = await kegg.lookup_pathways(client, "AT1G01010", organism="arabidopsis_thaliana")
+        with pytest.raises(NotFoundError, match="no gene record"):
+            await kegg.lookup_pathways(client, "ATMG00940", organism="arabidopsis_thaliana")
+    assert known["pathways"] == [] and known["errors"] == []
+    assert known["kegg_gene_id"] == "ath:AT1G01010"

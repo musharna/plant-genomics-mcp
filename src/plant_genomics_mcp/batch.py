@@ -274,6 +274,9 @@ async def batch_kegg_pathways(
     organism: str | int = organisms.DEFAULT_ORGANISM,
 ) -> dict[str, Any]:
     loci = _bound(loci)
+    # Issue #139: refuse an uncovered organism once, before the fan-out, the
+    # way the single tool does — not as one copied error per locus.
+    organisms.kegg_org_code_for(organism)
     results, errors = await _gather(
         loci, lambda locus: kegg.lookup_pathways(client, locus, organism=organism)
     )
@@ -324,6 +327,7 @@ async def batch_atted_coexpression(
     top_n: int = atted.DEFAULT_TOP_N,
 ) -> dict[str, Any]:
     loci = _bound(loci)
+    organisms.atted_release_for(organism)  # issue #139: refuse before the fan-out
     results, errors = await _gather(
         loci,
         lambda locus: atted.lookup_coexpression(client, locus, organism=organism, top_n=top_n),
