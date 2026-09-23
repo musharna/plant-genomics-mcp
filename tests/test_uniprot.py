@@ -57,7 +57,7 @@ async def test_lookup_locus_at1g01010_returns_q0wv96(httpx_mock: HTTPXMock) -> N
     httpx_mock.add_response(
         url=(
             "https://rest.uniprot.org/uniprotkb/search"
-            "?query=gene%3AAT1G01010+AND+organism_id%3A3702+AND+reviewed%3Atrue"
+            "?query=%28gene%3AAT1G01010+OR+xref%3Aensemblplants-AT1G01010%29+AND+organism_id%3A3702+AND+reviewed%3Atrue"
             "&format=json&size=1"
         ),
         json=_one_hit(),
@@ -83,7 +83,7 @@ async def test_lookup_locus_falls_back_to_unreviewed(httpx_mock: HTTPXMock) -> N
     httpx_mock.add_response(
         url=(
             "https://rest.uniprot.org/uniprotkb/search"
-            "?query=gene%3AOs01g0100100+AND+organism_id%3A39947+AND+reviewed%3Atrue"
+            "?query=%28gene%3AOs01g0100100+OR+xref%3Aensemblplants-Os01g0100100%29+AND+organism_id%3A39947+AND+reviewed%3Atrue"
             "&format=json&size=1"
         ),
         json={"results": []},
@@ -92,7 +92,7 @@ async def test_lookup_locus_falls_back_to_unreviewed(httpx_mock: HTTPXMock) -> N
     httpx_mock.add_response(
         url=(
             "https://rest.uniprot.org/uniprotkb/search"
-            "?query=gene%3AOs01g0100100+AND+organism_id%3A39947"
+            "?query=%28gene%3AOs01g0100100+OR+xref%3Aensemblplants-Os01g0100100%29+AND+organism_id%3A39947"
             "&format=json&size=1"
         ),
         json=_one_hit(
@@ -120,7 +120,7 @@ async def test_lookup_locus_raises_not_found_when_both_passes_empty(
     httpx_mock.add_response(
         url=(
             "https://rest.uniprot.org/uniprotkb/search"
-            "?query=gene%3ANOTREAL+AND+organism_id%3A3702+AND+reviewed%3Atrue"
+            "?query=%28gene%3ANOTREAL+OR+xref%3Aensemblplants-NOTREAL%29+AND+organism_id%3A3702+AND+reviewed%3Atrue"
             "&format=json&size=1"
         ),
         json={"results": []},
@@ -128,7 +128,7 @@ async def test_lookup_locus_raises_not_found_when_both_passes_empty(
     httpx_mock.add_response(
         url=(
             "https://rest.uniprot.org/uniprotkb/search"
-            "?query=gene%3ANOTREAL+AND+organism_id%3A3702"
+            "?query=%28gene%3ANOTREAL+OR+xref%3Aensemblplants-NOTREAL%29+AND+organism_id%3A3702"
             "&format=json&size=1"
         ),
         json={"results": []},
@@ -142,7 +142,7 @@ async def test_lookup_locus_raises_not_found_when_both_passes_empty(
 async def test_lookup_locus_retries_on_429_then_succeeds(httpx_mock: HTTPXMock) -> None:
     url = (
         "https://rest.uniprot.org/uniprotkb/search"
-        "?query=gene%3AAT1G01010+AND+organism_id%3A3702+AND+reviewed%3Atrue"
+        "?query=%28gene%3AAT1G01010+OR+xref%3Aensemblplants-AT1G01010%29+AND+organism_id%3A3702+AND+reviewed%3Atrue"
         "&format=json&size=1"
     )
     httpx_mock.add_response(url=url, status_code=429, headers={"Retry-After": "0"})
@@ -331,3 +331,24 @@ def test_normalize_rejects_non_string_gene_name():
         {**base, "genes": [{"geneName": {"value": "NAC001"}}, {"geneName": {}}]}, "AT1G01010"
     )
     assert ok["geneNames"] == ["NAC001"]
+
+
+# ---------- issue #138: wheat IWGSC ids are UniProt cross-references ----------
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_wheat_iwgsc_locus_resolves_and_the_other_organisms_still_do() -> None:
+    """Every wheat IWGSC locus failed: UniProt carries TraesCS… ids only as
+    EnsemblPlants cross-references, never as gene names (live, 2026-09-22:
+    gene: 0 hits, xref:ensemblplants- 1 hit, A0A3B6EER4, taxon 4565)."""
+    async with httpx.AsyncClient() as client:
+        wheat = await uniprot.lookup_locus(
+            client, "TraesCS3A02G159200", organism="triticum_aestivum"
+        )
+        # Positive controls: the gene-name path still answers as before.
+        ath = await uniprot.lookup_locus(client, "AT1G19850")
+        rice = await uniprot.lookup_locus(client, "Os01g0236300", organism="oryza_sativa")
+    assert (wheat["primaryAccession"], wheat["taxonId"]) == ("A0A3B6EER4", 4565)
+    assert ath["primaryAccession"] == "P93024"
+    assert rice["primaryAccession"] == "Q5NB85"

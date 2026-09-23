@@ -46,6 +46,23 @@ except ValueError:
     _MAX_RESPONSE_BYTES = 64 * 1024 * 1024
 
 
+def stated_count(body: Mapping[str, Any], key: str, *, service: str) -> int:
+    """The total an upstream body states under ``key`` — never a default.
+
+    ``int(body.get(key, 0))`` turns a body that carries no count into a count
+    of zero: Europe PMC's intermittent ``{"version":"6.9"}`` became "no papers"
+    for genes with 22-91 (issue #141). A missing or non-integer count is an
+    upstream fault, raised as one.
+    """
+    value = body.get(key)
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise UpstreamUnavailableError(
+            f"{service} answered without an integer {key!r} "
+            f"(got {value!r}); this is not a count of zero"
+        )
+    return value
+
+
 def _too_large(service: str, detail: str) -> PlantGenomicsError:
     """Build the typed 'response too large' error (shared by both cap checks)."""
     return PlantGenomicsError(

@@ -98,6 +98,7 @@ from plant_genomics_mcp import (
     jaspar,
     kegg,
     onekg,
+    organisms,
     orthodb,
     panther,
     pdbe,
@@ -282,6 +283,20 @@ _READ_ONLY_NON_IDEMPOTENT = types.ToolAnnotations(
 
 
 # ---- tool catalog -----------------------------------------------------------
+
+
+def _coverage(field: str) -> str:
+    """The organisms a backend covers, from the registry (issue #139).
+
+    Typed lists drifted: kegg_pathways said only Arabidopsis resolved while
+    its own refusal listed seven organisms and rice answered.
+    """
+    covered = ", ".join(sorted(organisms._supported_for(field)))
+    return (
+        f"Covers: {covered}. Any other organism raises OrganismNotSupported "
+        "before any request (both the single and batch forms)."
+    )
+
 
 TOOLS: list[types.Tool] = [
     types.Tool(
@@ -548,7 +563,9 @@ TOOLS: list[types.Tool] = [
             "with goId/goName/goAspect/qualifier/evidence + a by_aspect rollup "
             "({molecular_function: [{goId, goName}, ...], biological_process: "
             "[...], cellular_component: [...]}) deduped on goId so the "
-            "high-level term set is one read away."
+            "high-level term set is one read away; by_aspect_deduped_on "
+            "names that key in the payload. truncated is true when "
+            "numberOfHits exceeds returned — raise limit (max 100)."
         ),
         input_schema={
             "type": "object",
@@ -742,17 +759,16 @@ TOOLS: list[types.Tool] = [
         name="kegg_pathways",
         title="KEGG Pathways",
         description=(
-            "Fetch KEGG pathway memberships for an Arabidopsis locus from "
+            "Fetch KEGG pathway memberships for a plant locus from "
             "rest.kegg.jp. Returns a list of pathway IDs + names + KEGG "
             "category classes the locus participates in. Pairs with "
             "locus_go_annotations for the GO-level functional view. "
-            "Multi-organism caveat (v1.1.0): the organism= field accepts "
-            "any plant in the matrix for symmetry with the other backends, "
-            "but only arabidopsis_thaliana resolves — KEGG uses NCBI "
-            "Entrez Gene IDs for rice/maize/etc. and our cross-backend "
-            "locus contract can't produce those yet, so any other organism "
-            "raises OrganismNotSupported before any HTTP call. KEGG v118+ "
-            "is case-sensitive on the locus: pass AGI loci as uppercase."
+            f"{_coverage('kegg_org_code')} Non-Arabidopsis loci are bridged to "
+            "the NCBI Entrez Gene ID KEGG indexes (returned as entrez_gene_id). "
+            "A gene KEGG knows with no pathway memberships is an ok answer "
+            "with pathways=[]; a gene KEGG has no record of raises "
+            "NotFoundError. KEGG v118+ is case-sensitive on the locus: pass "
+            "AGI loci as uppercase."
         ),
         input_schema={
             "type": "object",
@@ -763,7 +779,7 @@ TOOLS: list[types.Tool] = [
                 },
                 "organism": {
                     "type": ["string", "integer"],
-                    "description": "Plant organism — only arabidopsis_thaliana is supported in v1.1.0; other plants raise OrganismNotSupported until an Entrez bridge lands",
+                    "description": "Plant organism — accepts canonical slug, scientific or common name, or NCBI taxid; see the tool description for which KEGG covers",
                     "default": "arabidopsis_thaliana",
                 },
             },
@@ -981,8 +997,10 @@ TOOLS: list[types.Tool] = [
             "Fetch the AlphaFold DB predicted-structure summary for a locus "
             "(alphafold.ebi.ac.uk; free, no key). Resolves the locus → UniProt "
             "accession, then returns the predicted model's global mean pLDDT "
-            "confidence, the per-band pLDDT distribution, modelled residue span, "
-            "latest model version, and mmCIF / PDB / PAE download URLs. A valid "
+            "confidence, the per-band pLDDT distribution with each band's pLDDT "
+            "range (plddt_band_ranges), modelled residue span, latest model "
+            "version, and mmCIF / PDB / PAE download URLs — links for the client "
+            "to fetch; no tool on this server retrieves them. A valid "
             "protein with no deposited model returns found=false (a normal "
             "outcome, not an error); a locus with no UniProt entry raises a "
             "typed NotFoundError. Works for all 12 organisms (UniProt-keyed). "
@@ -1413,9 +1431,12 @@ TOOLS: list[types.Tool] = [
         description=(
             "Fetch AraGWAS genome-wide association study hits for an Arabidopsis "
             "locus (aragwas.1001genomes.org; free, no key). Returns each "
-            "significant SNP association overlapping the gene with effect size "
-            "(score), minor-allele frequency, the SNP's predicted molecular effect "
-            "(impact, amino-acid change), and the phenotype/study it came from. "
+            "significant SNP association overlapping the gene with its score "
+            "(-log10 p), minor-allele frequency, the SNP's predicted molecular effect "
+            "(impact, amino-acid change), and the phenotype/study it came from, "
+            "including the study's own significance thresholds on the score's "
+            "scale (study.thresholds), which the over_bonferroni / over_fdr / "
+            "over_permutation flags are taken against. "
             "association_count is the true total even when page-capped. "
             "ARABIDOPSIS-ONLY — any other organism raises OrganismNotSupported. "
             "Defaults to arabidopsis_thaliana."
@@ -1773,11 +1794,7 @@ TOOLS: list[types.Tool] = [
         name="batch_kegg_pathways",
         title="Batch: KEGG Pathways",
         description=(
-            "Batch version of kegg_pathways. Up to 50 loci per call. "
-            "v1.1.0: only arabidopsis_thaliana resolves — KEGG uses NCBI "
-            "Entrez Gene IDs for other plants and our cross-backend locus "
-            "contract can't produce those yet, so a non-ath organism= "
-            "raises OrganismNotSupported before any HTTP fan-out."
+            f"Batch version of kegg_pathways. Up to 50 loci per call. {_coverage('kegg_org_code')}"
         ),
         input_schema={
             "type": "object",
@@ -1789,7 +1806,7 @@ TOOLS: list[types.Tool] = [
                 },
                 "organism": {
                     "type": ["string", "integer"],
-                    "description": "Plant organism — only arabidopsis_thaliana is supported in v1.1.0; other plants raise OrganismNotSupported until an Entrez bridge lands",
+                    "description": "Plant organism — accepts canonical slug, scientific or common name, or NCBI taxid; see the tool description for which KEGG covers",
                     "default": "arabidopsis_thaliana",
                 },
             },
@@ -1885,9 +1902,9 @@ TOOLS: list[types.Tool] = [
             "target locus + NCBI Entrez gene ID + z-score (higher = "
             "stronger coexpression). The ATTED-II release "
             "(e.g. Ath-u.c4-0 for Arabidopsis, Osa-u.c1-0 for rice) is "
-            "resolved per-organism; wheat, sorghum, barley, poplar, and "
-            "brachypodium have no published release and raise "
-            "OrganismNotSupported. Pairs with string_interactions to "
+            f"resolved per-organism. {_coverage('atted_release')} A locus "
+            "that is not in the organism's release raises NotFoundError. "
+            "Pairs with string_interactions to "
             "surface high-confidence functional partners (interactors "
             "that are also coexpressed)."
         ),
@@ -1920,7 +1937,10 @@ TOOLS: list[types.Tool] = [
     types.Tool(
         name="batch_atted_coexpression",
         title="Batch: ATTED-II Coexpression",
-        description="Batch version of atted_coexpression. Up to 50 loci per call.",
+        description=(
+            "Batch version of atted_coexpression. Up to 50 loci per call. "
+            f"{_coverage('atted_release')}"
+        ),
         input_schema={
             "type": "object",
             "properties": {
@@ -2228,14 +2248,9 @@ async def _resolve_then_go_annotations(
     up = await uniprot.lookup_locus(client, locus, organism=organism)
     accession = up["primaryAccession"]
     go = await quickgo.lookup_by_uniprot(client, accession, limit=limit)
-    return {
-        "locus": locus,
-        "uniprot_accession": accession,
-        "numberOfHits": go["numberOfHits"],
-        "returned": go["returned"],
-        "annotations": go["annotations"],
-        "by_aspect": go["by_aspect"],
-    }
+    # Issue #132: pass QuickGO's answer through whole. A hand-copied key
+    # list here dropped every field added to it later (upstream_version).
+    return {"locus": locus, **go}
 
 
 async def _dispatch(name: str, args: dict[str, Any]) -> Any:

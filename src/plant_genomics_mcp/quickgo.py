@@ -134,12 +134,18 @@ async def lookup_by_uniprot(
             f"QuickGO /annotation/search results is not a list: {type(results).__name__}"
         )
     annotations = [_normalize(r) for r in results if isinstance(r, dict)]
+    total = _http.stated_count(raw, "numberOfHits", service="QuickGO /annotation/search")
     return {
         "uniprot_accession": accession,
-        "numberOfHits": int(raw.get("numberOfHits", 0)),
+        "numberOfHits": total,
         "returned": len(annotations),
+        # Issue #132: 51 upstream / 50 returned shipped with no flag.
+        "truncated": total > len(annotations),
         "annotations": annotations,
         "by_aspect": _rollup_by_aspect(annotations),
+        # Issue #132: the rollup is a dedup of annotations[], not a cut of it;
+        # say so in the payload, not only in the tool description.
+        "by_aspect_deduped_on": "goId",
         # Issue #121: uniform key; null because this backend states no release on
         # the answering response (headers probed live 2026-09-22).
         "upstream_version": None,

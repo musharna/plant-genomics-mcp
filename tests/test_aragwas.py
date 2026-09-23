@@ -237,3 +237,54 @@ async def test_live_arabidopsis_associations() -> None:
     assert r["found"] is True
     assert r["association_count"] > 0
     assert r["associations"][0]["snp"]["position"]
+
+
+# ---------- issue #137: study name and the thresholds behind the booleans ----------
+
+# Verbatim from the live association (AT1G19850, 2026-09-22), trimmed to study.
+_LIVE_STUDY = {
+    "id": 283,
+    "name": "('As75_raw_Full imputed genotype_amm',)",
+    "transformation": "raw",
+    "method": "amm",
+    "phenotype": {"id": 283, "name": "As75", "description": "Arsenic concentrations in leaves"},
+    "thresholds": [
+        {"name": "bonferroni_threshold05", "value": 8.023918991285525},
+        {"name": "bonferroni_threshold01", "value": 8.722888995621544},
+        {"name": "bh_threshold", "value": 4.665903379135818},
+        {"name": "total_associations", "value": 5283102},
+        {"name": "permutation_threshold", "value": 15.954589770191001},
+    ],
+}
+
+
+def test_the_study_name_is_unwrapped_and_its_thresholds_surface() -> None:
+    row = aragwas._project({"score": 33.07, "study": _LIVE_STUDY}, "AT1G19850")
+    assert row["study"]["name"] == "As75_raw_Full imputed genotype_amm"
+    assert row["study"]["thresholds"] == {
+        "bonferroni_threshold05": 8.023918991285525,
+        "bonferroni_threshold01": 8.722888995621544,
+        "bh_threshold": 4.665903379135818,
+        "total_associations": 5283102,
+        "permutation_threshold": 15.954589770191001,
+    }
+    # Positive control: a name that is not a tuple repr comes back as sent,
+    # and a study without thresholds says so rather than inventing any.
+    plain = aragwas._project({"study": {"name": "As75_raw"}}, "AT1G19850")
+    assert plain["study"]["name"] == "As75_raw" and plain["study"]["thresholds"] == {}
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_score_is_minus_log10_p_on_the_thresholds_scale() -> None:
+    """The Bonferroni 0.05 threshold is -log10(0.05 / total): score's scale."""
+    import math
+
+    async with httpx.AsyncClient() as client:
+        r = await aragwas.lookup_locus(client, "AT1G19850")
+    study = r["associations"][0]["study"]
+    t = study["thresholds"]
+    assert math.isclose(
+        t["bonferroni_threshold05"], -math.log10(0.05 / t["total_associations"]), rel_tol=1e-6
+    )
+    assert "(" not in study["name"]

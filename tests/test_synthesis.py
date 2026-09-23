@@ -729,6 +729,10 @@ async def test_biological_context_synth_partial_phase2_failure_returns_composed_
         status_code=404,
         text="",
     )
+    # Empty /link is checked against /list (issue #140); 404 = unknown gene -> NotFoundError.
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/list/ath:AT1G01010", status_code=404, text="", is_reusable=True
+    )
     # Phase 2 — STRING OK.
     httpx_mock.add_response(
         url=re.compile(r"^https://string-db\.org/api/json/interaction_partners.*"),
@@ -1629,6 +1633,10 @@ async def test_gene_report_uniprot_failure_skips_go_but_composes(httpx_mock):
         url="https://rest.kegg.jp/link/pathway/ath:AT1G01010",
         text="",
     )
+    # Empty /link is checked against /list (issue #140); 404 = unknown gene -> NotFoundError.
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/list/ath:AT1G01010", status_code=404, text="", is_reusable=True
+    )
     httpx_mock.add_response(
         url=re.compile(r"^https://string-db\.org/api/json/interaction_partners.*"),
         json=[],
@@ -1888,6 +1896,10 @@ async def test_biological_context_synth_malformed_string_row_lands_as_error_step
     )
     httpx_mock.add_response(
         url="https://rest.kegg.jp/link/pathway/ath:AT1G01010", status_code=404, text=""
+    )
+    # Empty /link is checked against /list (issue #140); 404 = unknown gene -> NotFoundError.
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/list/ath:AT1G01010", status_code=404, text="", is_reusable=True
     )
     # STRING returns a malformed row: stringId_B is a bool, not "<taxid>.<locus>.<N>".
     httpx_mock.add_response(

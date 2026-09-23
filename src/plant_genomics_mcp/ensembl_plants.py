@@ -83,6 +83,28 @@ async def _get(
     return result
 
 
+def project_lookup(raw: dict[str, Any]) -> dict[str, Any]:
+    """One /lookup/id record, as both tool forms return it (issue #137).
+
+    The single and batch forms used to project separately, and the batch form
+    passed Ensembl's record through raw: ``species`` not renamed, no
+    ``upstream_version``. Built fresh rather than mutating ``raw`` (audit P5).
+    """
+    out = {**raw}
+    if "species" in out:
+        out["organism"] = out.pop("species")
+    # Ensembl spells canonical_transcript "<id>.<version>", and plant genes
+    # carry version None, so the id arrives as "AT1G19850.1." (live, 2026-09-22)
+    # while aragwas_associations spells the same transcript "AT1G19850.1".
+    transcript = out.get("canonical_transcript")
+    if isinstance(transcript, str) and out.get("version") is None:
+        out["canonical_transcript"] = transcript.removesuffix(".")
+    # Issue #121: uniform key; Ensembl states no release on the answering
+    # response (headers probed live 2026-09-22).
+    out["upstream_version"] = None
+    return out
+
+
 async def lookup_locus(
     client: httpx.AsyncClient,
     locus: str,
@@ -102,17 +124,8 @@ async def lookup_locus(
     wire_id = organisms.ensembl_id_prefix_for(organism) + locus
     params: dict[str, Any] = {"species": slug, "expand": 0}
     raw = await _get(client, f"/lookup/id/{wire_id}", params=params)
-    # Build a fresh dict rather than mutating ``raw`` in place: the cache now
-    # hands back an isolated copy (cache.get), but constructing a new object
-    # keeps the no-shared-mutation intent local and survives any future cache
-    # change (audit P5).
     if isinstance(raw, dict) and "species" in raw:
-        out = {**raw}
-        out["organism"] = out.pop("species")
-        # Issue #121: uniform key; Ensembl states no release on the answering
-        # response (headers probed live 2026-09-22).
-        out["upstream_version"] = None
-        return out
+        return project_lookup(raw)
     return raw
 
 

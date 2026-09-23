@@ -31,7 +31,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import __version__, _http, cache, organisms
+from plant_genomics_mcp import __version__, _http, cache, organisms, validators
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
@@ -89,6 +89,11 @@ def _normalize(row: dict[str, Any]) -> dict[str, Any]:
     """
     other_id = row.get("other_id") or []
     locus = other_id[0] if isinstance(other_id, list) and other_id else None
+    # Issue #137: ATTED-II spells AGIs 'At2g44830'; every other tool and TAIR
+    # itself use 'AT2G44830'. Only AGIs are recased — a rice RAP id
+    # ('Os08g0520550') is mixed-case by convention and comes back as sent.
+    if isinstance(locus, str) and validators.AGI_RE.match(locus):
+        locus = locus.upper()
     return {
         "locus": locus,
         "entrez_gene_id": row.get("gene"),
@@ -122,9 +127,17 @@ async def lookup_coexpression(
     )
     if not isinstance(raw, dict):
         raise PlantGenomicsError(f"ATTED-II {API_PATH} returned non-dict: {type(raw).__name__}")
+    # Issue #140: an empty answer here is NOT "a gene with zero neighbours" —
+    # a top-N ranking of every gene in the release is never empty for a gene
+    # that is in it. ATTED-II says so itself for AT1G34170 (live, 2026-09-22):
+    # "The entrez gene ID "840316" is not included in the database."
+    not_in_release = (
+        f"ATTED-II: {locus} is not in the {release} co-expression release "
+        "(no neighbour ranking exists for it there)"
+    )
     result_set = raw.get("result_set") or []
     if not isinstance(result_set, list) or not result_set:
-        raise NotFoundError(f"ATTED-II: no co-expression neighbors for {locus}")
+        raise NotFoundError(not_in_release)
     first = result_set[0]
     if not isinstance(first, dict):
         raise PlantGenomicsError(
@@ -132,7 +145,7 @@ async def lookup_coexpression(
         )
     rows = first.get("results") or []
     if not isinstance(rows, list) or not rows:
-        raise NotFoundError(f"ATTED-II: no co-expression neighbors for {locus}")
+        raise NotFoundError(not_in_release)
     neighbors = [_normalize(r) for r in rows if isinstance(r, dict)]
     return {
         "locus": locus,

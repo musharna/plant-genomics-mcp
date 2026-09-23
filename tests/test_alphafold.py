@@ -184,3 +184,27 @@ async def test_404_is_cached_so_a_repeat_lookup_stays_off_the_wire(
     assert first == second
     assert second["found"] is False
     assert len(httpx_mock.get_requests()) == 1
+
+
+# ---------- issue #135: the bands say where they divide ----------
+
+
+@pytest.mark.asyncio
+async def test_every_reported_band_carries_its_plddt_range(httpx_mock: HTTPXMock) -> None:
+    """Four fractions named very_low..very_high shipped with no cutoffs (#135)."""
+    httpx_mock.add_response(url=_PRED_URL, json=_PREDICTION)
+    httpx_mock.add_response(url=_PRED_URL, status_code=404, text="Not found")
+    async with httpx.AsyncClient() as client:
+        found = await alphafold.lookup_by_uniprot(client, "Q9SZ92")
+        alphafold._CACHE.clear()
+        missing = await alphafold.lookup_by_uniprot(client, "Q9SZ92")
+
+    ranges = found["plddt_band_ranges"]
+    assert set(ranges) == set(found["plddt_bands"])  # one range per reported band
+    # The ranges tile the 0-100 pLDDT scale in band order, no gap, no overlap.
+    ordered = [ranges[b] for b in ("very_low", "low", "confident", "very_high")]
+    assert ordered[0][0] == 0 and ordered[-1][1] == 100
+    assert all(lo[1] == hi[0] for lo, hi in zip(ordered, ordered[1:], strict=False))
+    assert ranges["confident"] == [70, 90]  # EMBL-EBI: "90 > pLDDT > 70"
+    # A definition, not data: the no-model answer states it too.
+    assert missing["found"] is False and missing["plddt_band_ranges"] == ranges

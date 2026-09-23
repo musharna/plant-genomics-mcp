@@ -163,7 +163,7 @@ async def batch_ensembl_plants_lookup_locus(
         if record is None:
             errors[locus] = f"[NotFoundError] Ensembl Plants /lookup/id: no record for {locus}"
         elif isinstance(record, dict):
-            results[locus] = record
+            results[locus] = ensembl_plants.project_lookup(record)
         else:
             errors[locus] = (
                 f"[PlantGenomicsError] Ensembl Plants returned non-dict for {locus}: "
@@ -243,14 +243,9 @@ async def batch_locus_go_annotations(
         up = await uniprot.lookup_locus(client, locus, organism=organism)
         accession = up["primaryAccession"]
         go = await quickgo.lookup_by_uniprot(client, accession, limit=limit)
-        return {
-            "locus": locus,
-            "uniprot_accession": accession,
-            "numberOfHits": go["numberOfHits"],
-            "returned": go["returned"],
-            "annotations": go["annotations"],
-            "by_aspect": go["by_aspect"],
-        }
+        # Issue #132: pass QuickGO's answer through whole. A hand-copied key
+        # list here dropped every field added to it later (upstream_version).
+        return {"locus": locus, **go}
 
     results, errors = await _gather(loci, _one)
     return _envelope("locus_go_annotations", loci, results, errors)
@@ -279,6 +274,9 @@ async def batch_kegg_pathways(
     organism: str | int = organisms.DEFAULT_ORGANISM,
 ) -> dict[str, Any]:
     loci = _bound(loci)
+    # Issue #139: refuse an uncovered organism once, before the fan-out, the
+    # way the single tool does — not as one copied error per locus.
+    organisms.kegg_org_code_for(organism)
     results, errors = await _gather(
         loci, lambda locus: kegg.lookup_pathways(client, locus, organism=organism)
     )
@@ -329,6 +327,7 @@ async def batch_atted_coexpression(
     top_n: int = atted.DEFAULT_TOP_N,
 ) -> dict[str, Any]:
     loci = _bound(loci)
+    organisms.atted_release_for(organism)  # issue #139: refuse before the fan-out
     results, errors = await _gather(
         loci,
         lambda locus: atted.lookup_coexpression(client, locus, organism=organism, top_n=top_n),
