@@ -38,6 +38,19 @@ MAX_PAGES = 5
 _CACHE = cache.TTLCache()
 
 
+def _page(resp: httpx.Response) -> Any:
+    """One InterPro response as a page.
+
+    Audit 2026-09-22 M4: InterPro answers a protein with no entries with HTTP
+    204 and an empty body (live, e.g. A0A0A0A0A0), not 200 ``{"count": 0}``.
+    That is a page of zero rows, read as one here instead of failing as an
+    HTTP error or a JSON parse of nothing.
+    """
+    if resp.status_code == 204:
+        return {"count": 0, "next": None, "previous": None, "results": []}
+    return _http.json_body(resp, "InterPro entry/protein")
+
+
 async def _get(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
     """GET one InterPro page (cached by full URL), returning the parsed dict."""
     body = await _http.cached_get(
@@ -48,6 +61,7 @@ async def _get(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
         headers={"Accept": "application/json"},
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
+        no_content_ok=True,
         parse=_stamped,
     )
     if not isinstance(body, dict):
@@ -66,7 +80,7 @@ def _stamped(resp: httpx.Response) -> Any:
     depending on timing. InterPro's own payload has no key in this namespace,
     and _project() selects fields explicitly, so it cannot leak into output.
     """
-    body = _http.json_body(resp, "InterPro entry/protein")
+    body = _page(resp)
     if isinstance(body, dict):
         body["_upstream_version"] = _http.upstream_version(resp)
     return body
@@ -145,7 +159,7 @@ async def lookup_locus(
     Propagates ``NotFoundError`` when the locus has no UniProt entry, mirroring
     the locus→UniProt→QuickGO path.
     """
-    validators.assert_valid_locus(locus, backend="InterPro")
+    locus = validators.assert_valid_locus(locus, backend="InterPro")
     up = await uniprot.lookup_locus(client, locus, organism=organism)
     accession = up["primaryAccession"]
     result = await lookup_by_uniprot(client, accession)

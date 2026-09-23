@@ -307,13 +307,31 @@ async def test_live_lookup_rice_locus() -> None:
 # ---------- get_sequence unit tests ----------
 
 
+_AT_LOOKUP = "https://rest.ensembl.org/lookup/id/{}?species=arabidopsis_thaliana&expand=0"
+
+
+def _gene(gene_id: str, transcript: str) -> dict[str, object]:
+    """A /lookup/id gene record as served live: version None, so Ensembl's
+    canonical_transcript ends in a bare '.' (see the #137 tests below)."""
+    return {
+        "id": gene_id,
+        "object_type": "Gene",
+        "species": "arabidopsis_thaliana",
+        "version": None,
+        "canonical_transcript": f"{transcript}.",
+    }
+
+
 @pytest.mark.asyncio
 async def test_get_sequence_default_type_is_protein(httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
-        url="https://rest.ensembl.org/sequence/id/AT1G01010?species=arabidopsis_thaliana&type=protein",
+        url=_AT_LOOKUP.format("AT1G01010"), json=_gene("AT1G01010", "AT1G01010.1")
+    )
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/sequence/id/AT1G01010.1?species=arabidopsis_thaliana&type=protein",
         json={
-            "id": "AT1G01010",
-            "query": "AT1G01010",
+            "id": "AT1G01010.1",
+            "query": "AT1G01010.1",
             "molecule": "protein",
             "seq": "MEDQVGFGFRPNDEELVGHYL",
             "version": 1,
@@ -328,7 +346,82 @@ async def test_get_sequence_default_type_is_protein(httpx_mock: HTTPXMock) -> No
     assert result["molecule"] == "protein"
     assert result["sequence"].startswith("MEDQ")
     assert result["length"] == len("MEDQVGFGFRPNDEELVGHYL")
-    assert result["ensembl_id"] == "AT1G01010"
+    assert result["ensembl_id"] == "AT1G01010.1"
+
+
+@pytest.mark.asyncio
+@pytest.mark.httpx_mock(assert_all_responses_were_requested=False)
+@pytest.mark.parametrize("seq_type", ["protein", "cds", "cdna"])
+async def test_get_sequence_of_a_multi_transcript_gene_is_its_canonical_product(
+    httpx_mock: HTTPXMock, seq_type: str
+) -> None:
+    """Audit 2026-09-22 M3: /sequence/id on a GENE with type protein/cds/cdna
+    is a 400 on any gene with more than one transcript (live, AT2G33860/ETT:
+    "2 sequences detected ... specify the multiple_sequences parameter"), so
+    the tool failed on most real genes. The product belongs to a transcript:
+    the tool asks for the canonical one, as its description always said."""
+    httpx_mock.add_response(  # the real answer, served to the gene-level request
+        url=(
+            "https://rest.ensembl.org/sequence/id/AT2G33860"
+            f"?species=arabidopsis_thaliana&type={seq_type}"
+        ),
+        status_code=400,
+        json={
+            "error": 'Requesting a gene and type not equal to "genomic" can result in '
+            "multiple sequences. 2 sequences detected. Please rerun your request and "
+            "specify the multiple_sequences parameter"
+        },
+    )
+    httpx_mock.add_response(
+        url=_AT_LOOKUP.format("AT2G33860"), json=_gene("AT2G33860", "AT2G33860.1")
+    )
+    httpx_mock.add_response(
+        url=(
+            "https://rest.ensembl.org/sequence/id/AT2G33860.1"
+            f"?species=arabidopsis_thaliana&type={seq_type}"
+        ),
+        json={"id": "AT2G33860.1", "query": "AT2G33860.1", "molecule": "x", "seq": "MGGLIDLNV"},
+    )
+    async with httpx.AsyncClient() as client:
+        result = await ensembl_plants.get_sequence(client, "AT2G33860", seq_type=seq_type)
+    assert result["sequence"] == "MGGLIDLNV"
+    assert result["ensembl_id"] == "AT2G33860.1"
+    assert result["locus"] == "AT2G33860"
+
+
+@pytest.mark.asyncio
+async def test_get_sequence_gene_without_a_canonical_transcript_is_not_found(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """A gene with no transcript (e.g. a non-coding locus record) has no product."""
+    from plant_genomics_mcp.errors import NotFoundError
+
+    httpx_mock.add_response(
+        url=_AT_LOOKUP.format("AT1G01010"),
+        json={"id": "AT1G01010", "object_type": "Gene", "species": "arabidopsis_thaliana"},
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="no canonical transcript"):
+            await ensembl_plants.get_sequence(client, "AT1G01010")
+
+
+@pytest.mark.asyncio
+async def test_get_sequence_of_a_transcript_id_is_that_transcripts_product(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """Positive control for the canonical hop: a transcript id (object_type
+    Transcript, live shape for AT2G33860.1) is fetched as itself."""
+    httpx_mock.add_response(
+        url=_AT_LOOKUP.format("AT2G33860.2"),
+        json={"id": "AT2G33860.2", "object_type": "Transcript", "species": "arabidopsis_thaliana"},
+    )
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/sequence/id/AT2G33860.2?species=arabidopsis_thaliana&type=protein",
+        json={"id": "AT2G33860.2", "molecule": "protein", "seq": "MKK"},
+    )
+    async with httpx.AsyncClient() as client:
+        result = await ensembl_plants.get_sequence(client, "AT2G33860.2")
+    assert result["ensembl_id"] == "AT2G33860.2" and result["sequence"] == "MKK"
 
 
 @pytest.mark.asyncio
@@ -356,7 +449,10 @@ async def test_get_sequence_raises_on_unexpected_payload(httpx_mock: HTTPXMock) 
     from plant_genomics_mcp.errors import PlantGenomicsError
 
     httpx_mock.add_response(
-        url="https://rest.ensembl.org/sequence/id/AT1G01010?species=arabidopsis_thaliana&type=protein",
+        url=_AT_LOOKUP.format("AT1G01010"), json=_gene("AT1G01010", "AT1G01010.1")
+    )
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/sequence/id/AT1G01010.1?species=arabidopsis_thaliana&type=protein",
         json=[{"seq": "X"}],  # Ensembl should hand back a dict, not a list.
     )
     async with httpx.AsyncClient() as client:
@@ -471,6 +567,17 @@ async def test_live_get_sequence_at1g01010_protein() -> None:
     assert result["molecule"] == "protein"
     assert result["length"] == 429
     assert result["sequence"].startswith("M")
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_get_sequence_multi_transcript_gene_protein() -> None:
+    """Real execution for M3: ETT (AT2G33860) has 2 transcripts; the gene-level
+    request is a 400, the canonical transcript's protein is the answer."""
+    async with httpx.AsyncClient() as client:
+        result = await ensembl_plants.get_sequence(client, "AT2G33860", seq_type="protein")
+    assert result["molecule"] == "protein"
+    assert result["sequence"].startswith("MGGLIDLNV")
 
 
 @live_only

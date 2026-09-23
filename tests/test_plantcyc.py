@@ -253,3 +253,58 @@ async def test_a_cached_404_does_not_mask_a_different_frame(
         assert await plantcyc._getxml(client, "ARA", "MISSING") is None
         assert await plantcyc._getxml(client, "ARA", "AT3G51240") is not None
     assert len(calls) == 2
+
+
+# ---------- audit 2026-09-22 L11: a count from a capped walk is not a total ----------
+
+
+def _hub_frames(n_reactions: int) -> dict[str, str]:
+    """A gene catalysing ``n_reactions`` reactions, reaction i in pathway PWY-i."""
+    rxns = "".join(
+        f"<Reaction ID='ARA:RXN-{i}' orgid='ARA' frameid='RXN-{i}'/>" for i in range(n_reactions)
+    )
+    frames = {
+        "AT3G51240": _GENE,
+        "AT3G51240-MONOMER": (
+            "<ptools-xml><Protein ID='ARA:AT3G51240-MONOMER' frameid='AT3G51240-MONOMER'>"
+            f"<catalyzes><Enzymatic-Reaction><reaction>{rxns}</reaction>"
+            "</Enzymatic-Reaction></catalyzes></Protein></ptools-xml>"
+        ),
+    }
+    for i in range(n_reactions):
+        frames[f"RXN-{i}"] = (
+            f"<ptools-xml><Reaction ID='ARA:RXN-{i}' frameid='RXN-{i}'>"
+            f"<in-pathway><Pathway orgid='ARA' frameid='PWY-{i}'/></in-pathway>"
+            "</Reaction></ptools-xml>"
+        )
+        frames[f"PWY-{i}"] = (
+            f"<ptools-xml><Pathway ID='ARA:PWY-{i}' frameid='PWY-{i}'>"
+            f"<common-name datatype='string'>p{i}</common-name></Pathway></ptools-xml>"
+        )
+    return frames
+
+
+@pytest.mark.asyncio
+async def test_pathway_count_past_the_reaction_cap_is_unknown_not_an_undercount(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """Only the first MAX_REACTIONS reactions are walked for pathways, so with
+    more reactions than that, len(pathways) counted a subset and was reported
+    as the "true total" (MAX_REACTIONS + 5 pathways reported as MAX_REACTIONS).
+    Unknown is null, as on every other count the server cannot state."""
+    n = plantcyc.MAX_REACTIONS + 5
+    _install_router(httpx_mock, frames=_hub_frames(n))
+    async with httpx.AsyncClient() as client:
+        result = await plantcyc.lookup_locus(client, "AT3G51240", "arabidopsis")
+    assert result["reaction_count"] == n  # this one IS a true total
+    assert result["pathway_count"] is None
+
+
+@pytest.mark.asyncio
+async def test_pathway_count_within_the_reaction_cap_is_the_total(httpx_mock: HTTPXMock) -> None:
+    """Positive control: every reaction walked, so the count is the total."""
+    n = plantcyc.MAX_REACTIONS
+    _install_router(httpx_mock, frames=_hub_frames(n))
+    async with httpx.AsyncClient() as client:
+        result = await plantcyc.lookup_locus(client, "AT3G51240", "arabidopsis")
+    assert result["pathway_count"] == n

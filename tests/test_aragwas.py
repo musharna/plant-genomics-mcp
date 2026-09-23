@@ -228,6 +228,25 @@ async def test_lookup_bad_agi_raises_before_network() -> None:
             await aragwas.lookup_locus(client, "AT1G0106", "arabidopsis")
 
 
+@pytest.mark.asyncio
+@pytest.mark.httpx_mock(assert_all_responses_were_requested=False)
+async def test_a_lowercase_agi_is_asked_for_in_its_canonical_spelling(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """Audit 2026-09-22 L7: AGI_RE is case-insensitive, so 'at1g01060' passed
+    validation and went out as typed; AraGWAS answers a lowercase AGI with
+    HTTP 500, which the retry layer reports as an outage."""
+    lower = f"{aragwas.BASE_URL}/api/genes/at1g01060/associations/"
+    httpx_mock.add_response(url=lower, status_code=500, text="Server Error", is_reusable=True)
+    httpx_mock.add_response(
+        url=_URL, json={"count": 1, "links": {"next": None}, "results": [_ASSOC]}
+    )
+    async with httpx.AsyncClient() as client:
+        r = await aragwas.lookup_locus(client, "at1g01060", "arabidopsis")
+    assert r["locus"] == "AT1G01060"
+    assert r["association_count"] == 1
+
+
 @live_only
 @pytest.mark.asyncio
 async def test_live_arabidopsis_associations() -> None:

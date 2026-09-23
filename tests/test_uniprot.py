@@ -167,10 +167,46 @@ async def test_lookup_locus_retries_on_429_then_succeeds(httpx_mock: HTTPXMock) 
         ("NP_001185207.1", False),  # NCBI RefSeq
         ("", False),
         ("GARBAGE", False),
+        # Only a numeric .N is a version; cutting at the first dot made any
+        # "<accession>.<anything>" an accession (the H1 prefix-truncation class).
+        ("Q9FLJ2.x", False),
+        ("Q9FLJ2.1.2", False),
     ],
 )
 def test_looks_like_uniprot_accession_regex(value: str, expected: bool) -> None:
     assert uniprot._looks_like_uniprot_accession(value) is expected
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "injected",
+    [
+        "AT1G01010) OR (reviewed:true",  # rewrites the Lucene query
+        "AT1G01010 OR gene:ARF5",
+        "",
+    ],
+)
+async def test_lookup_locus_refuses_a_query_fragment_before_any_request(
+    httpx_mock: HTTPXMock, injected: str
+) -> None:
+    """Audit 2026-09-22 L8: lookup_locus spliced the raw locus into
+    ``(gene:{locus} OR xref:ensemblplants-{locus}) AND organism_id:...``.
+    No mock is registered for the injected form, so a request would fail."""
+    httpx_mock.add_response(
+        url=(
+            "https://rest.uniprot.org/uniprotkb/search"
+            "?query=%28gene%3AAT1G01010+OR+xref%3Aensemblplants-AT1G01010%29+AND+organism_id%3A3702+AND+reviewed%3Atrue"
+            "&format=json&size=25"
+        ),
+        json=_one_hit(),
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="UniProt: invalid locus"):
+            await uniprot.lookup_locus(client, injected)
+        # Positive control: the legitimate locus — even lowercase — still resolves.
+        result = await uniprot.lookup_locus(client, "at1g01010")
+    assert result["primaryAccession"] == "Q0WV96"
+    assert len(httpx_mock.get_requests()) == 1
 
 
 @pytest.mark.asyncio

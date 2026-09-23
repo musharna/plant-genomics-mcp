@@ -141,7 +141,7 @@ async def gene_summary(
     the canonical TAIR fields come from thalemine. Returns ``ncbi_gene_id:
     None`` and ``aliases: []`` in that case.
     """
-    validators.assert_valid_locus(locus, backend="BAR")
+    locus = validators.assert_valid_locus(locus, backend="BAR")
     gi_env, aliases_env = await _gather_envelopes(client, locus)
     if isinstance(gi_env, BaseException):
         raise gi_env
@@ -236,7 +236,7 @@ async def efp_expression(
     everything else passes through unmodified except ``id``, which we
     HTML-strip down to the leading ecotype label.
     """
-    validators.assert_valid_locus(locus, backend="BAR")
+    locus = validators.assert_valid_locus(locus, backend="BAR")
     path = f"/microarray_gene_expression/world_efp/arabidopsis/{locus}"
     env = await _get(client, path)
     if not isinstance(env, dict) or not env.get("wasSuccessful"):
@@ -379,7 +379,7 @@ async def aiv_interactions(
     Rice requires the MSU ``LOC_Os*`` format; RAP-DB (``Os*g*``) is rejected
     upstream — match locus format to organism before calling.
     """
-    validators.assert_valid_locus(locus, backend="BAR")
+    locus = validators.assert_valid_locus(locus, backend="BAR")
     record = organisms.resolve(organism)
     canonical = record.canonical
     if canonical == "arabidopsis_thaliana":

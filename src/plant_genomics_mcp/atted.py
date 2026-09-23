@@ -109,6 +109,7 @@ async def lookup_coexpression(
     HTTP fires.
     """
     release = organisms.atted_release_for(organism)
+    locus = validators.assert_valid_locus(locus, backend="ATTED-II")
     top_n = max(1, min(top_n, MAX_TOP_N))
     raw = await _get(
         client,

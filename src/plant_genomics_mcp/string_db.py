@@ -6,8 +6,9 @@ for a protein, scored by predicted + curated + experimental confidence.
 
 Input shape: tools accept either a UniProt accession (``Q0WV96``,
 ``P12345``) or a locus identifier (``AT1G01010``, ``Os01g0100100``). Both
-are passed through to STRING unchanged — STRING's own identifier resolver
-picks the canonical species-scoped accession. Pre-resolving loci through
+go to STRING's own identifier resolver, which picks the canonical
+species-scoped accession, in the spelling STRING's alias table carries
+(:func:`string_query_id`): whole, never cut to a prefix. Pre-resolving loci through
 UniProt produces accession-choice mismatches when a locus has multiple
 valid UniProt accessions and STRING canonicalizes on a different one
 (observed v1.1.0 with rice Os01g0100100 → UniProt Q0JRI1 vs STRING
@@ -19,11 +20,12 @@ hardcode ``plant-genomics-mcp``.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import _http, cache, organisms, validators
+from plant_genomics_mcp import _http, cache, organisms, uniprot, validators
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
@@ -39,6 +41,48 @@ MAX_LIMIT = 500
 CALLER_IDENTITY = "plant-genomics-mcp"
 
 _CACHE = cache.TTLCache(default_ttl=CACHE_TTL_SECONDS)
+
+# Community locus spellings STRING's alias table does not carry, and the
+# UniProt ORF-name spelling it does, per organism. Each pair was probed live
+# on /api/json/get_string_ids (2026-09-22): the left form resolves to nothing,
+# the right form to the gene's own protein. An optional ``.N`` transcript
+# suffix is dropped (STRING indexes genes' proteins, not transcripts).
+_STRING_LOCUS_SPELLING: dict[str, tuple[re.Pattern[str], str]] = {
+    # Glyma.04G220900 -> GLYMA_04G220900 (K7KLM4)
+    "glycine_max": (re.compile(r"^Glyma\.(\d{2}G\d{6})(?:\.\d+)?\Z", re.I), "GLYMA_{0}"),
+    # Sobic.001G000100 -> SORBI_3001G000100 (C5WR12)
+    "sorghum_bicolor": (re.compile(r"^Sobic\.(\d{3}G\d{6})(?:\.\d+)?\Z", re.I), "SORBI_3{0}"),
+    # Bradi1g00200 -> BRADI_1g00200v3 (I1GKD6)
+    "brachypodium_distachyon": (
+        re.compile(r"^Bradi(\dg\d{5})(?:\.\d+)?\Z", re.I),
+        "BRADI_{0}v3",
+    ),
+}
+
+
+def string_query_id(locus_or_accession: str, organism: str | int) -> str:
+    """The identifier to send STRING for ``locus_or_accession`` in ``organism``.
+
+    Audit 2026-09-22 H1: this used to be ``split(".", 1)[0]`` for every input,
+    meant to drop a UniProt ``.N`` version. On a dotted locus it kept only the
+    prefix — soybean ``Glyma.04G220900`` went out as ``Glyma``, which STRING
+    resolved to an unrelated protein and answered for with confidence.
+    Now a suffix is dropped only where it is a version (UniProt accession) or
+    a transcript (AGI), a per-organism spelling is applied where STRING's
+    aliases differ from the community form, and everything else goes whole.
+    ``locus_or_accession`` must already be validated (canonical case).
+    """
+    if uniprot._looks_like_uniprot_accession(locus_or_accession):
+        return locus_or_accession.partition(".")[0]
+    if validators.AGI_RE.match(locus_or_accession):
+        return locus_or_accession.partition(".")[0]
+    spelling = _STRING_LOCUS_SPELLING.get(organisms.resolve(organism).canonical)
+    if spelling is not None:
+        pattern, template = spelling
+        match = pattern.match(locus_or_accession)
+        if match:
+            return template.format(match.group(1))
+    return locus_or_accession
 
 
 async def _get(
@@ -107,17 +151,18 @@ async def lookup_partners(
     # caller identifier containing cache-key separators ('&', '=', '|') could
     # slip through (audit P6). UniProt accessions and loci both match the
     # [A-Za-z0-9._-] class, so this rejects only genuinely malformed input.
-    validators.assert_valid_locus(locus_or_accession, backend="STRING")
+    locus_or_accession = validators.assert_valid_locus(locus_or_accession, backend="STRING")
     limit = max(1, min(limit, MAX_LIMIT))
     record = organisms.resolve(organism)
     taxid = organisms.string_taxid_for(organism)
-    query = locus_or_accession.split(".", 1)[0]  # strip optional UniProt version suffix
+    query = locus_or_accession
+    identifier = string_query_id(locus_or_accession, organism)
 
     raw = await _get(
         client,
         "/api/json/interaction_partners",
         params={
-            "identifiers": query,
+            "identifiers": identifier,
             "species": taxid,
             "limit": limit,
             "caller_identity": CALLER_IDENTITY,
@@ -128,7 +173,9 @@ async def lookup_partners(
             f"STRING /api/json/interaction_partners returned non-list: {type(raw).__name__}"
         )
     if not raw:
-        raise NotFoundError(f"STRING: no interaction partners for {query}")
+        raise NotFoundError(
+            f"STRING: no interaction partners for {query} (queried as {identifier})"
+        )
 
     # STRING returns stringId_A as "{taxid}.{accession}"; the accession is
     # STRING's species-canonical pick, which may differ from the input

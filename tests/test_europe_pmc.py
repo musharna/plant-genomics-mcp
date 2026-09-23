@@ -345,3 +345,32 @@ async def test_a_real_zero_is_still_a_zero(httpx_mock: HTTPXMock) -> None:
     # The cache is live in this suite: a valid body IS kept, so the size-0
     # assertion above is a claim about the bad body, not about a dead cache.
     assert europe_pmc._CACHE.stats()["size"] == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.httpx_mock(assert_all_responses_were_requested=False)
+async def test_an_empty_locus_is_refused_input_not_an_outage(httpx_mock: HTTPXMock) -> None:
+    """Audit 2026-09-22 L12: an empty locus is an empty query, which Europe PMC
+    answers with this 200 (live 2026-09-22) — no hitCount, so the #141 shape
+    check read it as an upstream outage after asking twice."""
+    from plant_genomics_mcp.errors import NotFoundError
+
+    httpx_mock.add_response(
+        url=re.compile(r"^https://www\.ebi\.ac\.uk/europepmc/webservices/rest/search\?query=&.*"),
+        json={
+            "errCode": 404,
+            "errMsg": "No search criteria provided. Please provide a search criteria "
+            "which is less than 1500 characters.",
+        },
+        is_reusable=True,
+    )
+    httpx_mock.add_response(
+        url=_AT1G01010_URL,
+        json={"version": "6.9", "hitCount": 0, "request": {}, "resultList": {"result": []}},
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="invalid locus"):
+            await europe_pmc.lookup_locus(client, "")
+        # Positive control: a real locus with no papers is still an ok zero.
+        result = await europe_pmc.lookup_locus(client, "AT1G01010")
+    assert result["hitCount"] == 0

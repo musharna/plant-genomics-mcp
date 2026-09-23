@@ -991,8 +991,9 @@ TOOLS: list[types.Tool] = [
             "(id/name) + pathways[] (id/name) — the metabolic-pathway view KEGG "
             "and GO don't provide. A non-enzymatic gene (e.g. a transcription "
             "factor) returns found=false with empty lists, not an error. "
-            "reaction_count / pathway_count report true totals even when the "
-            "lists are capped. 11 organisms have a PGDB (arabidopsis, rice, "
+            "reaction_count is the true total even when the lists are capped; "
+            "pathway_count is too, or null (unknown) when the gene catalyzes more "
+            "reactions than are walked for pathways. 11 organisms have a PGDB (arabidopsis, rice, "
             "maize, soybean, grape, poplar, tomato, barley, sorghum, medicago, "
             "brachypodium); wheat is not yet mapped. Defaults to "
             "arabidopsis_thaliana (AraCyc, the best-curated); pass organism= "
@@ -1858,6 +1859,7 @@ TOOLS: list[types.Tool] = [
                 "loci": {
                     "type": "array",
                     "items": {"type": "string"},
+                    "minItems": 1,
                     "maxItems": 50,
                     "description": "List of locus identifiers (max 50)",
                 },
@@ -1903,6 +1905,7 @@ TOOLS: list[types.Tool] = [
                 "loci": {
                     "type": "array",
                     "items": {"type": "string"},
+                    "minItems": 1,
                     "maxItems": 50,
                 },
                 "organism": {
@@ -1982,6 +1985,7 @@ TOOLS: list[types.Tool] = [
                 "loci": {
                     "type": "array",
                     "items": {"type": "string"},
+                    "minItems": 1,
                     "maxItems": 50,
                 },
                 "limit": {"type": "integer", "default": 20, "minimum": 1, "maximum": 500},
@@ -2052,6 +2056,7 @@ TOOLS: list[types.Tool] = [
                 "loci": {
                     "type": "array",
                     "items": {"type": "string"},
+                    "minItems": 1,
                     "maxItems": 50,
                 },
                 "organism": {

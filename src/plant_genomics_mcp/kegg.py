@@ -206,7 +206,7 @@ async def lookup_pathways(
     ``pathways[]`` with empty name/class and append the message to
     ``errors[]``.
     """
-    validators.assert_valid_locus(locus, backend="KEGG")
+    locus = validators.assert_valid_locus(locus, backend="KEGG")
     org_code = organisms.kegg_org_code_for(organism)
     entrez_gene_id: str | None = None
     if org_code == "ath":

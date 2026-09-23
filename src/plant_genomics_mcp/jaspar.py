@@ -316,7 +316,7 @@ async def lookup_locus(
     is a normal outcome, not an error. A locus with no UniProt entry propagates
     ``NotFoundError``.
     """
-    validators.assert_valid_locus(locus, backend="JASPAR")
+    locus = validators.assert_valid_locus(locus, backend="JASPAR")
     up = await uniprot.lookup_locus(client, locus, organism=organism)
     accession = up["primaryAccession"]
     # Prefer the taxid on the resolved record: it is authoritative for the actual

@@ -116,7 +116,7 @@ async def lookup_locus(
     for an organism absent from PANTHER). Returns ``found=False`` when PANTHER
     cannot map the locus to a family.
     """
-    validators.assert_valid_locus(locus, backend="PANTHER")
+    locus = validators.assert_valid_locus(locus, backend="PANTHER")
     taxid = organisms.panther_taxid_for(organism)
     path = "/services/oai/pantherdb/geneinfo"
     params = {"geneInputList": locus, "organism": taxid}

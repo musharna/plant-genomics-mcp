@@ -176,7 +176,7 @@ async def lookup_locus(
     """
     canonical = organisms.resolve(organism).canonical
     target = organisms.resolve(target_organism) if target_organism else None
-    validators.assert_valid_locus(locus, backend="OrthoDB")
+    locus = validators.assert_valid_locus(locus, backend="OrthoDB")
     cap = _resolve_limit(limit)
     query = {
         "locus": locus,

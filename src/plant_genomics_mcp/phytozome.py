@@ -123,7 +123,7 @@ async def lookup_locus(
     # Pre-flight reject before any HTTP — prevents XML injection via the
     # string-formatted template AND fails loud on accidental whitespace
     # / shell quoting damage.
-    validators.assert_valid_locus(locus, backend="Phytozome")
+    locus = validators.assert_valid_locus(locus, backend="Phytozome")
 
     phyto_id = organisms.phytozome_int_for(organism)
 

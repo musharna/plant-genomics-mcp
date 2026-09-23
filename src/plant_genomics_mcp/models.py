@@ -588,8 +588,10 @@ class PlantCycLocusInfo(BaseModel):
     free BioCyc web-services API. ``found=False`` with empty lists when the
     locus has no metabolic annotation (e.g. a non-enzymatic gene like a
     transcription factor) — this is a normal result, not an error.
-    ``reaction_count`` / ``pathway_count`` are the true totals even when the
-    returned lists are capped (see ``plantcyc.MAX_REACTIONS`` / ``MAX_PATHWAYS``).
+    ``reaction_count`` is the true total even when the returned lists are
+    capped (see ``plantcyc.MAX_REACTIONS`` / ``MAX_PATHWAYS``). ``pathway_count``
+    is too, except that pathways are read from the first ``MAX_REACTIONS``
+    reactions only, so past that cap it is null: unknown, never a subset's count.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -604,7 +606,12 @@ class PlantCycLocusInfo(BaseModel):
     reactions: list[PlantCycReaction]
     pathways: list[PlantCycPathway]
     reaction_count: int = Field(description="Total distinct reactions (pre-cap)")
-    pathway_count: int = Field(description="Total distinct pathways (pre-cap)")
+    pathway_count: int | None = Field(
+        description=(
+            "Total distinct pathways (pre-cap); null (unknown) when the gene catalyzes "
+            "more reactions than are walked for pathways"
+        )
+    )
 
 
 class AlphaFoldStructure(BaseModel):

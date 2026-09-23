@@ -286,3 +286,37 @@ async def test_string_takes_the_shared_name_and_still_its_deprecated_one(
     assert err.is_error is True
     assert _text(err).startswith("[InvalidArguments] ") and "not both" in _text(err)
     assert calls == [value, value]
+
+
+# ---------- audit 2026-09-22 L12: every batch states its size bounds ----------
+
+_BATCH_TOOLS = [t for t in server.TOOLS if str(t.name).startswith("batch_")]
+
+
+@pytest.mark.parametrize("tool", _BATCH_TOOLS, ids=lambda t: str(t.name))
+def test_every_batch_schema_bounds_its_loci_both_ways(tool: types.Tool) -> None:
+    """Four batch schemas were typed inline instead of reusing _LOCI_SCHEMA and
+    dropped ``minItems``, so ``loci: []`` passed the schema gate and failed
+    later inside ``batch._bound`` as an untyped error. Every batch now states
+    what the code enforces: 1..MAX_BATCH."""
+    loci = tool.input_schema["properties"]["loci"]
+    assert loci.get("minItems") == 1, tool.name
+    assert loci.get("maxItems") == batch.MAX_BATCH, tool.name
+
+
+@pytest.mark.asyncio
+async def test_an_empty_batch_is_refused_as_an_argument(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[list[str]] = []
+
+    async def fake(client: Any, loci: list[str], **_: Any) -> dict[str, Any]:
+        calls.append(loci)
+        return {"tool": "kegg_pathways", "count": len(loci), "results": {}, "errors": {}}
+
+    monkeypatch.setattr(batch, "batch_kegg_pathways", fake)
+    err = await _call("batch_kegg_pathways", {"loci": []})
+    assert err.is_error is True
+    assert _text(err).startswith("[InvalidArguments] "), _text(err)
+    # Positive control: one locus is a batch.
+    ok = await _call("batch_kegg_pathways", {"loci": ["AT1G01010"]})
+    assert ok.is_error is not True, _text(ok)
+    assert calls == [["AT1G01010"]]
