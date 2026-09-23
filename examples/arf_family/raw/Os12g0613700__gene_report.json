@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-22T07:31:32Z",
- "elapsed_s": 1.3194970700060367,
+ "started_at": "2026-09-23T04:54:37Z",
+ "elapsed_s": 45.299385998994694,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 1.00704311899608,
+   "elapsed_s": 44.97144352699979,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0007270010028150864,
+   "elapsed_s": 0.0005953219952061772,
    "result": null,
    "error": null
   },
@@ -28,23 +28,23 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 9.981800394598395e-05,
+   "elapsed_s": 6.459400174207985e-05,
    "result": null,
    "error": null
   },
   {
    "step": 4,
    "tool": "kegg_pathways",
-   "status": "error",
-   "elapsed_s": 6.740199751220644e-05,
+   "status": "ok",
+   "elapsed_s": 5.0775997806340456e-05,
    "result": null,
-   "error": "[NotFoundError] KEGG: no pathway memberships for Os12g0613700 (queried as osa:4352783)"
+   "error": null
   },
   {
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.31169534000218846,
+   "elapsed_s": 0.32742131600389257,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 3.597500472096726e-05,
+   "elapsed_s": 0.0005545549938688055,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0003331719999550842,
+   "elapsed_s": 0.0001680630084592849,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0005449469972518273,
+   "elapsed_s": 0.0002173649991163984,
    "result": null,
    "error": null
   }
@@ -85,22 +85,22 @@
    ]
   },
   "uniprot_accession": "Q2QM84",
-  "markdown": "# OsARF6b (UniProt: ARF25) \u2014 `Os12g0613700`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 12:26,002,370\u201326,008,343 (-) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 25**\nARFY_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 899 aa\nUniProt: [Q2QM84](https://www.uniprot.org/uniprotkb/Q2QM84)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [131\u2013232]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [296\u2013368]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [130\u2013233]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [763\u2013855]\n- **B3 DNA binding domain** (domain, interpro) [131\u2013234]\n- **Auxin response factor domain** (domain, interpro) [281\u2013364]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [117\u2013261]\n- **Auxin response factor** (family, interpro) [22\u2013854]\n- **PB1-like domain** (domain, interpro) [766\u2013850]\n- **B3 DNA binding domain** (domain, pfam) [132\u2013233]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n- [GO:0009733] response to auxin (IBA)\n- [GO:0009908] flower development (IBA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [NotFoundError] KEGG: no pathway memberships for Os12g0613700 (queried as osa:4352783)_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| B1153E06.24 | 0.98 |\n| Q0JC85_ORYSJ | 0.912 |\n| Q69MK0_ORYSJ | 0.905 |\n| Q8LRG9_ORYSJ | 0.905 |\n| A0A0P0VV58 | 0.899 |\n| A0A0P0VQD8 | 0.893 |\n| Q0JCJ0_ORYSJ | 0.884 |\n| Q0DIX4_ORYSJ | 0.884 |\n| PRMT5 | 0.879 |\n| TPC1 | 0.877 |\n\n## Cross-references\n- UniProtKB Gene Name: Q2QM84\n- WikiGene: 4352783\n- Expression Atlas: Os12g0613700\n- NCBI gene (formerly Entrezgene): 4352783\n\n## Literature\n_No literature found._\n",
+  "markdown": "# OsARF6b (UniProt: ARF25) \u2014 `Os12g0613700`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 12:26,002,370\u201326,008,343 (-) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 25**\nARFY_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 899 aa\nUniProt: [Q2QM84](https://www.uniprot.org/uniprotkb/Q2QM84)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [131\u2013232]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [296\u2013368]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [130\u2013233]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [763\u2013855]\n- **B3 DNA binding domain** (domain, interpro) [131\u2013234]\n- **Auxin response factor domain** (domain, interpro) [281\u2013364]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [117\u2013261]\n- **Auxin response factor** (family, interpro) [22\u2013854]\n- **PB1-like domain** (domain, interpro) [766\u2013850]\n- **B3 DNA binding domain** (domain, pfam) [132\u2013233]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n- [GO:0009733] response to auxin (IBA)\n- [GO:0009908] flower development (IBA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_No KEGG pathway memberships found._\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| B1153E06.24 | 0.98 |\n| Q0JC85_ORYSJ | 0.912 |\n| Q69MK0_ORYSJ | 0.905 |\n| Q8LRG9_ORYSJ | 0.905 |\n| A0A0P0VV58 | 0.899 |\n| A0A0P0VQD8 | 0.893 |\n| Q0JCJ0_ORYSJ | 0.884 |\n| Q0DIX4_ORYSJ | 0.884 |\n| PRMT5 | 0.879 |\n| TPC1 | 0.877 |\n\n## Cross-references\n- UniProtKB Gene Name: Q2QM84\n- WikiGene: 4352783\n- Expression Atlas: Os12g0613700\n- NCBI gene (formerly Entrezgene): 4352783\n\n## Literature\n4 hits total; showing top 4.\n- **Insights on Phytohormonal Crosstalk in Plant Response to Nitrogen Stress: A Focus on Plant Root Growth and Development** \u2014 Ahmad N, Jiang Z, Zhang L, Hussain I, Yang X. (PMID:36835044; doi:10.3390/ijms24043631)\n- **miR167d-ARFs Module Regulates Flower Opening and Stigma Size in Rice** \u2014 Zhao ZX, Yin XX, Li S, Peng YT, Yan XL, Chen C, Hassan B, Zhou SX, Pu M, Zhao JH, Hu XH, Li GB, Wang H, Zhang JW, Huang YY, Fan J, Li Y, Wang WM. (PMID:35876915; doi:10.1186/s12284-022-00587-z)\n- **Plant nitrogen availability and crosstalk with phytohormones signallings and their biotechnology breeding application in crops** \u2014 Xing J, Cao X, Zhang M, Wei X, Zhang J, Wan X. (PMID:36435985; doi:10.1111/pbi.13971)\n- **Gnp4/LAX2, a RAWUL protein, interferes with the OsIAA3-OsARF25 interaction to regulate grain length via the auxin signaling pathway in rice** \u2014 Zhang Z, Li J, Tang Z, Sun X, Zhang H, Yu J, Yao G, Li G, Guo H, Li J, Wu H, Huang H, Xu Y, Yin Z, Qi Y, Huang R, Yang W, Li Z. (PMID:30295905; doi:10.1093/jxb/ery256)\n",
   "sections": {
    "annotation": {
-    "db_type": "core",
-    "source": "RAP2022-09-01",
-    "display_name": "OsARF6b",
-    "strand": -1,
-    "id": "Os12g0613700",
     "end": 26008343,
-    "start": 26002370,
     "biotype": "protein_coding",
-    "object_type": "Gene",
-    "canonical_transcript": "Os12t0613700-01.",
-    "assembly_name": "IRGSP-1.0",
-    "seq_region_name": "12",
+    "start": 26002370,
     "logic_name": "rapdb_genes",
+    "assembly_name": "IRGSP-1.0",
+    "source": "RAP2022-09-01",
+    "id": "Os12g0613700",
+    "display_name": "OsARF6b",
+    "db_type": "core",
+    "strand": -1,
+    "canonical_transcript": "Os12t0613700-01",
+    "object_type": "Gene",
+    "seq_region_name": "12",
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -126,48 +126,48 @@
     "count": 4,
     "xrefs": [
      {
-      "primary_id": "Q2QM84",
-      "db_display_name": "UniProtKB Gene Name",
-      "display_id": "ARF25",
-      "description": null,
-      "dbname": "Uniprot_gn",
-      "info_text": "",
-      "version": null,
       "synonyms": [],
+      "dbname": "Uniprot_gn",
+      "db_display_name": "UniProtKB Gene Name",
+      "info_text": "",
+      "info_type": "DEPENDENT",
+      "description": null,
+      "primary_id": "Q2QM84",
+      "display_id": "ARF25",
+      "version": null
+     },
+     {
+      "info_text": "",
+      "db_display_name": "WikiGene",
+      "synonyms": [],
+      "dbname": "WikiGene",
+      "version": "0",
+      "display_id": "LOC4352783",
+      "primary_id": "4352783",
+      "description": "auxin response factor 25-like",
       "info_type": "DEPENDENT"
      },
      {
-      "info_type": "DEPENDENT",
-      "synonyms": [],
-      "version": "0",
-      "info_text": "",
-      "description": "auxin response factor 25-like",
-      "dbname": "WikiGene",
-      "display_id": "LOC4352783",
-      "db_display_name": "WikiGene",
-      "primary_id": "4352783"
-     },
-     {
-      "info_type": "DIRECT",
-      "version": "0",
-      "synonyms": [],
-      "info_text": "",
-      "display_id": "Os12g0613700",
       "db_display_name": "Expression Atlas",
-      "primary_id": "Os12g0613700",
+      "info_text": "",
+      "synonyms": [],
       "dbname": "ArrayExpress",
+      "display_id": "Os12g0613700",
+      "version": "0",
+      "info_type": "DIRECT",
+      "primary_id": "Os12g0613700",
       "description": null
      },
      {
-      "info_type": "DEPENDENT",
-      "info_text": "",
-      "version": "0",
-      "synonyms": [],
-      "description": "auxin response factor 25-like",
-      "dbname": "EntrezGene",
       "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "info_text": "",
+      "synonyms": [],
+      "dbname": "EntrezGene",
       "display_id": "LOC4352783",
-      "primary_id": "4352783"
+      "version": "0",
+      "info_type": "DEPENDENT",
+      "primary_id": "4352783",
+      "description": "auxin response factor 25-like"
      }
     ],
     "by_db": {
@@ -185,11 +185,22 @@
      ]
     }
    },
-   "pathways": null,
+   "pathways": {
+    "locus": "Os12g0613700",
+    "organism": "oryza_sativa",
+    "kegg_gene_id": "osa:4352783",
+    "pathways": [],
+    "errors": [],
+    "upstream_version": null,
+    "entrez_gene_id": "4352783"
+   },
    "interactions": {
     "query": "Os12g0613700",
     "accession": "Q2QM84",
     "organism": "oryza_sativa",
+    "total": null,
+    "returned": 10,
+    "truncated": null,
     "partners": [
      {
       "string_id": "39947.Q0DA50",
@@ -298,16 +309,91 @@
     "locus": "Os12g0613700",
     "organism": "oryza_sativa",
     "query": "Os12g0613700 AND rice",
-    "hitCount": 0,
-    "returned": 0,
+    "hitCount": 4,
+    "total": 4,
+    "returned": 4,
+    "truncated": false,
+    "next_cursor": null,
     "abstracts_included": true,
-    "hits": [],
+    "hits": [
+     {
+      "id": "36835044",
+      "source": "MED",
+      "pmid": "36835044",
+      "pmcid": "PMC9958644",
+      "doi": "10.3390/ijms24043631",
+      "title": "Insights on Phytohormonal Crosstalk in Plant Response to Nitrogen Stress: A Focus on Plant Root Growth and Development.",
+      "authorString": "Ahmad N, Jiang Z, Zhang L, Hussain I, Yang X.",
+      "journalTitle": "International journal of molecular sciences",
+      "pubYear": "2023",
+      "firstPublicationDate": "2023-02-11",
+      "citedByCount": 26,
+      "isOpenAccess": "Y",
+      "hasPDF": "Y",
+      "abstractText": "Nitrogen (N) is a vital mineral component that can restrict the growth and development of plants if supplied inappropriately. In order to benefit their growth and development, plants have complex physiological and structural responses to changes in their nitrogen supply. As higher plants have multiple organs with varying functions and nutritional requirements, they coordinate their responses at the whole-plant level based on local and long-distance signaling pathways. It has been suggested that phytohormones are signaling substances in such pathways. The nitrogen signaling pathway is closely associated with phytohormones such as auxin (AUX), abscisic acid (ABA), cytokinins (CKs), ethylene (ETH), brassinosteroid (BR), strigolactones (SLs), jasmonic acid (JA), and salicylic acid (SA). Recent research has shed light on how nitrogen and phytohormones interact to modulate physiology and morphology. This review provides a summary of the research on how phytohormone signaling affects root system architecture (RSA) in response to nitrogen availability. Overall, this review contributes to identifying recent developments in the interaction between phytohormones and N, as well as serving as a foundation for further study.",
+      "web_url": "https://europepmc.org/article/PMC/PMC9958644"
+     },
+     {
+      "id": "35876915",
+      "source": "MED",
+      "pmid": "35876915",
+      "pmcid": "PMC9314575",
+      "doi": "10.1186/s12284-022-00587-z",
+      "title": "miR167d-ARFs Module Regulates Flower Opening and Stigma Size in Rice.",
+      "authorString": "Zhao ZX, Yin XX, Li S, Peng YT, Yan XL, Chen C, Hassan B, Zhou SX, Pu M, Zhao JH, Hu XH, Li GB, Wang H, Zhang JW, Huang YY, Fan J, Li Y, Wang WM.",
+      "journalTitle": "Rice (New York, N.Y.)",
+      "pubYear": "2022",
+      "firstPublicationDate": "2022-07-25",
+      "citedByCount": 14,
+      "isOpenAccess": "Y",
+      "hasPDF": "Y",
+      "abstractText": "Flower opening and stigma exertion are two critical traits for cross-pollination during seed production of hybrid rice (Oryza sativa L.). In this study, we demonstrate that the miR167d-ARFs module regulates stigma size and flower opening that is associated with the elongation of stamen filaments and the cell arrangement of lodicules. The overexpression of miR167d (OX167d) resulted in failed elongation of stamen filaments, increased stigma size, and morphological alteration of lodicule, resulting in cleistogamy. Blocking miR167d by target mimicry also led to a morphological alteration of the individual floral organs, including a reduction in stigma size and alteration of lodicule cell morphology, but did not show the cleistogamous phenotype. In addition, the four target genes of miR167d, namely ARF6, ARF12, ARF17, and ARF25, have overlapping functions in flower opening and stigma size. The loss-of-function of a single ARF gene did not influence the flower opening and stigma size, but arf12 single mutant showed a reduced plant height and aborted apical spikelets. However, mutation in ARF12 together with mutation in either ARF6, ARF17, or ARF25 led to the same defective phenotypes that were observed in OX167d, including the failed elongation of stamen filaments, increased stigma size, and morphological alteration of lodicule. These findings indicate that the appropriate expression of miR167d is crucial and the miR167d-ARFs module plays important roles in the regulation of flower opening and stigma size in rice.",
+      "web_url": "https://europepmc.org/article/PMC/PMC9314575"
+     },
+     {
+      "id": "36435985",
+      "source": "MED",
+      "pmid": "36435985",
+      "pmcid": "PMC10281611",
+      "doi": "10.1111/pbi.13971",
+      "title": "Plant nitrogen availability and crosstalk with phytohormones signallings and their biotechnology breeding application in crops.",
+      "authorString": "Xing J, Cao X, Zhang M, Wei X, Zhang J, Wan X.",
+      "journalTitle": "Plant biotechnology journal",
+      "pubYear": "2023",
+      "firstPublicationDate": "2023-01-17",
+      "citedByCount": 49,
+      "isOpenAccess": "Y",
+      "hasPDF": "Y",
+      "abstractText": "Nitrogen (N), one of the most important nutrients, limits plant growth and crop yields in sustainable agriculture system, in which phytohormones are known to play essential roles in N availability. Hence, it is not surprising that massive studies about the crosstalk between N and phytohormones have been constantly emerging. In this review, with the intellectual landscape of N and phytohormones crosstalk provided by the bibliometric analysis, we trace the research story of best-known crosstalk between N and various phytohormones over the last 20\u2009years. Then, we discuss how N regulates various phytohormones biosynthesis and transport in plants. In reverse, we also summarize how phytohormones signallings modulate root system architecture (RSA) in response to N availability. Besides, we expand to outline how phytohormones signallings regulate uptake, transport, and assimilation of N in plants. Further, we conclude advanced biotechnology strategies, explain their application, and provide potential phytohormones-regulated N use efficiency (NUE) targets in crops. Collectively, this review provides not only a better understanding on the recent progress of crosstalk between N and phytohormones, but also targeted strategies for improvement of NUE to increase crop yields in future biotechnology breeding of crops.",
+      "web_url": "https://europepmc.org/article/PMC/PMC10281611"
+     },
+     {
+      "id": "30295905",
+      "source": "MED",
+      "pmid": "30295905",
+      "pmcid": "PMC6137978",
+      "doi": "10.1093/jxb/ery256",
+      "title": "Gnp4/LAX2, a RAWUL protein, interferes with the OsIAA3-OsARF25 interaction to regulate grain length via the auxin signaling pathway in rice.",
+      "authorString": "Zhang Z, Li J, Tang Z, Sun X, Zhang H, Yu J, Yao G, Li G, Guo H, Li J, Wu H, Huang H, Xu Y, Yin Z, Qi Y, Huang R, Yang W, Li Z.",
+      "journalTitle": "Journal of experimental botany",
+      "pubYear": "2018",
+      "firstPublicationDate": "2018-09-01",
+      "citedByCount": 89,
+      "isOpenAccess": "Y",
+      "hasPDF": "Y",
+      "abstractText": "Grain length is one of the determinants of yield in rice and auxin plays an important role in regulating it by mediating cell growth. Although several genes in the auxin pathway are involved in regulating grain length, the underlying molecular mechanisms remain unclear. In this study we identify a RING-finger and wd40-associated ubiquitin-like (RAWUL) domain-containing protein, Gnp4/LAX2, with a hitherto unknown role in regulation of grain length by its influence on cell expansion. Gnp4/LAX2 is broadly expressed in the plant and subcellular localization analysis shows that it encodes a nuclear protein. Overexpression of Gnp4/LAX2 can significantly increase grain length and thousand-kernel weight. Moreover, Gnp4/LAX2 physically interacts with OsIAA3 and consequently interferes with the OsIAA3-OsARF25 interaction in vitro and in vivo. OsIAA3 RNAi plants consistently exhibit longer grains, while the mutant osarf25 has small grains. In addition, OsARF25 binds to the promoter of OsERF142/SMOS1, a regulator of organ size, and positively regulates its expression. Taken together, the results reveal that Gnp4/LAX2 functions as a regulator of grain length through participation in the OsIAA3-OsARF25-OsERF142 pathway and that it has potential value for molecular breeding in rice.",
+      "web_url": "https://europepmc.org/article/PMC/PMC6137978"
+     }
+    ],
     "upstream_version": null
    },
    "go_annotations": {
     "uniprot_accession": "Q2QM84",
     "numberOfHits": 9,
+    "total": 9,
     "returned": 9,
+    "truncated": false,
+    "next_cursor": null,
     "annotations": [
      {
       "geneProductId": "UniProtKB:Q2QM84",
@@ -835,12 +921,15 @@
       }
      ]
     },
+    "by_aspect_deduped_on": "goId",
     "upstream_version": null
    },
    "domains": {
     "accession": "Q2QM84",
     "found": true,
     "domain_count": 17,
+    "total": 17,
+    "returned": 17,
     "truncated": false,
     "domains": [
      {

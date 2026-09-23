@@ -64,7 +64,7 @@ def test_the_drafts_directory_is_where_the_test_thinks_it_is() -> None:
     assert len(DRAFTS) >= 14, DRAFTS
     parsed = sum(len(SECTION_RE.findall(path.read_text())) for path in DRAFTS)
     assert parsed >= 20, f"parsed only {parsed} row sections out of {len(DRAFTS)} drafts"
-    assert len(_rows()) == 40
+    assert len(_rows()) == 43
 
 
 @pytest.mark.parametrize("draft", DRAFTS, ids=lambda p: p.name)

@@ -46,9 +46,12 @@ runner that appended to it would duplicate its own rows on a re-run, and
 one that truncated it would delete the hand-written ones. Writing to a
 separate file opened `"w"` makes a re-run idempotent in both directions.
 
-Calls are sequential on purpose: the tools sit in front of public APIs
-(Ensembl Plants, InterPro, STRING, KEGG, ...) that should not be hit in
-parallel from a demo.
+The runner's own calls are sequential on purpose: the tools sit in front
+of public APIs (Ensembl Plants, InterPro, STRING, KEGG, ...) that should
+not be hit in parallel from a demo. A batch call still fans out inside
+the server, at its one concurrency width for every backend
+(PLANT_GENOMICS_MCP_BATCH_CONCURRENCY, default 8) — wide enough that
+OrthoDB refuses part of it (`gaps.jsonl`, `batch-fanout-rate-limit`).
 """
 
 from __future__ import annotations

@@ -5,14 +5,14 @@
   "organism": "arabidopsis_thaliana",
   "top_n": 10
  },
- "started_at": "2026-09-22T07:28:41Z",
- "elapsed_s": 1.2017764959964552,
+ "started_at": "2026-09-23T04:46:41Z",
+ "elapsed_s": 2.1447140219970606,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.5597912640005234,
+   "elapsed_s": 1.3562801070074784,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0005031370019423775,
+   "elapsed_s": 0.0002994679962284863,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.6414735840007779,
+   "elapsed_s": 0.7878960589878261,
    "result": null,
    "error": null
   },
@@ -36,15 +36,15 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "error",
-   "elapsed_s": 3.4094999136868864e-05,
+   "elapsed_s": 4.201699630357325e-05,
    "result": null,
-   "error": "[NotFoundError] KEGG: no pathway memberships for ATMG00940 (queried as ath:ATMG00940)"
+   "error": "[NotFoundError] KEGG: no gene record for ATMG00940 (queried as ath:ATMG00940); /list/ath:ATMG00940 is empty"
   },
   {
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.31281737200333737,
+   "elapsed_s": 0.28183297500072513,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.001135161001002416,
+   "elapsed_s": 0.0016468129906570539,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00014924100105417892,
+   "elapsed_s": 0.00022919099137652665,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00017492600454716012,
+   "elapsed_s": 0.00027791300090029836,
    "result": null,
    "error": null
   }
@@ -83,21 +83,21 @@
    "uniprot": []
   },
   "uniprot_accession": "P92530",
-  "markdown": "# ATMG00940 \u2014 `ATMG00940`\n\n*Arabidopsis thaliana* \u00b7 protein_coding \u00b7 Mt:251,403\u2013251,897 (-) \u00b7 TAIR10\n\n## Protein\n**Uncharacterized mitochondrial protein AtMg00940**\nM940_ARATH \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 164 aa\nUniProt: [P92530](https://www.uniprot.org/uniprotkb/P92530)\n\n## Protein domains\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [108\u2013154]\n- **Auxin response factor domain** (domain, interpro) [93\u2013151]\n- **Auxin response factor** (family, interpro) [2\u2013151]\n- **Auxin response factor ancillary domain** (domain, pfam) [93\u2013151]\n- **AUXIN RESPONSE FACTOR 4-RELATED** (family, panther) [2\u2013151]\n\n## GO annotations\n**Molecular Function**\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IEA)\n- [GO:0005634] nucleus (ISM)\n- [GO:0005739] mitochondrion (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [NotFoundError] KEGG: no pathway memberships for ATMG00940 (queried as ath:ATMG00940)_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| ATP6-1 | 0.462 |\n| ATP6-2 | 0.429 |\n\n## Cross-references\n- NASC Gene ID: ATMG00940\n- TAIR: ATMG00940\n- TAIR Gene Name: ORF164\n- Expression Atlas: ATMG00940\n- KNETMINER_ARA: ATMG00940\n\n## Literature\n5 hits total; showing top 5.\n- **Genomic and experimental characterization of unique Antarctic temperate phage Perkons reveals multiple integrases and complex lysogenic dynamics in Psychrobacillus sp. L4** \u2014 Zrelovs N, Svanberga K, Priedeslaipa A, Jansons J, Lamsters K, Karuss J, Krievans M, Fridmanis D, Dislers A, Kazaks A. (PMID:42026481; doi:10.1186/s12866-026-05031-6)\n- **Comparison of the Effects of UV-C Light in the Form of Flash or Continuous Exposure: A Transcriptomic Analysis on <i>Arabidopsis thaliana</i> L** \u2014 Jazayeri SM, Aarrouf J, Urban L, Lopez-Lauri F. (PMID:39769480; doi:10.3390/ijms252413718)\n- **Three novel bacteriophages isolated from the East African Rift Valley soda lakes** \u2014 van Zyl LJ, Nemavhulani S, Cass J, Cowan DA, Trindade M. (PMID:27912769; doi:10.1186/s12985-016-0656-6)\n- **Phylogenomic network and comparative genomics reveal a diverged member of the \u03a6KZ-related group, marine vibrio phage \u03a6JM-2012** \u2014 Jang HB, Fagutao FF, Nho SW, Park SB, Cha IS, Yu JE, Lee JS, Im SP, Aoki T, Jung TS. (PMID:24067958; doi:10.1128/jvi.02656-13)\n- **Characterization of the basic replicon of Rhodococcus plasmid pSOX and development of a Rhodococcus-Escherichia coli shuttle vector** \u2014 Denis-Larose C, Bergeron H, Labb\u00e9 D, Greer CW, Hawari J, Grossman MJ, Sankey BM, Lau PC. (PMID:9797291; doi:10.1128/aem.64.11.4363-4367.1998)\n",
+  "markdown": "# ATMG00940 \u2014 `ATMG00940`\n\n*Arabidopsis thaliana* \u00b7 protein_coding \u00b7 Mt:251,403\u2013251,897 (-) \u00b7 TAIR10\n\n## Protein\n**Uncharacterized mitochondrial protein AtMg00940**\nM940_ARATH \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 164 aa\nUniProt: [P92530](https://www.uniprot.org/uniprotkb/P92530)\n\n## Protein domains\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [108\u2013154]\n- **Auxin response factor domain** (domain, interpro) [93\u2013151]\n- **Auxin response factor** (family, interpro) [2\u2013151]\n- **Auxin response factor ancillary domain** (domain, pfam) [93\u2013151]\n- **AUXIN RESPONSE FACTOR 4-RELATED** (family, panther) [2\u2013151]\n\n## GO annotations\n**Molecular Function**\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IEA)\n- [GO:0005634] nucleus (ISM)\n- [GO:0005739] mitochondrion (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [NotFoundError] KEGG: no gene record for ATMG00940 (queried as ath:ATMG00940); /list/ath:ATMG00940 is empty_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| ATP6-1 | 0.462 |\n| ATP6-2 | 0.429 |\n\n## Cross-references\n- NASC Gene ID: ATMG00940\n- TAIR: ATMG00940\n- TAIR Gene Name: ORF164\n- Expression Atlas: ATMG00940\n- KNETMINER_ARA: ATMG00940\n\n## Literature\n5 hits total; showing top 5.\n- **Genomic and experimental characterization of unique Antarctic temperate phage Perkons reveals multiple integrases and complex lysogenic dynamics in Psychrobacillus sp. L4** \u2014 Zrelovs N, Svanberga K, Priedeslaipa A, Jansons J, Lamsters K, Karuss J, Krievans M, Fridmanis D, Dislers A, Kazaks A. (PMID:42026481; doi:10.1186/s12866-026-05031-6)\n- **Comparison of the Effects of UV-C Light in the Form of Flash or Continuous Exposure: A Transcriptomic Analysis on <i>Arabidopsis thaliana</i> L** \u2014 Jazayeri SM, Aarrouf J, Urban L, Lopez-Lauri F. (PMID:39769480; doi:10.3390/ijms252413718)\n- **Three novel bacteriophages isolated from the East African Rift Valley soda lakes** \u2014 van Zyl LJ, Nemavhulani S, Cass J, Cowan DA, Trindade M. (PMID:27912769; doi:10.1186/s12985-016-0656-6)\n- **Phylogenomic network and comparative genomics reveal a diverged member of the \u03a6KZ-related group, marine vibrio phage \u03a6JM-2012** \u2014 Jang HB, Fagutao FF, Nho SW, Park SB, Cha IS, Yu JE, Lee JS, Im SP, Aoki T, Jung TS. (PMID:24067958; doi:10.1128/jvi.02656-13)\n- **Characterization of the basic replicon of Rhodococcus plasmid pSOX and development of a Rhodococcus-Escherichia coli shuttle vector** \u2014 Denis-Larose C, Bergeron H, Labb\u00e9 D, Greer CW, Hawari J, Grossman MJ, Sankey BM, Lau PC. (PMID:9797291; doi:10.1128/aem.64.11.4363-4367.1998)\n",
   "sections": {
    "annotation": {
-    "db_type": "core",
-    "source": "araport11",
+    "canonical_transcript": "ATMG00940.1",
     "object_type": "Gene",
-    "canonical_transcript": "ATMG00940.1.",
-    "id": "ATMG00940",
-    "logic_name": "araport11",
-    "strand": -1,
-    "end": 251897,
-    "start": 251403,
     "assembly_name": "TAIR10",
-    "biotype": "protein_coding",
+    "source": "araport11",
+    "logic_name": "araport11",
+    "start": 251403,
+    "strand": -1,
     "seq_region_name": "Mt",
+    "db_type": "core",
+    "biotype": "protein_coding",
+    "end": 251897,
+    "id": "ATMG00940",
     "organism": "arabidopsis_thaliana",
     "upstream_version": null
    },
@@ -121,58 +121,58 @@
     "count": 5,
     "xrefs": [
      {
-      "version": "0",
+      "primary_id": "ATMG00940",
+      "synonyms": [],
+      "display_id": "ATMG00940-TAIR-G",
+      "db_display_name": "NASC Gene ID",
+      "description": "DNA binding",
+      "dbname": "NASC_GENE_ID",
       "info_type": "DIRECT",
       "info_text": "",
-      "dbname": "NASC_GENE_ID",
-      "description": "DNA binding",
-      "synonyms": [],
-      "primary_id": "ATMG00940",
-      "db_display_name": "NASC Gene ID",
-      "display_id": "ATMG00940-TAIR-G"
+      "version": "0"
      },
      {
-      "info_text": "",
-      "info_type": "DIRECT",
-      "dbname": "TAIR_LOCUS",
-      "version": "0",
       "description": "DNA binding",
+      "primary_id": "ATMG00940",
+      "synonyms": [],
       "db_display_name": "TAIR",
       "display_id": "ATMG00940",
-      "primary_id": "ATMG00940",
-      "synonyms": []
+      "info_type": "DIRECT",
+      "info_text": "",
+      "dbname": "TAIR_LOCUS",
+      "version": "0"
      },
      {
-      "description": "",
-      "display_id": "ORF164",
-      "db_display_name": "TAIR Gene Name",
-      "synonyms": [],
-      "primary_id": "ORF164",
-      "info_text": "",
       "info_type": "DIRECT",
+      "info_text": "",
       "dbname": "TAIR_SYMBOL",
-      "version": "0"
+      "version": "0",
+      "description": "",
+      "primary_id": "ORF164",
+      "synonyms": [],
+      "display_id": "ORF164",
+      "db_display_name": "TAIR Gene Name"
      },
      {
-      "db_display_name": "Expression Atlas",
-      "display_id": "ATMG00940",
-      "primary_id": "ATMG00940",
-      "synonyms": [],
-      "description": null,
+      "version": "0",
       "dbname": "ArrayExpress",
-      "info_text": "",
       "info_type": "DIRECT",
-      "version": "0"
+      "info_text": "",
+      "synonyms": [],
+      "primary_id": "ATMG00940",
+      "display_id": "ATMG00940",
+      "db_display_name": "Expression Atlas",
+      "description": null
      },
      {
       "dbname": "KNETMINER_ARA",
-      "info_text": "",
       "info_type": "DEPENDENT",
+      "info_text": "",
       "version": "0",
-      "db_display_name": "KNETMINER_ARA",
-      "display_id": "ATMG00940",
       "synonyms": [],
       "primary_id": "ATMG00940",
+      "display_id": "ATMG00940",
+      "db_display_name": "KNETMINER_ARA",
       "description": null
      }
     ],
@@ -199,6 +199,9 @@
     "query": "ATMG00940",
     "accession": "P92530",
     "organism": "arabidopsis_thaliana",
+    "total": null,
+    "returned": 2,
+    "truncated": null,
     "partners": [
      {
       "string_id": "3702.P93298",
@@ -228,7 +231,10 @@
     "organism": "arabidopsis_thaliana",
     "query": "ATMG00940",
     "hitCount": 5,
+    "total": 5,
     "returned": 5,
+    "truncated": false,
+    "next_cursor": null,
     "abstracts_included": true,
     "hits": [
      {
@@ -239,7 +245,7 @@
       "doi": "10.1186/s12866-026-05031-6",
       "title": "Genomic and experimental characterization of unique Antarctic temperate phage Perkons reveals multiple integrases and complex lysogenic dynamics in Psychrobacillus sp. L4.",
       "authorString": "Zrelovs N, Svanberga K, Priedeslaipa A, Jansons J, Lamsters K, Karuss J, Krievans M, Fridmanis D, Dislers A, Kazaks A.",
-      "journalTitle": null,
+      "journalTitle": "BMC microbiology",
       "pubYear": "2026",
       "firstPublicationDate": "2026-04-23",
       "citedByCount": 0,
@@ -256,7 +262,7 @@
       "doi": "10.3390/ijms252413718",
       "title": "Comparison of the Effects of UV-C Light in the Form of Flash or Continuous Exposure: A Transcriptomic Analysis on <i>Arabidopsis thaliana</i> L.",
       "authorString": "Jazayeri SM, Aarrouf J, Urban L, Lopez-Lauri F.",
-      "journalTitle": null,
+      "journalTitle": "International journal of molecular sciences",
       "pubYear": "2024",
       "firstPublicationDate": "2024-12-22",
       "citedByCount": 3,
@@ -273,7 +279,7 @@
       "doi": "10.1186/s12985-016-0656-6",
       "title": "Three novel bacteriophages isolated from the East African Rift Valley soda lakes.",
       "authorString": "van Zyl LJ, Nemavhulani S, Cass J, Cowan DA, Trindade M.",
-      "journalTitle": null,
+      "journalTitle": "Virology journal",
       "pubYear": "2016",
       "firstPublicationDate": "2016-12-03",
       "citedByCount": 9,
@@ -290,7 +296,7 @@
       "doi": "10.1128/jvi.02656-13",
       "title": "Phylogenomic network and comparative genomics reveal a diverged member of the \u03a6KZ-related group, marine vibrio phage \u03a6JM-2012.",
       "authorString": "Jang HB, Fagutao FF, Nho SW, Park SB, Cha IS, Yu JE, Lee JS, Im SP, Aoki T, Jung TS.",
-      "journalTitle": null,
+      "journalTitle": "Journal of virology",
       "pubYear": "2013",
       "firstPublicationDate": "2013-09-25",
       "citedByCount": 32,
@@ -307,7 +313,7 @@
       "doi": "10.1128/aem.64.11.4363-4367.1998",
       "title": "Characterization of the basic replicon of Rhodococcus plasmid pSOX and development of a Rhodococcus-Escherichia coli shuttle vector.",
       "authorString": "Denis-Larose C, Bergeron H, Labb\u00e9 D, Greer CW, Hawari J, Grossman MJ, Sankey BM, Lau PC.",
-      "journalTitle": null,
+      "journalTitle": "Applied and environmental microbiology",
       "pubYear": "1998",
       "firstPublicationDate": "1998-11-01",
       "citedByCount": 14,
@@ -322,7 +328,10 @@
    "go_annotations": {
     "uniprot_accession": "P92530",
     "numberOfHits": 6,
+    "total": 6,
     "returned": 6,
+    "truncated": false,
+    "next_cursor": null,
     "annotations": [
      {
       "geneProductId": "UniProtKB:P92530",
@@ -518,12 +527,15 @@
       }
      ]
     },
+    "by_aspect_deduped_on": "goId",
     "upstream_version": null
    },
    "domains": {
     "accession": "P92530",
     "found": true,
     "domain_count": 5,
+    "total": 5,
+    "returned": 5,
     "truncated": false,
     "domains": [
      {

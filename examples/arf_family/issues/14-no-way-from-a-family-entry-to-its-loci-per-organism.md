@@ -1,9 +1,9 @@
 # No way from an InterPro entry to its loci in an organism: the walk that stands in costs 52 region calls, 325 domain calls and 19 minutes
 
-**Filed as [#124](https://github.com/musharna/plant-genomics-mcp/issues/124) — open.** Written from the ARF family dossier in
-[`examples/arf_family/`](../), re-run at server commit `967bc36`
-(release `1.21.0`): 400 MCP calls over 48 genes x 16 tools, the family
-itself from a 742-call enumeration through the same tools. Each section
+**Filed as [#124](https://github.com/musharna/plant-genomics-mcp/issues/124) — closed.** `family-enumeration-cost`, `candidate-undecidable` are closed at `052e4ec`. `no-assembly-metadata`, `paralog-closure-empty`, `free-text-null-outside-arabidopsis` stay open. Written from the ARF family dossier in
+[`examples/arf_family/`](../), re-run at server commit `052e4ec`
+(release `1.21.0`): 64 MCP calls over 114 genes x 16 tools, the family
+itself from a 1163-call enumeration through the same tools. Each section
 below is one row of [`gaps.jsonl`](../gaps.jsonl), quoted as logged;
 `Check` names the captured response to read it back from.
 

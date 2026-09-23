@@ -5,14 +5,14 @@
   "organism": "arabidopsis_thaliana",
   "top_n": 10
  },
- "started_at": "2026-09-22T07:28:09Z",
- "elapsed_s": 0.8988437779989908,
+ "started_at": "2026-09-23T04:46:36Z",
+ "elapsed_s": 2.4419632960052695,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.5561839660003898,
+   "elapsed_s": 1.4486208750022342,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0007208840033854358,
+   "elapsed_s": 0.00044241000432521105,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.15302452700416325,
+   "elapsed_s": 0.9781906209973386,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.004368488000181969,
+   "elapsed_s": 0.006996803000220098,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.3412958289991366,
+   "elapsed_s": 0.286227944001439,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0019097559998044744,
+   "elapsed_s": 0.005644659991958179,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0003830030036624521,
+   "elapsed_s": 0.0002677999873412773,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0005721010020351969,
+   "elapsed_s": 0.0002531460049794987,
    "result": null,
    "error": null
   }
@@ -88,20 +88,20 @@
   "markdown": "# ARF12 \u2014 `AT1G34310`\n\n*Arabidopsis thaliana* \u00b7 protein_coding \u00b7 1:12,508,548\u201312,511,520 (-) \u00b7 TAIR10\n\nauxin response factor 12 [Source:NCBI gene (formerly Entrezgene);Acc:840331]\n\n## Protein\n**Auxin response factor 12**\nARFL_ARATH \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 593 aa\nUniProt: [Q9XID4](https://www.uniprot.org/uniprotkb/Q9XID4)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [125\u2013226]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [287\u2013357]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [123\u2013227]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [507\u2013593]\n- **B3 DNA binding domain** (domain, interpro) [125\u2013228]\n- **Auxin response factor domain** (domain, interpro) [273\u2013354]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [123\u2013247]\n- **AUX/IAA domain** (domain, interpro) [505\u2013591]\n- **Auxin response factor** (family, interpro) [23\u2013591]\n- **PB1-like domain** (domain, interpro) [511\u2013592]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0000976] transcription cis-regulatory region binding (IPI)\n- [GO:0003677] DNA binding (IEA)\n- [GO:0003700] DNA-binding transcription factor activity (ISS)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n- [GO:0005634] nucleus (ISM)\n\n## Pathways (KEGG)\n- `ath04075` Plant hormone signal transduction - Arabidopsis thaliana (thale cress) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| IAA28 | 0.839 |\n| IAA34 | 0.832 |\n| IAA26 | 0.806 |\n| REM7 | 0.796 |\n| IAA8 | 0.774 |\n| IAA5 | 0.766 |\n| IAA2 | 0.764 |\n| IAA30 | 0.764 |\n| IAA32 | 0.76 |\n| IAA29 | 0.76 |\n\n## Cross-references\n- NASC Gene ID: AT1G34310\n- TAIR: AT1G34310\n- TAIR Gene Name: ARF12\n- Plant Reactome Reaction ID: R-ATH-9675504\n- Plant Reactome Pathway ID: R-ATH-9675508\n- Expression Atlas: AT1G34310\n- KNETMINER_ARA: AT1G34310\n- NCBI gene (formerly Entrezgene): 840331\n- UniProtKB Gene Name: Q9XID4\n- WikiGene: 840331\n\n## Literature\n13 hits total; showing top 10.\n- **The miR7125-MdARF1 module enhances the resistance of apple to Colletotrichum gloeosporioides by promoting lignin synthesis in response to salicylic acid signalling** \u2014 Liu X, Dai H, Zhang F, Wang J, Shi J, Chen J, He P, Wang F, Ma Y. (PMID:38852059; doi:10.1111/pbi.14401)\n- **Identification of Auxin-Associated Genes in Wheat Through Comparative Transcriptome Analysis and Validation of the Candidate Receptor-like Kinase Gene &lt;i&gt;TaPBL7-2B&lt;/i&gt; in Arabidopsis** \u2014 Zhang M, Chen G, Cai J, Ji Y, Xiang L, Chen X, Wang J. (PMID:40805625; doi:10.3390/plants14152277)\n- **Modified Crosstalk between Phytohormones in Arabidopsis Mutants for PEP-Associated Proteins** \u2014 Bychkov IA, Andreeva AA, Vankova R, Lacek J, Kudryakova NV, Kusnetsov VV. (PMID:38338865; doi:10.3390/ijms25031586)\n- **HRGRN: A Graph Search-Empowered Integrative Database of Arabidopsis Signaling Transduction, Metabolism and Gene Regulation Networks** \u2014 Dai X, Li J, Liu T, Zhao PX. (PMID:26657893; doi:10.1093/pcp/pcv200)\n- **Identification of two novel type 1 peroxisomal targeting signals in Arabidopsis thaliana** \u2014 Ramirez RA, Espinoza B, Kwok EY. (PMID:25183666; doi:10.1016/j.acthis.2014.08.001)\n- **Contribution of transcriptional regulation to natural variations in Arabidopsis** \u2014 Chen WJ, Chang SH, Hudson ME, Kwan WK, Li J, Estes B, Knoll D, Shi L, Zhu T. (PMID:15833119; doi:10.1186/gb-2005-6-4-r32)\n- **Cell-specific nitrogen responses mediate developmental plasticity** \u2014 Gifford ML, Dean A, Gutierrez RA, Coruzzi GM, Birnbaum KD. (PMID:18180456; doi:10.1073/pnas.0709559105)\n- **TE-Locate: A Tool to Locate and Group Transposable Element Occurrences Using Paired-End Next-Generation Sequencing Data** \u2014 Platzer A, Nizhynska V, Long Q. (PMID:24832231; doi:10.3390/biology1020395)\n- **Accelerating structure-function mapping using the ViVa webtool to mine natural variation** \u2014 Hamm MO, Moss BL, Leydon AR, Gala HP, Lanctot A, Ramos R, Klaeser H, Lemmex AC, Zahler ML, Nemhauser JL, Wright RC. (PMID:31372596; doi:10.1002/pld3.147)\n- **Sulphur systems biology-making sense of omics data** \u2014 Watanabe M, Hoefgen R. (PMID:31404467; doi:10.1093/jxb/erz260)\n",
   "sections": {
    "annotation": {
-    "id": "AT1G34310",
     "biotype": "protein_coding",
-    "description": "auxin response factor 12 [Source:NCBI gene (formerly Entrezgene);Acc:840331]",
-    "end": 12511520,
-    "db_type": "core",
-    "seq_region_name": "1",
-    "strand": -1,
-    "display_name": "ARF12",
     "start": 12508548,
     "logic_name": "araport11",
-    "source": "araport11",
-    "assembly_name": "TAIR10",
+    "end": 12511520,
+    "strand": -1,
+    "canonical_transcript": "AT1G34310.1",
+    "description": "auxin response factor 12 [Source:NCBI gene (formerly Entrezgene);Acc:840331]",
     "object_type": "Gene",
-    "canonical_transcript": "AT1G34310.1.",
+    "seq_region_name": "1",
+    "assembly_name": "TAIR10",
+    "display_name": "ARF12",
+    "source": "araport11",
+    "db_type": "core",
+    "id": "AT1G34310",
     "organism": "arabidopsis_thaliana",
     "upstream_version": null
    },
@@ -127,118 +127,118 @@
     "count": 10,
     "xrefs": [
      {
+      "version": "0",
+      "db_display_name": "NASC Gene ID",
+      "description": "auxin response factor 12",
       "display_id": "AT1G34310-TAIR-G",
+      "info_type": "DIRECT",
       "dbname": "NASC_GENE_ID",
       "info_text": "",
-      "info_type": "DIRECT",
-      "version": "0",
-      "description": "auxin response factor 12",
-      "db_display_name": "NASC Gene ID",
-      "primary_id": "AT1G34310",
-      "synonyms": []
-     },
-     {
-      "description": "auxin response factor 12",
-      "db_display_name": "TAIR",
-      "version": "0",
-      "info_text": "",
-      "dbname": "TAIR_LOCUS",
-      "info_type": "DIRECT",
-      "display_id": "AT1G34310",
       "synonyms": [],
       "primary_id": "AT1G34310"
      },
      {
+      "primary_id": "AT1G34310",
       "synonyms": [],
-      "primary_id": "ARF12",
-      "version": "0",
-      "description": "",
-      "db_display_name": "TAIR Gene Name",
-      "display_id": "ARF12",
+      "display_id": "AT1G34310",
+      "info_type": "DIRECT",
       "info_text": "",
+      "dbname": "TAIR_LOCUS",
+      "version": "0",
+      "db_display_name": "TAIR",
+      "description": "auxin response factor 12"
+     },
+     {
+      "version": "0",
+      "db_display_name": "TAIR Gene Name",
+      "description": "",
+      "display_id": "ARF12",
+      "info_type": "DIRECT",
       "dbname": "TAIR_SYMBOL",
-      "info_type": "DIRECT"
+      "info_text": "",
+      "synonyms": [],
+      "primary_id": "ARF12"
      },
      {
       "primary_id": "R-ATH-9675504",
       "synonyms": [],
-      "info_type": "DIRECT",
-      "info_text": "Generated via direct",
-      "dbname": "Plant_Reactome_Reaction",
       "display_id": "R-ATH-9675504",
-      "db_display_name": "Plant Reactome Reaction ID",
+      "dbname": "Plant_Reactome_Reaction",
+      "info_text": "Generated via direct",
+      "info_type": "DIRECT",
+      "version": "0",
       "description": "Expression of ARF1",
-      "version": "0"
+      "db_display_name": "Plant Reactome Reaction ID"
      },
      {
-      "synonyms": [],
       "primary_id": "R-ATH-9675508",
-      "description": "Root elongation",
-      "db_display_name": "Plant Reactome Pathway ID",
-      "version": "0",
+      "synonyms": [],
       "info_text": "Generated via direct",
       "dbname": "Plant_Reactome_Pathway",
       "info_type": "DIRECT",
-      "display_id": "R-ATH-9675508"
-     },
-     {
-      "primary_id": "AT1G34310",
-      "synonyms": [],
-      "display_id": "AT1G34310",
-      "info_text": "",
-      "dbname": "ArrayExpress",
-      "info_type": "DIRECT",
-      "version": "0",
-      "description": null,
-      "db_display_name": "Expression Atlas"
-     },
-     {
-      "primary_id": "AT1G34310",
-      "synonyms": [],
-      "dbname": "KNETMINER_ARA",
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "display_id": "AT1G34310",
-      "description": null,
-      "db_display_name": "KNETMINER_ARA",
+      "display_id": "R-ATH-9675508",
+      "description": "Root elongation",
+      "db_display_name": "Plant Reactome Pathway ID",
       "version": "0"
      },
      {
+      "info_text": "",
+      "dbname": "ArrayExpress",
+      "info_type": "DIRECT",
+      "display_id": "AT1G34310",
+      "description": null,
+      "db_display_name": "Expression Atlas",
+      "version": "0",
+      "primary_id": "AT1G34310",
+      "synonyms": []
+     },
+     {
+      "display_id": "AT1G34310",
+      "info_text": "",
+      "dbname": "KNETMINER_ARA",
+      "info_type": "DEPENDENT",
+      "version": "0",
+      "description": null,
+      "db_display_name": "KNETMINER_ARA",
+      "primary_id": "AT1G34310",
+      "synonyms": []
+     },
+     {
+      "dbname": "EntrezGene",
+      "info_text": "",
+      "info_type": "DEPENDENT",
+      "display_id": "ARF12",
+      "description": "auxin response factor 12",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "version": "0",
+      "primary_id": "840331",
       "synonyms": [
        "auxin response factor 12",
        "F23M19.4",
        "F23M19_4"
-      ],
-      "primary_id": "840331",
-      "description": "auxin response factor 12",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "version": "0",
-      "dbname": "EntrezGene",
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "display_id": "ARF12"
+      ]
      },
      {
-      "synonyms": [],
       "primary_id": "Q9XID4",
+      "synonyms": [],
+      "info_type": "DEPENDENT",
+      "dbname": "Uniprot_gn",
+      "info_text": "",
+      "display_id": "ARF12",
       "db_display_name": "UniProtKB Gene Name",
       "description": null,
-      "version": null,
-      "info_type": "DEPENDENT",
-      "info_text": "",
-      "dbname": "Uniprot_gn",
-      "display_id": "ARF12"
+      "version": null
      },
      {
-      "synonyms": [],
       "primary_id": "840331",
-      "description": "auxin response factor 12",
-      "db_display_name": "WikiGene",
-      "version": "0",
-      "dbname": "WikiGene",
-      "info_text": "",
+      "synonyms": [],
+      "display_id": "ARF12",
       "info_type": "DEPENDENT",
-      "display_id": "ARF12"
+      "info_text": "",
+      "dbname": "WikiGene",
+      "version": "0",
+      "db_display_name": "WikiGene",
+      "description": "auxin response factor 12"
      }
     ],
     "by_db": {
@@ -292,6 +292,9 @@
     "query": "AT1G34310",
     "accession": "Q9XID4",
     "organism": "arabidopsis_thaliana",
+    "total": null,
+    "returned": 10,
+    "truncated": null,
     "partners": [
      {
       "string_id": "3702.Q9XFM0",
@@ -401,7 +404,10 @@
     "organism": "arabidopsis_thaliana",
     "query": "AT1G34310",
     "hitCount": 13,
+    "total": 13,
     "returned": 10,
+    "truncated": true,
+    "next_cursor": "eyJwIjogeyJtYXJrIjogIkFvSUlQbHZ0VFNnME1ESTROall6TXc9PSIsICJvZmZzZXQiOiAxMH0sICJxIjogeyJxdWVyeSI6ICJBVDFHMzQzMTAiLCAic2l6ZSI6IDEwfSwgInQiOiAibG9jdXNfbGl0ZXJhdHVyZSJ9",
     "abstracts_included": true,
     "hits": [
      {
@@ -412,7 +418,7 @@
       "doi": "10.1111/pbi.14401",
       "title": "The miR7125-MdARF1 module enhances the resistance of apple to Colletotrichum gloeosporioides by promoting lignin synthesis in response to salicylic acid signalling.",
       "authorString": "Liu X, Dai H, Zhang F, Wang J, Shi J, Chen J, He P, Wang F, Ma Y.",
-      "journalTitle": null,
+      "journalTitle": "Plant biotechnology journal",
       "pubYear": "2024",
       "firstPublicationDate": "2024-06-09",
       "citedByCount": 24,
@@ -429,7 +435,7 @@
       "doi": "10.3390/plants14152277",
       "title": "Identification of Auxin-Associated Genes in Wheat Through Comparative Transcriptome Analysis and Validation of the Candidate Receptor-like Kinase Gene &lt;i&gt;TaPBL7-2B&lt;/i&gt; in Arabidopsis.",
       "authorString": "Zhang M, Chen G, Cai J, Ji Y, Xiang L, Chen X, Wang J.",
-      "journalTitle": null,
+      "journalTitle": "Plants (Basel, Switzerland)",
       "pubYear": "2025",
       "firstPublicationDate": "2025-07-24",
       "citedByCount": 0,
@@ -446,7 +452,7 @@
       "doi": "10.3390/ijms25031586",
       "title": "Modified Crosstalk between Phytohormones in Arabidopsis Mutants for PEP-Associated Proteins.",
       "authorString": "Bychkov IA, Andreeva AA, Vankova R, Lacek J, Kudryakova NV, Kusnetsov VV.",
-      "journalTitle": null,
+      "journalTitle": "International journal of molecular sciences",
       "pubYear": "2024",
       "firstPublicationDate": "2024-01-27",
       "citedByCount": 3,
@@ -463,7 +469,7 @@
       "doi": "10.1093/pcp/pcv200",
       "title": "HRGRN: A Graph Search-Empowered Integrative Database of Arabidopsis Signaling Transduction, Metabolism and Gene Regulation Networks.",
       "authorString": "Dai X, Li J, Liu T, Zhao PX.",
-      "journalTitle": null,
+      "journalTitle": "Plant & cell physiology",
       "pubYear": "2016",
       "firstPublicationDate": "2015-12-12",
       "citedByCount": 15,
@@ -480,7 +486,7 @@
       "doi": "10.1016/j.acthis.2014.08.001",
       "title": "Identification of two novel type 1 peroxisomal targeting signals in Arabidopsis thaliana.",
       "authorString": "Ramirez RA, Espinoza B, Kwok EY.",
-      "journalTitle": null,
+      "journalTitle": "Acta histochemica",
       "pubYear": "2014",
       "firstPublicationDate": "2014-08-30",
       "citedByCount": 7,
@@ -497,7 +503,7 @@
       "doi": "10.1186/gb-2005-6-4-r32",
       "title": "Contribution of transcriptional regulation to natural variations in Arabidopsis.",
       "authorString": "Chen WJ, Chang SH, Hudson ME, Kwan WK, Li J, Estes B, Knoll D, Shi L, Zhu T.",
-      "journalTitle": null,
+      "journalTitle": "Genome biology",
       "pubYear": "2005",
       "firstPublicationDate": "2005-03-15",
       "citedByCount": 39,
@@ -514,7 +520,7 @@
       "doi": "10.1073/pnas.0709559105",
       "title": "Cell-specific nitrogen responses mediate developmental plasticity.",
       "authorString": "Gifford ML, Dean A, Gutierrez RA, Coruzzi GM, Birnbaum KD.",
-      "journalTitle": null,
+      "journalTitle": "Proceedings of the National Academy of Sciences of the United States of America",
       "pubYear": "2008",
       "firstPublicationDate": "2008-01-07",
       "citedByCount": 423,
@@ -531,7 +537,7 @@
       "doi": "10.3390/biology1020395",
       "title": "TE-Locate: A Tool to Locate and Group Transposable Element Occurrences Using Paired-End Next-Generation Sequencing Data.",
       "authorString": "Platzer A, Nizhynska V, Long Q.",
-      "journalTitle": null,
+      "journalTitle": "Biology",
       "pubYear": "2012",
       "firstPublicationDate": "2012-09-12",
       "citedByCount": 32,
@@ -548,7 +554,7 @@
       "doi": "10.1002/pld3.147",
       "title": "Accelerating structure-function mapping using the ViVa webtool to mine natural variation.",
       "authorString": "Hamm MO, Moss BL, Leydon AR, Gala HP, Lanctot A, Ramos R, Klaeser H, Lemmex AC, Zahler ML, Nemhauser JL, Wright RC.",
-      "journalTitle": null,
+      "journalTitle": "Plant direct",
       "pubYear": "2019",
       "firstPublicationDate": "2019-07-26",
       "citedByCount": 11,
@@ -565,7 +571,7 @@
       "doi": "10.1093/jxb/erz260",
       "title": "Sulphur systems biology-making sense of omics data.",
       "authorString": "Watanabe M, Hoefgen R.",
-      "journalTitle": null,
+      "journalTitle": "Journal of experimental botany",
       "pubYear": "2019",
       "firstPublicationDate": "2019-08-01",
       "citedByCount": 21,
@@ -580,7 +586,10 @@
    "go_annotations": {
     "uniprot_accession": "Q9XID4",
     "numberOfHits": 13,
+    "total": 13,
     "returned": 13,
+    "truncated": false,
+    "next_cursor": null,
     "annotations": [
      {
       "geneProductId": "UniProtKB:Q9XID4",
@@ -1170,12 +1179,15 @@
       }
      ]
     },
+    "by_aspect_deduped_on": "goId",
     "upstream_version": null
    },
    "domains": {
     "accession": "Q9XID4",
     "found": true,
     "domain_count": 19,
+    "total": 19,
+    "returned": 19,
     "truncated": false,
     "domains": [
      {

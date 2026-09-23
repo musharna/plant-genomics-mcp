@@ -5,14 +5,14 @@
   "organism": "arabidopsis_thaliana",
   "top_n": 10
  },
- "started_at": "2026-09-22T07:28:37Z",
- "elapsed_s": 1.7577156289989944,
+ "started_at": "2026-09-23T04:46:40Z",
+ "elapsed_s": 2.5354053569899406,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.9806055669978377,
+   "elapsed_s": 1.8333973650005646,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0008542430005036294,
+   "elapsed_s": 0.00048764799430500716,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.7764494240036584,
+   "elapsed_s": 0.7013566389941843,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.004747625003801659,
+   "elapsed_s": 0.002873813995392993,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.30503103399678366,
+   "elapsed_s": 0.29090346599696204,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0023683420004090294,
+   "elapsed_s": 0.0012750919995596632,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0005682070041075349,
+   "elapsed_s": 0.00029968399030622095,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0004134560003876686,
+   "elapsed_s": 0.00020737099112011492,
    "result": null,
    "error": null
   }
@@ -89,19 +89,19 @@
   "sections": {
    "annotation": {
     "seq_region_name": "5",
-    "object_type": "Gene",
-    "description": "auxin response factor 8 [Source:NCBI gene (formerly Entrezgene);Acc:833672]",
-    "strand": 1,
-    "canonical_transcript": "AT5G37020.1.",
-    "db_type": "core",
-    "source": "araport11",
-    "display_name": "ARF8",
-    "id": "AT5G37020",
-    "assembly_name": "TAIR10",
-    "logic_name": "araport11",
-    "start": 14629453,
     "biotype": "protein_coding",
+    "assembly_name": "TAIR10",
+    "description": "auxin response factor 8 [Source:NCBI gene (formerly Entrezgene);Acc:833672]",
     "end": 14634454,
+    "start": 14629453,
+    "strand": 1,
+    "logic_name": "araport11",
+    "canonical_transcript": "AT5G37020.1",
+    "id": "AT5G37020",
+    "display_name": "ARF8",
+    "source": "araport11",
+    "object_type": "Gene",
+    "db_type": "core",
     "organism": "arabidopsis_thaliana",
     "upstream_version": null
    },
@@ -127,130 +127,130 @@
     "count": 11,
     "xrefs": [
      {
-      "info_text": "",
-      "version": "0",
-      "synonyms": [],
-      "info_type": "DIRECT",
       "primary_id": "AT5G37020",
-      "db_display_name": "NASC Gene ID",
+      "synonyms": [],
+      "dbname": "NASC_GENE_ID",
+      "info_text": "",
+      "info_type": "DIRECT",
       "display_id": "AT5G37020-TAIR-G",
       "description": "auxin response factor 8",
-      "dbname": "NASC_GENE_ID"
+      "db_display_name": "NASC Gene ID",
+      "version": "0"
      },
      {
       "primary_id": "AT5G37020",
+      "synonyms": [],
+      "info_type": "DIRECT",
+      "dbname": "TAIR_LOCUS",
+      "info_text": "",
       "display_id": "AT5G37020",
       "db_display_name": "TAIR",
-      "dbname": "TAIR_LOCUS",
       "description": "auxin response factor 8",
-      "synonyms": [],
-      "version": "0",
-      "info_text": "",
-      "info_type": "DIRECT"
+      "version": "0"
      },
      {
-      "info_text": "",
-      "synonyms": [],
-      "version": "0",
-      "info_type": "DIRECT",
       "primary_id": "ARF8",
-      "db_display_name": "TAIR Gene Name",
+      "synonyms": [],
+      "info_text": "",
+      "dbname": "TAIR_SYMBOL",
+      "info_type": "DIRECT",
       "display_id": "ARF8",
       "description": "",
-      "dbname": "TAIR_SYMBOL"
+      "db_display_name": "TAIR Gene Name",
+      "version": "0"
      },
      {
-      "primary_id": "R-ATH-5608208",
+      "info_type": "DIRECT",
+      "dbname": "Plant_Reactome_Reaction",
+      "info_text": "Generated via direct",
       "display_id": "R-ATH-5608208",
       "db_display_name": "Plant Reactome Reaction ID",
       "description": "ARF inactivation by AUX/IAA",
-      "dbname": "Plant_Reactome_Reaction",
       "version": "0",
-      "synonyms": [],
-      "info_text": "Generated via direct",
-      "info_type": "DIRECT"
-     },
-     {
-      "description": "Auxin signalling",
-      "dbname": "Plant_Reactome_Pathway",
-      "db_display_name": "Plant Reactome Pathway ID",
-      "display_id": "R-ATH-5608118",
-      "primary_id": "R-ATH-5608118",
-      "info_type": "DIRECT",
-      "info_text": "Generated via direct",
-      "version": "0",
+      "primary_id": "R-ATH-5608208",
       "synonyms": []
      },
      {
+      "synonyms": [],
+      "primary_id": "R-ATH-5608118",
+      "description": "Auxin signalling",
+      "db_display_name": "Plant Reactome Pathway ID",
+      "version": "0",
+      "dbname": "Plant_Reactome_Pathway",
+      "info_text": "Generated via direct",
+      "info_type": "DIRECT",
+      "display_id": "R-ATH-5608118"
+     },
+     {
+      "display_id": "AT5G37020",
       "info_type": "DIRECT",
       "info_text": "",
-      "synonyms": [],
-      "version": "0",
       "dbname": "ArrayExpress",
-      "description": null,
+      "version": "0",
       "db_display_name": "Expression Atlas",
-      "display_id": "AT5G37020",
-      "primary_id": "AT5G37020"
+      "description": null,
+      "primary_id": "AT5G37020",
+      "synonyms": []
      },
      {
+      "synonyms": [],
+      "primary_id": "AT5G37020",
+      "description": null,
+      "db_display_name": "KNETMINER_ARA",
+      "version": "0",
+      "info_text": "",
+      "dbname": "KNETMINER_ARA",
+      "info_type": "DEPENDENT",
+      "display_id": "AT5G37020"
+     },
+     {
+      "synonyms": [],
+      "primary_id": "Q9FGV1",
+      "db_display_name": "UniProtKB Gene Name",
+      "description": null,
+      "version": null,
       "info_type": "DEPENDENT",
       "info_text": "",
-      "synonyms": [],
-      "version": "0",
-      "description": null,
-      "dbname": "KNETMINER_ARA",
-      "db_display_name": "KNETMINER_ARA",
-      "display_id": "AT5G37020",
-      "primary_id": "AT5G37020"
-     },
-     {
       "dbname": "Uniprot_gn",
-      "description": null,
-      "display_id": "ARF8",
-      "db_display_name": "UniProtKB Gene Name",
-      "primary_id": "Q9FGV1",
-      "info_type": "DEPENDENT",
-      "version": null,
-      "synonyms": [],
-      "info_text": ""
+      "display_id": "ARF8"
      },
      {
+      "synonyms": [],
       "primary_id": "833672",
-      "db_display_name": "WikiGene",
-      "display_id": "ARF8",
       "description": "auxin response factor 8",
+      "db_display_name": "WikiGene",
+      "version": "0",
       "dbname": "WikiGene",
       "info_text": "",
-      "version": "0",
-      "synonyms": [],
-      "info_type": "DEPENDENT"
+      "info_type": "DEPENDENT",
+      "display_id": "ARF8"
      },
      {
+      "display_id": "ARF8",
+      "dbname": "Uniprot_gn",
+      "info_text": "",
       "info_type": "DEPENDENT",
       "version": null,
-      "synonyms": [],
-      "info_text": "",
-      "display_id": "ARF8",
+      "description": null,
       "db_display_name": "UniProtKB Gene Name",
       "primary_id": "A0A1P8BCS5",
-      "description": null,
-      "dbname": "Uniprot_gn"
+      "synonyms": []
      },
      {
-      "description": "auxin response factor 8",
-      "dbname": "EntrezGene",
-      "primary_id": "833672",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
       "display_id": "ARF8",
+      "info_type": "DEPENDENT",
       "info_text": "",
+      "dbname": "EntrezGene",
       "version": "0",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "description": "auxin response factor 8",
+      "primary_id": "833672",
       "synonyms": [
        "ATARF8",
        "auxin response factor 8",
        "K15O15.1",
        "K15O15_1"
-      ],
-      "info_type": "DEPENDENT"
+      ]
      }
     ],
     "by_db": {
@@ -305,6 +305,9 @@
     "query": "AT5G37020",
     "accession": "Q9FGV1",
     "organism": "arabidopsis_thaliana",
+    "total": null,
+    "returned": 10,
+    "truncated": null,
     "partners": [
      {
       "string_id": "3702.Q0JXE7",
@@ -414,7 +417,10 @@
     "organism": "arabidopsis_thaliana",
     "query": "AT5G37020",
     "hitCount": 69,
+    "total": 69,
     "returned": 10,
+    "truncated": true,
+    "next_cursor": "eyJwIjogeyJtYXJrIjogIkFvSUlQejIrZWlnMU1UWXhOakE0TkE9PSIsICJvZmZzZXQiOiAxMH0sICJxIjogeyJxdWVyeSI6ICJBVDVHMzcwMjAiLCAic2l6ZSI6IDEwfSwgInQiOiAibG9jdXNfbGl0ZXJhdHVyZSJ9",
     "abstracts_included": true,
     "hits": [
      {
@@ -425,7 +431,7 @@
       "doi": "10.1093/plphys/kiae030",
       "title": "On the cutting edge of development: laser-assisted microdissection of the Arabidopsis gynoecium reveals tissue-specific gene expression patterns.",
       "authorString": "Lanctot A.",
-      "journalTitle": null,
+      "journalTitle": "Plant physiology",
       "pubYear": "2024",
       "firstPublicationDate": "2024-04-01",
       "citedByCount": 0,
@@ -442,7 +448,7 @@
       "doi": "10.1111/tpj.71049",
       "title": "A RSL4-CPKs feedback loop integrates auxin and ethylene signals to regulate root hair growth in Arabidopsis.",
       "authorString": "Li LS, Chen YX, Ma L, Li S.",
-      "journalTitle": null,
+      "journalTitle": "The Plant journal : for cell and molecular biology",
       "pubYear": "2026",
       "firstPublicationDate": "2026-07-01",
       "citedByCount": 0,
@@ -459,7 +465,7 @@
       "doi": "10.1093/plphys/kiaf602",
       "title": "MONOPTEROS isoform MP11ir plays a role during somatic embryogenesis in Arabidopsis thaliana.",
       "authorString": "W\u00f3jcikowska B, Belaidi S, Mironova V, Citerne S, Robert HS.",
-      "journalTitle": null,
+      "journalTitle": "Plant physiology",
       "pubYear": "2025",
       "firstPublicationDate": "2025-11-01",
       "citedByCount": 2,
@@ -476,7 +482,7 @@
       "doi": "10.1093/plcell/koaf200",
       "title": "Gibberellin transport affects lateral root growth through HY5 in response to far-red light.",
       "authorString": "van Gelderen K, van der Velde K, Kang CK, Hollander J, Koppenol A, Petropoulos O, Prasetyaningrum P, Aky\u00fcz T, Pierik R.",
-      "journalTitle": null,
+      "journalTitle": "The Plant cell",
       "pubYear": "2025",
       "firstPublicationDate": "2025-09-01",
       "citedByCount": 9,
@@ -493,7 +499,7 @@
       "doi": "10.1186/s12870-025-08030-3",
       "title": "Identification of the Auxin Response Factor gene family in kernel consumption apricot and association analysis of related genes regulating fruit size in distant hybridization.",
       "authorString": "Han C, Zhang W, Chen S, Zhang Y, Guo H, Yu L, Liu L, Liu P, Wang L, Zhao H.",
-      "journalTitle": null,
+      "journalTitle": "BMC plant biology",
       "pubYear": "2026",
       "firstPublicationDate": "2026-01-20",
       "citedByCount": 1,
@@ -510,7 +516,7 @@
       "doi": "10.1186/s12864-025-12317-y",
       "title": "Genome-wide analysis of the B3 family in apple (Malus domestica Borkh.) and functional identification of MdREM19 involvement in salt stress.",
       "authorString": "Tian Y, Yang A, Yan J, Wang B, Guo L, Ma S, Han X, Zhang C.",
-      "journalTitle": null,
+      "journalTitle": "BMC genomics",
       "pubYear": "2026",
       "firstPublicationDate": "2026-03-12",
       "citedByCount": 0,
@@ -527,7 +533,7 @@
       "doi": "10.1038/s41467-025-66816-3",
       "title": "Phylogenomic profile of exon-intron organization across angiosperms, their relationships with protein domains, and functional implications.",
       "authorString": "Zhang T, Zhang L, Ma H, Wang J.",
-      "journalTitle": null,
+      "journalTitle": "Nature communications",
       "pubYear": "2026",
       "firstPublicationDate": "2026-01-07",
       "citedByCount": 3,
@@ -544,7 +550,7 @@
       "doi": "10.1111/pbi.14401",
       "title": "The miR7125-MdARF1 module enhances the resistance of apple to Colletotrichum gloeosporioides by promoting lignin synthesis in response to salicylic acid signalling.",
       "authorString": "Liu X, Dai H, Zhang F, Wang J, Shi J, Chen J, He P, Wang F, Ma Y.",
-      "journalTitle": null,
+      "journalTitle": "Plant biotechnology journal",
       "pubYear": "2024",
       "firstPublicationDate": "2024-06-09",
       "citedByCount": 24,
@@ -561,7 +567,7 @@
       "doi": "10.1186/s12864-021-07854-1",
       "title": "Genome-wide characterization and expression profiling of B3 superfamily during ethylene-induced flowering in pineapple (Ananas comosus L.).",
       "authorString": "Ruan CC, Chen Z, Hu FC, Fan W, Wang XH, Guo LJ, Fan HY, Luo ZW, Zhang ZL.",
-      "journalTitle": null,
+      "journalTitle": "BMC genomics",
       "pubYear": "2021",
       "firstPublicationDate": "2021-07-21",
       "citedByCount": 15,
@@ -578,7 +584,7 @@
       "doi": "10.1007/s13205-024-04084-6",
       "title": "Identification of differentially expressed miRNAs between male sterile and fertile floral buds in watermelon (&lt;i&gt;Citrullus lanatus&lt;/i&gt; L.) via high-throughput sequencing.",
       "authorString": "Zhang G, Wei B, Ding Q.",
-      "journalTitle": null,
+      "journalTitle": "3 Biotech",
       "pubYear": "2024",
       "firstPublicationDate": "2024-09-25",
       "citedByCount": 2,
@@ -593,7 +599,10 @@
    "go_annotations": {
     "uniprot_accession": "Q9FGV1",
     "numberOfHits": 25,
+    "total": 25,
     "returned": 25,
+    "truncated": false,
+    "next_cursor": null,
     "annotations": [
      {
       "geneProductId": "UniProtKB:Q9FGV1",
@@ -1519,12 +1528,15 @@
       }
      ]
     },
+    "by_aspect_deduped_on": "goId",
     "upstream_version": null
    },
    "domains": {
     "accession": "Q9FGV1",
     "found": true,
     "domain_count": 17,
+    "total": 17,
+    "returned": 17,
     "truncated": false,
     "domains": [
      {

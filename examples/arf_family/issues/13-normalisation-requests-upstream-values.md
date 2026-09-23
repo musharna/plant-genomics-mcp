@@ -1,9 +1,9 @@
 # Normalisation requests: six values this server passes through from upstream unchanged
 
-**Filed as [#137](https://github.com/musharna/plant-genomics-mcp/issues/137) — open.** Written from the ARF family dossier in
-[`examples/arf_family/`](../), re-run at server commit `967bc36`
-(release `1.21.0`): 400 MCP calls over 48 genes x 16 tools, the family
-itself from a 742-call enumeration through the same tools. Each section
+**Filed as [#137](https://github.com/musharna/plant-genomics-mcp/issues/137) — open.** `locus-case`, `normalise-upstream-repr`, `thresholds-undocumented`, `normalise-upstream-id` are closed at `052e4ec`. `free-text-not-a-label`, `enrichment-ask` stay open. Written from the ARF family dossier in
+[`examples/arf_family/`](../), re-run at server commit `052e4ec`
+(release `1.21.0`): 64 MCP calls over 114 genes x 16 tools, the family
+itself from a 1163-call enumeration through the same tools. Each section
 below is one row of [`gaps.jsonl`](../gaps.jsonl), quoted as logged;
 `Check` names the captured response to read it back from.
 
