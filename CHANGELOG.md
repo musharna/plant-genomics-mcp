@@ -2,6 +2,44 @@
 
 ## Unreleased
 
+Fixes from the 2026-09-22 bug audit:
+
+- **Fix: `string_interactions` sent a dotted locus as its prefix (H1).**
+  Soybean `Glyma.04G220900` went to STRING as `Glyma`, which STRING resolved
+  to an unrelated protein and answered for. The STRING id is now derived per
+  organism (`string_db.string_query_id`): soybean `Glyma.` → `GLYMA_`,
+  sorghum `Sobic.` → `SORBI_3`, Brachypodium `Bradi1g…` → `BRADI_1g…v3`
+  (each probed live), a `.N` is dropped only from a UniProt accession or an
+  AGI transcript, and any other id goes whole. `query` now echoes the input.
+- **Fix: `batch_ensembl_plants_lookup_locus` omitted tomato's `gene-` prefix
+  (H2),** so every tomato batch lookup was NotFound. Single and batch forms
+  share `ensembl_plants.wire_id`; a malformed locus in a batch is refused per
+  locus, not for the whole batch.
+- **Fix: `get_sequence` protein / cds / cdna failed on any multi-transcript
+  gene (M3)** (Ensembl 400 "N sequences detected"). The gene resolves to its
+  canonical transcript first; a transcript id is fetched as itself.
+- **Fix: `interpro_domains` read InterPro's 204 "no entries" as an error
+  (M4).** It is an ok answer with zero domains. `_http.request_with_retry`
+  returns a 204 only for a caller that opts in (`no_content_ok=True`).
+- **Fix: `entry_members` cursors are bound to entry, organism, filter and page
+  size (M5),** like the other six cursor tools; one passed with another query
+  is `InvalidArguments`. The cursor is now opaque (it wraps UniProt's).
+- **Fix: a lowercase AGI reached KEGG (ok, no pathways) and AraGWAS (HTTP 500)
+  as typed (M6, L7).** Validation returns the canonical spelling
+  (`validators.canonical_locus`: AGIs upper-cased, other loci unchanged) and
+  every backend uses it; ATTED-II and Europe PMC now validate too.
+- **Fix: `resolve_locus_to_uniprot` spliced an unvalidated locus into a Lucene
+  query (L8).** A UniProt accession is only `<acc>` or `<acc>.<digits>`.
+- **HTTP transport: a non-ASCII bearer is 401, not 500 (L9); a chunked body
+  over `PLANT_GENOMICS_MCP_HTTP_MAX_BODY` is 413 (L10)** — the cap counts the
+  bytes that arrive, not only a declared `Content-Length`.
+- **Behaviour change — `plantcyc_locus_info.pathway_count` is null (unknown)
+  when the gene has more than `MAX_REACTIONS` reactions (L11);** it used to
+  count only the walked subset and call it the total.
+- **L12:** the four inline batch schemas state `minItems: 1`, so `loci: []` is
+  `InvalidArguments`; an empty `locus_literature` locus is refused as input
+  instead of reading as a Europe PMC outage.
+
 - **Rows past the cap are reachable (#123).** `orthodb_orthologs`,
   `gramene_homologs`, `aragwas_associations`, `arabidopsis_natural_variation`,
   `locus_literature` and `locus_go_annotations` take `cursor` and return
