@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **`gramene_homologs` can name each homolog's species without filtering
+  (#130).** `with_organism=true` adds `organism` (Gramene species slug, null
+  when Gramene has no record) to every returned row, using the enrichment
+  `target_organism` and `consensus_homologs` already ran. Only the returned
+  page is resolved (one call per 100 rows). Also on `batch_gramene_homologs`.
+  Default off; output unchanged without it.
+
 - **Rows past the cap are reachable (#123).** `orthodb_orthologs`,
   `gramene_homologs`, `aragwas_associations`, `arabidopsis_natural_variation`,
   `locus_literature` and `locus_go_annotations` take `cursor` and return

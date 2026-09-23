@@ -720,8 +720,9 @@ TOOLS: list[types.Tool] = [
             "(data.gramene.org v69). Default homology_type='ortholog'; pass "
             "'paralog' for in-species duplicates or 'all' for everything. "
             "Returns target_locus + homology category (type) + shared gene_tree_id "
-            "per hit. Rows carry no taxon unless target_organism is given, which "
-            "filters to one organism before the cap and adds 'organism' per row; "
+            "per hit. Rows carry no taxon unless with_organism=true (adds "
+            "'organism' per row) or target_organism is given, which filters to "
+            "one organism before the cap and adds 'organism' per row; "
             "pair with resolve_locus_to_uniprot for protein-level enrichment and "
             "with blast_sequence for sequence similarity discovery."
         ),
@@ -745,6 +746,14 @@ TOOLS: list[types.Tool] = [
                         "name, or NCBI taxid), filtered BEFORE the cap so a hub gene's "
                         "rice or wheat orthologs cannot be pushed past 'limit' by other "
                         "species. Adds 'organism' to every row and 'total_all_organisms'."
+                    ),
+                },
+                "with_organism": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": (
+                        "Add 'organism' (Gramene species slug, null when unknown) to "
+                        "every row without filtering; one extra call per 100 rows (#130)"
                     ),
                 },
                 "limit": {
@@ -1863,6 +1872,14 @@ TOOLS: list[types.Tool] = [
                         "species. Adds 'organism' to every row and 'total_all_organisms'."
                     ),
                 },
+                "with_organism": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": (
+                        "Add 'organism' (Gramene species slug, null when unknown) to "
+                        "every row without filtering; one extra call per 100 rows (#130)"
+                    ),
+                },
             },
             "required": ["loci"],
             "additionalProperties": False,
@@ -2630,6 +2647,7 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     args["loci"],
                     homology_type=args.get("homology_type", "ortholog"),
                     target_organism=args.get("target_organism"),
+                    with_organism=args.get("with_organism", False),
                 )
             case "kegg_pathways":
                 return await kegg.lookup_pathways(
@@ -2666,6 +2684,7 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     limit=args.get("limit"),
                     target_organism=args.get("target_organism"),
                     cursor=args.get("cursor"),
+                    with_organism=args.get("with_organism", False),
                 )
             case "analyze_locus_synth":
                 env = await synthesis.analyze_locus_synth(

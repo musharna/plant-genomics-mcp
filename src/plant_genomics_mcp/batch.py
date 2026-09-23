@@ -256,12 +256,17 @@ async def batch_gramene_homologs(
     loci: list[str],
     homology_type: str = "ortholog",
     target_organism: str | int | None = None,
+    with_organism: bool = False,
 ) -> dict[str, Any]:
     loci = _bound(loci)
     results, errors = await _gather(
         loci,
         lambda locus: gramene.lookup_homologs(
-            client, locus, homology_type=homology_type, target_organism=target_organism
+            client,
+            locus,
+            homology_type=homology_type,
+            target_organism=target_organism,
+            with_organism=with_organism,
         ),
     )
     return _envelope("gramene_homologs", loci, results, errors)
