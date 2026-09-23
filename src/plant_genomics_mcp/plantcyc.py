@@ -175,8 +175,9 @@ async def lookup_locus(
     Walks the PlantCyc/PMN data model (gene → enzyme → reactions → pathways)
     with bounded, cached getxml hops. Returns ``found=False`` with empty lists
     when the locus has no metabolic annotation in the organism's PGDB (e.g. a
-    non-enzymatic gene) — not an error. ``reaction_count`` / ``pathway_count``
-    report the true totals even when the returned lists are capped.
+    non-enzymatic gene) — not an error. ``reaction_count`` reports the true
+    total even when the returned lists are capped; ``pathway_count`` does too
+    unless the reactions were capped, when it is ``None`` (unknown).
     """
     locus = locus.strip()
     # Typed rejection (NotFoundError → [ClassName] wire prefix) before any network
@@ -249,5 +250,8 @@ async def lookup_locus(
         "reactions": [{"id": rid, "name": reactions[rid]} for rid in reaction_ids],
         "pathways": [{"id": pid, "name": pathways[pid]} for pid in pathway_ids],
         "reaction_count": len(reactions),
-        "pathway_count": len(pathways),
+        # Audit 2026-09-22 L11: pathways were read from reaction_ids only, the
+        # first MAX_REACTIONS reactions. Past that cap len(pathways) counts a
+        # subset, so the total is unknown — null — rather than an undercount.
+        "pathway_count": len(pathways) if len(reactions) <= MAX_REACTIONS else None,
     }

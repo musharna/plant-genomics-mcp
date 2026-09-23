@@ -151,6 +151,10 @@ def check_count_semantics(spec: CountSpec, payload: dict[str, Any], description:
         return Result(Verdict.SKIPPED, f"{spec.field} absent from payload")
 
     count = payload[spec.field]
+    if count is None and spec.kind is CountKind.PRE_CAP:
+        # A pre-cap total the tool cannot state is null (unknown), never guessed
+        # from a capped walk (plantcyc pathway_count past MAX_REACTIONS).
+        return Result(Verdict.PASS, f"{spec.field}=null (unknown total)")
     if not isinstance(count, int):
         return Result(Verdict.FAIL, f"{spec.field} is {type(count).__name__}, not int")
     if count < 0:
