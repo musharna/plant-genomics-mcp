@@ -29,7 +29,9 @@ Env knobs:
                                      /healthz always exempt
   PLANT_GENOMICS_MCP_HTTP_MAX_BODY   default 2_097_152 (2 MiB) — POSTs
                                      advertising a larger Content-Length
-                                     return 413 before the body is read
+                                     return 413 before the body is read;
+                                     a chunked body is counted as it
+                                     arrives and cut off with 413
 
 CORS is deny-all: no browser origin gets an
 ``Access-Control-Allow-Origin`` header, so cross-origin XHRs are
@@ -53,7 +55,7 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Mount, Route
-from starlette.types import Receive, Scope, Send
+from starlette.types import Message, Receive, Scope, Send
 
 from plant_genomics_mcp.server import server
 
@@ -71,20 +73,51 @@ def _env_flag(name: str, default: bool) -> bool:
     return raw.strip().lower() not in ("0", "false", "no", "off", "")
 
 
-def _extract_bearer(scope: Scope) -> str:
-    """Pull the bearer credential out of an ASGI scope's headers.
+def _extract_bearer(scope: Scope) -> bytes:
+    """Pull the bearer credential out of an ASGI scope's headers, as raw bytes.
 
-    Returns the empty string when the header is absent or doesn't carry
-    the ``Bearer `` scheme — the caller compares with ``compare_digest``,
-    which treats the empty string as a non-match against any real token.
+    Returns ``b""`` when the header is absent or doesn't carry the
+    ``Bearer `` scheme — the caller compares with ``compare_digest``, which
+    treats the empty value as a non-match against any real token.
+
+    Bytes, not text (audit 2026-09-22 L9): ``hmac.compare_digest`` raises
+    ``TypeError`` on a ``str`` holding a non-ASCII character, so a bearer with
+    any byte >= 0x80 (decoded latin-1) crashed the handler with 500. Bytes
+    compare in constant time whatever they contain.
     """
     for name, value in scope.get("headers", []):
         if name == b"authorization":
-            decoded = value.decode("latin-1", errors="replace")
-            if decoded.startswith("Bearer "):
-                return decoded[len("Bearer ") :]
-            return ""
-    return ""
+            if value.startswith(b"Bearer "):
+                return bytes(value[len(b"Bearer ") :])
+            return b""
+    return b""
+
+
+class _BodyTooLarge(Exception):
+    """Raised while reading a request body once it passes the cap."""
+
+
+async def _read_capped(receive: Receive, max_body: int) -> list[Message]:
+    """Read the request body's messages, counting the bytes that arrive.
+
+    Audit 2026-09-22 L10: the cap used to read only ``Content-Length``, which a
+    chunked request does not send, so any size streamed through. The bytes
+    actually received are counted here and reading stops past ``max_body``.
+    Holding at most ``max_body`` (2 MiB by default) is the price of replaying
+    the body to the session manager.
+    """
+    messages: list[Message] = []
+    received = 0
+    while True:
+        message = await receive()
+        messages.append(message)
+        if message["type"] != "http.request":
+            return messages  # client went away; let the manager see it
+        received += len(message.get("body", b""))
+        if received > max_body:
+            raise _BodyTooLarge
+        if not message.get("more_body", False):
+            return messages
 
 
 def build_app() -> Starlette:
@@ -105,6 +138,7 @@ def build_app() -> Starlette:
             "Generate one with `openssl rand -hex 32` and pass it via the "
             "container env_file or docker compose `environment:` block."
         )
+    expected_bytes = expected_token.encode("utf-8")
     max_body = int(os.environ.get("PLANT_GENOMICS_MCP_HTTP_MAX_BODY", "2097152"))
 
     session_manager = StreamableHTTPSessionManager(
@@ -121,6 +155,13 @@ def build_app() -> Starlette:
         # can read __version__ from the initialize handshake.
         return JSONResponse({"status": "ok"})
 
+    async def _too_large(scope: Scope, receive: Receive, send: Send) -> None:
+        response = JSONResponse(
+            {"error": "payload too large", "max_body": max_body},
+            status_code=413,
+        )
+        await response(scope, receive, send)
+
     async def handle_mcp(scope: Scope, receive: Receive, send: Send) -> None:
         # /mcp is always gated on bearer token (build_app aborts before we
         # get here if the env var is absent or <32 chars). /healthz is
@@ -135,15 +176,11 @@ def build_app() -> Starlette:
                 except ValueError:
                     break
                 if declared > max_body:
-                    response = JSONResponse(
-                        {"error": "payload too large", "max_body": max_body},
-                        status_code=413,
-                    )
-                    await response(scope, receive, send)
+                    await _too_large(scope, receive, send)
                     return
                 break
         provided = _extract_bearer(scope)
-        if not hmac.compare_digest(provided, expected_token):
+        if not hmac.compare_digest(provided, expected_bytes):
             response = JSONResponse(
                 {"error": "unauthorized"},
                 status_code=401,
@@ -151,7 +188,21 @@ def build_app() -> Starlette:
             )
             await response(scope, receive, send)
             return
-        await session_manager.handle_request(scope, receive, send)
+        # The declared length above is only a fast path: the bytes that arrive
+        # are what the cap is about (L10). Read after auth, so an unauthenticated
+        # chunked stream is refused without being read.
+        try:
+            buffered = await _read_capped(receive, max_body)
+        except _BodyTooLarge:
+            await _too_large(scope, receive, send)
+            return
+
+        async def replay() -> Message:
+            if buffered:
+                return buffered.pop(0)
+            return await receive()
+
+        await session_manager.handle_request(scope, replay, send)
 
     @contextlib.asynccontextmanager
     async def lifespan(_app: Starlette) -> AsyncIterator[None]:

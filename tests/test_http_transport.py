@@ -13,6 +13,7 @@ Two layers:
 from __future__ import annotations
 
 import asyncio
+import json
 import socket
 from typing import Any
 
@@ -620,3 +621,98 @@ async def test_bearer_auth_via_real_uvicorn(monkeypatch: pytest.MonkeyPatch) -> 
             await asyncio.wait_for(serve_task, timeout=5.0)
         except TimeoutError:
             serve_task.cancel()
+
+
+# ---------- audit 2026-09-22 L9 / L10 ----------
+
+_INIT = {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {
+        "protocolVersion": "2025-03-26",
+        "capabilities": {},
+        "clientInfo": {"name": "pgmcp-test", "version": "0.0.1"},
+    },
+}
+_ACCEPT = "application/json, text/event-stream"
+
+
+async def _chunks(body: bytes, size: int = 256):  # noqa: ANN202 — async byte stream
+    """A body with no Content-Length: httpx sends it Transfer-Encoding: chunked."""
+    for i in range(0, len(body), size):
+        yield body[i : i + size]
+
+
+async def _serve(app: Any):  # noqa: ANN202
+    port = _free_port()
+    uv_server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="error"))
+    task = asyncio.create_task(uv_server.serve())
+    for _ in range(100):
+        if uv_server.started:
+            break
+        await asyncio.sleep(0.05)
+    assert uv_server.started, "uvicorn never reported started"
+    return port, uv_server, task
+
+
+async def _stop(uv_server: uvicorn.Server, task: asyncio.Task) -> None:
+    uv_server.should_exit = True
+    try:
+        await asyncio.wait_for(task, timeout=5.0)
+    except TimeoutError:
+        task.cancel()
+
+
+@pytest.mark.asyncio
+async def test_a_non_ascii_bearer_is_401_not_500(monkeypatch: pytest.MonkeyPatch) -> None:
+    """L9: hmac.compare_digest(str, str) raises TypeError on non-ASCII text, so
+    a bearer carrying a byte >= 0x80 (decoded latin-1) crashed the handler with
+    500 instead of 401. Real socket: the header goes out as raw bytes."""
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", _VALID_TOKEN)
+    port, uv_server, task = await _serve(server_http.build_app())
+    try:
+        async with httpx.AsyncClient(base_url=f"http://127.0.0.1:{port}", timeout=10.0) as c:
+            bad = await c.post(
+                "/mcp/",
+                json=_INIT,
+                headers={b"Accept": _ACCEPT.encode(), b"Authorization": b"Bearer \xe9" + b"x" * 31},
+            )
+            assert bad.status_code == 401, (bad.status_code, bad.text)
+            # Positive control: the right token still passes.
+            good = await c.post(
+                "/mcp/",
+                json=_INIT,
+                headers={"Accept": _ACCEPT, "Authorization": f"Bearer {_VALID_TOKEN}"},
+            )
+            assert good.status_code == 200, good.text
+    finally:
+        await _stop(uv_server, task)
+
+
+@pytest.mark.asyncio
+async def test_a_chunked_body_over_the_cap_is_413(monkeypatch: pytest.MonkeyPatch) -> None:
+    """L10: the cap read only Content-Length, which a chunked body does not
+    send, so any size streamed straight into the session manager. The cap now
+    counts the bytes that arrive."""
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_TOKEN", _VALID_TOKEN)
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_HTTP_MAX_BODY", "1024")
+    port, uv_server, task = await _serve(server_http.build_app())
+    auth = {
+        "Accept": _ACCEPT,
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {_VALID_TOKEN}",
+    }
+    try:
+        async with httpx.AsyncClient(base_url=f"http://127.0.0.1:{port}", timeout=10.0) as c:
+            big = b'{"jsonrpc":"2.0","id":1,"method":"tools/list","pad":"' + b"x" * 4096 + b'"}'
+            over = await c.post("/mcp/", content=_chunks(big), headers=auth)
+            assert "content-length" not in over.request.headers  # really chunked
+            assert over.status_code == 413, (over.status_code, over.text)
+            # Positive control: a chunked body under the cap reaches the manager.
+            small = json.dumps(_INIT).encode()
+            assert len(small) < 1024
+            ok = await c.post("/mcp/", content=_chunks(small, 64), headers=auth)
+            assert ok.status_code == 200, (ok.status_code, ok.text)
+    finally:
+        await _stop(uv_server, task)
