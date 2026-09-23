@@ -55,7 +55,12 @@ def _looks_like_uniprot_accession(value: str) -> bool:
     """
     if not value:
         return False
-    base = value.split(".", 1)[0]
+    # Only a numeric ``.N`` is a version: ``Q0WV96.x`` is not an accession, and
+    # cutting at the first dot would read it as one (the prefix-truncation
+    # class of audit 2026-09-22 H1).
+    base, dot, version = value.partition(".")
+    if dot and not version.isdigit():
+        return False
     return bool(_UNIPROT_ACCESSION_RE.match(base))
 
 

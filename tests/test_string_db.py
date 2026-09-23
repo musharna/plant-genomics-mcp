@@ -230,3 +230,92 @@ def test_normalize_rejects_non_string_string_id():
     assert ok["string_id"] == "3702.AT3G15500.1"
     # Missing field stays None (STRING rows without a B side are tolerated downstream).
     assert string_db._normalize({"score": 0.5}, "Q0WV96")["string_id"] is None
+
+
+# ---------- H1 (audit 2026-09-22): the STRING query id is derived, never truncated ----------
+
+_PARTNERS = "https://string-db.org/api/json/interaction_partners"
+
+
+def _partner_row(a: str, b: str) -> dict[str, object]:
+    return {"stringId_A": a, "stringId_B": b, "preferredName_B": "P", "score": 0.9}
+
+
+@pytest.mark.parametrize(
+    "given,organism,sent",
+    [
+        # Soybean: STRING knows the UniProt ORF name GLYMA_04G220900 (-> K7KLM4,
+        # live 2026-09-22) and nothing called Glyma.04G220900. The old
+        # split('.')[0] sent "Glyma", which STRING resolved to an unrelated
+        # protein (A0A0R0I6K5 = GLYMA_09G103300) and answered with confidence.
+        ("Glyma.04G220900", "glycine_max", "GLYMA_04G220900"),
+        ("Glyma.04G220900.1", "glycine_max", "GLYMA_04G220900"),
+        # Sorghum: SORBI_3001G000100 -> C5WR12 (live); Sobic.001G000100 -> none.
+        ("Sobic.001G000100", "sorghum_bicolor", "SORBI_3001G000100"),
+        # Brachypodium: BRADI_1g00200v3 -> I1GKD6 (live); Bradi1g00200 -> none.
+        ("Bradi1g00200", "brachypodium_distachyon", "BRADI_1g00200v3"),
+        # Arabidopsis: AT1G01010 -> Q0WV96 (live); the transcript AT1G01010.1
+        # resolves to nothing, so a transcript suffix is dropped.
+        ("AT1G01010.1", "arabidopsis_thaliana", "AT1G01010"),
+        # A UniProt accession's .N version is dropped (BLAST text reports).
+        ("Q0WV96.2", "arabidopsis_thaliana", "Q0WV96"),
+        # Anything else goes through whole — a dotted id is never cut to its prefix.
+        ("Potri.001G399000", "populus_trichocarpa", "Potri.001G399000"),
+        ("Os01g0100100", "oryza_sativa", "Os01g0100100"),
+    ],
+)
+def test_query_id_is_the_whole_id_in_strings_spelling(given: str, organism: str, sent: str):
+    assert string_db.string_query_id(given, organism) == sent
+
+
+@pytest.mark.asyncio
+async def test_a_dotted_locus_is_never_sent_as_its_prefix(httpx_mock: HTTPXMock):
+    """The finding, end to end: soybean Glyma.04G220900 reaches STRING whole."""
+    httpx_mock.add_response(
+        url=(
+            f"{_PARTNERS}?identifiers=GLYMA_04G220900&species=3847&limit=20"
+            "&caller_identity=plant-genomics-mcp"
+        ),
+        json=[_partner_row("3847.K7KLM4", "3847.I1K9R8")],
+    )
+    async with httpx.AsyncClient() as client:
+        result = await string_db.lookup_partners(client, "Glyma.04G220900", organism="glycine_max")
+    sent = httpx_mock.get_requests()[0].url.params["identifiers"]
+    assert sent == "GLYMA_04G220900", sent
+    # `query` is what the caller passed (its schema says so), not the wire form.
+    assert result["query"] == "Glyma.04G220900"
+    assert result["accession"] == "K7KLM4"
+
+
+@pytest.mark.asyncio
+async def test_an_id_string_cannot_resolve_is_not_found_not_a_neighbour(httpx_mock: HTTPXMock):
+    """STRING's real answer for a name it does not know: HTTP 404 with an
+    Error object (live 2026-09-22, identifiers=Glyma.04G220900). Poplar loci
+    have no STRING alias, so the honest answer is NotFound."""
+    httpx_mock.add_response(
+        url=(
+            f"{_PARTNERS}?identifiers=Potri.001G399000&species=3694&limit=20"
+            "&caller_identity=plant-genomics-mcp"
+        ),
+        status_code=404,
+        json=[{"Error": "not found", "ErrorMessage": "Sorry, STRING did not find a protein"}],
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError):
+            await string_db.lookup_partners(
+                client, "Potri.001G399000", organism="populus_trichocarpa"
+            )
+
+
+@pytest.mark.skipif(
+    os.environ.get("PLANT_GENOMICS_MCP_LIVE") != "1",
+    reason="set PLANT_GENOMICS_MCP_LIVE=1 to hit string-db.org",
+)
+@pytest.mark.asyncio
+async def test_live_soybean_dotted_locus_resolves_to_its_own_protein():
+    """Real execution for H1: the old code answered for 'Glyma' (A0A0R0I6K5)."""
+    async with httpx.AsyncClient() as client:
+        result = await string_db.lookup_partners(
+            client, "Glyma.04G220900", organism="glycine_max", limit=3
+        )
+    assert result["accession"] == "K7KLM4", result["accession"]

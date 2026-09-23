@@ -167,6 +167,10 @@ async def test_lookup_locus_retries_on_429_then_succeeds(httpx_mock: HTTPXMock) 
         ("NP_001185207.1", False),  # NCBI RefSeq
         ("", False),
         ("GARBAGE", False),
+        # Only a numeric .N is a version; cutting at the first dot made any
+        # "<accession>.<anything>" an accession (the H1 prefix-truncation class).
+        ("Q9FLJ2.x", False),
+        ("Q9FLJ2.1.2", False),
     ],
 )
 def test_looks_like_uniprot_accession_regex(value: str, expected: bool) -> None:
