@@ -62,8 +62,26 @@ def test_assert_valid_locus_rejects_punctuation_only(locus: str) -> None:
 
 
 def test_assert_valid_locus_passes_through_for_clean_input() -> None:
-    # No exception. Helper returns None — its side effect is the raise.
-    assert validators.assert_valid_locus("AT1G01010", backend="ensembl") is None
+    # No exception; the locus comes back in canonical case.
+    assert validators.assert_valid_locus("AT1G01010", backend="ensembl") == "AT1G01010"
+
+
+@pytest.mark.parametrize(
+    "given,canonical",
+    [
+        # Audit 2026-09-22 M6/L7: AGI_RE is case-insensitive, so a lowercase
+        # AGI passed validation and reached KEGG (case-sensitive: an ok answer
+        # with no pathways) and AraGWAS (HTTP 500) as typed.
+        ("at1g01010", "AT1G01010"),
+        ("At3g52930.1", "AT3G52930.1"),
+        # Positive control: non-AGI loci keep their conventional mixed case.
+        ("Os01g0100100", "Os01g0100100"),
+        ("Zm00001d027231", "Zm00001d027231"),
+        ("Glyma.04G220900", "Glyma.04G220900"),
+    ],
+)
+def test_validation_returns_the_canonical_spelling(given: str, canonical: str) -> None:
+    assert validators.assert_valid_locus(given, backend="ensembl") == canonical
 
 
 def test_assert_valid_locus_raises_notfound_with_backend_label() -> None:
@@ -92,7 +110,7 @@ def test_assert_valid_locus_includes_pattern_in_message() -> None:
     ["AT1G01060", "AT5G67640", "ATCG00010", "ATMG00010", "AT1G01060.1", "at1g01060"],
 )
 def test_assert_valid_agi_accepts_real_agis(agi: str) -> None:
-    assert validators.assert_valid_agi(agi, backend="AraGWAS") is None
+    assert validators.assert_valid_agi(agi, backend="AraGWAS") == agi.upper()
 
 
 @pytest.mark.parametrize(

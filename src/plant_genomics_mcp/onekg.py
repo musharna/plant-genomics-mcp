@@ -111,7 +111,7 @@ async def lookup_locus(
         raise OrganismNotSupported(
             backend="1001genomes", organism=canonical, supported=["arabidopsis_thaliana"]
         )
-    validators.assert_valid_agi(locus, backend="1001genomes")
+    locus = validators.assert_valid_agi(locus, backend="1001genomes")
     tx = locus if "." in locus else f"{locus}.1"
     query = {"locus": locus}
     offset = int(

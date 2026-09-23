@@ -135,7 +135,7 @@ async def lookup_locus(
     Propagates ``NotFoundError`` when the locus has no UniProt entry (it can't be
     keyed into PDBe), mirroring the locus→UniProt→AlphaFold path.
     """
-    validators.assert_valid_locus(locus, backend="PDBe")
+    locus = validators.assert_valid_locus(locus, backend="PDBe")
     up = await uniprot.lookup_locus(client, locus, organism=organism)
     accession = up["primaryAccession"]
     result = await lookup_by_uniprot(client, accession)

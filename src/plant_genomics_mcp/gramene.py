@@ -230,7 +230,7 @@ async def lookup_homologs(
     fl=homology projection does NOT carry per-row taxon, identity, protein
     ID, dn/ds, or goc_score — so we only surface what's there.
     """
-    validators.assert_valid_locus(locus, backend="Gramene")
+    locus = validators.assert_valid_locus(locus, backend="Gramene")
     # Resolve the target first so a typo fails before any upstream call.
     target_slug = organisms.resolve(target_organism).canonical if target_organism else None
     # #123: Gramene answers with the whole homology set, so a page is an offset

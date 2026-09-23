@@ -142,7 +142,7 @@ async def lookup_locus(
     Propagates ``NotFoundError`` when the locus has no UniProt entry, mirroring
     the locus→UniProt→QuickGO path.
     """
-    validators.assert_valid_locus(locus, backend="InterPro")
+    locus = validators.assert_valid_locus(locus, backend="InterPro")
     up = await uniprot.lookup_locus(client, locus, organism=organism)
     accession = up["primaryAccession"]
     result = await lookup_by_uniprot(client, accession)

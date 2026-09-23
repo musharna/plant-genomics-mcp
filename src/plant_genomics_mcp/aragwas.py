@@ -156,7 +156,7 @@ async def lookup_locus(
         raise OrganismNotSupported(
             backend="aragwas", organism=canonical, supported=["arabidopsis_thaliana"]
         )
-    validators.assert_valid_agi(locus, backend="AraGWAS")
+    locus = validators.assert_valid_agi(locus, backend="AraGWAS")
     query = {"locus": locus}
     offset = int(_http.decode_cursor("aragwas_associations", query, cursor).get("offset", 0))
     first = f"{BASE_URL}/api/genes/{locus}/associations/"

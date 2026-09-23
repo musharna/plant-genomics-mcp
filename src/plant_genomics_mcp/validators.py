@@ -47,8 +47,24 @@ JASPAR_MATRIX_RE: re.Pattern[str] = re.compile(r"^[A-Za-z]{2,4}\d{3,7}(\.\d+)?\Z
 _PATH_METACHARS = re.compile(r"[/\s?#&%]")
 
 
-def assert_valid_locus(locus: str, *, backend: str) -> None:
-    """Raise ``NotFoundError`` if ``locus`` doesn't match ``LOCUS_RE``.
+def canonical_locus(locus: str) -> str:
+    """``locus`` in its canonical spelling: an AGI upper-cased, anything else as given.
+
+    ``AGI_RE`` matches case-insensitively so ``at1g01010`` is accepted, but
+    KEGG v118+ is case-sensitive (``ath:at1g01010`` is an empty answer, not
+    an unknown gene) and AraGWAS answers a lowercase AGI with HTTP 500 (audit
+    2026-09-22, M6/L7). Other loci keep their case: rice ``Os01g0100100`` and
+    maize ``Zm00001d027231`` are mixed-case by convention.
+    """
+    return locus.upper() if AGI_RE.match(locus) else locus
+
+
+def assert_valid_locus(locus: str, *, backend: str) -> str:
+    """Raise ``NotFoundError`` if ``locus`` doesn't match ``LOCUS_RE``; else
+    return it in canonical case (:func:`canonical_locus`).
+
+    Callers use the return value, so every backend receives the one spelling
+    of an AGI — the case is normalised once, here, rather than per backend.
 
     The error message names ``backend`` so the caller (and log greps)
     know which boundary rejected the input, and includes the pattern so
@@ -64,10 +80,12 @@ def assert_valid_locus(locus: str, *, backend: str) -> None:
         # dot-segment removal to a *different* endpoint than intended. A real
         # locus always carries an identifier character, so require one.
         raise NotFoundError(f"{backend}: invalid locus {locus!r} (needs an alphanumeric character)")
+    return canonical_locus(locus)
 
 
-def assert_valid_agi(locus: str, *, backend: str) -> None:
-    """Raise ``NotFoundError`` if ``locus`` is not a well-formed Arabidopsis AGI.
+def assert_valid_agi(locus: str, *, backend: str) -> str:
+    """Raise ``NotFoundError`` if ``locus`` is not a well-formed Arabidopsis AGI;
+    else return it upper-cased (the only spelling AraGWAS / KEGG answer for).
 
     Stricter than :func:`assert_valid_locus` — for the Arabidopsis-only backends
     where a typo'd AGI (wrong length/prefix) hits an upstream 500 that the retry
@@ -78,6 +96,7 @@ def assert_valid_agi(locus: str, *, backend: str) -> None:
         raise NotFoundError(
             f"{backend}: {locus!r} is not a valid Arabidopsis AGI locus (e.g. AT1G01060)"
         )
+    return locus.upper()
 
 
 def assert_valid_jaspar_matrix_id(matrix_id: str, *, backend: str) -> None:

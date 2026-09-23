@@ -182,7 +182,7 @@ async def lookup_locus(
     # Typed rejection (NotFoundError → [ClassName] wire prefix) before any network
     # call; shared validator is ``\Z``-anchored, unlike the old local ``$`` regex
     # which silently accepted a trailing newline (2026-07-21 audit L4).
-    validators.assert_valid_locus(locus, backend="PlantCyc")
+    locus = validators.assert_valid_locus(locus, backend="PlantCyc")
     record = organisms.resolve(organism)
     orgid = organisms.plantcyc_orgid_for(organism)
 

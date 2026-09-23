@@ -57,6 +57,49 @@ async def test_lookup_pathways_arabidopsis_uses_ath_prefix(httpx_mock: HTTPXMock
     assert result["pathways"][0]["id"] == "ath04075"
 
 
+_FBA_LIST = "ath:AT3G52930\tCDS\t3:19619494..19621140\tFBA8; fructose-bisphosphate aldolase\n"
+
+
+@pytest.mark.asyncio
+@pytest.mark.httpx_mock(assert_all_responses_were_requested=False)
+async def test_a_lowercase_agi_gets_the_pathways_of_its_canonical_spelling(
+    httpx_mock: HTTPXMock,
+):
+    """Audit 2026-09-22 M6 (regression of the #140 fix): AGI_RE accepts
+    'at3g52930', KEGG's /link is case-sensitive (empty for the lowercase id,
+    live v118) while /list still finds the gene, so the #140 branch answered
+    ok with ``pathways: []`` for a gene in 8 pathways. The AGI is recased once,
+    at validation, so KEGG sees the one spelling it answers for."""
+    # What KEGG serves the lowercase spelling: nothing linked, a gene listed.
+    httpx_mock.add_response(url="https://rest.kegg.jp/link/pathway/ath:at3g52930", text="")
+    httpx_mock.add_response(url="https://rest.kegg.jp/list/ath:at3g52930", text=_FBA_LIST)
+    # What it serves the canonical spelling.
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/link/pathway/ath:AT3G52930",
+        text="ath:AT3G52930\tpath:ath00010\n",
+    )
+    httpx_mock.add_response(
+        url="https://rest.kegg.jp/get/path:ath00010",
+        text="ENTRY       ath00010                    Pathway\nNAME        Glycolysis / Gluconeogenesis\n",
+    )
+    async with httpx.AsyncClient() as client:
+        result = await kegg.lookup_pathways(client, "at3g52930", organism="arabidopsis_thaliana")
+    assert result["kegg_gene_id"] == "ath:AT3G52930"
+    assert [p["id"] for p in result["pathways"]] == ["ath00010"]
+
+
+@pytest.mark.skipif(
+    not os.environ.get("PLANT_GENOMICS_MCP_LIVE"),
+    reason="set PLANT_GENOMICS_MCP_LIVE=1 to hit rest.kegg.jp",
+)
+@pytest.mark.asyncio
+async def test_live_kegg_lowercase_agi_has_pathways():
+    """Real execution for M6: the lowercase spelling of an 8-pathway gene."""
+    async with httpx.AsyncClient() as client:
+        result = await kegg.lookup_pathways(client, "at3g52930", organism="arabidopsis_thaliana")
+    assert len(result["pathways"]) > 0
+
+
 @pytest.mark.asyncio
 async def test_lookup_pathways_unsupported_organism_raises():
     """Organisms in the 8 deferred set (tomato, wheat, sorghum, barley,

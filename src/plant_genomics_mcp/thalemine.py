@@ -207,7 +207,7 @@ async def lookup_interactions(
     has no curated interaction on record — a normal answer, not an error. An
     unknown locus raises ``NotFoundError``.
     """
-    validators.assert_valid_locus(locus, backend="ThaleMine")
+    locus = validators.assert_valid_locus(locus, backend="ThaleMine")
     canonical = _assert_arabidopsis(organism)
     rows = await _rows(client, _query_xml(_INTERACTION_VIEW, "Gene.interactions", locus))
     symbol, data = _split(rows, locus, width=9)
@@ -282,7 +282,7 @@ async def lookup_gene_rifs(
     data does not support. ``found=False`` means the gene exists but has no
     GeneRIF; an unknown locus raises ``NotFoundError``.
     """
-    validators.assert_valid_locus(locus, backend="ThaleMine")
+    locus = validators.assert_valid_locus(locus, backend="ThaleMine")
     canonical = _assert_arabidopsis(organism)
     rows = await _rows(client, _query_xml(_RIF_VIEW, "Gene.geneRifs", locus))
     symbol, data = _split(rows, locus, width=5)
