@@ -1847,6 +1847,7 @@ TOOLS: list[types.Tool] = [
                 "loci": {
                     "type": "array",
                     "items": {"type": "string"},
+                    "minItems": 1,
                     "maxItems": 50,
                     "description": "List of locus identifiers (max 50)",
                 },
@@ -1884,6 +1885,7 @@ TOOLS: list[types.Tool] = [
                 "loci": {
                     "type": "array",
                     "items": {"type": "string"},
+                    "minItems": 1,
                     "maxItems": 50,
                 },
                 "organism": {
@@ -1963,6 +1965,7 @@ TOOLS: list[types.Tool] = [
                 "loci": {
                     "type": "array",
                     "items": {"type": "string"},
+                    "minItems": 1,
                     "maxItems": 50,
                 },
                 "limit": {"type": "integer", "default": 20, "minimum": 1, "maximum": 500},
@@ -2033,6 +2036,7 @@ TOOLS: list[types.Tool] = [
                 "loci": {
                     "type": "array",
                     "items": {"type": "string"},
+                    "minItems": 1,
                     "maxItems": 50,
                 },
                 "organism": {

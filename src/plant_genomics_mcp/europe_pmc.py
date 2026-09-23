@@ -18,7 +18,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import _http, cache, organisms
+from plant_genomics_mcp import _http, cache, organisms, validators
 from plant_genomics_mcp.errors import (
     PlantGenomicsError,
     UpstreamUnavailableError,
@@ -180,6 +180,11 @@ async def lookup_locus(
     shaped per ``LocusLiterature``: locus, organism (resolved canonical),
     hitCount (total available in Europe PMC), returned (len(hits)), hits[].
     """
+    # Audit 2026-09-22 L12: an empty locus became an empty query, which Europe
+    # PMC answers with 200 {"errCode":404,"errMsg":"No search criteria
+    # provided..."} — no hitCount, so it read as an outage. Validated like
+    # every other locus tool (and the AGI recased), so it is refused as input.
+    locus = validators.assert_valid_locus(locus, backend="Europe PMC")
     size = max(1, min(size, MAX_PAGE_SIZE))
     record = organisms.resolve(organism)
     query = locus
