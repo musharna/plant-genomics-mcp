@@ -2,6 +2,38 @@
 
 ## Unreleased
 
+- **A missing upstream count is an error, not zero (#141).** Europe PMC
+  intermittently answers `/search` with HTTP 200 and `{"version":"6.9"}`
+  alone; `locus_literature` read that as `hitCount 0` and cached it, so genes
+  with 22-91 papers came back empty with `ok=true`. The body is now checked
+  before it is cached, asked for once more, then raised as
+  `UpstreamUnavailableError`. QuickGO, Planteome, InterPro and AraGWAS read
+  their totals the same way (`_http.stated_count`).
+- **Behaviour change — `kegg_pathways`: a gene KEGG knows with no pathways is
+  an ok answer with `pathways: []` (#140),** told apart from a gene KEGG has
+  no record of (still `NotFoundError`) by KEGG's `/list`. `atted_coexpression`
+  keeps `NotFoundError` for an empty answer, which means the gene is not in
+  that ATTED-II release, and now says so.
+- **Behaviour change — `batch_kegg_pathways` / `batch_atted_coexpression`
+  refuse an uncovered organism with `OrganismNotSupported` before any request
+  (#139),** as their single forms and descriptions already did. All four
+  descriptions state the covered organisms from the registry; the KEGG ones
+  had said only Arabidopsis resolved since v1.1.0.
+- **Wheat IWGSC loci resolve to UniProt (#138):** the query also matches
+  EnsemblPlants cross-references, which is the only place UniProt carries
+  `TraesCS…` ids, so every protein-level tool now answers for wheat.
+- **Payload fields that said less than they meant.** `locus_go_annotations`
+  gains `truncated` and `by_aspect_deduped_on` (#132); `alphafold_structure`
+  gains `plddt_band_ranges` (#135); `locus_literature` fills `journalTitle`
+  from where `resultType=core` carries it (#134); every URL-valued output
+  field says no tool dereferences it (#136); `aragwas_associations` unwraps
+  its tuple-repr `study.name` and adds `study.thresholds` (#137);
+  `atted_coexpression` spells AGI neighbours in upper case and
+  `ensembl_plants_lookup_locus` drops the empty-version dot from
+  `canonical_transcript` (#137). The batch forms of the GO and Ensembl tools
+  now project rows exactly as their single forms do, which also brings them
+  the `upstream_version` key (#121) they had been dropping.
+
 - **Tool arguments are checked against the schema each tool advertises
   (#118).** The mcp SDK hands a call's `arguments` to the handler without
   validating them against its `inputSchema`, so the declared schema was
