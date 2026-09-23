@@ -29,6 +29,19 @@ MAX_RETRIES = 3
 # Per-module response cache. See plant_genomics_mcp.cache for env knobs.
 _CACHE = cache.TTLCache()
 
+# Issue #135: the pLDDT span behind each band AlphaFold DB reports a fraction
+# for, [lower, upper] on the 0-100 scale. EMBL-EBI's AlphaFold course:
+# very high "pLDDT > 90", confident "90 > pLDDT > 70", low "70 > pLDDT > 50",
+# very low "pLDDT < 50" (ebi.ac.uk/training/online/courses/alphafold, section
+# "pLDDT: understanding local confidence", read 2026-09-22). The source does
+# not say which band a value of exactly 50/70/90 falls in, so neither do we.
+PLDDT_BAND_RANGES: dict[str, list[int]] = {
+    "very_low": [0, 50],
+    "low": [50, 70],
+    "confident": [70, 90],
+    "very_high": [90, 100],
+}
+
 
 def _version_str(value: Any) -> str | None:
     """AlphaFold sends latestVersion as an int (6); the shared key is a string."""
@@ -45,6 +58,7 @@ def _empty(accession: str) -> dict[str, Any]:
         "model_entity_id": None,
         "mean_plddt": None,
         "plddt_bands": None,
+        "plddt_band_ranges": PLDDT_BAND_RANGES,
         "latest_version": None,
         "model_created": None,
         "residue_range": None,
@@ -73,6 +87,7 @@ def _project(accession: str, entry: dict[str, Any]) -> dict[str, Any]:
             "confident": entry.get("fractionPlddtConfident"),
             "very_high": entry.get("fractionPlddtVeryHigh"),
         },
+        "plddt_band_ranges": PLDDT_BAND_RANGES,
         "latest_version": entry.get("latestVersion"),
         "model_created": entry.get("modelCreatedDate"),
         "residue_range": {"start": start, "end": end} if start is not None else None,

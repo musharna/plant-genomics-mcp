@@ -575,6 +575,12 @@ class AlphaFoldStructure(BaseModel):
     plddt_bands: dict[str, float | None] | None = Field(
         default=None, description="Fraction of residues per confidence band"
     )
+    plddt_band_ranges: dict[str, list[int]] = Field(
+        description=(
+            "Band -> [lower, upper] pLDDT on the 0-100 scale, per EMBL-EBI: very_low <50, "
+            "low 50-70, confident 70-90, very_high >90"
+        ),
+    )
     latest_version: int | None = Field(default=None, description="Latest AlphaFold model version")
     model_created: str | None = Field(default=None, description="Model creation date (ISO 8601)")
     residue_range: dict[str, int | None] | None = Field(
