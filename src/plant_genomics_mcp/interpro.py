@@ -38,6 +38,19 @@ MAX_PAGES = 5
 _CACHE = cache.TTLCache()
 
 
+def _page(resp: httpx.Response) -> Any:
+    """One InterPro response as a page.
+
+    Audit 2026-09-22 M4: InterPro answers a protein with no entries with HTTP
+    204 and an empty body (live, e.g. A0A0A0A0A0), not 200 ``{"count": 0}``.
+    That is a page of zero rows, read as one here instead of failing as an
+    HTTP error or a JSON parse of nothing.
+    """
+    if resp.status_code == 204:
+        return {"count": 0, "next": None, "previous": None, "results": []}
+    return resp.json()
+
+
 async def _get(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
     """GET one InterPro page (cached by full URL), returning the parsed dict."""
     key = cache.make_key("GET", url, "", None)
@@ -51,8 +64,9 @@ async def _get(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
             headers={"Accept": "application/json"},
             timeout=DEFAULT_TIMEOUT,
             max_retries=MAX_RETRIES,
+            no_content_ok=True,
         )
-        cached = resp.json()
+        cached = _page(resp)
         # Stash the release the ANSWERING response reported, inside the cached
         # value. Cached separately it would be dropped on every cache hit, so a
         # warm result would silently claim no version while a cold one reported

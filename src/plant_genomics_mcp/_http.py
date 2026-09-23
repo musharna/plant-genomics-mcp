@@ -199,6 +199,7 @@ async def request_with_retry(
     not_found_returns: Any = _RAISE,
     not_found_400_pattern: re.Pattern[str] | None = None,
     allow_html: bool = False,
+    no_content_ok: bool = False,
 ) -> httpx.Response | Any:
     """Issue ``method url`` with the shared retry + classification policy.
 
@@ -221,6 +222,11 @@ async def request_with_retry(
     (the interposed page is typically transient) and, once the budget is
     spent, raises ``UpstreamUnavailableError``. Pass ``allow_html=True`` for
     the rare endpoint that genuinely serves HTML (NCBI QBlast).
+
+    A 204 No Content is returned (not raised) only with ``no_content_ok=True``,
+    for an upstream whose 204 is an answer: InterPro serves 204 with an empty
+    body for a protein with no entries (live, 2026-09-22). Elsewhere it stays
+    an error, since a caller that parses the body has nothing to parse.
     """
     delay = 1.0
     last_status: int | None = None
@@ -320,6 +326,9 @@ async def request_with_retry(
                 delay *= 2
                 continue
             break
+
+        if resp.status_code == 204 and no_content_ok:
+            return resp
 
         if resp.status_code == 404 and not_found_returns is not _RAISE:
             return not_found_returns

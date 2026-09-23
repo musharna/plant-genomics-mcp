@@ -86,9 +86,17 @@ async def test_lookup_by_uniprot_full(httpx_mock: HTTPXMock) -> None:
 
 @pytest.mark.asyncio
 async def test_lookup_by_uniprot_empty_is_found_true(httpx_mock: HTTPXMock) -> None:
-    """A protein with no annotated domains → found=True, empty list (not error)."""
+    """A protein with no annotated domains → found=True, empty list (not error).
+
+    Audit 2026-09-22 M4: this used to mock ``200 {"count": 0, ...}``, a body
+    InterPro never sends, so it passed while the real answer failed. InterPro
+    says "no entries" with HTTP 204, an empty body and its release header
+    (live 2026-09-22, .../protein/uniprot/A0A0A0A0A0/)."""
     httpx_mock.add_response(
-        url=_URL, json={"count": 0, "next": None, "previous": None, "results": []}
+        url=_URL,
+        status_code=204,
+        content=b"",
+        headers={"content-type": "application/json", "InterPro-Version": "110.0"},
     )
     async with httpx.AsyncClient() as client:
         r = await interpro.lookup_by_uniprot(client, "Q9SZ92")
@@ -96,6 +104,23 @@ async def test_lookup_by_uniprot_empty_is_found_true(httpx_mock: HTTPXMock) -> N
     assert r["domain_count"] == 0
     assert r["domains"] == []
     assert r["count_by_type"] == {}
+    assert r["upstream_version"] == "110.0"
+
+
+@pytest.mark.asyncio
+async def test_a_204_is_an_answer_only_where_the_caller_says_so(httpx_mock: HTTPXMock) -> None:
+    """The opt-in is scoped: for any other upstream a 204 stays an error, since
+    its caller would parse an empty body. Positive control: InterPro's opt-in."""
+    from plant_genomics_mcp import _http
+
+    httpx_mock.add_response(url="https://example.org/x", status_code=204, is_reusable=True)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(PlantGenomicsError, match="HTTP 204"):
+            await _http.request_with_retry(client, "GET", "https://example.org/x", service="x")
+        resp = await _http.request_with_retry(
+            client, "GET", "https://example.org/x", service="x", no_content_ok=True
+        )
+    assert resp.status_code == 204
 
 
 @pytest.mark.asyncio
