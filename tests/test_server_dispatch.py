@@ -69,6 +69,7 @@ class Spec:
     expected_org: str | None  # None => tool must not forward organism=
     sync: bool = False  # a pure-sync dispatch arm (no client, no await); none currently
     synth: bool = False  # synthesis arms call env.model_dump() on the return
+    batched: bool = False  # batch_locus_call wraps each result in the batch envelope
 
 
 DISPATCH_SPECS: list[Spec] = [
@@ -190,6 +191,15 @@ DISPATCH_SPECS: list[Spec] = [
         _DEFAULT_ORG,
     ),
     Spec("batch_gramene_homologs", batch, "batch_gramene_homologs", {"loci": LOCI}, LOCI, None),
+    Spec(
+        "batch_locus_call",
+        ensembl_plants,
+        "lookup_locus",
+        {"tool": "ensembl_plants_lookup_locus", "loci": [L]},
+        L,
+        _DEFAULT_ORG,
+        batched=True,
+    ),
     Spec("kegg_pathways", kegg, "lookup_pathways", {"locus": L}, L, _DEFAULT_ORG),
     Spec(
         "string_interactions",
@@ -294,6 +304,8 @@ async def test_dispatch_routes_identifier_and_default_organism(spec: Spec, monke
     # The dispatcher returns the backend's result; synth arms call .model_dump()
     # on the returned envelope (_Env.model_dump() → {"stub": True}), so every arm
     # yields the same sentinel here — asserting it locks the return path (L10).
+    if spec.batched:
+        result = result["results"][spec.expected_id]
     assert result == {"stub": True}, f"{spec.tool}: dispatcher returned {result!r}"
     assert rec.calls, f"{spec.tool}: backend stub was never called"
     a, k = rec.calls[0]

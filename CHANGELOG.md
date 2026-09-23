@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **`batch_locus_call`: one batch form for every locus-keyed tool (#131).**
+  `tool` names any tool whose only required argument is `locus` (32 today,
+  including the 8 #131 found with no batch form: `interpro_domains`,
+  `alphafold_structure`, `experimental_structures`, `tf_binding_motifs`,
+  `panther_family`, `orthodb_orthologs`, `aragwas_associations`,
+  `gene_report`); `args` holds its other arguments, checked against that
+  tool's schema once before any locus runs. Returns the batch envelope with
+  each result exactly what the single tool returns. The list is derived from
+  the schemas, so a locus tool added later is batchable. 52 tools.
+
 - **`gramene_homologs` can name each homolog's species without filtering
   (#130).** `with_organism=true` adds `organism` (Gramene species slug, null
   when Gramene has no record) to every returned row, using the enrichment

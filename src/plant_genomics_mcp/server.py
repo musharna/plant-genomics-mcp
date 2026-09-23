@@ -52,6 +52,7 @@ synthesis tools that compose the live backends:
   - ``batch_atted_coexpression``          — gather over atted_coexpression
   - ``batch_bar_gene_summary``            — gather over bar_gene_summary
   - ``batch_bar_aiv_interactions``        — gather over bar_aiv_interactions
+  - ``batch_locus_call``                  — gather over any locus-keyed tool (#131)
   - ``analyze_locus_synth``               — v0.8 synthesis: Ensembl + Phytozome + UniProt + xrefs in one envelope
   - ``find_homologs_synth``               — v0.8 synthesis: BLAST + per-hit UniProt resolution
   - ``biological_context_synth``          — v0.8 synthesis: GO + literature + KEGG + STRING + ATTED + consensus_partners
@@ -2224,6 +2225,64 @@ TOOLS: list[types.Tool] = [
     ),
 ]
 
+# #131: one batch form for every tool keyed by a single locus, rather than a
+# batch_* per tool. Derived from the schemas above, so a locus tool added
+# later is batchable without touching this.
+BATCHABLE_LOCUS_TOOLS: tuple[str, ...] = tuple(
+    sorted(
+        str(tool.name)
+        for tool in TOOLS
+        if tool.input_schema.get("required") == ["locus"]
+        and not str(tool.name).startswith("batch_")
+    )
+)
+# Refused inside `args`: the batch supplies `locus`, and a cursor continues
+# one locus's list, so it cannot apply to every locus in the batch.
+_BATCH_CALL_RESERVED = ("locus", "cursor")
+
+TOOLS.append(
+    types.Tool(
+        name="batch_locus_call",
+        title="Batch: Any Locus Tool",
+        description=(
+            "Run one locus-keyed tool over up to 50 loci in one call (#131). "
+            "'tool' names any tool whose only required argument is 'locus' "
+            "(interpro_domains, alphafold_structure, panther_family, "
+            "orthodb_orthologs, gene_report, ...); 'args' holds that tool's "
+            "other arguments, shared by every locus and checked against its "
+            "schema once before any call. Returns the standard batch envelope: "
+            "results keyed by locus, each exactly what the single tool returns, "
+            "and per-locus errors. The dedicated batch_* tools remain."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "tool": {"type": "string", "enum": list(BATCHABLE_LOCUS_TOOLS)},
+                "loci": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "minItems": 1,
+                    "maxItems": batch.MAX_BATCH,
+                    "description": f"Locus identifiers (max {batch.MAX_BATCH})",
+                },
+                "args": {
+                    "type": "object",
+                    "default": {},
+                    "description": (
+                        "The tool's arguments other than 'locus' (and not 'cursor'), "
+                        'e.g. {"organism": "oryza_sativa"}'
+                    ),
+                },
+            },
+            "required": ["tool", "loci"],
+            "additionalProperties": False,
+        },
+        output_schema=BatchEnvelope.model_json_schema(),
+        annotations=_READ_ONLY,
+        _meta=_EDAM,
+    )
+)
+
 
 # ---- argument validation ----------------------------------------------------
 # Every tool above declares a complete JSON Schema, and nothing enforced it:
@@ -2727,8 +2786,31 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     top_n=args.get("top_n", 10),
                 )
                 return env.model_dump()
+            case "batch_locus_call":
+                return await _batch_locus_call(args["tool"], args["loci"], args.get("args") or {})
             case _:
                 raise ValueError(f"unknown tool: {name}")
+
+
+async def _batch_locus_call(tool: str, loci: list[str], shared: dict[str, Any]) -> dict[str, Any]:
+    """``tool`` once per locus through the same path a single call takes.
+
+    The shared arguments are renamed and validated against ``tool``'s own
+    schema before the fan-out, so a bad argument is one refusal, not one
+    copied error per locus (the #139 lesson for batch forms).
+    """
+    if tool not in BATCHABLE_LOCUS_TOOLS:
+        raise InvalidArguments(f"batch_locus_call: {tool!r} is not a locus-keyed tool")
+    reserved = [key for key in _BATCH_CALL_RESERVED if key in shared]
+    if reserved:
+        raise InvalidArguments(f"batch_locus_call: args may not carry {', '.join(reserved)}")
+    loci = batch._bound(loci)
+    calls = {
+        locus: _rename_deprecated_arguments(tool, {**shared, "locus": locus}) for locus in loci
+    }
+    _validate_arguments(tool, calls[loci[0]])
+    results, errors = await batch._gather(loci, lambda locus: _dispatch(tool, calls[locus]))
+    return batch._envelope(tool, loci, results, errors)
 
 
 async def _call_tool(
