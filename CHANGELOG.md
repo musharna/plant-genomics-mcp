@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **`batch_locus_call`: one batch form for every locus-keyed tool (#131).**
+  `tool` names any tool whose only required argument is `locus` (32 today,
+  including the 8 #131 found with no batch form: `interpro_domains`,
+  `alphafold_structure`, `experimental_structures`, `tf_binding_motifs`,
+  `panther_family`, `orthodb_orthologs`, `aragwas_associations`,
+  `gene_report`); `args` holds its other arguments, checked against that
+  tool's schema once before any locus runs. Returns the batch envelope with
+  each result exactly what the single tool returns. The list is derived from
+  the schemas, so a locus tool added later is batchable. 52 tools.
+
 - **Rows past the cap are reachable (#123).** `orthodb_orthologs`,
   `gramene_homologs`, `aragwas_associations`, `arabidopsis_natural_variation`,
   `locus_literature` and `locus_go_annotations` take `cursor` and return
