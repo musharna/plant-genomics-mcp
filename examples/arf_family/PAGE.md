@@ -284,7 +284,7 @@ again against each later run; those this run no
 longer reproduces are listed last, with what it returned instead.
 Drafted issue text, grouped by theme, is in [`issues/`](issues): drafts
 01–19 were filed as #121–#141, and each says which of its rows are
-closed; 20–22, from this run's new rows, are not filed yet.
+closed; 20–22, from this run's new rows, were filed as #153–#155.
 
 ## Known gaps
 

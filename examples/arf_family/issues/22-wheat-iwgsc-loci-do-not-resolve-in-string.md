@@ -1,6 +1,6 @@
 # Every wheat IWGSC locus is a 404 in STRING, though the same loci resolve to UniProt
 
-**Not filed yet.** Written from the ARF family dossier in
+**Filed as [#155](https://github.com/musharna/plant-genomics-mcp/issues/155).** Written from the ARF family dossier in
 [`examples/arf_family/`](../), re-run at server commit `052e4ec`
 (release `1.21.0`): 64 MCP calls over 114 genes x 16 tools, the family
 itself from a 1163-call enumeration through the same tools. Each section

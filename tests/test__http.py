@@ -8,6 +8,7 @@ tests that exercise it via each backend's wrapper.
 
 from __future__ import annotations
 
+import asyncio
 import re
 
 import httpx
@@ -849,3 +850,191 @@ async def test_configured_timeout_reaches_the_transport(httpx_mock: HTTPXMock) -
         await _http.request_with_retry(client, "GET", f"{url}-default", service="example")
     req = httpx_mock.get_request(url=f"{url}-default")
     assert req is not None and req.extensions["timeout"]["read"] == 30.0
+
+
+# ---- a 403 that refuses on rate, and a per-upstream limit (issue #153) ------
+
+_REFUSAL = re.compile(r"too high request rate")
+# OrthoDB's refusal page, verbatim from a live 403 (2026-09-23).
+_REFUSAL_PAGE = (
+    "<html>\nYour query was rejected.\nThe reason can be any of the 3 below:\n<ul>\n"
+    "<li> too high request rate</li>\n<li> your IP being blocked</li>\n"
+    "<li> site being overloaded</li>\n</ul>\n</body>\n</html>"
+)
+
+
+@pytest.mark.asyncio
+async def test_403_matching_the_refusal_pattern_is_retried(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
+    httpx_mock.add_response(url="https://example.test/r403", status_code=403, text=_REFUSAL_PAGE)
+    httpx_mock.add_response(url="https://example.test/r403", json={"ok": True})
+    async with httpx.AsyncClient() as client:
+        resp = await _http.request_with_retry(
+            client,
+            "GET",
+            "https://example.test/r403",
+            service="example",
+            retry_403_pattern=_REFUSAL,
+        )
+    assert resp.json() == {"ok": True}
+
+
+@pytest.mark.asyncio
+async def test_403_is_not_retried_without_the_pattern_or_on_another_body(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """The opt-in is body-matched: a 403 that is not the refusal page stays terminal."""
+    httpx_mock.add_response(url="https://example.test/a", status_code=403, text=_REFUSAL_PAGE)
+    httpx_mock.add_response(url="https://example.test/b", status_code=403, text="Forbidden")
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(PlantGenomicsError, match="HTTP 403"):
+            await _http.request_with_retry(
+                client, "GET", "https://example.test/a", service="example"
+            )
+        with pytest.raises(PlantGenomicsError, match="HTTP 403: Forbidden"):
+            await _http.request_with_retry(
+                client,
+                "GET",
+                "https://example.test/b",
+                service="example",
+                retry_403_pattern=_REFUSAL,
+            )
+    # One request each: neither was retried (pytest-httpx fails on unused or
+    # over-used responses, so a retry would have needed a second response).
+
+
+@pytest.mark.asyncio
+async def test_exhausted_403_refusals_say_what_the_upstream_said(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
+    for _ in range(3):
+        httpx_mock.add_response(
+            url="https://example.test/r403x", status_code=403, text=_REFUSAL_PAGE
+        )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(RateLimitError, match=r"exhausted 3 retries \(HTTP 403: .*too high"):
+            await _http.request_with_retry(
+                client,
+                "GET",
+                "https://example.test/r403x",
+                service="example",
+                retry_403_pattern=_REFUSAL,
+            )
+
+
+def _counting_transport(
+    peak: list[int], status_when_crowded: int | None = None
+) -> httpx.MockTransport:
+    """A transport that records the most requests it ever held at once.
+
+    With ``status_when_crowded`` it refuses any request that arrives while
+    another is in flight, as OrthoDB does (live probe 2026-09-23).
+    """
+    in_flight = 0
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal in_flight
+        in_flight += 1
+        peak[0] = max(peak[0], in_flight)
+        try:
+            crowded = in_flight > 1
+            await asyncio.sleep(0.01)
+            if crowded and status_when_crowded is not None:
+                return httpx.Response(status_when_crowded, text=_REFUSAL_PAGE)
+            return httpx.Response(200, json={"ok": True})
+        finally:
+            in_flight -= 1
+
+    return httpx.MockTransport(handler)
+
+
+async def _eight_at_once(limit: _http.UpstreamLimit | None) -> int:
+    peak = [0]
+    async with httpx.AsyncClient(transport=_counting_transport(peak)) as client:
+        await asyncio.gather(
+            *(
+                _http.request_with_retry(
+                    client, "GET", f"https://example.test/{i}", service="example", limit=limit
+                )
+                for i in range(8)
+            )
+        )
+    return peak[0]
+
+
+@pytest.mark.asyncio
+async def test_upstream_limit_caps_requests_in_flight() -> None:
+    # Positive control: unlimited, the transport does see all eight at once,
+    # so a peak of 1 below is the limit working, not a harness that serialises.
+    assert await _eight_at_once(None) == 8
+    assert await _eight_at_once(_http.UpstreamLimit(1)) == 1
+    assert await _eight_at_once(_http.UpstreamLimit(3)) == 3
+
+
+@pytest.mark.asyncio
+async def test_upstream_limit_is_released_during_backoff(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A request sleeping before its retry must not hold its slot."""
+    order: list[str] = []
+    real_sleep = asyncio.sleep
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        order.append(request.url.path)
+        if request.url.path == "/slow" and order.count("/slow") == 1:
+            return httpx.Response(503)
+        return httpx.Response(200, json={"ok": True})
+
+    async def _backoff(seconds: float) -> None:
+        await real_sleep(0.05)
+
+    monkeypatch.setattr(_http.asyncio, "sleep", _backoff)
+    limit = _http.UpstreamLimit(1)
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+
+        async def fast() -> None:
+            await real_sleep(0.01)  # arrive while /slow is in its backoff
+            await _http.request_with_retry(
+                client, "GET", "https://example.test/fast", service="example", limit=limit
+            )
+
+        await asyncio.gather(
+            _http.request_with_retry(
+                client, "GET", "https://example.test/slow", service="example", limit=limit
+            ),
+            fast(),
+        )
+    assert order == ["/slow", "/fast", "/slow"]
+
+
+def test_upstream_limit_works_across_event_loops() -> None:
+    """One module-level limit serves every loop the process runs.
+
+    An ``asyncio.Semaphore`` binds to the first loop it makes a caller wait
+    on and raises ``RuntimeError`` on any later loop, which a module-level
+    limit meets under pytest's per-test loops and any host that restarts one.
+    """
+    limit = _http.UpstreamLimit(1)
+    assert asyncio.run(_eight_at_once(limit)) == 1
+    assert asyncio.run(_eight_at_once(limit)) == 1
+
+
+@pytest.mark.asyncio
+async def test_a_refusal_followed_by_interposed_pages_names_the_pages(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The error names the LAST failure: a refusal earlier in the budget must
+    not be reported for a run that ended on challenge pages."""
+    monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
+    url = "https://example.test/mixed"
+    httpx_mock.add_response(url=url, status_code=403, text=_REFUSAL_PAGE)
+    for _ in range(2):
+        httpx_mock.add_response(url=url, text="<html>challenge</html>")
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError, match="not the requested data"):
+            await _http.request_with_retry(
+                client, "GET", url, service="example", retry_403_pattern=_REFUSAL
+            )

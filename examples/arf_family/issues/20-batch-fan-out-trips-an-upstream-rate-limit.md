@@ -1,6 +1,6 @@
 # `batch_locus_call` fans out 8 wide, and OrthoDB refuses the excess as a rate limit
 
-**Not filed yet.** Written from the ARF family dossier in
+**Filed as [#153](https://github.com/musharna/plant-genomics-mcp/issues/153).** Written from the ARF family dossier in
 [`examples/arf_family/`](../), re-run at server commit `052e4ec`
 (release `1.21.0`): 64 MCP calls over 114 genes x 16 tools, the family
 itself from a 1163-call enumeration through the same tools. Each section
