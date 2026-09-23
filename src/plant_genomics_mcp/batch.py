@@ -163,7 +163,7 @@ async def batch_ensembl_plants_lookup_locus(
         if record is None:
             errors[locus] = f"[NotFoundError] Ensembl Plants /lookup/id: no record for {locus}"
         elif isinstance(record, dict):
-            results[locus] = record
+            results[locus] = ensembl_plants.project_lookup(record)
         else:
             errors[locus] = (
                 f"[PlantGenomicsError] Ensembl Plants returned non-dict for {locus}: "

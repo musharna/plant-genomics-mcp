@@ -481,3 +481,46 @@ async def test_live_region_query_arabidopsis_chr1_finds_arv1() -> None:
         result = await ensembl_plants.region_query(client, "1", 3000, 10000, feature="gene")
     ids = {f.get("id") for f in result["features"]}
     assert "AT1G01020" in ids, f"expected AT1G01020 in region, got {ids}"
+
+
+# ---------- issue #137: one projection, and no empty-version dot ----------
+
+# Verbatim fields of the live record (rest.ensembl.org, 2026-09-22): plant
+# genes carry version None, and Ensembl builds canonical_transcript as
+# "<id>.<version>" regardless, so the id ends in a bare '.'.
+_LIVE_RECORD = {
+    "id": "AT1G19850",
+    "canonical_transcript": "AT1G19850.1.",
+    "version": None,
+    "species": "arabidopsis_thaliana",
+    "db_type": "core",
+}
+
+
+@pytest.mark.asyncio
+async def test_single_and_batch_lookups_project_a_record_the_same_way(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """The batch form passed Ensembl's record through raw; the single one did not."""
+    from plant_genomics_mcp import batch
+
+    maize = {**_LIVE_RECORD, "id": "Zm1", "canonical_transcript": "Zm00001eb000010_T001"}
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/lookup/id/AT1G19850?species=arabidopsis_thaliana&expand=0",
+        json=_LIVE_RECORD,
+    )
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/lookup/id",
+        method="POST",
+        json={"AT1G19850": _LIVE_RECORD, "Zm1": maize},
+    )
+    async with httpx.AsyncClient() as client:
+        single = await ensembl_plants.lookup_locus(client, "AT1G19850")
+        env = await batch.batch_ensembl_plants_lookup_locus(client, ["AT1G19850", "Zm1"])
+
+    assert single == env["results"]["AT1G19850"]
+    assert single["canonical_transcript"] == "AT1G19850.1"  # aragwas spells it this way
+    assert single["organism"] == "arabidopsis_thaliana" and "species" not in single
+    assert "upstream_version" in single
+    # Positive control: an id with no empty-version dot is left as it came.
+    assert env["results"]["Zm1"]["canonical_transcript"] == "Zm00001eb000010_T001"

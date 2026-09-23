@@ -607,7 +607,8 @@ async def test_batch_ensembl_post_is_the_documented_request(httpx_mock: HTTPXMoc
     )
     assert req.extensions["timeout"]["read"] == ensembl_plants.DEFAULT_TIMEOUT
     assert env["tool"] == "ensembl_plants_lookup_locus" and env["count"] == 3
-    assert env["results"] == {"AT1G01010": {"id": "AT1G01010"}}
+    # Projected exactly as the single form projects it (issue #137).
+    assert env["results"] == {"AT1G01010": {"id": "AT1G01010", "upstream_version": None}}
     assert env["errors"]["AT1G01020"] == (
         "[PlantGenomicsError] Ensembl Plants returned non-dict for AT1G01020: list"
     )
