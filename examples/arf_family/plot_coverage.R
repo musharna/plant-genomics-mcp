@@ -1,9 +1,9 @@
 # Response-size figure for the ARF dossier's 16 chain tools.
 #
-# A calls-per-tool figure over all 50 tools carries no information: the
-# 34 tools outside the chain were never called and the 16 inside it are
-# called by a fixed rule (once per locus, or once per organism through a
-# batch_ form). `coverage.tsv` still has a row for all 50 (built by
+# A calls-per-tool figure over every published tool carries no
+# information: the tools outside the chain are never called and the 16
+# inside it are called by a fixed rule (one batch call per organism per 50
+# loci). `coverage.tsv` still has a row for every tool (built by
 # `coverage.py`); this figure instead plots the one thing that DOES vary
 # per call — response size — from `calls.jsonl` directly rather than from
 # the aggregated table. `n_bytes` there is the
@@ -23,10 +23,10 @@
 # same log draws the same figure and the page's counts can be checked
 # against it.
 #
-# One row of calls.jsonl is one MCP call. Eight chain tools go through
-# their batch_ form (one call per organism per 50 loci); the other eight
-# are called once per locus, so a per-locus tool draws up to a point per
-# locus per organism and a batch tool draws one per organism. The vertical
+# One row of calls.jsonl is one MCP call. Every chain tool goes through a
+# batch form — eight through their own batch_ tool, eight through
+# batch_locus_call — one call per organism per 50 loci, so each tool draws
+# one point per call. The vertical
 # offset is per ORGANISM, not per gene: one point per gene per tool is not
 # readable at this count, and the organism is what the eye has to
 # separate. The shape legend and the caption both name the organism
@@ -43,6 +43,11 @@ cov <- read.delim("examples/arf_family/coverage.tsv")
 chain <- cov[cov$status != "unused", ]
 
 calls <- jsonlite::stream_in(file("examples/arf_family/calls.jsonl"), verbose = FALSE)
+# A batch_locus_call call is counted under the tool it ran, the same key
+# coverage.py's `call_key` builds (#131): pooled under one name, eight
+# tools would share one row.
+generic <- calls$tool == "batch_locus_call"
+calls$tool[generic] <- paste0("batch_locus_call:", calls$chain_tool[generic])
 calls <- calls[calls$tool %in% chain$tool, ]
 
 tool_order <- chain$tool[order(chain$median_bytes)]
@@ -114,7 +119,8 @@ p <- ggplot(calls, aes(x = n_bytes, y = y)) +
     name = NULL,
     values = c(21, 22, 24)[seq_along(organisms_sorted)],
     breaks = organisms_sorted,
-    labels = gsub("_", " ", organisms_sorted),
+    # Abbreviated binomials: three full slugs overrun the 7in width.
+    labels = sub("^(.)[a-z]+_", "\\U\\1. ", organisms_sorted, perl = TRUE),
     guide = ggplot2::guide_legend(override.aes = list(fill = "grey60"))
   ) +
   scale_x_log10(labels = scales::label_comma()) +

@@ -1,8 +1,9 @@
 """Per-tool coverage table for the ARF dossier run.
 
-Every tool the live server publishes (`tools/list`, 50 of them) gets one
-row. The 16 the dossier's `CHAIN` actually calls (`chain.py`) come from
-`calls.jsonl`; the other 34 are written as `unused` — the table is never
+Every tool the live server publishes (`tools/list`) gets one row, and
+`batch_locus_call` one row per tool it ran (`call_key`). The tools the
+dossier's `CHAIN` (`chain.py`) reached come from `calls.jsonl`; the rest
+are written as `unused` — the table is never
 built from `CHAIN` alone, because that would silently drop a tool the
 server added or renamed since `CHAIN` was last hand-written (the same
 drift `tests/test_arf_chain.py` checks against the live schema).
@@ -56,6 +57,8 @@ RELEASE_UNDER_ANOTHER_KEY = "release under another key"
 RELEASE_ABSENT = "no release in the payload"
 RELEASE_UNUSED = "unused"
 
+GENERIC_BATCH = "batch_locus_call"
+
 _RAW_TOOL_RE = re.compile(r"__(.+)\.json$")
 
 FIELDNAMES = [
@@ -91,13 +94,33 @@ async def all_tool_names(server_cmd: list[str] = SERVER_CMD) -> list[str]:
 
 
 def load_calls(calls_path: Path) -> dict[str, list[dict]]:
-    """Group `calls.jsonl` rows by tool name."""
+    """Group `calls.jsonl` rows by `call_key`."""
     by_tool: dict[str, list[dict]] = defaultdict(list)
     with open(calls_path) as f:
         for line in f:
             row = json.loads(line)
-            by_tool[row["tool"]].append(row)
+            by_tool[call_key(row)].append(row)
     return by_tool
+
+
+def call_key(row: dict) -> str:
+    """The name a call is counted under: the tool called, except that a
+    `batch_locus_call` call (#131) is `batch_locus_call:<tool it ran>` —
+    pooled under the one name, eight tools' sizes and release status would
+    mix in one row."""
+    if row["tool"] == GENERIC_BATCH:
+        return f"{GENERIC_BATCH}:{row['args']['tool']}"
+    return row["tool"]
+
+
+def expand_tool_names(tool_names: list[str], by_tool: dict[str, list[dict]]) -> list[str]:
+    """`tool_names` with `batch_locus_call` replaced by one name per tool it
+    ran (`call_key`), in order; left as it is when it was never called."""
+    served = sorted(k for k in by_tool if k.startswith(f"{GENERIC_BATCH}:"))
+    out: list[str] = []
+    for name in tool_names:
+        out.extend(served if name == GENERIC_BATCH and served else [name])
+    return out
 
 
 def release_under_another_key_tools(gaps_path: Path, root: Path) -> set[str]:
@@ -197,7 +220,8 @@ def build_rows(
             # A batch_ form carries each locus's payload, release key and
             # all, inside its envelope: the gap row cites the split
             # per-locus raw files, which are the same payloads.
-            tool.removeprefix("batch_") in release_under_another_key
+            tool.removeprefix(f"{GENERIC_BATCH}:").removeprefix("batch_")
+            in release_under_another_key
         ):
             release_status = RELEASE_UNDER_ANOTHER_KEY
         else:
@@ -234,8 +258,8 @@ async def main(
     gaps_path: Path = GAPS_PATH,
     out_path: Path = COVERAGE_PATH,
 ) -> int:
-    tool_names = await all_tool_names(server_cmd)
     by_tool = load_calls(calls_path)
+    tool_names = expand_tool_names(await all_tool_names(server_cmd), by_tool)
     release_under_another_key = release_under_another_key_tools(gaps_path, root=HERE)
     rows = build_rows(tool_names, by_tool, release_under_another_key)
     write_coverage(rows, out_path)
