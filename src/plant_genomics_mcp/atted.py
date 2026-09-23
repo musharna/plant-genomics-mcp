@@ -31,7 +31,7 @@ from typing import Any
 
 import httpx
 
-from plant_genomics_mcp import __version__, _http, cache, organisms
+from plant_genomics_mcp import __version__, _http, cache, organisms, validators
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
@@ -89,6 +89,11 @@ def _normalize(row: dict[str, Any]) -> dict[str, Any]:
     """
     other_id = row.get("other_id") or []
     locus = other_id[0] if isinstance(other_id, list) and other_id else None
+    # Issue #137: ATTED-II spells AGIs 'At2g44830'; every other tool and TAIR
+    # itself use 'AT2G44830'. Only AGIs are recased — a rice RAP id
+    # ('Os08g0520550') is mixed-case by convention and comes back as sent.
+    if isinstance(locus, str) and validators.AGI_RE.match(locus):
+        locus = locus.upper()
     return {
         "locus": locus,
         "entrez_gene_id": row.get("gene"),

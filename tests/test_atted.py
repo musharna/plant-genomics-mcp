@@ -137,7 +137,7 @@ async def test_lookup_coexpression_happy(httpx_mock: HTTPXMock):
     assert result["atted_release"] == "Ath-u.c4-0"
     assert len(result["neighbors"]) == 2
     n0 = result["neighbors"][0]
-    assert n0["locus"] == "At4g36990"
+    assert n0["locus"] == "AT4G36990"  # upstream "At4g36990", recased (#137)
     assert n0["entrez_gene_id"] == 842367
     assert n0["z_score"] == 4.58
 
@@ -219,3 +219,16 @@ async def test_live_atted_at1g01010_has_neighbors():
     assert len(result["neighbors"]) > 0
     assert result["neighbors"][0]["z_score"] is not None
     assert result["neighbors"][0]["locus"]
+
+
+# ---------- issue #137: one locus spelling across tools ----------
+
+
+def test_an_agi_neighbour_is_spelled_as_every_other_tool_spells_it() -> None:
+    """396 of 400 neighbours came back 'At2g44830' beside 'AT1G19850' everywhere else."""
+    row = atted._normalize({"gene": 818087, "other_id": ["At2g44830"], "z": 11.8})
+    assert row["locus"] == "AT2G44830"
+    # Positive controls: ids that are not AGIs keep their own canonical case —
+    # a rice RAP id is mixed-case by convention, and the empty id stays empty.
+    for sent in ("Os08g0520550", "OSNPB_080175600", ""):
+        assert atted._normalize({"gene": 1, "other_id": [sent], "z": 1.0})["locus"] == sent
