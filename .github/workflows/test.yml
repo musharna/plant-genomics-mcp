@@ -12,6 +12,10 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # The suite takes a few minutes. Behind the dead proxy below, an ungated
+    # live test does not fail fast: every call retries with backoff (a
+    # 115-row manifest ran past 30 min), so bound the job and name the test.
+    timeout-minutes: 15
     strategy:
       matrix:
         # Must span the whole `requires-python = ">=3.11"` range, not just the
@@ -43,4 +47,34 @@ jobs:
       - name: Test (mocked + stdio smoke; live network gated by PLANT_GENOMICS_MCP_LIVE=1)
         env:
           PLANT_GENOMICS_MCP_STDIO_SMOKE: "1"
-        run: pytest -q --cov=src --cov-report=term --cov-report=xml
+          # A dead proxy, so a test that reaches the internet without the
+          # PLANT_GENOMICS_MCP_LIVE gate fails on every run instead of on the
+          # runs where the upstream happens to be down. Local sockets (the
+          # uvicorn transport tests) bypass it via NO_PROXY.
+          HTTP_PROXY: "http://127.0.0.1:9"
+          HTTPS_PROXY: "http://127.0.0.1:9"
+          NO_PROXY: "localhost,127.0.0.1"
+        run: pytest -q -o faulthandler_timeout=300 --cov=src --cov-report=term --cov-report=xml
+
+  # Live InterPro/PANTHER checks of the ARF example. Not a required check:
+  # its result depends on third-party services, so it reports on a PR
+  # without blocking the merge. One interpreter, so a PR costs the
+  # upstreams one pass, not four.
+  live-smoke:
+    runs-on: ubuntu-latest
+    # A local run took 17 min on 2026-09-23 with PANTHER timing out.
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Python 3.12
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e '.[dev]'
+      - name: Live ARF checks (InterPro, PANTHER)
+        env:
+          PLANT_GENOMICS_MCP_LIVE: "1"
+        run: pytest -q tests/test_verify_genes.py tests/test_arf_mcp_client.py

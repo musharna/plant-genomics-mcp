@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+- **CI: the required test job no longer depends on InterPro or PANTHER being up.**
+  Two live tests of `examples/arf_family/` were gated on
+  `PLANT_GENOMICS_MCP_STDIO_SMOKE`, the flag for the network-free stdio smoke
+  tests, so they ran in the required `test` job and failed it whenever the
+  upstreams failed the CI runners (twice on 2026-09-23: real ARF rows flagged,
+  green on re-run; a local re-run the same night showed why, PANTHER
+  `geneinfo` read timeouts on 4 rows). They are now gated on
+  `PLANT_GENOMICS_MCP_LIVE=1` and run in a separate, non-required `live-smoke`
+  job on one interpreter. The required job's pytest step runs behind a dead
+  proxy with `faulthandler_timeout=300` and a 15 min cap, so an ungated live
+  call fails every run and the stuck test is named. A `verify_genes` live failure now prints each flagged row's reason,
+  and the planted negative row must be caught by the IPR010525 check, not by a
+  failed call.
+
 ## v1.22.0 — 2026-09-23
 
 **52 tools / 23 backends** — two new tools, `batch_locus_call` (#131) and `entry_members` (#124). A minor release rather than a patch: besides the new tools, several answers change shape or meaning (the entries marked **Behaviour change** below).

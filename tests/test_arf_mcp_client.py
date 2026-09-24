@@ -34,10 +34,11 @@ def test_lists_all_tools_over_real_stdio():
 
 def test_unknown_tool_is_reported_not_raised():
     # No tool in this server is network-free (every tool.annotations sets
-    # open_world_hint=True — confirmed by grep), and the repo's own stdio
-    # smoke test (tests/test_server_stdio.py) gates every live-network
-    # tools/call behind PLANT_GENOMICS_MCP_STDIO_SMOKE=1 specifically so the
-    # default `pytest -q` run stays network-free. This test runs
+    # open_world_hint=True — confirmed by grep), and every live-network
+    # tools/call in this repo is gated behind PLANT_GENOMICS_MCP_LIVE=1 so
+    # both the default `pytest -q` run and the stdio smoke run
+    # (PLANT_GENOMICS_MCP_STDIO_SMOKE=1, tests/test_server_stdio.py) stay
+    # network-free. This test runs
     # unconditionally in `pytest -q`, so the positive control here is
     # list_tools() succeeding (real execution over the real stdio
     # subprocess, no external network) in the same client session as the
@@ -156,11 +157,13 @@ def test_start_raises_runtime_error_on_initialize_error_and_reaps_process():
 
 
 @pytest.mark.skipif(
-    not os.environ.get("PLANT_GENOMICS_MCP_STDIO_SMOKE"),
-    reason="set PLANT_GENOMICS_MCP_STDIO_SMOKE=1 to run the stdio smoke test",
+    os.environ.get("PLANT_GENOMICS_MCP_LIVE") != "1",
+    reason="set PLANT_GENOMICS_MCP_LIVE=1 to run (calls InterPro and PANTHER live)",
 )
 def test_interpro_domains_separates_arf_from_adp_ribosylation_factor_over_real_stdio():
-    # Real-execution control, gated exactly like tests/test_server_stdio.py.
+    # Real-execution control against live InterPro, gated like the repo's
+    # other live tests (PLANT_GENOMICS_MCP_LIVE=1), not like the network-free
+    # stdio smoke test.
     # The ARF-vs-ADP-ribosylation-factor discriminator is a structured
     # InterPro accession, not Ensembl free text — a prior version of this
     # test asserted a regex against free-text wording that live data
