@@ -296,8 +296,8 @@ def test_fake_server_rejects_an_unknown_mode_string():
 
 
 @pytest.mark.skipif(
-    not os.environ.get("PLANT_GENOMICS_MCP_STDIO_SMOKE"),
-    reason="set PLANT_GENOMICS_MCP_STDIO_SMOKE=1 to run the stdio smoke test",
+    os.environ.get("PLANT_GENOMICS_MCP_LIVE") != "1",
+    reason="set PLANT_GENOMICS_MCP_LIVE=1 to run (calls InterPro and PANTHER live)",
 )
 def test_verify_genes_over_real_stdio_passes_the_manifest_and_catches_a_planted_bad_row(tmp_path):
     # Real-execution control for verify_genes.py itself (not just the
@@ -305,7 +305,9 @@ def test_verify_genes_over_real_stdio_passes_the_manifest_and_catches_a_planted_
     # server, and a planted bad row (AT1G23490, the ADP-ribosylation factor
     # from the interpro negative control, mislabeled as an ARF1 row) must be
     # caught in the same run — the brief's Step 4 "prove it can fail",
-    # automated and gated exactly like the client's live test.
+    # automated and gated exactly like the client's live test. Live-gated,
+    # not smoke-gated: the required CI job runs the smoke tests and must not
+    # depend on InterPro or PANTHER being up (LESSONS.md, 2026-09-23).
     with open(GENES_TSV) as f:
         real_rows = list(csv.DictReader(f, delimiter="\t"))
     planted = _row("AT1G23490", "ARF1", "PTHR31384:SF96", "true")
@@ -313,4 +315,10 @@ def test_verify_genes_over_real_stdio_passes_the_manifest_and_catches_a_planted_
 
     bad = run(verify(genes, SERVER_CMD))
 
-    assert [locus for locus, _, _ in bad] == ["AT1G23490"]
+    # The message carries every flagged row's reason, so a live failure says
+    # which call failed and how, not only which loci.
+    report = "\n".join(f"{locus} {symbol}: {reason}" for locus, symbol, reason in bad)
+    assert [locus for locus, _, _ in bad] == ["AT1G23490"], report
+    # The planted row must be caught by the discriminator, not by a failed
+    # call — a 404 for AT1G23490 alone would otherwise pass as "caught".
+    assert "IPR010525 absent" in bad[0][2], report
