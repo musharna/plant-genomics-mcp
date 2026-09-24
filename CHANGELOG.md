@@ -16,6 +16,15 @@
   and the planted negative row must be caught by the IPR010525 check, not by a
   failed call.
 
+- **CI: `test_grafts_cannot_empty_the_listing[info-grafts]` no longer fails at
+  random** (4 times on 2026-09-23/24, once in the required `test (3.11)` on
+  `main`). Its setup gave the twin commit `main` as parent and then grafted
+  `main` onto the twin — a cycle, so `git merge-base` answered by commit date
+  and returned `main` whenever the feature commit fell a second after it. The
+  twin is now parentless, and the test pins the feature commit one second
+  after `main` so the case that used to fail runs every time. Test-only; the
+  denylist gate was not at fault.
+
 ## v1.22.0 — 2026-09-23
 
 **52 tools / 23 backends** — two new tools, `batch_locus_call` (#131) and `entry_members` (#124). A minor release rather than a patch: besides the new tools, several answers change shape or meaning (the entries marked **Behaviour change** below).

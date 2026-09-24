@@ -1684,6 +1684,14 @@ def test_grafts_cannot_empty_the_listing(tmp_path, via):
     repo = _repo_with_planted_file(tmp_path, "repo", planted=True)
     deny_file = tmp_path / "deny.txt"
     deny_file.write_text("ZZPLANTED9\n")
+    # Commit a second after ``main``, every run. The setup used to give the
+    # twin ``main`` as its parent, so grafting ``main`` onto it made a cycle
+    # and ``merge-base`` answered by commit date: ``main`` instead of the
+    # twin whenever the feature commit fell in a later second than ``main``,
+    # which a slow CI runner hit and a fast laptop did not.
+    later = str(int(_git_out(["log", "-1", "--format=%ct", "main"], repo)) + 1)
+    dated = {"GIT_AUTHOR_DATE": f"@{later} +0000", "GIT_COMMITTER_DATE": f"@{later} +0000"}
+    _git_out(["commit", "-q", "--amend", "--no-edit", "--reset-author"], repo, extra_env=dated)
 
     before = _run_denylist(repo, deny_file, "main")
     assert before.returncode == 1, before.stdout + before.stderr
@@ -1691,7 +1699,9 @@ def test_grafts_cannot_empty_the_listing(tmp_path, via):
 
     head = _git_out(["rev-parse", "HEAD"], repo)
     main = _git_out(["rev-parse", "main"], repo)
-    twin = _git_out(["commit-tree", "-p", main, "-m", "twin", f"{head}^{{tree}}"], repo)
+    # Parentless: both grafts point at it and nothing points back, so it is
+    # the one common ancestor whatever the commit dates.
+    twin = _git_out(["commit-tree", "-m", "twin", f"{head}^{{tree}}"], repo, extra_env=dated)
     grafts = f"{head} {twin}\n{main} {twin}\n"
     extra: dict[str, str] = {}
     if via == "env-graft-file":
