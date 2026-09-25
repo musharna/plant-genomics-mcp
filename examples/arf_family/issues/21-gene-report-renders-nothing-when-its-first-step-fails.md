@@ -1,6 +1,6 @@
 # `gene_report` answers ok with an empty result when its Ensembl step fails, where the description promises a degraded dossier
 
-**Filed as [#154](https://github.com/musharna/plant-genomics-mcp/issues/154).** Written from the ARF family dossier in
+**Filed as [#154](https://github.com/musharna/plant-genomics-mcp/issues/154) — fixed.** The row is closed at `2fc3f92`. Written from the ARF family dossier in
 [`examples/arf_family/`](../), re-run at server commit `052e4ec`
 (release `1.21.0`): 64 MCP calls over 114 genes x 16 tools, the family
 itself from a 1163-call enumeration through the same tools. Each section

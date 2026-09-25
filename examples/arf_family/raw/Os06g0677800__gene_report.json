@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-23T04:54:33Z",
- "elapsed_s": 27.82645832299022,
+ "started_at": "2026-09-25T05:17:09Z",
+ "elapsed_s": 11.218903479995788,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 27.530110733001493,
+   "elapsed_s": 10.892162347998237,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.00044863000221084803,
+   "elapsed_s": 0.0006740159878972918,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 6.0085003497079015e-05,
+   "elapsed_s": 8.460399112664163e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 4.8955000238493085e-05,
+   "elapsed_s": 8.106399036478251e-05,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.28446568400249816,
+   "elapsed_s": 0.3258185160084395,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.000872892007464543,
+   "elapsed_s": 0.001415983002516441,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00016582199896220118,
+   "elapsed_s": 0.00024777599901426584,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00030424899887293577,
+   "elapsed_s": 0.00038290699012577534,
    "result": null,
    "error": null
   }
@@ -88,19 +88,19 @@
   "markdown": "# OsARF17 (UniProt: ARF17) \u2014 `Os06g0677800`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 6:28,158,519\u201328,164,557 (-) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 17**\nARFQ_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 917 aa\nUniProt: [Q653U3](https://www.uniprot.org/uniprotkb/Q653U3)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [133\u2013234]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [298\u2013370]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [132\u2013235]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [783\u2013875]\n- **B3 DNA binding domain** (domain, interpro) [133\u2013236]\n- **Auxin response factor domain** (domain, interpro) [283\u2013366]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [119\u2013263]\n- **AUX/IAA domain** (domain, interpro) [784\u2013871]\n- **Auxin response factor** (family, interpro) [24\u2013875]\n- **PB1-like domain** (domain, interpro) [786\u2013870]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_No KEGG pathway memberships found._\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| B1153E06.24 | 0.98 |\n| Q0JC85_ORYSJ | 0.912 |\n| Q8LRG9_ORYSJ | 0.905 |\n| Q69MK0_ORYSJ | 0.905 |\n| A0A0P0VV58 | 0.899 |\n| A0A0P0VQD8 | 0.893 |\n| Q0DIX4_ORYSJ | 0.884 |\n| Q0JCJ0_ORYSJ | 0.884 |\n| PRMT5 | 0.879 |\n| Q688U0_ORYSJ | 0.877 |\n\n## Cross-references\n- WikiGene: 4341841\n- Expression Atlas: Os06g0677800\n- NCBI gene (formerly Entrezgene): 4341841\n\n## Literature\n7 hits total; showing top 7.\n- **Identification of Key Genes and Pathways for Anaerobic Germination Tolerance in Rice Using Weighted Gene Co-Expression Network Analysis (WGCNA) in Association with Quantitative Trait Locus (QTL) Mapping** \u2014 Yin M, Zheng Z, Zhang Y, Wang S, Zuo L, Lei Y, Zhao Y, Zhao X, Fu B, Shi Y, Xu J, Wang W. (PMID:38819744; doi:10.1186/s12284-024-00714-y)\n- **Population Structure of Nation-Wide Rice in Thailand** \u2014 Vejchasarn P, Shearman JR, Chaiprom U, Phansenee Y, Suthanthangjai A, Jairin J, Chamarerk V, Tulyananda T, Amornbunchornvej C. (PMID:34693480; doi:10.1186/s12284-021-00528-2)\n- **Insights on Phytohormonal Crosstalk in Plant Response to Nitrogen Stress: A Focus on Plant Root Growth and Development** \u2014 Ahmad N, Jiang Z, Zhang L, Hussain I, Yang X. (PMID:36835044; doi:10.3390/ijms24043631)\n- **miR167d-ARFs Module Regulates Flower Opening and Stigma Size in Rice** \u2014 Zhao ZX, Yin XX, Li S, Peng YT, Yan XL, Chen C, Hassan B, Zhou SX, Pu M, Zhao JH, Hu XH, Li GB, Wang H, Zhang JW, Huang YY, Fan J, Li Y, Wang WM. (PMID:35876915; doi:10.1186/s12284-022-00587-z)\n- **SPOC domain-containing protein Leaf inclination3 interacts with LIP1 to regulate rice leaf inclination through auxin signaling** \u2014 Chen SH, Zhou LJ, Xu P, Xue HW. (PMID:30496185; doi:10.1371/journal.pgen.1007829)\n- **Plant nitrogen availability and crosstalk with phytohormones signallings and their biotechnology breeding application in crops** \u2014 Xing J, Cao X, Zhang M, Wei X, Zhang J, Wan X. (PMID:36435985; doi:10.1111/pbi.13971)\n- **Metabolic and transcriptional regulatory mechanisms underlying the anoxic adaptation of rice coleoptile** \u2014 Lakshmanan M, Mohanty B, Lim SH, Ha SH, Lee DY. (PMID:24894389; doi:10.1093/aobpla/plu026)\n",
   "sections": {
    "annotation": {
-    "end": 28164557,
     "strand": -1,
     "id": "Os06g0677800",
-    "start": 28158519,
-    "assembly_name": "IRGSP-1.0",
+    "end": 28164557,
     "source": "RAP2022-09-01",
+    "assembly_name": "IRGSP-1.0",
+    "start": 28158519,
     "biotype": "protein_coding",
+    "canonical_transcript": "Os06t0677800-01",
     "seq_region_name": "6",
     "display_name": "OsARF17",
-    "canonical_transcript": "Os06t0677800-01",
     "object_type": "Gene",
-    "db_type": "core",
     "logic_name": "rapdb_genes",
+    "db_type": "core",
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -126,37 +126,37 @@
     "count": 3,
     "xrefs": [
      {
-      "info_text": "",
+      "db_display_name": "WikiGene",
       "info_type": "DEPENDENT",
       "dbname": "WikiGene",
-      "version": "0",
+      "info_text": "",
+      "display_id": "LOC4341841",
+      "synonyms": [],
       "description": "auxin response factor 17-like",
-      "db_display_name": "WikiGene",
-      "display_id": "LOC4341841",
-      "synonyms": [],
-      "primary_id": "4341841"
-     },
-     {
-      "description": null,
-      "db_display_name": "Expression Atlas",
-      "display_id": "Os06g0677800",
-      "primary_id": "Os06g0677800",
-      "synonyms": [],
-      "version": "0",
-      "info_text": "",
-      "info_type": "DIRECT",
-      "dbname": "ArrayExpress"
-     },
-     {
-      "dbname": "EntrezGene",
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "version": "0",
-      "display_id": "LOC4341841",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "synonyms": [],
       "primary_id": "4341841",
-      "description": "auxin response factor 17-like"
+      "version": "0"
+     },
+     {
+      "info_type": "DIRECT",
+      "db_display_name": "Expression Atlas",
+      "dbname": "ArrayExpress",
+      "info_text": "",
+      "version": "0",
+      "primary_id": "Os06g0677800",
+      "description": null,
+      "synonyms": [],
+      "display_id": "Os06g0677800"
+     },
+     {
+      "version": "0",
+      "primary_id": "4341841",
+      "description": "auxin response factor 17-like",
+      "synonyms": [],
+      "display_id": "LOC4341841",
+      "info_text": "",
+      "dbname": "EntrezGene",
+      "info_type": "DEPENDENT",
+      "db_display_name": "NCBI gene (formerly Entrezgene)"
      }
     ],
     "by_db": {

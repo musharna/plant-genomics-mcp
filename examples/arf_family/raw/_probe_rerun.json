@@ -1,6 +1,6 @@
 {
- "server_version": "1.21.0",
- "server_commit": "052e4ec",
+ "server_version": "1.22.0",
+ "server_commit": "2fc3f92",
  "tool_count": 52,
  "tools": {
   "string_interactions": {
@@ -21,7 +21,7 @@
     "openWorldHint": true,
     "readOnlyHint": true
    },
-   "description": "Fetch protein-protein interaction partners from STRING-DB (string-db.org). Accepts either a UniProt accession or a locus identifier \u2014 the latter is resolved via UniProt first. Defaults to arabidopsis_thaliana; pass organism= for other plant species (slug, scientific/common name, or NCBI taxid). Returns first-neighbor partners with the combined STRING score plus per-channel sub-scores (experimental, database, textmining, predicted). The argument was called locus_or_accession before #129; that name is still accepted, deprecated.",
+   "description": "Fetch protein-protein interaction partners from STRING-DB (string-db.org). Accepts either a UniProt accession or a locus identifier. A locus goes to STRING's own resolver, except for wheat, whose STRING proteins carry no locus alias: a wheat locus is resolved via UniProt first. Defaults to arabidopsis_thaliana; pass organism= for other plant species (slug, scientific/common name, or NCBI taxid). Returns first-neighbor partners with the combined STRING score plus per-channel sub-scores (experimental, database, textmining, predicted). The argument was called locus_or_accession before #129; that name is still accepted, deprecated.",
    "inputSchema": {
     "properties": {
      "locus": {
