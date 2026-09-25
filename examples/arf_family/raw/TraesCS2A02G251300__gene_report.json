@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-25T05:21:22Z",
- "elapsed_s": 0.9184533049992751,
+ "started_at": "2026-09-25T11:15:47Z",
+ "elapsed_s": 21.851243103999877,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.6256782319978811,
+   "elapsed_s": 8.306419256000481,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0004987459979020059,
+   "elapsed_s": 0.00028794599984394154,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.14326098799938336,
+   "elapsed_s": 13.544416333999834,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 3.427000774536282e-05,
+   "elapsed_s": 2.155899983335985e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.29137334899860434,
+   "elapsed_s": 0.23692669200045202,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 5.776499165222049e-05,
+   "elapsed_s": 3.497600027912995e-05,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00013202399713918567,
+   "elapsed_s": 0.00018992900004377589,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00017359000048600137,
+   "elapsed_s": 0.000152356999933545,
    "result": null,
    "error": null
   }
@@ -87,17 +87,17 @@
   "sections": {
    "annotation": {
     "db_type": "core",
+    "biotype": "protein_coding",
+    "end": 379297829,
+    "id": "TraesCS2A02G251300",
+    "strand": -1,
+    "seq_region_name": "2A",
+    "logic_name": "iwgsc_high_conf",
+    "start": 379293994,
     "source": "IWGSC",
     "object_type": "Gene",
-    "id": "TraesCS2A02G251300",
-    "canonical_transcript": "TraesCS2A02G251300.1",
-    "logic_name": "iwgsc_high_conf",
-    "strand": -1,
-    "end": 379297829,
-    "start": 379293994,
     "assembly_name": "IWGSC",
-    "biotype": "protein_coding",
-    "seq_region_name": "2A",
+    "canonical_transcript": "TraesCS2A02G251300.1",
     "organism": "triticum_aestivum",
     "upstream_version": null
    },
@@ -121,37 +121,37 @@
     "count": 3,
     "xrefs": [
      {
-      "version": "0",
+      "info_text": "",
+      "synonyms": [],
       "display_id": "TraesCS2A02G251300",
-      "primary_id": "TraesCS2A02G251300",
       "description": null,
       "info_type": "DEPENDENT",
-      "info_text": "",
+      "version": "0",
       "db_display_name": "KNETMINER_WHEAT",
-      "synonyms": [],
-      "dbname": "KNETMINER_WHEAT"
+      "dbname": "KNETMINER_WHEAT",
+      "primary_id": "TraesCS2A02G251300"
      },
      {
-      "display_id": "TraesCS2A02G251300",
-      "version": "0",
       "info_type": "DEPENDENT",
-      "primary_id": "TraesCS2A02G251300",
-      "description": null,
-      "db_display_name": "Wheat Expression",
-      "info_text": "",
+      "display_id": "TraesCS2A02G251300",
       "synonyms": [],
-      "dbname": "WHEATEXP_GENE"
+      "description": null,
+      "info_text": "",
+      "dbname": "WHEATEXP_GENE",
+      "primary_id": "TraesCS2A02G251300",
+      "version": "0",
+      "db_display_name": "Wheat Expression"
      },
      {
-      "db_display_name": "Expression Atlas",
-      "info_text": "",
+      "primary_id": "TraesCS2A02G251300",
       "dbname": "ArrayExpress",
-      "synonyms": [],
-      "display_id": "TraesCS2A02G251300",
+      "db_display_name": "Expression Atlas",
       "version": "0",
       "info_type": "DIRECT",
       "description": null,
-      "primary_id": "TraesCS2A02G251300"
+      "display_id": "TraesCS2A02G251300",
+      "synonyms": [],
+      "info_text": ""
      }
     ],
     "by_db": {

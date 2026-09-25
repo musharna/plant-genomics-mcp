@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-25T05:21:27Z",
- "elapsed_s": 0.97553920300561,
+ "started_at": "2026-09-25T11:17:05Z",
+ "elapsed_s": 6.797654203000093,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.5408206730062375,
+   "elapsed_s": 3.8412042589998237,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0007789760129526258,
+   "elapsed_s": 0.000408609000260185,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.1689054890011903,
+   "elapsed_s": 2.9558742720000737,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 3.160399501211941e-05,
+   "elapsed_s": 4.949100002704654e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.433400891997735,
+   "elapsed_s": 0.28542021100020065,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0004188359889667481,
+   "elapsed_s": 0.0009766419998413767,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00034783298906404525,
+   "elapsed_s": 0.0009917119996316615,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00035444200329948217,
+   "elapsed_s": 0.00106353599949216,
    "result": null,
    "error": null
   }
@@ -87,17 +87,17 @@
   "sections": {
    "annotation": {
     "object_type": "Gene",
-    "seq_region_name": "3D",
-    "canonical_transcript": "TraesCS3D02G292100.1",
-    "strand": -1,
-    "source": "IWGSC",
-    "id": "TraesCS3D02G292100",
-    "db_type": "core",
-    "assembly_name": "IWGSC",
-    "logic_name": "iwgsc_high_conf",
     "biotype": "protein_coding",
-    "start": 401893668,
+    "assembly_name": "IWGSC",
+    "canonical_transcript": "TraesCS3D02G292100.1",
+    "seq_region_name": "3D",
+    "logic_name": "iwgsc_high_conf",
+    "source": "IWGSC",
+    "db_type": "core",
+    "strand": -1,
     "end": 401899417,
+    "id": "TraesCS3D02G292100",
+    "start": 401893668,
     "organism": "triticum_aestivum",
     "upstream_version": null
    },
@@ -121,81 +121,81 @@
     "count": 7,
     "xrefs": [
      {
-      "db_display_name": "KNETMINER_WHEAT",
+      "display_id": "TraesCS3D02G292100",
+      "info_type": "DEPENDENT",
       "info_text": "",
       "dbname": "KNETMINER_WHEAT",
-      "synonyms": [],
-      "display_id": "TraesCS3D02G292100",
       "version": "0",
-      "info_type": "DEPENDENT",
-      "description": null,
-      "primary_id": "TraesCS3D02G292100"
-     },
-     {
-      "version": "0",
-      "display_id": "TraesCS3D02G292100",
+      "db_display_name": "KNETMINER_WHEAT",
       "description": null,
       "primary_id": "TraesCS3D02G292100",
-      "info_type": "DEPENDENT",
-      "info_text": "",
-      "db_display_name": "Wheat Expression",
-      "synonyms": [],
-      "dbname": "WHEATEXP_GENE"
-     },
-     {
-      "db_display_name": "Plant Reactome Reaction ID",
-      "info_text": "Generated via direct",
-      "dbname": "Plant_Reactome_Reaction",
-      "synonyms": [],
-      "display_id": "R-TAE-9675270",
-      "version": "0",
-      "info_type": "DIRECT",
-      "primary_id": "R-TAE-9675270",
-      "description": "Expression of ARF3"
-     },
-     {
-      "version": "0",
-      "display_id": "R-TAE-5608208",
-      "description": "ARF inactivation by AUX/IAA",
-      "primary_id": "R-TAE-5608208",
-      "info_type": "DIRECT",
-      "info_text": "Generated via direct",
-      "db_display_name": "Plant Reactome Reaction ID",
-      "synonyms": [],
-      "dbname": "Plant_Reactome_Reaction"
-     },
-     {
-      "info_type": "DIRECT",
-      "description": "Lateral root emergence",
-      "primary_id": "R-TAE-9675304",
-      "display_id": "R-TAE-9675304",
-      "version": "0",
-      "dbname": "Plant_Reactome_Pathway",
-      "synonyms": [],
-      "db_display_name": "Plant Reactome Pathway ID",
-      "info_text": "Generated via direct"
-     },
-     {
-      "display_id": "R-TAE-5608118",
-      "version": "0",
-      "info_type": "DIRECT",
-      "primary_id": "R-TAE-5608118",
-      "description": "Auxin signalling",
-      "db_display_name": "Plant Reactome Pathway ID",
-      "info_text": "Generated via direct",
-      "dbname": "Plant_Reactome_Pathway",
       "synonyms": []
      },
      {
-      "info_text": "",
-      "db_display_name": "Expression Atlas",
-      "dbname": "ArrayExpress",
       "synonyms": [],
-      "version": "0",
-      "display_id": "TraesCS3D02G292100",
-      "description": null,
       "primary_id": "TraesCS3D02G292100",
-      "info_type": "DIRECT"
+      "db_display_name": "Wheat Expression",
+      "description": null,
+      "version": "0",
+      "info_type": "DEPENDENT",
+      "info_text": "",
+      "dbname": "WHEATEXP_GENE",
+      "display_id": "TraesCS3D02G292100"
+     },
+     {
+      "primary_id": "R-TAE-9675270",
+      "synonyms": [],
+      "info_type": "DIRECT",
+      "info_text": "Generated via direct",
+      "dbname": "Plant_Reactome_Reaction",
+      "display_id": "R-TAE-9675270",
+      "db_display_name": "Plant Reactome Reaction ID",
+      "description": "Expression of ARF3",
+      "version": "0"
+     },
+     {
+      "info_type": "DIRECT",
+      "info_text": "Generated via direct",
+      "dbname": "Plant_Reactome_Reaction",
+      "display_id": "R-TAE-5608208",
+      "db_display_name": "Plant Reactome Reaction ID",
+      "description": "ARF inactivation by AUX/IAA",
+      "version": "0",
+      "primary_id": "R-TAE-5608208",
+      "synonyms": []
+     },
+     {
+      "description": "Lateral root emergence",
+      "db_display_name": "Plant Reactome Pathway ID",
+      "version": "0",
+      "dbname": "Plant_Reactome_Pathway",
+      "info_text": "Generated via direct",
+      "info_type": "DIRECT",
+      "display_id": "R-TAE-9675304",
+      "synonyms": [],
+      "primary_id": "R-TAE-9675304"
+     },
+     {
+      "primary_id": "R-TAE-5608118",
+      "synonyms": [],
+      "display_id": "R-TAE-5608118",
+      "info_type": "DIRECT",
+      "info_text": "Generated via direct",
+      "dbname": "Plant_Reactome_Pathway",
+      "version": "0",
+      "db_display_name": "Plant Reactome Pathway ID",
+      "description": "Auxin signalling"
+     },
+     {
+      "synonyms": [],
+      "primary_id": "TraesCS3D02G292100",
+      "version": "0",
+      "db_display_name": "Expression Atlas",
+      "description": null,
+      "display_id": "TraesCS3D02G292100",
+      "info_type": "DIRECT",
+      "dbname": "ArrayExpress",
+      "info_text": ""
      }
     ],
     "by_db": {
@@ -350,11 +350,11 @@
       "title": "Kernel Transcriptome Profiles of Susceptible Wheat Genotypes in Response to Wheat Dwarf Bunt.",
       "authorString": "Su S, Zhang Z, Shen T, Chen J, Liu Q.",
       "journalTitle": "International journal of molecular sciences",
-      "pubYear": "2023",
+      "pubYear": 2023,
       "firstPublicationDate": "2023-12-08",
       "citedByCount": 1,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "Wheat dwarf bunt is caused by <i>Tilletia controversa</i> J. G. <i>K\u00fchn</i> (TCK), which is a serious fungal diseases affecting kernels of wheat. In order to identify candidate genes involved in the abnormal development of kernels in wheat, we used RNA sequencing technology to analyze the transcriptome of the abnormal and healthy kernels of a susceptible variety (Yili053) at the mid-filling stage, late-filling stage, and maturity stage, respectively. The differentially expressed genes (DEGs) were analyzed, and there were 3930 DEGs, 28,422 DEGs, and 20,874 DEGs found at the mid-filling stage, late-filling stage, and maturity stage in Yili053, respectively. A total of 1592 DEGs (506 DEGs up-regulated) showed continuously differential expression in the three stages. Gene ontology analysis showed that these DEGs were related to biological regulation, metabolic processes, and the response to stimulus. Kyoto Encyclopedia of Genes and Genomes enrichment analysis showed that these DEGs play major roles in pathways including photosynthesis, carbon metabolism, carbon fixation in photosynthetic organisms, and glyoxylate and dicarboxylate metabolism. Moreover, we predicted that 13 MADS-MIKC transcription factors, which were continuously up-regulated, were crucial for regulating the maturation and senescence of eukaryotes. Some 21 genes related to the plant hormone signaling transduction pathway and 61 genes related to the response to stimulus were analyzed. A total of 26 of them were successful validated with a qPCR analysis. These genes were thought to be involved in the abnormal development of kernels infected by TCK. A transcriptomics analysis of wheat kernels in response to TCK will contribute to understanding the interaction of TCK and wheat, and may provide a basis for knowledge of molecular events in the abnormal development of kernels, which will be helpful for more efficient TCK management.",
       "web_url": "https://europepmc.org/article/PMC/PMC10744332"
      },
@@ -367,11 +367,11 @@
       "title": "Enhancing wheat regeneration and genetic transformation through overexpression of TaLAX1.",
       "authorString": "Yu Y, Yu H, Peng J, Yao WJ, Wang YP, Zhang FL, Wang SR, Zhao Y, Zhao XY, Zhang XS, Su YH.",
       "journalTitle": "Plant communications",
-      "pubYear": "2024",
+      "pubYear": 2024,
       "firstPublicationDate": "2023-10-28",
       "citedByCount": 42,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "In the realm of genetically transformed crops, the process of plant regeneration holds utmost significance. However, the low regeneration efficiency of several wheat varieties currently restricts the use of genetic transformation for gene functional analysis and improved crop production. This research explores overexpression of TaLAX PANICLE1 (TaLAX1), which markedly enhances regeneration efficiency, thereby boosting genetic transformation and genome editing in wheat. Particularly noteworthy is the substantial increase in regeneration efficiency of common wheat varieties\u00a0previously regarded as recalcitrant to genetic transformation. Our study shows that increased expression of TaGROWTH-REGULATING FACTOR (TaGRF) genes, alongside that of their co-factor, TaGRF-INTERACTING FACTOR 1 (TaGIF1), enhances cytokinin accumulation and auxin response, which may play pivotal roles in the improved regeneration and transformation of TaLAX1-overexpressing wheat plants. Overexpression of TaLAX1 homologs also significantly increases the regeneration efficiency of maize and soybean, suggesting that both monocot\u00a0and dicot\u00a0crops can benefit from this enhancement. Our findings\u00a0shed light on a gene that enhances wheat genetic transformation and elucidate molecular mechanisms that potentially underlie wheat regeneration.",
       "web_url": "https://europepmc.org/article/PMC/PMC11121199"
      }

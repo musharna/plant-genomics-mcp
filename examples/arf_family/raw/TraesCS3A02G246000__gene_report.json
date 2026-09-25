@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-25T05:21:25Z",
- "elapsed_s": 1.7303101979923667,
+ "started_at": "2026-09-25T11:16:31Z",
+ "elapsed_s": 11.085749680000845,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.7533742840023478,
+   "elapsed_s": 10.250830375999612,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.003460877007455565,
+   "elapsed_s": 0.008944358000007924,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.9764407579932595,
+   "elapsed_s": 0.8344106989998181,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 2.7677000616677105e-05,
+   "elapsed_s": 1.715500002319459e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.48845523700583726,
+   "elapsed_s": 0.267090559999815,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0005144570022821426,
+   "elapsed_s": 0.00029306000033102464,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0002832520112860948,
+   "elapsed_s": 0.00022248599998420104,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0005156970000825822,
+   "elapsed_s": 0.00022386000000551576,
    "result": null,
    "error": null
   }
@@ -88,18 +88,18 @@
   "markdown": "# LOC543452 \u2014 `TraesCS3A02G246000`\n\n*Triticum aestivum* \u00b7 protein_coding \u00b7 3A:461,786,114\u2013461,792,083 (+) \u00b7 IWGSC\n\n## Protein\n**Auxin response factor**\nA0A3B6EH29_WHEAT \u00b7 UniProtKB unreviewed (TrEMBL) \u00b7 666 aa\nUniProt: [A0A3B6EH29](https://www.uniprot.org/uniprotkb/A0A3B6EH29)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [132\u2013234]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [297\u2013371]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [132\u2013236]\n- **B3 DNA binding domain** (domain, interpro) [132\u2013236]\n- **Auxin response factor domain** (domain, interpro) [283\u2013363]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [128\u2013245]\n- **Auxin response factor** (family, interpro) [25\u2013650]\n- **B3 DNA binding domain** (domain, pfam) [134\u2013235]\n- **Auxin response factor ancillary domain** (domain, pfam) [283\u2013363]\n- **B3 DNA-binding domain profile** (domain, profile) [134\u2013236]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006351] DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| A0A341W2P9 | 0.888 |\n| A0A3B5ZRD3 | 0.874 |\n| A0A3B5XWW7 | 0.874 |\n| A0A3B5Z3W7 | 0.847 |\n| A0A3B6EHX7 | 0.847 |\n| A0A3B6A261 | 0.847 |\n| A0A077RUL8 | 0.847 |\n| A0A3B6GTJ6 | 0.847 |\n| A0A3B5Y6F0 | 0.847 |\n| IAA1 | 0.846 |\n\n## Cross-references\n- WikiGene: 543452\n- KNETMINER_WHEAT: TraesCS3A02G246000\n- Wheat Expression: TraesCS3A02G246000\n- Plant Reactome Reaction ID: R-TAE-5608208\n- Plant Reactome Pathway ID: R-TAE-5608118\n- NCBI gene (formerly Entrezgene): 543452\n- Expression Atlas: TraesCS3A02G246000\n\n## Literature\n1 hits total; showing top 1.\n- **The TaTCP4/10-B1 cascade regulates awn elongation in wheat (Triticum aestivum L.)** \u2014 Ke W, Xing J, Chen Z, Zhao Y, Xu W, Tian L, Guo J, Xie X, Du D, Wang Z, Li Y, Xu J, Xin M, Guo W, Hu Z, Su Z, Liu J, Peng H, Yao Y, Sun Q, Ni Z. (PMID:36919240; doi:10.1016/j.xplc.2023.100590)\n",
   "sections": {
    "annotation": {
-    "end": 461792083,
     "logic_name": "iwgsc_high_conf",
-    "biotype": "protein_coding",
     "start": 461786114,
     "source": "IWGSC",
-    "id": "TraesCS3A02G246000",
-    "db_type": "core",
-    "assembly_name": "IWGSC",
-    "seq_region_name": "3A",
     "object_type": "Gene",
-    "strand": 1,
+    "assembly_name": "IWGSC",
     "canonical_transcript": "TraesCS3A02G246000.1",
+    "db_type": "core",
+    "biotype": "protein_coding",
+    "end": 461792083,
+    "id": "TraesCS3A02G246000",
+    "strand": 1,
+    "seq_region_name": "3A",
     "organism": "triticum_aestivum",
     "upstream_version": null
    },
@@ -125,80 +125,80 @@
     "count": 7,
     "xrefs": [
      {
-      "display_id": "LOC543452",
-      "db_display_name": "WikiGene",
+      "info_text": "",
+      "version": "0",
       "primary_id": "543452",
       "description": "auxin response factor 2",
-      "dbname": "WikiGene",
-      "info_type": "DEPENDENT",
-      "version": "0",
       "synonyms": [],
-      "info_text": ""
+      "display_id": "LOC543452",
+      "info_type": "DEPENDENT",
+      "db_display_name": "WikiGene",
+      "dbname": "WikiGene"
      },
      {
       "db_display_name": "KNETMINER_WHEAT",
+      "info_type": "DEPENDENT",
+      "dbname": "KNETMINER_WHEAT",
+      "info_text": "",
+      "synonyms": [],
       "display_id": "TraesCS3A02G246000",
       "primary_id": "TraesCS3A02G246000",
-      "dbname": "KNETMINER_WHEAT",
-      "description": null,
-      "info_type": "DEPENDENT",
-      "info_text": "",
       "version": "0",
-      "synonyms": []
+      "description": null
      },
      {
       "db_display_name": "Wheat Expression",
-      "display_id": "TraesCS3A02G246000",
-      "primary_id": "TraesCS3A02G246000",
-      "dbname": "WHEATEXP_GENE",
-      "description": null,
       "info_type": "DEPENDENT",
+      "dbname": "WHEATEXP_GENE",
       "info_text": "",
       "synonyms": [],
-      "version": "0"
+      "display_id": "TraesCS3A02G246000",
+      "version": "0",
+      "primary_id": "TraesCS3A02G246000",
+      "description": null
      },
      {
-      "info_type": "DIRECT",
-      "info_text": "Generated via direct",
-      "version": "0",
-      "synonyms": [],
-      "dbname": "Plant_Reactome_Reaction",
-      "description": "ARF inactivation by AUX/IAA",
       "db_display_name": "Plant Reactome Reaction ID",
+      "info_type": "DIRECT",
+      "dbname": "Plant_Reactome_Reaction",
+      "info_text": "Generated via direct",
+      "synonyms": [],
       "display_id": "R-TAE-5608208",
-      "primary_id": "R-TAE-5608208"
+      "version": "0",
+      "primary_id": "R-TAE-5608208",
+      "description": "ARF inactivation by AUX/IAA"
      },
      {
       "dbname": "Plant_Reactome_Pathway",
-      "description": "Auxin signalling",
       "db_display_name": "Plant Reactome Pathway ID",
+      "info_type": "DIRECT",
       "display_id": "R-TAE-5608118",
+      "synonyms": [],
+      "description": "Auxin signalling",
       "primary_id": "R-TAE-5608118",
-      "info_type": "DIRECT",
-      "info_text": "Generated via direct",
-      "synonyms": [],
-      "version": "0"
+      "version": "0",
+      "info_text": "Generated via direct"
      },
      {
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "display_id": "LOC543452",
-      "primary_id": "543452",
-      "dbname": "EntrezGene",
       "description": "auxin response factor 2",
-      "info_type": "DEPENDENT",
-      "info_text": "",
       "version": "0",
-      "synonyms": []
+      "primary_id": "543452",
+      "display_id": "LOC543452",
+      "synonyms": [],
+      "info_text": "",
+      "dbname": "EntrezGene",
+      "info_type": "DEPENDENT",
+      "db_display_name": "NCBI gene (formerly Entrezgene)"
      },
      {
       "info_text": "",
+      "description": null,
       "version": "0",
+      "primary_id": "TraesCS3A02G246000",
+      "display_id": "TraesCS3A02G246000",
       "synonyms": [],
       "info_type": "DIRECT",
-      "primary_id": "TraesCS3A02G246000",
       "db_display_name": "Expression Atlas",
-      "display_id": "TraesCS3A02G246000",
-      "description": null,
       "dbname": "ArrayExpress"
      }
     ],
@@ -358,11 +358,11 @@
       "title": "The TaTCP4/10-B1 cascade regulates awn elongation in wheat (Triticum aestivum L.).",
       "authorString": "Ke W, Xing J, Chen Z, Zhao Y, Xu W, Tian L, Guo J, Xie X, Du D, Wang Z, Li Y, Xu J, Xin M, Guo W, Hu Z, Su Z, Liu J, Peng H, Yao Y, Sun Q, Ni Z.",
       "journalTitle": "Plant communications",
-      "pubYear": "2023",
+      "pubYear": 2023,
       "firstPublicationDate": "2023-03-14",
       "citedByCount": 6,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "Awns are important morphological markers for wheat and exert a strong physiological effect on wheat yield. The awn elongation suppressor B1 has recently been cloned through association and linkage analysis in wheat. However, the mechanism of awn inhibition centered around B1 remains to be clarified. Here, we identified an allelic variant in the coding region of B1 through analysis of re-sequencing data; this variant causes an amino acid substitution and premature termination, resulting in a long-awn phenotype. Transcriptome analysis indicated that B1 inhibited awn elongation by impeding cytokinin- and auxin-promoted cell division. Moreover, B1 directly repressed the expression of TaRAE2 and TaLks2, whose orthologs\u00a0have been reported to promote awn development in rice or barley. More importantly, we found that TaTCP4 and TaTCP10 synergistically inhibited the expression of B1, and a G-to-A mutation in the B1 promoter attenuated its inhibition by TaTCP4/10. Taken together, our results reveal novel mechanisms of awn development and provide genetic resources for trait improvement in wheat.",
       "web_url": "https://europepmc.org/article/PMC/PMC10363512"
      }

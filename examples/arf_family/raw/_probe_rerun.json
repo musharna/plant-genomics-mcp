@@ -1,7 +1,7 @@
 {
- "server_version": "1.22.0",
- "server_commit": "2fc3f92",
- "tool_count": 52,
+ "server_version": "1.23.0",
+ "server_commit": "9054886",
+ "tool_count": 53,
  "tools": {
   "string_interactions": {
    "_meta": {
@@ -1358,14 +1358,14 @@
        "pubYear": {
         "anyOf": [
          {
-          "type": "string"
+          "type": "integer"
          },
          {
           "type": "null"
          }
         ],
         "default": null,
-        "description": "String \u2014 wire format is untyped",
+        "description": "Publication year",
         "title": "Pubyear"
        },
        "firstPublicationDate": {
@@ -1396,27 +1396,27 @@
        "isOpenAccess": {
         "anyOf": [
          {
-          "type": "string"
+          "type": "boolean"
          },
          {
           "type": "null"
          }
         ],
         "default": null,
-        "description": "\"Y\" or \"N\"",
+        "description": "Open access (upstream Y/N)",
         "title": "Isopenaccess"
        },
        "hasPDF": {
         "anyOf": [
          {
-          "type": "string"
+          "type": "boolean"
          },
          {
           "type": "null"
          }
         ],
         "default": null,
-        "description": "\"Y\" or \"N\"",
+        "description": "A PDF is available (upstream Y/N)",
         "title": "Haspdf"
        },
        "abstractText": {
@@ -2760,6 +2760,179 @@
     "title": "GrameneHomologs"
    },
    "title": "Gramene Homologs"
+  },
+  "gene_tree_members": {
+   "_meta": {
+    "edam": {
+     "operation": [
+      "operation_2422"
+     ],
+     "topic": [
+      "topic_0780",
+      "topic_0114"
+     ]
+    }
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true
+   },
+   "description": "List the member genes of an Ensembl Compara (plants) gene tree \u2014 the gene_tree_id that gramene_homologs returns on every homolog (rest.ensembl.org /genetree; free, no key). Each member gives the locus (the id the locus-keyed tools accept), protein_id, species and taxid, and organism (the canonical slug, or null for a species outside this server's 12). target_organism= keeps one organism's members; omit it for every species. total counts members before limit; truncated=true when limit cut some off. An unknown tree id is a not-found error.",
+   "inputSchema": {
+    "properties": {
+     "gene_tree_id": {
+      "type": "string",
+      "pattern": "^EPlGT\\d{14}$",
+      "description": "e.g. EPlGT00940000167082 (from gramene_homologs)"
+     },
+     "target_organism": {
+      "type": [
+       "string",
+       "integer"
+      ],
+      "description": "Keep one organism's members \u2014 canonical slug, scientific or common name, or NCBI taxid. Omit for every species."
+     },
+     "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "default": 100
+     }
+    },
+    "required": [
+     "gene_tree_id"
+    ],
+    "type": "object",
+    "additionalProperties": false
+   },
+   "name": "gene_tree_members",
+   "outputSchema": {
+    "properties": {
+     "gene_tree_id": {
+      "description": "The tree asked about, e.g. EPlGT00940000167082",
+      "title": "Gene Tree Id",
+      "type": "string"
+     },
+     "target_organism": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "The organism filter; null = every species",
+      "title": "Target Organism"
+     },
+     "total": {
+      "description": "How many members after the organism filter exist upstream for this query, all pages (pre-cap) (#123)",
+      "title": "Total",
+      "type": "integer"
+     },
+     "returned": {
+      "description": "Rows in this payload (#123)",
+      "title": "Returned",
+      "type": "integer"
+     },
+     "truncated": {
+      "description": "True when limit cut members off",
+      "title": "Truncated",
+      "type": "boolean"
+     },
+     "members": {
+      "items": {
+       "$ref": "#/$defs/GeneTreeMember"
+      },
+      "title": "Members",
+      "type": "array"
+     },
+     "upstream_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Ensembl release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means Ensembl did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "title": "Upstream Version"
+     }
+    },
+    "required": [
+     "gene_tree_id",
+     "target_organism",
+     "total",
+     "returned",
+     "truncated",
+     "members"
+    ],
+    "type": "object",
+    "$defs": {
+     "GeneTreeMember": {
+      "additionalProperties": false,
+      "description": "One leaf of an Ensembl Compara (plants) gene tree.",
+      "properties": {
+       "locus": {
+        "description": "Gene id as the locus tools accept it, e.g. AT1G19850",
+        "title": "Locus",
+        "type": "string"
+       },
+       "protein_id": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "The leaf's protein/translation id",
+        "title": "Protein Id"
+       },
+       "organism": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "description": "Canonical organism slug; null for a species outside this server's 12",
+        "title": "Organism"
+       },
+       "species": {
+        "description": "Compara's scientific name for the leaf's taxon",
+        "title": "Species",
+        "type": "string"
+       },
+       "taxid": {
+        "description": "The NCBI taxid Compara tags the leaf with",
+        "title": "Taxid",
+        "type": "integer"
+       }
+      },
+      "required": [
+       "locus",
+       "organism",
+       "species",
+       "taxid"
+      ],
+      "title": "GeneTreeMember",
+      "type": "object"
+     }
+    },
+    "additionalProperties": false,
+    "description": "The member genes of one gene tree, optionally one organism's.",
+    "title": "GeneTreeMembers"
+   },
+   "title": "Gene Tree Members"
   },
   "entry_members": {
    "_meta": {
@@ -4425,6 +4598,1336 @@
    },
    "error": null,
    "n_bytes": 29570
+  },
+  {
+   "row": "identifier-with-no-tool",
+   "tool": "gene_tree_members",
+   "args": {
+    "gene_tree_id": "EPlGT00940000167082",
+    "limit": 1000
+   },
+   "ok": true,
+   "payload": {
+    "gene_tree_id": "EPlGT00940000167082",
+    "target_organism": null,
+    "total": 187,
+    "returned": 187,
+    "truncated": false,
+    "members": [
+     {
+      "locus": "CEY00_Acc04567",
+      "protein_id": "PSS31271",
+      "organism": null,
+      "species": "Actinidia chinensis var. chinensis strain Red5",
+      "taxid": 1590841
+     },
+     {
+      "locus": "CEY00_Acc23580",
+      "protein_id": "PSR99607",
+      "organism": null,
+      "species": "Actinidia chinensis var. chinensis strain Red5",
+      "taxid": 1590841
+     },
+     {
+      "locus": "AET2Gv21082000",
+      "protein_id": "AET2Gv21082000.1",
+      "organism": null,
+      "species": "Aegilops tauschii subsp. strangulata strain AL8/78",
+      "taxid": 200361
+     },
+     {
+      "locus": "AET2Gv21082200",
+      "protein_id": "AET2Gv21082200.2",
+      "organism": null,
+      "species": "Aegilops tauschii subsp. strangulata strain AL8/78",
+      "taxid": 200361
+     },
+     {
+      "locus": "AET2Gv21082400",
+      "protein_id": "AET2Gv21082400.1",
+      "organism": null,
+      "species": "Aegilops tauschii subsp. strangulata strain AL8/78",
+      "taxid": 200361
+     },
+     {
+      "locus": "AET2Gv21082600",
+      "protein_id": "AET2Gv21082600.1",
+      "organism": null,
+      "species": "Aegilops tauschii subsp. strangulata strain AL8/78",
+      "taxid": 200361
+     },
+     {
+      "locus": "AeUmb.TA1851.r1.2UG0034600",
+      "protein_id": "cds:AeUmb.TA1851.r1.2UG0034600.1",
+      "organism": null,
+      "species": "Aegilops umbellulata",
+      "taxid": 4491
+     },
+     {
+      "locus": "AMTR_s00211p00025860",
+      "protein_id": "ERN02330",
+      "organism": null,
+      "species": "Amborella trichopoda",
+      "taxid": 13333
+     },
+     {
+      "locus": "Aco025401.1.path1",
+      "protein_id": "Aco025401.1.mrna1",
+      "organism": null,
+      "species": "Ananas comosus strain F153",
+      "taxid": 4615
+     },
+     {
+      "locus": "g13864",
+      "protein_id": "g13864.t1",
+      "organism": null,
+      "species": "Arabidopsis halleri subsp. gemmifera strain W302",
+      "taxid": 63677
+     },
+     {
+      "locus": "fgenesh2_kg.1__2164__AT1G19850.1",
+      "protein_id": "fgenesh2_kg.1__2164__AT1G19850.1",
+      "organism": null,
+      "species": "Arabidopsis lyrata subsp. lyrata strain MN47",
+      "taxid": 81972
+     },
+     {
+      "locus": "AT1G19850",
+      "protein_id": "AT1G19850.1",
+      "organism": "arabidopsis_thaliana",
+      "species": "Arabidopsis thaliana strain Columbia",
+      "taxid": 3702
+     },
+     {
+      "locus": "AALP_AA3G079400",
+      "protein_id": "KFK38177",
+      "organism": null,
+      "species": "Arabis alpina",
+      "taxid": 50452
+     },
+     {
+      "locus": "arahy.Tifrunner.gnm2.ann2.Ah02g194300",
+      "protein_id": "arahy.Tifrunner.gnm2.ann2.Ah02g194300.1-CDS",
+      "organism": null,
+      "species": "Arachis hypogaea",
+      "taxid": 3818
+     },
+     {
+      "locus": "arahy.Tifrunner.gnm2.ann2.Ah06g158100",
+      "protein_id": "arahy.Tifrunner.gnm2.ann2.Ah06g158100.1-CDS",
+      "organism": null,
+      "species": "Arachis hypogaea",
+      "taxid": 3818
+     },
+     {
+      "locus": "arahy.Tifrunner.gnm2.ann2.Ah06g158300",
+      "protein_id": "arahy.Tifrunner.gnm2.ann2.Ah06g158300.1-CDS",
+      "organism": null,
+      "species": "Arachis hypogaea",
+      "taxid": 3818
+     },
+     {
+      "locus": "arahy.Tifrunner.gnm2.ann2.Ah08g017500",
+      "protein_id": "arahy.Tifrunner.gnm2.ann2.Ah08g017500.1-CDS",
+      "organism": null,
+      "species": "Arachis hypogaea",
+      "taxid": 3818
+     },
+     {
+      "locus": "arahy.Tifrunner.gnm2.ann2.Ah11g196300",
+      "protein_id": "arahy.Tifrunner.gnm2.ann2.Ah11g196300.1-CDS",
+      "organism": null,
+      "species": "Arachis hypogaea",
+      "taxid": 3818
+     },
+     {
+      "locus": "arahy.Tifrunner.gnm2.ann2.Ah16g010100",
+      "protein_id": "arahy.Tifrunner.gnm2.ann2.Ah16g010100.1-CDS",
+      "organism": null,
+      "species": "Arachis hypogaea",
+      "taxid": 3818
+     },
+     {
+      "locus": "arahy.Tifrunner.gnm2.ann2.Ah16g010400",
+      "protein_id": "arahy.Tifrunner.gnm2.ann2.Ah16g010400.1-CDS",
+      "organism": null,
+      "species": "Arachis hypogaea",
+      "taxid": 3818
+     },
+     {
+      "locus": "arahy.Tifrunner.gnm2.ann2.Ah17g360400",
+      "protein_id": "arahy.Tifrunner.gnm2.ann2.Ah17g360400.1-CDS",
+      "organism": null,
+      "species": "Arachis hypogaea",
+      "taxid": 3818
+     },
+     {
+      "locus": "A4U43_C07F31010",
+      "protein_id": "ONK64884",
+      "organism": null,
+      "species": "Asparagus officinalis strain DH00/086",
+      "taxid": 4686
+     },
+     {
+      "locus": "AVESA.00001b.r3.2Ag0002328",
+      "protein_id": "cds.AVESA.00001b.r3.2Ag0002328.1",
+      "organism": null,
+      "species": "Avena sativa cultivar OT3098",
+      "taxid": 4498
+     },
+     {
+      "locus": "AVESA.00001b.r3.2Cg0003034",
+      "protein_id": "cds.AVESA.00001b.r3.2Cg0003034.1",
+      "organism": null,
+      "species": "Avena sativa cultivar OT3098",
+      "taxid": 4498
+     },
+     {
+      "locus": "AVESA.00001b.r3.2Dg0002248",
+      "protein_id": "cds.AVESA.00001b.r3.2Dg0002248.1",
+      "organism": null,
+      "species": "Avena sativa cultivar OT3098",
+      "taxid": 4498
+     },
+     {
+      "locus": "AVESA.00010b.r2.2AG0244870",
+      "protein_id": "AVESA.00010b.r2.2AG0244870.1.CDS",
+      "organism": null,
+      "species": "Avena sativa cultivar sang",
+      "taxid": 4498
+     },
+     {
+      "locus": "AVESA.00010b.r2.2CG0323630",
+      "protein_id": "AVESA.00010b.r2.2CG0323630.1.CDS",
+      "organism": null,
+      "species": "Avena sativa cultivar sang",
+      "taxid": 4498
+     },
+     {
+      "locus": "AVESA.00010b.r2.2DG0358550",
+      "protein_id": "AVESA.00010b.r2.2DG0358550.1.CDS",
+      "organism": null,
+      "species": "Avena sativa cultivar sang",
+      "taxid": 4498
+     },
+     {
+      "locus": "BVRB_1g022070",
+      "protein_id": "KMS99638",
+      "organism": null,
+      "species": "Beta vulgaris subsp. vulgaris strain KWS2320 DH",
+      "taxid": 3555
+     },
+     {
+      "locus": "BRADI_5g25157v3",
+      "protein_id": "KQJ85149",
+      "organism": "brachypodium_distachyon",
+      "species": "Brachypodium distachyon strain Bd21",
+      "taxid": 15368
+     },
+     {
+      "locus": "GSBRNA2T00030648001",
+      "protein_id": "CDY61164",
+      "organism": null,
+      "species": "Brassica napus strain Darmor-bzh",
+      "taxid": 3708
+     },
+     {
+      "locus": "GSBRNA2T00036420001",
+      "protein_id": "CDY62586",
+      "organism": null,
+      "species": "Brassica napus strain Darmor-bzh",
+      "taxid": 3708
+     },
+     {
+      "locus": "GSBRNA2T00042975001",
+      "protein_id": "CDY29392",
+      "organism": null,
+      "species": "Brassica napus strain Darmor-bzh",
+      "taxid": 3708
+     },
+     {
+      "locus": "GSBRNA2T00067779001",
+      "protein_id": "CDY39348",
+      "organism": null,
+      "species": "Brassica napus strain Darmor-bzh",
+      "taxid": 3708
+     },
+     {
+      "locus": "GSBRNA2T00112376001",
+      "protein_id": "CDY01393",
+      "organism": null,
+      "species": "Brassica napus strain Darmor-bzh",
+      "taxid": 3708
+     },
+     {
+      "locus": "GSBRNA2T00139470001",
+      "protein_id": "CDX83741",
+      "organism": null,
+      "species": "Brassica napus strain Darmor-bzh",
+      "taxid": 3708
+     },
+     {
+      "locus": "Bo5g027930",
+      "protein_id": "Bo5g027930.1",
+      "organism": null,
+      "species": "Brassica oleracea var. oleracea strain TO1000",
+      "taxid": 109376
+     },
+     {
+      "locus": "Bo7g062090",
+      "protein_id": "Bo7g062090.1",
+      "organism": null,
+      "species": "Brassica oleracea var. oleracea strain TO1000",
+      "taxid": 109376
+     },
+     {
+      "locus": "Bo8g069820",
+      "protein_id": "Bo8g069820.1",
+      "organism": null,
+      "species": "Brassica oleracea var. oleracea strain TO1000",
+      "taxid": 109376
+     },
+     {
+      "locus": "A06p017600.1_BraROA",
+      "protein_id": "A06p017600.1_BraROA.1",
+      "organism": null,
+      "species": "Brassica rapa subsp. trilocularis cultivar R-o-18",
+      "taxid": 1813537
+     },
+     {
+      "locus": "A07p021650.1_BraROA",
+      "protein_id": "A07p021650.1_BraROA.1",
+      "organism": null,
+      "species": "Brassica rapa subsp. trilocularis cultivar R-o-18",
+      "taxid": 1813537
+     },
+     {
+      "locus": "A08p038220.1_BraROA",
+      "protein_id": "A08p038220.1_BraROA.1",
+      "organism": null,
+      "species": "Brassica rapa subsp. trilocularis cultivar R-o-18",
+      "taxid": 1813537
+     },
+     {
+      "locus": "gene-KK1_028765",
+      "protein_id": "KYP49484.1",
+      "organism": null,
+      "species": "Cajanus cajan",
+      "taxid": 3821
+     },
+     {
+      "locus": "Csa03g023700",
+      "protein_id": "Csa03g023700.1",
+      "organism": null,
+      "species": "Camelina sativa strain dh55",
+      "taxid": 90675
+     },
+     {
+      "locus": "Csa14g025130",
+      "protein_id": "Csa14g025130.1",
+      "organism": null,
+      "species": "Camelina sativa strain dh55",
+      "taxid": 90675
+     },
+     {
+      "locus": "Csa17g025650",
+      "protein_id": "Csa17g025650.1",
+      "organism": null,
+      "species": "Camelina sativa strain dh55",
+      "taxid": 90675
+     },
+     {
+      "locus": "Csa17g025660",
+      "protein_id": "Csa17g025660.1",
+      "organism": null,
+      "species": "Camelina sativa strain dh55",
+      "taxid": 90675
+     },
+     {
+      "locus": "evm.TU.01.2980",
+      "protein_id": "cds.evm.model.01.2980",
+      "organism": null,
+      "species": "Cannabis sativa",
+      "taxid": 3483
+     },
+     {
+      "locus": "T459_13352",
+      "protein_id": "PHT84909",
+      "organism": null,
+      "species": "Capsicum annuum strain Criollo de Morelos 334",
+      "taxid": 4072
+     },
+     {
+      "locus": "T459_35349",
+      "protein_id": "PHT60799",
+      "organism": null,
+      "species": "Capsicum annuum strain Criollo de Morelos 334",
+      "taxid": 4072
+     },
+     {
+      "locus": "AUR62035726",
+      "protein_id": "AUR62035726-RA:cds",
+      "organism": null,
+      "species": "Chenopodium quinoa strain PI614886",
+      "taxid": 63459
+     },
+     {
+      "locus": "Cla97C05G099830",
+      "protein_id": "Cla97C05G099830.1",
+      "organism": null,
+      "species": "Citrullus lanatus strain 97103",
+      "taxid": 3654
+     },
+     {
+      "locus": "CICLE_v10000183mg",
+      "protein_id": "ESR48386",
+      "organism": null,
+      "species": "Citrus x clementina strain Clemenules",
+      "taxid": 85681
+     },
+     {
+      "locus": "GSCOC_T00024683001",
+      "protein_id": "CDP07420",
+      "organism": null,
+      "species": "Coffea canephora strain DH200-94",
+      "taxid": 49390
+     },
+     {
+      "locus": "CCACVL1_09034",
+      "protein_id": "OMO87461",
+      "organism": null,
+      "species": "Corchorus capsularis strain CVL-1",
+      "taxid": 210143
+     },
+     {
+      "locus": "gene-BT93_J0358",
+      "protein_id": "cds-KAF8009336.1",
+      "organism": null,
+      "species": "Corymbia citriodora subsp. variegata genotype CCV2-018",
+      "taxid": 360336
+     },
+     {
+      "locus": "MELO3C003768.2",
+      "protein_id": "MELO3C003768.2.1",
+      "organism": null,
+      "species": "Cucumis melo",
+      "taxid": 3656
+     },
+     {
+      "locus": "Csa_3G866510",
+      "protein_id": "KGN60018",
+      "organism": null,
+      "species": "Cucumis sativus strain 9930",
+      "taxid": 3659
+     },
+     {
+      "locus": "gene-Ccrd_013824",
+      "protein_id": "KVI07815.1",
+      "organism": null,
+      "species": "Cynara cardunculus var. scolymus isolate 2C",
+      "taxid": 59895
+     },
+     {
+      "locus": "gene-Ccrd_013825",
+      "protein_id": "KVI07816.1",
+      "organism": null,
+      "species": "Cynara cardunculus var. scolymus isolate 2C",
+      "taxid": 59895
+     },
+     {
+      "locus": "gene-Ccrd_013826",
+      "protein_id": "KVI07813.1",
+      "organism": null,
+      "species": "Cynara cardunculus var. scolymus isolate 2C",
+      "taxid": 59895
+     },
+     {
+      "locus": "gene-Ccrd_014310",
+      "protein_id": "KVI07290.1",
+      "organism": null,
+      "species": "Cynara cardunculus var. scolymus isolate 2C",
+      "taxid": 59895
+     },
+     {
+      "locus": "gene-Ccrd_014311",
+      "protein_id": "KVI07386.1",
+      "organism": null,
+      "species": "Cynara cardunculus var. scolymus isolate 2C",
+      "taxid": 59895
+     },
+     {
+      "locus": "DCAR_017496",
+      "protein_id": "KZM94253",
+      "organism": null,
+      "species": "Daucus carota subsp. sativus strain DH1",
+      "taxid": 79200
+     },
+     {
+      "locus": "DCAR_022437",
+      "protein_id": "KZM90198",
+      "organism": null,
+      "species": "Daucus carota subsp. sativus strain DH1",
+      "taxid": 79200
+     },
+     {
+      "locus": "Dexi7A01G0021970",
+      "protein_id": "Dexi7A01G0021970.1:cds",
+      "organism": null,
+      "species": "Digitaria exilis strain digitaria_exilis",
+      "taxid": 1010633
+     },
+     {
+      "locus": "Dexi7B01G0022720",
+      "protein_id": "Dexi7B01G0022720.1:cds",
+      "organism": null,
+      "species": "Digitaria exilis strain digitaria_exilis",
+      "taxid": 1010633
+     },
+     {
+      "locus": "DRNTG_21844",
+      "protein_id": "DRNTG_21844.2",
+      "organism": null,
+      "species": "Dioscorea cayenensis subsp. rotundata",
+      "taxid": 55577
+     },
+     {
+      "locus": "DRNTG_22201",
+      "protein_id": "DRNTG_22201.1",
+      "organism": null,
+      "species": "Dioscorea cayenensis subsp. rotundata",
+      "taxid": 55577
+     },
+     {
+      "locus": "scaffold120.215",
+      "protein_id": "scaffold120.215.cds",
+      "organism": null,
+      "species": "Echinochloa crus-galli reference strain",
+      "taxid": 90397
+     },
+     {
+      "locus": "scaffold19.149",
+      "protein_id": "scaffold19.149.cds",
+      "organism": null,
+      "species": "Echinochloa crus-galli reference strain",
+      "taxid": 90397
+     },
+     {
+      "locus": "EJB05_40031",
+      "protein_id": "TVU16465",
+      "organism": null,
+      "species": "Eragrostis curvula strain Tanganyika",
+      "taxid": 38414
+     },
+     {
+      "locus": "Et_1B_012651",
+      "protein_id": "Et_1B_012651.CDS",
+      "organism": null,
+      "species": "Eragrostis tef cultivar Dabbi",
+      "taxid": 110835
+     },
+     {
+      "locus": "Et_7A_051318",
+      "protein_id": "Et_7A_051318.CDS",
+      "organism": null,
+      "species": "Eragrostis tef cultivar Dabbi",
+      "taxid": 110835
+     },
+     {
+      "locus": "Et_7B_053981",
+      "protein_id": "Et_7B_053981.CDS",
+      "organism": null,
+      "species": "Eragrostis tef cultivar Dabbi",
+      "taxid": 110835
+     },
+     {
+      "locus": "EUGRSUZ_F02090",
+      "protein_id": "KCW68434",
+      "organism": null,
+      "species": "Eucalyptus grandis strain BRASUZ1",
+      "taxid": 71139
+     },
+     {
+      "locus": "EUTSA_v10006748mg",
+      "protein_id": "ESQ34811",
+      "organism": null,
+      "species": "Eutrema salsugineum",
+      "taxid": 72664
+     },
+     {
+      "locus": "FCD_00003481",
+      "protein_id": "FCD_00003481-RA:cds",
+      "organism": null,
+      "species": "Ficus carica cultivar Dottato",
+      "taxid": 3494
+     },
+     {
+      "locus": "FRAEX38873_v2_000083000",
+      "protein_id": "FRAEX38873_v2_000083000.2.cds",
+      "organism": null,
+      "species": "Fraxinus excelsior reference strain",
+      "taxid": 38873
+     },
+     {
+      "locus": "FRAEX38873_v2_000309970",
+      "protein_id": "FRAEX38873_v2_000309970.2.cds",
+      "organism": null,
+      "species": "Fraxinus excelsior reference strain",
+      "taxid": 38873
+     },
+     {
+      "locus": "GLYMA_12G153700",
+      "protein_id": "KRH26133",
+      "organism": "glycine_max",
+      "species": "Glycine max strain Williams 82",
+      "taxid": 3847
+     },
+     {
+      "locus": "GLYMA_14G217700",
+      "protein_id": "KRH17404",
+      "organism": "glycine_max",
+      "species": "Glycine max strain Williams 82",
+      "taxid": 3847
+     },
+     {
+      "locus": "GLYMA_17G256500",
+      "protein_id": "KRH05923",
+      "organism": "glycine_max",
+      "species": "Glycine max strain Williams 82",
+      "taxid": 3847
+     },
+     {
+      "locus": "LOC114385190",
+      "protein_id": "XP_028201013.1",
+      "organism": null,
+      "species": "Glycine soja",
+      "taxid": 3848
+     },
+     {
+      "locus": "LOC114393714",
+      "protein_id": "XP_028210922.1",
+      "organism": null,
+      "species": "Glycine soja",
+      "taxid": 3848
+     },
+     {
+      "locus": "LOC105769031",
+      "protein_id": "XP_012444848.1",
+      "organism": null,
+      "species": "Gossypium raimondii isolate GPD5lz",
+      "taxid": 29730
+     },
+     {
+      "locus": "LOC105784599",
+      "protein_id": "XP_012465955.1",
+      "organism": null,
+      "species": "Gossypium raimondii isolate GPD5lz",
+      "taxid": 29730
+     },
+     {
+      "locus": "HanXRQr2_Chr05g0213851",
+      "protein_id": "mRNA:HanXRQr2_Chr05g0213851",
+      "organism": null,
+      "species": "Helianthus annuus cultivar XRQ/B",
+      "taxid": 4232
+     },
+     {
+      "locus": "HanXRQr2_Chr06g0275011",
+      "protein_id": "mRNA:HanXRQr2_Chr06g0275011",
+      "organism": null,
+      "species": "Helianthus annuus cultivar XRQ/B",
+      "taxid": 4232
+     },
+     {
+      "locus": "HanXRQr2_Chr14g0624761",
+      "protein_id": "mRNA:HanXRQr2_Chr14g0624761",
+      "organism": null,
+      "species": "Helianthus annuus cultivar XRQ/B",
+      "taxid": 4232
+     },
+     {
+      "locus": "HORVU.MOREX.r3.2HG0200970",
+      "protein_id": "HORVU.MOREX.r3.2HG0200970.1",
+      "organism": "hordeum_vulgare",
+      "species": "Hordeum vulgare subsp. vulgare cultivar Morex",
+      "taxid": 112509
+     },
+     {
+      "locus": "itb01g35000",
+      "protein_id": "itb01g35000.t1",
+      "organism": null,
+      "species": "Ipomoea triloba strain NCNSP0323",
+      "taxid": 35885
+     },
+     {
+      "locus": "Jr11_20160",
+      "protein_id": "cds.Jr11_20160_p1",
+      "organism": null,
+      "species": "Juglans regia cultivar Chandler",
+      "taxid": 51240
+     },
+     {
+      "locus": "Jr11_20170",
+      "protein_id": "cds.Jr11_20170_p1",
+      "organism": null,
+      "species": "Juglans regia cultivar Chandler",
+      "taxid": 51240
+     },
+     {
+      "locus": "Kaladp0003s0067.v1.1",
+      "protein_id": "Kaladp0003s0067.1.v1.1",
+      "organism": null,
+      "species": "Kalanchoe fedtschenkoi",
+      "taxid": 63787
+     },
+     {
+      "locus": "Kaladp0100s0015.v1.1",
+      "protein_id": "Kaladp0100s0015.1.v1.1",
+      "organism": null,
+      "species": "Kalanchoe fedtschenkoi",
+      "taxid": 63787
+     },
+     {
+      "locus": "gene21423",
+      "protein_id": "cds:mRNA21423",
+      "organism": null,
+      "species": "Lablab purpureus",
+      "taxid": 35936
+     },
+     {
+      "locus": "gene-LSAT_V11C200055820",
+      "protein_id": "KAJ0221514.1",
+      "organism": null,
+      "species": "Lactuca sativa",
+      "taxid": 4236
+     },
+     {
+      "locus": "gene-LSAT_V11C900473060",
+      "protein_id": "KAJ0185508.1",
+      "organism": null,
+      "species": "Lactuca sativa",
+      "taxid": 4236
+     },
+     {
+      "locus": "LPERR04G24160",
+      "protein_id": "LPERR04G24160.1",
+      "organism": null,
+      "species": "Leersia perrieri cultivar IRGC:105164",
+      "taxid": 77586
+     },
+     {
+      "locus": "KYUSg_chr2.52074",
+      "protein_id": "cds.KYUSt_chr2.52074",
+      "organism": null,
+      "species": "Lolium perenne reference strain",
+      "taxid": 4522
+     },
+     {
+      "locus": "KYUSg_chr5.39506",
+      "protein_id": "cds.KYUSt_chr5.39506",
+      "organism": null,
+      "species": "Lolium perenne reference strain",
+      "taxid": 4522
+     },
+     {
+      "locus": "TanjilG_08164",
+      "protein_id": "OIW15588",
+      "organism": null,
+      "species": "Lupinus angustifolius strain Tanjil",
+      "taxid": 3871
+     },
+     {
+      "locus": "TanjilG_17061",
+      "protein_id": "OIW14836",
+      "organism": null,
+      "species": "Lupinus angustifolius strain Tanjil",
+      "taxid": 3871
+     },
+     {
+      "locus": "TanjilG_31042",
+      "protein_id": "OIW21208",
+      "organism": null,
+      "species": "Lupinus angustifolius strain Tanjil",
+      "taxid": 3871
+     },
+     {
+      "locus": "MD08G0014100",
+      "protein_id": "mRNA:MD08G0014100",
+      "organism": null,
+      "species": "Malus domestica strain Golden Delicious",
+      "taxid": 3750
+     },
+     {
+      "locus": "MD15G0012200",
+      "protein_id": "mRNA:MD15G0012200",
+      "organism": null,
+      "species": "Malus domestica strain Golden Delicious",
+      "taxid": 3750
+     },
+     {
+      "locus": "Manes.18G015400.v8.1",
+      "protein_id": "Manes.18G015400.1.v8.1.CDS",
+      "organism": null,
+      "species": "Manihot esculenta",
+      "taxid": 3983
+     },
+     {
+      "locus": "gene1046",
+      "protein_id": "RHN77579.1",
+      "organism": "medicago_truncatula",
+      "species": "Medicago truncatula",
+      "taxid": 3880
+     },
+     {
+      "locus": "gene1047",
+      "protein_id": "RHN77580.1",
+      "organism": "medicago_truncatula",
+      "species": "Medicago truncatula",
+      "taxid": 3880
+     },
+     {
+      "locus": "gene1048",
+      "protein_id": "RHN77581.1",
+      "organism": "medicago_truncatula",
+      "species": "Medicago truncatula",
+      "taxid": 3880
+     },
+     {
+      "locus": "Ma01_g13260",
+      "protein_id": "Ma01_p13260.1",
+      "organism": null,
+      "species": "Musa acuminata subsp. malaccensis cultivar Doubled-haploid Pahang (DH-Pahang)",
+      "taxid": 214687
+     },
+     {
+      "locus": "Ma01_g13290",
+      "protein_id": "Ma01_p13290.2",
+      "organism": null,
+      "species": "Musa acuminata subsp. malaccensis cultivar Doubled-haploid Pahang (DH-Pahang)",
+      "taxid": 214687
+     },
+     {
+      "locus": "Ma01_g13320",
+      "protein_id": "Ma01_p13320.3",
+      "organism": null,
+      "species": "Musa acuminata subsp. malaccensis cultivar Doubled-haploid Pahang (DH-Pahang)",
+      "taxid": 214687
+     },
+     {
+      "locus": "Ma05_g19130",
+      "protein_id": "Ma05_p19130.1",
+      "organism": null,
+      "species": "Musa acuminata subsp. malaccensis cultivar Doubled-haploid Pahang (DH-Pahang)",
+      "taxid": 214687
+     },
+     {
+      "locus": "Ma06_g38940",
+      "protein_id": "Ma06_p38940.3",
+      "organism": null,
+      "species": "Musa acuminata subsp. malaccensis cultivar Doubled-haploid Pahang (DH-Pahang)",
+      "taxid": 214687
+     },
+     {
+      "locus": "A4A49_07736",
+      "protein_id": "OIT36774",
+      "organism": null,
+      "species": "Nicotiana attenuata strain UT",
+      "taxid": 49451
+     },
+     {
+      "locus": "LOC116249272",
+      "protein_id": "XP_049932378.1",
+      "organism": null,
+      "species": "Nymphaea colorata isolate Beijing-Zhang1983",
+      "taxid": 210225
+     },
+     {
+      "locus": "OE9A020465",
+      "protein_id": "OE9A020465C5",
+      "organism": null,
+      "species": "Olea europaea subsp. europaea variety Farga",
+      "taxid": 158383
+     },
+     {
+      "locus": "OE9A070555",
+      "protein_id": "OE9A070555C4",
+      "organism": null,
+      "species": "Olea europaea subsp. europaea variety Farga",
+      "taxid": 158383
+     },
+     {
+      "locus": "OBART04G28590",
+      "protein_id": "OBART04G28590.1",
+      "organism": null,
+      "species": "Oryza barthii cultivar IRGC:105608",
+      "taxid": 65489
+     },
+     {
+      "locus": "OB04G35570",
+      "protein_id": "OB04G35570.1",
+      "organism": null,
+      "species": "Oryza brachyantha cultivar IRGC:101232",
+      "taxid": 4533
+     },
+     {
+      "locus": "ORGLA04G0248600",
+      "protein_id": "ORGLA04G0248600.1",
+      "organism": null,
+      "species": "Oryza glaberrima cultivar CG14",
+      "taxid": 4538
+     },
+     {
+      "locus": "OGLUM04G28480",
+      "protein_id": "OGLUM04G28480.1",
+      "organism": null,
+      "species": "Oryza glumipatula",
+      "taxid": 40148
+     },
+     {
+      "locus": "KN538740.1_FG017",
+      "protein_id": "KN538740.1_FGP017",
+      "organism": null,
+      "species": "Oryza longistaminata",
+      "taxid": 4528
+     },
+     {
+      "locus": "OMERI04G24170",
+      "protein_id": "OMERI04G24170.1",
+      "organism": null,
+      "species": "Oryza meridionalis cultivar OR44 (W2112)",
+      "taxid": 40149
+     },
+     {
+      "locus": "ONIVA04G27140",
+      "protein_id": "ONIVA04G27140.1",
+      "organism": null,
+      "species": "Oryza nivara cultivar IRGC:100897",
+      "taxid": 4536
+     },
+     {
+      "locus": "OPUNC04G26100",
+      "protein_id": "OPUNC04G26100.1",
+      "organism": null,
+      "species": "Oryza punctata cultivar IRGC:105690",
+      "taxid": 4537
+     },
+     {
+      "locus": "ORUFI04G30260",
+      "protein_id": "ORUFI04G30260.1",
+      "organism": null,
+      "species": "Oryza rufipogon cultivar W1943",
+      "taxid": 4529
+     },
+     {
+      "locus": "BGIOSGA014158",
+      "protein_id": "BGIOSGA014158-PA",
+      "organism": null,
+      "species": "Oryza sativa Indica Group strain 93-11",
+      "taxid": 39946
+     },
+     {
+      "locus": "Os04g0664400",
+      "protein_id": "Os04t0664400-02",
+      "organism": "oryza_sativa",
+      "species": "Oryza sativa Japonica Group reference (Nipponbare) cultivar",
+      "taxid": 39947
+     },
+     {
+      "locus": "GQ55_7G319600",
+      "protein_id": "PUZ49360",
+      "organism": null,
+      "species": "Panicum hallii var. hallii reference (HAL2) ecotype",
+      "taxid": 1504633
+     },
+     {
+      "locus": "C5167_014531",
+      "protein_id": "RZC55684",
+      "organism": null,
+      "species": "Papaver somniferum strain High Noscapine 1 (HN1)",
+      "taxid": 3469
+     },
+     {
+      "locus": "C5167_020472",
+      "protein_id": "RZC52046",
+      "organism": null,
+      "species": "Papaver somniferum strain High Noscapine 1 (HN1)",
+      "taxid": 3469
+     },
+     {
+      "locus": "PHAVU_001G008200g",
+      "protein_id": "ESW32677",
+      "organism": null,
+      "species": "Phaseolus vulgaris strain G19833",
+      "taxid": 3885
+     },
+     {
+      "locus": "PHAVU_001G008300g",
+      "protein_id": "ESW32678",
+      "organism": null,
+      "species": "Phaseolus vulgaris strain G19833",
+      "taxid": 3885
+     },
+     {
+      "locus": "EVM0031148",
+      "protein_id": "cds-EVM0031148.1",
+      "organism": null,
+      "species": "Pistacia vera strain Batoury",
+      "taxid": 55513
+     },
+     {
+      "locus": "KIW84_060119",
+      "protein_id": "KAI5392832.1",
+      "organism": null,
+      "species": "Pisum sativum CAAS_Psat_ZW6_1.0",
+      "taxid": 3888
+     },
+     {
+      "locus": "PSAT_LOCUS24726",
+      "protein_id": "CAL5205832.1",
+      "organism": null,
+      "species": "Pisum sativum JIC_Psat_v1.3",
+      "taxid": 3888
+     },
+     {
+      "locus": "Potri.002G024700.v4.1",
+      "protein_id": "Potri.002G024700.1.v4.1",
+      "organism": "populus_trichocarpa",
+      "species": "Populus trichocarpa",
+      "taxid": 3694
+     },
+     {
+      "locus": "Potri.005G236700.v4.1",
+      "protein_id": "Potri.005G236700.1.v4.1",
+      "organism": "populus_trichocarpa",
+      "species": "Populus trichocarpa",
+      "taxid": 3694
+     },
+     {
+      "locus": "Pav_sc0002080.1_g180.1.mk",
+      "protein_id": "Pav_sc0002080.1_g180.1.mk:mrna",
+      "organism": null,
+      "species": "Prunus avium strain Satonishiki",
+      "taxid": 42229
+     },
+     {
+      "locus": "Pav_sc0004359.1_g050.1.br",
+      "protein_id": "Pav_sc0004359.1_g050.1.br:mrna",
+      "organism": null,
+      "species": "Prunus avium strain Satonishiki",
+      "taxid": 42229
+     },
+     {
+      "locus": "Prudul26B021243",
+      "protein_id": "VVA22451",
+      "organism": null,
+      "species": "Prunus dulcis strain Texas",
+      "taxid": 3755
+     },
+     {
+      "locus": "PRUPE_1G368300",
+      "protein_id": "ONI32447",
+      "organism": null,
+      "species": "Prunus persica strain Lovell",
+      "taxid": 3760
+     },
+     {
+      "locus": "QL02p011050",
+      "protein_id": "QL02p011050:mrna",
+      "organism": null,
+      "species": "Quercus lobata",
+      "taxid": 97700
+     },
+     {
+      "locus": "gene-LOC112011953",
+      "protein_id": "XP_023900074.1",
+      "organism": null,
+      "species": "Quercus suber isolate HL8",
+      "taxid": 58331
+     },
+     {
+      "locus": "RchiOBHm_Chr6g0302551",
+      "protein_id": "PRQ27177",
+      "organism": null,
+      "species": "Rosa chinensis",
+      "taxid": 74649
+     },
+     {
+      "locus": "SECCE2Rv1G0129000",
+      "protein_id": "SECCE2Rv1G0129000.1",
+      "organism": null,
+      "species": "Secale cereale",
+      "taxid": 4550
+     },
+     {
+      "locus": "SIN_1002371",
+      "protein_id": "SIN_1002371.t",
+      "organism": null,
+      "species": "Sesamum indicum strain Zhongzhi No. 13",
+      "taxid": 4182
+     },
+     {
+      "locus": "SIN_1009079",
+      "protein_id": "SIN_1009079.t",
+      "organism": null,
+      "species": "Sesamum indicum strain Zhongzhi No. 13",
+      "taxid": 4182
+     },
+     {
+      "locus": "SETIT_021121mg",
+      "protein_id": "KQL12936",
+      "organism": null,
+      "species": "Setaria italica strain Yugu1",
+      "taxid": 4555
+     },
+     {
+      "locus": "SEVIR_3G028900v2",
+      "protein_id": "TKW24076",
+      "organism": null,
+      "species": "Setaria viridis strain A10",
+      "taxid": 4556
+     },
+     {
+      "locus": "Solyc04g081240.2",
+      "protein_id": "CDS-Solyc04g081240.2.1",
+      "organism": "solanum_lycopersicum",
+      "species": "Solanum lycopersicum cultivar Heinz 1706",
+      "taxid": 4081
+     },
+     {
+      "locus": "PGSC0003DMG400003771",
+      "protein_id": "PGSC0003DMT400009660",
+      "organism": null,
+      "species": "Solanum tuberosum cultivar DM 1-3 516 R44",
+      "taxid": 4113
+     },
+     {
+      "locus": "SORBI_3006G255300",
+      "protein_id": "EES13038",
+      "organism": "sorghum_bicolor",
+      "species": "Sorghum bicolor strain BTx623",
+      "taxid": 4558
+     },
+     {
+      "locus": "gene-AYBTSS11_LOCUS24570",
+      "protein_id": "CAJ1972521.1",
+      "organism": null,
+      "species": "Sphenostylis stenocarpa",
+      "taxid": 92480
+     },
+     {
+      "locus": "TCM_034194",
+      "protein_id": "EOY14976",
+      "organism": null,
+      "species": "Theobroma cacao reference (Matina) cultivar",
+      "taxid": 3641
+     },
+     {
+      "locus": "Tp57577_TGAC_v2_gene34351",
+      "protein_id": "Tp57577_TGAC_v2_mRNA35520",
+      "organism": null,
+      "species": "Trifolium pratense strain Milvus B",
+      "taxid": 57577
+     },
+     {
+      "locus": "TraesCS2A02G491000",
+      "protein_id": "TraesCS2A02G491000.1",
+      "organism": "triticum_aestivum",
+      "species": "Triticum aestivum reference (Chinese spring) cultivar",
+      "taxid": 4565
+     },
+     {
+      "locus": "TraesCS2B02G519200",
+      "protein_id": "TraesCS2B02G519200.2",
+      "organism": "triticum_aestivum",
+      "species": "Triticum aestivum reference (Chinese spring) cultivar",
+      "taxid": 4565
+     },
+     {
+      "locus": "TraesCS2D02G491200",
+      "protein_id": "TraesCS2D02G491200.2",
+      "organism": "triticum_aestivum",
+      "species": "Triticum aestivum reference (Chinese spring) cultivar",
+      "taxid": 4565
+     },
+     {
+      "locus": "TRIDC1BG021080",
+      "protein_id": "TRIDC1BG021080.2",
+      "organism": null,
+      "species": "Triticum dicoccoides strain Zavitan (Atlit2015)",
+      "taxid": 85692
+     },
+     {
+      "locus": "TRIDC2AG069310",
+      "protein_id": "TRIDC2AG069310.4",
+      "organism": null,
+      "species": "Triticum dicoccoides strain Zavitan (Atlit2015)",
+      "taxid": 85692
+     },
+     {
+      "locus": "TRIDC2BG074990",
+      "protein_id": "TRIDC2BG074990.2",
+      "organism": null,
+      "species": "Triticum dicoccoides strain Zavitan (Atlit2015)",
+      "taxid": 85692
+     },
+     {
+      "locus": "TRIDC7BG002410",
+      "protein_id": "TRIDC7BG002410.1",
+      "organism": null,
+      "species": "Triticum dicoccoides strain Zavitan (Atlit2015)",
+      "taxid": 85692
+     },
+     {
+      "locus": "TraesTSP2A01G527100",
+      "protein_id": "TraesTSP2A01G527100.1",
+      "organism": null,
+      "species": "Triticum spelta cultivar Spelta",
+      "taxid": 58933
+     },
+     {
+      "locus": "TraesTSP2B01G557200",
+      "protein_id": "TraesTSP2B01G557200.1",
+      "organism": null,
+      "species": "Triticum spelta cultivar Spelta",
+      "taxid": 58933
+     },
+     {
+      "locus": "TraesTSP2D01G537800",
+      "protein_id": "TraesTSP2D01G537800.1",
+      "organism": null,
+      "species": "Triticum spelta cultivar Spelta",
+      "taxid": 58933
+     },
+     {
+      "locus": "Tritim_EIv0.3_0293900",
+      "protein_id": "Tritim_EIv0.3_0293900.1.CDS",
+      "organism": null,
+      "species": "Triticum timopheevii WRC_timopheevii_genome_with_organelles",
+      "taxid": 4570
+     },
+     {
+      "locus": "Tritim_EIv0.3_0293910",
+      "protein_id": "Tritim_EIv0.3_0293910.1.CDS",
+      "organism": null,
+      "species": "Triticum timopheevii WRC_timopheevii_genome_with_organelles",
+      "taxid": 4570
+     },
+     {
+      "locus": "Tritim_EIv0.3_0428290",
+      "protein_id": "Tritim_EIv0.3_0428290.1.CDS",
+      "organism": null,
+      "species": "Triticum timopheevii WRC_timopheevii_genome_with_organelles",
+      "taxid": 4570
+     },
+     {
+      "locus": "Tritim_EIv0.3_1529040",
+      "protein_id": "Tritim_EIv0.3_1529040.1.CDS",
+      "organism": null,
+      "species": "Triticum timopheevii WRC_timopheevii_genome_with_organelles",
+      "taxid": 4570
+     },
+     {
+      "locus": "TRITD2Av1G268360",
+      "protein_id": "TRITD2Av1G268360.4",
+      "organism": null,
+      "species": "Triticum turgidum subsp. durum strain svevo",
+      "taxid": 4567
+     },
+     {
+      "locus": "TRITD2Bv1G232020",
+      "protein_id": "TRITD2Bv1G232020.2",
+      "organism": null,
+      "species": "Triticum turgidum subsp. durum strain svevo",
+      "taxid": 4567
+     },
+     {
+      "locus": "TuG1812G0200005380.01",
+      "protein_id": "TuG1812G0200005380.01.T01",
+      "organism": null,
+      "species": "Triticum urartu strain G1812 (PI428198)",
+      "taxid": 4572
+     },
+     {
+      "locus": "TuG1812G0200005381.01",
+      "protein_id": "TuG1812G0200005381.01.T01",
+      "organism": null,
+      "species": "Triticum urartu strain G1812 (PI428198)",
+      "taxid": 4572
+     },
+     {
+      "locus": "TuG1812S0002799300.01",
+      "protein_id": "TuG1812S0002799300.01.T01",
+      "organism": null,
+      "species": "Triticum urartu strain G1812 (PI428198)",
+      "taxid": 4572
+     },
+     {
+      "locus": "Vfaba.Hedin2.R1.1g487960",
+      "protein_id": "cds:Vfaba.Hedin2.R1.1g487960.1",
+      "organism": null,
+      "species": "Vicia faba",
+      "taxid": 3906
+     },
+     {
+      "locus": "Vfaba.Hedin2.R1.3g236120",
+      "protein_id": "cds:Vfaba.Hedin2.R1.3g236120.1",
+      "organism": null,
+      "species": "Vicia faba",
+      "taxid": 3906
+     },
+     {
+      "locus": "LR48_Vigan07g283500",
+      "protein_id": "KOM49131",
+      "organism": null,
+      "species": "Vigna angularis strain Jingnong 6",
+      "taxid": 3914
+     },
+     {
+      "locus": "Vradi06g16730",
+      "protein_id": "Vradi06g16730.1",
+      "organism": null,
+      "species": "Vigna radiata var. radiata strain VC1973A",
+      "taxid": 3916
+     },
+     {
+      "locus": "LOC114194614",
+      "protein_id": "XP_027940752.1",
+      "organism": null,
+      "species": "Vigna unguiculata cultivar IT97K-499-35",
+      "taxid": 3917
+     },
+     {
+      "locus": "Vitis02g01346",
+      "protein_id": "Vitis02g01346.t01.CDS",
+      "organism": "vitis_vinifera",
+      "species": "Vitis vinifera",
+      "taxid": 29760
+     },
+     {
+      "locus": "Vitis18g01221",
+      "protein_id": "Vitis18g01221.t01.CDS",
+      "organism": "vitis_vinifera",
+      "species": "Vitis vinifera",
+      "taxid": 29760
+     },
+     {
+      "locus": "Zm00001eb067270",
+      "protein_id": "Zm00001eb067270_P004",
+      "organism": "zea_mays",
+      "species": "Zea mays strain B73",
+      "taxid": 4577
+     },
+     {
+      "locus": "Zm00001eb433020",
+      "protein_id": "Zm00001eb433020_P001",
+      "organism": "zea_mays",
+      "species": "Zea mays strain B73",
+      "taxid": 4577
+     }
+    ],
+    "upstream_version": null
+   },
+   "error": null,
+   "n_bytes": 58002
   },
   {
    "row": "no-pagination",

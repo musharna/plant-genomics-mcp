@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-25T05:21:26Z",
- "elapsed_s": 2.948214370000642,
+ "started_at": "2026-09-25T11:17:03Z",
+ "elapsed_s": 14.799098226999376,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 2.3336312149913283,
+   "elapsed_s": 6.789070326000001,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0006774939975002781,
+   "elapsed_s": 0.0003502259996821522,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.6137922689958941,
+   "elapsed_s": 8.009411539000212,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 3.5505989217199385e-05,
+   "elapsed_s": 2.7803000193671323e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.34174703901226167,
+   "elapsed_s": 0.3039985320001506,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.00027276400942355394,
+   "elapsed_s": 0.0001833790001910529,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0002575229882495478,
+   "elapsed_s": 0.00424584199936362,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00043428099888842553,
+   "elapsed_s": 0.0002935249995061895,
    "result": null,
    "error": null
   }
@@ -86,18 +86,18 @@
   "markdown": "# TraesCS3D02G166700 \u2014 `TraesCS3D02G166700`\n\n*Triticum aestivum* \u00b7 protein_coding \u00b7 3D:140,766,103\u2013140,770,322 (+) \u00b7 IWGSC\n\n## Protein\n**Auxin response factor**\nA0A3B6GTW2_WHEAT \u00b7 UniProtKB unreviewed (TrEMBL) \u00b7 758 aa\nUniProt: [A0A3B6GTW2](https://www.uniprot.org/uniprotkb/A0A3B6GTW2)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [177\u2013277]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [341\u2013413]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [174\u2013279]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [650\u2013739]\n- **B3 DNA binding domain** (domain, interpro) [177\u2013279]\n- **Auxin response factor domain** (domain, interpro) [326\u2013407]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [165\u2013306]\n- **AUX/IAA domain** (domain, interpro) [638\u2013692]\n- **Auxin response factor** (family, interpro) [69\u2013739]\n- **PB1-like domain** (domain, interpro) [654\u2013734]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006351] DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| A0A3B6NMZ2 | 0.99 |\n| A0A3B6RQD9 | 0.99 |\n| A0A3B6SM70 | 0.99 |\n| A0A3B6TQU0 | 0.99 |\n| A0A3B6PHL7 | 0.99 |\n| wMAD2-B1 | 0.943 |\n| wMAD2-D1 | 0.943 |\n| wMAD2-A1 | 0.943 |\n| A0A3B6B100 | 0.941 |\n| A0A3B6C887 | 0.941 |\n\n## Cross-references\n- KNETMINER_WHEAT: TraesCS3D02G166700\n- Wheat Expression: TraesCS3D02G166700\n- Plant Reactome Reaction ID: R-TAE-9675504\n- Plant Reactome Pathway ID: R-TAE-9675508\n- Expression Atlas: TraesCS3D02G166700\n\n## Literature\n1 hits total; showing top 1.\n- **TaPYL4, an ABA receptor gene of wheat, positively regulates plant drought adaptation through modulating the osmotic stress-associated processes** \u2014 Zhang Y, Zhao Y, Li T, Ni C, Han L, Du P, Xiao K. (PMID:36050643; doi:10.1186/s12870-022-03799-z)\n",
   "sections": {
    "annotation": {
-    "assembly_name": "IWGSC",
-    "biotype": "protein_coding",
-    "seq_region_name": "3D",
     "end": 140770322,
     "start": 140766103,
+    "id": "TraesCS3D02G166700",
     "strand": 1,
     "db_type": "core",
-    "object_type": "Gene",
     "source": "IWGSC",
-    "id": "TraesCS3D02G166700",
-    "canonical_transcript": "TraesCS3D02G166700.1",
     "logic_name": "iwgsc_high_conf",
+    "canonical_transcript": "TraesCS3D02G166700.1",
+    "assembly_name": "IWGSC",
+    "seq_region_name": "3D",
+    "object_type": "Gene",
+    "biotype": "protein_coding",
     "organism": "triticum_aestivum",
     "upstream_version": null
    },
@@ -121,59 +121,59 @@
     "count": 5,
     "xrefs": [
      {
-      "display_id": "TraesCS3D02G166700",
-      "info_text": "",
-      "synonyms": [],
-      "dbname": "KNETMINER_WHEAT",
       "description": null,
       "db_display_name": "KNETMINER_WHEAT",
       "version": "0",
+      "dbname": "KNETMINER_WHEAT",
+      "info_text": "",
       "info_type": "DEPENDENT",
+      "display_id": "TraesCS3D02G166700",
+      "synonyms": [],
       "primary_id": "TraesCS3D02G166700"
      },
      {
-      "synonyms": [],
-      "display_id": "TraesCS3D02G166700",
       "info_text": "",
-      "info_type": "DEPENDENT",
-      "primary_id": "TraesCS3D02G166700",
       "dbname": "WHEATEXP_GENE",
+      "info_type": "DEPENDENT",
+      "display_id": "TraesCS3D02G166700",
       "description": null,
       "db_display_name": "Wheat Expression",
-      "version": "0"
-     },
-     {
-      "description": "Expression of ARF1",
-      "dbname": "Plant_Reactome_Reaction",
       "version": "0",
-      "db_display_name": "Plant Reactome Reaction ID",
-      "info_type": "DIRECT",
-      "primary_id": "R-TAE-9675504",
-      "display_id": "R-TAE-9675504",
-      "info_text": "Generated via direct",
+      "primary_id": "TraesCS3D02G166700",
       "synonyms": []
      },
      {
       "synonyms": [],
-      "info_text": "Generated via direct",
-      "display_id": "R-TAE-9675508",
-      "primary_id": "R-TAE-9675508",
-      "info_type": "DIRECT",
+      "primary_id": "R-TAE-9675504",
+      "description": "Expression of ARF1",
+      "db_display_name": "Plant Reactome Reaction ID",
       "version": "0",
-      "db_display_name": "Plant Reactome Pathway ID",
-      "description": "Root elongation",
-      "dbname": "Plant_Reactome_Pathway"
+      "dbname": "Plant_Reactome_Reaction",
+      "info_text": "Generated via direct",
+      "info_type": "DIRECT",
+      "display_id": "R-TAE-9675504"
      },
      {
-      "primary_id": "TraesCS3D02G166700",
-      "info_type": "DIRECT",
-      "db_display_name": "Expression Atlas",
-      "version": "0",
-      "dbname": "ArrayExpress",
-      "description": null,
+      "primary_id": "R-TAE-9675508",
       "synonyms": [],
+      "info_type": "DIRECT",
+      "info_text": "Generated via direct",
+      "dbname": "Plant_Reactome_Pathway",
+      "display_id": "R-TAE-9675508",
+      "db_display_name": "Plant Reactome Pathway ID",
+      "description": "Root elongation",
+      "version": "0"
+     },
+     {
+      "synonyms": [],
+      "primary_id": "TraesCS3D02G166700",
+      "version": "0",
+      "description": null,
+      "db_display_name": "Expression Atlas",
+      "display_id": "TraesCS3D02G166700",
       "info_text": "",
-      "display_id": "TraesCS3D02G166700"
+      "dbname": "ArrayExpress",
+      "info_type": "DIRECT"
      }
     ],
     "by_db": {
@@ -326,11 +326,11 @@
       "title": "TaPYL4, an ABA receptor gene of wheat, positively regulates plant drought adaptation through modulating the osmotic stress-associated processes.",
       "authorString": "Zhang Y, Zhao Y, Li T, Ni C, Han L, Du P, Xiao K.",
       "journalTitle": "BMC plant biology",
-      "pubYear": "2022",
+      "pubYear": 2022,
       "firstPublicationDate": "2022-09-01",
       "citedByCount": 22,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "<h4>Background</h4>Abscisic acid receptors (ABR) involve transduction of the ABA signaling in plants, impacting largely on stress-defensive physiological processes and plant osmotic stress response. In this study, we characterized TaPYL4, a gene of ABR family in T. aestivum, in mediating plant drought tolerance given scarcity of functional characterization on wheat ABR members thus far.<h4>Results</h4>TaPYL4 harbors nine conserved domains shared by its PYL counterparts, targeting onto plasma membrane and nucleus after endoplasmic reticulum assortment. TaPYL4 interacts with TaPP2C2 whereas the latter with TaSnRK2.1, which establish a core module of the ABA signaling pathway. TaPYL4 expression was upregulated in root and aerial tissues upon drought stress. Overexpressing TaPYL4 conferred plants improved growth traits whereas knockdown expression of target gene alleviated growth feature compared with wild type under drought treatment. The TaPYL4-enhanced drought adaptation associates gene function in positively regulating stomata movement, osmolyte biosynthesis, and root system architecture (RSA) establishment. Expression analysis on the P5CS family genes involving proline biosynthesis indicated that TaP5CS1 exerts critical roles in promoting osmolytes accumulation in drought-challenged TaPYL4 lines. TaPIN9, a PIN-FORMED gene modulating cellular auxin translocation, was validated to function as a crucial mediator in defining RSA establishment underlying TaPYL4 regulation. Transcriptome analysis revealed that TaPYL4 controls transcription of numerous genes, which impact on physiological processes associated with 'biological process', 'molecular component', and 'cellular process'. Moreover, the differentially expressed genes mediated by TaPYL4 were closely related to stress defensive pathways.<h4>Conclusions</h4>Our investigation suggested that TaPYL4 acts as a positive regulator in plant drought tolerance and a valuable target for engineering drought-tolerant cultivars in T. aestivum.",
       "web_url": "https://europepmc.org/article/PMC/PMC9434867"
      }

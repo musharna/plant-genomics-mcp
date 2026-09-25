@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-25T05:21:36Z",
- "elapsed_s": 1.04517512700113,
+ "started_at": "2026-09-25T11:18:11Z",
+ "elapsed_s": 10.153962737999791,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.6546495049988152,
+   "elapsed_s": 6.7563899019996825,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.002652620998560451,
+   "elapsed_s": 0.0004007400002592476,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.3898416439915309,
+   "elapsed_s": 3.397009832000549,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 3.578599717002362e-05,
+   "elapsed_s": 2.7425000553193968e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.3245166370033985,
+   "elapsed_s": 0.24322387800020806,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0004543760005617514,
+   "elapsed_s": 0.000428436999754922,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0003326440055388957,
+   "elapsed_s": 0.0003388799996173475,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0006302810070337728,
+   "elapsed_s": 0.0004407269998409902,
    "result": null,
    "error": null
   }
@@ -88,18 +88,18 @@
   "markdown": "# LOC123159636 \u2014 `TraesCS7B02G316600`\n\n*Triticum aestivum* \u00b7 protein_coding \u00b7 7B:565,908,841\u2013565,917,820 (-) \u00b7 IWGSC\n\n## Protein\n**Auxin response factor**\nA0A3B6SPH9_WHEAT \u00b7 UniProtKB unreviewed (TrEMBL) \u00b7 1174 aa\nUniProt: [A0A3B6SPH9](https://www.uniprot.org/uniprotkb/A0A3B6SPH9)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [145\u2013237]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [310\u2013381]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [144\u2013247]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [1035\u20131129]\n- **B3 DNA binding domain** (domain, interpro) [145\u2013248]\n- **Auxin response factor domain** (domain, interpro) [295\u2013378]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [135\u2013275]\n- **AUX/IAA domain** (domain, interpro) [1038\u20131125]\n- **Auxin response factor** (family, interpro) [38\u20131129]\n- **PB1-like domain** (domain, interpro) [1040\u20131124]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006351] DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| A0A3B6B100 | 0.7 |\n| A0A3B6DF48 | 0.7 |\n| A0A3B6C887 | 0.7 |\n| A0A3B6IL23 | 0.682 |\n| A0A3B6JF47 | 0.682 |\n| A0A3B6I0Z6 | 0.682 |\n| A0A3B6QF02 | 0.677 |\n| A0A3B5Z140 | 0.677 |\n| A0A3B6G1I4 | 0.673 |\n| A0A3B6RMG2 | 0.665 |\n\n## Cross-references\n- KNETMINER_WHEAT: TraesCS7B02G316600\n- Wheat Expression: TraesCS7B02G316600\n- WikiGene: 123159636\n- NCBI gene (formerly Entrezgene): 123159636\n- Expression Atlas: TraesCS7B02G316600\n\n## Literature\n1 hits total; showing top 1.\n- **Dominant inhibition of awn development by a putative zinc-finger transcriptional repressor expressed at the B1 locus in wheat** \u2014 Huang D, Zheng Q, Melchkart T, Bekkaoui Y, Konkin DJF, Kagale S, Martucci M, You FM, Clarke M, Adamski NM, Chinoy C, Steed A, McCartney CA, Cutler AJ, Nicholson P, Feurtado JA. (PMID:31469444; doi:10.1111/nph.16154)\n",
   "sections": {
    "annotation": {
-    "biotype": "protein_coding",
+    "assembly_name": "IWGSC",
+    "db_type": "core",
     "strand": -1,
+    "source": "IWGSC",
+    "object_type": "Gene",
     "id": "TraesCS7B02G316600",
     "end": 565917820,
-    "assembly_name": "IWGSC",
-    "source": "IWGSC",
-    "start": 565908841,
-    "object_type": "Gene",
-    "logic_name": "iwgsc_high_conf",
-    "db_type": "core",
-    "canonical_transcript": "TraesCS7B02G316600.1",
+    "biotype": "protein_coding",
     "seq_region_name": "7B",
+    "logic_name": "iwgsc_high_conf",
+    "start": 565908841,
+    "canonical_transcript": "TraesCS7B02G316600.1",
     "organism": "triticum_aestivum",
     "upstream_version": null
    },
@@ -125,59 +125,59 @@
     "count": 5,
     "xrefs": [
      {
-      "synonyms": [],
-      "primary_id": "TraesCS7B02G316600",
-      "display_id": "TraesCS7B02G316600",
-      "db_display_name": "KNETMINER_WHEAT",
       "description": null,
-      "version": "0",
-      "dbname": "KNETMINER_WHEAT",
+      "synonyms": [],
       "info_type": "DEPENDENT",
-      "info_text": ""
-     },
-     {
-      "version": "0",
-      "dbname": "WHEATEXP_GENE",
-      "info_type": "DEPENDENT",
-      "info_text": "",
       "primary_id": "TraesCS7B02G316600",
-      "synonyms": [],
-      "db_display_name": "Wheat Expression",
-      "display_id": "TraesCS7B02G316600",
-      "description": null
+      "db_display_name": "KNETMINER_WHEAT",
+      "dbname": "KNETMINER_WHEAT",
+      "version": "0",
+      "info_text": "",
+      "display_id": "TraesCS7B02G316600"
      },
      {
-      "display_id": "LOC123159636",
-      "db_display_name": "WikiGene",
-      "primary_id": "123159636",
-      "synonyms": [],
-      "description": "auxin response factor 19",
+      "primary_id": "TraesCS7B02G316600",
+      "db_display_name": "Wheat Expression",
+      "dbname": "WHEATEXP_GENE",
       "version": "0",
-      "dbname": "WikiGene",
+      "display_id": "TraesCS7B02G316600",
       "info_text": "",
+      "description": null,
+      "synonyms": [],
       "info_type": "DEPENDENT"
      },
      {
-      "version": "0",
-      "dbname": "EntrezGene",
-      "info_type": "DEPENDENT",
-      "info_text": "",
+      "description": "auxin response factor 19",
       "synonyms": [],
+      "info_type": "DEPENDENT",
       "primary_id": "123159636",
-      "display_id": "LOC123159636",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "description": "auxin response factor 19"
+      "db_display_name": "WikiGene",
+      "dbname": "WikiGene",
+      "version": "0",
+      "info_text": "",
+      "display_id": "LOC123159636"
      },
      {
-      "db_display_name": "Expression Atlas",
-      "display_id": "TraesCS7B02G316600",
-      "synonyms": [],
-      "primary_id": "TraesCS7B02G316600",
-      "description": null,
-      "dbname": "ArrayExpress",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "dbname": "EntrezGene",
+      "primary_id": "123159636",
+      "version": "0",
       "info_text": "",
+      "display_id": "LOC123159636",
+      "description": "auxin response factor 19",
+      "synonyms": [],
+      "info_type": "DEPENDENT"
+     },
+     {
       "info_type": "DIRECT",
-      "version": "0"
+      "synonyms": [],
+      "description": null,
+      "info_text": "",
+      "display_id": "TraesCS7B02G316600",
+      "version": "0",
+      "dbname": "ArrayExpress",
+      "db_display_name": "Expression Atlas",
+      "primary_id": "TraesCS7B02G316600"
      }
     ],
     "by_db": {
@@ -330,11 +330,11 @@
       "title": "Dominant inhibition of awn development by a putative zinc-finger transcriptional repressor expressed at the B1 locus in wheat.",
       "authorString": "Huang D, Zheng Q, Melchkart T, Bekkaoui Y, Konkin DJF, Kagale S, Martucci M, You FM, Clarke M, Adamski NM, Chinoy C, Steed A, McCartney CA, Cutler AJ, Nicholson P, Feurtado JA.",
       "journalTitle": "The New phytologist",
-      "pubYear": "2020",
+      "pubYear": 2020,
       "firstPublicationDate": "2019-10-10",
       "citedByCount": 53,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "Awns, bristle-like structures extending from grass lemmas, provide protection against predators, contribute to photosynthesis and aid in grain dispersal. In wheat, selection of awns with minimal extension, termed awnletted, has occurred during domestication by way of loci that dominantly inhibit awn development, such as Tipped1 (B1), Tipped2 (B2), and Hooded (Hd). Here we identify and characterize the B1 gene. B1 was identified using bulked segregant RNA-sequencing of an F<sub>2</sub> durum wheat population and through deletion mapping of awned bread wheat mutants. Functional characterization was accomplished by gene overexpression while haplotype analyses assessed B1 polymorphisms and genetic variation. Located on chromosome 5A, B1 is a C2H2 zinc finger encoding gene with ethylene-responsive element binding factor-associated amphiphilic repression (EAR) motifs. Constitutive overexpression of B1 in awned wheat produced an awnletted phenotype with pleiotropic effects on plant height and fertility. Transcriptome analysis of B1 overexpression plants suggests a role as transcriptional repressor, putatively targeting pathways involved in cell proliferation. Haplotype analysis revealed a conserved B1 coding region with proximal polymorphisms and supported the contention that B1 is mainly responsible for awnletted wheats globally. B1, predominantly responsible for awn inhibition in wheat, encodes a C2H2 zinc finger protein with EAR motifs which putatively functions as a transcriptional repressor.",
       "web_url": "https://europepmc.org/article/PMC/PMC6916588"
      }

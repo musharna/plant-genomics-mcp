@@ -5,22 +5,22 @@
   "organism": "arabidopsis_thaliana",
   "top_n": 10
  },
- "started_at": "2026-09-25T05:14:08Z",
- "elapsed_s": 10.830848072000663,
+ "started_at": "2026-09-25T11:01:41Z",
+ "elapsed_s": 108.91868394300036,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
-   "status": "ok",
-   "elapsed_s": 7.169758773990907,
+   "status": "error",
+   "elapsed_s": 94.80577087900019,
    "result": null,
-   "error": null
+   "error": "[UpstreamUnavailableError] Ensembl Plants /lookup/id/AT1G34310 exhausted 3 retries (ReadTimeout: )"
   },
   {
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0005437579966383055,
+   "elapsed_s": 0.0009778960002222448,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 3.4645337120018667,
+   "elapsed_s": 14.076877707000676,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.1197358570061624,
+   "elapsed_s": 0.0029081849997965037,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.5898977530014236,
+   "elapsed_s": 0.2734324970006128,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.02223193200188689,
+   "elapsed_s": 0.0009457120004299213,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00038853300793562084,
+   "elapsed_s": 0.0002491830000508344,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00042121099249925464,
+   "elapsed_s": 0.00023292100013350137,
    "result": null,
    "error": null
   }
@@ -79,32 +79,15 @@
   "canonical_gene_name": "ARF12",
   "gene_names": {
    "canonical": "ARF12",
-   "ensembl": "ARF12",
+   "ensembl": null,
    "uniprot": [
     "ARF12"
    ]
   },
   "uniprot_accession": "Q9XID4",
-  "markdown": "# ARF12 \u2014 `AT1G34310`\n\n*Arabidopsis thaliana* \u00b7 protein_coding \u00b7 1:12,508,548\u201312,511,520 (-) \u00b7 TAIR10\n\nauxin response factor 12 [Source:NCBI gene (formerly Entrezgene);Acc:840331]\n\n## Protein\n**Auxin response factor 12**\nARFL_ARATH \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 593 aa\nUniProt: [Q9XID4](https://www.uniprot.org/uniprotkb/Q9XID4)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [125\u2013226]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [287\u2013357]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [123\u2013227]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [507\u2013593]\n- **B3 DNA binding domain** (domain, interpro) [125\u2013228]\n- **Auxin response factor domain** (domain, interpro) [273\u2013354]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [123\u2013247]\n- **AUX/IAA domain** (domain, interpro) [505\u2013591]\n- **Auxin response factor** (family, interpro) [23\u2013591]\n- **PB1-like domain** (domain, interpro) [511\u2013592]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0000976] transcription cis-regulatory region binding (IPI)\n- [GO:0003677] DNA binding (IEA)\n- [GO:0003700] DNA-binding transcription factor activity (ISS)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n- [GO:0005634] nucleus (ISM)\n\n## Pathways (KEGG)\n- `ath04075` Plant hormone signal transduction - Arabidopsis thaliana (thale cress) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| IAA28 | 0.839 |\n| IAA34 | 0.832 |\n| IAA26 | 0.806 |\n| REM7 | 0.796 |\n| IAA8 | 0.774 |\n| IAA5 | 0.766 |\n| IAA2 | 0.764 |\n| IAA30 | 0.764 |\n| IAA32 | 0.76 |\n| IAA29 | 0.76 |\n\n## Cross-references\n- NASC Gene ID: AT1G34310\n- TAIR: AT1G34310\n- TAIR Gene Name: ARF12\n- Plant Reactome Reaction ID: R-ATH-9675504\n- Plant Reactome Pathway ID: R-ATH-9675508\n- Expression Atlas: AT1G34310\n- KNETMINER_ARA: AT1G34310\n- NCBI gene (formerly Entrezgene): 840331\n- UniProtKB Gene Name: Q9XID4\n- WikiGene: 840331\n\n## Literature\n13 hits total; showing top 10.\n- **The miR7125-MdARF1 module enhances the resistance of apple to Colletotrichum gloeosporioides by promoting lignin synthesis in response to salicylic acid signalling** \u2014 Liu X, Dai H, Zhang F, Wang J, Shi J, Chen J, He P, Wang F, Ma Y. (PMID:38852059; doi:10.1111/pbi.14401)\n- **Identification of Auxin-Associated Genes in Wheat Through Comparative Transcriptome Analysis and Validation of the Candidate Receptor-like Kinase Gene &lt;i&gt;TaPBL7-2B&lt;/i&gt; in Arabidopsis** \u2014 Zhang M, Chen G, Cai J, Ji Y, Xiang L, Chen X, Wang J. (PMID:40805625; doi:10.3390/plants14152277)\n- **Modified Crosstalk between Phytohormones in Arabidopsis Mutants for PEP-Associated Proteins** \u2014 Bychkov IA, Andreeva AA, Vankova R, Lacek J, Kudryakova NV, Kusnetsov VV. (PMID:38338865; doi:10.3390/ijms25031586)\n- **HRGRN: A Graph Search-Empowered Integrative Database of Arabidopsis Signaling Transduction, Metabolism and Gene Regulation Networks** \u2014 Dai X, Li J, Liu T, Zhao PX. (PMID:26657893; doi:10.1093/pcp/pcv200)\n- **Identification of two novel type 1 peroxisomal targeting signals in Arabidopsis thaliana** \u2014 Ramirez RA, Espinoza B, Kwok EY. (PMID:25183666; doi:10.1016/j.acthis.2014.08.001)\n- **Contribution of transcriptional regulation to natural variations in Arabidopsis** \u2014 Chen WJ, Chang SH, Hudson ME, Kwan WK, Li J, Estes B, Knoll D, Shi L, Zhu T. (PMID:15833119; doi:10.1186/gb-2005-6-4-r32)\n- **Cell-specific nitrogen responses mediate developmental plasticity** \u2014 Gifford ML, Dean A, Gutierrez RA, Coruzzi GM, Birnbaum KD. (PMID:18180456; doi:10.1073/pnas.0709559105)\n- **TE-Locate: A Tool to Locate and Group Transposable Element Occurrences Using Paired-End Next-Generation Sequencing Data** \u2014 Platzer A, Nizhynska V, Long Q. (PMID:24832231; doi:10.3390/biology1020395)\n- **Accelerating structure-function mapping using the ViVa webtool to mine natural variation** \u2014 Hamm MO, Moss BL, Leydon AR, Gala HP, Lanctot A, Ramos R, Klaeser H, Lemmex AC, Zahler ML, Nemhauser JL, Wright RC. (PMID:31372596; doi:10.1002/pld3.147)\n- **Sulphur systems biology-making sense of omics data** \u2014 Watanabe M, Hoefgen R. (PMID:31404467; doi:10.1093/jxb/erz260)\n",
+  "markdown": "# ARF12 \u2014 `AT1G34310`\n\n*Arabidopsis thaliana*\n\n_Unavailable \u2014 [UpstreamUnavailableError] Ensembl Plants /lookup/id/AT1G34310 exhausted 3 retries (ReadTimeout: )_\n\n## Protein\n**Auxin response factor 12**\nARFL_ARATH \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 593 aa\nUniProt: [Q9XID4](https://www.uniprot.org/uniprotkb/Q9XID4)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [125\u2013226]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [287\u2013357]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [123\u2013227]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [507\u2013593]\n- **B3 DNA binding domain** (domain, interpro) [125\u2013228]\n- **Auxin response factor domain** (domain, interpro) [273\u2013354]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [123\u2013247]\n- **AUX/IAA domain** (domain, interpro) [505\u2013591]\n- **Auxin response factor** (family, interpro) [23\u2013591]\n- **PB1-like domain** (domain, interpro) [511\u2013592]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0000976] transcription cis-regulatory region binding (IPI)\n- [GO:0003677] DNA binding (IEA)\n- [GO:0003700] DNA-binding transcription factor activity (ISS)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n- [GO:0005634] nucleus (ISM)\n\n## Pathways (KEGG)\n- `ath04075` Plant hormone signal transduction - Arabidopsis thaliana (thale cress) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| IAA28 | 0.839 |\n| IAA34 | 0.832 |\n| IAA26 | 0.806 |\n| REM7 | 0.796 |\n| IAA8 | 0.774 |\n| IAA5 | 0.766 |\n| IAA2 | 0.764 |\n| IAA30 | 0.764 |\n| IAA32 | 0.76 |\n| IAA29 | 0.76 |\n\n## Cross-references\n- NASC Gene ID: AT1G34310\n- TAIR: AT1G34310\n- TAIR Gene Name: ARF12\n- Plant Reactome Reaction ID: R-ATH-9675504\n- Plant Reactome Pathway ID: R-ATH-9675508\n- Expression Atlas: AT1G34310\n- KNETMINER_ARA: AT1G34310\n- NCBI gene (formerly Entrezgene): 840331\n- UniProtKB Gene Name: Q9XID4\n- WikiGene: 840331\n\n## Literature\n13 hits total; showing top 10.\n- **The miR7125-MdARF1 module enhances the resistance of apple to Colletotrichum gloeosporioides by promoting lignin synthesis in response to salicylic acid signalling** \u2014 Liu X, Dai H, Zhang F, Wang J, Shi J, Chen J, He P, Wang F, Ma Y. (PMID:38852059; doi:10.1111/pbi.14401)\n- **Identification of Auxin-Associated Genes in Wheat Through Comparative Transcriptome Analysis and Validation of the Candidate Receptor-like Kinase Gene &lt;i&gt;TaPBL7-2B&lt;/i&gt; in Arabidopsis** \u2014 Zhang M, Chen G, Cai J, Ji Y, Xiang L, Chen X, Wang J. (PMID:40805625; doi:10.3390/plants14152277)\n- **Modified Crosstalk between Phytohormones in Arabidopsis Mutants for PEP-Associated Proteins** \u2014 Bychkov IA, Andreeva AA, Vankova R, Lacek J, Kudryakova NV, Kusnetsov VV. (PMID:38338865; doi:10.3390/ijms25031586)\n- **HRGRN: A Graph Search-Empowered Integrative Database of Arabidopsis Signaling Transduction, Metabolism and Gene Regulation Networks** \u2014 Dai X, Li J, Liu T, Zhao PX. (PMID:26657893; doi:10.1093/pcp/pcv200)\n- **Identification of two novel type 1 peroxisomal targeting signals in Arabidopsis thaliana** \u2014 Ramirez RA, Espinoza B, Kwok EY. (PMID:25183666; doi:10.1016/j.acthis.2014.08.001)\n- **Contribution of transcriptional regulation to natural variations in Arabidopsis** \u2014 Chen WJ, Chang SH, Hudson ME, Kwan WK, Li J, Estes B, Knoll D, Shi L, Zhu T. (PMID:15833119; doi:10.1186/gb-2005-6-4-r32)\n- **Cell-specific nitrogen responses mediate developmental plasticity** \u2014 Gifford ML, Dean A, Gutierrez RA, Coruzzi GM, Birnbaum KD. (PMID:18180456; doi:10.1073/pnas.0709559105)\n- **TE-Locate: A Tool to Locate and Group Transposable Element Occurrences Using Paired-End Next-Generation Sequencing Data** \u2014 Platzer A, Nizhynska V, Long Q. (PMID:24832231; doi:10.3390/biology1020395)\n- **Accelerating structure-function mapping using the ViVa webtool to mine natural variation** \u2014 Hamm MO, Moss BL, Leydon AR, Gala HP, Lanctot A, Ramos R, Klaeser H, Lemmex AC, Zahler ML, Nemhauser JL, Wright RC. (PMID:31372596; doi:10.1002/pld3.147)\n- **Sulphur systems biology-making sense of omics data** \u2014 Watanabe M, Hoefgen R. (PMID:31404467; doi:10.1093/jxb/erz260)\n",
   "sections": {
-   "annotation": {
-    "logic_name": "araport11",
-    "canonical_transcript": "AT1G34310.1",
-    "description": "auxin response factor 12 [Source:NCBI gene (formerly Entrezgene);Acc:840331]",
-    "assembly_name": "TAIR10",
-    "seq_region_name": "1",
-    "biotype": "protein_coding",
-    "object_type": "Gene",
-    "end": 12511520,
-    "start": 12508548,
-    "id": "AT1G34310",
-    "display_name": "ARF12",
-    "strand": -1,
-    "db_type": "core",
-    "source": "araport11",
-    "organism": "arabidopsis_thaliana",
-    "upstream_version": null
-   },
+   "annotation": null,
    "protein": {
     "locus_query": "AT1G34310",
     "primaryAccession": "Q9XID4",
@@ -127,118 +110,118 @@
     "count": 10,
     "xrefs": [
      {
-      "db_display_name": "NASC Gene ID",
-      "info_type": "DIRECT",
-      "dbname": "NASC_GENE_ID",
       "info_text": "",
       "display_id": "AT1G34310-TAIR-G",
       "synonyms": [],
       "description": "auxin response factor 12",
-      "primary_id": "AT1G34310",
-      "version": "0"
+      "info_type": "DIRECT",
+      "version": "0",
+      "db_display_name": "NASC Gene ID",
+      "dbname": "NASC_GENE_ID",
+      "primary_id": "AT1G34310"
      },
      {
-      "db_display_name": "TAIR",
-      "info_type": "DIRECT",
+      "primary_id": "AT1G34310",
       "dbname": "TAIR_LOCUS",
-      "info_text": "",
+      "db_display_name": "TAIR",
+      "version": "0",
+      "description": "auxin response factor 12",
       "synonyms": [],
       "display_id": "AT1G34310",
-      "version": "0",
-      "primary_id": "AT1G34310",
-      "description": "auxin response factor 12"
-     },
-     {
       "info_text": "",
-      "display_id": "ARF12",
-      "synonyms": [],
-      "description": "",
+      "info_type": "DIRECT"
+     },
+     {
       "version": "0",
-      "primary_id": "ARF12",
       "db_display_name": "TAIR Gene Name",
-      "info_type": "DIRECT",
-      "dbname": "TAIR_SYMBOL"
+      "dbname": "TAIR_SYMBOL",
+      "primary_id": "ARF12",
+      "info_text": "",
+      "synonyms": [],
+      "display_id": "ARF12",
+      "description": "",
+      "info_type": "DIRECT"
      },
      {
       "info_type": "DIRECT",
-      "db_display_name": "Plant Reactome Reaction ID",
-      "dbname": "Plant_Reactome_Reaction",
       "info_text": "Generated via direct",
+      "synonyms": [],
+      "display_id": "R-ATH-9675504",
       "description": "Expression of ARF1",
       "version": "0",
-      "primary_id": "R-ATH-9675504",
-      "display_id": "R-ATH-9675504",
-      "synonyms": []
+      "db_display_name": "Plant Reactome Reaction ID",
+      "dbname": "Plant_Reactome_Reaction",
+      "primary_id": "R-ATH-9675504"
      },
      {
-      "description": "Root elongation",
+      "dbname": "Plant_Reactome_Pathway",
       "primary_id": "R-ATH-9675508",
       "version": "0",
+      "db_display_name": "Plant Reactome Pathway ID",
+      "synonyms": [],
       "display_id": "R-ATH-9675508",
-      "synonyms": [],
+      "description": "Root elongation",
       "info_text": "Generated via direct",
-      "dbname": "Plant_Reactome_Pathway",
-      "info_type": "DIRECT",
-      "db_display_name": "Plant Reactome Pathway ID"
+      "info_type": "DIRECT"
      },
      {
-      "db_display_name": "Expression Atlas",
-      "info_type": "DIRECT",
-      "dbname": "ArrayExpress",
-      "info_text": "",
-      "display_id": "AT1G34310",
-      "synonyms": [],
-      "description": null,
       "primary_id": "AT1G34310",
-      "version": "0"
-     },
-     {
-      "info_text": "",
+      "dbname": "ArrayExpress",
+      "db_display_name": "Expression Atlas",
+      "version": "0",
+      "description": null,
       "display_id": "AT1G34310",
       "synonyms": [],
+      "info_text": "",
+      "info_type": "DIRECT"
+     },
+     {
+      "synonyms": [],
+      "display_id": "AT1G34310",
       "description": null,
+      "info_text": "",
+      "info_type": "DEPENDENT",
+      "dbname": "KNETMINER_ARA",
       "primary_id": "AT1G34310",
       "version": "0",
-      "db_display_name": "KNETMINER_ARA",
-      "info_type": "DEPENDENT",
-      "dbname": "KNETMINER_ARA"
+      "db_display_name": "KNETMINER_ARA"
      },
      {
-      "dbname": "EntrezGene",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "info_type": "DEPENDENT",
-      "display_id": "ARF12",
+      "description": "auxin response factor 12",
       "synonyms": [
        "auxin response factor 12",
        "F23M19.4",
        "F23M19_4"
       ],
-      "description": "auxin response factor 12",
-      "primary_id": "840331",
-      "version": "0",
-      "info_text": ""
-     },
-     {
       "display_id": "ARF12",
-      "synonyms": [],
-      "description": null,
-      "version": null,
-      "primary_id": "Q9XID4",
       "info_text": "",
-      "dbname": "Uniprot_gn",
-      "db_display_name": "UniProtKB Gene Name",
-      "info_type": "DEPENDENT"
+      "info_type": "DEPENDENT",
+      "primary_id": "840331",
+      "dbname": "EntrezGene",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "version": "0"
      },
      {
-      "dbname": "WikiGene",
+      "synonyms": [],
+      "display_id": "ARF12",
+      "description": null,
+      "info_text": "",
       "info_type": "DEPENDENT",
-      "db_display_name": "WikiGene",
-      "description": "auxin response factor 12",
-      "version": "0",
+      "dbname": "Uniprot_gn",
+      "primary_id": "Q9XID4",
+      "version": null,
+      "db_display_name": "UniProtKB Gene Name"
+     },
+     {
       "primary_id": "840331",
+      "dbname": "WikiGene",
+      "db_display_name": "WikiGene",
+      "version": "0",
+      "description": "auxin response factor 12",
       "display_id": "ARF12",
       "synonyms": [],
-      "info_text": ""
+      "info_text": "",
+      "info_type": "DEPENDENT"
      }
     ],
     "by_db": {
@@ -407,7 +390,7 @@
     "total": 13,
     "returned": 10,
     "truncated": true,
-    "next_cursor": "eyJwIjogeyJtYXJrIjogIkFvSUlQbHY2VVNnME1ESTROall6TXc9PSIsICJvZmZzZXQiOiAxMH0sICJxIjogeyJxdWVyeSI6ICJBVDFHMzQzMTAiLCAic2l6ZSI6IDEwfSwgInQiOiAibG9jdXNfbGl0ZXJhdHVyZSJ9",
+    "next_cursor": "eyJwIjogeyJtYXJrIjogIkFvSUlQbFlXMmlnME1ESTROall6TXc9PSIsICJvZmZzZXQiOiAxMH0sICJxIjogeyJxdWVyeSI6ICJBVDFHMzQzMTAiLCAic2l6ZSI6IDEwfSwgInQiOiAibG9jdXNfbGl0ZXJhdHVyZSJ9",
     "abstracts_included": true,
     "hits": [
      {
@@ -419,11 +402,11 @@
       "title": "The miR7125-MdARF1 module enhances the resistance of apple to Colletotrichum gloeosporioides by promoting lignin synthesis in response to salicylic acid signalling.",
       "authorString": "Liu X, Dai H, Zhang F, Wang J, Shi J, Chen J, He P, Wang F, Ma Y.",
       "journalTitle": "Plant biotechnology journal",
-      "pubYear": "2024",
+      "pubYear": 2024,
       "firstPublicationDate": "2024-06-09",
       "citedByCount": 24,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "Apple is an important cash crop in China, and it is susceptible to fungal infections that have deleterious effects on its yield. Apple bitter rot caused by Colletorichum gloeosporioides is one of the most severe fungal diseases of apple. Salicylic acid (SA) is a key signalling molecule in the plant disease resistance signalling pathways. Lignin synthesis also plays a key role in conferring disease resistance. However, few studies have clarified the relationship between the SA disease resistance signalling pathway and the lignin disease resistance pathway in apple. MdMYB46 has previously been shown to promote lignin accumulation in apple and enhance salt and osmotic stress tolerance. Here, we investigated the relationship between MdMYB46 and biological stress; we found that MdMYB46 overexpression enhances the resistance of apple to C. gloeosporioides. We also identified MdARF1, a transcription factor upstream of MdMYB46, via yeast library screening and determined that MdARF1 was regulated by miR7125 through psRNATarget prediction. This regulatory relationship was confirmed through LUC and qRT-PCR experiments, demonstrating that miR7125 negatively regulates MdARF1. Analysis of the miR7125 promoter revealed that miR7125 responds to SA signals. The accumulation of SA level will result in the decrease of miR7125 expression level. In sum, the results of our study provide novel insights into the molecular mechanisms underlying the resistance of apple to C. gloeosporioides and reveal a new pathway that enhances lignin accumulation in apple in response to SA signals. These findings provide valuable information for future studies aimed at breeding apple for disease resistance.",
       "web_url": "https://europepmc.org/article/PMC/PMC11536455"
      },
@@ -436,11 +419,11 @@
       "title": "Identification of Auxin-Associated Genes in Wheat Through Comparative Transcriptome Analysis and Validation of the Candidate Receptor-like Kinase Gene &lt;i&gt;TaPBL7-2B&lt;/i&gt; in Arabidopsis.",
       "authorString": "Zhang M, Chen G, Cai J, Ji Y, Xiang L, Chen X, Wang J.",
       "journalTitle": "Plants (Basel, Switzerland)",
-      "pubYear": "2025",
+      "pubYear": 2025,
       "firstPublicationDate": "2025-07-24",
       "citedByCount": 0,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "Auxin (IAA), a key natural signaling molecule, plays a pivotal role in regulating plant growth, development, and stress responses. Understanding its signal transduction mechanisms is crucial for improving crop yields. In this study, we conducted a comparative transcriptome analysis of wheat leaf and root tissues treated with different concentrations of IAA (0, 1, and 50 \u03bcM). Functional enrichment analysis revealed that differentially expressed genes (DEGs) exhibited tissue-specific regulatory patterns in response to auxin. Weighted Gene Co-expression Network Analysis (WGCNA) identified receptor-like kinase genes within the MEgreen module as highly correlated with auxin response, suggesting their involvement in both root and leaf regulation. Among them, <i>TaPBL7-2B</i>, a receptor-like kinase gene significantly upregulated under 50 \u03bcM IAA treatment, was selected for functional validation. Ectopic overexpression of <i>TaPBL7-2B</i> in <i>Arabidopsis thaliana</i> (Col-0) enhanced auxin sensitivity and inhibited plant growth by suppressing root development and leaf expansion. In contrast, knockout of the Arabidopsis homolog <i>AtPBL7</i> reduced auxin sensitivity and promoted both root and leaf growth. Transcriptome analysis of Col-0, the <i>TaPBL7-2B</i> overexpression line, and the <i>pbl7</i> mutant indicated that <i>TaPBL7-2B</i> primarily functions through the MAPK signaling pathway and plant hormone signal transduction pathway. Furthermore, qRT-PCR analysis of wheat varieties with differing auxin sensitivities confirmed a positive correlation between <i>TaPBL7-2B</i> expression and auxin response. In conclusion, <i>TaPBL7-2B</i> acts as a negative regulator of plant growth, affecting root development and leaf expansion in both Arabidopsis and wheat. These findings enhance our understanding of auxin signaling and provide new insights for optimizing crop architecture and productivity.",
       "web_url": "https://europepmc.org/article/PMC/PMC12348988"
      },
@@ -453,11 +436,11 @@
       "title": "Modified Crosstalk between Phytohormones in Arabidopsis Mutants for PEP-Associated Proteins.",
       "authorString": "Bychkov IA, Andreeva AA, Vankova R, Lacek J, Kudryakova NV, Kusnetsov VV.",
       "journalTitle": "International journal of molecular sciences",
-      "pubYear": "2024",
+      "pubYear": 2024,
       "firstPublicationDate": "2024-01-27",
       "citedByCount": 3,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "Plastid-encoded RNA polymerase (PEP) forms a multisubunit complex in operating chloroplasts, where PEP subunits and a sigma factor are tightly associated with 12 additional nuclear-encoded proteins. Mutants with disrupted genes encoding PEP-associated proteins (PAPs) provide unique tools for deciphering mutual relationships among phytohormones. A block of chloroplast biogenesis in <i>Arabidopsis pap</i> mutants specifying highly altered metabolism in white tissues induced dramatic fluctuations in the content of major phytohormones and their metabolic genes, whereas hormone signaling circuits mostly remained functional. Reprogramming of the expression of biosynthetic and metabolic genes contributed to a greatly increased content of salicylic acid (SA) and a concomitant decrease in 1-aminocyclopropane-1-carboxylic acid (ACC) and oxophytodienoic acid (OPDA), precursors of ethylene and jasmonic acid, respectively, in parallel to reduced levels of abscisic acid (ABA). The lack of differences in the free levels of indole-3-acetic acid (IAA) between the <i>pap</i> mutants and wild-type plants was accompanied by fluctuations in the contents of IAA precursors and conjugated forms as well as multilayered changes in the expression of IAA metabolic genes. Along with cytokinin (CK) overproduction, all of these compensatory changes aim to balance plant growth and defense systems to ensure viability under highly modulated conditions.",
       "web_url": "https://europepmc.org/article/PMC/PMC10855609"
      },
@@ -470,11 +453,11 @@
       "title": "HRGRN: A Graph Search-Empowered Integrative Database of Arabidopsis Signaling Transduction, Metabolism and Gene Regulation Networks.",
       "authorString": "Dai X, Li J, Liu T, Zhao PX.",
       "journalTitle": "Plant & cell physiology",
-      "pubYear": "2016",
+      "pubYear": 2016,
       "firstPublicationDate": "2015-12-12",
       "citedByCount": 15,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "The biological networks controlling plant signal transduction, metabolism and gene regulation are composed of not only tens of thousands of genes, compounds, proteins and RNAs but also the complicated interactions and co-ordination among them. These networks play critical roles in many fundamental mechanisms, such as plant growth, development and environmental response. Although much is known about these complex interactions, the knowledge and data are currently scattered throughout the published literature, publicly available high-throughput data sets and third-party databases. Many 'unknown' yet important interactions among genes need to be mined and established through extensive computational analysis. However, exploring these complex biological interactions at the network level from existing heterogeneous resources remains challenging and time-consuming for biologists. Here, we introduce HRGRN, a graph search-empowered integrative database of Arabidopsis signal transduction, metabolism and gene regulatory networks. HRGRN utilizes Neo4j, which is a highly scalable graph database management system, to host large-scale biological interactions among genes, proteins, compounds and small RNAs that were either validated experimentally or predicted computationally. The associated biological pathway information was also specially marked for the interactions that are involved in the pathway to facilitate the investigation of cross-talk between pathways. Furthermore, HRGRN integrates a series of graph path search algorithms to discover novel relationships among genes, compounds, RNAs and even pathways from heterogeneous biological interaction data that could be missed by traditional SQL database search methods. Users can also build subnetworks based on known interactions. The outcomes are visualized with rich text, figures and interactive network graphs on web pages. The HRGRN database is freely available at http://plantgrn.noble.org/hrgrn/.",
       "web_url": "https://europepmc.org/article/PMC/PMC4722177"
      },
@@ -487,11 +470,11 @@
       "title": "Identification of two novel type 1 peroxisomal targeting signals in Arabidopsis thaliana.",
       "authorString": "Ramirez RA, Espinoza B, Kwok EY.",
       "journalTitle": "Acta histochemica",
-      "pubYear": "2014",
+      "pubYear": 2014,
       "firstPublicationDate": "2014-08-30",
       "citedByCount": 7,
-      "isOpenAccess": "N",
-      "hasPDF": "Y",
+      "isOpenAccess": false,
+      "hasPDF": true,
       "abstractText": "Peroxisomes lack their own genetic material and must therefore import proteins encoded by genes in the nucleus. Amino acids within these proteins serve as targeting signals: they direct the delivery of the proteins to the organelle. The majority of soluble proteins destined for the peroxisomal matrix utilize a type 1 peroxisomal targeting signal (PTS1): a C-terminal tripeptide that follows the pattern small/basic/hydrophobic. We have discovered two new C-terminal tripeptides that target proteins to peroxisomes in Arabidopsis thaliana. The tripeptides PSL and KRR do not fit the major PTS1 consensus but cause green fluorescent protein to accumulate in peroxisomes of stably transformed Arabidopsis. We have identified forty-one proteins in the Arabidopsis genome that also bear these tripeptides at their C-termini and may therefore be peroxisomal.",
       "web_url": "https://europepmc.org/article/PMC/PMC4262709"
      },
@@ -504,11 +487,11 @@
       "title": "Contribution of transcriptional regulation to natural variations in Arabidopsis.",
       "authorString": "Chen WJ, Chang SH, Hudson ME, Kwan WK, Li J, Estes B, Knoll D, Shi L, Zhu T.",
       "journalTitle": "Genome biology",
-      "pubYear": "2005",
+      "pubYear": 2005,
       "firstPublicationDate": "2005-03-15",
       "citedByCount": 39,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "<h4>Background</h4>Genetic control of gene transcription is a key component in genome evolution. To understand the transcriptional basis of natural variation, we have studied genome-wide variations in transcription and characterized the genetic variations in regulatory elements among Arabidopsis accessions.<h4>Results</h4>Among five accessions (Col-0, C24, Ler, WS-2, and NO-0) 7,508 probe sets with no detectable genomic sequence variations were identified on the basis of the comparative genomic hybridization to the Arabidopsis GeneChip microarray, and used for accession-specific transcriptome analysis. Two-way ANOVA analysis has identified 60 genes whose mRNA levels differed in different accession backgrounds in an organ-dependent manner. Most of these genes were involved in stress responses and late stages of plant development, such as seed development. Correlation analysis of expression patterns of these 7,508 genes between pairs of accessions identified a group of 65 highly plastic genes with distinct expression patterns in each accession.<h4>Conclusion</h4>Genes that show substantial genetic variation in mRNA level are those with functions in signal transduction, transcription and stress response, suggesting the existence of variations in the regulatory mechanisms for these genes among different accessions. This is in contrast to those genes with significant polymorphisms in the coding regions identified by genomic hybridization, which include genes encoding transposon-related proteins, kinases and disease-resistance proteins. While relatively fewer sequence variations were detected on average in the coding regions of these genes, a number of differences were identified from the upstream regions, several of which alter potential cis-regulatory elements. Our results suggest that nucleotide polymorphisms in regulatory elements of genes encoding controlling factors could be primary targets of natural selection and a driving force behind the evolution of Arabidopsis accessions.",
       "web_url": "https://europepmc.org/article/PMC/PMC1088960"
      },
@@ -521,11 +504,11 @@
       "title": "Cell-specific nitrogen responses mediate developmental plasticity.",
       "authorString": "Gifford ML, Dean A, Gutierrez RA, Coruzzi GM, Birnbaum KD.",
       "journalTitle": "Proceedings of the National Academy of Sciences of the United States of America",
-      "pubYear": "2008",
+      "pubYear": 2008,
       "firstPublicationDate": "2008-01-07",
       "citedByCount": 423,
-      "isOpenAccess": "N",
-      "hasPDF": "Y",
+      "isOpenAccess": false,
+      "hasPDF": true,
       "abstractText": "The organs of multicellular species consist of cell types that must function together to perform specific tasks. One critical organ function is responding to internal or external change. Some cell-specific responses to changes in environmental conditions are known, but the scale of cell-specific responses within an entire organ as it perceives an environmental flux has not been well characterized in plants or any other multicellular organism. Here, we use cellular profiling of five Arabidopsis root cell types in response to an influx of a critical resource, nitrogen, to uncover a vast and predominantly cell-specific response. We show that cell-specific profiling increases sensitivity several-fold, revealing highly localized regulation of transcripts that were largely hidden from previous global analyses. The cell-specific data revealed responses that suggested a coordinated developmental response in distinct cell types or tissues. One example is the cell-specific regulation of a transcriptional circuit that we showed mediates lateral root outgrowth in response to nitrogen via microRNA167, linking small RNAs to nitrogen responses. Together, these results reveal a previously cryptic component of cell-specific responses to nitrogen. Thus, the results make an important advance in our understanding of how multicellular organisms cope with environmental change at the cell level.",
       "web_url": "https://europepmc.org/article/PMC/PMC2206617"
      },
@@ -538,11 +521,11 @@
       "title": "TE-Locate: A Tool to Locate and Group Transposable Element Occurrences Using Paired-End Next-Generation Sequencing Data.",
       "authorString": "Platzer A, Nizhynska V, Long Q.",
       "journalTitle": "Biology",
-      "pubYear": "2012",
+      "pubYear": 2012,
       "firstPublicationDate": "2012-09-12",
       "citedByCount": 32,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "Transposable elements (TEs) are common mobile DNA elements present in nearly all genomes. Since the movement of TEs within a genome can sometimes have phenotypic consequences, an accurate report of TE actions is desirable. To this end, we developed TE-Locate, a computational tool that uses paired-end reads to identify the novel locations of known TEs. TE-Locate can utilize either a database of TE sequences, or annotated TEs within the reference sequence of interest. This makes TE-Locate useful in the search for any mobile sequence, including retrotransposed gene copies. One major concern is to act on the correct hierarchy level, thereby avoiding an incorrect calling of a single insertion as multiple events of TEs with high sequence similarity. We used the (super)family level, but TE-Locate can also use any other level, right down to the individual transposable element. As an example of analysis with TE-Locate, we used the Swedish population in the 1,001 Arabidopsis genomes project, and presented the biological insights gained from the novel TEs, inducing the association between different TE superfamilies. The program is freely available, and the URL is provided in the end of the paper.",
       "web_url": "https://europepmc.org/article/PMC/PMC4009769"
      },
@@ -555,11 +538,11 @@
       "title": "Accelerating structure-function mapping using the ViVa webtool to mine natural variation.",
       "authorString": "Hamm MO, Moss BL, Leydon AR, Gala HP, Lanctot A, Ramos R, Klaeser H, Lemmex AC, Zahler ML, Nemhauser JL, Wright RC.",
       "journalTitle": "Plant direct",
-      "pubYear": "2019",
+      "pubYear": 2019,
       "firstPublicationDate": "2019-07-26",
       "citedByCount": 11,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "Thousands of sequenced genomes are now publicly available capturing a significant amount of natural variation within plant species; yet, much of these data remain inaccessible to researchers without significant bioinformatics experience. Here, we present a webtool called ViVa (Visualizing Variation) which aims to empower any researcher to take advantage of the amazing genetic resource collected in the <i>Arabidopsis thaliana</i> 1001 Genomes Project (http://1001genomes.org). ViVa facilitates data mining on the gene, gene family, or gene network level. To test the utility and accessibility of ViVa, we assembled a team with a range of expertise within biology and bioinformatics to analyze the natural variation within the well-studied nuclear auxin signaling pathway. Our analysis has provided further confirmation of existing knowledge and has also helped generate new hypotheses regarding this well-studied pathway. These results highlight how natural variation could be used to generate and test hypotheses about less-studied gene families and networks, especially when paired with biochemical and genetic characterization. ViVa is also readily extensible to databases of interspecific genetic variation in plants as well as other organisms, such as the 3,000 Rice Genomes Project ( http://snp-seek.irri.org/) and human genetic variation ( https://www.ncbi.nlm.nih.gov/clinvar/).",
       "web_url": "https://europepmc.org/article/PMC/PMC6658840"
      },
@@ -572,11 +555,11 @@
       "title": "Sulphur systems biology-making sense of omics data.",
       "authorString": "Watanabe M, Hoefgen R.",
       "journalTitle": "Journal of experimental botany",
-      "pubYear": "2019",
+      "pubYear": 2019,
       "firstPublicationDate": "2019-08-01",
       "citedByCount": 21,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "Systems biology approaches have been applied over the last two decades to study plant sulphur metabolism. These 'sulphur-omics' approaches have been developed in parallel with the advancing field of systems biology, which is characterized by permanent improvements of high-throughput methods to obtain system-wide data. The aim is to obtain a holistic view of sulphur metabolism and to generate models that allow predictions of metabolic and physiological responses. Besides known sulphur-responsive genes derived from previous studies, numerous genes have been identified in transcriptomics studies. This has not only increased our knowledge of sulphur metabolism but has also revealed links between metabolic processes, thus indicating a previously unexpected complex interconnectivity. The identification of response and control networks has been supported through metabolomics and proteomics studies. Due to the complex interlacing nature of biological processes, experimental validation using targeted or systems approaches is ongoing. There is still room for improvement in integrating the findings from studies of metabolomes, proteomes, and metabolic fluxes into a single unifying concept and to generate consistent models. We therefore suggest a joint effort of the sulphur research community to standardize data acquisition. Furthermore, focusing on a few different model plant systems would help overcome the problem of fragmented data, and would allow us to provide a standard data set against which future experiments can be designed and compared.",
       "web_url": "https://europepmc.org/article/PMC/PMC6698701"
      }

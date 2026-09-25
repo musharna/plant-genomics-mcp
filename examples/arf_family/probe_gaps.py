@@ -52,6 +52,13 @@ PROBES: list[tuple[str, str, dict]] = [
         {"loci": ["Os01g0236300"], "organism": "triticum_aestivum"},
     ),
     ("identifier-with-no-tool", "gramene_homologs", {"locus": "AT1G19850", "with_organism": True}),
+    # The gene_tree_id the probe above returns, dereferenced (#130).
+    (
+        "identifier-with-no-tool",
+        "gene_tree_members",
+        {"gene_tree_id": "EPlGT00940000167082", "limit": 1000},
+    ),
+    # Last: main() follows this probe's next_cursor to its second page.
     ("no-pagination", "gramene_homologs", {"locus": "AT1G19850"}),
 ]
 
@@ -70,6 +77,7 @@ DESCRIBED = (
     "experimental_structures",
     "locus_go_annotations",
     "gramene_homologs",
+    "gene_tree_members",
     "entry_members",
     "batch_locus_call",
 )

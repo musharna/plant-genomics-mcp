@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-25T05:21:37Z",
- "elapsed_s": 2.457990486000199,
+ "started_at": "2026-09-25T11:18:17Z",
+ "elapsed_s": 4.25977513899943,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.5873472929961281,
+   "elapsed_s": 2.954357921999872,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0025175379996653646,
+   "elapsed_s": 0.0013990020006531267,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 1.8701872189994901,
+   "elapsed_s": 1.3050246590000825,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 0.0010084589885082096,
+   "elapsed_s": 1.9357999917701818e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "error",
-   "elapsed_s": 0.589660145007656,
+   "elapsed_s": 0.27138063900019915,
    "result": null,
    "error": "[NotFoundError] STRING has no protein for TraesCS7D02G161900 in triticum_aestivum (queried as A0A3B6TFB3): STRING /api/json/interaction_partners \u2192 HTTP 404: [{ \"Error\" : \"not found\", \"ErrorMessage\" : \"<p>Sorry, STRING did not find a protein called 'A0A3B6TFB3' in the taxon '4565'.</p><p>Generally, STRING understands a number of different names/symbols for"
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0003611900028772652,
+   "elapsed_s": 0.00023270600013347575,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00017328398826066405,
+   "elapsed_s": 0.00010315600047761109,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00044494100438896567,
+   "elapsed_s": 0.00032357600048271706,
    "result": null,
    "error": null
   }
@@ -88,18 +88,18 @@
   "markdown": "# LOC123163801 \u2014 `TraesCS7D02G161900`\n\n*Triticum aestivum* \u00b7 protein_coding \u00b7 7D:112,045,748\u2013112,052,551 (+) \u00b7 IWGSC\n\n## Protein\n**Auxin response factor**\nA0A3B6TFB3_WHEAT \u00b7 UniProtKB unreviewed (TrEMBL) \u00b7 1047 aa\nUniProt: [A0A3B6TFB3](https://www.uniprot.org/uniprotkb/A0A3B6TFB3)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [108\u2013209]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [272\u2013343]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [106\u2013211]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [926\u20131020]\n- **B3 DNA binding domain** (domain, interpro) [108\u2013211]\n- **Auxin response factor domain** (domain, interpro) [258\u2013340]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [99\u2013238]\n- **AUX/IAA domain** (domain, interpro) [926\u20131017]\n- **Auxin response factor** (family, interpro) [36\u2013545]\n- **PB1-like domain** (domain, interpro) [931\u20131024]\n\n## GO annotations\n**Molecular Function**\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006351] DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']_\n\n## Interaction partners (STRING, top 10)\n_Unavailable \u2014 [NotFoundError] STRING has no protein for TraesCS7D02G161900 in triticum_aestivum (queried as A0A3B6TFB3): STRING /api/json/interaction_partners \u2192 HTTP 404: [{ \"Error\" : \"not found\", \"ErrorMessage\" : \"<p>Sorry, STRING did not find a protein called 'A0A3B6TFB3' in the taxon '4565'.</p><p>Generally, STRING understands a number of different names/symbols for_\n\n## Cross-references\n- UniProtKB Gene Name: A0A3B6TLI6\n- UniProtKB Gene Name: A0A3B6TFB3\n- KNETMINER_WHEAT: TraesCS7D02G161900\n- Wheat Expression: TraesCS7D02G161900\n- Plant Reactome Reaction ID: R-TAE-5608208\n- Plant Reactome Pathway ID: R-TAE-5608118\n- WikiGene: 123163801\n- NCBI gene (formerly Entrezgene): 123163801\n- Expression Atlas: TraesCS7D02G161900\n\n## Literature\n1 hits total; showing top 1.\n- **Integrated Analysis of Microarray, Small RNA, and Degradome Datasets Uncovers the Role of MicroRNAs in Temperature-Sensitive Genic Male Sterility in Wheat** \u2014 Liu Y, Li D, Zhang S, Zhang L, Gong J, Li Y, Chen J, Zhang F, Liao X, Chen Z, Wang Y, Pang B, Ma J, Chen X, Gao J, Zhao C, Gao S. (PMID:35897633; doi:10.3390/ijms23158057)\n",
   "sections": {
    "annotation": {
-    "source": "IWGSC",
-    "id": "TraesCS7D02G161900",
-    "db_type": "core",
-    "assembly_name": "IWGSC",
     "seq_region_name": "7D",
-    "object_type": "Gene",
     "canonical_transcript": "TraesCS7D02G161900.1",
-    "strand": 1,
-    "end": 112052551,
+    "assembly_name": "IWGSC",
     "logic_name": "iwgsc_high_conf",
     "biotype": "protein_coding",
+    "object_type": "Gene",
+    "strand": 1,
+    "end": 112052551,
     "start": 112045748,
+    "id": "TraesCS7D02G161900",
+    "db_type": "core",
+    "source": "IWGSC",
     "organism": "triticum_aestivum",
     "upstream_version": null
    },
@@ -125,102 +125,102 @@
     "count": 9,
     "xrefs": [
      {
-      "description": null,
-      "db_display_name": "UniProtKB Gene Name",
-      "version": null,
-      "info_text": "",
-      "dbname": "Uniprot_gn",
-      "info_type": "DEPENDENT",
-      "display_id": "LOC123163801",
       "synonyms": [],
-      "primary_id": "A0A3B6TLI6"
+      "dbname": "Uniprot_gn",
+      "db_display_name": "UniProtKB Gene Name",
+      "info_text": "",
+      "info_type": "DEPENDENT",
+      "primary_id": "A0A3B6TLI6",
+      "description": null,
+      "display_id": "LOC123163801",
+      "version": null
      },
      {
+      "description": null,
       "primary_id": "A0A3B6TFB3",
-      "synonyms": [],
-      "display_id": "LOC123163801",
-      "info_text": "",
-      "dbname": "Uniprot_gn",
       "info_type": "DEPENDENT",
       "version": null,
-      "description": null,
+      "display_id": "LOC123163801",
+      "dbname": "Uniprot_gn",
+      "synonyms": [],
+      "info_text": "",
       "db_display_name": "UniProtKB Gene Name"
      },
      {
-      "db_display_name": "KNETMINER_WHEAT",
+      "primary_id": "TraesCS7D02G161900",
       "description": null,
-      "version": "0",
       "info_type": "DEPENDENT",
-      "info_text": "",
+      "version": "0",
+      "display_id": "TraesCS7D02G161900",
+      "synonyms": [],
       "dbname": "KNETMINER_WHEAT",
-      "display_id": "TraesCS7D02G161900",
-      "synonyms": [],
-      "primary_id": "TraesCS7D02G161900"
+      "info_text": "",
+      "db_display_name": "KNETMINER_WHEAT"
      },
      {
-      "synonyms": [],
-      "primary_id": "TraesCS7D02G161900",
-      "version": "0",
-      "description": null,
+      "info_text": "",
       "db_display_name": "Wheat Expression",
-      "display_id": "TraesCS7D02G161900",
       "dbname": "WHEATEXP_GENE",
-      "info_text": "",
-      "info_type": "DEPENDENT"
-     },
-     {
-      "primary_id": "R-TAE-5608208",
       "synonyms": [],
-      "info_text": "Generated via direct",
-      "dbname": "Plant_Reactome_Reaction",
-      "info_type": "DIRECT",
-      "display_id": "R-TAE-5608208",
-      "description": "ARF inactivation by AUX/IAA",
-      "db_display_name": "Plant Reactome Reaction ID",
-      "version": "0"
-     },
-     {
-      "primary_id": "R-TAE-5608118",
-      "synonyms": [],
-      "info_type": "DIRECT",
-      "info_text": "Generated via direct",
-      "dbname": "Plant_Reactome_Pathway",
-      "display_id": "R-TAE-5608118",
-      "db_display_name": "Plant Reactome Pathway ID",
-      "description": "Auxin signalling",
-      "version": "0"
-     },
-     {
-      "synonyms": [],
-      "primary_id": "123163801",
       "version": "0",
-      "description": "auxin response factor 16",
-      "db_display_name": "WikiGene",
-      "display_id": "LOC123163801",
-      "info_text": "",
-      "dbname": "WikiGene",
-      "info_type": "DEPENDENT"
-     },
-     {
-      "synonyms": [],
-      "primary_id": "123163801",
-      "version": "0",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "description": "auxin response factor 16",
-      "display_id": "LOC123163801",
-      "info_type": "DEPENDENT",
-      "info_text": "",
-      "dbname": "EntrezGene"
-     },
-     {
-      "synonyms": [],
-      "primary_id": "TraesCS7D02G161900",
+      "display_id": "TraesCS7D02G161900",
       "description": null,
-      "db_display_name": "Expression Atlas",
+      "primary_id": "TraesCS7D02G161900",
+      "info_type": "DEPENDENT"
+     },
+     {
+      "db_display_name": "Plant Reactome Reaction ID",
+      "info_text": "Generated via direct",
+      "synonyms": [],
+      "dbname": "Plant_Reactome_Reaction",
+      "display_id": "R-TAE-5608208",
       "version": "0",
-      "dbname": "ArrayExpress",
-      "info_text": "",
       "info_type": "DIRECT",
+      "description": "ARF inactivation by AUX/IAA",
+      "primary_id": "R-TAE-5608208"
+     },
+     {
+      "dbname": "Plant_Reactome_Pathway",
+      "synonyms": [],
+      "db_display_name": "Plant Reactome Pathway ID",
+      "info_text": "Generated via direct",
+      "info_type": "DIRECT",
+      "description": "Auxin signalling",
+      "primary_id": "R-TAE-5608118",
+      "display_id": "R-TAE-5608118",
+      "version": "0"
+     },
+     {
+      "dbname": "WikiGene",
+      "synonyms": [],
+      "db_display_name": "WikiGene",
+      "info_text": "",
+      "info_type": "DEPENDENT",
+      "description": "auxin response factor 16",
+      "primary_id": "123163801",
+      "display_id": "LOC123163801",
+      "version": "0"
+     },
+     {
+      "info_type": "DEPENDENT",
+      "primary_id": "123163801",
+      "description": "auxin response factor 16",
+      "display_id": "LOC123163801",
+      "version": "0",
+      "synonyms": [],
+      "dbname": "EntrezGene",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "info_text": ""
+     },
+     {
+      "dbname": "ArrayExpress",
+      "synonyms": [],
+      "info_text": "",
+      "db_display_name": "Expression Atlas",
+      "description": null,
+      "primary_id": "TraesCS7D02G161900",
+      "info_type": "DIRECT",
+      "version": "0",
       "display_id": "TraesCS7D02G161900"
      }
     ],
@@ -274,11 +274,11 @@
       "title": "Integrated Analysis of Microarray, Small RNA, and Degradome Datasets Uncovers the Role of MicroRNAs in Temperature-Sensitive Genic Male Sterility in Wheat.",
       "authorString": "Liu Y, Li D, Zhang S, Zhang L, Gong J, Li Y, Chen J, Zhang F, Liao X, Chen Z, Wang Y, Pang B, Ma J, Chen X, Gao J, Zhao C, Gao S.",
       "journalTitle": "International journal of molecular sciences",
-      "pubYear": "2022",
+      "pubYear": 2022,
       "firstPublicationDate": "2022-07-22",
       "citedByCount": 6,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "Temperature-sensitive genic male sterile (TGMS) line Beijing Sterility 366 (BS366) has been utilized in hybrid breeding for a long time, but the molecular mechanism underlying male sterility remains unclear. Expression arrays, small RNA, and degradome sequencing were used in this study to explore the potential role of miRNA in the cold-induced male sterility of BS366. Microspore observation showed defective cell plates in dyads and tetrads and shrunken microspores at the vacuolated stage. Differential regulation of Golgi vesicle transport, phragmoplast formation, sporopollenin biosynthesis, pollen exine formation, and lipid metabolism were observed between cold and control conditions. Pollen development was significantly represented in the 352 antagonistic miRNA-target pairs in the integrated analysis of miRNA and mRNA profiles. The specific cleavage of <i>ARF17</i> and <i>TIR1</i> by miR160 and miR393 were found in the cold-treated BS366 degradome, respectively. Thus, the cold-mediated miRNAs impaired cell plate formation through repression of Golgi vesicle transport and phragmoplast formation. The repressed expression of <i>ARF17</i> and <i>TIR1</i> impaired pollen exine formation. The results of this study will contribute to our understanding of the roles of miRNAs in male sterility in wheat.",
       "web_url": "https://europepmc.org/article/PMC/PMC9332412"
      }

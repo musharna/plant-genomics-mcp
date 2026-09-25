@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-25T05:21:35Z",
- "elapsed_s": 1.1850764959963271,
+ "started_at": "2026-09-25T11:18:03Z",
+ "elapsed_s": 7.929820745000143,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.5523426110012224,
+   "elapsed_s": 5.205409649000103,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0006795460067223758,
+   "elapsed_s": 0.0004624539997166721,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.5051740009948844,
+   "elapsed_s": 2.605230942000162,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 5.745000089518726e-05,
+   "elapsed_s": 3.920600011042552e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.3254566079995129,
+   "elapsed_s": 0.28143848099989555,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0005879710079170763,
+   "elapsed_s": 0.0007766099997752463,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00043430199730210006,
+   "elapsed_s": 0.0007902449997345684,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0005236699944362044,
+   "elapsed_s": 0.0006477420001829159,
    "result": null,
    "error": null
   }
@@ -88,18 +88,18 @@
   "markdown": "# LOC123144881 \u2014 `TraesCS6D02G212700`\n\n*Triticum aestivum* \u00b7 protein_coding \u00b7 6D:301,268,010\u2013301,270,782 (+) \u00b7 IWGSC\n\n## Protein\n**Auxin response factor**\nA0A3B6QFK5_WHEAT \u00b7 UniProtKB unreviewed (TrEMBL) \u00b7 769 aa\nUniProt: [A0A3B6QFK5](https://www.uniprot.org/uniprotkb/A0A3B6QFK5)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [197\u2013298]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [381\u2013454]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [196\u2013300]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [683\u2013766]\n- **B3 DNA binding domain** (domain, interpro) [197\u2013300]\n- **Auxin response factor domain** (domain, interpro) [366\u2013449]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [191\u2013308]\n- **Auxin response factor** (family, interpro) [91\u2013761]\n- **PB1-like domain** (domain, interpro) [683\u2013761]\n- **B3 DNA binding domain** (domain, pfam) [198\u2013299]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006351] DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0007389] pattern specification process (IBA)\n- [GO:0007389] pattern specification process (IEA)\n- [GO:0009725] response to hormone (IEA)\n- [GO:0009733] response to auxin (IBA)\n- [GO:0048829] root cap development (IBA)\n- [GO:0048829] root cap development (IEA)\n- [GO:0051301] cell division (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| A0A3B6B5Z0 | 0.478 |\n| A0A3B6CH15 | 0.478 |\n| A0A3B6DPH3 | 0.478 |\n| A0A3B6DFC3 | 0.459 |\n| A0A3B6B084 | 0.459 |\n| A0A3B6NRF7 | 0.459 |\n| A0A3B6PNI2 | 0.459 |\n| A0A3B6QEG6 | 0.459 |\n| A0A3B6C8K6 | 0.459 |\n| A0A3B6SHB3 | 0.402 |\n\n## Cross-references\n- UniProtKB Gene Name: A0A3B6QFK5\n- KNETMINER_WHEAT: TraesCS6D02G212700\n- Wheat Expression: TraesCS6D02G212700\n- WikiGene: 123144881\n- WikiGene: 123127710\n- NCBI gene (formerly Entrezgene): 123144881\n- NCBI gene (formerly Entrezgene): 123127710\n- Expression Atlas: TraesCS6D02G212700\n\n## Literature\n2 hits total; showing top 2.\n- **Stage-specific transcriptomic responses of wheat to heat, drought, and combined stress: AP2/ERF regulatory networks and functional characterization of TaEREBP1-L** \u2014 Han J, Xia J, Wang C, Wang Z, Zhao Z, Wang Z, Zhang Y. (PMID:41254527; doi:10.1186/s12870-025-07615-2)\n- **Regulatory changes in TaSNAC8-6A are associated with drought tolerance in wheat seedlings** \u2014 Mao H, Li S, Wang Z, Cheng X, Li F, Mei F, Chen N, Kang Z. (PMID:31617659; doi:10.1111/pbi.13277)\n",
   "sections": {
    "annotation": {
-    "canonical_transcript": "TraesCS6D02G212700.1",
-    "assembly_name": "IWGSC",
-    "seq_region_name": "6D",
-    "logic_name": "iwgsc_high_conf",
-    "biotype": "protein_coding",
     "object_type": "Gene",
-    "strand": 1,
     "end": 301270782,
-    "start": 301268010,
     "id": "TraesCS6D02G212700",
-    "source": "IWGSC",
+    "biotype": "protein_coding",
+    "assembly_name": "IWGSC",
     "db_type": "core",
+    "strand": 1,
+    "source": "IWGSC",
+    "logic_name": "iwgsc_high_conf",
+    "start": 301268010,
+    "canonical_transcript": "TraesCS6D02G212700.1",
+    "seq_region_name": "6D",
     "organism": "triticum_aestivum",
     "upstream_version": null
    },
@@ -125,92 +125,92 @@
     "count": 8,
     "xrefs": [
      {
-      "info_type": "DEPENDENT",
-      "primary_id": "A0A3B6QFK5",
-      "description": null,
-      "display_id": "LOC123144881",
-      "version": null,
-      "synonyms": [],
       "dbname": "Uniprot_gn",
       "db_display_name": "UniProtKB Gene Name",
+      "info_type": "DEPENDENT",
+      "synonyms": [],
+      "display_id": "LOC123144881",
+      "version": null,
+      "primary_id": "A0A3B6QFK5",
+      "description": null,
+      "info_text": ""
+     },
+     {
+      "dbname": "KNETMINER_WHEAT",
+      "info_type": "DEPENDENT",
+      "db_display_name": "KNETMINER_WHEAT",
+      "version": "0",
+      "primary_id": "TraesCS6D02G212700",
+      "description": null,
+      "synonyms": [],
+      "display_id": "TraesCS6D02G212700",
       "info_text": ""
      },
      {
       "info_text": "",
-      "db_display_name": "KNETMINER_WHEAT",
       "synonyms": [],
-      "dbname": "KNETMINER_WHEAT",
-      "version": "0",
       "display_id": "TraesCS6D02G212700",
+      "version": "0",
       "primary_id": "TraesCS6D02G212700",
       "description": null,
-      "info_type": "DEPENDENT"
+      "db_display_name": "Wheat Expression",
+      "info_type": "DEPENDENT",
+      "dbname": "WHEATEXP_GENE"
      },
      {
       "info_text": "",
-      "db_display_name": "Wheat Expression",
-      "synonyms": [],
-      "dbname": "WHEATEXP_GENE",
-      "version": "0",
-      "display_id": "TraesCS6D02G212700",
-      "primary_id": "TraesCS6D02G212700",
-      "description": null,
-      "info_type": "DEPENDENT"
-     },
-     {
       "description": "auxin response factor 8",
       "primary_id": "123144881",
-      "info_type": "DEPENDENT",
       "version": "0",
       "display_id": "LOC123144881",
       "synonyms": [],
-      "dbname": "WikiGene",
+      "info_type": "DEPENDENT",
+      "db_display_name": "WikiGene",
+      "dbname": "WikiGene"
+     },
+     {
+      "primary_id": "123127710",
+      "version": "0",
+      "description": "auxin response factor 8",
+      "synonyms": [],
+      "display_id": "LOC123127710",
       "info_text": "",
+      "dbname": "WikiGene",
+      "info_type": "DEPENDENT",
       "db_display_name": "WikiGene"
      },
      {
-      "info_type": "DEPENDENT",
-      "primary_id": "123127710",
-      "description": "auxin response factor 8",
-      "display_id": "LOC123127710",
-      "version": "0",
-      "dbname": "WikiGene",
-      "synonyms": [],
-      "db_display_name": "WikiGene",
-      "info_text": ""
-     },
-     {
       "info_text": "",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
       "synonyms": [],
-      "dbname": "EntrezGene",
-      "version": "0",
       "display_id": "LOC123144881",
-      "description": "auxin response factor 8",
+      "version": "0",
       "primary_id": "123144881",
-      "info_type": "DEPENDENT"
+      "description": "auxin response factor 8",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "info_type": "DEPENDENT",
+      "dbname": "EntrezGene"
      },
      {
-      "dbname": "EntrezGene",
-      "synonyms": [],
       "info_text": "",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
       "description": "auxin response factor 8",
       "primary_id": "123127710",
-      "info_type": "DEPENDENT",
       "version": "0",
-      "display_id": "LOC123127710"
+      "display_id": "LOC123127710",
+      "synonyms": [],
+      "info_type": "DEPENDENT",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "dbname": "EntrezGene"
      },
      {
-      "synonyms": [],
-      "dbname": "ArrayExpress",
-      "db_display_name": "Expression Atlas",
       "info_text": "",
-      "info_type": "DIRECT",
+      "version": "0",
       "primary_id": "TraesCS6D02G212700",
       "description": null,
+      "synonyms": [],
       "display_id": "TraesCS6D02G212700",
-      "version": "0"
+      "info_type": "DIRECT",
+      "db_display_name": "Expression Atlas",
+      "dbname": "ArrayExpress"
      }
     ],
     "by_db": {
@@ -368,11 +368,11 @@
       "title": "Stage-specific transcriptomic responses of wheat to heat, drought, and combined stress: AP2/ERF regulatory networks and functional characterization of TaEREBP1-L.",
       "authorString": "Han J, Xia J, Wang C, Wang Z, Zhao Z, Wang Z, Zhang Y.",
       "journalTitle": "BMC plant biology",
-      "pubYear": "2025",
+      "pubYear": 2025,
       "firstPublicationDate": "2025-11-18",
       "citedByCount": 0,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "Wheat (Triticum aestivum L.) production is increasingly constrained by drought, heat, and their combination, especially in arid regions like Xinjiang, China. While previous studies have focused on single-stress responses, the molecular mechanisms underlying wheat adaptation to combined drought and heat stress (HD) remain elusive. Here, we performed transcriptome profiling at three key spike developmental stages-Jointing Stage (JS), Stamen and Pistil Primordial Differentiation Stage (SPDS), and Tetrad Stage (TS)-under drought (DS), heat (HS), and combined HD conditions. Comparative analysis revealed that HD triggered the most extensive transcriptional reprogramming, with 3,884, 5,230, and 2,793 stage-specific upregulated genes across JS, SPDS, and TS, respectively. Notably, the overlap between HS- and HD-responsive genes was higher than that between DS and HD during early stages, indicating stress-specific transcriptional shifts. Functional enrichment highlighted pathways related to osmotic adjustment, oxidative defense, and phytohormone signaling, particularly ABA and JA biosynthesis. Among stress-responsive transcription factors, the AP2/ERF family showed prominent enrichment, with TaEREBP1-L (TraesCS5A02G215900) identified as a central regulator. Dual-luciferase reporter assays confirmed that TaEREBP1-L directly activated the promoters of ABA- and JA-pathway genes (AAO3, AOC2). Co-expression analysis further revealed its coordination with membrane transporters (e.g., ABC and MATE families), suggesting an integrative regulatory function under HD conditions. Transgenic Arabidopsis overexpressing TaEREBP1-L displayed significantly enhanced drought and heat tolerance, evidenced by increased proline content, antioxidant enzyme activity (SOD, CAT), and elevated ABA/JA levels. These results demonstrate that TaEREBP1-L confers broad-spectrum stress tolerance by orchestrating hormonal and physiological pathways. Our findings provide valuable insights into combinatorial stress adaptation and identify TaEREBP1-L as a promising target for improving wheat resilience under climate-related challenges.",
       "web_url": "https://europepmc.org/article/PMC/PMC12625192"
      },
@@ -385,11 +385,11 @@
       "title": "Regulatory changes in TaSNAC8-6A are associated with drought tolerance in wheat seedlings.",
       "authorString": "Mao H, Li S, Wang Z, Cheng X, Li F, Mei F, Chen N, Kang Z.",
       "journalTitle": "Plant biotechnology journal",
-      "pubYear": "2020",
+      "pubYear": 2020,
       "firstPublicationDate": "2019-11-19",
       "citedByCount": 70,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "Wheat is a staple crop produced in arid and semi-arid areas worldwide, and its production is frequently compromised by water scarcity. Thus, increased drought tolerance is a priority objective for wheat breeding programmes, and among their targets, the NAC transcription factors have been demonstrated to contribute to plant drought response. However, natural sequence variations in these genes have been largely unexplored for their potential roles in drought tolerance. Here, we conducted a candidate gene association analysis of the stress-responsive NAC gene subfamily in a wheat panel consisting of 700 varieties collected worldwide. We identified a drought responsive gene, TaSNAC8-6A, that is tightly associated with drought tolerance in wheat seedlings. Further analysis found that a favourable allele TaSNAC8-6A<sup>In-313</sup> , carrying an insertion in the ABRE promoter motif, is targeted by TaABFs and confers enhanced drought-inducible expression of TaSNAC8-6A in drought-tolerant genotypes. Transgenic wheat and Arabidopsis TaSNAC8-6A overexpression lines exhibited enhanced drought tolerance through induction of auxin- and drought-response pathways, confirmed by transcriptomic analysis, that stimulated lateral root development, subsequently improving water-use efficiency. Taken together, our findings reveal that natural variation in TaSNAC8-6A and specifically the TaSNAC8-6A<sup>In-313</sup> allele strongly contribute to wheat drought tolerance and thus represent a valuable genetic resource for improvement of drought-tolerant germplasm for wheat production.",
       "web_url": "https://europepmc.org/article/PMC/PMC7061879"
      }

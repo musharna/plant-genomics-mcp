@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-25T05:17:07Z",
- "elapsed_s": 9.801507201991626,
+ "started_at": "2026-09-25T11:09:51Z",
+ "elapsed_s": 50.58983534700019,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 9.488015808005002,
+   "elapsed_s": 15.016943613999501,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0006955400021979585,
+   "elapsed_s": 0.0007764920001136488,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 7.391200051642954e-05,
+   "elapsed_s": 35.474151899999924,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 9.12529940251261e-05,
+   "elapsed_s": 35.571911463000106,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "error",
-   "elapsed_s": 0.3070368930057157,
+   "elapsed_s": 0.31506362300024193,
    "result": null,
    "error": "[NotFoundError] STRING: no interaction partners for Os04g0690600 (queried as Os04g0690600)"
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.000685596009134315,
+   "elapsed_s": 0.0007761759998174966,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00028647099679801613,
+   "elapsed_s": 0.0003152839999529533,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0003235199983464554,
+   "elapsed_s": 0.0004342199999882723,
    "result": null,
    "error": null
   }
@@ -88,19 +88,19 @@
   "markdown": "# OsARF13 (UniProt: ARF13) \u2014 `Os04g0690600`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 4:35,329,565\u201335,333,095 (-) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 13**\nARFM_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 529 aa\nUniProt: [Q7XSS9](https://www.uniprot.org/uniprotkb/Q7XSS9)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [126\u2013232]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [294\u2013360]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [125\u2013234]\n- **B3 DNA binding domain** (domain, interpro) [126\u2013234]\n- **Auxin response factor domain** (domain, interpro) [279\u2013358]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [117\u2013237]\n- **Auxin response factor** (family, interpro) [26\u2013483]\n- **B3 DNA binding domain** (domain, pfam) [129\u2013233]\n- **Auxin response factor ancillary domain** (domain, pfam) [279\u2013358]\n- **B3 DNA-binding domain profile** (domain, profile) [128\u2013234]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_No KEGG pathway memberships found._\n\n## Interaction partners (STRING, top 10)\n_Unavailable \u2014 [NotFoundError] STRING: no interaction partners for Os04g0690600 (queried as Os04g0690600)_\n\n## Cross-references\n- UniProtKB Gene Name: Q7XSS9\n- WikiGene: 9269399\n- Expression Atlas: Os04g0690600\n- NCBI gene (formerly Entrezgene): 9269399\n\n## Literature\n3 hits total; showing top 3.\n- **Initiation of scutellum-derived callus is regulated by an embryo-like developmental pathway in rice** \u2014 Guo F, Wang H, Lian G, Cai G, Liu W, Zhang H, Li D, Zhou C, Han N, Zhu M, Su Y, Seo PJ, Xu L, Bian H. (PMID:37100819; doi:10.1038/s42003-023-04835-w)\n- **Overexpression of <i>OsERF83</i>, a Vascular Tissue-Specific Transcription Factor Gene, Confers Drought Tolerance in Rice** \u2014 Jung SE, Bang SW, Kim SH, Seo JS, Yoon HB, Kim YS, Kim JK. (PMID:34299275; doi:10.3390/ijms22147656)\n- **Moderate water stress in rice induces rhizosheath formation associated with abscisic acid and auxin responses** \u2014 Zhang Y, Du H, Gui Y, Xu F, Liu J, Zhang J, Xu W. (PMID:32053723; doi:10.1093/jxb/eraa021)\n",
   "sections": {
    "annotation": {
+    "source": "RAP2022-09-01",
+    "logic_name": "rapdb_genes",
+    "start": 35329565,
     "canonical_transcript": "Os04t0690600-01",
-    "strand": -1,
-    "seq_region_name": "4",
     "object_type": "Gene",
     "assembly_name": "IRGSP-1.0",
-    "source": "RAP2022-09-01",
+    "strand": -1,
+    "seq_region_name": "4",
+    "db_type": "core",
+    "end": 35333095,
+    "biotype": "protein_coding",
     "id": "Os04g0690600",
     "display_name": "OsARF13",
-    "db_type": "core",
-    "biotype": "protein_coding",
-    "start": 35329565,
-    "logic_name": "rapdb_genes",
-    "end": 35333095,
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -126,48 +126,48 @@
     "count": 4,
     "xrefs": [
      {
-      "description": null,
-      "primary_id": "Q7XSS9",
-      "info_type": "DEPENDENT",
-      "version": null,
-      "display_id": "ARF13",
-      "synonyms": [],
       "dbname": "Uniprot_gn",
+      "synonyms": [],
+      "version": null,
+      "db_display_name": "UniProtKB Gene Name",
       "info_text": "",
-      "db_display_name": "UniProtKB Gene Name"
-     },
-     {
       "info_type": "DEPENDENT",
-      "description": "auxin response factor 13-like",
-      "primary_id": "9269399",
-      "display_id": "LOC9269399",
-      "version": "0",
-      "synonyms": [],
-      "dbname": "WikiGene",
-      "db_display_name": "WikiGene",
-      "info_text": ""
-     },
-     {
-      "info_type": "DIRECT",
-      "primary_id": "Os04g0690600",
       "description": null,
-      "display_id": "Os04g0690600",
-      "version": "0",
+      "display_id": "ARF13",
+      "primary_id": "Q7XSS9"
+     },
+     {
+      "db_display_name": "WikiGene",
+      "dbname": "WikiGene",
       "synonyms": [],
-      "dbname": "ArrayExpress",
-      "db_display_name": "Expression Atlas",
+      "version": "0",
+      "info_type": "DEPENDENT",
+      "description": "auxin response factor 13-like",
+      "primary_id": "9269399",
+      "display_id": "LOC9269399",
       "info_text": ""
      },
      {
+      "info_text": "",
+      "info_type": "DIRECT",
+      "description": null,
+      "primary_id": "Os04g0690600",
+      "display_id": "Os04g0690600",
+      "dbname": "ArrayExpress",
+      "synonyms": [],
       "version": "0",
-      "display_id": "LOC9269399",
-      "description": "auxin response factor 13-like",
-      "primary_id": "9269399",
+      "db_display_name": "Expression Atlas"
+     },
+     {
       "info_type": "DEPENDENT",
+      "description": "auxin response factor 13-like",
+      "display_id": "LOC9269399",
+      "primary_id": "9269399",
       "info_text": "",
       "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "synonyms": [],
-      "dbname": "EntrezGene"
+      "dbname": "EntrezGene",
+      "version": "0",
+      "synonyms": []
      }
     ],
     "by_db": {
@@ -215,11 +215,11 @@
       "title": "Initiation of scutellum-derived callus is regulated by an embryo-like developmental pathway in rice.",
       "authorString": "Guo F, Wang H, Lian G, Cai G, Liu W, Zhang H, Li D, Zhou C, Han N, Zhu M, Su Y, Seo PJ, Xu L, Bian H.",
       "journalTitle": "Communications biology",
-      "pubYear": "2023",
+      "pubYear": 2023,
       "firstPublicationDate": "2023-04-25",
       "citedByCount": 11,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "In rice (Oryza sativa) tissue culture, callus can be induced from the scutellum in embryo or from the vasculature of non-embryonic organs such as leaves, nodes, or roots. Here we show that the auxin signaling pathway triggers cell division in the epidermis of the scutellum to form an embryo-like structure, which leads to callus formation. Our transcriptome data show that embryo-, stem cell-, and auxin-related genes are upregulated during scutellum-derived callus initiation. Among those genes, the embryo-specific gene OsLEC1 is activated by auxin and involved in scutellum-derived callus initiation. However, OsLEC1 is not required for vasculature-derived callus initiation from roots. In addition, OsIAA11 and OsCRL1, which are involved in root development, are required for vasculature-derived callus formation but not for scutellum-derived callus formation. Overall, our data indicate that scutellum-derived callus initiation is regulated by an embryo-like development program, and this is different from vasculature-derived callus initiation which borrows a root development program.",
       "web_url": "https://europepmc.org/article/PMC/PMC10130139"
      },
@@ -232,11 +232,11 @@
       "title": "Overexpression of <i>OsERF83</i>, a Vascular Tissue-Specific Transcription Factor Gene, Confers Drought Tolerance in Rice.",
       "authorString": "Jung SE, Bang SW, Kim SH, Seo JS, Yoon HB, Kim YS, Kim JK.",
       "journalTitle": "International journal of molecular sciences",
-      "pubYear": "2021",
+      "pubYear": 2021,
       "firstPublicationDate": "2021-07-17",
       "citedByCount": 39,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "Abiotic stresses severely affect plant growth and productivity. To cope with abiotic stresses, plants have evolved tolerance mechanisms that are tightly regulated by reprogramming transcription factors (TFs). APETALA2/ethylene-responsive factor (AP2/ERF) transcription factors are known to play an important role in various abiotic stresses. However, our understanding of the molecular mechanisms remains incomplete. In this study, we identified the role of <i>OsERF83</i>, a member of the AP2/ERF transcription factor family, in response to drought stress. OsERF83 is a transcription factor localized to the nucleus and induced in response to various abiotic stresses, such as drought and abscisic acid (ABA). Overexpression of <i>OsERF83</i> in transgenic plants (<i>OsERF83<sup>OX</sup></i>) significantly increased drought tolerance, with higher photochemical efficiency in rice. <i>OsERF83<sup>OX</sup></i> was also associated with growth retardation, with reduced grain yields under normal growth conditions. <i>OsERF83</i> is predominantly expressed in the vascular tissue of all organs. Transcriptome analysis revealed that <i>OsERF83</i> regulates drought response genes, which are related to the transporter (<i>OsNPF8.10, OsNPF8.17, OsLH1),</i> lignin biosynthesis (<i>OsLAC17, OsLAC10, CAD8D)</i>, terpenoid synthesis (<i>OsTPS33, OsTPS14, OsTPS3)</i>, cytochrome P450 family (<i>Oscyp71Z4, CYP76M10</i>), and abiotic stress-related genes (<i>OsSAP, OsLEA14, PCC13-62). OsERF83</i> also up-regulates biotic stress-associated genes, including <i>PATHOGENESIS-RELATED PROTEIN</i> (<i>PR</i>), <i>WALL-ASSOCIATED KINASE</i> (<i>WAK</i>), <i>CELLULOSE SYNTHASE-LIKE PROTEIN E1</i> (<i>CslE1</i>), and <i>LYSM RECEPTOR-LIKE KINASE</i> (<i>RLK</i>) genes. Our results provide new insight into the multiple roles of <i>OsERF83</i> in the cross-talk between abiotic and biotic stress signaling pathways.",
       "web_url": "https://europepmc.org/article/PMC/PMC8304134"
      },
@@ -249,11 +249,11 @@
       "title": "Moderate water stress in rice induces rhizosheath formation associated with abscisic acid and auxin responses.",
       "authorString": "Zhang Y, Du H, Gui Y, Xu F, Liu J, Zhang J, Xu W.",
       "journalTitle": "Journal of experimental botany",
-      "pubYear": "2020",
+      "pubYear": 2020,
       "firstPublicationDate": "2020-05-01",
       "citedByCount": 28,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "The rhizosheath is known to be beneficial for drought resistance in many plants, but the regulation of rhizosheath formation in rice plants is unclear. Here, we investigate rhizosheath formation in different rice varieties and root hair mutants. Our results showed that moderate water stress in rice induced rhizosheath formation. The soil porosity and water content were higher in the rice rhizosheath than in the rice bulk soil under moderate water stress. Additionally, rhizosheath formation in short root hair mutants was lower than in wild-type rice under moderate water stress. Moreover, transcriptomic results indicated that abscisic acid (ABA) and auxin were involved in root and root hair responses in rhizosheath formation. Further, blocking ABA and auxin pathways in wild type and in rhl1-1, the shortest root hair mutant, rhizosheath formation and root hair length were significantly decreased under moderate water stress. However, wild type plants maintained a higher root ABA content, root basipetal auxin transport, root hair length, and amount of rhizosheath than did rhl1-1. Our results suggest that moderate water stress in rice induces rhizosheath formation by modulating the ABA and auxin responses to regulate root and root hair growth, which may be used to breed rice varieties resistant to drought.",
       "web_url": "https://europepmc.org/article/PMC/PMC7210750"
      }

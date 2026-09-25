@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-25T05:21:37Z",
- "elapsed_s": 1.9244655779912136,
+ "started_at": "2026-09-25T11:18:19Z",
+ "elapsed_s": 19.72077412100043,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 1.0513415339955827,
+   "elapsed_s": 13.964817363000293,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.000758818001486361,
+   "elapsed_s": 0.000546039000255405,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.8722745499981102,
+   "elapsed_s": 5.755425901000308,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 4.883900692220777e-05,
+   "elapsed_s": 4.205499953968683e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.3424426839919761,
+   "elapsed_s": 0.26896902800035605,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.00038247300835791975,
+   "elapsed_s": 0.0006623240005865227,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0006635199970332906,
+   "elapsed_s": 0.000622861999545421,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00046095700236037374,
+   "elapsed_s": 0.0005772350004917826,
    "result": null,
    "error": null
   }
@@ -88,18 +88,18 @@
   "markdown": "# LOC123164583 \u2014 `TraesCS7D02G436800`\n\n*Triticum aestivum* \u00b7 protein_coding \u00b7 7D:556,120,190\u2013556,124,226 (+) \u00b7 IWGSC\n\n## Protein\n**Auxin response factor**\nA0A3B6TQE3_WHEAT \u00b7 UniProtKB unreviewed (TrEMBL) \u00b7 695 aa\nUniProt: [A0A3B6TQE3](https://www.uniprot.org/uniprotkb/A0A3B6TQE3)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [122\u2013223]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [321\u2013394]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [121\u2013225]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [608\u2013690]\n- **B3 DNA binding domain** (domain, interpro) [122\u2013225]\n- **Auxin response factor domain** (domain, interpro) [306\u2013389]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [118\u2013225]\n- **Auxin response factor** (family, interpro) [19\u2013686]\n- **PB1-like domain** (domain, interpro) [608\u2013688]\n- **B3 DNA binding domain** (domain, pfam) [123\u2013224]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006351] DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0007389] pattern specification process (IBA)\n- [GO:0007389] pattern specification process (IEA)\n- [GO:0009725] response to hormone (IEA)\n- [GO:0009733] response to auxin (IBA)\n- [GO:0048829] root cap development (IBA)\n- [GO:0048829] root cap development (IEA)\n- [GO:0051301] cell division (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| A0A3B6DPH3 | 0.478 |\n| A0A3B6CH15 | 0.478 |\n| A0A3B6B5Z0 | 0.478 |\n| A0A3B6C8K6 | 0.459 |\n| A0A3B6B084 | 0.459 |\n| A0A3B6QEG6 | 0.459 |\n| A0A3B6PNI2 | 0.459 |\n| A0A3B6NRF7 | 0.459 |\n| A0A3B6DFC3 | 0.459 |\n\n## Cross-references\n- UniProtKB Gene Name: A0A3B6TQE3\n- KNETMINER_WHEAT: TraesCS7D02G436800\n- Wheat Expression: TraesCS7D02G436800\n- Plant Reactome Reaction ID: R-TAE-5608208\n- Plant Reactome Pathway ID: R-TAE-5608118\n- WikiGene: 123164583\n- NCBI gene (formerly Entrezgene): 123164583\n- Expression Atlas: TraesCS7D02G436800\n\n## Literature\n2 hits total; showing top 2.\n- **Novel resistance loci for quantitative resistance to Septoria tritici blotch in Asian wheat (Triticum aestivum) via genome-wide association study** \u2014 Patial M, Navathe S, He X, Kamble U, Kumar M, Joshi AK, Singh PK. (PMID:39251916; doi:10.1186/s12870-024-05547-x)\n- **Multi-Locus GWAS of Quality Traits in Bread Wheat: Mining More Candidate Genes and Possible Regulatory Network** \u2014 Yang Y, Chai Y, Zhang X, Lu S, Zhao Z, Wei D, Chen L, Hu YG. (PMID:32849679; doi:10.3389/fpls.2020.01091)\n",
   "sections": {
    "annotation": {
-    "source": "IWGSC",
-    "assembly_name": "IWGSC",
-    "start": 556120190,
-    "id": "TraesCS7D02G436800",
-    "strand": 1,
-    "end": 556124226,
     "biotype": "protein_coding",
-    "canonical_transcript": "TraesCS7D02G436800.1",
-    "seq_region_name": "7D",
-    "logic_name": "iwgsc_high_conf",
+    "end": 556124226,
+    "id": "TraesCS7D02G436800",
     "db_type": "core",
+    "seq_region_name": "7D",
+    "strand": 1,
+    "assembly_name": "IWGSC",
     "object_type": "Gene",
+    "canonical_transcript": "TraesCS7D02G436800.1",
+    "start": 556120190,
+    "logic_name": "iwgsc_high_conf",
+    "source": "IWGSC",
     "organism": "triticum_aestivum",
     "upstream_version": null
    },
@@ -125,20 +125,20 @@
     "count": 8,
     "xrefs": [
      {
-      "info_text": "",
-      "db_display_name": "UniProtKB Gene Name",
-      "synonyms": [],
-      "dbname": "Uniprot_gn",
-      "version": null,
-      "display_id": "LOC123164583",
       "primary_id": "A0A3B6TQE3",
       "description": null,
-      "info_type": "DEPENDENT"
+      "info_type": "DEPENDENT",
+      "version": null,
+      "display_id": "LOC123164583",
+      "synonyms": [],
+      "dbname": "Uniprot_gn",
+      "info_text": "",
+      "db_display_name": "UniProtKB Gene Name"
      },
      {
       "info_type": "DEPENDENT",
-      "description": null,
       "primary_id": "TraesCS7D02G436800",
+      "description": null,
       "display_id": "TraesCS7D02G436800",
       "version": "0",
       "synonyms": [],
@@ -147,70 +147,70 @@
       "info_text": ""
      },
      {
-      "info_type": "DEPENDENT",
-      "primary_id": "TraesCS7D02G436800",
       "description": null,
-      "display_id": "TraesCS7D02G436800",
+      "primary_id": "TraesCS7D02G436800",
+      "info_type": "DEPENDENT",
       "version": "0",
-      "synonyms": [],
+      "display_id": "TraesCS7D02G436800",
       "dbname": "WHEATEXP_GENE",
-      "db_display_name": "Wheat Expression",
-      "info_text": ""
+      "synonyms": [],
+      "info_text": "",
+      "db_display_name": "Wheat Expression"
      },
      {
-      "dbname": "Plant_Reactome_Reaction",
-      "synonyms": [],
-      "info_text": "Generated via direct",
-      "db_display_name": "Plant Reactome Reaction ID",
-      "primary_id": "R-TAE-5608208",
       "description": "ARF inactivation by AUX/IAA",
+      "primary_id": "R-TAE-5608208",
       "info_type": "DIRECT",
       "version": "0",
-      "display_id": "R-TAE-5608208"
+      "display_id": "R-TAE-5608208",
+      "synonyms": [],
+      "dbname": "Plant_Reactome_Reaction",
+      "info_text": "Generated via direct",
+      "db_display_name": "Plant Reactome Reaction ID"
      },
      {
-      "info_text": "Generated via direct",
       "db_display_name": "Plant Reactome Pathway ID",
+      "info_text": "Generated via direct",
       "dbname": "Plant_Reactome_Pathway",
       "synonyms": [],
-      "version": "0",
       "display_id": "R-TAE-5608118",
+      "version": "0",
+      "info_type": "DIRECT",
       "description": "Auxin signalling",
-      "primary_id": "R-TAE-5608118",
-      "info_type": "DIRECT"
+      "primary_id": "R-TAE-5608118"
      },
      {
-      "primary_id": "123164583",
-      "description": "auxin response factor 18",
-      "info_type": "DEPENDENT",
-      "version": "0",
-      "display_id": "LOC123164583",
-      "dbname": "WikiGene",
       "synonyms": [],
+      "dbname": "WikiGene",
       "info_text": "",
-      "db_display_name": "WikiGene"
-     },
-     {
-      "primary_id": "123164583",
+      "db_display_name": "WikiGene",
       "description": "auxin response factor 18",
+      "primary_id": "123164583",
       "info_type": "DEPENDENT",
       "version": "0",
-      "display_id": "LOC123164583",
+      "display_id": "LOC123164583"
+     },
+     {
+      "info_text": "",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
       "dbname": "EntrezGene",
       "synonyms": [],
-      "info_text": "",
-      "db_display_name": "NCBI gene (formerly Entrezgene)"
+      "version": "0",
+      "display_id": "LOC123164583",
+      "description": "auxin response factor 18",
+      "primary_id": "123164583",
+      "info_type": "DEPENDENT"
      },
      {
-      "info_type": "DIRECT",
+      "synonyms": [],
+      "dbname": "ArrayExpress",
+      "info_text": "",
+      "db_display_name": "Expression Atlas",
       "description": null,
       "primary_id": "TraesCS7D02G436800",
-      "display_id": "TraesCS7D02G436800",
+      "info_type": "DIRECT",
       "version": "0",
-      "dbname": "ArrayExpress",
-      "synonyms": [],
-      "db_display_name": "Expression Atlas",
-      "info_text": ""
+      "display_id": "TraesCS7D02G436800"
      }
     ],
     "by_db": {
@@ -362,11 +362,11 @@
       "title": "Novel resistance loci for quantitative resistance to Septoria tritici blotch in Asian wheat (Triticum aestivum) via genome-wide association study.",
       "authorString": "Patial M, Navathe S, He X, Kamble U, Kumar M, Joshi AK, Singh PK.",
       "journalTitle": "BMC plant biology",
-      "pubYear": "2024",
+      "pubYear": 2024,
       "firstPublicationDate": "2024-09-09",
       "citedByCount": 3,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "<h4>Background</h4>Septoria tritici blotch (STB) disease causes yield losses of up to 50 per cent in susceptible wheat cultivars and can reduce wheat production. In this study, genomic architecture for adult-plant STB resistance in a Septoria Association Mapping Panel (SAMP) having 181 accessions and genomic regions governing STB resistance in a South Asian wheat panel were looked for.<h4>Results</h4>Field experiments during the period from 2019 to 2021\u00a0revealed those certain accessions, namely BGD52 (CHIR7/ANB//CHIR1), BGD54 (CHIR7/ANB//CHIR1), IND92 (WH 1218), IND8 (DBW 168), and IND75 (PBW 800), exhibited a high level of resistance. Genetic analysis revealed the presence of 21 stable quantitative trait nucleotides (QTNs) associated with resistance to STB (Septoria tritici blotch) on all wheat chromosomes, except for 2D, 3A, 3D, 4A, 4D, 5D, 6B, 6D, and 7A. These QTNs were predominantly located in chromosome regions previously identified as associated with STB resistance. Three Quantitative Trait Loci (QTNs) were found to have significant phenotypic effects in field evaluations. These QTNs are Q.STB.5A.1, Q.STB.5B.1, and Q.STB.5B.3. Furthermore, it is possible that the QTNs located on chromosomes 1A (Q.STB.1A.1), 2A (Q.STB_DH.2A.1, Q.STB.2A.3), 2B (Q.STB.2B.4), 5A (Q.STB.5A.1, Q.STB.5A.2), and 7B (Q.STB.7B.2) could potentially be new genetic regions associated with resistance.<h4>Conclusion</h4>Our findings demonstrate the importance of Asian bread wheat as a source of STB resistance alleles and novel stable QTNs for wheat breeding programs aiming to develop long-lasting and wide-ranging resistance to Zymoseptoria tritici in wheat cultivars.",
       "web_url": "https://europepmc.org/article/PMC/PMC11382471"
      },
@@ -379,11 +379,11 @@
       "title": "Multi-Locus GWAS of Quality Traits in Bread Wheat: Mining More Candidate Genes and Possible Regulatory Network.",
       "authorString": "Yang Y, Chai Y, Zhang X, Lu S, Zhao Z, Wei D, Chen L, Hu YG.",
       "journalTitle": "Frontiers in plant science",
-      "pubYear": "2020",
+      "pubYear": 2020,
       "firstPublicationDate": "2020-07-31",
       "citedByCount": 61,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "In wheat breeding, improved quality traits, including grain quality and dough rheological properties, have long been a critical goal. To understand the genetic basis of key quality traits of wheat, two single-locus and five multi-locus GWAS models were performed for six grain quality traits and three dough rheological properties based on 19, 254 SNPs in 267 bread wheat accessions. As a result, 299 quantitative trait nucleotides (QTNs) within 105 regions were identified to be associated with these quality traits in four environments. Of which, 40 core QTN regions were stably detected in at least three environments, 19 of which were novel. Compared with the previous studies, these novel QTN regions explained smaller phenotypic variation, which verified the advantages of the multi-locus GWAS models in detecting important small effect QTNs associated with complex traits. After characterization of the function and expression in-depth, 67 core candidate genes involved in protein/sugar synthesis, histone modification and the regulation of transcription factor were observed to be associated with the formation of grain quality, which showed that multi-level regulations influenced wheat grain quality. Finally, a preliminary network of gene regulation that may affect wheat quality formation was inferred. This study verified the power and reliability of multi-locus GWAS methods in wheat quality trait research, and increased the understanding of wheat quality formation mechanisms. The detected QTN regions and candidate genes in this study could be further used for gene cloning and marker-assisted selection in high-quality breeding of bread wheat.",
       "web_url": "https://europepmc.org/article/PMC/PMC7411135"
      }

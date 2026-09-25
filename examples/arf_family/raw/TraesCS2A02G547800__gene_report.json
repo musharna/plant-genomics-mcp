@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-25T05:21:23Z",
- "elapsed_s": 0.8855105109978467,
+ "started_at": "2026-09-25T11:15:53Z",
+ "elapsed_s": 17.690816655000162,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.5521148970001377,
+   "elapsed_s": 12.218910083000083,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0010449379915371537,
+   "elapsed_s": 0.0005052030001024832,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.28119107900420204,
+   "elapsed_s": 5.471357553999951,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 2.1378000383265316e-05,
+   "elapsed_s": 3.675799962366e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.3323057730012806,
+   "elapsed_s": 0.3035551020002458,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0002515039959689602,
+   "elapsed_s": 0.0003305409991298802,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00032953899062704295,
+   "elapsed_s": 0.00024185800066334195,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0004611850017681718,
+   "elapsed_s": 0.0002645249996930943,
    "result": null,
    "error": null
   }
@@ -86,18 +86,18 @@
   "markdown": "# TraesCS2A02G547800 \u2014 `TraesCS2A02G547800`\n\n*Triticum aestivum* \u00b7 protein_coding \u00b7 2A:755,768,802\u2013755,776,624 (+) \u00b7 IWGSC\n\n## Protein\n**Auxin response factor**\nA0A3B6B888_WHEAT \u00b7 UniProtKB unreviewed (TrEMBL) \u00b7 831 aa\nUniProt: [A0A3B6B888](https://www.uniprot.org/uniprotkb/A0A3B6B888)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [132\u2013233]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [297\u2013369]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [131\u2013234]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [728\u2013821]\n- **B3 DNA binding domain** (domain, interpro) [132\u2013235]\n- **Auxin response factor domain** (domain, interpro) [282\u2013365]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [118\u2013262]\n- **AUX/IAA domain** (domain, interpro) [729\u2013820]\n- **Auxin response factor** (family, interpro) [23\u2013533]\n- **PB1-like domain** (domain, interpro) [732\u2013816]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006351] DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0009725] response to hormone (IEA)\n- [GO:0009733] response to auxin (IBA)\n- [GO:0009908] flower development (IBA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| A0A3B6SM70 | 0.99 |\n| A0A3B6RQD9 | 0.99 |\n| A0A3B6NMZ2 | 0.99 |\n| A0A3B6PHL7 | 0.99 |\n| A0A3B6TQU0 | 0.99 |\n| wMAD2-B1 | 0.943 |\n| wMAD2-D1 | 0.943 |\n| wMAD2-A1 | 0.943 |\n| A0A3B6B100 | 0.941 |\n| A0A3B6DF48 | 0.941 |\n\n## Cross-references\n- KNETMINER_WHEAT: TraesCS2A02G547800\n- Wheat Expression: TraesCS2A02G547800\n- Plant Reactome Reaction ID: R-TAE-5608208\n- Plant Reactome Pathway ID: R-TAE-5608118\n- Expression Atlas: TraesCS2A02G547800\n\n## Literature\n1 hits total; showing top 1.\n- **Exploring Drought Resistance Genes from the Roots of the Wheat Cultivar Yunhan1818** \u2014 Qiao L, Chang L, Kai M, Zhang X, Kang T, Wu L, Zhang X, Li X, Zhao J, Zhao Z, Zheng J. (PMID:39769221; doi:10.3390/ijms252413458)\n",
   "sections": {
    "annotation": {
-    "logic_name": "iwgsc_high_conf",
-    "start": 755768802,
-    "biotype": "protein_coding",
-    "end": 755776624,
-    "seq_region_name": "2A",
-    "object_type": "Gene",
-    "canonical_transcript": "TraesCS2A02G547800.1",
-    "strand": 1,
-    "source": "IWGSC",
-    "id": "TraesCS2A02G547800",
-    "db_type": "core",
     "assembly_name": "IWGSC",
+    "start": 755768802,
+    "db_type": "core",
+    "seq_region_name": "2A",
+    "canonical_transcript": "TraesCS2A02G547800.1",
+    "end": 755776624,
+    "logic_name": "iwgsc_high_conf",
+    "biotype": "protein_coding",
+    "strand": 1,
+    "object_type": "Gene",
+    "id": "TraesCS2A02G547800",
+    "source": "IWGSC",
     "organism": "triticum_aestivum",
     "upstream_version": null
    },
@@ -121,59 +121,59 @@
     "count": 5,
     "xrefs": [
      {
-      "display_id": "TraesCS2A02G547800",
-      "info_type": "DEPENDENT",
-      "info_text": "",
       "dbname": "KNETMINER_WHEAT",
+      "primary_id": "TraesCS2A02G547800",
       "version": "0",
       "db_display_name": "KNETMINER_WHEAT",
-      "description": null,
-      "primary_id": "TraesCS2A02G547800",
-      "synonyms": []
-     },
-     {
+      "info_type": "DEPENDENT",
       "synonyms": [],
-      "primary_id": "TraesCS2A02G547800",
-      "version": "0",
-      "description": null,
-      "db_display_name": "Wheat Expression",
       "display_id": "TraesCS2A02G547800",
-      "dbname": "WHEATEXP_GENE",
-      "info_text": "",
-      "info_type": "DEPENDENT"
+      "description": null,
+      "info_text": ""
      },
      {
+      "info_type": "DEPENDENT",
+      "description": null,
       "synonyms": [],
-      "primary_id": "R-TAE-5608208",
+      "display_id": "TraesCS2A02G547800",
+      "info_text": "",
+      "primary_id": "TraesCS2A02G547800",
+      "dbname": "WHEATEXP_GENE",
+      "db_display_name": "Wheat Expression",
+      "version": "0"
+     },
+     {
+      "info_text": "Generated via direct",
       "description": "ARF inactivation by AUX/IAA",
+      "display_id": "R-TAE-5608208",
+      "synonyms": [],
+      "info_type": "DIRECT",
       "db_display_name": "Plant Reactome Reaction ID",
       "version": "0",
-      "info_text": "Generated via direct",
-      "dbname": "Plant_Reactome_Reaction",
-      "info_type": "DIRECT",
-      "display_id": "R-TAE-5608208"
+      "primary_id": "R-TAE-5608208",
+      "dbname": "Plant_Reactome_Reaction"
      },
      {
-      "primary_id": "R-TAE-5608118",
+      "description": "Auxin signalling",
       "synonyms": [],
-      "dbname": "Plant_Reactome_Pathway",
+      "display_id": "R-TAE-5608118",
       "info_text": "Generated via direct",
       "info_type": "DIRECT",
-      "display_id": "R-TAE-5608118",
-      "description": "Auxin signalling",
+      "primary_id": "R-TAE-5608118",
+      "dbname": "Plant_Reactome_Pathway",
       "db_display_name": "Plant Reactome Pathway ID",
       "version": "0"
      },
      {
-      "primary_id": "TraesCS2A02G547800",
-      "synonyms": [],
+      "description": null,
       "display_id": "TraesCS2A02G547800",
-      "info_type": "DIRECT",
+      "synonyms": [],
       "info_text": "",
+      "info_type": "DIRECT",
+      "primary_id": "TraesCS2A02G547800",
       "dbname": "ArrayExpress",
-      "version": "0",
       "db_display_name": "Expression Atlas",
-      "description": null
+      "version": "0"
      }
     ],
     "by_db": {
@@ -326,11 +326,11 @@
       "title": "Exploring Drought Resistance Genes from the Roots of the Wheat Cultivar Yunhan1818.",
       "authorString": "Qiao L, Chang L, Kai M, Zhang X, Kang T, Wu L, Zhang X, Li X, Zhao J, Zhao Z, Zheng J.",
       "journalTitle": "International journal of molecular sciences",
-      "pubYear": "2024",
+      "pubYear": 2024,
       "firstPublicationDate": "2024-12-16",
       "citedByCount": 1,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "The root is an important organ by which plants directly sense variation in soil moisture. The discovery of drought stress-responsive genes in roots is very important for the improvement of drought tolerance in wheat varieties via molecular approaches. In this study, transcriptome sequencing was conducted on the roots of drought-tolerant wheat cultivar YH1818 seedlings at 0, 2, and 7 days after treatment (DAT). Based on a weighted gene correlation network analysis of differentially expressed genes (DEGs), 14 coexpression modules were identified, of which five modules comprising 3107 DEGs were related to 2 or 7 DAT under drought stress conditions. A total of 223,357 single-nucleotide polymorphisms (SNPs) of these DEGs were retrieved from public databases. Using the R language package and GAPIT program, association analysis was performed between the 223,357 SNPs and the drought tolerance coefficient (DTC) values of six drought resistance-related traits in 114 wheat germplasms. The results revealed that 18 high-confidence SNPs of 10 DEGs, including <i>TaPK</i>, <i>TaRFP</i>, <i>TaMCO</i>, <i>TaPOD</i>, <i>TaC3H-ZF</i>, <i>TaGRP</i>, <i>TaDHODH</i>, <i>TaPPDK</i>, <i>TaLectin</i>, and <i>TaARF7-A</i>, were associated with drought tolerance. The RT-qPCR results confirmed that these genes were significantly upregulated by drought stress at 7 DAT. Among them, <i>TaARF7-A</i> contained three DTC-related SNPs, which presented two haplotypes in the tested wheat germplasms. YH1818 belongs to the Hap1 allele, which is involved in increased drought tolerance. This study revealed key modules and candidate genes for understanding the drought-stress response mechanism in wheat roots.",
       "web_url": "https://europepmc.org/article/PMC/PMC11679818"
      }
