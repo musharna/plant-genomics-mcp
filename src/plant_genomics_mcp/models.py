@@ -1541,9 +1541,18 @@ class CoexNeighbor(BaseModel):
         default=None,
         description="NCBI Entrez gene ID (upstream 'gene' field)",
     )
+    score: float = Field(
+        description=(
+            "Coexpression score in the release's own index, named by the "
+            "response's score_type; higher = stronger coexpression"
+        ),
+    )
     z_score: float | None = Field(
         default=None,
-        description="ATTED-II z-score; higher = stronger coexpression",
+        description=(
+            "ATTED-II z-score; higher = stronger coexpression. Null unless "
+            "score_type is 'z' (Ath-u.c4-0); read score for every release"
+        ),
     )
 
 
@@ -1559,6 +1568,13 @@ class AttedCoexpression(BaseModel):
     locus: str
     atted_release: str = Field(
         description="ATTED-II DB identifier, e.g. Ath-u.c4-0 (release version included)",
+    )
+    score_type: str = Field(
+        description=(
+            "The coexpression index every neighbour's score is in, as ATTED-II "
+            "declares it: 'z' for Ath-u.c4-0, 'LSmr' (logit score) for the "
+            "other releases"
+        ),
     )
     neighbors: list[CoexNeighbor]
     upstream_version: str | None = upstream_version_field(

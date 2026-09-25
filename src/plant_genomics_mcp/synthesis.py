@@ -663,13 +663,16 @@ def _consensus_partners(
     Live-shape consumption (verified 2026-05-22 against backend modules):
       - STRING normalized partners carry ``string_id`` (``<taxid>.<locus>.<N>``)
         and ``score`` (combined_score, already 0-1).
-      - ATTED normalized neighbors carry ``locus`` and ``z_score`` (NOT
-        ``mr`` — atted._normalize does not emit a mutual_rank field).
+      - ATTED normalized neighbors carry ``locus`` and ``score``, in the
+        index the release declares (``z`` for Ath-u.c4-0, ``LSmr`` for the
+        other releases). ``z_score`` is null outside Arabidopsis, so reading
+        it scored every other organism's neighbours 0.
 
     Scoring:
       STRING combined_score already 0-1.
-      ATTED z-score normalized via ``z / (1 + z)`` → bounded 0-1
-        (z=3 → 0.75, z=5 → 0.83, z=10 → 0.91).
+      ATTED score normalized via ``s / (1 + s)`` → bounded 0-1
+        (s=3 → 0.75, s=5 → 0.83, s=10 → 0.91) for either index, both
+        higher = stronger; a score at or below 0 contributes 0.
       combined_score = mean(normalized_scores across sources).
       sort by (n_sources desc, combined_score desc, target_locus asc), top-N.
     """
@@ -693,8 +696,12 @@ def _consensus_partners(
             locus = n.get("locus")
             if not locus:
                 continue
-            z = float(n.get("z_score") or 0.0)
-            normalized = z / (1.0 + z) if z > 0 else 0.0
+            s = n.get("score")
+            if isinstance(s, bool) or not isinstance(s, (int, float)):
+                raise PlantGenomicsError(
+                    f"ATTED neighbour {locus!r} carries no numeric score: {s!r}"
+                )
+            normalized = s / (1.0 + s) if s > 0 else 0.0
             entry = scores.setdefault(
                 locus, {"target_locus": locus, "sources": [], "normalized": []}
             )

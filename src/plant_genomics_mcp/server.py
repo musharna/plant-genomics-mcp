@@ -19,7 +19,7 @@ synthesis tools that compose the live backends:
   - ``gene_tree_members``                 — every gene in a gene_tree_id, optionally one organism's (live, Ensembl Compara)
   - ``kegg_pathways``                     — KEGG pathway memberships (live, multi-organism via ``organism=``)
   - ``string_interactions``               — STRING-DB first-neighbor partners (live, per-channel scores)
-  - ``atted_coexpression``                — ATTED-II Ath-u.c4-0 coexpression (live, z-scores)
+  - ``atted_coexpression``                — ATTED-II coexpression (live; z for Ath, LSmr elsewhere)
   - ``bar_gene_summary``                  — BAR ThaleMine + GAIA aliases (live, Arabidopsis curator summary)
   - ``bar_efp_expression``                — BAR world-eFP natural-variation expression (live, ~36 Arabidopsis ecotypes)
   - ``bar_aiv_interactions``              — BAR AIV interactions (live, Arabidopsis GRN paper refs / Rice predicted PPI pairs)
@@ -2053,8 +2053,10 @@ TOOLS: list[types.Tool] = [
         description=(
             "Fetch co-expressed gene neighbors from ATTED-II (atted.jp, "
             "API v5) for a plant locus. Returns top_n neighbors with "
-            "target locus + NCBI Entrez gene ID + z-score (higher = "
-            "stronger coexpression). The ATTED-II release "
+            "target locus + NCBI Entrez gene ID + score (higher = "
+            "stronger coexpression), in the index the release declares "
+            "as score_type: 'z' for Ath-u.c4-0, 'LSmr' (logit score) for "
+            "the other releases. The ATTED-II release "
             "(e.g. Ath-u.c4-0 for Arabidopsis, Osa-u.c1-0 for rice) is "
             f"resolved per-organism. {_coverage('atted_release')} A locus "
             "that is not in the organism's release raises NotFoundError. "

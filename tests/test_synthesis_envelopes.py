@@ -361,12 +361,12 @@ def test_consensus_partners_full_contract():
     }
     atted_payload = {
         "neighbors": [
-            {"locus": "AT1G00002", "z_score": 3.0},  # joins string: (0.4 + 0.75) / 2
-            {"locus": "AT1G00003", "z_score": 1.0},  # 0.5
-            {"locus": "AT1G00005", "z_score": 0.0},  # z=0 -> 0.0, still a row
-            {"locus": "AT1G00006", "z_score": -2.0},  # negative z -> 0.0
-            {"locus": None, "z_score": 9.0},  # no locus: skipped, later rows still read
-            {"locus": "AT1G00007", "z_score": 1.0},
+            {"locus": "AT1G00002", "score": 3.0},  # joins string: (0.4 + 0.75) / 2
+            {"locus": "AT1G00003", "score": 1.0},  # 0.5
+            {"locus": "AT1G00005", "score": 0.0},  # 0 -> 0.0, still a row
+            {"locus": "AT1G00006", "score": -2.0},  # negative -> 0.0
+            {"locus": None, "score": 9.0},  # no locus: skipped, later rows still read
+            {"locus": "AT1G00007", "score": 1.0},
         ]
     }
     out = synthesis._consensus_partners(string_payload, atted_payload, top_n=10)
@@ -392,9 +392,9 @@ def test_consensus_partners_full_contract():
         "AT1G00001",
     ]
     assert synthesis._consensus_partners(None, None, top_n=5) == []
-    # rounding is to 4 places: z=2 -> 2/3
+    # rounding is to 4 places: 2 -> 2/3
     only = synthesis._consensus_partners(
-        None, {"neighbors": [{"locus": "L", "z_score": 2.0}]}, top_n=5
+        None, {"neighbors": [{"locus": "L", "score": 2.0}]}, top_n=5
     )
     assert only == [
         {"target_locus": "L", "n_sources": 1, "combined_score": 0.6667, "sources": ["atted"]}
@@ -801,7 +801,7 @@ async def test_biological_context_synth_happy_path_calls_and_envelope_exact(monk
         )
     )
     st = Recorder({"partners": [{"string_id": "3702.AT3G15500.1", "score": 0.8}]})
-    at = Recorder({"neighbors": [{"locus": "AT3G15500", "z_score": 3.0}]})
+    at = Recorder({"neighbors": [{"locus": "AT3G15500", "score": 3.0, "z_score": 3.0}]})
     monkeypatch.setattr(synthesis.uniprot, "lookup_locus", uni)
     monkeypatch.setattr(synthesis.gramene, "lookup_homologs", gr)
     monkeypatch.setattr(synthesis.kegg, "lookup_pathways", kg)
@@ -846,7 +846,7 @@ async def test_biological_context_synth_happy_path_calls_and_envelope_exact(monk
                 "atted_coexpression",
                 "ok",
                 elapsed="t",
-                result={"neighbors": [{"locus": "AT3G15500", "z_score": 3.0}]},
+                result={"neighbors": [{"locus": "AT3G15500", "score": 3.0, "z_score": 3.0}]},
             ),
         ],
         "result": {
@@ -854,7 +854,7 @@ async def test_biological_context_synth_happy_path_calls_and_envelope_exact(monk
             "homologs": {"homologs": []},
             "pathways": None,
             "string_partners": {"partners": [{"string_id": "3702.AT3G15500.1", "score": 0.8}]},
-            "atted_coexpression": {"neighbors": [{"locus": "AT3G15500", "z_score": 3.0}]},
+            "atted_coexpression": {"neighbors": [{"locus": "AT3G15500", "score": 3.0, "z_score": 3.0}]},
             "consensus_partners": [
                 {
                     "target_locus": "AT3G15500",
@@ -1283,3 +1283,23 @@ async def test_consensus_homologs_enrichment_failure_falls_back_to_no_xrefs(monk
     d = shape(env)
     assert d["steps"][3] == row(4, CH_TOOLS[3], "error", elapsed="t", error="[ReadTimeout] b")
     assert d["result"] == {"uniprot_accession": "Q0WV96", "sequence_length": 24, "consensus": []}
+
+
+def test_consensus_reads_the_atted_score_whatever_index_the_release_uses():
+    """Outside Arabidopsis every ATTED neighbour came back with z_score null
+    (the release scores by LSmr), and consensus read z_score: each neighbour
+    counted 0.0, pulling every combined score down. It reads `score` now."""
+    rice = {"neighbors": [{"locus": "Os07g0438550", "score": 8.0, "z_score": None}]}
+    out = synthesis._consensus_partners(None, rice, top_n=5)
+    assert out == [
+        {
+            "target_locus": "Os07g0438550",
+            "n_sources": 1,
+            "combined_score": 0.8889,
+            "sources": ["atted"],
+        }
+    ]
+    # A neighbour with no numeric score is refused, not read as 0.
+    for bad in (None, "8.0", True):
+        with pytest.raises(PlantGenomicsError, match="carries no numeric score"):
+            synthesis._consensus_partners(None, {"neighbors": [{"locus": "X", "score": bad}]}, 5)
