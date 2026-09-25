@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **`string_interactions` answers for wheat loci (#155).** STRING's alias
+  table carries no IWGSC id for wheat proteins, only their UniProt accession,
+  so every wheat locus was a 404. A wheat locus is now resolved through UniProt
+  before it goes to STRING: of the 66 wheat ARF loci in `examples/arf_family`,
+  46 now return partners and 2 are found with no partners (live, 2026-09-25).
+  The other 18 accessions are not in STRING, and their error now names both
+  the locus and the accession queried. The tool description no longer claims
+  every locus is resolved via UniProt first, which has been untrue since
+  v1.1.1.
+
 - **`gene_report` renders the dossier when Ensembl is down (#154).
   Behaviour change.** An Ensembl lookup failure used to return `result: null`
   with the six later steps `skipped`, and the UniProt payload left under

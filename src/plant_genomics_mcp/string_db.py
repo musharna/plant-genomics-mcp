@@ -59,6 +59,14 @@ _STRING_LOCUS_SPELLING: dict[str, tuple[re.Pattern[str], str]] = {
     ),
 }
 
+# Species whose STRING proteins carry no locus alias at all, only their UniProt
+# accession: a locus is resolved through UniProt before it goes to STRING
+# (#155). Wheat, probed on /api/json/get_string_ids (2026-09-25): the IWGSC
+# gene (TraesCS3A02G449300), its transcript (.1) and its RefSeq name
+# (LOC123063246) resolve to nothing; its accession A0A3B6EQF8 resolves to
+# itself, as do 48 of the 66 wheat ARF accessions in examples/arf_family.
+_STRING_KEYED_BY_UNIPROT = frozenset({"triticum_aestivum"})
+
 
 def string_query_id(locus_or_accession: str, organism: str | int) -> str:
     """The identifier to send STRING for ``locus_or_accession`` in ``organism``.
@@ -139,9 +147,11 @@ async def lookup_partners(
 ) -> dict[str, Any]:
     """Fetch STRING first-neighbor interactors for a protein.
 
-    Accepts either a UniProt accession or a locus identifier; both are
-    passed through to STRING's ``/api/json/interaction_partners`` endpoint
-    unchanged. STRING's internal resolver picks the species-canonical
+    Accepts either a UniProt accession or a locus identifier; both go to
+    STRING's ``/api/json/interaction_partners`` endpoint in the spelling its
+    alias table carries (:func:`string_query_id`), except that a locus of a
+    species STRING keys by UniProt accession alone (wheat) is resolved through
+    UniProt first (#155). STRING's internal resolver picks the species-canonical
     accession and returns it in ``stringId_A`` (taxid-prefixed); we surface
     the bare accession as ``accession`` on the result. ``organism`` accepts
     any form the resolver supports (slug, scientific/common name, taxid).
@@ -157,17 +167,34 @@ async def lookup_partners(
     taxid = organisms.string_taxid_for(organism)
     query = locus_or_accession
     identifier = string_query_id(locus_or_accession, organism)
+    if record.canonical in _STRING_KEYED_BY_UNIPROT and not uniprot._looks_like_uniprot_accession(
+        identifier
+    ):
+        try:
+            entry = await uniprot.lookup_locus(client, identifier, organism=organism)
+        except NotFoundError as exc:
+            raise NotFoundError(
+                f"STRING indexes {record.canonical} proteins by UniProt accession "
+                f"only, and UniProt resolves no accession for {query}: {exc.args[0]}"
+            ) from exc
+        identifier = entry["primaryAccession"]
 
-    raw = await _get(
-        client,
-        "/api/json/interaction_partners",
-        params={
-            "identifiers": identifier,
-            "species": taxid,
-            "limit": limit,
-            "caller_identity": CALLER_IDENTITY,
-        },
-    )
+    try:
+        raw = await _get(
+            client,
+            "/api/json/interaction_partners",
+            params={
+                "identifiers": identifier,
+                "species": taxid,
+                "limit": limit,
+                "caller_identity": CALLER_IDENTITY,
+            },
+        )
+    except NotFoundError as exc:
+        raise NotFoundError(
+            f"STRING has no protein for {query} in {record.canonical} "
+            f"(queried as {identifier}): {exc.args[0]}"
+        ) from exc
     if not isinstance(raw, list):
         raise PlantGenomicsError(
             f"STRING /api/json/interaction_partners returned non-list: {type(raw).__name__}"
