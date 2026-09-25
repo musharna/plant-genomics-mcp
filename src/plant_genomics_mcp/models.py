@@ -1200,8 +1200,10 @@ class GrameneHomolog(BaseModel):
     type: str | None = Field(
         default=None,
         description=(
-            "Homology category: ortholog_one2one | ortholog_one2many | "
-            "ortholog_many2many | within_species_paralog | between_species_paralog"
+            "Gramene homology category, as upstream names it, e.g. ortholog_one2one, "
+            "ortholog_many2many, syntenic_ortholog_one2one, within_species_paralog, "
+            "homoeolog_one2one (wheat). homology_type='ortholog' keeps the categories "
+            "whose name contains 'ortholog', 'paralog' those containing 'paralog'"
         ),
     )
     gene_tree_id: str | None = Field(
@@ -1240,6 +1242,14 @@ class GrameneHomologs(BaseModel):
     total_all_organisms: int | None = Field(
         default=None,
         description="Homolog total before the organism filter; present only when filtered",
+    )
+    excluded_categories: dict[str, int] = Field(
+        description=(
+            "Homologs Gramene returned that homology_type left out, counted per "
+            "category (e.g. {'within_species_paralog': 3, 'homoeolog_one2one': 2} "
+            "under 'ortholog'); empty under 'all'. Counted over every organism, "
+            "before any target_organism filter"
+        ),
     )
     upstream_version: str | None = upstream_version_field(
         "Gramene", "the release pinned in the request path (e.g. 'v69'); same value as release"

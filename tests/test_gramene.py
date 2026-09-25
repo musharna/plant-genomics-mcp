@@ -11,6 +11,7 @@ from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import gramene
 from plant_genomics_mcp.errors import (
+    InvalidArguments,
     NotFoundError,
     RateLimitError,
     UpstreamUnavailableError,
@@ -82,6 +83,60 @@ async def test_lookup_homologs_ortholog_only(httpx_mock: HTTPXMock):
         result = await gramene.lookup_homologs(client, "AT1G01010", homology_type="ortholog")
     assert result["total"] == 1
     assert result["homologs"][0]["target_locus"] == "Os01g0100100"
+    assert result["excluded_categories"] == {"within_species_paralog": 1}
+
+
+# Category keys as v69 returns them (probed live 2026-09-25): AT2G28350 carries
+# syntenic_ortholog_* rows, wheat TraesCS3A02G449300 a homoeolog_one2one row.
+# The syntenic loci are not repeated under the plain ortholog_* keys.
+_V69_CATEGORIES = {
+    "ortholog_one2one": ["Os01g0100100"],
+    "syntenic_ortholog_one2one": ["Zm00001eb000010"],
+    "syntenic_ortholog_many2many": ["Sb01g000100"],
+    "within_species_paralog": ["AT3G15500"],
+    "homoeolog_one2one": ["TraesCS3B02G485900"],
+}
+
+
+@pytest.mark.asyncio
+async def test_every_category_gramene_sends_is_kept_or_counted_as_excluded(
+    httpx_mock: HTTPXMock,
+) -> None:
+    for _ in range(3):
+        httpx_mock.add_response(
+            url="https://data.gramene.org/v69/genes?idList=AT1G01010&fl=homology",
+            json=[
+                {
+                    "_id": "AT1G01010",
+                    "homology": {"gene_tree": {"id": "T1"}, "homologous_genes": _V69_CATEGORIES},
+                }
+            ],
+        )
+    async with httpx.AsyncClient() as client:
+        orthologs = await gramene.lookup_homologs(client, "AT1G01010", homology_type="ortholog")
+        gramene._CACHE.clear()
+        paralogs = await gramene.lookup_homologs(client, "AT1G01010", homology_type="paralog")
+        gramene._CACHE.clear()
+        everything = await gramene.lookup_homologs(client, "AT1G01010", homology_type="all")
+        # An unknown filter is refused; it used to mean "all" without a word.
+        with pytest.raises(InvalidArguments, match="orthologue"):
+            await gramene.lookup_homologs(client, "AT1G01010", homology_type="orthologue")
+
+    assert {h["type"] for h in orthologs["homologs"]} == {
+        "ortholog_one2one",
+        "syntenic_ortholog_one2one",
+        "syntenic_ortholog_many2many",
+    }
+    assert orthologs["excluded_categories"] == {
+        "within_species_paralog": 1,
+        "homoeolog_one2one": 1,
+    }
+    assert [h["target_locus"] for h in paralogs["homologs"]] == ["AT3G15500"]
+    assert everything["total"] == 5
+    assert everything["excluded_categories"] == {}
+    # Nothing Gramene sent is silently lost: kept + excluded covers every row.
+    for result in (orthologs, paralogs):
+        assert result["total"] + sum(result["excluded_categories"].values()) == 5
 
 
 @pytest.mark.asyncio
@@ -533,3 +588,21 @@ async def test_live_with_organism_names_the_species_of_arf5_orthologs() -> None:
         s is None or re.fullmatch(r"[a-z0-9_]+", s) for s in slugs
     ), slugs
     assert slugs.count(None) < len(slugs) / 2, slugs
+
+
+@pytest.mark.skipif(os.environ.get("PLANT_GENOMICS_MCP_LIVE") != "1", reason="live")
+@pytest.mark.asyncio
+async def test_live_filters_keep_syntenic_orthologs_and_account_for_the_rest() -> None:
+    # AT2G28350 carries syntenic_ortholog_* rows in v69; wheat carries homoeologs.
+    async with httpx.AsyncClient() as c:
+        orthologs = await gramene.lookup_homologs(c, "AT2G28350")
+        everything = await gramene.lookup_homologs(c, "AT2G28350", homology_type="all")
+        wheat = await gramene.lookup_homologs(c, "TraesCS3A02G449300")
+    # Only the paralogs are left out, so the syntenic rows are counted as orthologs.
+    assert set(orthologs["excluded_categories"]) == {"within_species_paralog"}, orthologs
+    assert (
+        orthologs["total"] + orthologs["excluded_categories"]["within_species_paralog"]
+        == (everything["total"])
+    )
+    assert everything["excluded_categories"] == {}
+    assert wheat["excluded_categories"].get("homoeolog_one2one", 0) > 0, wheat

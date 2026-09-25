@@ -881,6 +881,7 @@ def test_biological_context_synth_fixtures_match_real_response_shapes():
                     "gene_tree_id": "EPlGT01130000406172",
                 }
             ],
+            "excluded_categories": {"within_species_paralog": 3},
         }
     )
 
@@ -1261,6 +1262,7 @@ def test_consensus_homologs_fixtures_match_real_response_shapes():
             "total": len(gramene_homologs),
             "returned": len(gramene_homologs),
             "homologs": gramene_homologs,
+            "excluded_categories": {},
         }
     )
 
