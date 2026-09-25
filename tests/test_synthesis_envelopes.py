@@ -854,7 +854,9 @@ async def test_biological_context_synth_happy_path_calls_and_envelope_exact(monk
             "homologs": {"homologs": []},
             "pathways": None,
             "string_partners": {"partners": [{"string_id": "3702.AT3G15500.1", "score": 0.8}]},
-            "atted_coexpression": {"neighbors": [{"locus": "AT3G15500", "score": 3.0, "z_score": 3.0}]},
+            "atted_coexpression": {
+                "neighbors": [{"locus": "AT3G15500", "score": 3.0, "z_score": 3.0}]
+            },
             "consensus_partners": [
                 {
                     "target_locus": "AT3G15500",
