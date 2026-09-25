@@ -34,8 +34,9 @@ README = Path(__file__).resolve().parents[1] / "README.md"
 # examples/arf_family/PAGE.md: the link line and the blank line that must
 # precede it (a link line glued to the previous paragraph renders as part
 # of that paragraph). +1 (#124): the tool-matrix row for `entry_members`;
-# a new tool's row is the one addition the matrix exists to carry.
-BUDGET = 343
+# a new tool's row is the one addition the matrix exists to carry. +1
+# (#130): the row for `gene_tree_members`, on the same terms.
+BUDGET = 344
 
 TITLE_LINE = "# 🌱 plant-genomics-mcp"
 
