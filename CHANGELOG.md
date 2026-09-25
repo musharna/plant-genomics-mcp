@@ -2,6 +2,42 @@
 
 ## Unreleased
 
+- **`atted_coexpression` neighbours carry a score in every species.
+  Behaviour change.** ATTED-II names each release's index in
+  `result_set[0].type`: `z` for Arabidopsis (`Ath-u.c4-0`), `LSmr` (a logit
+  score) for the rice, maize, tomato, soybean, grape and Medicago releases.
+  The tool read only `z`, so outside Arabidopsis every neighbour's score
+  was null (live, 5 of 5 rice neighbours). Each neighbour now has `score`
+  under the declared index, and the response names it in `score_type`;
+  `z_score` stays, null unless the index is `z`. A result set that declares
+  no index, or a row without the declared key, raises. `consensus_partners`
+  reads `score`, so non-Arabidopsis coexpression now counts toward
+  consensus.
+
+- **`gramene_homologs` keeps syntenic orthologs and counts what a filter
+  leaves out. Behaviour change.** The `homology_type` filter was a list of
+  four category names, so `syntenic_ortholog_one2one` and
+  `syntenic_ortholog_many2many` matched neither `ortholog` nor `paralog`
+  and were dropped without a sign (AT2G28350: 2 + 2 rows). A category now
+  passes when its name contains the filter word, and the new
+  `excluded_categories` counts the rows each left-out category held
+  (wheat's `homoeolog_one2one` appears only under `all`), so kept plus
+  excluded is everything Gramene sent. An unknown `homology_type` passed
+  to the Python function raises `InvalidArguments`; it used to mean `all`.
+
+- **`string_interactions` partners no longer carry `accession` (#133).
+  Breaking.** Deprecated in 1.22.0: it was always `string_id` again, a
+  STRING id. Read `string_id`. The result-level `accession`, the UniProt
+  accession queried, is unchanged.
+
+- **Descriptions say which values are links and which nulls are answers.**
+  Every tool description that offers a URL, logo or image now says no tool
+  on this server fetches it (`tf_binding_motifs`, `jaspar_motif`,
+  `resolve_locus_to_uniprot`, `locus_literature`, `bar_aiv_interactions`),
+  held by a test over all tools. `panther_family`'s `found` means PANTHER
+  mapped the locus; a mapped locus can have a null family and subfamily,
+  which is PANTHER's answer.
+
 - **`examples/arf_family/` re-run at `1.23.0` (`9054886`).** Same 64 calls
   over the same 114 genes, against the release.
   32 of the 43 hand-logged gap rows are closed (2 by this run): `locus_literature` hits carry one
