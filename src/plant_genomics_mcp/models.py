@@ -1521,13 +1521,6 @@ class StringPartner(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     string_id: str | None = Field(default=None, description='e.g. "3702.AT3G15500.1"')
-    accession: str | None = Field(
-        default=None,
-        description=(
-            "Deprecated (#133): always equal to string_id, a STRING id — NOT the "
-            "UniProt accession other tools mean by 'accession'. Read string_id."
-        ),
-    )
     preferred_name: str | None = Field(default=None, description="Human-readable gene symbol")
     score: float | None = Field(default=None, description="Combined STRING confidence [0,1]")
     escore: float | None = Field(default=None, description="Experimental sub-score")

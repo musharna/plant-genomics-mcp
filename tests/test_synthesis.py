@@ -912,7 +912,6 @@ def test_biological_context_synth_fixtures_match_real_response_shapes():
             "partners": [
                 {
                     "string_id": "3702.AT3G15500.1",
-                    "accession": "3702.AT3G15500.1",
                     "preferred_name": "NAC3",
                     "score": 0.85,
                     "escore": 0.4,
