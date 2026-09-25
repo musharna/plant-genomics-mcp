@@ -757,10 +757,14 @@ async def gene_report(
       ``string_interactions``, ``locus_literature``, and ``locus_go_annotations``
       (only when UniProt resolved).
 
-    Ensembl is the root: if it fails the envelope returns ``result=None`` with
-    every downstream row ``skipped``. Any individual phase-2 failure degrades
-    that one section to an "Unavailable" note in the Markdown (and ``None`` in
-    the structured mirror); the rest of the dossier still renders.
+    Phase 1 establishes that the locus exists: if neither Ensembl nor UniProt
+    resolves it, the envelope returns ``result=None`` with every downstream row
+    ``skipped``. No phase-2 backend consumes the Ensembl record (each is keyed
+    on the locus, or on the UniProt accession), so an Ensembl failure alone is
+    one more degraded section, not a root failure (#154). Any single backend
+    failure degrades that section to an "Unavailable" note in the Markdown
+    (and ``None`` in the structured mirror); the rest of the dossier still
+    renders.
     """
     top_n = _bound_top_n(top_n)
     started_at = _now_iso()
@@ -806,10 +810,10 @@ async def gene_report(
     )
     root, uniprot_row = phase1
 
-    if root.status != "ok":
-        # Ensembl is the entry point; without it the dossier can't anchor.
+    if root.status != "ok" and uniprot_row.status != "ok":
+        # Neither resolver found the locus; there is nothing to anchor a dossier on.
         skipped = [
-            _skipped(i + 1, _GENE_REPORT_STEPS[i], "phase-1 ensembl lookup failed; skipped")
+            _skipped(i + 1, _GENE_REPORT_STEPS[i], "phase-1 lookups both failed; skipped")
             for i in range(2, 8)
         ]
         return SynthesisEnvelope(
@@ -867,7 +871,7 @@ async def gene_report(
     def _ok(row: StepRow) -> Any:
         return row.result if row.status == "ok" else None
 
-    ensembl_record = _result_dict(root)
+    ensembl_record = _result_dict(root) if root.status == "ok" else {}
     uniprot_record = _ok(uniprot_row)
 
     gene_names = _gene_names(ensembl_record, uniprot_record)
@@ -979,6 +983,9 @@ def _render_gene_report_md(
     if ann.get("assembly_name"):
         header_bits.append(str(ann["assembly_name"]))
     lines.append(" · ".join(header_bits))
+    note = _section_note(rows["annotation"])
+    if note:
+        lines += ["", note]
     if ann.get("description"):
         lines += ["", str(ann["description"])]
 

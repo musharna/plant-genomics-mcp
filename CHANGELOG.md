@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **`gene_report` renders the dossier when Ensembl is down (#154).
+  Behaviour change.** An Ensembl lookup failure used to return `result: null`
+  with the six later steps `skipped`, and the UniProt payload left under
+  `steps[1].result`, although no later step reads the Ensembl record. The
+  dossier now skips only when neither Ensembl nor UniProt resolves the locus;
+  an Ensembl failure alone shows as an `Unavailable` note under the title, with
+  `sections.annotation` null and every other section rendered.
+
 - **CI: the required test job no longer depends on InterPro or PANTHER being up.**
   Two live tests of `examples/arf_family/` were gated on
   `PLANT_GENOMICS_MCP_STDIO_SMOKE`, the flag for the network-free stdio smoke

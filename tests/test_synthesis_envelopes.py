@@ -895,9 +895,11 @@ async def test_gene_report_unknown_organism_envelope_exact(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_gene_report_ensembl_failure_envelope_exact(monkeypatch):
+async def test_gene_report_no_resolver_envelope_exact(monkeypatch):
+    # Both phase-1 resolvers fail → root failure. Ensembl failing alone is a
+    # degraded dossier (#154; test_synthesis.py covers that path).
     ens = Recorder(httpx.ConnectTimeout("t"))
-    uni = Recorder({"primaryAccession": "Q0WV96"})
+    uni = Recorder(httpx.ConnectTimeout("u"))
     xr = Recorder()
     monkeypatch.setattr(synthesis.ensembl_plants, "lookup_locus", ens)
     monkeypatch.setattr(synthesis.uniprot, "lookup_locus", uni)
@@ -910,9 +912,9 @@ async def test_gene_report_ensembl_failure_envelope_exact(monkeypatch):
         "elapsed_s": "t",
         "steps": [
             row(1, GR[0], "error", elapsed="t", error="[ConnectTimeout] t"),
-            row(2, GR[1], "ok", elapsed="t", result={"primaryAccession": "Q0WV96"}),
+            row(2, GR[1], "error", elapsed="t", error="[ConnectTimeout] u"),
         ]
-        + [skipped(i + 1, GR[i], "phase-1 ensembl lookup failed; skipped") for i in range(2, 8)],
+        + [skipped(i + 1, GR[i], "phase-1 lookups both failed; skipped") for i in range(2, 8)],
         "result": None,
     }
     assert xr.calls == []

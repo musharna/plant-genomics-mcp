@@ -1390,24 +1390,29 @@ def test_biological_context_synth_unknown_organism_root_fails():
 # ---------------------------------------------------------------------------
 
 
-def _gene_report_success_mocks(httpx_mock):
-    """Register happy-path mocks for all seven gene_report backends."""
+def _gene_report_success_mocks(httpx_mock, ensembl_ok=True):
+    """Register happy-path mocks for all seven gene_report backends.
+
+    ``ensembl_ok=False`` leaves the two Ensembl URLs (lookup, xrefs) unmocked
+    so the caller can register the outage it is testing.
+    """
     # Phase 1a — Ensembl lookup (root)
-    httpx_mock.add_response(
-        url="https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0",
-        json={
-            "id": "AT1G01010",
-            "species": "arabidopsis_thaliana",
-            "biotype": "protein_coding",
-            "display_name": "NAC001",
-            "description": "NAC domain containing protein 1 [Source:NCBI gene;Acc:839580]",
-            "seq_region_name": "1",
-            "start": 3631,
-            "end": 5899,
-            "strand": 1,
-            "assembly_name": "TAIR10",
-        },
-    )
+    if ensembl_ok:
+        httpx_mock.add_response(
+            url="https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0",
+            json={
+                "id": "AT1G01010",
+                "species": "arabidopsis_thaliana",
+                "biotype": "protein_coding",
+                "display_name": "NAC001",
+                "description": "NAC domain containing protein 1 [Source:NCBI gene;Acc:839580]",
+                "seq_region_name": "1",
+                "start": 3631,
+                "end": 5899,
+                "strand": 1,
+                "assembly_name": "TAIR10",
+            },
+        )
     # Phase 1b — UniProt (needed for GO accession)
     httpx_mock.add_response(
         url=re.compile(r"^https://rest\.uniprot\.org/uniprotkb/search.*"),
@@ -1430,13 +1435,14 @@ def _gene_report_success_mocks(httpx_mock):
         },
     )
     # Phase 2 — xrefs
-    httpx_mock.add_response(
-        url="https://rest.ensembl.org/xrefs/id/AT1G01010?species=arabidopsis_thaliana",
-        json=[
-            {"dbname": "Uniprot_gn", "primary_id": "Q0WV96", "display_id": "NAC001"},
-            {"dbname": "TAIR_LOCUS", "primary_id": "AT1G01010", "display_id": "AT1G01010"},
-        ],
-    )
+    if ensembl_ok:
+        httpx_mock.add_response(
+            url="https://rest.ensembl.org/xrefs/id/AT1G01010?species=arabidopsis_thaliana",
+            json=[
+                {"dbname": "Uniprot_gn", "primary_id": "Q0WV96", "display_id": "NAC001"},
+                {"dbname": "TAIR_LOCUS", "primary_id": "AT1G01010", "display_id": "AT1G01010"},
+            ],
+        )
     # Phase 2 — KEGG (link + per-pathway get)
     httpx_mock.add_response(
         url="https://rest.kegg.jp/link/pathway/ath:AT1G01010",
@@ -1582,8 +1588,71 @@ async def test_gene_report_all_backends_succeed_returns_dossier(httpx_mock):
 
 
 @pytest.mark.asyncio
-async def test_gene_report_phase1_ensembl_failure_skips_rest(httpx_mock):
-    # Ensembl root 404 → whole dossier root-fails.
+async def test_gene_report_ensembl_outage_still_renders_dossier(httpx_mock, monkeypatch):
+    """#154: an Ensembl outage degrades the Ensembl sections; it does not
+    empty the dossier. No phase-2 backend consumes the Ensembl record, so the
+    UniProt-resolved locus still gets its protein, domains, GO, pathways,
+    interactors and literature. The positive control is the same call with
+    Ensembl up (test_gene_report_all_backends_succeed_returns_dossier); the
+    negative is test_gene_report_no_resolver_finds_locus_root_fails."""
+
+    async def _noop_sleep(_: float) -> None:
+        return None
+
+    monkeypatch.setattr("plant_genomics_mcp._http.asyncio.sleep", _noop_sleep)
+    _gene_report_success_mocks(httpx_mock, ensembl_ok=False)
+    for url in (
+        "https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0",
+        "https://rest.ensembl.org/xrefs/id/AT1G01010?species=arabidopsis_thaliana",
+    ):
+        httpx_mock.add_response(url=url, status_code=500, is_reusable=True)
+
+    from plant_genomics_mcp.synthesis import gene_report
+
+    async with httpx.AsyncClient() as client:
+        env = await gene_report(client, "AT1G01010", organism="arabidopsis_thaliana")
+
+    status = {s.tool: s.status for s in env.steps}
+    assert status == {
+        "ensembl_plants_lookup_locus": "error",
+        "resolve_locus_to_uniprot": "ok",
+        "get_gene_xrefs": "error",
+        "kegg_pathways": "ok",
+        "string_interactions": "ok",
+        "locus_literature": "ok",
+        "locus_go_annotations": "ok",
+        "interpro_domains": "ok",
+    }
+    assert "[UpstreamUnavailableError]" in env.steps[0].error
+    # steps[] is the audit trail only, on this path too.
+    assert [s.result for s in env.steps] == [None] * 8
+
+    assert env.result is not None
+    assert env.result["canonical_gene_name"] == "NAC001"  # from UniProt
+    assert env.result["uniprot_accession"] == "Q0WV96"
+    sections = env.result["sections"]
+    assert sections["annotation"] is None and sections["xrefs"] is None
+    assert sections["protein"]["primaryAccession"] == "Q0WV96"
+
+    md = env.result["markdown"]
+    assert md.startswith("# NAC001 — `AT1G01010`")
+    # The failed root is named in the dossier, not silently blank.
+    assert "_Unavailable — [UpstreamUnavailableError]" in md.split("## Protein")[0]
+    for text in (
+        "Q0WV96",
+        "No apical meristem (NAM) protein",
+        "regulation of DNA-templated transcription",
+        "Glycolysis",
+        "NAC3",
+        "Spaceflight transcriptome",
+    ):
+        assert text in md, text
+
+
+@pytest.mark.asyncio
+async def test_gene_report_no_resolver_finds_locus_root_fails(httpx_mock):
+    # Neither Ensembl (404) nor UniProt (no hits) resolves the locus, so there
+    # is nothing to anchor a dossier on → whole dossier root-fails.
     httpx_mock.add_response(
         url="https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0",
         status_code=404,
