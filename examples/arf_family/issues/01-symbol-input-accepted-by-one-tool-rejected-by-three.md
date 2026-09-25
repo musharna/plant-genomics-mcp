@@ -1,6 +1,6 @@
 # A gene symbol in a `locus` argument is answered by one tool and rejected by three
 
-**Filed as [#128](https://github.com/musharna/plant-genomics-mcp/issues/128) — closed.** `shared-symbol` is closed at `052e4ec`. `symbol-rejected-elsewhere` stays open. Written from the ARF family dossier in
+**Filed as [#128](https://github.com/musharna/plant-genomics-mcp/issues/128) — closed.** `shared-symbol` is closed at `052e4ec`. `symbol-rejected-elsewhere` is declined: since [#147](https://github.com/musharna/plant-genomics-mcp/pull/147) all four tools refuse a symbol that names several loci, and only the UniProt-backed tools answer one that names a single locus, so the three that refuse every symbol are consistent with that rule. The row stays in the gap log as upstream behaviour. Written from the ARF family dossier in
 [`examples/arf_family/`](../), re-run at server commit `052e4ec`
 (release `1.21.0`): 64 MCP calls over 114 genes x 16 tools, the family
 itself from a 1163-call enumeration through the same tools. Each section

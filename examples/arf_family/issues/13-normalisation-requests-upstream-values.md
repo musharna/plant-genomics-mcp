@@ -1,6 +1,6 @@
 # Normalisation requests: six values this server passes through from upstream unchanged
 
-**Filed as [#137](https://github.com/musharna/plant-genomics-mcp/issues/137) — open.** `locus-case`, `normalise-upstream-repr`, `thresholds-undocumented`, `normalise-upstream-id` are closed at `052e4ec`. `free-text-not-a-label`, `enrichment-ask` stay open. Written from the ARF family dossier in
+**Filed as [#137](https://github.com/musharna/plant-genomics-mcp/issues/137) — closed as not planned.** `locus-case`, `normalise-upstream-repr`, `thresholds-undocumented`, `normalise-upstream-id` are closed at `052e4ec`. `free-text-not-a-label`, `enrichment-ask` are declined in #137: `panther_family` and `entry_members` already answer the family question, and naming ATTED-II's neighbours would cost about 25 lookups per gene that `batch_resolve_locus_to_uniprot` makes in one call. Both rows stay in the gap log as upstream behaviour. Written from the ARF family dossier in
 [`examples/arf_family/`](../), re-run at server commit `052e4ec`
 (release `1.21.0`): 64 MCP calls over 114 genes x 16 tools, the family
 itself from a 1163-call enumeration through the same tools. Each section
