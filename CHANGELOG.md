@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **`locus_literature` hits carry one type per kind of value (#134).
+  Behaviour change.** `pubYear` is now an int (was the string `"2024"`),
+  and `isOpenAccess` and `hasPDF` are booleans (were `"Y"` / `"N"`).
+  `pmid` stays a string, as an identifier; `citedByCount` was already an
+  int. A year or flag outside Europe PMC's documented form raises a
+  `PlantGenomicsError` naming the value, rather than being passed through
+  or read as either answer. Live, 103 hits over 5 loci all converted.
+
 - **`examples/arf_family/` re-run at `2fc3f92`.** Same 64 calls over the
   same 114 genes, after the fixes for #153, #154 and #155: OrthoDB and
   PANTHER answer for all 114 genes (27 and 51 on the last run), all 114

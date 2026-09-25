@@ -19,6 +19,7 @@ from typing import Any
 import httpx
 
 from plant_genomics_mcp import _http, cache, organisms, validators
+from plant_genomics_mcp.errors import PlantGenomicsError
 
 BASE_URL = "https://www.ebi.ac.uk/europepmc/webservices/rest"
 DEFAULT_TIMEOUT = 30.0
@@ -95,6 +96,27 @@ async def _get(
     )
 
 
+_FLAGS = {"Y": True, "N": False}
+
+
+def _year(value: Any) -> int | None:
+    """Europe PMC's string pubYear as an int (#134); None stays None."""
+    if value is None:
+        return None
+    if isinstance(value, str) and value.isdigit():
+        return int(value)
+    raise PlantGenomicsError(f"Europe PMC pubYear is not a year: {value!r}")
+
+
+def _flag(name: str, value: Any) -> bool | None:
+    """Europe PMC's "Y"/"N" flag as a bool (#134); None stays None."""
+    if value is None:
+        return None
+    if value in _FLAGS:
+        return _FLAGS[value]
+    raise PlantGenomicsError(f"Europe PMC {name} is neither 'Y' nor 'N': {value!r}")
+
+
 def _normalize(hit: dict[str, Any], include_abstract: bool = True) -> dict[str, Any]:
     """Project an Europe PMC result row down to the surfaced field set.
 
@@ -103,6 +125,11 @@ def _normalize(hit: dict[str, Any], include_abstract: bool = True) -> dict[str, 
     is observable in the wire payload.
     """
     normalized: dict[str, Any] = {k: hit.get(k) for k in _HIT_FIELDS}
+    # Issue #134: one type per kind of value. Upstream sends the year and the
+    # Y/N flags as strings beside an int citedByCount; identifiers stay strings.
+    normalized["pubYear"] = _year(hit.get("pubYear"))
+    normalized["isOpenAccess"] = _flag("isOpenAccess", hit.get("isOpenAccess"))
+    normalized["hasPDF"] = _flag("hasPDF", hit.get("hasPDF"))
     # Issue #134: resultType=core carries the journal under journalInfo; the
     # flat journalTitle is a lite-only field and was null on every real hit.
     journal = (hit.get("journalInfo") or {}).get("journal") or {}
