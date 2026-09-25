@@ -824,11 +824,11 @@ def test_consensus_partners_two_source_ranks_above_single_source():
             {"string_id": "3702.AT1B.1", "preferred_name": "Y", "score": 0.95},
         ]
     }
-    # ATTED uses normalized shape: locus, z_score (NOT mr).
+    # ATTED uses normalized shape: locus, score (in the release's declared index).
     atted_payload = {
         "neighbors": [
-            {"locus": "AT1A", "z_score": 5.0},
-            {"locus": "AT2C", "z_score": 7.0},
+            {"locus": "AT1A", "score": 5.0},
+            {"locus": "AT2C", "score": 7.0},
         ]
     }
     consensus = _consensus_partners(string_payload, atted_payload, top_n=10)
@@ -881,6 +881,7 @@ def test_biological_context_synth_fixtures_match_real_response_shapes():
                     "gene_tree_id": "EPlGT01130000406172",
                 }
             ],
+            "excluded_categories": {"within_species_paralog": 3},
         }
     )
 
@@ -911,7 +912,6 @@ def test_biological_context_synth_fixtures_match_real_response_shapes():
             "partners": [
                 {
                     "string_id": "3702.AT3G15500.1",
-                    "accession": "3702.AT3G15500.1",
                     "preferred_name": "NAC3",
                     "score": 0.85,
                     "escore": 0.4,
@@ -923,13 +923,16 @@ def test_biological_context_synth_fixtures_match_real_response_shapes():
         }
     )
 
-    # ATTED composer output (z_score, NOT mr)
+    # ATTED composer output (score + score_type; z_score null outside Ath)
     AttedCoexpression.model_validate(
         {
             "locus": "AT1G01010",
             "atted_release": "Ath-u.c4-0",
+            "score_type": "z",
             "returned": 1,
-            "neighbors": [{"locus": "AT4G36990", "entrez_gene_id": 842367, "z_score": 7.0}],
+            "neighbors": [
+                {"locus": "AT4G36990", "entrez_gene_id": 842367, "score": 7.0, "z_score": 7.0}
+            ],
         }
     )
 
@@ -1258,6 +1261,7 @@ def test_consensus_homologs_fixtures_match_real_response_shapes():
             "total": len(gramene_homologs),
             "returned": len(gramene_homologs),
             "homologs": gramene_homologs,
+            "excluded_categories": {},
         }
     )
 

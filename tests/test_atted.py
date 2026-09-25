@@ -15,7 +15,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import atted, organisms
-from plant_genomics_mcp.errors import NotFoundError, OrganismNotSupported
+from plant_genomics_mcp.errors import NotFoundError, OrganismNotSupported, PlantGenomicsError
 
 
 @pytest.fixture(autouse=True)
@@ -48,7 +48,11 @@ async def test_lookup_coexpression_arabidopsis_uses_known_release(
     expected_release = organisms.atted_release_for("arabidopsis_thaliana")
     httpx_mock.add_response(
         url=f"https://atted.jp/api5/?gene=AT1G01010&topN=25&db={expected_release}",
-        json={"result_set": [{"results": [{"gene": 839580, "other_id": ["AT1G01020"], "z": 4.2}]}]},
+        json={
+            "result_set": [
+                {"type": "z", "results": [{"gene": 839580, "other_id": ["AT1G01020"], "z": 4.2}]}
+            ]
+        },
     )
     async with httpx.AsyncClient() as client:
         out = await atted.lookup_coexpression(client, "AT1G01010", organism="arabidopsis_thaliana")
@@ -65,10 +69,19 @@ async def test_lookup_coexpression_rice_uses_osa_release(
     the ``db=`` query param, not the Arabidopsis default.
     """
     expected_release = organisms.atted_release_for("oryza_sativa")
+    # The rice release scores by LSmr, not z (live, 2026-09-25: Os08g0520550 →
+    # {"type": "LSmr", "results": [{"gene": 4343083, "other_id":
+    # ["Os07g0438550"], "LSmr": 8.57}, ...]}). The earlier fixture sent "z"
+    # here, which is why no test caught every rice score coming back null.
     httpx_mock.add_response(
         url=f"https://atted.jp/api5/?gene=Os01g0100100&topN=10&db={expected_release}",
         json={
-            "result_set": [{"results": [{"gene": 4326732, "other_id": ["Os01g0100200"], "z": 5.1}]}]
+            "result_set": [
+                {
+                    "type": "LSmr",
+                    "results": [{"gene": 4326732, "other_id": ["Os01g0100200"], "LSmr": 8.57}],
+                }
+            ]
         },
     )
     async with httpx.AsyncClient() as client:
@@ -76,7 +89,11 @@ async def test_lookup_coexpression_rice_uses_osa_release(
             client, "Os01g0100100", organism="oryza_sativa", top_n=10
         )
     assert out["atted_release"] == expected_release
-    assert out["neighbors"][0]["locus"] == "Os01g0100200"
+    assert out["score_type"] == "LSmr"
+    n0 = out["neighbors"][0]
+    assert n0["locus"] == "Os01g0100200"
+    assert n0["score"] == 8.57
+    assert n0["z_score"] is None
 
 
 @pytest.mark.asyncio
@@ -140,6 +157,40 @@ async def test_lookup_coexpression_happy(httpx_mock: HTTPXMock):
     assert n0["locus"] == "AT4G36990"  # upstream "At4g36990", recased (#137)
     assert n0["entrez_gene_id"] == 842367
     assert n0["z_score"] == 4.58
+    assert result["score_type"] == "z"
+    assert n0["score"] == 4.58
+
+
+@pytest.mark.asyncio
+async def test_a_score_type_that_is_missing_or_absent_from_a_row_is_refused(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """A null score reads as "no coexpression evidence"; the rows had one.
+
+    Every non-Arabidopsis release came back with z_score null on every
+    neighbour because the score sat under LSmr. A result set that names no
+    score type, or a row without the key it names, must fail naming what
+    is missing rather than answer with a null score.
+    """
+    url = "https://atted.jp/api5/?gene=Os01g0100100&topN=25&db=Osa-u.c1-0"
+    row = {"gene": 4326732, "other_id": ["Os01g0100200"], "LSmr": 8.57}
+    # Positive control: the declared key is read.
+    httpx_mock.add_response(url=url, json={"result_set": [{"type": "LSmr", "results": [row]}]})
+    async with httpx.AsyncClient() as client:
+        ok = await atted.lookup_coexpression(client, "Os01g0100100", organism="oryza_sativa")
+    assert ok["neighbors"][0]["score"] == 8.57
+
+    atted._CACHE.clear()
+    httpx_mock.add_response(url=url, json={"result_set": [{"results": [row]}]})
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(PlantGenomicsError, match=r"declares no score type \(type=None\)"):
+            await atted.lookup_coexpression(client, "Os01g0100100", organism="oryza_sativa")
+
+    atted._CACHE.clear()
+    httpx_mock.add_response(url=url, json={"result_set": [{"type": "z", "results": [row]}]})
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(PlantGenomicsError, match=r"has no 'z' score.*'LSmr'"):
+            await atted.lookup_coexpression(client, "Os01g0100100", organism="oryza_sativa")
 
 
 @pytest.mark.asyncio
@@ -219,6 +270,28 @@ async def test_live_atted_at1g01010_has_neighbors():
     assert len(result["neighbors"]) > 0
     assert result["neighbors"][0]["z_score"] is not None
     assert result["neighbors"][0]["locus"]
+
+
+@pytest.mark.skipif(
+    not os.environ.get("PLANT_GENOMICS_MCP_LIVE"),
+    reason="set PLANT_GENOMICS_MCP_LIVE=1 to hit atted.jp",
+)
+@pytest.mark.asyncio
+async def test_live_atted_rice_neighbours_carry_the_declared_score():
+    """The dossier's null-score row: all 25 rice neighbours had z_score null."""
+    async with httpx.AsyncClient() as client:
+        rice = await atted.lookup_coexpression(
+            client, "Os08g0520550", organism="oryza_sativa", top_n=5
+        )
+        ath = await atted.lookup_coexpression(
+            client, "AT1G19850", organism="arabidopsis_thaliana", top_n=5
+        )
+    assert rice["score_type"] == "LSmr"
+    assert all(isinstance(n["score"], float) for n in rice["neighbors"])
+    assert all(n["z_score"] is None for n in rice["neighbors"])
+    # Positive control: Arabidopsis still scores by z, in both fields.
+    assert ath["score_type"] == "z"
+    assert all(n["score"] == n["z_score"] is not None for n in ath["neighbors"])
 
 
 # ---------- issue #137: one locus spelling across tools ----------

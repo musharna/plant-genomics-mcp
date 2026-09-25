@@ -129,7 +129,6 @@ def _normalize(row: dict[str, Any], query_accession: str) -> dict[str, Any]:
         )
     return {
         "string_id": string_id,
-        "accession": string_id,  # partner's stringId; UniProt mapping not always trivial
         "preferred_name": row.get("preferredName_B"),
         "score": row.get("score"),
         "escore": row.get("escore"),

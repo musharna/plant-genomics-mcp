@@ -18,6 +18,7 @@ import httpx
 
 from plant_genomics_mcp import _http, cache, organisms, validators
 from plant_genomics_mcp.errors import (
+    InvalidArguments,
     NotFoundError,
     PlantGenomicsError,
 )
@@ -49,16 +50,19 @@ async def _get(
     )
 
 
-# Gramene homology categories as KEYS of homologous_genes.
-# Probed against AT1G01010 on 2026-05-21: live response contained
-# ortholog_one2many, ortholog_many2many, within_species_paralog. Other
-# categories (ortholog_one2one, between_species_paralog) appear for other
-# loci; we keep them in the filter map but tolerate their absence.
-_HOMOLOGY_FILTERS: dict[str, tuple[str, ...]] = {
-    "ortholog": ("ortholog_one2one", "ortholog_one2many", "ortholog_many2many"),
-    "paralog": ("within_species_paralog", "between_species_paralog"),
-    "all": (),
-}
+# Gramene homology categories are the KEYS of homologous_genes, and the set
+# is open: an enumerated whitelist (built from one 2026-05-21 probe) dropped
+# syntenic_ortholog_one2one / _many2many from homology_type='ortholog', and
+# wheat's homoeolog_one2one from both filters, with nothing in the answer
+# saying so (live v69, 2026-09-25; none of those loci is also listed under a
+# plain ortholog_* key). A category is classed by the word in its name, and
+# every category a filter leaves out is counted in `excluded_categories`.
+HOMOLOGY_TYPES = ("ortholog", "paralog", "all")
+
+
+def _in_filter(category: str, homology_type: str) -> bool:
+    return homology_type == "all" or homology_type in category
+
 
 # Row cap, matching the convention every other row-returning backend here
 # already follows (interpro MAX_PAGES, ensembl_variation MAX_VARIANTS=500,
@@ -214,10 +218,11 @@ async def lookup_homologs(
     filtering (#130): only the returned page is resolved, one call per 100
     rows. ``organism`` is null where Gramene has no record for the locus.
 
-    ``homology_type`` is one of ``"ortholog"``, ``"paralog"``, ``"all"``.
-    Unknown values default to ``"all"`` — we prefer permissive filtering
-    over raising on a typo, since the upstream homology_type strings
-    occasionally drift.
+    ``homology_type`` is one of ``"ortholog"``, ``"paralog"``, ``"all"``;
+    any other value raises ``InvalidArguments`` (it used to mean ``"all"``
+    silently). The filter keeps the categories whose name contains the word
+    and counts the rest in ``excluded_categories``, so a category neither
+    word names (wheat's ``homoeolog_one2one``) is reported, not lost.
 
     Live response shape (Gramene v69, fl=homology):
         homology = {
@@ -229,6 +234,10 @@ async def lookup_homologs(
     ID, dn/ds, or goc_score — so we only surface what's there.
     """
     locus = validators.assert_valid_locus(locus, backend="Gramene")
+    if homology_type not in HOMOLOGY_TYPES:
+        raise InvalidArguments(
+            f"gramene_homologs: homology_type {homology_type!r} is not one of {HOMOLOGY_TYPES}"
+        )
     # Resolve the target first so a typo fails before any upstream call.
     target_slug = organisms.resolve(target_organism).canonical if target_organism else None
     # #123: Gramene answers with the whole homology set, so a page is an offset
@@ -260,12 +269,13 @@ async def lookup_homologs(
         raise PlantGenomicsError(
             f"Gramene: homologous_genes is not a dict for {locus}: {type(homologous_genes).__name__}"
         )
-    allowed = _HOMOLOGY_FILTERS.get(homology_type, ())
     normalized: list[dict[str, Any]] = []
+    excluded: dict[str, int] = {}
     for category, loci in homologous_genes.items():
-        if allowed and category not in allowed:
-            continue
         if not isinstance(loci, list):
+            continue
+        if not _in_filter(category, homology_type):
+            excluded[category] = len(loci)
             continue
         for target_locus in loci:
             if isinstance(target_locus, str):
@@ -288,6 +298,7 @@ async def lookup_homologs(
             **_http.counted(total, rows, offset=offset),
             "next_cursor": _next(query, total, offset, rows),
             "homologs": rows,
+            "excluded_categories": excluded,
             # Issue #121: the release is pinned in the request path, so it is
             # the release that answered by construction.
             "upstream_version": GRAMENE_RELEASE,
@@ -310,5 +321,8 @@ async def lookup_homologs(
         "next_cursor": _next(query, len(kept), offset, rows),
         "total_all_organisms": len(normalized),
         "homologs": rows,
+        # Counted over every organism: the species of a left-out row is never
+        # fetched, so the counts are not narrowed by target_organism.
+        "excluded_categories": excluded,
         "upstream_version": GRAMENE_RELEASE,
     }

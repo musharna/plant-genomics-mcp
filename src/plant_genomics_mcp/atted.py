@@ -1,8 +1,8 @@
 """ATTED-II coexpression backend — async httpx wrapper around atted.jp.
 
 ATTED-II is the Tohoku/Yamagata-hosted plant coexpression database.
-Returns co-expressed gene neighbors with a z-score (higher = stronger
-coexpression). Free, no API key.
+Returns co-expressed gene neighbors with a coexpression score (higher =
+stronger coexpression). Free, no API key.
 
 We use API v5 (canonical docs https://atted.jp/static/help/API.shtml,
 last updated 2024-01-25). The DB string (e.g. ``Ath-u.c4-0`` for
@@ -20,6 +20,12 @@ Live response shape:
                    type: "z",
                    results: [{gene: int, other_id: [locus_str], z: float}, ...],
                    other_id: locus_str}]}
+
+``type`` names the key each row carries its score under, and it is not the
+same in every release: ``z`` for Ath-u.c4-0, ``LSmr`` for Osa-, Zma-, Sly-,
+Gma-, Vvi- and Mtr-u.c1-0 (live, 2026-09-25). Reading ``z`` alone returned a
+null score for every organism but Arabidopsis, so the score is read under
+the key the result set declares.
 
 We assume a single query gene per call and project ``result_set[0].results``
 into a flat list of neighbors.
@@ -70,13 +76,20 @@ async def _get(
     )
 
 
-def _normalize(row: dict[str, Any]) -> dict[str, Any]:
+def _normalize(row: dict[str, Any], score_type: str = "z") -> dict[str, Any]:
     """Project one ATTED-II result row → flat neighbor dict.
 
-    Input row shape: ``{"gene": <entrez_int>, "other_id": [locus_str], "z": float}``
+    Input row shape: ``{"gene": <entrez_int>, "other_id": [locus_str], <score_type>: float}``
     The ``other_id`` field is a list; we take the first entry as the
-    canonical locus and tolerate missing/empty cases.
+    canonical locus and tolerate missing/empty cases. ``score`` is the value
+    under ``score_type``, the key its result set declares; ``z_score`` keeps
+    its old meaning and is null unless the release scores by ``z``.
     """
+    if score_type not in row:
+        raise PlantGenomicsError(
+            f"ATTED-II row for gene {row.get('gene')!r} has no {score_type!r} score, "
+            f"the key its result set declares (row keys: {sorted(row)})"
+        )
     other_id = row.get("other_id") or []
     locus = other_id[0] if isinstance(other_id, list) and other_id else None
     # Issue #137: ATTED-II spells AGIs 'At2g44830'; every other tool and TAIR
@@ -87,6 +100,7 @@ def _normalize(row: dict[str, Any]) -> dict[str, Any]:
     return {
         "locus": locus,
         "entrez_gene_id": row.get("gene"),
+        "score": row[score_type],
         "z_score": row.get("z"),
     }
 
@@ -137,10 +151,17 @@ async def lookup_coexpression(
     rows = first.get("results") or []
     if not isinstance(rows, list) or not rows:
         raise NotFoundError(not_in_release)
-    neighbors = [_normalize(r) for r in rows if isinstance(r, dict)]
+    score_type = first.get("type")
+    if not isinstance(score_type, str) or not score_type:
+        raise PlantGenomicsError(
+            f"ATTED-II {API_PATH}: result_set[0] declares no score type "
+            f"(type={score_type!r}) for {locus} in {release}"
+        )
+    neighbors = [_normalize(r, score_type) for r in rows if isinstance(r, dict)]
     return {
         "locus": locus,
         "atted_release": release,
+        "score_type": score_type,
         # A top-N ranking over the whole release: ATTED states no total.
         **_http.counted(None, neighbors),
         "neighbors": neighbors,

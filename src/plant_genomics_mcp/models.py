@@ -984,18 +984,32 @@ class VepAnnotation(BaseModel):
 class PantherFamily(BaseModel):
     """PANTHER protein-family classification for a locus.
 
-    ``found=False`` (with null/empty fields) means PANTHER could not classify the
-    locus into a family — a normal outcome, not an error.
+    ``found=False`` (with null/empty fields) means PANTHER could not map the
+    locus — a normal outcome, not an error. A mapped locus (``found=True``) can
+    still carry null family and subfamily fields: PANTHER knows the gene and may
+    annotate GO terms for it, but assigns it no family (seen live 2026-09-25 for
+    an Arabidopsis mitochondrial locus).
     """
 
     model_config = ConfigDict(extra="forbid")
 
     locus: str
-    found: bool = Field(description="True if PANTHER classified the locus")
+    found: bool = Field(
+        description="True if PANTHER mapped the locus; the family fields can still be null"
+    )
     accession: str | None = Field(default=None, description="PANTHER mapped accession")
-    family_id: str | None = Field(default=None, description="PANTHER family id, e.g. PTHR12802")
+    family_id: str | None = Field(
+        default=None,
+        description="PANTHER family id, e.g. PTHR12802; null when PANTHER assigns no family",
+    )
     family_name: str | None = Field(default=None)
-    subfamily_id: str | None = Field(default=None, description="e.g. PTHR12802:SF176")
+    subfamily_id: str | None = Field(
+        default=None,
+        description=(
+            "e.g. PTHR12802:SF176; null when PANTHER assigns no subfamily, which is "
+            "PANTHER's answer, not a failed lookup"
+        ),
+    )
     subfamily_name: str | None = Field(default=None)
     go_molecular_function: list[dict[str, Any]] = Field(default_factory=list)
     go_biological_process: list[dict[str, Any]] = Field(default_factory=list)
@@ -1200,8 +1214,10 @@ class GrameneHomolog(BaseModel):
     type: str | None = Field(
         default=None,
         description=(
-            "Homology category: ortholog_one2one | ortholog_one2many | "
-            "ortholog_many2many | within_species_paralog | between_species_paralog"
+            "Gramene homology category, as upstream names it, e.g. ortholog_one2one, "
+            "ortholog_many2many, syntenic_ortholog_one2one, within_species_paralog, "
+            "homoeolog_one2one (wheat). homology_type='ortholog' keeps the categories "
+            "whose name contains 'ortholog', 'paralog' those containing 'paralog'"
         ),
     )
     gene_tree_id: str | None = Field(
@@ -1240,6 +1256,14 @@ class GrameneHomologs(BaseModel):
     total_all_organisms: int | None = Field(
         default=None,
         description="Homolog total before the organism filter; present only when filtered",
+    )
+    excluded_categories: dict[str, int] = Field(
+        description=(
+            "Homologs Gramene returned that homology_type left out, counted per "
+            "category (e.g. {'within_species_paralog': 3, 'homoeolog_one2one': 2} "
+            "under 'ortholog'); empty under 'all'. Counted over every organism, "
+            "before any target_organism filter"
+        ),
     )
     upstream_version: str | None = upstream_version_field(
         "Gramene", "the release pinned in the request path (e.g. 'v69'); same value as release"
@@ -1497,13 +1521,6 @@ class StringPartner(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     string_id: str | None = Field(default=None, description='e.g. "3702.AT3G15500.1"')
-    accession: str | None = Field(
-        default=None,
-        description=(
-            "Deprecated (#133): always equal to string_id, a STRING id — NOT the "
-            "UniProt accession other tools mean by 'accession'. Read string_id."
-        ),
-    )
     preferred_name: str | None = Field(default=None, description="Human-readable gene symbol")
     score: float | None = Field(default=None, description="Combined STRING confidence [0,1]")
     escore: float | None = Field(default=None, description="Experimental sub-score")
@@ -1541,9 +1558,18 @@ class CoexNeighbor(BaseModel):
         default=None,
         description="NCBI Entrez gene ID (upstream 'gene' field)",
     )
+    score: float = Field(
+        description=(
+            "Coexpression score in the release's own index, named by the "
+            "response's score_type; higher = stronger coexpression"
+        ),
+    )
     z_score: float | None = Field(
         default=None,
-        description="ATTED-II z-score; higher = stronger coexpression",
+        description=(
+            "ATTED-II z-score; higher = stronger coexpression. Null unless "
+            "score_type is 'z' (Ath-u.c4-0); read score for every release"
+        ),
     )
 
 
@@ -1559,6 +1585,13 @@ class AttedCoexpression(BaseModel):
     locus: str
     atted_release: str = Field(
         description="ATTED-II DB identifier, e.g. Ath-u.c4-0 (release version included)",
+    )
+    score_type: str = Field(
+        description=(
+            "The coexpression index every neighbour's score is in, as ATTED-II "
+            "declares it: 'z' for Ath-u.c4-0, 'LSmr' (logit score) for the "
+            "other releases"
+        ),
     )
     neighbors: list[CoexNeighbor]
     upstream_version: str | None = upstream_version_field(

@@ -10,7 +10,8 @@ The ``organism`` taxid is NOT always the species taxid: barley is indexed under
 the subspecies taxid 112509, so we route through
 ``organisms.panther_taxid_for`` (see the ``panther_taxid`` registry slot).
 
-A gene PANTHER cannot classify returns ``found=False`` (a normal outcome).
+A gene PANTHER cannot map returns ``found=False`` (a normal outcome); a mapped
+gene can still have no family, and then its family fields are null.
 
 Endpoint (https only — http 301-redirects via Cloudflare):
     https://pantherdb.org/services/oai/pantherdb/geneinfo
@@ -52,7 +53,7 @@ def _as_list(x: Any) -> list[Any]:
 
 
 def _empty(locus: str) -> dict[str, Any]:
-    """Result for a gene PANTHER could not classify."""
+    """Result for a gene PANTHER could not map."""
     return {
         "locus": locus,
         "found": False,
@@ -114,7 +115,8 @@ async def lookup_locus(
 
     Resolves ``organism`` to its PANTHER taxid (raising ``OrganismNotSupported``
     for an organism absent from PANTHER). Returns ``found=False`` when PANTHER
-    cannot map the locus to a family.
+    cannot map the locus. A mapped locus keeps ``found=True`` even when PANTHER
+    assigns it no family, so its family and subfamily fields are null.
     """
     locus = validators.assert_valid_locus(locus, backend="PANTHER")
     taxid = organisms.panther_taxid_for(organism)

@@ -61,3 +61,28 @@ def test_every_url_field_in_an_output_schema_says_no_tool_dereferences_it() -> N
 
     unmarked = {path: desc for path, desc in fields.items() if LINK_NOTE not in desc}
     assert not unmarked, unmarked
+
+
+# A description that offers a link (a URL, a logo, an image, a web_url) has to
+# say in the same breath that no tool here fetches it: the ARF dossier found
+# three descriptions listing link fields as if they were data (browser-needed-
+# assets), while alphafold_structure's said so. The output-schema note above is
+# not enough, because a client choosing a tool reads the description.
+LINK_WORDS = re.compile(r"url|logo|image", re.I)
+DESCRIPTION_NOTE = "no tool on this server"
+
+
+def test_a_description_that_offers_a_link_says_no_tool_fetches_it() -> None:
+    with_links = {path.split(".", 1)[0] for path in _all_url_fields()}
+    descriptions = {str(tool.name): tool.description or "" for tool in server.TOOLS}
+    offering = {name for name in with_links if LINK_WORDS.search(descriptions[name])}
+    # Positive control: descriptions the dossier read that list link fields,
+    # plus a tool whose schema has links its description never mentions, which
+    # the rule leaves alone.
+    assert {"alphafold_structure", "tf_binding_motifs", "resolve_locus_to_uniprot"} <= offering, (
+        sorted(offering)
+    )
+    assert "bar_gene_summary" in with_links - offering
+
+    silent = sorted(name for name in offering if DESCRIPTION_NOTE not in descriptions[name])
+    assert not silent, silent

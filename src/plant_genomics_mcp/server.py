@@ -19,7 +19,7 @@ synthesis tools that compose the live backends:
   - ``gene_tree_members``                 — every gene in a gene_tree_id, optionally one organism's (live, Ensembl Compara)
   - ``kegg_pathways``                     — KEGG pathway memberships (live, multi-organism via ``organism=``)
   - ``string_interactions``               — STRING-DB first-neighbor partners (live, per-channel scores)
-  - ``atted_coexpression``                — ATTED-II Ath-u.c4-0 coexpression (live, z-scores)
+  - ``atted_coexpression``                — ATTED-II coexpression (live; z for Ath, LSmr elsewhere)
   - ``bar_gene_summary``                  — BAR ThaleMine + GAIA aliases (live, Arabidopsis curator summary)
   - ``bar_efp_expression``                — BAR world-eFP natural-variation expression (live, ~36 Arabidopsis ecotypes)
   - ``bar_aiv_interactions``              — BAR AIV interactions (live, Arabidopsis GRN paper refs / Rice predicted PPI pairs)
@@ -486,7 +486,8 @@ TOOLS: list[types.Tool] = [
             "symbol shared by several loci (ARF1) is InvalidArguments listing "
             "them. "
             "Returns primaryAccession, uniProtkbId, entryType, recommendedName, "
-            "geneNames, organism, taxonId, sequenceLength, web_url. This is "
+            "geneNames, organism, taxonId, sequenceLength, web_url (a link for "
+            "the client to open; no tool on this server retrieves it). This is "
             "the protein-side entry point — pair with InterPro / AlphaFold / "
             "Reactome / structural-bio tools."
         ),
@@ -517,7 +518,9 @@ TOOLS: list[types.Tool] = [
             "Search Europe PMC for literature mentioning a plant locus. "
             "Free, no API key. Returns up to `size` results (default 10, "
             "capped at 25) with title, authors, journal, year, DOI, PMID, "
-            "open-access status, citation count, and abstract. For "
+            "open-access status, citation count, abstract, and the article's "
+            "web_url (a link for the client to open; no tool on this server "
+            "retrieves it). For "
             "non-Arabidopsis species the species common name is appended "
             "to the query to disambiguate locus IDs (rice, maize, ...). "
             "Pair with resolve_locus_to_uniprot or ensembl_plants_lookup_locus "
@@ -724,6 +727,9 @@ TOOLS: list[types.Tool] = [
             "Fetch orthologs and paralogs for a plant locus from Gramene compara "
             "(data.gramene.org v69). Default homology_type='ortholog'; pass "
             "'paralog' for in-species duplicates or 'all' for everything. "
+            "'ortholog' includes syntenic_ortholog_* rows; homoeologs "
+            "(polyploid subgenome copies) come back only under 'all', and "
+            "excluded_categories counts every category the filter left out. "
             "Returns target_locus + homology category (type) + shared gene_tree_id "
             "per hit. Rows carry no taxon unless with_organism=true (adds "
             "'organism' per row) or target_organism is given, which filters to "
@@ -884,7 +890,9 @@ TOOLS: list[types.Tool] = [
             "for an Arabidopsis or rice locus. Dispatches by organism: "
             "Arabidopsis returns curated GRN paper refs from "
             "/interactions/get_paper_by_agi/{locus} (PubMed ID, title, "
-            "image, comments, pipe-split tags); rice returns predicted "
+            "image URL, comments, pipe-split tags; the image is a link for the "
+            "client to fetch, no tool on this server retrieves it); rice "
+            "returns predicted "
             "PPI partners from /interactions/rice/{locus} with Pearson "
             "co-expression r (pcc), evidence hits, and quality score. "
             "The `kind` field discriminates the response shape "
@@ -1110,8 +1118,9 @@ TOOLS: list[types.Tool] = [
             "profile's uniprot_ids. Returns per motif the JASPAR matrix id, TF "
             "class/family, assay type (SELEX / ChIP-seq / PBM / DAP-seq), an "
             "IUPAC consensus derived from the position-frequency matrix (e.g. "
-            "CACGTG, the G-box/ABRE core), motif length, PubMed refs, and an SVG "
-            "sequence-logo URL. IMPORTANT: JASPAR's name search is fuzzy, so "
+            "CACGTG, the G-box/ABRE core), motif length, PubMed refs, and the "
+            "SVG sequence_logo and JASPAR web_url — links for the client to "
+            "fetch; no tool on this server retrieves them. IMPORTANT: JASPAR's name search is fuzzy, so "
             "name-similarity hits belonging to a DIFFERENT gene are returned "
             "separately in name_only_matches and must NOT be attributed to this "
             "locus; only `motifs` is UniProt-confirmed. found=false means the "
@@ -1151,7 +1160,8 @@ TOOLS: list[types.Tool] = [
             "position-frequency matrix (PFM: per-base count vectors keyed "
             "A/C/G/T) plus TF class/family, assay type, source species, UniProt "
             "accessions, PubMed refs, IUPAC consensus, and the sequence-logo "
-            "URL. The drill-down companion to tf_binding_motifs, which returns "
+            "URL (a link for the client to fetch; no tool on this server "
+            "retrieves it). The drill-down companion to tf_binding_motifs, which returns "
             "the derived consensus but not the matrix. Accepts a versioned id "
             "(MA0570.1) or a bare base id (MA0570, which resolves to the newest "
             "version). Unknown ids raise a typed NotFoundError."
@@ -1376,7 +1386,8 @@ TOOLS: list[types.Tool] = [
             "subfamily (id + name) plus curated GO terms grouped by aspect "
             "(molecular_function / biological_process / cellular_component), the "
             "PANTHER protein class, and pathways. found=false when PANTHER cannot "
-            "classify the locus. Complements the sequence-homology tools "
+            "map the locus; a mapped locus can still have a null family or "
+            "subfamily, which means PANTHER assigns it none. Complements the sequence-homology tools "
             "(gramene_homologs / consensus_homologs) with an evolutionary-family "
             "view. Works for all 12 organisms. Defaults to arabidopsis_thaliana; "
             "pass organism= for other species."
@@ -2053,8 +2064,10 @@ TOOLS: list[types.Tool] = [
         description=(
             "Fetch co-expressed gene neighbors from ATTED-II (atted.jp, "
             "API v5) for a plant locus. Returns top_n neighbors with "
-            "target locus + NCBI Entrez gene ID + z-score (higher = "
-            "stronger coexpression). The ATTED-II release "
+            "target locus + NCBI Entrez gene ID + score (higher = "
+            "stronger coexpression), in the index the release declares "
+            "as score_type: 'z' for Ath-u.c4-0, 'LSmr' (logit score) for "
+            "the other releases. The ATTED-II release "
             "(e.g. Ath-u.c4-0 for Arabidopsis, Osa-u.c1-0 for rice) is "
             f"resolved per-organism. {_coverage('atted_release')} A locus "
             "that is not in the organism's release raises NotFoundError. "

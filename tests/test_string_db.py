@@ -59,7 +59,10 @@ async def test_lookup_partners_by_accession_happy(httpx_mock: HTTPXMock):
     assert result["organism"] == "arabidopsis_thaliana"
     assert len(result["partners"]) == 1
     p = result["partners"][0]
-    assert p["accession"] is not None  # raw stringId_B field
+    assert p["string_id"] == "3702.AT3G15500.1"  # stringId_B, as STRING spells it
+    # Removed in 1.24.0 (#133): a partner's "accession" was only ever string_id
+    # again, a STRING id where every other tool means a UniProt accession.
+    assert "accession" not in p, p
     assert p["preferred_name"] == "NAC3"
     assert p["score"] == 0.812
 

@@ -140,7 +140,11 @@ async def test_atted_reports_the_release_pinned_in_the_request(httpx_mock: HTTPX
     release = organisms.atted_release_for("arabidopsis_thaliana")
     httpx_mock.add_response(
         url=f"https://atted.jp/api5/?gene=AT1G01010&topN=25&db={release}",
-        json={"result_set": [{"results": [{"gene": 1, "other_id": ["AT1G01020"], "z": 4.2}]}]},
+        json={
+            "result_set": [
+                {"type": "z", "results": [{"gene": 1, "other_id": ["AT1G01020"], "z": 4.2}]}
+            ]
+        },
     )
     async with httpx.AsyncClient() as client:
         r = await atted.lookup_coexpression(client, "AT1G01010", organism="arabidopsis_thaliana")
