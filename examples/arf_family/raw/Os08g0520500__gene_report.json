@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-23T04:54:33Z",
- "elapsed_s": 29.950759282990475,
+ "started_at": "2026-09-25T05:17:11Z",
+ "elapsed_s": 16.8208112949942,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 29.651899171003606,
+   "elapsed_s": 16.367779498003074,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0004396580043248832,
+   "elapsed_s": 0.0009854370000539348,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 6.648599810432643e-05,
+   "elapsed_s": 5.752600554842502e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "error",
-   "elapsed_s": 4.0700993849895895e-05,
+   "elapsed_s": 7.44909921195358e-05,
    "result": null,
    "error": "[NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os08g0520500 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.29692708399670664,
+   "elapsed_s": 0.45236980699701235,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0002854970080079511,
+   "elapsed_s": 0.0004240609996486455,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00025031898985616863,
+   "elapsed_s": 0.0009297359938500449,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0004088120040250942,
+   "elapsed_s": 0.0006832119979662821,
    "result": null,
    "error": null
   }
@@ -88,19 +88,19 @@
   "markdown": "# OsARF7b (UniProt: ARF21) \u2014 `Os08g0520500`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 8:25,870,837\u201325,871,444 (-) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 21**\nARFU_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 1116 aa\nUniProt: [Q6YZW0](https://www.uniprot.org/uniprotkb/Q6YZW0)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [131\u2013221]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [296\u2013366]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [129\u2013233]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [993\u20131087]\n- **B3 DNA binding domain** (domain, interpro) [131\u2013234]\n- **Auxin response factor domain** (domain, interpro) [281\u2013364]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [122\u2013261]\n- **AUX/IAA domain** (domain, interpro) [990\u20131084]\n- **Auxin response factor** (family, interpro) [21\u20131087]\n- **PB1-like domain** (domain, interpro) [998\u20131082]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os08g0520500 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| C7J1U6_ORYSJ | 0.849 |\n| Q0JCJ0_ORYSJ | 0.677 |\n| PES | 0.67 |\n| BOP1 | 0.624 |\n| WDR12 | 0.617 |\n| Q651Y0_ORYSJ | 0.61 |\n| Q2QWN0_ORYSJ | 0.61 |\n| Q5JNF8_ORYSJ | 0.61 |\n| Q0D724_ORYSJ | 0.61 |\n| A0A0P0V2D3 | 0.558 |\n\n## Cross-references\n- Expression Atlas: Os08g0520500\n\n## Literature\n1 hits total; showing top 1.\n- **Gene Expression Profiles Deciphering the Pathways of Coronatine Alleviating Water Stress in Rice (<i>Oryza sativa</i> L.) Cultivar Nipponbare (Japonica)** \u2014 Gao W, Yu C, Ai L, Zhou Y, Duan L, Duan L. (PMID:31126161; doi:10.3390/ijms20102543)\n",
   "sections": {
    "annotation": {
-    "end": 25871444,
-    "start": 25870837,
+    "object_type": "Gene",
     "biotype": "protein_coding",
-    "logic_name": "rapdb_genes",
     "assembly_name": "IRGSP-1.0",
-    "source": "RAP2022-09-01",
-    "db_type": "core",
-    "display_name": "OsARF7b",
-    "id": "Os08g0520500",
-    "strand": -1,
     "canonical_transcript": "Os08t0520500-01",
     "seq_region_name": "8",
-    "object_type": "Gene",
+    "logic_name": "rapdb_genes",
+    "source": "RAP2022-09-01",
+    "db_type": "core",
+    "strand": -1,
+    "display_name": "OsARF7b",
+    "end": 25871444,
+    "id": "Os08g0520500",
+    "start": 25870837,
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -126,15 +126,15 @@
     "count": 1,
     "xrefs": [
      {
-      "synonyms": [],
-      "display_id": "Os08g0520500",
-      "info_text": "",
       "info_type": "DIRECT",
-      "primary_id": "Os08g0520500",
-      "description": null,
+      "db_display_name": "Expression Atlas",
       "dbname": "ArrayExpress",
+      "info_text": "",
+      "description": null,
       "version": "0",
-      "db_display_name": "Expression Atlas"
+      "primary_id": "Os08g0520500",
+      "display_id": "Os08g0520500",
+      "synonyms": []
      }
     ],
     "by_db": {

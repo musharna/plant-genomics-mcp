@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-23T05:00:41Z",
- "elapsed_s": 1.708885490996181,
+ "started_at": "2026-09-25T05:21:24Z",
+ "elapsed_s": 0.8837404810037697,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 1.159359441997367,
+   "elapsed_s": 0.5719947820034577,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.007986017008079216,
+   "elapsed_s": 0.011131564009701833,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.36411435301124584,
+   "elapsed_s": 0.1475130530016031,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 3.64030129276216e-05,
+   "elapsed_s": 2.6973997591994703e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
@@ -44,15 +44,15 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "error",
-   "elapsed_s": 0.29478542000288144,
+   "elapsed_s": 0.310638351002126,
    "result": null,
-   "error": "[NotFoundError] STRING /api/json/interaction_partners \u2192 HTTP 404: [{ \"Error\" : \"not found\", \"ErrorMessage\" : \"<p>Sorry, STRING did not find a protein called 'TraesCS2D02G307600' in the taxon '4565'.</p><p>Generally, STRING understands a number of different names/sym"
+   "error": "[NotFoundError] STRING has no protein for TraesCS2D02G307600 in triticum_aestivum (queried as A0A3B6DF98): STRING /api/json/interaction_partners \u2192 HTTP 404: [{ \"Error\" : \"not found\", \"ErrorMessage\" : \"<p>Sorry, STRING did not find a protein called 'A0A3B6DF98' in the taxon '4565'.</p><p>Generally, STRING understands a number of different names/symbols for"
   },
   {
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.5476966920105042,
+   "elapsed_s": 8.18310072645545e-05,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00022354599786922336,
+   "elapsed_s": 0.00015582700143568218,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00472955999430269,
+   "elapsed_s": 0.00038180500268936157,
    "result": null,
    "error": null
   }
@@ -85,21 +85,21 @@
    ]
   },
   "uniprot_accession": "A0A3B6DF98",
-  "markdown": "# LOC123053385 \u2014 `TraesCS2D02G307600`\n\n*Triticum aestivum* \u00b7 protein_coding \u00b7 2D:394,536,026\u2013394,541,495 (-) \u00b7 IWGSC\n\n## Protein\n**Auxin response factor**\nA0A3B6DF98_WHEAT \u00b7 UniProtKB unreviewed (TrEMBL) \u00b7 630 aa\nUniProt: [A0A3B6DF98](https://www.uniprot.org/uniprotkb/A0A3B6DF98)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [122\u2013224]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [287\u2013362]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [121\u2013226]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [503\u2013597]\n- **B3 DNA binding domain** (domain, interpro) [122\u2013226]\n- **Auxin response factor domain** (domain, interpro) [273\u2013358]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [111\u2013253]\n- **AUX/IAA domain** (domain, interpro) [492\u2013599]\n- **Auxin response factor** (family, interpro) [18\u2013596]\n- **PB1-like domain** (domain, interpro) [508\u2013601]\n\n## GO annotations\n**Molecular Function**\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006351] DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']_\n\n## Interaction partners (STRING, top 10)\n_Unavailable \u2014 [NotFoundError] STRING /api/json/interaction_partners \u2192 HTTP 404: [{ \"Error\" : \"not found\", \"ErrorMessage\" : \"<p>Sorry, STRING did not find a protein called 'TraesCS2D02G307600' in the taxon '4565'.</p><p>Generally, STRING understands a number of different names/sym_\n\n## Cross-references\n- WikiGene: 123053385\n- KNETMINER_WHEAT: TraesCS2D02G307600\n- Wheat Expression: TraesCS2D02G307600\n- Plant Reactome Reaction ID: R-TAE-5608208\n- Plant Reactome Pathway ID: R-TAE-5608118\n- NCBI gene (formerly Entrezgene): 123053385\n- Expression Atlas: TraesCS2D02G307600\n\n## Literature\n_No literature found._\n",
+  "markdown": "# LOC123053385 \u2014 `TraesCS2D02G307600`\n\n*Triticum aestivum* \u00b7 protein_coding \u00b7 2D:394,536,026\u2013394,541,495 (-) \u00b7 IWGSC\n\n## Protein\n**Auxin response factor**\nA0A3B6DF98_WHEAT \u00b7 UniProtKB unreviewed (TrEMBL) \u00b7 630 aa\nUniProt: [A0A3B6DF98](https://www.uniprot.org/uniprotkb/A0A3B6DF98)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [122\u2013224]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [287\u2013362]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [121\u2013226]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [503\u2013597]\n- **B3 DNA binding domain** (domain, interpro) [122\u2013226]\n- **Auxin response factor domain** (domain, interpro) [273\u2013358]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [111\u2013253]\n- **AUX/IAA domain** (domain, interpro) [492\u2013599]\n- **Auxin response factor** (family, interpro) [18\u2013596]\n- **PB1-like domain** (domain, interpro) [508\u2013601]\n\n## GO annotations\n**Molecular Function**\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006351] DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']_\n\n## Interaction partners (STRING, top 10)\n_Unavailable \u2014 [NotFoundError] STRING has no protein for TraesCS2D02G307600 in triticum_aestivum (queried as A0A3B6DF98): STRING /api/json/interaction_partners \u2192 HTTP 404: [{ \"Error\" : \"not found\", \"ErrorMessage\" : \"<p>Sorry, STRING did not find a protein called 'A0A3B6DF98' in the taxon '4565'.</p><p>Generally, STRING understands a number of different names/symbols for_\n\n## Cross-references\n- WikiGene: 123053385\n- KNETMINER_WHEAT: TraesCS2D02G307600\n- Wheat Expression: TraesCS2D02G307600\n- Plant Reactome Reaction ID: R-TAE-5608208\n- Plant Reactome Pathway ID: R-TAE-5608118\n- NCBI gene (formerly Entrezgene): 123053385\n- Expression Atlas: TraesCS2D02G307600\n\n## Literature\n_No literature found._\n",
   "sections": {
    "annotation": {
-    "seq_region_name": "2D",
-    "assembly_name": "IWGSC",
-    "biotype": "protein_coding",
-    "end": 394541495,
-    "start": 394536026,
-    "strand": -1,
-    "object_type": "Gene",
-    "source": "IWGSC",
-    "db_type": "core",
     "canonical_transcript": "TraesCS2D02G307600.1",
-    "id": "TraesCS2D02G307600",
+    "seq_region_name": "2D",
+    "object_type": "Gene",
     "logic_name": "iwgsc_high_conf",
+    "db_type": "core",
+    "strand": -1,
+    "id": "TraesCS2D02G307600",
+    "end": 394541495,
+    "assembly_name": "IWGSC",
+    "source": "IWGSC",
+    "start": 394536026,
+    "biotype": "protein_coding",
     "organism": "triticum_aestivum",
     "upstream_version": null
    },
@@ -125,81 +125,81 @@
     "count": 7,
     "xrefs": [
      {
-      "version": "0",
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "dbname": "WikiGene",
-      "description": "auxin response factor 9",
       "display_id": "LOC123053385",
+      "info_text": "",
+      "synonyms": [],
+      "description": "auxin response factor 9",
+      "dbname": "WikiGene",
+      "version": "0",
       "db_display_name": "WikiGene",
-      "primary_id": "123053385",
+      "info_type": "DEPENDENT",
+      "primary_id": "123053385"
+     },
+     {
+      "version": "0",
+      "db_display_name": "KNETMINER_WHEAT",
+      "description": null,
+      "dbname": "KNETMINER_WHEAT",
+      "primary_id": "TraesCS2D02G307600",
+      "info_type": "DEPENDENT",
+      "info_text": "",
+      "display_id": "TraesCS2D02G307600",
       "synonyms": []
      },
      {
-      "version": "0",
-      "info_type": "DEPENDENT",
-      "info_text": "",
-      "dbname": "KNETMINER_WHEAT",
-      "description": null,
-      "synonyms": [],
-      "primary_id": "TraesCS2D02G307600",
       "display_id": "TraesCS2D02G307600",
-      "db_display_name": "KNETMINER_WHEAT"
-     },
-     {
-      "version": "0",
       "info_text": "",
-      "info_type": "DEPENDENT",
+      "synonyms": [],
       "dbname": "WHEATEXP_GENE",
       "description": null,
-      "display_id": "TraesCS2D02G307600",
       "db_display_name": "Wheat Expression",
-      "synonyms": [],
+      "version": "0",
+      "info_type": "DEPENDENT",
       "primary_id": "TraesCS2D02G307600"
      },
      {
-      "display_id": "R-TAE-5608208",
-      "db_display_name": "Plant Reactome Reaction ID",
-      "primary_id": "R-TAE-5608208",
       "synonyms": [],
+      "display_id": "R-TAE-5608208",
+      "info_text": "Generated via direct",
+      "info_type": "DIRECT",
+      "primary_id": "R-TAE-5608208",
       "description": "ARF inactivation by AUX/IAA",
       "dbname": "Plant_Reactome_Reaction",
-      "info_text": "Generated via direct",
-      "info_type": "DIRECT",
-      "version": "0"
+      "version": "0",
+      "db_display_name": "Plant Reactome Reaction ID"
      },
      {
-      "db_display_name": "Plant Reactome Pathway ID",
-      "display_id": "R-TAE-5608118",
       "primary_id": "R-TAE-5608118",
-      "synonyms": [],
-      "description": "Auxin signalling",
+      "info_type": "DIRECT",
+      "db_display_name": "Plant Reactome Pathway ID",
       "version": "0",
       "dbname": "Plant_Reactome_Pathway",
+      "description": "Auxin signalling",
+      "synonyms": [],
       "info_text": "Generated via direct",
-      "info_type": "DIRECT"
+      "display_id": "R-TAE-5608118"
      },
      {
-      "synonyms": [],
-      "primary_id": "123053385",
-      "display_id": "LOC123053385",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "description": "auxin response factor 9",
-      "dbname": "EntrezGene",
       "info_type": "DEPENDENT",
-      "info_text": "",
-      "version": "0"
+      "primary_id": "123053385",
+      "dbname": "EntrezGene",
+      "description": "auxin response factor 9",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "version": "0",
+      "synonyms": [],
+      "display_id": "LOC123053385",
+      "info_text": ""
      },
      {
-      "info_type": "DIRECT",
-      "info_text": "",
       "dbname": "ArrayExpress",
-      "version": "0",
       "description": null,
-      "primary_id": "TraesCS2D02G307600",
-      "synonyms": [],
       "db_display_name": "Expression Atlas",
-      "display_id": "TraesCS2D02G307600"
+      "version": "0",
+      "info_type": "DIRECT",
+      "primary_id": "TraesCS2D02G307600",
+      "display_id": "TraesCS2D02G307600",
+      "info_text": "",
+      "synonyms": []
      }
     ],
     "by_db": {

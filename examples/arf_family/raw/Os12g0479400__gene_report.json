@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-23T04:54:34Z",
- "elapsed_s": 4.290498302987544,
+ "started_at": "2026-09-25T05:17:13Z",
+ "elapsed_s": 1.121651668989216,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 4.003060192000703,
+   "elapsed_s": 0.6016656020074151,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0008478469972033054,
+   "elapsed_s": 0.0008611719968030229,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 6.087600195314735e-05,
+   "elapsed_s": 9.578600293025374e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.0018858010007534176,
+   "elapsed_s": 0.007124650001060218,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.28688701799546834,
+   "elapsed_s": 0.5191894440067699,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0007784570043440908,
+   "elapsed_s": 0.0040341669955523685,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00015325300046242774,
+   "elapsed_s": 0.000642235012492165,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0002880970132537186,
+   "elapsed_s": 0.0008124890009639785,
    "result": null,
    "error": null
   }
@@ -88,19 +88,19 @@
   "markdown": "# OsARF24 (UniProt: ARF24) \u2014 `Os12g0479400`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 12:17,571,844\u201317,577,848 (-) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 24**\nARFX_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 841 aa\nUniProt: [Q2QQX6](https://www.uniprot.org/uniprotkb/Q2QQX6)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [146\u2013248]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [311\u2013384]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [145\u2013250]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [709\u2013802]\n- **B3 DNA binding domain** (domain, interpro) [146\u2013250]\n- **Auxin response factor domain** (domain, interpro) [297\u2013379]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [141\u2013277]\n- **AUX/IAA domain** (domain, interpro) [702\u2013801]\n- **Auxin response factor** (family, interpro) [30\u2013802]\n- **PB1-like domain** (domain, interpro) [713\u2013797]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n- `osa04075` Plant hormone signal transduction - Oryza sativa japonica (Japanese rice) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| MYBAS2 | 0.482 |\n| A0A0P0VIK8 | 0.412 |\n| OsJ_34384 | 0.4 |\n\n## Cross-references\n- UniProtKB Gene Name: Q2QQX6\n- WikiGene: 4352211\n- Expression Atlas: Os12g0479400\n- NCBI gene (formerly Entrezgene): 4352211\n\n## Literature\n6 hits total; showing top 6.\n- **Role of paternal Oryza sativa Baby Booms (OsBBMs) in initiating de novo gene expression and regulating early zygotic development in rice** \u2014 Akter N, Tezuka T, Rattanawong K, Satoh A, Kinoshita A, Sato Y, Okamoto T. (PMID:40570546; doi:10.1111/tpj.70305)\n- **The OsMAPK5-OsWRKY72 module negatively regulates grain length and grain weight in rice** \u2014 Wang F, Lin J, Yang F, Chen X, Liu Y, Yan L, Chen J, Wang Z, Xie H, Zhang J, Xu H, Chen S. (PMID:39474750; doi:10.1111/jipb.13786)\n- **Insights on Phytohormonal Crosstalk in Plant Response to Nitrogen Stress: A Focus on Plant Root Growth and Development** \u2014 Ahmad N, Jiang Z, Zhang L, Hussain I, Yang X. (PMID:36835044; doi:10.3390/ijms24043631)\n- **Moderate water stress in rice induces rhizosheath formation associated with abscisic acid and auxin responses** \u2014 Zhang Y, Du H, Gui Y, Xu F, Liu J, Zhang J, Xu W. (PMID:32053723; doi:10.1093/jxb/eraa021)\n- **Plant nitrogen availability and crosstalk with phytohormones signallings and their biotechnology breeding application in crops** \u2014 Xing J, Cao X, Zhang M, Wei X, Zhang J, Wan X. (PMID:36435985; doi:10.1111/pbi.13971)\n- **Rice actin-binding protein RMD is a key link in the auxin-actin regulatory loop that controls cell growth** \u2014 Li G, Liang W, Zhang X, Ren H, Hu J, Bennett MJ, Zhang D. (PMID:24982173; doi:10.1073/pnas.1401680111)\n",
   "sections": {
    "annotation": {
+    "logic_name": "rapdb_genes",
     "seq_region_name": "12",
     "canonical_transcript": "Os12t0479400-02",
-    "start": 17571844,
-    "logic_name": "rapdb_genes",
-    "source": "RAP2022-09-01",
     "assembly_name": "IRGSP-1.0",
-    "display_name": "OsARF24",
-    "db_type": "core",
-    "strand": -1,
-    "id": "Os12g0479400",
-    "end": 17577848,
     "biotype": "protein_coding",
     "object_type": "Gene",
+    "end": 17577848,
+    "id": "Os12g0479400",
+    "start": 17571844,
+    "display_name": "OsARF24",
+    "strand": -1,
+    "db_type": "core",
+    "source": "RAP2022-09-01",
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -126,48 +126,48 @@
     "count": 4,
     "xrefs": [
      {
-      "display_id": "ARF24",
-      "info_type": "DEPENDENT",
-      "dbname": "Uniprot_gn",
-      "info_text": "",
-      "version": null,
-      "db_display_name": "UniProtKB Gene Name",
-      "description": null,
-      "primary_id": "Q2QQX6",
-      "synonyms": []
-     },
-     {
-      "info_type": "DEPENDENT",
-      "dbname": "WikiGene",
-      "info_text": "",
-      "display_id": "LOC4352211",
-      "db_display_name": "WikiGene",
-      "description": "auxin response factor 24-like",
-      "version": "0",
-      "primary_id": "4352211",
-      "synonyms": []
-     },
-     {
       "synonyms": [],
-      "primary_id": "Os12g0479400",
-      "db_display_name": "Expression Atlas",
+      "display_id": "ARF24",
+      "info_text": "",
+      "info_type": "DEPENDENT",
+      "primary_id": "Q2QQX6",
+      "dbname": "Uniprot_gn",
       "description": null,
+      "db_display_name": "UniProtKB Gene Name",
+      "version": null
+     },
+     {
+      "primary_id": "4352211",
+      "info_type": "DEPENDENT",
+      "db_display_name": "WikiGene",
       "version": "0",
+      "dbname": "WikiGene",
+      "description": "auxin response factor 24-like",
+      "synonyms": [],
+      "info_text": "",
+      "display_id": "LOC4352211"
+     },
+     {
+      "db_display_name": "Expression Atlas",
+      "version": "0",
+      "dbname": "ArrayExpress",
+      "description": null,
+      "primary_id": "Os12g0479400",
       "info_type": "DIRECT",
       "info_text": "",
-      "dbname": "ArrayExpress",
-      "display_id": "Os12g0479400"
+      "display_id": "Os12g0479400",
+      "synonyms": []
      },
      {
-      "info_type": "DEPENDENT",
       "info_text": "",
-      "dbname": "EntrezGene",
       "display_id": "LOC4352211",
+      "synonyms": [],
       "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "description": "auxin response factor 24-like",
       "version": "0",
+      "dbname": "EntrezGene",
+      "description": "auxin response factor 24-like",
       "primary_id": "4352211",
-      "synonyms": []
+      "info_type": "DEPENDENT"
      }
     ],
     "by_db": {

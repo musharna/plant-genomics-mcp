@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-23T04:54:33Z",
- "elapsed_s": 29.231457318004686,
+ "started_at": "2026-09-25T05:17:10Z",
+ "elapsed_s": 1.0027792699984275,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 28.92612464899139,
+   "elapsed_s": 0.5346444939932553,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0004010740085504949,
+   "elapsed_s": 0.0007098990026861429,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 7.843300409149379e-05,
+   "elapsed_s": 9.80199984041974e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.0026875389885390177,
+   "elapsed_s": 0.004585431001032703,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.3032666470098775,
+   "elapsed_s": 0.46691031999944244,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0008680879982421175,
+   "elapsed_s": 0.002301733009517193,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00035823498910758644,
+   "elapsed_s": 0.00045773999590892345,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00031896799919195473,
+   "elapsed_s": 0.0003803139989031479,
    "result": null,
    "error": null
   }
@@ -89,18 +89,18 @@
   "sections": {
    "annotation": {
     "strand": 1,
-    "display_name": "OsARF10",
-    "canonical_transcript": "Os06t0685700-01",
-    "id": "Os06g0685700",
-    "logic_name": "rapdb_genes",
     "db_type": "core",
     "object_type": "Gene",
     "source": "RAP2022-09-01",
-    "assembly_name": "IRGSP-1.0",
+    "display_name": "OsARF10",
+    "logic_name": "rapdb_genes",
+    "canonical_transcript": "Os06t0685700-01",
+    "id": "Os06g0685700",
     "biotype": "protein_coding",
+    "assembly_name": "IRGSP-1.0",
     "seq_region_name": "6",
-    "start": 28586492,
     "end": 28590205,
+    "start": 28586492,
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -126,37 +126,37 @@
     "count": 4,
     "xrefs": [
      {
-      "db_display_name": "UniProtKB Gene Name",
-      "info_text": "",
-      "synonyms": [],
-      "dbname": "Uniprot_gn",
       "display_id": "ARF18",
       "version": null,
       "info_type": "DEPENDENT",
       "description": null,
-      "primary_id": "Q653H7"
+      "primary_id": "Q653H7",
+      "db_display_name": "UniProtKB Gene Name",
+      "info_text": "",
+      "dbname": "Uniprot_gn",
+      "synonyms": []
      },
      {
-      "info_type": "DEPENDENT",
-      "description": "auxin response factor 18-like",
-      "primary_id": "4341882",
-      "display_id": "LOC4341882",
-      "version": "0",
+      "db_display_name": "WikiGene",
+      "info_text": "",
       "synonyms": [],
       "dbname": "WikiGene",
-      "db_display_name": "WikiGene",
-      "info_text": ""
+      "display_id": "LOC4341882",
+      "version": "0",
+      "info_type": "DEPENDENT",
+      "description": "auxin response factor 18-like",
+      "primary_id": "4341882"
      },
      {
+      "version": "0",
+      "display_id": "Os06g0685700",
+      "description": null,
+      "primary_id": "Os06g0685700",
+      "info_type": "DIRECT",
       "info_text": "",
       "db_display_name": "Expression Atlas",
       "dbname": "ArrayExpress",
-      "synonyms": [],
-      "version": "0",
-      "display_id": "Os06g0685700",
-      "primary_id": "Os06g0685700",
-      "description": null,
-      "info_type": "DIRECT"
+      "synonyms": []
      },
      {
       "version": "0",
@@ -166,8 +166,8 @@
       "info_type": "DEPENDENT",
       "info_text": "",
       "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "synonyms": [],
-      "dbname": "EntrezGene"
+      "dbname": "EntrezGene",
+      "synonyms": []
      }
     ],
     "by_db": {

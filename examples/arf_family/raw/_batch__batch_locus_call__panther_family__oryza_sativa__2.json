@@ -1,32 +1,798 @@
 {
  "tool": "panther_family",
  "count": 25,
- "results": {},
- "errors": {
-  "Os01g0236300": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os01g0670800": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os01g0753500": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os01g0927600": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os02g0141100": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os02g0164900": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os02g0557200": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os02g0628600": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os04g0442000": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os04g0519700": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os04g0664400": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os04g0671900": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os04g0690600": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os05g0515400": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os05g0563400": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os06g0196700": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os06g0677800": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os06g0685700": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os06g0702600": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os08g0520500": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os08g0520550": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os10g0479900": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os11g0523800": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os12g0479400": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )",
-  "Os12g0613700": "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )"
- }
+ "results": {
+  "Os01g0236300": {
+   "locus": "Os01g0236300",
+   "found": true,
+   "accession": "ORYSJ|EnsemblGenome=Os01g0236300|UniProtKB=Q5NB85",
+   "family_id": "PTHR31384",
+   "family_name": "AUXIN RESPONSE FACTOR 4-RELATED",
+   "subfamily_id": "PTHR31384:SF1",
+   "subfamily_name": "AUXIN RESPONSE FACTOR 9",
+   "go_molecular_function": [
+    {
+     "id": "GO:0003677",
+     "name": "DNA binding"
+    }
+   ],
+   "go_biological_process": [
+    {
+     "id": "GO:0006355",
+     "name": "regulation of DNA-templated transcription"
+    },
+    {
+     "id": "GO:0009725",
+     "name": "response to hormone"
+    }
+   ],
+   "go_cellular_component": [
+    {
+     "id": "GO:0005634",
+     "name": "nucleus"
+    }
+   ],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os01g0670800": {
+   "locus": "Os01g0670800",
+   "found": true,
+   "accession": "ORYSJ|EnsemblGenome=Os01g0670800|UniProtKB=Q0JKI9",
+   "family_id": "PTHR31384",
+   "family_name": "AUXIN RESPONSE FACTOR 4-RELATED",
+   "subfamily_id": "PTHR31384:SF182",
+   "subfamily_name": "AUXIN RESPONSE FACTOR 2",
+   "go_molecular_function": [
+    {
+     "id": "GO:0003677",
+     "name": "DNA binding"
+    }
+   ],
+   "go_biological_process": [
+    {
+     "id": "GO:0006355",
+     "name": "regulation of DNA-templated transcription"
+    },
+    {
+     "id": "GO:0009725",
+     "name": "response to hormone"
+    }
+   ],
+   "go_cellular_component": [
+    {
+     "id": "GO:0005634",
+     "name": "nucleus"
+    }
+   ],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os01g0753500": {
+   "locus": "Os01g0753500",
+   "found": true,
+   "accession": "ORYSJ|EnsemblGenome=Os01g0753500|UniProtKB=Q5JMM1",
+   "family_id": "PTHR31384",
+   "family_name": "AUXIN RESPONSE FACTOR 4-RELATED",
+   "subfamily_id": "PTHR31384:SF13",
+   "subfamily_name": "AUXIN RESPONSE FACTOR 3",
+   "go_molecular_function": [
+    {
+     "id": "GO:0003677",
+     "name": "DNA binding"
+    }
+   ],
+   "go_biological_process": [
+    {
+     "id": "GO:0006355",
+     "name": "regulation of DNA-templated transcription"
+    },
+    {
+     "id": "GO:0009725",
+     "name": "response to hormone"
+    }
+   ],
+   "go_cellular_component": [
+    {
+     "id": "GO:0005634",
+     "name": "nucleus"
+    }
+   ],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os01g0927600": {
+   "locus": "Os01g0927600",
+   "found": true,
+   "accession": "ORYSJ|EnsemblGenome=Os01g0927600|UniProtKB=Q5JK20",
+   "family_id": "PTHR31384",
+   "family_name": "AUXIN RESPONSE FACTOR 4-RELATED",
+   "subfamily_id": "PTHR31384:SF72",
+   "subfamily_name": "AUXIN RESPONSE FACTOR 4",
+   "go_molecular_function": [
+    {
+     "id": "GO:0003677",
+     "name": "DNA binding"
+    }
+   ],
+   "go_biological_process": [
+    {
+     "id": "GO:0006355",
+     "name": "regulation of DNA-templated transcription"
+    },
+    {
+     "id": "GO:0009725",
+     "name": "response to hormone"
+    }
+   ],
+   "go_cellular_component": [
+    {
+     "id": "GO:0005634",
+     "name": "nucleus"
+    }
+   ],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os02g0141100": {
+   "locus": "Os02g0141100",
+   "found": false,
+   "accession": null,
+   "family_id": null,
+   "family_name": null,
+   "subfamily_id": null,
+   "subfamily_name": null,
+   "go_molecular_function": [],
+   "go_biological_process": [],
+   "go_cellular_component": [],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os02g0164900": {
+   "locus": "Os02g0164900",
+   "found": true,
+   "accession": "ORYSJ|EnsemblGenome=Os02g0164900|UniProtKB=Q6H6V4",
+   "family_id": "PTHR31384",
+   "family_name": "AUXIN RESPONSE FACTOR 4-RELATED",
+   "subfamily_id": "PTHR31384:SF115",
+   "subfamily_name": "AUXIN RESPONSE FACTOR 6",
+   "go_molecular_function": [
+    {
+     "id": "GO:0003677",
+     "name": "DNA binding"
+    }
+   ],
+   "go_biological_process": [
+    {
+     "id": "GO:0006355",
+     "name": "regulation of DNA-templated transcription"
+    },
+    {
+     "id": "GO:0009725",
+     "name": "response to hormone"
+    }
+   ],
+   "go_cellular_component": [
+    {
+     "id": "GO:0005634",
+     "name": "nucleus"
+    }
+   ],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os02g0557200": {
+   "locus": "Os02g0557200",
+   "found": true,
+   "accession": "ORYSJ|EnsemblGenome=Os02g0557200|UniProtKB=Q6YVY0",
+   "family_id": "PTHR31384",
+   "family_name": "AUXIN RESPONSE FACTOR 4-RELATED",
+   "subfamily_id": "PTHR31384:SF96",
+   "subfamily_name": "AUXIN RESPONSE FACTOR 1",
+   "go_molecular_function": [
+    {
+     "id": "GO:0003677",
+     "name": "DNA binding"
+    }
+   ],
+   "go_biological_process": [
+    {
+     "id": "GO:0006355",
+     "name": "regulation of DNA-templated transcription"
+    },
+    {
+     "id": "GO:0009725",
+     "name": "response to hormone"
+    }
+   ],
+   "go_cellular_component": [
+    {
+     "id": "GO:0005634",
+     "name": "nucleus"
+    }
+   ],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os02g0628600": {
+   "locus": "Os02g0628600",
+   "found": true,
+   "accession": "ORYSJ|EnsemblGenome=Os02g0628600|UniProtKB=Q6K223",
+   "family_id": "PTHR31384",
+   "family_name": "AUXIN RESPONSE FACTOR 4-RELATED",
+   "subfamily_id": "PTHR31384:SF37",
+   "subfamily_name": "AUXIN RESPONSE FACTOR 8",
+   "go_molecular_function": [
+    {
+     "id": "GO:0003677",
+     "name": "DNA binding"
+    }
+   ],
+   "go_biological_process": [
+    {
+     "id": "GO:0006355",
+     "name": "regulation of DNA-templated transcription"
+    },
+    {
+     "id": "GO:0007389",
+     "name": "pattern specification process"
+    },
+    {
+     "id": "GO:0009725",
+     "name": "response to hormone"
+    },
+    {
+     "id": "GO:0048829",
+     "name": "root cap development"
+    },
+    {
+     "id": "GO:0051301",
+     "name": "cell division"
+    }
+   ],
+   "go_cellular_component": [
+    {
+     "id": "GO:0005634",
+     "name": "nucleus"
+    }
+   ],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os04g0442000": {
+   "locus": "Os04g0442000",
+   "found": true,
+   "accession": "ORYSJ|EnsemblGenome=Os04g0442000|UniProtKB=Q0JCZ4",
+   "family_id": "PTHR31384",
+   "family_name": "AUXIN RESPONSE FACTOR 4-RELATED",
+   "subfamily_id": "PTHR31384:SF146",
+   "subfamily_name": "AUXIN RESPONSE FACTOR 9",
+   "go_molecular_function": [
+    {
+     "id": "GO:0003677",
+     "name": "DNA binding"
+    }
+   ],
+   "go_biological_process": [
+    {
+     "id": "GO:0006355",
+     "name": "regulation of DNA-templated transcription"
+    },
+    {
+     "id": "GO:0009725",
+     "name": "response to hormone"
+    }
+   ],
+   "go_cellular_component": [
+    {
+     "id": "GO:0005634",
+     "name": "nucleus"
+    }
+   ],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os04g0519700": {
+   "locus": "Os04g0519700",
+   "found": false,
+   "accession": null,
+   "family_id": null,
+   "family_name": null,
+   "subfamily_id": null,
+   "subfamily_name": null,
+   "go_molecular_function": [],
+   "go_biological_process": [],
+   "go_cellular_component": [],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os04g0664400": {
+   "locus": "Os04g0664400",
+   "found": true,
+   "accession": "ORYSJ|EnsemblGenome=Os04g0664400|UniProtKB=Q8S983",
+   "family_id": "PTHR31384",
+   "family_name": "AUXIN RESPONSE FACTOR 4-RELATED",
+   "subfamily_id": "PTHR31384:SF10",
+   "subfamily_name": "AUXIN RESPONSE FACTOR 5",
+   "go_molecular_function": [
+    {
+     "id": "GO:0003677",
+     "name": "DNA binding"
+    }
+   ],
+   "go_biological_process": [
+    {
+     "id": "GO:0006355",
+     "name": "regulation of DNA-templated transcription"
+    },
+    {
+     "id": "GO:0009725",
+     "name": "response to hormone"
+    }
+   ],
+   "go_cellular_component": [
+    {
+     "id": "GO:0005634",
+     "name": "nucleus"
+    }
+   ],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os04g0671900": {
+   "locus": "Os04g0671900",
+   "found": true,
+   "accession": "ORYSJ|EnsemblGenome=Os04g0671900|UniProtKB=Q0J951",
+   "family_id": "PTHR31384",
+   "family_name": "AUXIN RESPONSE FACTOR 4-RELATED",
+   "subfamily_id": "PTHR31384:SF185",
+   "subfamily_name": "AUXIN RESPONSE FACTOR 12",
+   "go_molecular_function": [
+    {
+     "id": "GO:0003677",
+     "name": "DNA binding"
+    }
+   ],
+   "go_biological_process": [
+    {
+     "id": "GO:0006355",
+     "name": "regulation of DNA-templated transcription"
+    },
+    {
+     "id": "GO:0009725",
+     "name": "response to hormone"
+    }
+   ],
+   "go_cellular_component": [
+    {
+     "id": "GO:0005634",
+     "name": "nucleus"
+    }
+   ],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os04g0690600": {
+   "locus": "Os04g0690600",
+   "found": true,
+   "accession": "ORYSJ|EnsemblGenome=Os04g0690600|UniProtKB=Q7XSS9",
+   "family_id": "PTHR31384",
+   "family_name": "AUXIN RESPONSE FACTOR 4-RELATED",
+   "subfamily_id": "PTHR31384:SF94",
+   "subfamily_name": "AUXIN RESPONSE FACTOR 17",
+   "go_molecular_function": [
+    {
+     "id": "GO:0003677",
+     "name": "DNA binding"
+    }
+   ],
+   "go_biological_process": [
+    {
+     "id": "GO:0006355",
+     "name": "regulation of DNA-templated transcription"
+    },
+    {
+     "id": "GO:0009725",
+     "name": "response to hormone"
+    }
+   ],
+   "go_cellular_component": [
+    {
+     "id": "GO:0005634",
+     "name": "nucleus"
+    }
+   ],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os05g0515400": {
+   "locus": "Os05g0515400",
+   "found": false,
+   "accession": null,
+   "family_id": null,
+   "family_name": null,
+   "subfamily_id": null,
+   "subfamily_name": null,
+   "go_molecular_function": [],
+   "go_biological_process": [],
+   "go_cellular_component": [],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os05g0563400": {
+   "locus": "Os05g0563400",
+   "found": true,
+   "accession": "ORYSJ|EnsemblGenome=Os05g0563400|UniProtKB=Q8S985",
+   "family_id": "PTHR31384",
+   "family_name": "AUXIN RESPONSE FACTOR 4-RELATED",
+   "subfamily_id": "PTHR31384:SF5",
+   "subfamily_name": "AUXIN RESPONSE FACTOR 3",
+   "go_molecular_function": [
+    {
+     "id": "GO:0003677",
+     "name": "DNA binding"
+    }
+   ],
+   "go_biological_process": [
+    {
+     "id": "GO:0006355",
+     "name": "regulation of DNA-templated transcription"
+    },
+    {
+     "id": "GO:0009725",
+     "name": "response to hormone"
+    }
+   ],
+   "go_cellular_component": [
+    {
+     "id": "GO:0005634",
+     "name": "nucleus"
+    }
+   ],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os06g0196700": {
+   "locus": "Os06g0196700",
+   "found": true,
+   "accession": "ORYSJ|EnsemblGenome=Os06g0196700|UniProtKB=A3B9A0",
+   "family_id": "PTHR31384",
+   "family_name": "AUXIN RESPONSE FACTOR 4-RELATED",
+   "subfamily_id": "PTHR31384:SF21",
+   "subfamily_name": "AUXIN RESPONSE FACTOR 19",
+   "go_molecular_function": [
+    {
+     "id": "GO:0003677",
+     "name": "DNA binding"
+    }
+   ],
+   "go_biological_process": [
+    {
+     "id": "GO:0006355",
+     "name": "regulation of DNA-templated transcription"
+    },
+    {
+     "id": "GO:0009725",
+     "name": "response to hormone"
+    }
+   ],
+   "go_cellular_component": [
+    {
+     "id": "GO:0005634",
+     "name": "nucleus"
+    }
+   ],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os06g0677800": {
+   "locus": "Os06g0677800",
+   "found": true,
+   "accession": "ORYSJ|EnsemblGenome=Os06g0677800|UniProtKB=Q653U3",
+   "family_id": "PTHR31384",
+   "family_name": "AUXIN RESPONSE FACTOR 4-RELATED",
+   "subfamily_id": "PTHR31384:SF22",
+   "subfamily_name": "AUXIN RESPONSE FACTOR 17",
+   "go_molecular_function": [
+    {
+     "id": "GO:0003677",
+     "name": "DNA binding"
+    }
+   ],
+   "go_biological_process": [
+    {
+     "id": "GO:0006355",
+     "name": "regulation of DNA-templated transcription"
+    },
+    {
+     "id": "GO:0009725",
+     "name": "response to hormone"
+    }
+   ],
+   "go_cellular_component": [
+    {
+     "id": "GO:0005634",
+     "name": "nucleus"
+    }
+   ],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os06g0685700": {
+   "locus": "Os06g0685700",
+   "found": true,
+   "accession": "ORYSJ|EnsemblGenome=Os06g0685700|UniProtKB=Q653H7",
+   "family_id": "PTHR31384",
+   "family_name": "AUXIN RESPONSE FACTOR 4-RELATED",
+   "subfamily_id": "PTHR31384:SF160",
+   "subfamily_name": "AUXIN RESPONSE FACTOR 16",
+   "go_molecular_function": [
+    {
+     "id": "GO:0003677",
+     "name": "DNA binding"
+    }
+   ],
+   "go_biological_process": [
+    {
+     "id": "GO:0006355",
+     "name": "regulation of DNA-templated transcription"
+    },
+    {
+     "id": "GO:0007389",
+     "name": "pattern specification process"
+    },
+    {
+     "id": "GO:0009725",
+     "name": "response to hormone"
+    },
+    {
+     "id": "GO:0048829",
+     "name": "root cap development"
+    },
+    {
+     "id": "GO:0051301",
+     "name": "cell division"
+    }
+   ],
+   "go_cellular_component": [
+    {
+     "id": "GO:0005634",
+     "name": "nucleus"
+    }
+   ],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os06g0702600": {
+   "locus": "Os06g0702600",
+   "found": true,
+   "accession": "ORYSJ|EnsemblGenome=Os06g0702600|UniProtKB=Q0D9R7",
+   "family_id": "PTHR31384",
+   "family_name": "AUXIN RESPONSE FACTOR 4-RELATED",
+   "subfamily_id": "PTHR31384:SF9",
+   "subfamily_name": "AUXIN RESPONSE FACTOR 19",
+   "go_molecular_function": [
+    {
+     "id": "GO:0003677",
+     "name": "DNA binding"
+    }
+   ],
+   "go_biological_process": [
+    {
+     "id": "GO:0006355",
+     "name": "regulation of DNA-templated transcription"
+    },
+    {
+     "id": "GO:0009725",
+     "name": "response to hormone"
+    }
+   ],
+   "go_cellular_component": [
+    {
+     "id": "GO:0005634",
+     "name": "nucleus"
+    }
+   ],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os08g0520500": {
+   "locus": "Os08g0520500",
+   "found": false,
+   "accession": null,
+   "family_id": null,
+   "family_name": null,
+   "subfamily_id": null,
+   "subfamily_name": null,
+   "go_molecular_function": [],
+   "go_biological_process": [],
+   "go_cellular_component": [],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os08g0520550": {
+   "locus": "Os08g0520550",
+   "found": true,
+   "accession": "ORYSJ|EnsemblGenome=Os08g0520550|UniProtKB=A0A0P0XIX0",
+   "family_id": "PTHR31384",
+   "family_name": "AUXIN RESPONSE FACTOR 4-RELATED",
+   "subfamily_id": "PTHR31384:SF163",
+   "subfamily_name": "AUXIN RESPONSE FACTOR 21",
+   "go_molecular_function": [
+    {
+     "id": "GO:0003677",
+     "name": "DNA binding"
+    }
+   ],
+   "go_biological_process": [
+    {
+     "id": "GO:0006355",
+     "name": "regulation of DNA-templated transcription"
+    },
+    {
+     "id": "GO:0009725",
+     "name": "response to hormone"
+    }
+   ],
+   "go_cellular_component": [
+    {
+     "id": "GO:0005634",
+     "name": "nucleus"
+    }
+   ],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os10g0479900": {
+   "locus": "Os10g0479900",
+   "found": true,
+   "accession": "ORYSJ|EnsemblGenome=Os10g0479900|UniProtKB=Q9AV47",
+   "family_id": "PTHR31384",
+   "family_name": "AUXIN RESPONSE FACTOR 4-RELATED",
+   "subfamily_id": "PTHR31384:SF165",
+   "subfamily_name": "AUXIN RESPONSE FACTOR 22",
+   "go_molecular_function": [
+    {
+     "id": "GO:0003677",
+     "name": "DNA binding"
+    }
+   ],
+   "go_biological_process": [
+    {
+     "id": "GO:0006355",
+     "name": "regulation of DNA-templated transcription"
+    },
+    {
+     "id": "GO:0007389",
+     "name": "pattern specification process"
+    },
+    {
+     "id": "GO:0009725",
+     "name": "response to hormone"
+    },
+    {
+     "id": "GO:0048829",
+     "name": "root cap development"
+    },
+    {
+     "id": "GO:0051301",
+     "name": "cell division"
+    }
+   ],
+   "go_cellular_component": [
+    {
+     "id": "GO:0005634",
+     "name": "nucleus"
+    }
+   ],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os11g0523800": {
+   "locus": "Os11g0523800",
+   "found": false,
+   "accession": null,
+   "family_id": null,
+   "family_name": null,
+   "subfamily_id": null,
+   "subfamily_name": null,
+   "go_molecular_function": [],
+   "go_biological_process": [],
+   "go_cellular_component": [],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os12g0479400": {
+   "locus": "Os12g0479400",
+   "found": true,
+   "accession": "ORYSJ|EnsemblGenome=Os12g0479400|UniProtKB=Q2QQX6",
+   "family_id": "PTHR31384",
+   "family_name": "AUXIN RESPONSE FACTOR 4-RELATED",
+   "subfamily_id": "PTHR31384:SF40",
+   "subfamily_name": "AUXIN RESPONSE FACTOR 24",
+   "go_molecular_function": [
+    {
+     "id": "GO:0003677",
+     "name": "DNA binding"
+    }
+   ],
+   "go_biological_process": [
+    {
+     "id": "GO:0006355",
+     "name": "regulation of DNA-templated transcription"
+    },
+    {
+     "id": "GO:0009725",
+     "name": "response to hormone"
+    }
+   ],
+   "go_cellular_component": [
+    {
+     "id": "GO:0005634",
+     "name": "nucleus"
+    }
+   ],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  },
+  "Os12g0613700": {
+   "locus": "Os12g0613700",
+   "found": true,
+   "accession": "ORYSJ|EnsemblGenome=Os12g0613700|UniProtKB=Q2QM84",
+   "family_id": "PTHR31384",
+   "family_name": "AUXIN RESPONSE FACTOR 4-RELATED",
+   "subfamily_id": "PTHR31384:SF150",
+   "subfamily_name": "AUXIN RESPONSE FACTOR 6",
+   "go_molecular_function": [
+    {
+     "id": "GO:0003677",
+     "name": "DNA binding"
+    }
+   ],
+   "go_biological_process": [
+    {
+     "id": "GO:0006355",
+     "name": "regulation of DNA-templated transcription"
+    },
+    {
+     "id": "GO:0009725",
+     "name": "response to hormone"
+    }
+   ],
+   "go_cellular_component": [
+    {
+     "id": "GO:0005634",
+     "name": "nucleus"
+    }
+   ],
+   "protein_class": [],
+   "pathways": [],
+   "upstream_version": null
+  }
+ },
+ "errors": {}
 }

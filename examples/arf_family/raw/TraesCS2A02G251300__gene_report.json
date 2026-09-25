@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-23T05:00:39Z",
- "elapsed_s": 4.861091755999951,
+ "started_at": "2026-09-25T05:21:22Z",
+ "elapsed_s": 0.9184533049992751,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 4.265187564989901,
+   "elapsed_s": 0.6256782319978811,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0003589650004869327,
+   "elapsed_s": 0.0004987459979020059,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.2282006720051868,
+   "elapsed_s": 0.14326098799938336,
    "result": null,
    "error": null
   },
@@ -36,23 +36,23 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 4.316000558901578e-05,
+   "elapsed_s": 3.427000774536282e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
   {
    "step": 5,
    "tool": "string_interactions",
-   "status": "error",
-   "elapsed_s": 0.5943496460095048,
+   "status": "ok",
+   "elapsed_s": 0.29137334899860434,
    "result": null,
-   "error": "[NotFoundError] STRING /api/json/interaction_partners \u2192 HTTP 404: [{ \"Error\" : \"not found\", \"ErrorMessage\" : \"<p>Sorry, STRING did not find a protein called 'TraesCS2A02G251300' in the taxon '4565'.</p><p>Generally, STRING understands a number of different names/sym"
+   "error": null
   },
   {
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 7.429599645547569e-05,
+   "elapsed_s": 5.776499165222049e-05,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00016240699915215373,
+   "elapsed_s": 0.00013202399713918567,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0004571659956127405,
+   "elapsed_s": 0.00017359000048600137,
    "result": null,
    "error": null
   }
@@ -83,21 +83,21 @@
    "uniprot": []
   },
   "uniprot_accession": "A0A3B6AXV4",
-  "markdown": "# TraesCS2A02G251300 \u2014 `TraesCS2A02G251300`\n\n*Triticum aestivum* \u00b7 protein_coding \u00b7 2A:379,293,994\u2013379,297,829 (-) \u00b7 IWGSC\n\n## Protein\n**Auxin response factor domain-containing protein**\nA0A3B6AXV4_WHEAT \u00b7 UniProtKB unreviewed (TrEMBL) \u00b7 144 aa\nUniProt: [A0A3B6AXV4](https://www.uniprot.org/uniprotkb/A0A3B6AXV4)\n\n## Protein domains\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [64\u2013136]\n- **Auxin response factor domain** (domain, interpro) [49\u2013130]\n- **Auxin response factor** (family, interpro) [47\u2013138]\n- **Auxin response factor ancillary domain** (domain, pfam) [49\u2013130]\n- **AUXIN RESPONSE FACTOR 4-RELATED** (family, panther) [47\u2013138]\n\n## GO annotations\n**Molecular Function**\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']_\n\n## Interaction partners (STRING, top 10)\n_Unavailable \u2014 [NotFoundError] STRING /api/json/interaction_partners \u2192 HTTP 404: [{ \"Error\" : \"not found\", \"ErrorMessage\" : \"<p>Sorry, STRING did not find a protein called 'TraesCS2A02G251300' in the taxon '4565'.</p><p>Generally, STRING understands a number of different names/sym_\n\n## Cross-references\n- KNETMINER_WHEAT: TraesCS2A02G251300\n- Wheat Expression: TraesCS2A02G251300\n- Expression Atlas: TraesCS2A02G251300\n\n## Literature\n_No literature found._\n",
+  "markdown": "# TraesCS2A02G251300 \u2014 `TraesCS2A02G251300`\n\n*Triticum aestivum* \u00b7 protein_coding \u00b7 2A:379,293,994\u2013379,297,829 (-) \u00b7 IWGSC\n\n## Protein\n**Auxin response factor domain-containing protein**\nA0A3B6AXV4_WHEAT \u00b7 UniProtKB unreviewed (TrEMBL) \u00b7 144 aa\nUniProt: [A0A3B6AXV4](https://www.uniprot.org/uniprotkb/A0A3B6AXV4)\n\n## Protein domains\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [64\u2013136]\n- **Auxin response factor domain** (domain, interpro) [49\u2013130]\n- **Auxin response factor** (family, interpro) [47\u2013138]\n- **Auxin response factor ancillary domain** (domain, pfam) [49\u2013130]\n- **AUXIN RESPONSE FACTOR 4-RELATED** (family, panther) [47\u2013138]\n\n## GO annotations\n**Molecular Function**\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| A0A3B5ZR90 | 0.76 |\n| A0A3B5YSU1 | 0.76 |\n| A0A3B5XVC4 | 0.76 |\n| IAA1 | 0.742 |\n| A0A3B6LTA7 | 0.742 |\n| A0A3B6MXE6 | 0.742 |\n| A0A3B5XWR3 | 0.644 |\n| A0A077RTL4 | 0.644 |\n| A0A3B6GNU0 | 0.644 |\n| A0A3B5ZR14 | 0.644 |\n\n## Cross-references\n- KNETMINER_WHEAT: TraesCS2A02G251300\n- Wheat Expression: TraesCS2A02G251300\n- Expression Atlas: TraesCS2A02G251300\n\n## Literature\n_No literature found._\n",
   "sections": {
    "annotation": {
-    "source": "IWGSC",
-    "assembly_name": "IWGSC",
-    "strand": -1,
     "db_type": "core",
-    "id": "TraesCS2A02G251300",
-    "end": 379297829,
-    "biotype": "protein_coding",
+    "source": "IWGSC",
     "object_type": "Gene",
-    "seq_region_name": "2A",
+    "id": "TraesCS2A02G251300",
     "canonical_transcript": "TraesCS2A02G251300.1",
-    "start": 379293994,
     "logic_name": "iwgsc_high_conf",
+    "strand": -1,
+    "end": 379297829,
+    "start": 379293994,
+    "assembly_name": "IWGSC",
+    "biotype": "protein_coding",
+    "seq_region_name": "2A",
     "organism": "triticum_aestivum",
     "upstream_version": null
    },
@@ -121,37 +121,37 @@
     "count": 3,
     "xrefs": [
      {
+      "version": "0",
+      "display_id": "TraesCS2A02G251300",
+      "primary_id": "TraesCS2A02G251300",
+      "description": null,
+      "info_type": "DEPENDENT",
+      "info_text": "",
+      "db_display_name": "KNETMINER_WHEAT",
+      "synonyms": [],
+      "dbname": "KNETMINER_WHEAT"
+     },
+     {
+      "display_id": "TraesCS2A02G251300",
+      "version": "0",
+      "info_type": "DEPENDENT",
+      "primary_id": "TraesCS2A02G251300",
+      "description": null,
+      "db_display_name": "Wheat Expression",
+      "info_text": "",
+      "synonyms": [],
+      "dbname": "WHEATEXP_GENE"
+     },
+     {
+      "db_display_name": "Expression Atlas",
+      "info_text": "",
+      "dbname": "ArrayExpress",
       "synonyms": [],
       "display_id": "TraesCS2A02G251300",
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "primary_id": "TraesCS2A02G251300",
-      "dbname": "KNETMINER_WHEAT",
-      "description": null,
-      "db_display_name": "KNETMINER_WHEAT",
-      "version": "0"
-     },
-     {
       "version": "0",
-      "db_display_name": "Wheat Expression",
-      "description": null,
-      "dbname": "WHEATEXP_GENE",
-      "primary_id": "TraesCS2A02G251300",
-      "info_type": "DEPENDENT",
-      "info_text": "",
-      "display_id": "TraesCS2A02G251300",
-      "synonyms": []
-     },
-     {
-      "version": "0",
-      "db_display_name": "Expression Atlas",
-      "description": null,
-      "dbname": "ArrayExpress",
-      "primary_id": "TraesCS2A02G251300",
       "info_type": "DIRECT",
-      "info_text": "",
-      "display_id": "TraesCS2A02G251300",
-      "synonyms": []
+      "description": null,
+      "primary_id": "TraesCS2A02G251300"
      }
     ],
     "by_db": {
@@ -167,7 +167,117 @@
     }
    },
    "pathways": null,
-   "interactions": null,
+   "interactions": {
+    "query": "TraesCS2A02G251300",
+    "accession": "A0A3B6AXV4",
+    "organism": "triticum_aestivum",
+    "total": null,
+    "returned": 10,
+    "truncated": null,
+    "partners": [
+     {
+      "string_id": "4565.A0A3B5ZR90",
+      "accession": "4565.A0A3B5ZR90",
+      "preferred_name": "A0A3B5ZR90",
+      "score": 0.76,
+      "escore": 0.068,
+      "dscore": 0.754,
+      "tscore": 0,
+      "pscore": 0
+     },
+     {
+      "string_id": "4565.A0A3B5YSU1",
+      "accession": "4565.A0A3B5YSU1",
+      "preferred_name": "A0A3B5YSU1",
+      "score": 0.76,
+      "escore": 0.068,
+      "dscore": 0.754,
+      "tscore": 0,
+      "pscore": 0
+     },
+     {
+      "string_id": "4565.A0A3B5XVC4",
+      "accession": "4565.A0A3B5XVC4",
+      "preferred_name": "A0A3B5XVC4",
+      "score": 0.76,
+      "escore": 0.068,
+      "dscore": 0.754,
+      "tscore": 0,
+      "pscore": 0
+     },
+     {
+      "string_id": "4565.Q7XTK5",
+      "accession": "4565.Q7XTK5",
+      "preferred_name": "IAA1",
+      "score": 0.742,
+      "escore": 0.117,
+      "dscore": 0.72,
+      "tscore": 0,
+      "pscore": 0
+     },
+     {
+      "string_id": "4565.A0A3B6LTA7",
+      "accession": "4565.A0A3B6LTA7",
+      "preferred_name": "A0A3B6LTA7",
+      "score": 0.742,
+      "escore": 0.117,
+      "dscore": 0.72,
+      "tscore": 0,
+      "pscore": 0
+     },
+     {
+      "string_id": "4565.A0A3B6MXE6",
+      "accession": "4565.A0A3B6MXE6",
+      "preferred_name": "A0A3B6MXE6",
+      "score": 0.742,
+      "escore": 0.117,
+      "dscore": 0.72,
+      "tscore": 0,
+      "pscore": 0
+     },
+     {
+      "string_id": "4565.A0A3B5XWR3",
+      "accession": "4565.A0A3B5XWR3",
+      "preferred_name": "A0A3B5XWR3",
+      "score": 0.644,
+      "escore": 0.119,
+      "dscore": 0.613,
+      "tscore": 0,
+      "pscore": 0
+     },
+     {
+      "string_id": "4565.A0A077RTL4",
+      "accession": "4565.A0A077RTL4",
+      "preferred_name": "A0A077RTL4",
+      "score": 0.644,
+      "escore": 0.119,
+      "dscore": 0.613,
+      "tscore": 0,
+      "pscore": 0
+     },
+     {
+      "string_id": "4565.A0A3B6GNU0",
+      "accession": "4565.A0A3B6GNU0",
+      "preferred_name": "A0A3B6GNU0",
+      "score": 0.644,
+      "escore": 0.119,
+      "dscore": 0.613,
+      "tscore": 0,
+      "pscore": 0
+     },
+     {
+      "string_id": "4565.A0A3B5ZR14",
+      "accession": "4565.A0A3B5ZR14",
+      "preferred_name": "A0A3B5ZR14",
+      "score": 0.644,
+      "escore": 0.119,
+      "dscore": 0.613,
+      "tscore": 0,
+      "pscore": 0
+     }
+    ],
+    "upstream_version": null
+   },
    "literature": {
     "locus": "TraesCS2A02G251300",
     "organism": "triticum_aestivum",

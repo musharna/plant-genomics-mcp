@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- **`examples/arf_family/` re-run at `2fc3f92`.** Same 64 calls over the
+  same 114 genes, after the fixes for #153, #154 and #155: OrthoDB and
+  PANTHER answer for all 114 genes (27 and 51 on the last run), all 114
+  `gene_report`s render, and 46 of the 66 wheat genes get STRING partners
+  (0 before). Locus-level errors drop from 262 to 62.
+  30 of the 43 hand-logged gap rows are closed (3 by this run). The runner now blanks
+  every identifier-like token when it groups errors into auto-gap rows,
+  not just the locus and bare numbers: STRING's new error names the
+  accession it queried, and 18 identical wheat misses had split into 18
+  rows.
+
 - **`string_interactions` answers for wheat loci (#155).** STRING's alias
   table carries no IWGSC id for wheat proteins, only their UniProt accession,
   so every wheat locus was a 404. A wheat locus is now resolved through UniProt
