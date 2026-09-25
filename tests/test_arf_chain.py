@@ -322,3 +322,32 @@ def test_auto_gap_rows_live_in_their_own_file():
     assert all(row["auto"] is True for row in auto)
     hand = [json.loads(line) for line in GAPS.read_text().splitlines()]
     assert all(row["auto"] is False for row in hand)
+
+
+def test_error_class_groups_one_failure_across_loci_by_its_wording() -> None:
+    """An auto-gap row is one kind of failure, whatever per-locus ids its
+    message carries. #155's STRING error names the UniProt accession it
+    queried, which differs per locus; blanking only the locus and bare
+    numbers split 18 identical wheat misses into 18 rows. Positive control in
+    the same test: failures worded differently stay apart."""
+    miss = (
+        "[NotFoundError] STRING has no protein for {l} in triticum_aestivum "
+        "(queried as {a}): STRING /api/json/interaction_partners → HTTP 404"
+    )
+    a = run_dossier.error_class(
+        miss.format(l="TraesCS2A02G309300", a="A0A3B6B034"), "TraesCS2A02G309300"
+    )
+    b = run_dossier.error_class(
+        miss.format(l="TraesCS6D02G127600", a="A0A3B6QEX9"), "TraesCS6D02G127600"
+    )
+    assert a == b, (a, b)
+    no_partners = run_dossier.error_class(
+        "[NotFoundError] STRING: no interaction partners for TraesCS2D02G577800 "
+        "(queried as A0A3B6DPF9)",
+        "TraesCS2D02G577800",
+    )
+    assert no_partners != a
+    # Release names differ by their letters, so two species' misses stay apart.
+    ath = run_dossier.error_class("ATTED-II: X is not in the Ath-u.c4-0 release", "X")
+    osa = run_dossier.error_class("ATTED-II: X is not in the Osa-u.c3-0 release", "X")
+    assert ath != osa

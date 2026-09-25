@@ -120,7 +120,9 @@ def locus_batch_args(chain_tool: str, loci: list[str], organism: str) -> dict:
 # documents as unsupported — recorded as `expected`, not as a gap.
 EXPECTED_ERROR_TAGS = ("[OrganismNotSupported]",)
 
-_DIGITS = re.compile(r"\d+")
+# A token holding a digit is an identifier or a count (HTTP 404, c4, the
+# accession a locus was queried as), never the wording of a failure.
+_ID_TOKEN = re.compile(r"[A-Za-z_]*\d[A-Za-z0-9_]*")
 
 
 def find_version(obj: object) -> str | None:
@@ -143,9 +145,11 @@ def is_expected(error: str | None) -> bool:
 
 
 def error_class(error: str, locus: str) -> str:
-    """The error text with the locus and every number blanked, so the same
-    failure on different loci groups into one auto-gap row."""
-    return _DIGITS.sub("N", error.replace(locus, "<locus>"))[:200]
+    """The error text with the locus and every identifier or number blanked,
+    so the same failure on different loci groups into one auto-gap row. An
+    identifier derived from the locus (#155: the UniProt accession STRING was
+    queried as) varies per locus just as the locus does."""
+    return _ID_TOKEN.sub("N", error.replace(locus, "<locus>"))[:200]
 
 
 def _walltime_guard(*_: object) -> None:
