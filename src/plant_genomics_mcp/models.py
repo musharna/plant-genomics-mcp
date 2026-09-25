@@ -1051,6 +1051,34 @@ class EntryMembers(BaseModel):
     )
 
 
+class GeneTreeMember(BaseModel):
+    """One leaf of an Ensembl Compara (plants) gene tree."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str = Field(description="Gene id as the locus tools accept it, e.g. AT1G19850")
+    protein_id: str | None = Field(default=None, description="The leaf's protein/translation id")
+    organism: str | None = Field(
+        description="Canonical organism slug; null for a species outside this server's 12"
+    )
+    species: str = Field(description="Compara's scientific name for the leaf's taxon")
+    taxid: int = Field(description="The NCBI taxid Compara tags the leaf with")
+
+
+class GeneTreeMembers(BaseModel):
+    """The member genes of one gene tree, optionally one organism's."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    gene_tree_id: str = Field(description="The tree asked about, e.g. EPlGT00940000167082")
+    target_organism: str | None = Field(description="The organism filter; null = every species")
+    total: int = total_field("members after the organism filter")
+    returned: int = Field(description=RETURNED_DESCRIPTION)
+    truncated: bool = Field(description="True when limit cut members off")
+    members: list[GeneTreeMember]
+    upstream_version: str | None = upstream_version_field("Ensembl", None)
+
+
 class OrthoDbOrthologs(BaseModel):
     """OrthoDB ortholog group + cross-species member genes for a locus.
 

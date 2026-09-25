@@ -124,6 +124,15 @@ DISPATCH_SPECS: list[Spec] = [
     Spec(
         "entry_members", uniprot, "entry_members", {"entry": "IPR010525"}, "IPR010525", _DEFAULT_ORG
     ),
+    # target_organism is a filter with no default; organism= is never forwarded
+    Spec(
+        "gene_tree_members",
+        ensembl_plants,
+        "gene_tree_members",
+        {"gene_tree_id": "EPlGT00940000167082"},
+        "EPlGT00940000167082",
+        None,
+    ),
     Spec("orthodb_orthologs", orthodb, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec("aragwas_associations", aragwas, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec("arabidopsis_natural_variation", onekg, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),

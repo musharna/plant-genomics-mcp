@@ -90,6 +90,7 @@ async def test_initialize_and_list_tools(server_params: StdioServerParameters) -
                 "get_gene_xrefs",
                 "get_sequence",
                 "go_enrichment",
+                "gene_tree_members",
                 "gramene_homologs",
                 "interpro_domains",
                 "jaspar_motif",
