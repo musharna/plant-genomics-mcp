@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-25T05:21:22Z",
- "elapsed_s": 0.8950679590052459,
+ "started_at": "2026-09-25T11:15:53Z",
+ "elapsed_s": 29.35377968300054,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.5782276149984682,
+   "elapsed_s": 12.334747247999985,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0003748809976968914,
+   "elapsed_s": 0.0003367239996805438,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.16476517499540932,
+   "elapsed_s": 17.018536255999607,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 3.5397999454289675e-05,
+   "elapsed_s": 7.833200015738839e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.315421774997958,
+   "elapsed_s": 0.26993038000000524,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 6.361999840009958e-05,
+   "elapsed_s": 9.324900020146742e-05,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.000183461990673095,
+   "elapsed_s": 0.00019438599974819226,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0009778380044735968,
+   "elapsed_s": 0.0003940409997085226,
    "result": null,
    "error": null
   }
@@ -88,18 +88,18 @@
   "markdown": "# LOC123189873 \u2014 `TraesCS2A02G380300`\n\n*Triticum aestivum* \u00b7 protein_coding \u00b7 2A:623,561,951\u2013623,564,926 (-) \u00b7 IWGSC\n\n## Protein\n**PB1 domain-containing protein**\nA0A3B6B2J8_WHEAT \u00b7 UniProtKB unreviewed (TrEMBL) \u00b7 404 aa\nUniProt: [A0A3B6B2J8](https://www.uniprot.org/uniprotkb/A0A3B6B2J8)\n\n## Protein domains\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [5\u201378]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [317\u2013402]\n- **Auxin response factor domain** (domain, interpro) [1\u201373]\n- **Auxin response factor** (family, interpro) [1\u2013396]\n- **PB1-like domain** (domain, interpro) [318\u2013398]\n- **Auxin response factor ancillary domain** (domain, pfam) [1\u201373]\n- **PB1 domain profile** (domain, profile) [318\u2013398]\n- **AUXIN RESPONSE FACTOR 4-RELATED** (family, panther) [1\u2013396]\n\n## GO annotations\n**Molecular Function**\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| A0A3B6CH15 | 0.478 |\n| A0A3B6B5Z0 | 0.478 |\n| A0A3B6DPH3 | 0.478 |\n| A0A3B6DFC3 | 0.459 |\n| A0A3B6C8K6 | 0.459 |\n| A0A3B6B084 | 0.459 |\n| A0A3B6QEG6 | 0.459 |\n| A0A3B6PNI2 | 0.459 |\n| A0A3B6NRF7 | 0.459 |\n| A0A3B6LNE6 | 0.452 |\n\n## Cross-references\n- WikiGene: 123189873\n- KNETMINER_WHEAT: TraesCS2A02G380300\n- Wheat Expression: TraesCS2A02G380300\n- NCBI gene (formerly Entrezgene): 123189873\n- Expression Atlas: TraesCS2A02G380300\n\n## Literature\n_No literature found._\n",
   "sections": {
    "annotation": {
+    "source": "IWGSC",
+    "assembly_name": "IWGSC",
     "strand": -1,
     "db_type": "core",
-    "source": "IWGSC",
-    "object_type": "Gene",
-    "canonical_transcript": "TraesCS2A02G380300.1",
     "id": "TraesCS2A02G380300",
-    "logic_name": "iwgsc_high_conf",
-    "biotype": "protein_coding",
-    "assembly_name": "IWGSC",
-    "seq_region_name": "2A",
-    "start": 623561951,
     "end": 623564926,
+    "biotype": "protein_coding",
+    "object_type": "Gene",
+    "seq_region_name": "2A",
+    "canonical_transcript": "TraesCS2A02G380300.1",
+    "start": 623561951,
+    "logic_name": "iwgsc_high_conf",
     "organism": "triticum_aestivum",
     "upstream_version": null
    },
@@ -125,59 +125,59 @@
     "count": 5,
     "xrefs": [
      {
-      "primary_id": "123189873",
-      "synonyms": [],
       "info_type": "DEPENDENT",
-      "info_text": "",
-      "dbname": "WikiGene",
-      "display_id": "LOC123189873",
       "db_display_name": "WikiGene",
+      "dbname": "WikiGene",
+      "info_text": "",
       "description": "auxin response factor 8",
-      "version": "0"
-     },
-     {
-      "description": null,
-      "db_display_name": "KNETMINER_WHEAT",
+      "primary_id": "123189873",
       "version": "0",
-      "dbname": "KNETMINER_WHEAT",
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "display_id": "TraesCS2A02G380300",
-      "synonyms": [],
-      "primary_id": "TraesCS2A02G380300"
+      "display_id": "LOC123189873",
+      "synonyms": []
      },
      {
-      "primary_id": "TraesCS2A02G380300",
-      "synonyms": [],
-      "info_type": "DEPENDENT",
       "info_text": "",
-      "dbname": "WHEATEXP_GENE",
       "display_id": "TraesCS2A02G380300",
-      "db_display_name": "Wheat Expression",
+      "synonyms": [],
       "description": null,
-      "version": "0"
+      "primary_id": "TraesCS2A02G380300",
+      "version": "0",
+      "db_display_name": "KNETMINER_WHEAT",
+      "info_type": "DEPENDENT",
+      "dbname": "KNETMINER_WHEAT"
      },
      {
+      "db_display_name": "Wheat Expression",
+      "info_type": "DEPENDENT",
+      "dbname": "WHEATEXP_GENE",
+      "info_text": "",
       "synonyms": [],
+      "display_id": "TraesCS2A02G380300",
+      "primary_id": "TraesCS2A02G380300",
+      "version": "0",
+      "description": null
+     },
+     {
+      "info_text": "",
+      "display_id": "LOC123189873",
+      "synonyms": [],
+      "description": "auxin response factor 8",
       "primary_id": "123189873",
       "version": "0",
       "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "description": "auxin response factor 8",
-      "display_id": "LOC123189873",
       "info_type": "DEPENDENT",
-      "dbname": "EntrezGene",
-      "info_text": ""
+      "dbname": "EntrezGene"
      },
      {
-      "version": "0",
-      "description": null,
-      "db_display_name": "Expression Atlas",
       "display_id": "TraesCS2A02G380300",
-      "dbname": "ArrayExpress",
-      "info_text": "",
-      "info_type": "DIRECT",
       "synonyms": [],
-      "primary_id": "TraesCS2A02G380300"
+      "description": null,
+      "version": "0",
+      "primary_id": "TraesCS2A02G380300",
+      "info_text": "",
+      "dbname": "ArrayExpress",
+      "db_display_name": "Expression Atlas",
+      "info_type": "DIRECT"
      }
     ],
     "by_db": {

@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-25T05:21:37Z",
- "elapsed_s": 3.386987438003416,
+ "started_at": "2026-09-25T11:18:18Z",
+ "elapsed_s": 20.176748466999925,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 1.8532158820016775,
+   "elapsed_s": 13.598125334000542,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0010844180069398135,
+   "elapsed_s": 0.0010162990001845174,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 1.5332196750096045,
+   "elapsed_s": 6.578152040000532,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 3.337299858685583e-05,
+   "elapsed_s": 1.4720999388373457e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "error",
-   "elapsed_s": 0.2865595640032552,
+   "elapsed_s": 0.2549234640000577,
    "result": null,
    "error": "[NotFoundError] STRING has no protein for TraesCS7D02G409700 in triticum_aestivum (queried as A0A3B6TPM7): STRING /api/json/interaction_partners \u2192 HTTP 404: [{ \"Error\" : \"not found\", \"ErrorMessage\" : \"<p>Sorry, STRING did not find a protein called 'A0A3B6TPM7' in the taxon '4565'.</p><p>Generally, STRING understands a number of different names/symbols for"
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0003414590028114617,
+   "elapsed_s": 0.0003201569998054765,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0002213039988419041,
+   "elapsed_s": 0.00011224599984416272,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00041776600119192153,
+   "elapsed_s": 0.0002857139998013736,
    "result": null,
    "error": null
   }
@@ -88,18 +88,18 @@
   "markdown": "# LOC123168439 \u2014 `TraesCS7D02G409700`\n\n*Triticum aestivum* \u00b7 protein_coding \u00b7 7D:528,133,883\u2013528,142,887 (-) \u00b7 IWGSC\n\n## Protein\n**Auxin response factor**\nA0A3B6TPM7_WHEAT \u00b7 UniProtKB unreviewed (TrEMBL) \u00b7 1082 aa\nUniProt: [A0A3B6TPM7](https://www.uniprot.org/uniprotkb/A0A3B6TPM7)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [146\u2013238]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [311\u2013382]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [145\u2013248]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [943\u20131037]\n- **B3 DNA binding domain** (domain, interpro) [146\u2013249]\n- **Auxin response factor domain** (domain, interpro) [296\u2013379]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [136\u2013276]\n- **AUX/IAA domain** (domain, interpro) [946\u20131033]\n- **Auxin response factor** (family, interpro) [39\u20131037]\n- **PB1-like domain** (domain, interpro) [948\u20131032]\n\n## GO annotations\n**Molecular Function**\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006351] DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']_\n\n## Interaction partners (STRING, top 10)\n_Unavailable \u2014 [NotFoundError] STRING has no protein for TraesCS7D02G409700 in triticum_aestivum (queried as A0A3B6TPM7): STRING /api/json/interaction_partners \u2192 HTTP 404: [{ \"Error\" : \"not found\", \"ErrorMessage\" : \"<p>Sorry, STRING did not find a protein called 'A0A3B6TPM7' in the taxon '4565'.</p><p>Generally, STRING understands a number of different names/symbols for_\n\n## Cross-references\n- UniProtKB Gene Name: A0A3B6TPM7\n- UniProtKB Gene Name: A0A3B6TVK9\n- KNETMINER_WHEAT: TraesCS7D02G409700\n- Wheat Expression: TraesCS7D02G409700\n- WikiGene: 123168439\n- NCBI gene (formerly Entrezgene): 123168439\n- Expression Atlas: TraesCS7D02G409700\n\n## Literature\n2 hits total; showing top 2.\n- **Genome-wide association study identifies genomic regions under selection for domestication and agronomic traits in intermediate wheatgrass** \u2014 Stoll H, Bajgain P, Anderson JA. (PMID:42244195; doi:10.1002/tpg2.70258)\n- **Deciphering key genomic regions controlling flag leaf size in wheat via integration of meta-QTL and in silico transcriptome assessment** \u2014 Kong B, Ma J, Zhang P, Chen T, Liu Y, Che Z, Shahinnia F, Yang D. (PMID:36658498; doi:10.1186/s12864-023-09119-5)\n",
   "sections": {
    "annotation": {
-    "source": "IWGSC",
-    "start": 528133883,
-    "logic_name": "iwgsc_high_conf",
-    "canonical_transcript": "TraesCS7D02G409700.1",
-    "assembly_name": "IWGSC",
-    "object_type": "Gene",
-    "strand": -1,
-    "seq_region_name": "7D",
+    "db_type": "core",
     "biotype": "protein_coding",
     "end": 528142887,
     "id": "TraesCS7D02G409700",
-    "db_type": "core",
+    "strand": -1,
+    "seq_region_name": "7D",
+    "logic_name": "iwgsc_high_conf",
+    "start": 528133883,
+    "source": "IWGSC",
+    "object_type": "Gene",
+    "assembly_name": "IWGSC",
+    "canonical_transcript": "TraesCS7D02G409700.1",
     "organism": "triticum_aestivum",
     "upstream_version": null
    },
@@ -125,81 +125,81 @@
     "count": 7,
     "xrefs": [
      {
+      "info_type": "DEPENDENT",
+      "description": null,
+      "display_id": "LOC123168439",
       "synonyms": [],
+      "info_text": "",
       "primary_id": "A0A3B6TPM7",
-      "db_display_name": "UniProtKB Gene Name",
-      "description": null,
-      "version": null,
-      "info_type": "DEPENDENT",
-      "info_text": "",
       "dbname": "Uniprot_gn",
-      "display_id": "LOC123168439"
+      "db_display_name": "UniProtKB Gene Name",
+      "version": null
      },
      {
-      "synonyms": [],
+      "dbname": "Uniprot_gn",
       "primary_id": "A0A3B6TVK9",
-      "description": null,
-      "db_display_name": "UniProtKB Gene Name",
       "version": null,
-      "info_text": "",
-      "dbname": "Uniprot_gn",
+      "db_display_name": "UniProtKB Gene Name",
       "info_type": "DEPENDENT",
-      "display_id": "LOC123168439"
-     },
-     {
-      "primary_id": "TraesCS7D02G409700",
       "synonyms": [],
-      "display_id": "TraesCS7D02G409700",
-      "info_text": "",
-      "dbname": "KNETMINER_WHEAT",
-      "info_type": "DEPENDENT",
-      "version": "0",
+      "display_id": "LOC123168439",
       "description": null,
-      "db_display_name": "KNETMINER_WHEAT"
+      "info_text": ""
      },
      {
+      "version": "0",
+      "db_display_name": "KNETMINER_WHEAT",
+      "dbname": "KNETMINER_WHEAT",
       "primary_id": "TraesCS7D02G409700",
-      "synonyms": [],
-      "display_id": "TraesCS7D02G409700",
       "info_type": "DEPENDENT",
       "info_text": "",
-      "dbname": "WHEATEXP_GENE",
-      "version": "0",
-      "db_display_name": "Wheat Expression",
+      "synonyms": [],
+      "display_id": "TraesCS7D02G409700",
       "description": null
      },
      {
-      "primary_id": "123168439",
+      "dbname": "WHEATEXP_GENE",
+      "primary_id": "TraesCS7D02G409700",
+      "version": "0",
+      "db_display_name": "Wheat Expression",
       "synonyms": [],
-      "info_type": "DEPENDENT",
+      "display_id": "TraesCS7D02G409700",
+      "description": null,
       "info_text": "",
-      "dbname": "WikiGene",
-      "display_id": "LOC123168439",
-      "db_display_name": "WikiGene",
-      "description": "auxin response factor 19",
-      "version": "0"
+      "info_type": "DEPENDENT"
      },
      {
-      "version": "0",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "description": "auxin response factor 19",
-      "display_id": "LOC123168439",
-      "info_type": "DEPENDENT",
       "info_text": "",
-      "dbname": "EntrezGene",
+      "display_id": "LOC123168439",
       "synonyms": [],
+      "description": "auxin response factor 19",
+      "info_type": "DEPENDENT",
+      "version": "0",
+      "db_display_name": "WikiGene",
+      "dbname": "WikiGene",
       "primary_id": "123168439"
      },
      {
-      "primary_id": "TraesCS7D02G409700",
-      "synonyms": [],
-      "display_id": "TraesCS7D02G409700",
-      "info_text": "",
-      "dbname": "ArrayExpress",
-      "info_type": "DIRECT",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
       "version": "0",
+      "primary_id": "123168439",
+      "dbname": "EntrezGene",
+      "info_text": "",
+      "description": "auxin response factor 19",
+      "synonyms": [],
+      "display_id": "LOC123168439",
+      "info_type": "DEPENDENT"
+     },
+     {
+      "dbname": "ArrayExpress",
+      "primary_id": "TraesCS7D02G409700",
+      "version": "0",
+      "db_display_name": "Expression Atlas",
+      "info_type": "DIRECT",
+      "display_id": "TraesCS7D02G409700",
+      "synonyms": [],
       "description": null,
-      "db_display_name": "Expression Atlas"
+      "info_text": ""
      }
     ],
     "by_db": {
@@ -246,11 +246,11 @@
       "title": "Genome-wide association study identifies genomic regions under selection for domestication and agronomic traits in intermediate wheatgrass.",
       "authorString": "Stoll H, Bajgain P, Anderson JA.",
       "journalTitle": "The plant genome",
-      "pubYear": "2026",
+      "pubYear": 2026,
       "firstPublicationDate": "2026-06-01",
       "citedByCount": 1,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "Intermediate wheatgrass (IWG) (Thinopyrum intermedium, Kernza) is a perennial forage grass undergoing neo-domestication as a grain crop. IWG provides numerous ecosystem services and has the potential to benefit rural communities as an alternative crop option with high market value. However, IWG has only been under development as a perennial grain crop for the past few decades and at the University of Minnesota (UMN) since 2011. Improvements in grain-related traits, market development, and agronomic management are needed for the long-term viability of IWG as a Midwestern grain crop. In this study, 225 parent genets (genetically unique individuals) from UMN IWG breeding Cycles 2, 3, 4, and 5 were cloned, planted, and evaluated for 2 years at two locations. Plants were genotyped using genotyping-by-sequencing to get 12,072 single nucleotide polymorphisms and phenotyped for key domestication and agronomic traits. A genome-wide association study (GWAS) identified 36 quantitative trait loci (QTLs) for shattering, seed size, and yield traits, which individually explained an average of 13% of the phenotypic variation. Several QTLs mapped to the same homoeologous chromosomes or regions as previously identified domestication and agronomic loci in IWG and other cereal species. Changes in allele frequencies for significant QTL across breeding cycles were examined, which identified 12 alleles under selection. Several favorable alleles remain at minor frequencies, indicating substantial potential for continued genetic improvement. Integration of GWAS hits as fixed effects within genomic selection models could enable recurrent selection schemes that strategically increase favorable allele frequencies and stack positive traits for long-term gain.",
       "web_url": "https://europepmc.org/article/PMC/PMC13238349"
      },
@@ -263,11 +263,11 @@
       "title": "Deciphering key genomic regions controlling flag leaf size in wheat via integration of meta-QTL and in silico transcriptome assessment.",
       "authorString": "Kong B, Ma J, Zhang P, Chen T, Liu Y, Che Z, Shahinnia F, Yang D.",
       "journalTitle": "BMC genomics",
-      "pubYear": "2023",
+      "pubYear": 2023,
       "firstPublicationDate": "2023-01-19",
       "citedByCount": 11,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "<h4>Background</h4>Grain yield is a complex and polygenic trait influenced by the photosynthetic source-sink relationship in wheat. The top three leaves, especially the flag leaf, are considered the major sources of photo-assimilates accumulated in the grain. Determination of significant genomic regions and candidate genes affecting flag leaf size can be used in breeding for grain yield improvement.<h4>Results</h4>With the final purpose of understanding key genomic regions for flag leaf size, a meta-analysis of 521 initial quantitative trait loci (QTLs) from 31 independent QTL mapping studies over the past decades was performed, where 333 loci eventually were refined into 64 meta-QTLs (MQTLs). The average confidence interval (CI) of these MQTLs was 5.28 times less than that of the initial QTLs. Thirty-three MQTLs overlapped the marker trait associations (MTAs) previously reported in genome-wide association studies (GWAS) for flag leaf traits in wheat. A total of 2262 candidate genes for flag leaf size, which were involved in the peroxisome, basal transcription factor, and tyrosine metabolism pathways were identified in MQTL regions by the in silico transcriptome assessment. Of these, the expression analysis of the available genes revealed that 134 genes with >\u20092 transcripts per million (TPM) were highly and specifically expressed in the leaf. These candidate genes could be critical to affect flag leaf size in wheat.<h4>Conclusions</h4>The findings will make further insight into the genetic determinants of flag leaf size and provide some reliable MQTLs and putative candidate genes for the genetic improvement of flag leaf size in wheat.",
       "web_url": "https://europepmc.org/article/PMC/PMC9854125"
      }

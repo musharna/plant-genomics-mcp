@@ -214,7 +214,7 @@ def test_every_gap_row_reaches_the_page() -> None:
     """
     hand = read_rows(render_gaps.GAPS_PATH)
     auto = read_rows(render_gaps.GAPS_AUTO_PATH)
-    assert (len(hand), len(auto)) == (43, 16)
+    assert (len(hand), len(auto)) == (43, 17)
 
     section = extract_section(render_gaps.PAGE_PATH.read_text())
     bullets = [line for line in section.splitlines() if line.startswith("- **")]

@@ -1,6 +1,6 @@
 # `locus_literature` promises a journal and returns null in all 160 hits
 
-**Filed as [#134](https://github.com/musharna/plant-genomics-mcp/issues/134) — open.** Written from the ARF family dossier in
+**Filed as [#134](https://github.com/musharna/plant-genomics-mcp/issues/134) — fixed.** The row is closed at `9054886`. Written from the ARF family dossier in
 [`examples/arf_family/`](../), re-run at server commit `052e4ec`
 (release `1.21.0`): 64 MCP calls over 114 genes x 16 tools, the family
 itself from a 1163-call enumeration through the same tools. Each section

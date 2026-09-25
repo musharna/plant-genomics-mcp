@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-25T05:21:29Z",
- "elapsed_s": 5.347689875998185,
+ "started_at": "2026-09-25T11:17:13Z",
+ "elapsed_s": 12.397919691000425,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 4.490554736999911,
+   "elapsed_s": 10.918448905000332,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0006949130038265139,
+   "elapsed_s": 0.0003689989998747478,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.8564613820053637,
+   "elapsed_s": 1.4790178610001021,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 2.75939964922145e-05,
+   "elapsed_s": 4.221699964546133e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.2915353940043133,
+   "elapsed_s": 0.2897024949998013,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.00023250999220181257,
+   "elapsed_s": 0.0002527579999878071,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00035401599598117173,
+   "elapsed_s": 0.0003776519997700234,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0003371179918758571,
+   "elapsed_s": 0.00026721099948190385,
    "result": null,
    "error": null
   }
@@ -86,18 +86,18 @@
   "markdown": "# TraesCS6A02G222300 \u2014 `TraesCS6A02G222300`\n\n*Triticum aestivum* \u00b7 protein_coding \u00b7 6A:415,905,558\u2013415,907,673 (-) \u00b7 IWGSC\n\n## Protein\n**Auxin response factor**\nA0A3B6NQU7_WHEAT \u00b7 UniProtKB unreviewed (TrEMBL) \u00b7 672 aa\nUniProt: [A0A3B6NQU7](https://www.uniprot.org/uniprotkb/A0A3B6NQU7)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [122\u2013223]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [306\u2013380]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [121\u2013225]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [608\u2013672]\n- **B3 DNA binding domain** (domain, interpro) [122\u2013225]\n- **Auxin response factor domain** (domain, interpro) [291\u2013374]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [116\u2013233]\n- **Auxin response factor** (family, interpro) [16\u2013671]\n- **B3 DNA binding domain** (domain, pfam) [123\u2013224]\n- **Auxin response factor ancillary domain** (domain, pfam) [291\u2013374]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006351] DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0007389] pattern specification process (IBA)\n- [GO:0007389] pattern specification process (IEA)\n- [GO:0009725] response to hormone (IEA)\n- [GO:0009733] response to auxin (IBA)\n- [GO:0048829] root cap development (IBA)\n- [GO:0048829] root cap development (IEA)\n- [GO:0051301] cell division (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| A0A3B6DPH3 | 0.478 |\n| A0A3B6CH15 | 0.478 |\n| A0A3B6B5Z0 | 0.478 |\n| A0A3B6C8K6 | 0.459 |\n| A0A3B6B084 | 0.459 |\n| A0A3B6NRF7 | 0.459 |\n| A0A3B6PNI2 | 0.459 |\n| A0A3B6QEG6 | 0.459 |\n| A0A3B6DFC3 | 0.459 |\n| A0A3B6RHN5 | 0.402 |\n\n## Cross-references\n- KNETMINER_WHEAT: TraesCS6A02G222300\n- Wheat Expression: TraesCS6A02G222300\n- Expression Atlas: TraesCS6A02G222300\n\n## Literature\n1 hits total; showing top 1.\n- **Stage-specific transcriptomic responses of wheat to heat, drought, and combined stress: AP2/ERF regulatory networks and functional characterization of TaEREBP1-L** \u2014 Han J, Xia J, Wang C, Wang Z, Zhao Z, Wang Z, Zhang Y. (PMID:41254527; doi:10.1186/s12870-025-07615-2)\n",
   "sections": {
    "annotation": {
+    "canonical_transcript": "TraesCS6A02G222300.1",
+    "assembly_name": "IWGSC",
     "seq_region_name": "6A",
     "logic_name": "iwgsc_high_conf",
-    "start": 415905558,
-    "canonical_transcript": "TraesCS6A02G222300.1",
-    "db_type": "core",
-    "strand": -1,
-    "assembly_name": "IWGSC",
-    "source": "IWGSC",
     "object_type": "Gene",
     "biotype": "protein_coding",
-    "id": "TraesCS6A02G222300",
+    "strand": -1,
     "end": 415907673,
+    "id": "TraesCS6A02G222300",
+    "start": 415905558,
+    "source": "IWGSC",
+    "db_type": "core",
     "organism": "triticum_aestivum",
     "upstream_version": null
    },
@@ -121,37 +121,37 @@
     "count": 3,
     "xrefs": [
      {
-      "primary_id": "TraesCS6A02G222300",
-      "synonyms": [],
-      "info_type": "DEPENDENT",
-      "dbname": "KNETMINER_WHEAT",
-      "info_text": "",
-      "display_id": "TraesCS6A02G222300",
       "db_display_name": "KNETMINER_WHEAT",
-      "description": null,
-      "version": "0"
-     },
-     {
-      "version": "0",
-      "description": null,
-      "db_display_name": "Wheat Expression",
-      "display_id": "TraesCS6A02G222300",
-      "info_text": "",
-      "dbname": "WHEATEXP_GENE",
-      "info_type": "DEPENDENT",
+      "dbname": "KNETMINER_WHEAT",
       "synonyms": [],
-      "primary_id": "TraesCS6A02G222300"
-     },
-     {
-      "dbname": "ArrayExpress",
-      "info_text": "",
-      "info_type": "DIRECT",
+      "version": "0",
+      "info_type": "DEPENDENT",
+      "primary_id": "TraesCS6A02G222300",
       "display_id": "TraesCS6A02G222300",
       "description": null,
+      "info_text": ""
+     },
+     {
+      "db_display_name": "Wheat Expression",
+      "synonyms": [],
+      "version": "0",
+      "dbname": "WHEATEXP_GENE",
+      "primary_id": "TraesCS6A02G222300",
+      "display_id": "TraesCS6A02G222300",
+      "description": null,
+      "info_type": "DEPENDENT",
+      "info_text": ""
+     },
+     {
       "db_display_name": "Expression Atlas",
       "version": "0",
+      "synonyms": [],
+      "dbname": "ArrayExpress",
+      "description": null,
       "primary_id": "TraesCS6A02G222300",
-      "synonyms": []
+      "display_id": "TraesCS6A02G222300",
+      "info_type": "DIRECT",
+      "info_text": ""
      }
     ],
     "by_db": {
@@ -298,11 +298,11 @@
       "title": "Stage-specific transcriptomic responses of wheat to heat, drought, and combined stress: AP2/ERF regulatory networks and functional characterization of TaEREBP1-L.",
       "authorString": "Han J, Xia J, Wang C, Wang Z, Zhao Z, Wang Z, Zhang Y.",
       "journalTitle": "BMC plant biology",
-      "pubYear": "2025",
+      "pubYear": 2025,
       "firstPublicationDate": "2025-11-18",
       "citedByCount": 0,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "Wheat (Triticum aestivum L.) production is increasingly constrained by drought, heat, and their combination, especially in arid regions like Xinjiang, China. While previous studies have focused on single-stress responses, the molecular mechanisms underlying wheat adaptation to combined drought and heat stress (HD) remain elusive. Here, we performed transcriptome profiling at three key spike developmental stages-Jointing Stage (JS), Stamen and Pistil Primordial Differentiation Stage (SPDS), and Tetrad Stage (TS)-under drought (DS), heat (HS), and combined HD conditions. Comparative analysis revealed that HD triggered the most extensive transcriptional reprogramming, with 3,884, 5,230, and 2,793 stage-specific upregulated genes across JS, SPDS, and TS, respectively. Notably, the overlap between HS- and HD-responsive genes was higher than that between DS and HD during early stages, indicating stress-specific transcriptional shifts. Functional enrichment highlighted pathways related to osmotic adjustment, oxidative defense, and phytohormone signaling, particularly ABA and JA biosynthesis. Among stress-responsive transcription factors, the AP2/ERF family showed prominent enrichment, with TaEREBP1-L (TraesCS5A02G215900) identified as a central regulator. Dual-luciferase reporter assays confirmed that TaEREBP1-L directly activated the promoters of ABA- and JA-pathway genes (AAO3, AOC2). Co-expression analysis further revealed its coordination with membrane transporters (e.g., ABC and MATE families), suggesting an integrative regulatory function under HD conditions. Transgenic Arabidopsis overexpressing TaEREBP1-L displayed significantly enhanced drought and heat tolerance, evidenced by increased proline content, antioxidant enzyme activity (SOD, CAT), and elevated ABA/JA levels. These results demonstrate that TaEREBP1-L confers broad-spectrum stress tolerance by orchestrating hormonal and physiological pathways. Our findings provide valuable insights into combinatorial stress adaptation and identify TaEREBP1-L as a promising target for improving wheat resilience under climate-related challenges.",
       "web_url": "https://europepmc.org/article/PMC/PMC12625192"
      }

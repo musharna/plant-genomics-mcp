@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-25T05:21:30Z",
- "elapsed_s": 0.8323278030002257,
+ "started_at": "2026-09-25T11:17:27Z",
+ "elapsed_s": 30.754340767999565,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.5271539469977142,
+   "elapsed_s": 20.602588476000165,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0005947960016783327,
+   "elapsed_s": 0.0003861250006593764,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.18758107400208246,
+   "elapsed_s": 10.15127861000019,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 0.004057701997226104,
+   "elapsed_s": 3.436800034251064e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.3000609919981798,
+   "elapsed_s": 0.27277179900011106,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 7.581200043205172e-05,
+   "elapsed_s": 7.656100024178158e-05,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0003959119931096211,
+   "elapsed_s": 0.0005577000001721899,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.008673599993926473,
+   "elapsed_s": 0.0004182390002824832,
    "result": null,
    "error": null
   }
@@ -89,17 +89,17 @@
   "sections": {
    "annotation": {
     "biotype": "protein_coding",
-    "object_type": "Gene",
-    "logic_name": "iwgsc_high_conf",
-    "canonical_transcript": "TraesCS6B02G258800.1",
-    "assembly_name": "IWGSC",
-    "seq_region_name": "6B",
-    "source": "IWGSC",
-    "db_type": "core",
-    "start": 466695618,
     "end": 466698313,
     "id": "TraesCS6B02G258800",
+    "db_type": "core",
     "strand": 1,
+    "seq_region_name": "6B",
+    "start": 466695618,
+    "logic_name": "iwgsc_high_conf",
+    "source": "IWGSC",
+    "assembly_name": "IWGSC",
+    "object_type": "Gene",
+    "canonical_transcript": "TraesCS6B02G258800.1",
     "organism": "triticum_aestivum",
     "upstream_version": null
    },
@@ -125,69 +125,69 @@
     "count": 6,
     "xrefs": [
      {
-      "info_type": "DEPENDENT",
-      "info_text": "",
+      "synonyms": [],
       "dbname": "Uniprot_gn",
-      "version": null,
-      "description": null,
-      "synonyms": [],
-      "primary_id": "A0A3B6PPA3",
       "db_display_name": "UniProtKB Gene Name",
-      "display_id": "LOC123137538"
-     },
-     {
-      "dbname": "KNETMINER_WHEAT",
       "info_text": "",
       "info_type": "DEPENDENT",
-      "version": "0",
-      "display_id": "TraesCS6B02G258800",
-      "db_display_name": "KNETMINER_WHEAT",
-      "synonyms": [],
-      "primary_id": "TraesCS6B02G258800",
-      "description": null
-     },
-     {
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "dbname": "WHEATEXP_GENE",
-      "version": "0",
+      "primary_id": "A0A3B6PPA3",
       "description": null,
-      "db_display_name": "Wheat Expression",
-      "display_id": "TraesCS6B02G258800",
+      "display_id": "LOC123137538",
+      "version": null
+     },
+     {
+      "info_type": "DEPENDENT",
       "primary_id": "TraesCS6B02G258800",
-      "synonyms": []
-     },
-     {
+      "description": null,
+      "display_id": "TraesCS6B02G258800",
       "version": "0",
-      "dbname": "WikiGene",
-      "info_type": "DEPENDENT",
-      "info_text": "",
       "synonyms": [],
-      "primary_id": "123137538",
-      "display_id": "LOC123137538",
-      "db_display_name": "WikiGene",
-      "description": "auxin response factor 8"
-     },
-     {
-      "primary_id": "123137538",
-      "synonyms": [],
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "display_id": "LOC123137538",
-      "description": "auxin response factor 8",
-      "version": "0",
-      "dbname": "EntrezGene",
-      "info_type": "DEPENDENT",
+      "dbname": "KNETMINER_WHEAT",
+      "db_display_name": "KNETMINER_WHEAT",
       "info_text": ""
      },
      {
-      "db_display_name": "Expression Atlas",
-      "display_id": "TraesCS6B02G258800",
       "synonyms": [],
+      "dbname": "WHEATEXP_GENE",
+      "info_text": "",
+      "db_display_name": "Wheat Expression",
       "primary_id": "TraesCS6B02G258800",
       "description": null,
+      "info_type": "DEPENDENT",
       "version": "0",
-      "dbname": "ArrayExpress",
+      "display_id": "TraesCS6B02G258800"
+     },
+     {
+      "info_type": "DEPENDENT",
+      "description": "auxin response factor 8",
+      "primary_id": "123137538",
+      "display_id": "LOC123137538",
+      "version": "0",
+      "dbname": "WikiGene",
+      "synonyms": [],
+      "db_display_name": "WikiGene",
+      "info_text": ""
+     },
+     {
+      "dbname": "EntrezGene",
+      "synonyms": [],
       "info_text": "",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "description": "auxin response factor 8",
+      "primary_id": "123137538",
+      "info_type": "DEPENDENT",
+      "version": "0",
+      "display_id": "LOC123137538"
+     },
+     {
+      "info_text": "",
+      "db_display_name": "Expression Atlas",
+      "dbname": "ArrayExpress",
+      "synonyms": [],
+      "version": "0",
+      "display_id": "TraesCS6B02G258800",
+      "primary_id": "TraesCS6B02G258800",
+      "description": null,
       "info_type": "DIRECT"
      }
     ],

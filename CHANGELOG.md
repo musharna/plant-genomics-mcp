@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- **`examples/arf_family/` re-run at `1.23.0` (`9054886`).** Same 64 calls
+  over the same 114 genes, against the release.
+  32 of the 43 hand-logged gap rows are closed (2 by this run): `locus_literature` hits carry one
+  type per kind of value on all 358 hits (#134), and `gene_tree_members`
+  takes the `gene_tree_id` that `gramene_homologs` hands back, 187 members
+  for the ARF tree (#130; `probe_gaps.py` now asks it). Locus-level errors
+  63 (62 on the last run); the one new error is an Ensembl read timeout on
+  the KEGG ID bridge for a locus that answered before. A first run of the
+  same commit was discarded after 45 PANTHER read timeouts; the same loci
+  answered through the same server minutes later.
+
 ## v1.23.0 — 2026-09-25
 
 **53 tools / 23 backends** — one new tool, `gene_tree_members` (#130). A minor release rather than a patch: `locus_literature` hit fields and the `gene_report` dossier when Ensembl is down change shape (the entries marked **Behaviour change** below).

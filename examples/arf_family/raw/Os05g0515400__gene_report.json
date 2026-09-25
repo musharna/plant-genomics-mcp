@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-25T05:17:08Z",
- "elapsed_s": 1.0947005829948466,
+ "started_at": "2026-09-25T11:09:52Z",
+ "elapsed_s": 17.09067880299972,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.7349588979996042,
+   "elapsed_s": 16.70585657400079,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0005062190030002967,
+   "elapsed_s": 0.00038761399991926737,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 6.39140052953735e-05,
+   "elapsed_s": 7.594199996674433e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "error",
-   "elapsed_s": 4.451299901120365e-05,
+   "elapsed_s": 4.664700009016087e-05,
    "result": null,
    "error": "[NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os05g0515400 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.35867929499363527,
+   "elapsed_s": 0.38424431400017056,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.000433569002780132,
+   "elapsed_s": 0.0004217910000079428,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00026010299916379154,
+   "elapsed_s": 0.00020723199941130588,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00327789100992959,
+   "elapsed_s": 0.0002956339994852897,
    "result": null,
    "error": null
   }
@@ -88,19 +88,19 @@
   "markdown": "# OsARF14 (UniProt: ARF14) \u2014 `Os05g0515400`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 5:25,555,850\u201325,561,791 (+) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 14**\nARFN_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 687 aa\nUniProt: [Q0DGS1](https://www.uniprot.org/uniprotkb/Q0DGS1)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [131\u2013233]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [296\u2013369]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [131\u2013235]\n- **B3 DNA binding domain** (domain, interpro) [131\u2013235]\n- **Auxin response factor domain** (domain, interpro) [282\u2013363]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [122\u2013271]\n- **Auxin response factor** (family, interpro) [19\u2013641]\n- **B3 DNA binding domain** (domain, pfam) [133\u2013234]\n- **Auxin response factor ancillary domain** (domain, pfam) [282\u2013363]\n- **B3 DNA-binding domain profile** (domain, profile) [133\u2013235]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os05g0515400 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| IAA12 | 0.91 |\n| IAA5 | 0.876 |\n| IAA19 | 0.876 |\n| IAA13 | 0.87 |\n| IAA1 | 0.867 |\n| IAA15 | 0.867 |\n| IAA16 | 0.864 |\n| IAA9 | 0.863 |\n| IAA3 | 0.86 |\n| IAA17 | 0.86 |\n\n## Cross-references\n- Expression Atlas: Os05g0515400\n\n## Literature\n2 hits total; showing top 2.\n- **Comparative transcriptome analysis of coleorhiza development in japonica and Indica rice** \u2014 Song T, Das D, Ye NH, Wang GQ, Zhu FY, Chen MX, Yang F, Zhang JH. (PMID:34736393; doi:10.1186/s12870-021-03276-z)\n- **Plant root transcriptome profiling reveals a strain-dependent response during Azospirillum-rice cooperation** \u2014 Drogue B, Sanguin H, Chamam A, Mozar M, Llauro C, Panaud O, Prigent-Combaret C, Picault N, Wisniewski-Dy\u00e9 F. (PMID:25414716; doi:10.3389/fpls.2014.00607)\n",
   "sections": {
    "annotation": {
-    "end": 25561791,
-    "logic_name": "rapdb_genes",
-    "start": 25555850,
     "biotype": "protein_coding",
+    "logic_name": "rapdb_genes",
+    "end": 25561791,
+    "canonical_transcript": "Os05t0515400-01",
+    "seq_region_name": "5",
+    "db_type": "core",
+    "start": 25555850,
+    "assembly_name": "IRGSP-1.0",
     "source": "RAP2022-09-01",
     "display_name": "OsARF14",
-    "db_type": "core",
     "id": "Os05g0515400",
-    "assembly_name": "IRGSP-1.0",
-    "seq_region_name": "5",
     "object_type": "Gene",
     "strand": 1,
-    "canonical_transcript": "Os05t0515400-01",
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -126,15 +126,15 @@
     "count": 1,
     "xrefs": [
      {
-      "synonyms": [],
       "primary_id": "Os05g0515400",
-      "version": "0",
-      "db_display_name": "Expression Atlas",
-      "description": null,
+      "synonyms": [],
       "display_id": "Os05g0515400",
-      "info_type": "DIRECT",
       "dbname": "ArrayExpress",
-      "info_text": ""
+      "info_text": "",
+      "info_type": "DIRECT",
+      "version": "0",
+      "description": null,
+      "db_display_name": "Expression Atlas"
      }
     ],
     "by_db": {
@@ -275,11 +275,11 @@
       "title": "Comparative transcriptome analysis of coleorhiza development in japonica and Indica rice.",
       "authorString": "Song T, Das D, Ye NH, Wang GQ, Zhu FY, Chen MX, Yang F, Zhang JH.",
       "journalTitle": "BMC plant biology",
-      "pubYear": "2021",
+      "pubYear": 2021,
       "firstPublicationDate": "2021-11-04",
       "citedByCount": 5,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "<h4>Background</h4>Coleorhiza hairs, are sheath-like outgrowth organs in the seeds of Poaceae family that look like root hair but develop from the coleorhiza epidermal cells during seed imbibition. The major role of coleorhiza hair in seed germination involves facilitating water uptake and nutrient supply for seed germination. However, molecular basis of coleorhiza hair development and underlying genes and metabolic pathways during seed germination are largely unknown and need to be established.<h4>Results</h4>In this study, a comparative transcriptome analysis of coleorhiza hairs from japonica and indica rice suggested that DEGs in embryo samples from seeds with embryo in air (EIA) as compared to embryo from seeds completely covered by water (CBW) were enriched in water deprivation, abscisic acid (ABA) and auxin metabolism, carbohydrate catabolism and phosphorus metabolism in coleorhiza hairs in both cultivars. Up-regulation of key metabolic genes in ABA, auxin and dehydrin and aquaporin genes may help maintain the basic development of coleorhiza hair in japonica and indica in EIA samples during both early and late stages. Additionally, DEGs involved in glutathione metabolism and carbon metabolism are upregulated while DEGs involved in amino acid and nucleotide sugar metabolism are downregulated in EIA suggesting induction of oxidative stress-alleviating genes and less priority to primary metabolism.<h4>Conclusions</h4>Taken together, results in this study could provide novel aspects about the molecular signaling that could be involved in coleorhiza hair development in different types of rice cultivars during seed germination and may give some hints for breeders to improve seed germination efficiency under moderate drought conditions.",
       "web_url": "https://europepmc.org/article/PMC/PMC8567703"
      },
@@ -292,11 +292,11 @@
       "title": "Plant root transcriptome profiling reveals a strain-dependent response during Azospirillum-rice cooperation.",
       "authorString": "Drogue B, Sanguin H, Chamam A, Mozar M, Llauro C, Panaud O, Prigent-Combaret C, Picault N, Wisniewski-Dy\u00e9 F.",
       "journalTitle": "Frontiers in plant science",
-      "pubYear": "2014",
+      "pubYear": 2014,
       "firstPublicationDate": "2014-11-06",
       "citedByCount": 39,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "Cooperation involving Plant Growth-Promoting Rhizobacteria results in improvements of plant growth and health. While pathogenic and symbiotic interactions are known to induce transcriptional changes for genes related to plant defense and development, little is known about the impact of phytostimulating rhizobacteria on plant gene expression. This study aims at identifying genes significantly regulated in rice roots upon Azospirillum inoculation, considering possible favored interaction between a strain and its original host cultivar. Genome-wide analyzes of Oryza sativa japonica cultivars Cigalon and Nipponbare were performed, by using microarrays, seven days post-inoculation with Azospirillum lipoferum 4B (isolated from Cigalon) or Azospirillum sp. B510 (isolated from Nipponbare) and compared to the respective non-inoculated condition. A total of 7384 genes were significantly regulated, which represent about 16% of total rice genes. A set of 34 genes is regulated by both Azospirillum strains in both cultivars, including a gene orthologous to PR10 of Brachypodium, and these could represent plant markers of Azospirillum-rice interactions. The results highlight a strain-dependent response of rice, with 83% of the differentially expressed genes being classified as combination-specific. Whatever the combination, most of the differentially expressed genes are involved in primary metabolism, transport, regulation of transcription and protein fate. When considering genes involved in response to stress and plant defense, it appears that strain B510, a strain displaying endophytic properties, leads to the repression of a wider set of genes than strain 4B. Individual genotypic variations could be the most important driving force of rice roots gene expression upon Azospirillum inoculation. Strain-dependent transcriptional changes observed for genes related to auxin and ethylene signaling highlight the complexity of hormone signaling networks in the Azospirillum-rice cooperation.",
       "web_url": "https://europepmc.org/article/PMC/PMC4222233"
      }

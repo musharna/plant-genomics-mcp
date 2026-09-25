@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-25T05:17:07Z",
- "elapsed_s": 1.0163658029923681,
+ "started_at": "2026-09-25T11:09:44Z",
+ "elapsed_s": 47.01653614499992,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.5530416950059589,
+   "elapsed_s": 46.72085441599938,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0007382400071946904,
+   "elapsed_s": 0.000528401000337908,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.00014295899018179625,
+   "elapsed_s": 7.37509999453323e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.012321422997047193,
+   "elapsed_s": 0.008445534000202315,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.3603212049929425,
+   "elapsed_s": 0.2949956550000934,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0007155610073823482,
+   "elapsed_s": 0.0006387260000337847,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00040809999336488545,
+   "elapsed_s": 0.00034761200004140846,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0004056449979543686,
+   "elapsed_s": 0.005431771999610646,
    "result": null,
    "error": null
   }
@@ -88,19 +88,19 @@
   "markdown": "# OsARF11 (UniProt: ARF11) \u2014 `Os04g0664400`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 4:33,888,004\u201333,894,393 (-) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 11**\nARFK_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 955 aa\nUniProt: [Q8S983](https://www.uniprot.org/uniprotkb/Q8S983)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [142\u2013243]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [306\u2013378]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [141\u2013245]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [849\u2013941]\n- **B3 DNA binding domain** (domain, interpro) [142\u2013245]\n- **Auxin response factor domain** (domain, interpro) [292\u2013373]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [133\u2013272]\n- **AUX/IAA domain** (domain, interpro) [812\u2013940]\n- **Auxin response factor** (family, interpro) [33\u2013942]\n- **PB1-like domain** (domain, interpro) [852\u2013936]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n- [GO:0009733] response to auxin (IBA)\n- [GO:0009908] flower development (IBA)\n- [GO:0009942] longitudinal axis specification (IBA)\n- [GO:0010305] leaf vascular tissue pattern formation (IBA)\n- [GO:0048364] root development (IBA)\n- [GO:0048507] meristem development (IBA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n- `osa04075` Plant hormone signal transduction - Oryza sativa japonica (Japanese rice) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| IAA13 | 0.972 |\n| IAA10 | 0.967 |\n| IAA30 | 0.942 |\n| IAA11 | 0.942 |\n| IAA5 | 0.933 |\n| IAA3 | 0.927 |\n| IAA19 | 0.925 |\n| IAA18 | 0.923 |\n| IAA17 | 0.922 |\n| IAA15 | 0.92 |\n\n## Cross-references\n- UniProtKB Gene Name: Q8S983\n- WikiGene: 4337309\n- Expression Atlas: Os04g0664400\n- NCBI gene (formerly Entrezgene): 4337309\n\n## Literature\n4 hits total; showing top 4.\n- **Evaluating the Differential Response of Transcription Factors in Diploid versus Autotetraploid Rice Leaves Subjected to Diverse Saline-Alkali Stresses** \u2014 Wang N, Wang Y, Wang C, Leng Z, Qi F, Wang S, Zhou Y, Meng W, Liu K, Zhang C, Ma J. (PMID:37372331; doi:10.3390/genes14061151)\n- **CBL-Interacting Protein Kinase OsCIPK18 Regulates the Response of Ammonium Toxicity in Rice Roots** \u2014 Sun T, Wang T, Qiang Y, Zhao G, Yang J, Zhong H, Peng X, Yang J, Li Y. (PMID:35574117; doi:10.3389/fpls.2022.863283)\n- **<i>OsARF11</i> Promotes Growth, Meristem, Seed, and Vein Formation during Rice Plant Development** \u2014 Sims K, Abedi-Samakush F, Szulc N, Macias Honti MG, Mattsson J. (PMID:33920962; doi:10.3390/ijms22084089)\n- **Identification of transcription factors potential related to brown planthopper resistance in rice via microarray expression profiling** \u2014 Wang Y, Guo H, Li H, Zhang H, Miao X. (PMID:23228240; doi:10.1186/1471-2164-13-687)\n",
   "sections": {
    "annotation": {
-    "end": 33894393,
-    "strand": -1,
-    "id": "Os04g0664400",
-    "start": 33888004,
-    "assembly_name": "IRGSP-1.0",
-    "source": "RAP2022-09-01",
     "biotype": "protein_coding",
-    "display_name": "OsARF11",
-    "seq_region_name": "4",
-    "canonical_transcript": "Os04t0664400-02",
-    "object_type": "Gene",
-    "db_type": "core",
     "logic_name": "rapdb_genes",
+    "strand": -1,
+    "seq_region_name": "4",
+    "source": "RAP2022-09-01",
+    "end": 33894393,
+    "start": 33888004,
+    "display_name": "OsARF11",
+    "db_type": "core",
+    "assembly_name": "IRGSP-1.0",
+    "object_type": "Gene",
+    "id": "Os04g0664400",
+    "canonical_transcript": "Os04t0664400-02",
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -126,48 +126,48 @@
     "count": 4,
     "xrefs": [
      {
-      "synonyms": [],
-      "info_text": "",
-      "display_id": "ARF11",
+      "dbname": "Uniprot_gn",
       "primary_id": "Q8S983",
-      "info_type": "DEPENDENT",
       "version": null,
       "db_display_name": "UniProtKB Gene Name",
+      "synonyms": [],
+      "display_id": "ARF11",
       "description": null,
-      "dbname": "Uniprot_gn"
+      "info_text": "",
+      "info_type": "DEPENDENT"
      },
      {
       "info_type": "DEPENDENT",
-      "primary_id": "4337309",
-      "dbname": "WikiGene",
-      "description": "auxin response factor 11",
-      "db_display_name": "WikiGene",
-      "version": "0",
       "synonyms": [],
       "display_id": "LOC4337309",
-      "info_text": ""
+      "description": "auxin response factor 11",
+      "info_text": "",
+      "dbname": "WikiGene",
+      "primary_id": "4337309",
+      "version": "0",
+      "db_display_name": "WikiGene"
      },
      {
-      "display_id": "Os04g0664400",
-      "info_text": "",
-      "synonyms": [],
-      "dbname": "ArrayExpress",
-      "description": null,
       "db_display_name": "Expression Atlas",
       "version": "0",
-      "info_type": "DIRECT",
-      "primary_id": "Os04g0664400"
+      "primary_id": "Os04g0664400",
+      "dbname": "ArrayExpress",
+      "info_text": "",
+      "description": null,
+      "display_id": "Os04g0664400",
+      "synonyms": [],
+      "info_type": "DIRECT"
      },
      {
+      "info_text": "",
+      "description": "auxin response factor 11",
+      "synonyms": [],
+      "display_id": "LOC4337309",
+      "info_type": "DEPENDENT",
       "db_display_name": "NCBI gene (formerly Entrezgene)",
       "version": "0",
-      "dbname": "EntrezGene",
-      "description": "auxin response factor 11",
       "primary_id": "4337309",
-      "info_type": "DEPENDENT",
-      "info_text": "",
-      "display_id": "LOC4337309",
-      "synonyms": []
+      "dbname": "EntrezGene"
      }
     ],
     "by_db": {
@@ -331,11 +331,11 @@
       "title": "Evaluating the Differential Response of Transcription Factors in Diploid versus Autotetraploid Rice Leaves Subjected to Diverse Saline-Alkali Stresses.",
       "authorString": "Wang N, Wang Y, Wang C, Leng Z, Qi F, Wang S, Zhou Y, Meng W, Liu K, Zhang C, Ma J.",
       "journalTitle": "Genes",
-      "pubYear": "2023",
+      "pubYear": 2023,
       "firstPublicationDate": "2023-05-25",
       "citedByCount": 4,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "Saline-alkali stress is a significant abiotic stress factor that impacts plant growth, development, and crop yield. Consistent with the notion that genome-wide replication events can enhance plant stress resistance, autotetraploid rice exhibited a higher level of tolerance to saline-alkali stress than its donor counterparts, which is reflected by differential gene expression between autotetraploid and diploid rice in response to salt, alkali, and saline-alkali stress. In this study, we investigated the expression of the transcription factors (TFs) in the leaf tissues of autotetraploid and diploid rice under different types of saline-alkali stress. Transcriptome analysis identified a total of 1040 genes from 55 TF families that were altered in response to these stresses, with a significantly higher number in autotetraploid rice compared to diploid rice. Contrarily, under these stresses, the number of expressed TF genes in autotetraploid rice was greater than that in diploid rice for all three types of stress. In addition to the different numbers, the differentially expressed TF genes were found to be from significantly distinct TF families between autotetraploid and diploid rice genotypes. The GO enrichment analysis unraveled that all the DEGs were distributed with differentially biological functions in rice, in particular those that were enriched in the pathways of phytohormones and salt resistance, signal transduction, and physiological and biochemical metabolism in autotetraploid rice compared to its diploid counterpart. This may provide useful guidance for studying the biological roles of polyploidization in plant resilience in response to saline-alkali stress.",
       "web_url": "https://europepmc.org/article/PMC/PMC10298515"
      },
@@ -348,11 +348,11 @@
       "title": "CBL-Interacting Protein Kinase OsCIPK18 Regulates the Response of Ammonium Toxicity in Rice Roots.",
       "authorString": "Sun T, Wang T, Qiang Y, Zhao G, Yang J, Zhong H, Peng X, Yang J, Li Y.",
       "journalTitle": "Frontiers in plant science",
-      "pubYear": "2022",
+      "pubYear": 2022,
       "firstPublicationDate": "2022-04-29",
       "citedByCount": 6,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "Ammonium (  NH 4 +   ) is one of the major nitrogen sources for plants. However, excessive ammonium can cause serious harm to the growth and development of plants, i.e., ammonium toxicity. The primary regulatory mechanisms behind ammonium toxicity are still poorly characterized. In this study, we showed that OsCIPK18, a CBL-interacting protein kinase, plays an important role in response to ammonium toxicity by comparative analysis of the physiological and whole transcriptome of the T-DNA insertion mutant (<i>cipk18</i>) and the wild-type (WT). Root biomass and length of <i>cipk18</i> are less inhibited by excess  NH 4 +   compared with WT, indicating increased resistance to ammonium toxicity. Transcriptome analysis reveals that OsCIPK18 affects the  NH 4 +   uptake by regulating the expression of OsAMT1;2 and other  NH 4 +   transporters, but does not affect ammonium assimilation. Differentially expressed genes induced by excess  NH 4 +   in WT and <i>cipk18</i> were associated with functions, such as ion transport, metabolism, cell wall formation, and phytohormones signaling, suggesting a fundamental role for OsCIPK18 in ammonium toxicity. We further identified a transcriptional regulatory network downstream of OsCIPK18 under  NH 4 +   stress that is centered on several core transcription factors. Moreover, OsCIPK18 might function as a transmitter in the auxin and abscisic acid (ABA) signaling pathways affected by excess ammonium. These data allowed us to define an OsCIPK18-regulated/dependent transcriptomic network for the response of ammonium toxicity and provide new insights into the mechanisms underlying ammonium toxicity.",
       "web_url": "https://europepmc.org/article/PMC/PMC9100847"
      },
@@ -365,11 +365,11 @@
       "title": "<i>OsARF11</i> Promotes Growth, Meristem, Seed, and Vein Formation during Rice Plant Development.",
       "authorString": "Sims K, Abedi-Samakush F, Szulc N, Macias Honti MG, Mattsson J.",
       "journalTitle": "International journal of molecular sciences",
-      "pubYear": "2021",
+      "pubYear": 2021,
       "firstPublicationDate": "2021-04-15",
       "citedByCount": 31,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "The plant hormone auxin acts as a mediator providing positional instructions in a range of developmental processes. Studies in <i>Arabidopsis thaliana</i> L. show that auxin acts in large part via activation of Auxin Response Factors (ARFs) that in turn regulate the expression of downstream genes. The rice (<i>Oryza sativa</i> L.) gene <i>OsARF11</i> is of interest because of its expression in developing rice organs and its high sequence similarity with <i>MONOPTEROS/ARF5</i>, a gene with prominent roles in <i>A. thaliana</i> development. We have assessed the phenotype of homozygous insertion mutants in the <i>OsARF11</i> gene and found that in relation to wildtype, <i>osarf11</i> seedlings produced fewer and shorter roots as well as shorter and less wide leaves. Leaves developed fewer veins and larger areoles. Mature <i>osarf11</i> plants had a reduced root system, fewer branches per panicle, fewer grains per panicle and fewer filled seeds. Mutants had a reduced sensitivity to auxin-mediated callus formation and inhibition of root elongation, and phenylboronic acid (PBA)-mediated inhibition of vein formation. Taken together, our results implicate <i>OsARF11</i> in auxin-mediated growth of multiple organs and leaf veins. <i>OsARF11</i> also appears to play a central role in the formation of lateral root, panicle branch, and grain meristems.",
       "web_url": "https://europepmc.org/article/PMC/PMC8071273"
      },
@@ -382,11 +382,11 @@
       "title": "Identification of transcription factors potential related to brown planthopper resistance in rice via microarray expression profiling.",
       "authorString": "Wang Y, Guo H, Li H, Zhang H, Miao X.",
       "journalTitle": "BMC genomics",
-      "pubYear": "2012",
+      "pubYear": 2012,
       "firstPublicationDate": "2012-12-10",
       "citedByCount": 25,
-      "isOpenAccess": "Y",
-      "hasPDF": "Y",
+      "isOpenAccess": true,
+      "hasPDF": true,
       "abstractText": "<h4>Background</h4>Brown planthopper (BPH), Nilaparvata lugens St\u00e5l, is one of the most destructive insect pests of rice. The molecular responses of plants to sucking insects resemble responses to pathogen infection. However, the molecular mechanism of BPH-resistance in rice remains unclear. Transcription factors (TF) are up-stream regulators of various genes that bind to specific DNA sequences, thereby controlling the transcription from DNA to mRNA. They are key regulators for transcriptional expression in biological processes, and are probably involved in the BPH-induced pathways in resistant rice varieties.<h4>Results</h4>We conducted a microarray experiment to analyze TF genes related to BPH resistance in a Sri Lankan rice cultivar, Rathu Heenati (RHT). We compared the expression profiles of TF genes in RHT with those of the susceptible rice cultivar Taichun Native 1 (TN1). We detected 2038 TF genes showing differential expression signals between the two rice varieties. Of these, 442 TF genes were probably related to BPH-induced resistance in RHT and TN1, and 229 may be related to constitutive resistance only in RHT. These genes showed a fold change (FC) of more than 2.0 (P<0.05). Among the 442 TF genes related to BPH-induced resistance, most of them were readily induced in TN1 than in RHT by BPH feeding, for instance, 154 TF genes were up-regulated in TN1, but only 31 TF genes were up-regulated in RHT at 24 hours after BPH infestation; 2-4 times more TF genes were induced in TN1 than in RHT by BPH. At an FC threshold of >10, there were 37 induced TF genes and 26 constitutive resistance TF genes. Of these, 13 were probably involved in BPH-induced resistance, and 8 in constitutive resistance to BPH in RHT.<h4>Conclusions</h4>We explored the molecular mechanism of resistance to BPH in rice by comparing expressions of TF genes between RHT and TN1. We speculate that the level of gene repression, especially for early TF genes, plays an important role in the defense response. The fundamental point of the resistance strategy is that plants protect themselves by reducing their metabolic level to inhibit feeding by BPH and prevent damage from water and nutrient loss. We have selected 21 TF genes related to BPH resistance for further analyses to understand the molecular responses to BPH feeding in rice.",
       "web_url": "https://europepmc.org/article/PMC/PMC3538557"
      }
