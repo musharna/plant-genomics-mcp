@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v1.24.0 — 2026-09-25
+
+**53 tools / 23 backends** — no new tool. A minor release rather than a patch: `atted_coexpression` and `gramene_homologs` change shape (**Behaviour change**), and `string_interactions` partners drop the `accession` deprecated in 1.22.0 (**Breaking**).
 
 - **`atted_coexpression` neighbours carry a score in every species.
   Behaviour change.** ATTED-II names each release's index in
