@@ -917,7 +917,9 @@ TOOLS: list[types.Tool] = [
         description=(
             "Fetch protein-protein interaction partners from STRING-DB "
             "(string-db.org). Accepts either a UniProt accession or a "
-            "locus identifier — the latter is resolved via UniProt first. "
+            "locus identifier. A locus goes to STRING's own resolver, except "
+            "for wheat, whose STRING proteins carry no locus alias: a wheat "
+            "locus is resolved via UniProt first. "
             "Defaults to arabidopsis_thaliana; pass organism= for other "
             "plant species (slug, scientific/common name, or NCBI taxid). "
             "Returns first-neighbor partners with the combined STRING score "
