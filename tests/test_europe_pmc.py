@@ -374,3 +374,26 @@ async def test_an_empty_locus_is_refused_input_not_an_outage(httpx_mock: HTTPXMo
         # Positive control: a real locus with no papers is still an ok zero.
         result = await europe_pmc.lookup_locus(client, "AT1G01010")
     assert result["hitCount"] == 0
+
+
+def test_normalize_gives_one_type_per_kind_of_value() -> None:
+    """#134: Europe PMC sends pubYear and the Y/N flags as strings beside an
+    int citedByCount. The projection types them: a year is an int, a flag a
+    bool, an identifier (pmid) stays a string. A flag outside Y/N is refused
+    by name rather than read as either answer; a normal row in the same test
+    is the positive control."""
+    from plant_genomics_mcp.errors import PlantGenomicsError
+
+    hit = europe_pmc._normalize(_one_result())
+    assert hit["pubYear"] == 2024 and type(hit["pubYear"]) is int
+    assert hit["isOpenAccess"] is True and hit["hasPDF"] is True
+    assert hit["pmid"] == "12345678"
+    assert hit["citedByCount"] == 7
+    closed = europe_pmc._normalize(_one_result(isOpenAccess="N", hasPDF="N"))
+    assert closed["isOpenAccess"] is False and closed["hasPDF"] is False
+    absent = europe_pmc._normalize(_one_result(pubYear=None, isOpenAccess=None, hasPDF=None))
+    assert (absent["pubYear"], absent["isOpenAccess"], absent["hasPDF"]) == (None, None, None)
+    with pytest.raises(PlantGenomicsError, match="isOpenAccess.*'maybe'"):
+        europe_pmc._normalize(_one_result(isOpenAccess="maybe"))
+    with pytest.raises(PlantGenomicsError, match="pubYear.*'20x4'"):
+        europe_pmc._normalize(_one_result(pubYear="20x4"))
