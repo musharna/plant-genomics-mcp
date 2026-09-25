@@ -114,7 +114,8 @@ async def lookup_locus(
 
     Resolves ``organism`` to its PANTHER taxid (raising ``OrganismNotSupported``
     for an organism absent from PANTHER). Returns ``found=False`` when PANTHER
-    cannot map the locus to a family.
+    cannot map the locus. A mapped locus keeps ``found=True`` even when PANTHER
+    assigns it no family, so its family and subfamily fields are null.
     """
     locus = validators.assert_valid_locus(locus, backend="PANTHER")
     taxid = organisms.panther_taxid_for(organism)

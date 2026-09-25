@@ -984,18 +984,32 @@ class VepAnnotation(BaseModel):
 class PantherFamily(BaseModel):
     """PANTHER protein-family classification for a locus.
 
-    ``found=False`` (with null/empty fields) means PANTHER could not classify the
-    locus into a family — a normal outcome, not an error.
+    ``found=False`` (with null/empty fields) means PANTHER could not map the
+    locus — a normal outcome, not an error. A mapped locus (``found=True``) can
+    still carry null family and subfamily fields: PANTHER knows the gene and may
+    annotate GO terms for it, but assigns it no family (seen live 2026-09-25 for
+    an Arabidopsis mitochondrial locus).
     """
 
     model_config = ConfigDict(extra="forbid")
 
     locus: str
-    found: bool = Field(description="True if PANTHER classified the locus")
+    found: bool = Field(
+        description="True if PANTHER mapped the locus; the family fields can still be null"
+    )
     accession: str | None = Field(default=None, description="PANTHER mapped accession")
-    family_id: str | None = Field(default=None, description="PANTHER family id, e.g. PTHR12802")
+    family_id: str | None = Field(
+        default=None,
+        description="PANTHER family id, e.g. PTHR12802; null when PANTHER assigns no family",
+    )
     family_name: str | None = Field(default=None)
-    subfamily_id: str | None = Field(default=None, description="e.g. PTHR12802:SF176")
+    subfamily_id: str | None = Field(
+        default=None,
+        description=(
+            "e.g. PTHR12802:SF176; null when PANTHER assigns no subfamily, which is "
+            "PANTHER's answer, not a failed lookup"
+        ),
+    )
     subfamily_name: str | None = Field(default=None)
     go_molecular_function: list[dict[str, Any]] = Field(default_factory=list)
     go_biological_process: list[dict[str, Any]] = Field(default_factory=list)

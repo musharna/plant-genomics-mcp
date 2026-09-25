@@ -109,7 +109,7 @@ async def test_lookup_minimal_gene_no_annotations(httpx_mock: HTTPXMock) -> None
 
 @pytest.mark.asyncio
 async def test_lookup_unmapped_is_found_false(httpx_mock: HTTPXMock) -> None:
-    """A gene PANTHER can't classify (no mapped_genes.gene) → found=False."""
+    """A gene PANTHER can't map (no mapped_genes.gene) → found=False."""
     httpx_mock.add_response(url=_URL, json={"search": {"product": {}}})
     async with httpx.AsyncClient() as client:
         r = await panther.lookup_locus(client, "AT1G01060", "arabidopsis")
@@ -143,3 +143,20 @@ async def test_live_arabidopsis_family() -> None:
         r = await panther.lookup_locus(client, "AT1G01060", "arabidopsis")
     assert r["found"] is True
     assert r["family_id"].startswith("PTHR")
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_a_mapped_gene_with_no_family_is_found_with_null_family() -> None:
+    """PANTHER maps ATMG00940 and annotates GO terms but assigns no family.
+
+    The schema documents that as found=True with null family and subfamily
+    (arf dossier, unclassified-member); LHY is the classified control.
+    """
+    async with httpx.AsyncClient() as client:
+        unassigned = await panther.lookup_locus(client, "ATMG00940", "arabidopsis")
+        classified = await panther.lookup_locus(client, "AT1G01060", "arabidopsis")
+    assert unassigned["found"] is True
+    assert unassigned["go_molecular_function"], unassigned
+    assert (unassigned["family_id"], unassigned["subfamily_id"]) == (None, None), unassigned
+    assert classified["subfamily_id"].startswith(classified["family_id"] + ":SF"), classified
