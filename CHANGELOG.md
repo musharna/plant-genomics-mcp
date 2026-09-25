@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v1.23.0 — 2026-09-25
+
+**53 tools / 23 backends** — one new tool, `gene_tree_members` (#130). A minor release rather than a patch: `locus_literature` hit fields and the `gene_report` dossier when Ensembl is down change shape (the entries marked **Behaviour change** below).
 
 - **New tool `gene_tree_members` (#130).** `gramene_homologs` returns a
   `gene_tree_id` on every homolog, and until now no tool took one back. The
