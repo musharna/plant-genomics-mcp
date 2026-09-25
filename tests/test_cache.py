@@ -116,6 +116,41 @@ def test_make_key_distinguishes_method_and_body() -> None:
     assert k_b1 == k_b2
 
 
+def test_make_key_keys_on_every_param_name_and_body_value() -> None:
+    """Two calls that differ only in a param NAME, or only in a body VALUE,
+    are different requests and must not share an entry (#96: mutants that
+    dropped the names or the body survived, since the test above only
+    compares a body against no body). Positive control: the same call twice
+    is one key."""
+    key = cache.make_key
+    assert key("GET", "https://x", "/p", params={"a": 1}) != key(
+        "GET", "https://x", "/p", params={"b": 1}
+    )
+    assert key("POST", "https://x", "/p", body={"q": 1}) != key(
+        "POST", "https://x", "/p", body={"q": 2}
+    )
+    assert key("POST", "https://x", "/p", body={"q": 1}) == key(
+        "POST", "https://x", "/p", body={"q": 1}
+    )
+    assert key("GET", "https://x", "/p") == "GET|https://x|/p"
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"), [(None, 7), ("", 7), ("42", 42), ("-3", -3), ("ten", 7)]
+)
+def test_env_int_reads_an_integer_and_falls_back_on_anything_else(
+    monkeypatch: pytest.MonkeyPatch, raw: str | None, expected: int
+) -> None:
+    """The TTL and size knobs are read once at import, so only a direct call
+    runs `_env_int` under a mutant (#96: 7 survivors). The parametrization
+    carries its own positive control: "42" must be read, not defaulted."""
+    if raw is None:
+        monkeypatch.delenv("PGMCP_TEST_KNOB", raising=False)
+    else:
+        monkeypatch.setenv("PGMCP_TEST_KNOB", raw)
+    assert cache._env_int("PGMCP_TEST_KNOB", 7) == expected
+
+
 def test_make_key_param_value_with_separators_no_collision() -> None:
     """audit P6: a param value containing the old hand-join separators must not
     alias a different param set. ``{"x": "1&y=2"}`` and ``{"x": "1", "y": "2"}``
@@ -238,4 +273,31 @@ def test_negative_sentinel_expires_like_any_other_entry() -> None:
     c = cache.TTLCache(default_ttl=0.01)
     c.set("k", cache.NEGATIVE)
     time.sleep(0.02)
+    assert c.get("k") is None
+
+
+def test_counters_count_every_hit_and_every_miss() -> None:
+    """Two misses are 2, not 1 (#96: ``+= 1`` -> ``= 1`` survived on both
+    miss paths and on hits, since every test stopped at one of each)."""
+    c = cache.TTLCache(default_ttl=600)
+    c.get("absent")
+    c.get("absent")
+    c.set("gone", 1, ttl=-1)
+    c.get("gone")
+    c.set("k", 1)
+    c.get("k")
+    c.get("k")
+    assert c.stats() == {"hits": 2, "misses": 3, "size": 1}
+
+
+def test_an_entry_is_expired_at_its_expiry_instant(monkeypatch: pytest.MonkeyPatch) -> None:
+    """``expires_at <= now`` is a miss; a hair before is a hit (survivor:
+    ``<`` served an entry at the instant its TTL ran out)."""
+    now = [100.0]
+    monkeypatch.setattr(cache.time, "monotonic", lambda: now[0])
+    c = cache.TTLCache()
+    c.set("k", "v", ttl=10)
+    now[0] = 109.5
+    assert c.get("k") == "v"
+    now[0] = 110.0
     assert c.get("k") is None

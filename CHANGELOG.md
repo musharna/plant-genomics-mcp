@@ -19,6 +19,19 @@
   `PlantGenomicsError` naming the value, rather than being passed through
   or read as either answer. Live, 103 hits over 5 loci all converted.
 
+- **Shared core: 168 surviving mutants down to 21 (#96).** A bounded pass
+  over `_http`, `organisms` and `cache`, the code every backend runs
+  through. New tests read back what each path actually produces: every
+  field of a "backend has no ID" error, the exact text of the retry and
+  challenge-page errors, cursors at every encoded length, cache counters
+  and the expiry instant. Two kinds of code no test could reach are now
+  covered: code that runs only at import (the alias index, the cache knobs)
+  is called directly, and branches no current organism takes are driven
+  through a shadowed record. Four unreachable lines in `request_with_retry`
+  (raises for 429 and 5xx, which are always retried first) are deleted. No
+  behaviour changes. The 21 left are equivalent mutants (header-name case,
+  values a later check overrides) and are listed in the PR.
+
 - **`examples/arf_family/` re-run at `2fc3f92`.** Same 64 calls over the
   same 114 genes, after the fixes for #153, #154 and #155: OrthoDB and
   PANTHER answer for all 114 genes (27 and 51 on the last run), all 114
