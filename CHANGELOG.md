@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **New tool `gene_tree_members` (#130).** `gramene_homologs` returns a
+  `gene_tree_id` on every homolog, and until now no tool took one back. The
+  new tool lists a tree's member genes from Ensembl Compara (plants): locus,
+  protein id, species, taxid and organism. `target_organism` keeps one
+  organism's members. Barley is matched on the subspecies taxid 112509 that
+  Compara tags its leaves with, and tomato's wire prefix `gene-` is stripped
+  from its loci. An unknown tree is a not-found error. Live, the ARF tree
+  `EPlGT00940000167082` has 187 members, and all 12 organisms are found. 53 tools.
+
 - **`locus_literature` hits carry one type per kind of value (#134).
   Behaviour change.** `pubYear` is now an int (was the string `"2024"`),
   and `isOpenAccess` and `hasPDF` are booleans (were `"Y"` / `"N"`).

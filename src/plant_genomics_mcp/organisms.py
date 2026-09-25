@@ -66,6 +66,11 @@ class OrganismRecord:
     # vulgare), not the species taxid 4513. Populated explicitly for all 12
     # (``None`` = organism absent from PANTHER supportedgenomes, so gated).
     # Verified against .../pantherdb/supportedgenomes (probed 2026-07-20).
+    compara_taxid: int | None = None
+    # Taxid Ensembl Compara (plants) tags this organism's gene-tree leaves
+    # with, when it differs from ``ncbi_taxid``. ``None`` = the same. Barley's
+    # leaves carry the subspecies 112509, not 4513 (live genetree
+    # EPlGT00940000167082, probed 2026-09-25). Used by ``gene_tree_members``.
     aliases: tuple[str, ...] = field(default_factory=tuple)
 
 
@@ -220,6 +225,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         gprofiler_id="hvulgare",  # g:Profiler taxid 112509; species taxid 4513 is not a g:Profiler org
         plantcyc_orgid="BARLEY",
         panther_taxid=112509,  # subspecies taxid — barley absent under species 4513
+        compara_taxid=112509,  # Compara gene-tree leaves use the subspecies too
         aliases=("h. vulgare",),
     ),
     "vitis_vinifera": OrganismRecord(
@@ -463,6 +469,23 @@ def plantcyc_orgid_for(query: str | int) -> str:
             supported=_supported_for("plantcyc_orgid"),
         )
     return record.plantcyc_orgid
+
+
+def compara_taxid_for(query: str | int) -> int:
+    """The taxid Ensembl Compara gene trees tag this organism's leaves with."""
+    record = resolve(query)
+    return record.compara_taxid or record.ncbi_taxid
+
+
+def by_compara_taxid(taxid: int) -> OrganismRecord | None:
+    """The organism whose Compara leaves carry ``taxid``, or None if unlisted.
+
+    Exact match only: rice Indica (39946) is not ``oryza_sativa`` (39947).
+    """
+    for record in ORGANISMS.values():
+        if (record.compara_taxid or record.ncbi_taxid) == taxid:
+            return record
+    return None
 
 
 def ncbi_taxid_for(query: str | int) -> int:

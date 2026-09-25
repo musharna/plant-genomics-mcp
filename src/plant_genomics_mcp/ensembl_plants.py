@@ -56,6 +56,7 @@ async def _get(
     client: httpx.AsyncClient,
     path: str,
     params: dict[str, Any] | None = None,
+    not_found_400_pattern: re.Pattern[str] = NOT_FOUND_400_RE,
 ) -> Any:
     """GET an Ensembl REST endpoint with retry on 429/5xx.
 
@@ -72,7 +73,7 @@ async def _get(
         headers={"Accept": "application/json"},
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
-        not_found_400_pattern=NOT_FOUND_400_RE,
+        not_found_400_pattern=not_found_400_pattern,
     )
 
 
@@ -294,4 +295,91 @@ async def region_query(
         "feature": feature,
         "count": len(raw),
         "features": raw,
+    }
+
+
+GENE_TREE_ID_RE = re.compile(r"^EPlGT\d{14}$")
+# An unknown tree is `400 {"error":"No GeneTree found for ID ..."}` (live,
+# 2026-09-25): no "not found" in it, so the module pattern misses it.
+_GENE_TREE_NOT_FOUND_RE = re.compile(r"No GeneTree found|\bnot found\b", re.IGNORECASE)
+GENE_TREE_MEMBERS_DEFAULT_LIMIT = 100
+GENE_TREE_MEMBERS_MAX_LIMIT = 1000
+
+
+def _gene_tree_leaves(tree: dict[str, Any]) -> list[dict[str, Any]]:
+    """Every leaf of a genetree node, at any depth (iterative: trees run deep)."""
+    leaves: list[dict[str, Any]] = []
+    stack = [tree]
+    while stack:
+        node = stack.pop()
+        children = node.get("children")
+        if children:
+            stack.extend(children)
+        else:
+            leaves.append(node)
+    return leaves
+
+
+def _gene_tree_member(leaf: dict[str, Any], gene_tree_id: str) -> dict[str, Any]:
+    try:
+        gene = leaf["id"]["accession"]
+        taxid = leaf["taxonomy"]["id"]
+        species = leaf["taxonomy"]["scientific_name"]
+    except (KeyError, TypeError) as exc:
+        raise PlantGenomicsError(
+            f"Ensembl genetree {gene_tree_id}: leaf without gene id or taxonomy ({exc!r}): {leaf!r}"
+        ) from exc
+    record = organisms.by_compara_taxid(taxid)
+    prefix = (record.ensembl_id_prefix or "") if record else ""
+    proteins = (leaf.get("sequence") or {}).get("id") or []
+    return {
+        "locus": gene.removeprefix(prefix) if prefix else gene,
+        "protein_id": proteins[0]["accession"] if proteins else None,
+        "organism": record.canonical if record else None,
+        "species": species,
+        "taxid": taxid,
+    }
+
+
+async def gene_tree_members(
+    client: httpx.AsyncClient,
+    gene_tree_id: str,
+    target_organism: str | int | None = None,
+    limit: int = GENE_TREE_MEMBERS_DEFAULT_LIMIT,
+) -> dict[str, Any]:
+    """The member genes of an Ensembl Compara (plants) gene tree (issue #130).
+
+    ``gene_tree_id`` is the ``EPlGT...`` id ``gramene_homologs`` returns.
+    ``target_organism=None`` lists every species in the tree; otherwise only the
+    leaves Compara tags with that organism's taxid. Members are sorted by
+    species then locus; ``total`` counts them before ``limit`` cuts.
+    """
+    if not isinstance(gene_tree_id, str) or not GENE_TREE_ID_RE.match(gene_tree_id):
+        raise NotFoundError(f"invalid gene_tree_id {gene_tree_id!r}: expected EPlGT + 14 digits")
+    if not 1 <= limit <= GENE_TREE_MEMBERS_MAX_LIMIT:
+        raise ValueError(f"limit must be in 1..{GENE_TREE_MEMBERS_MAX_LIMIT}, got {limit}")
+    wanted = organisms.resolve(target_organism) if target_organism is not None else None
+    raw = await _get(
+        client,
+        f"/genetree/id/{gene_tree_id}",
+        params={"compara": "plants", "aligned": 0, "sequence": "none"},
+        not_found_400_pattern=_GENE_TREE_NOT_FOUND_RE,
+    )
+    tree = raw.get("tree") if isinstance(raw, dict) else None
+    if not isinstance(tree, dict):
+        raise PlantGenomicsError(
+            f"Ensembl genetree {gene_tree_id} returned no tree: {type(raw).__name__}"
+        )
+    members = [_gene_tree_member(leaf, gene_tree_id) for leaf in _gene_tree_leaves(tree)]
+    if wanted is not None:
+        members = [m for m in members if m["organism"] == wanted.canonical]
+    members.sort(key=lambda m: (m["species"], m["locus"]))
+    return {
+        "gene_tree_id": gene_tree_id,
+        "target_organism": wanted.canonical if wanted else None,
+        "total": len(members),
+        "returned": min(len(members), limit),
+        "truncated": len(members) > limit,
+        "members": members[:limit],
+        "upstream_version": None,
     }

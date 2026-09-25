@@ -16,6 +16,7 @@ synthesis tools that compose the live backends:
   - ``go_enrichment``                     — g:Profiler GO+KEGG over-representation over a gene LIST (live)
   - ``blast_sequence``                    — NCBI BLAST URLAPI (live, async Put/Get polling)
   - ``gramene_homologs``                  — Gramene v69 homology (live, ortholog/paralog + gene_tree_id)
+  - ``gene_tree_members``                 — every gene in a gene_tree_id, optionally one organism's (live, Ensembl Compara)
   - ``kegg_pathways``                     — KEGG pathway memberships (live, multi-organism via ``organism=``)
   - ``string_interactions``               — STRING-DB first-neighbor partners (live, per-channel scores)
   - ``atted_coexpression``                — ATTED-II Ath-u.c4-0 coexpression (live, z-scores)
@@ -135,6 +136,7 @@ from plant_genomics_mcp.models import (
     ExperimentalInteractions,
     ExperimentalStructures,
     GeneRifs,
+    GeneTreeMembers,
     GeneXrefs,
     GoEnrichmentResult,
     GrameneHomologs,
@@ -1453,6 +1455,47 @@ TOOLS: list[types.Tool] = [
         _meta=_EDAM,
     ),
     types.Tool(
+        name="gene_tree_members",
+        title="Gene Tree Members",
+        description=(
+            "List the member genes of an Ensembl Compara (plants) gene tree — "
+            "the gene_tree_id that gramene_homologs returns on every homolog "
+            "(rest.ensembl.org /genetree; free, no key). Each member gives the "
+            "locus (the id the locus-keyed tools accept), protein_id, species "
+            "and taxid, and organism (the canonical slug, or null for a species "
+            "outside this server's 12). target_organism= keeps one organism's "
+            "members; "
+            "omit it for every species. total counts members before limit; "
+            "truncated=true when limit cut some off. An unknown tree id is a "
+            "not-found error."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "gene_tree_id": {
+                    "type": "string",
+                    "pattern": "^EPlGT\\d{14}$",
+                    "description": "e.g. EPlGT00940000167082 (from gramene_homologs)",
+                },
+                "target_organism": {
+                    "type": ["string", "integer"],
+                    "description": "Keep one organism's members — canonical slug, scientific or common name, or NCBI taxid. Omit for every species.",
+                },
+                "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000,
+                    "default": 100,
+                },
+            },
+            "required": ["gene_tree_id"],
+            "additionalProperties": False,
+        },
+        output_schema=GeneTreeMembers.model_json_schema(),
+        annotations=_READ_ONLY,
+        _meta=_EDAM,
+    ),
+    types.Tool(
         name="orthodb_orthologs",
         title="OrthoDB: Orthologs",
         description=(
@@ -2604,6 +2647,13 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     reviewed_only=args.get("reviewed_only", True),
                     page_size=args.get("page_size", uniprot.ENTRY_MEMBERS_DEFAULT_PAGE),
                     cursor=args.get("cursor"),
+                )
+            case "gene_tree_members":
+                return await ensembl_plants.gene_tree_members(
+                    client,
+                    args["gene_tree_id"],
+                    target_organism=args.get("target_organism"),
+                    limit=args.get("limit", ensembl_plants.GENE_TREE_MEMBERS_DEFAULT_LIMIT),
                 )
             case "orthodb_orthologs":
                 return await orthodb.lookup_locus(
