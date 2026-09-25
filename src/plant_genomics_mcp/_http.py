@@ -437,12 +437,9 @@ async def request_with_retry(
             and not_found_400_pattern.search(resp.text)
         ):
             raise NotFoundError(f"{service} → HTTP 400 (not found): {resp.text[:200]}")
-        if resp.status_code == 429:
-            raise RateLimitError(f"{service} rate-limited (HTTP 429): {resp.text[:200]}")
-        if resp.status_code in (500, 502, 503, 504):
-            raise UpstreamUnavailableError(
-                f"{service} → HTTP {resp.status_code}: {resp.text[:200]}"
-            )
+        # 429 and 5xx never get here: they are _RETRYABLE_STATUSES, so they
+        # retry or break to the "exhausted" raises below (#96: the raises for
+        # them that stood here were unreachable, and their mutants survived).
         raise PlantGenomicsError(f"{service} → HTTP {resp.status_code}: {resp.text[:200]}")
 
     if last_exc is not None:

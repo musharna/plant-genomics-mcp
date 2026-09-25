@@ -355,6 +355,11 @@ async def test_gzipped_response_is_decoded_exactly_once() -> None:
         # And the reassembled headers must not still advertise a coding this
         # body no longer carries, or the next consumer decodes it again.
         assert "content-encoding" not in {k.lower() for k in resp.headers}
+        # Content-Length describes this decoded body, not the gzip on the wire
+        # (#96: survivors kept the wire length; the payload is ~60 bytes, its
+        # gzip ~70, so the two cannot coincide).
+        wire = len(gzip.compress(_json.dumps(payload).encode()))
+        assert resp.headers["content-length"] == str(len(resp.content)) != str(wire)
     finally:
         server.should_exit = True
         await task
@@ -722,6 +727,13 @@ async def test_backoff_doubles_from_one_second_and_stops_at_max_retries(
         "(attempt 3/4)",
         "(attempt 4/4)",
     ], notices
+    # And it names what failed (#96: the transport line said "NoneType").
+    cause = {
+        "503": "HTTP 503",
+        "transport": "ConnectError",
+        "interposed-html": "HTTP 200 but text/html (interposed page, not payload)",
+    }[failure]
+    assert notices[0].startswith(f"example: {cause}, retrying in 1.0s"), notices
 
 
 @pytest.mark.asyncio
@@ -1038,3 +1050,273 @@ async def test_a_refusal_followed_by_interposed_pages_names_the_pages(
             await _http.request_with_retry(
                 client, "GET", url, service="example", retry_403_pattern=_REFUSAL
             )
+
+
+# ---- #96 bounded pass: survivors of the nightly mutation run on _http ----
+
+
+def test_cursor_round_trips_at_every_encoded_length() -> None:
+    """Base64 without its "=" padding leaves 0, 2 or 3 characters over a
+    multiple of four; decode_cursor must re-pad each. Survivors padded with
+    ``+len % 4`` / ``% 5`` and stripped the wrong end (or nothing) of the
+    encoded token, and passed because every cursor tested had one length."""
+    residues = set()
+    for n in range(8):
+        query = {"locus": "A" * n, "page_size": 100}
+        cursor = _http.encode_cursor("tool", query, {"offset": n})
+        residues.add(len(cursor) % 4)
+        assert "=" not in cursor and re.fullmatch(r"[A-Za-z0-9_-]+", cursor), cursor
+        assert _http.decode_cursor("tool", query, cursor) == {"offset": n}
+    assert residues == {0, 2, 3}
+
+
+def test_cursor_does_not_depend_on_the_order_the_query_was_built_in() -> None:
+    """The same query built in another key order is the same cursor
+    (survivors dropped ``sort_keys=True``)."""
+    one = _http.encode_cursor("tool", {"a": 1, "b": 2}, {"o": 1})
+    two = _http.encode_cursor("tool", {"b": 2, "a": 1}, {"o": 1})
+    assert one == two
+    assert one != _http.encode_cursor("tool", {"a": 1, "b": 3}, {"o": 1})
+
+
+def test_a_cursor_that_is_not_an_object_is_refused_by_name() -> None:
+    """JSON that is not an object, or whose position is not one, is "not one
+    this server issued", never an AttributeError (survivor: ``and`` -> ``or``).
+    A cursor for another query names both queries. Positive control: the
+    issued cursor decodes."""
+    import base64
+    import json
+
+    from plant_genomics_mcp.errors import InvalidArguments
+
+    def forged(obj: object) -> str:
+        return base64.urlsafe_b64encode(json.dumps(obj).encode()).decode().rstrip("=")
+
+    for bad in ([1, 2], {"t": "tool", "q": {}, "p": [1]}, "text"):
+        with pytest.raises(InvalidArguments, match="cursor is not one this server issued"):
+            _http.decode_cursor("tool", {}, forged(bad))
+    issued = _http.encode_cursor("tool", {"locus": "AT1G01010"}, {"o": 2})
+    with pytest.raises(
+        InvalidArguments,
+        match=re.escape("continues tool {'locus': 'AT1G01010'}, not tool {'locus': 'AT2G02020'}"),
+    ):
+        _http.decode_cursor("tool", {"locus": "AT2G02020"}, issued)
+    assert _http.decode_cursor("tool", {"locus": "AT1G01010"}, issued) == {"o": 2}
+
+
+def test_upstream_limit_refuses_a_width_below_one_and_says_why() -> None:
+    with pytest.raises(ValueError, match=r"UpstreamLimit needs n >= 1, got 0"):
+        _http.UpstreamLimit(0)
+    assert _http.UpstreamLimit(1).n == 1
+
+
+@pytest.mark.asyncio
+async def test_oversized_error_names_the_knob_that_raises_the_cap(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The refusal tells the operator which env var lifts the cap, verbatim
+    (survivors re-cased or blanked the sentence)."""
+    monkeypatch.setattr(_http, "_MAX_RESPONSE_BYTES", 5)
+    httpx_mock.add_response(url="https://example.test/big", text="x" * 20)
+    httpx_mock.add_response(url="https://example.test/small", text="x" * 5)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(PlantGenomicsError) as excinfo:
+            await _http.request_with_retry(
+                client, "GET", "https://example.test/big", service="example"
+            )
+        ok = await _http.request_with_retry(
+            client, "GET", "https://example.test/small", service="example"
+        )
+    assert str(excinfo.value).startswith("example response too large: ")
+    assert str(excinfo.value).endswith(
+        "exceeds cap 5 bytes (raise PLANT_GENOMICS_MCP_MAX_RESPONSE_BYTES to allow)"
+    )
+    assert ok.text == "xxxxx"
+
+
+@pytest.mark.asyncio
+async def test_interposed_page_error_names_the_media_type_without_parameters(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """``text/html; charset=UTF-8`` is reported as ``text/html`` (survivor:
+    the ``;`` split mutated, which kept the parameter)."""
+    monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
+    url = "https://example.test/challenge"
+    for _ in range(3):
+        httpx_mock.add_response(
+            url=url,
+            text="<html>challenge</html>",
+            headers={"content-type": "text/html; charset=UTF-8"},
+        )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError, match=r"text/html, not the requested data"):
+            await _http.request_with_retry(client, "GET", url, service="example")
+
+
+def test_whitespace_before_a_bom_does_not_hide_an_interposed_page() -> None:
+    """The existing BOM test puts the BOM first; a page with whitespace
+    BEFORE the BOM is still a page (survivor: the first ``lstrip`` ->
+    ``rstrip``). Positive control: the same prefix before JSON is data."""
+    prefix = b" \n\xef\xbb\xbf"
+    page = httpx.Response(200, content=prefix + b"<html>challenge</html>")
+    data = httpx.Response(200, content=prefix + b'{"ok": true}')
+    assert _http._is_interposed_html(page) is True
+    assert _http._is_interposed_html(data) is False
+
+
+@pytest.mark.asyncio
+async def test_non_json_body_error_names_the_service(httpx_mock: HTTPXMock) -> None:
+    """The error names the service and quotes 200 characters of the body,
+    called directly and through cached_get (#96: cached_get passed
+    ``service=None`` and a cut at 201 both survived)."""
+    from plant_genomics_mcp import cache
+
+    body = "<" + "n" * 300
+    with pytest.raises(PlantGenomicsError) as direct:
+        _http.json_body(httpx.Response(200, text=body), "svc")
+    assert str(direct.value) == f"svc returned non-JSON: {body[:200]}"
+    url = "https://example.test/not-json"
+    httpx_mock.add_response(url=url, text=body)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(PlantGenomicsError) as via_cache:
+            await _http.cached_get(client, cache.TTLCache(), url, service="svc")
+    assert str(via_cache.value) == str(direct.value)
+    assert _http.json_body(httpx.Response(200, json=[1]), "svc") == [1]
+
+
+@pytest.mark.asyncio
+async def test_cached_get_sends_a_get_with_the_callers_headers(httpx_mock: HTTPXMock) -> None:
+    """Survivors sent another method, or dropped ``headers=``; the mock
+    matched any method and no test read the request back."""
+    from plant_genomics_mcp import cache
+
+    url = "https://example.test/hdr"
+    httpx_mock.add_response(url=url, json={"ok": True})
+    async with httpx.AsyncClient() as client:
+        got = await _http.cached_get(
+            client, cache.TTLCache(), url, service="svc", headers={"Accept": "application/json"}
+        )
+    (request,) = httpx_mock.get_requests()
+    assert request.method == "GET"
+    assert request.headers["accept"] == "application/json"
+    assert got == {"ok": True}
+
+
+@pytest.mark.asyncio
+async def test_cached_get_asks_a_rejected_body_exactly_once_more(httpx_mock: HTTPXMock) -> None:
+    """A body ``reject`` refuses is fetched twice in all, not three times,
+    and the error says so in full (survivors: ``range(3 ...)`` and the
+    message). Positive control: a rejection followed by a good body is
+    served and stored."""
+    from plant_genomics_mcp import cache
+
+    bad = "https://example.test/bad"
+    httpx_mock.add_response(url=bad, json={"rows": None}, is_reusable=True)
+    reject = lambda v: "rows is null" if v["rows"] is None else None  # noqa: E731
+    store = cache.TTLCache()
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError) as excinfo:
+            await _http.cached_get(client, store, bad, service="svc", reject=reject)
+        assert len(httpx_mock.get_requests(url=bad)) == 2
+        assert str(excinfo.value) == (
+            "[UpstreamUnavailableError] svc answered 200 twice without a readable "
+            "result (rows is null); this is not a count of zero"
+        )
+        good = "https://example.test/good"
+        httpx_mock.add_response(url=good, json={"rows": None})
+        httpx_mock.add_response(url=good, json={"rows": [1]})
+        assert await _http.cached_get(client, store, good, service="svc", reject=reject) == {
+            "rows": [1]
+        }
+    assert store.stats()["size"] == 1
+
+
+@pytest.mark.asyncio
+async def test_a_zero_retry_budget_asks_nothing_and_claims_no_cause(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """With ``max_retries=0`` no request is made, and the error is the plain
+    "exhausted" one: no rate limit, no refusal, no challenge page and no
+    transport error is claimed, since none was seen (#96: survivors started
+    the four ``last_*`` trackers at "" and each turned this into one of
+    those). Positive control: a budget of one asks once."""
+    url = "https://example.test/zero"
+    httpx_mock.add_response(url=url, json={"ok": True})
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError) as excinfo:
+            await _http.request_with_retry(client, "GET", url, service="svc", max_retries=0)
+        assert httpx_mock.get_requests() == []
+        assert str(excinfo.value) == (
+            "[UpstreamUnavailableError] svc exhausted 0 retries (last HTTP None)"
+        )
+        assert excinfo.value.__cause__ is None
+        ok = await _http.request_with_retry(client, "GET", url, service="svc", max_retries=1)
+    assert ok.json() == {"ok": True}
+
+
+@pytest.mark.parametrize(
+    ("status", "kwargs", "error", "head"),
+    [
+        (404, {}, NotFoundError, "svc → HTTP 404: "),
+        (
+            400,
+            {"not_found_400_pattern": re.compile("not found")},
+            NotFoundError,
+            "svc → HTTP 400 (not found): ",
+        ),
+        (418, {}, PlantGenomicsError, "svc → HTTP 418: "),
+    ],
+)
+@pytest.mark.asyncio
+async def test_a_refused_body_is_quoted_to_exactly_200_characters(
+    httpx_mock: HTTPXMock, status: int, kwargs: dict, error: type, head: str
+) -> None:
+    """Each terminal error quotes the upstream's body, cut at 200 characters
+    (#96: survivors cut at 201 or dropped the message, and every test
+    matched on a word, never on the text)."""
+    body = "not found " + "z" * 300
+    url = f"https://example.test/{status}"
+    httpx_mock.add_response(url=url, status_code=status, text=body)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(error) as excinfo:
+            await _http.request_with_retry(client, "GET", url, service="svc", **kwargs)
+    message = str(excinfo.value)
+    assert message.endswith(head + body[:200]), message
+    assert type(excinfo.value) is error
+
+
+@pytest.mark.asyncio
+async def test_exhausted_refusals_quote_the_page_to_200_characters(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
+    url = "https://example.test/refused-long"
+    page = "too high request rate " + "q" * 300
+    httpx_mock.add_response(url=url, status_code=403, text=page, is_reusable=True)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(RateLimitError) as excinfo:
+            await _http.request_with_retry(
+                client, "GET", url, service="svc", retry_403_pattern=_REFUSAL
+            )
+    assert str(excinfo.value).endswith(f"(HTTP 403: {page[:200]})"), str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_exhausted_interposed_pages_without_a_media_type_say_so_in_full(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The whole diagnosis is the product here, so it is pinned verbatim
+    (#96: survivors re-cased or blanked each clause of it)."""
+    monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
+    url = "https://example.test/bare-challenge"
+    httpx_mock.add_response(
+        url=url, content=b"<html>challenge</html>", headers={}, is_reusable=True
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError) as excinfo:
+            await _http.request_with_retry(client, "GET", url, service="svc")
+    assert str(excinfo.value) == (
+        "[UpstreamUnavailableError] svc exhausted 3 retries (HTTP 200 with no "
+        "content-type, not the requested data — the upstream or a bot-mitigation "
+        "layer in front of it served a challenge, login or maintenance page)"
+    )

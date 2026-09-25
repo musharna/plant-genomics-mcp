@@ -75,6 +75,35 @@ def test_resolve_arabidopsis_from_all_forms(query) -> None:
     assert record.canonical == "arabidopsis_thaliana"
 
 
+def test_alias_index_holds_every_form_of_every_record() -> None:
+    """The index is built once at import, so a test that only calls resolve()
+    never runs the builder under a mutant (#96: 17 survivors, including one
+    that returned None). Called fresh here; the live index is the positive
+    control that this is the builder resolve() really uses."""
+    index = organisms._build_alias_index()
+    assert index == organisms._ALIAS_INDEX
+    assert all(isinstance(k, str) for k in index)
+    assert set(index.values()) == set(organisms.ORGANISMS)
+    for canonical, record in organisms.ORGANISMS.items():
+        assert index[canonical] == canonical
+        assert index[record.scientific.lower().replace(" ", "_")] == canonical
+        for name in (*record.common, *record.aliases):
+            assert index[organisms._normalize(name)] == canonical
+    # Genus initial + species epithet, from a two-word name.
+    assert index["a_thaliana"] == "arabidopsis_thaliana"
+    assert index["o_sativa"] == "oryza_sativa"
+    assert "r_thaliana" not in index and "A_THALIANA" not in index
+
+
+def test_resolve_collapses_runs_of_spaces_and_hyphens() -> None:
+    """Three separators in a row normalize to one underscore; a single
+    replace pass would leave "oryza__sativa" and miss."""
+    assert organisms.resolve("  Oryza -  Sativa ").canonical == "oryza_sativa"
+    assert organisms._normalize("thale---cress") == "thale_cress"
+    with pytest.raises(OrganismNotFound):
+        organisms.resolve("oryza_x_sativa")
+
+
 def test_resolve_unknown_raises_organism_not_found() -> None:
     with pytest.raises(OrganismNotFound) as excinfo:
         organisms.resolve("zucchini")
@@ -105,6 +134,7 @@ def test_resolve_refuses_input_that_is_neither_a_name_nor_a_taxid(query) -> None
     with pytest.raises(OrganismNotFound) as excinfo:
         organisms.resolve(query)
     assert "arabidopsis_thaliana" in excinfo.value.supported
+    assert excinfo.value.query is query  # the error names what was asked (#96)
 
     assert organisms.resolve("arabidopsis_thaliana").canonical == "arabidopsis_thaliana"
     assert organisms.resolve(3702).canonical == "arabidopsis_thaliana"
@@ -218,6 +248,51 @@ def test_phytozome_unsupported_raises(monkeypatch: pytest.MonkeyPatch) -> None:
     assert excinfo.value.backend == "phytozome"
     assert excinfo.value.organism == "vitis_vinifera"
     assert "arabidopsis_thaliana" in excinfo.value.supported
+
+
+# Every accessor that raises on a None slot, with the backend name its error
+# carries. The name is the contract a caller reads (synthesis turns it into a
+# skip reason), so it is pinned here, not re-derived from the code (#96:
+# 51 surviving mutants renamed a backend, emptied `supported` or blanked the
+# organism, in accessors whose field no current record leaves None).
+_RAISING_ACCESSORS = [
+    (organisms.ensembl_slug_for, "ensembl_slug", "ensembl"),
+    (organisms.phytozome_int_for, "phytozome_int", "phytozome"),
+    (organisms.kegg_org_code_for, "kegg_org_code", "kegg"),
+    (organisms.atted_release_for, "atted_release", "atted"),
+    (organisms.gprofiler_id_for, "gprofiler_id", "gprofiler"),
+    (organisms.plantcyc_orgid_for, "plantcyc_orgid", "plantcyc"),
+    (organisms.panther_taxid_for, "panther_taxid", "panther"),
+    (organisms.string_taxid_for, "string_taxid", "string"),
+]
+
+
+@pytest.mark.parametrize(
+    ("accessor", "field", "backend"), _RAISING_ACCESSORS, ids=[f for _, f, _ in _RAISING_ACCESSORS]
+)
+def test_unsupported_names_the_backend_the_organism_and_every_supporter(
+    monkeypatch: pytest.MonkeyPatch, accessor, field: str, backend: str
+) -> None:
+    """A None slot raises with the backend, the organism asked about, and
+    the exact list of organisms that backend does serve. Positive control in
+    the same test: an organism with the slot filled gets its own value, asked
+    by common name so the lookup goes through resolve()."""
+    from dataclasses import replace
+
+    shadowed = dict(organisms.ORGANISMS)
+    shadowed["vitis_vinifera"] = replace(shadowed["vitis_vinifera"], **{field: None})
+    monkeypatch.setattr(organisms, "ORGANISMS", shadowed)
+    expected = sorted(c for c, r in shadowed.items() if getattr(r, field) is not None)
+    assert expected and "vitis_vinifera" not in expected
+
+    with pytest.raises(OrganismNotSupported) as excinfo:
+        accessor("grape")
+    err = excinfo.value
+    assert (err.backend, err.organism, err.supported) == (backend, "vitis_vinifera", expected)
+    assert f"backend {backend!r} has no ID for 'vitis_vinifera'" in str(err)
+
+    served = shadowed[expected[0]]
+    assert accessor(served.canonical) == getattr(served, field)
 
 
 # --- v1.1.0 T4: kegg_org_code + atted_release schema migration ---------------
