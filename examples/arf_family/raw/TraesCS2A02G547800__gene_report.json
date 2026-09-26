@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-26T02:36:26Z",
- "elapsed_s": 1.505195386998821,
+ "started_at": "2026-09-26T06:52:41Z",
+ "elapsed_s": 0.9349527989979833,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 1.0400915260033798,
+   "elapsed_s": 0.541727185001946,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0008332229990628548,
+   "elapsed_s": 0.0005236870056251064,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.464616543999,
+   "elapsed_s": 0.13320141698932275,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 2.4617998860776424e-05,
+   "elapsed_s": 2.1100000594742596e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.4032409909996204,
+   "elapsed_s": 0.38962342600279953,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.00027010399935534224,
+   "elapsed_s": 0.000286012000287883,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0002618709986563772,
+   "elapsed_s": 0.0002626759960548952,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0003619150011218153,
+   "elapsed_s": 0.00032101699616760015,
    "result": null,
    "error": null
   }
@@ -87,17 +87,17 @@
   "sections": {
    "annotation": {
     "biotype": "protein_coding",
-    "object_type": "Gene",
-    "logic_name": "iwgsc_high_conf",
-    "seq_region_name": "2A",
-    "canonical_transcript": "TraesCS2A02G547800.1",
-    "assembly_name": "IWGSC",
-    "source": "IWGSC",
-    "db_type": "core",
     "end": 755776624,
     "id": "TraesCS2A02G547800",
-    "start": 755768802,
+    "db_type": "core",
     "strand": 1,
+    "seq_region_name": "2A",
+    "assembly_name": "IWGSC",
+    "object_type": "Gene",
+    "canonical_transcript": "TraesCS2A02G547800.1",
+    "start": 755768802,
+    "logic_name": "iwgsc_high_conf",
+    "source": "IWGSC",
     "organism": "triticum_aestivum",
     "upstream_version": null
    },
@@ -122,58 +122,58 @@
     "xrefs": [
      {
       "synonyms": [],
-      "info_type": "DEPENDENT",
-      "description": null,
+      "primary_id": "TraesCS2A02G547800",
       "version": "0",
+      "description": null,
+      "db_display_name": "KNETMINER_WHEAT",
       "display_id": "TraesCS2A02G547800",
       "info_text": "",
-      "db_display_name": "KNETMINER_WHEAT",
       "dbname": "KNETMINER_WHEAT",
-      "primary_id": "TraesCS2A02G547800"
+      "info_type": "DEPENDENT"
      },
      {
-      "version": "0",
-      "display_id": "TraesCS2A02G547800",
-      "info_text": "",
+      "synonyms": [],
       "primary_id": "TraesCS2A02G547800",
       "db_display_name": "Wheat Expression",
-      "dbname": "WHEATEXP_GENE",
-      "synonyms": [],
-      "info_type": "DEPENDENT",
-      "description": null
-     },
-     {
+      "description": null,
       "version": "0",
-      "info_text": "Generated via direct",
-      "display_id": "R-TAE-5608208",
-      "db_display_name": "Plant Reactome Reaction ID",
-      "dbname": "Plant_Reactome_Reaction",
-      "primary_id": "R-TAE-5608208",
-      "synonyms": [],
-      "info_type": "DIRECT",
-      "description": "ARF inactivation by AUX/IAA"
+      "info_type": "DEPENDENT",
+      "dbname": "WHEATEXP_GENE",
+      "info_text": "",
+      "display_id": "TraesCS2A02G547800"
      },
      {
-      "description": "Auxin signalling",
-      "info_type": "DIRECT",
       "synonyms": [],
-      "dbname": "Plant_Reactome_Pathway",
-      "db_display_name": "Plant Reactome Pathway ID",
-      "primary_id": "R-TAE-5608118",
+      "primary_id": "R-TAE-5608208",
+      "description": "ARF inactivation by AUX/IAA",
+      "db_display_name": "Plant Reactome Reaction ID",
+      "version": "0",
+      "dbname": "Plant_Reactome_Reaction",
       "info_text": "Generated via direct",
+      "info_type": "DIRECT",
+      "display_id": "R-TAE-5608208"
+     },
+     {
+      "primary_id": "R-TAE-5608118",
+      "synonyms": [],
       "display_id": "R-TAE-5608118",
-      "version": "0"
+      "dbname": "Plant_Reactome_Pathway",
+      "info_text": "Generated via direct",
+      "info_type": "DIRECT",
+      "version": "0",
+      "description": "Auxin signalling",
+      "db_display_name": "Plant Reactome Pathway ID"
      },
      {
       "primary_id": "TraesCS2A02G547800",
-      "dbname": "ArrayExpress",
-      "db_display_name": "Expression Atlas",
+      "synonyms": [],
       "display_id": "TraesCS2A02G547800",
+      "dbname": "ArrayExpress",
       "info_text": "",
+      "info_type": "DIRECT",
       "version": "0",
       "description": null,
-      "info_type": "DIRECT",
-      "synonyms": []
+      "db_display_name": "Expression Atlas"
      }
     ],
     "by_db": {

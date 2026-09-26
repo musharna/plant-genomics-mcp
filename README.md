@@ -66,7 +66,7 @@ combined answer. Swap in any locus and pass `organism=` for cross-species —
 e.g. rice `Os01g0100100` (`oryza_sativa`) — and each tool maps the organism to
 that backend's own identifier.
 
-A worked 64-call run over 114 genes in three organisms, with the 58 gaps it logged (36 since closed), is in [`examples/arf_family/PAGE.md`](examples/arf_family/PAGE.md).
+A worked 64-call run over 114 genes in three organisms, with the 58 gaps it logged (37 since closed), is in [`examples/arf_family/PAGE.md`](examples/arf_family/PAGE.md).
 
 ## 🛠️ Tools
 

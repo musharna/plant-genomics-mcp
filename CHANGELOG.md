@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+- **`examples/arf_family/` re-run at `1.25.0` (`6cf5408`).** Same 64 calls
+  over the same 114 genes, against the release; every call's ok, error and
+  expected counts match the `1.24.0` run's.
+  37 of the 43 hand-logged gap rows are closed (1 by this run):
+  `ensembl_plants_paralogs` answers AT1G19850 with 24 paralogues, the 22
+  other Arabidopsis loci in `genes.tsv` among them, so a paralog closure
+  no longer stops at 6 loci. Locus-level errors 62, as on the last run.
+  A first run of the same commit was discarded after 47 of its
+  `panther_family` answers timed out, while minutes later PANTHER answered
+  the 25 rice requests, sent at once outside the server, each in under 2
+  seconds.
+
 ## v1.25.0 — 2026-09-26
 
 **54 tools / 23 backends** — one new tool, `ensembl_plants_paralogs`; no existing tool changes its output (`gramene_homologs` changes only its description).
