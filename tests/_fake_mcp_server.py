@@ -172,6 +172,9 @@ CHAIN_FAILING_TOOL = "kegg_pathways"
 # shape — so the runner's "expected, not a gap" classification is testable.
 CHAIN_UNSUPPORTED_ORGANISM = "fake_unsupported"
 _UNSUPPORTED = "[OrganismNotSupported] backend 'fake' has no ID for 'fake_unsupported'"
+# `chain` mode answers `upstream_release` with a read number, so a test can
+# tell a second read from the first one reused.
+_release_reads = 0
 
 # Keyed by locus. Shapes mirror the real interpro_domains / panther_family
 # tool payloads closely enough for `verify_genes.py` to read: `domains` (list
@@ -397,6 +400,15 @@ def main() -> None:
                     _respond(req_id, result=_error_result(_UNSUPPORTED))
                 elif name == CHAIN_FAILING_TOOL:
                     _respond(req_id, result=_error_result(f"fake chain failure for {name}"))
+                elif name == "upstream_release":
+                    global _release_reads
+                    _release_reads += 1
+                    release = {
+                        "backend": args.get("backend"),
+                        "release": "1",
+                        "read": _release_reads,
+                    }
+                    _respond(req_id, result=_text_result(release))
                 else:
                     _respond(req_id, result=_text_result({"tool": name, "args": args}))
             elif mode == "arf" and name in ("interpro_domains", "panther_family"):
