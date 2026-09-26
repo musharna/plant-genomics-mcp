@@ -1059,7 +1059,7 @@ Polish bundle — two BREAKING contract tightenings on the multi-organism resolv
 
 **Operational impact**
 
-- Docker images retag `:1.1.0` / `:1.1` / `:latest` on tag-push; Diun on the demo host auto-redeploys the hosted demo. After the redeploy, `curl -sI https://mjarnoldgt76.tail86d19d.ts.net/mcp` returns `404` (was `307` with the broken `Location`); `curl -sI https://mjarnoldgt76.tail86d19d.ts.net/mcp/` with the bearer token returns `200`/`406` per the streamable-HTTP handler.
+- Docker images retag `:1.1.0` / `:1.1` / `:latest` on tag-push; Diun on the demo host auto-redeploys the hosted demo. After the redeploy, `curl -sI https://<demo-host>/mcp` returns `404` (was `307` with the broken `Location`); `curl -sI https://<demo-host>/mcp/` with the bearer token returns `200`/`406` per the streamable-HTTP handler.
 - MCP registry metadata (short description, `mcp-name` token) unchanged — no `mcp-publisher publish` re-submit needed beyond the PyPI version bump.
 
 ## v1.0.4 — 2026-05-24
@@ -1079,7 +1079,7 @@ Internal refactor — extracts the duplicated 429/5xx-retry + `Retry-After`-cap 
 - **Migrated callers (9 modules):** `ensembl_plants.py`, `kegg.py`, `bar.py`, `atted.py`, `europe_pmc.py`, `gramene.py`, `quickgo.py`, `string_db.py`, `phytozome.py` (POST variant), `uniprot.py` (3 inline sites — `_search`, `_fetch_by_accession`, `fetch_sequence`; the latter two wrap with `try/except NotFoundError` to preserve the canonical "UniProt has no entry/FASTA for accession=X" message that several tests assert on).
 - **Test-only change:** `tests/test_ensembl_plants.py` now patches `_http.asyncio.sleep` instead of `ensembl_plants.asyncio.sleep` to intercept retry backoff (the sleep call moved into the shared helper).
 - **Verification:** full suite green (350 passed, 34 skipped — same counts as v1.0.2). Live tests gated by `PLANT_GENOMICS_MCP_LIVE=1` were not re-run; the migration is a pure code move, not a wire-protocol change.
-- **No operational impact.** Docker images `:1.0.3` / `:1.0` / `:latest` retag on merge; Diun on the demo host auto-redeploys. Behavior on the hosted demo at `https://mjarnoldgt76.tail86d19d.ts.net/mcp` is unchanged.
+- **No operational impact.** Docker images `:1.0.3` / `:1.0` / `:latest` retag on merge; Diun on the demo host auto-redeploys. Behavior on the hosted demo at `https://<demo-host>/mcp` is unchanged.
 
 ## v1.0.2 — 2026-05-23
 
@@ -1088,7 +1088,7 @@ Hot-fix — repairs the BAR backend, which was DOA in v1.0.0 and v1.0.1. The `ba
 - **`src/plant_genomics_mcp/server.py`** — add `bar,` to the import block (alphabetic position between `batch,` and `blast,`), restoring the binding the dispatcher relies on.
 - **`tests/test_bar.py`** — new regression test `test_dispatch_bar_gene_summary_resolves_bar_module` routes through `server._dispatch("bar_gene_summary", ...)` with mocked HTTPX so any future drop of the `bar,` import fails CI loudly. Module-level direct-call tests stayed green through the bug; this test pins the _dispatch path_ contract.
 - **`tests/test_organisms.py`** — move the `from plant_genomics_mcp.errors import (...)` block above the test function defs (E402 cleanup).
-- **Operational impact.** Hosted demo at `https://mjarnoldgt76.tail86d19d.ts.net/mcp` has been silently 500-ing on BAR tool calls for the v1.0.0 → v1.0.1 window (~few hours). The Docker pipeline retags `:1.0.2` / `:1.0` / `:latest`; Diun on the demo host auto-redeploys.
+- **Operational impact.** The hosted demo has been silently 500-ing on BAR tool calls for the v1.0.0 → v1.0.1 window (~few hours). The Docker pipeline retags `:1.0.2` / `:1.0` / `:latest`; Diun on the demo host auto-redeploys.
 
 ## v1.0.1 — 2026-05-23
 
@@ -1175,7 +1175,7 @@ Hosted endpoint release — no new tools or backends. Adds a public Streamable-H
 - **`GET /healthz` route** added to `server_http.build_app()` ahead of the `/mcp` mount. Returns `200 {"status":"ok","version":<__version__>}`. No new dependency, no MCP-protocol entanglement — drop-in target for Uptime Kuma, Diun, or curl-in-cron.
 - **`Dockerfile.http` + `ghcr.io/musharna/plant-genomics-mcp-http`** new image (two-stage builder + slim runtime, non-root mcp uid 10001, EXPOSE 8765, ENTRYPOINT `plant-genomics-mcp-http`). The existing `plant-genomics-mcp` stdio image is unchanged.
 - **`.github/workflows/docker.yml` publishes both images** from the same trigger via parallel `metadata-action` + `build-push-action` steps sharing the buildx GHA cache. Same tag policy on both — push to `main` → `:edge`; semver tag → `:vX.Y.Z` + `:vX.Y` + `:latest`.
-- **Hosted instance** at `https://mjarnoldgt76.tail86d19d.ts.net/mcp` (Tailscale Funnel → the demo host → Docker on `127.0.0.1:8765`). Open access — no token, no IP allowlist; upstream backends self-rate-limit. Best-effort uptime, demo-grade. README has the full `claude mcp add` recipe.
+- **Hosted instance** (Tailscale Funnel → the demo host → Docker on `127.0.0.1:8765`). Open access — no token, no IP allowlist; upstream backends self-rate-limit. Best-effort uptime, demo-grade. README has the full `claude mcp add` recipe.
 
 ## v0.8.0 — 2026-05-22
 

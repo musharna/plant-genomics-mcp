@@ -17,14 +17,10 @@ support branches. Always upgrade to the latest version.
 
 **Please do not open a public GitHub issue for security vulnerabilities.**
 
-Report privately through either channel:
-
-1. **GitHub private advisory (preferred).** Go to the repository's
-   **Security → Advisories → Report a vulnerability** page
-   (`https://github.com/musharna/plant-genomics-mcp/security/advisories/new`).
-   This opens a private advisory visible only to maintainers.
-2. **Email.** mjarnold1998@gmail.com — include "plant-genomics-mcp security"
-   in the subject.
+Report privately through a GitHub private advisory: go to the repository's
+**Security → Advisories → Report a vulnerability** page
+(`https://github.com/musharna/plant-genomics-mcp/security/advisories/new`).
+This opens a private advisory visible only to maintainers.
 
 Please include a description of the issue, affected version, reproduction
 steps, and the impact you expect. You will get an acknowledgement; once a fix

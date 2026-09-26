@@ -211,33 +211,12 @@ Clients discover them via `resources/list` and `prompts/list`.
 The HTTP transport is stateless and emits JSON responses by default —
 the right shape for registry indexers and remote hosting.
 
-### Hosted endpoint
+### Self-hosting
 
-A small **personal demo** runs at:
-
-```
-https://mjarnoldgt76.tail86d19d.ts.net/mcp
-```
-
-Intended for registry indexers, one-off evaluation, and quick
-interactive testing — **not for production workloads**. No SLA, no
-uptime commitment, URL may change without notice (single laptop on a
-residential connection).
-
-```bash
-# liveness probe
-curl https://mjarnoldgt76.tail86d19d.ts.net/healthz
-# {"status":"ok"}
-
-# connect from Claude Code
-claude mcp add --transport http plant-genomics-mcp \
-  https://mjarnoldgt76.tail86d19d.ts.net/mcp
-```
-
-For anything beyond casual evaluation, **self-host**. The HTTP transport
-is the same binary; self-hosting buys deterministic uptime, your own
-bearer-token gate (`PLANT_GENOMICS_MCP_HTTP_TOKEN`), and NCBI BLAST
-etiquette under your own contact email.
+There is no public hosted endpoint. To use the HTTP transport, run it
+yourself: it is the same binary, gated by your own bearer token
+(`PLANT_GENOMICS_MCP_HTTP_TOKEN`), with NCBI BLAST requests sent under your
+own contact email.
 
 ## ⚙️ Configuration
 
