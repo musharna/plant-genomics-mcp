@@ -10,7 +10,9 @@
   their lengths in one call (chromosome 1: 30,427,671, the length the
   enumeration's region walk read from a refusal), and
   `ensembl_region_query` answers each at a start equal to its length and
-  refuses one base past it. Locus-level errors 62, as on the last run.
+  refuses one base past it, for all 7 (`probe_gaps.py` now records those
+  14 calls in `raw/_probe_rerun.json`). Locus-level errors 62, as on the
+  last run.
 
 ## v1.26.0 — 2026-09-26
 
