@@ -166,7 +166,11 @@ async def read_releases(client: McpClient) -> dict[str, dict]:
     out: dict[str, dict] = {}
     for backend in RELEASE_BACKENDS:
         res = await client.call(RELEASE_TOOL, {"backend": backend})
-        out[backend] = res.payload if res.ok else {"ok": False, "error": res.error}
+        if res.ok and isinstance(res.payload, dict):
+            out[backend] = res.payload
+        else:
+            error = res.error or f"no JSON object in the answer: {res.payload!r}"
+            out[backend] = {"ok": False, "error": error}
     return out
 
 

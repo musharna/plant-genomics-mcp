@@ -154,7 +154,8 @@ async def test_upstream_version_is_the_release_the_answer_states(httpx_mock: HTT
         r = await panther.lookup_locus(client, "AT1G01060", "arabidopsis")
     assert (r["found"], r["upstream_version"]) == (True, "19")
 
-    for search in ({"mapped_genes": {"gene": _GENE}}, {"product": {}, "mapped_genes": {}}):
+    searches: list[dict] = [{"mapped_genes": {"gene": _GENE}}, {"product": {}, "mapped_genes": {}}]
+    for search in searches:
         panther._CACHE.clear()
         httpx_mock.add_response(url=_URL, json={"search": search})
         async with httpx.AsyncClient() as client:

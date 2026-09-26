@@ -172,7 +172,9 @@ def test_the_runner_reads_every_backend_the_live_upstream_release_offers():
 
 def test_the_release_bracket_flags_a_change_and_never_reads_a_failed_read_as_none() -> None:
     def reads(**over: dict) -> dict[str, dict]:
-        base = {b: {"backend": b, "release": "1"} for b in run_dossier.RELEASE_BACKENDS}
+        base: dict[str, dict] = {
+            b: {"backend": b, "release": "1"} for b in run_dossier.RELEASE_BACKENDS
+        }
         base["pdbe"] = {"backend": "pdbe", "release": None}
         return {**base, **over}
 
