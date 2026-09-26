@@ -111,6 +111,7 @@ async def test_initialize_and_list_tools(server_params: StdioServerParameters) -
                 "string_interactions",
                 "tair_locus_info",
                 "tf_binding_motifs",
+                "upstream_release",
                 "vep_annotate",
             }, f"got {names}"
 

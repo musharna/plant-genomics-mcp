@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+- **New tool `upstream_release`.** The release a backend's own endpoint
+  calls current, for the backends whose answers state none (their tools'
+  `upstream_version` stays null): Ensembl (`/info/eg_version`, e.g. `63`),
+  STRING (`/api/json/version`, `12.0`), QuickGO (the GO annotation load date
+  and the GO ontology date), JASPAR (the newest active release; several are
+  active at once) and KEGG (the pathway and genes last-update dates; KEGG has
+  no release number). PDBe, AraGWAS and Europe PMC publish no data release:
+  `release` is null and `reason` says why. It is a separate request, so it is
+  not proof of the release that answered any one call and is never copied into
+  `upstream_version`; read it before and after a run, and equal values mean no
+  release changed in between. Never cached. Every always-null
+  `upstream_version` description now names its `upstream_release` backend.
+- **`panther_family` reports its release.** Every PANTHER answer, mapped or
+  not, states `search.product.version` (`19`); `upstream_version` was null.
+- **`orthodb_orthologs` is pinned to OrthoDB `v12`** (was `/current/`, which
+  answers the same today), and reports `v12` as `upstream_version`. `/v11/`
+  answers with different group ids and an unknown release is refused, so the
+  pin selects the data; it moves only when `ORTHODB_RELEASE` is bumped.
+
 - **`examples/arf_family/` re-run at `1.26.0` (`75576d0`).** Same 64 calls
   over the same 114 genes, against the release; every call's ok, error and
   expected counts match the `1.25.0` run's.

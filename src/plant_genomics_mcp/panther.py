@@ -67,10 +67,33 @@ def _empty(locus: str) -> dict[str, Any]:
         "go_cellular_component": [],
         "protein_class": [],
         "pathways": [],
-        # Issue #121: uniform key; null because this backend states no release on
-        # the answering response (headers probed live 2026-09-22).
+        # Issue #121: uniform key; lookup_locus fills it from the answer's
+        # ``search.product.version`` (_release), null when the answer states none.
         "upstream_version": None,
     }
+
+
+def _release(search: dict[str, Any]) -> str | None:
+    """The PANTHER release the answer states in ``search.product.version``.
+
+    Every geneinfo answer, mapped or not, carries ``product: {source, version}``
+    (live 2026-09-26: ``{"source": "PANTHERDB", "version": 19}``). An absent
+    product or version is null (not stated); a value of any other shape raises,
+    because a release read from a payload we no longer understand is a guess.
+    """
+    product = search.get("product")
+    if product is None:
+        return None
+    if not isinstance(product, dict):
+        raise PlantGenomicsError(
+            f"PANTHER geneinfo product is {type(product).__name__}, expected an object"
+        )
+    version = product.get("version")
+    if version is None:
+        return None
+    if isinstance(version, bool) or not isinstance(version, (int, str)) or not str(version).strip():
+        raise PlantGenomicsError(f"PANTHER geneinfo product.version is unusable: {version!r}")
+    return str(version).strip()
 
 
 def _terms(block: dict[str, Any]) -> list[dict[str, Any]]:
@@ -141,10 +164,12 @@ async def lookup_locus(
         raise PlantGenomicsError(
             f"PANTHER geneinfo returned unexpected payload: {type(cached).__name__}"
         )
-    mapped = (cached.get("search") or {}).get("mapped_genes") or {}
+    search = cached.get("search") or {}
+    release = _release(search)
+    mapped = search.get("mapped_genes") or {}
     gene = mapped.get("gene")
     if isinstance(gene, list):
         gene = gene[0] if gene else None
-    if not isinstance(gene, dict):
-        return _empty(locus)
-    return _project(locus, gene)
+    result = _project(locus, gene) if isinstance(gene, dict) else _empty(locus)
+    result["upstream_version"] = release
+    return result

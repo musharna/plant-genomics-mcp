@@ -29,7 +29,9 @@ def link_field(what: str, *, optional: bool = True) -> Any:
     return Field(description=description)
 
 
-def upstream_version_field(source: str, stated_by: str | None) -> Any:
+def upstream_version_field(
+    source: str, stated_by: str | None, *, current_release: str | None = None
+) -> Any:
     """The ``upstream_version`` field every chain tool carries (issue #121).
 
     A release is reported only when the ANSWERING request or response states
@@ -39,12 +41,21 @@ def upstream_version_field(source: str, stated_by: str | None) -> Any:
     request that may describe a different release, so it is never consulted.
     ``stated_by=None`` documents a backend that states nothing (headers probed
     live 2026-09-22): the field is then always null, and a single-key pass over
-    every tool still reads it uniformly instead of finding it missing.
+    every tool still reads it uniformly instead of finding it missing. Such a
+    field must name its ``current_release`` backend: the ``upstream_release``
+    tool reports what that backend's own release endpoint says now, or why
+    there is none (gap provenance-null-rate).
     """
+    if stated_by is None and current_release is None:
+        raise TypeError(f"{source}: a field that is always null must name its upstream_release")
     how = (
         f"as stated by {stated_by}"
         if stated_by
-        else "— always null today: this backend states no release on its responses"
+        else (
+            "— always null today: this backend states no release on its responses; "
+            f"upstream_release(backend='{current_release}') reports the release its own "
+            "endpoint calls current at query time, or why there is none"
+        )
     )
     return Field(
         default=None,
@@ -113,7 +124,9 @@ class EnsemblPlantsLocus(BaseModel):
     logic_name: str | None = Field(default=None, description="Source annotation pipeline")
     source: str | None = Field(default=None)
     canonical_transcript: str | None = Field(default=None)
-    upstream_version: str | None = upstream_version_field("Ensembl Plants", None)
+    upstream_version: str | None = upstream_version_field(
+        "Ensembl Plants", None, current_release="ensembl_plants"
+    )
 
 
 class GeneXrefEntry(BaseModel):
@@ -318,7 +331,9 @@ class LocusLiterature(BaseModel):
         ),
     )
     hits: list[LiteratureHit]
-    upstream_version: str | None = upstream_version_field("Europe PMC", None)
+    upstream_version: str | None = upstream_version_field(
+        "Europe PMC", None, current_release="europe_pmc"
+    )
 
 
 class GoAnnotation(BaseModel):
@@ -379,7 +394,9 @@ class LocusGoAnnotations(BaseModel):
     by_aspect_deduped_on: Literal["goId"] = Field(
         description="The key by_aspect collapses annotations[] on: a dedup, not a truncation",
     )
-    upstream_version: str | None = upstream_version_field("QuickGO", None)
+    upstream_version: str | None = upstream_version_field(
+        "QuickGO", None, current_release="quickgo"
+    )
 
 
 class PlantOntologyAnnotation(BaseModel):
@@ -743,7 +760,7 @@ class ExperimentalStructures(BaseModel):
         default_factory=list,
         description="Best-first {pdb_id, chain_id, experimental_method, resolution, coverage, …}",
     )
-    upstream_version: str | None = upstream_version_field("PDBe", None)
+    upstream_version: str | None = upstream_version_field("PDBe", None, current_release="pdbe")
 
 
 class TfBindingMotif(BaseModel):
@@ -811,7 +828,7 @@ class TfBindingMotifs(BaseModel):
             "[{matrix_id, name, uniprot_ids}] — not this locus's motifs"
         ),
     )
-    upstream_version: str | None = upstream_version_field("JASPAR", None)
+    upstream_version: str | None = upstream_version_field("JASPAR", None, current_release="jaspar")
 
 
 class JasparMotif(TfBindingMotif):
@@ -1016,7 +1033,9 @@ class PantherFamily(BaseModel):
     go_cellular_component: list[dict[str, Any]] = Field(default_factory=list)
     protein_class: list[dict[str, Any]] = Field(default_factory=list)
     pathways: list[dict[str, Any]] = Field(default_factory=list)
-    upstream_version: str | None = upstream_version_field("PANTHER", None)
+    upstream_version: str | None = upstream_version_field(
+        "PANTHER", "the answer's search.product.version"
+    )
 
 
 class EntryMember(BaseModel):
@@ -1090,7 +1109,9 @@ class GeneTreeMembers(BaseModel):
     returned: int = Field(description=RETURNED_DESCRIPTION)
     truncated: bool = Field(description="True when limit cut members off")
     members: list[GeneTreeMember]
-    upstream_version: str | None = upstream_version_field("Ensembl", None)
+    upstream_version: str | None = upstream_version_field(
+        "Ensembl", None, current_release="ensembl_plants"
+    )
 
 
 class EnsemblParalog(BaseModel):
@@ -1137,7 +1158,9 @@ class EnsemblParalogs(BaseModel):
     truncated: bool = Field(description="True when limit cut paralogues off")
     counts_by_type: dict[str, int] = Field(description="Paralogues per type, counted before limit")
     paralogs: list[EnsemblParalog] = Field(description="Closest first (perc_id descending)")
-    upstream_version: str | None = upstream_version_field("Ensembl", None)
+    upstream_version: str | None = upstream_version_field(
+        "Ensembl", None, current_release="ensembl_plants"
+    )
 
 
 class EnsemblAssemblyRegion(BaseModel):
@@ -1175,7 +1198,35 @@ class EnsemblAssembly(BaseModel):
     regions: list[EnsemblAssemblyRegion] = Field(
         description="Karyotype regions first, in karyotype order; then the rest, longest first"
     )
-    upstream_version: str | None = upstream_version_field("Ensembl", None)
+    upstream_version: str | None = upstream_version_field(
+        "Ensembl", None, current_release="ensembl_plants"
+    )
+
+
+class UpstreamRelease(BaseModel):
+    """The release a backend's own endpoint calls current (gap provenance-null-rate)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    backend: str = Field(description="The backend asked about")
+    release: str | None = Field(
+        description=(
+            "The release its own endpoint calls current at query time — a DIFFERENT "
+            "request from any data call, so not proof of the release that answered "
+            "one. null when the backend publishes no data release (see reason)"
+        )
+    )
+    components: dict[str, str] = Field(
+        description="The release's parts by name, e.g. QuickGO annotation + go dates; {} when null"
+    )
+    endpoints: list[str] = Field(
+        description=(
+            "Full URLs of the release endpoints read, as provenance; [] when the "
+            "backend publishes none — " + LINK_NOTE
+        )
+    )
+    observed_at: str = Field(description="UTC time the endpoints were read (ISO 8601)")
+    reason: str = Field(description="What the value is, or why there is none")
 
 
 class OrthoDbOrthologs(BaseModel):
@@ -1225,7 +1276,9 @@ class OrthoDbOrthologs(BaseModel):
         default=None,
         description="Whole-group member total (pre-filter, pre-cap); present only when filtered",
     )
-    upstream_version: str | None = upstream_version_field("OrthoDB", None)
+    upstream_version: str | None = upstream_version_field(
+        "OrthoDB", "the release pinned in every request path (/v12/)"
+    )
 
 
 class AraGwasAssociations(BaseModel):
@@ -1255,7 +1308,9 @@ class AraGwasAssociations(BaseModel):
             "scale, which over_bonferroni / over_fdr / over_permutation compare score against"
         ),
     )
-    upstream_version: str | None = upstream_version_field("AraGWAS", None)
+    upstream_version: str | None = upstream_version_field(
+        "AraGWAS", None, current_release="aragwas"
+    )
 
 
 class ArabidopsisNaturalVariation(BaseModel):
@@ -1382,7 +1437,7 @@ class KeggPathways(BaseModel):
         default_factory=list,
         description="Per-pathway step-2 failures (kept inline so the call doesn't abort)",
     )
-    upstream_version: str | None = upstream_version_field("KEGG", None)
+    upstream_version: str | None = upstream_version_field("KEGG", None, current_release="kegg")
 
 
 class BarGeneSummary(BaseModel):
@@ -1627,7 +1682,7 @@ class StringInteractions(BaseModel):
     accession: str = Field(description="UniProt accession actually queried at STRING")
     organism: str = Field(description="Plant organism canonical slug, e.g. arabidopsis_thaliana")
     partners: list[StringPartner]
-    upstream_version: str | None = upstream_version_field("STRING", None)
+    upstream_version: str | None = upstream_version_field("STRING", None, current_release="string")
 
 
 class CoexNeighbor(BaseModel):

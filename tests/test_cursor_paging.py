@@ -67,9 +67,9 @@ async def test_orthodb_pages_through_the_whole_group(monkeypatch: pytest.MonkeyP
 
     async def fake(client: Any, path: str, params: dict[str, Any]) -> dict[str, Any]:
         answers: dict[str, dict[str, Any]] = {
-            "/current/search": {"data": ["G1"]},
-            "/current/group": {"data": {"id": "G1"}},
-            "/current/orthologs": {"data": [{"organism": {"name": "o"}, "genes": genes}]},
+            "/v12/search": {"data": ["G1"]},
+            "/v12/group": {"data": {"id": "G1"}},
+            "/v12/orthologs": {"data": [{"organism": {"name": "o"}, "genes": genes}]},
         }
         return answers[path]
 

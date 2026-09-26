@@ -163,6 +163,34 @@ def test_chain_arguments_match_the_live_tool_schemas():
         assert schema_violations(chain_tool, inner, schemas) == [], (chain_tool, inner)
 
 
+def test_the_runner_reads_every_backend_the_live_upstream_release_offers():
+    schemas = live_schemas()
+    enum = schemas[run_dossier.RELEASE_TOOL]["properties"]["backend"]["enum"]
+    assert list(run_dossier.RELEASE_BACKENDS) == enum
+    assert schemas[run_dossier.RELEASE_TOOL]["required"] == ["backend"]
+
+
+def test_the_release_bracket_flags_a_change_and_never_reads_a_failed_read_as_none() -> None:
+    def reads(**over: dict) -> dict[str, dict]:
+        base: dict[str, dict] = {
+            b: {"backend": b, "release": "1"} for b in run_dossier.RELEASE_BACKENDS
+        }
+        base["pdbe"] = {"backend": "pdbe", "release": None}
+        return {**base, **over}
+
+    same = run_dossier.release_bracket(reads(), reads())
+    # Positive control: identical reads, including a backend that publishes
+    # none (null at both ends), are neither changed nor unread.
+    assert (same["changed"], same["unread"]) == ([], [])
+    rolled = run_dossier.release_bracket(
+        reads(ensembl_plants={"backend": "ensembl_plants", "release": "63"}),
+        reads(ensembl_plants={"backend": "ensembl_plants", "release": "64"}),
+    )
+    assert (rolled["changed"], rolled["unread"]) == (["ensembl_plants"], [])
+    failed = run_dossier.release_bracket(reads(), reads(kegg={"ok": False, "error": "timeout"}))
+    assert (failed["changed"], failed["unread"]) == ([], ["kegg"])
+
+
 def _run_once(tmp_path: Path) -> None:
     """Drive the real runner against the fake server, writing into tmp_path."""
     asyncio.run(run_dossier.main(server_cmd=FAKE_CHAIN, here=tmp_path))
@@ -232,6 +260,15 @@ def test_a_rerun_rewrites_auto_gaps_and_never_touches_the_hand_logged_file(tmp_p
     }
     assert sum(c["n_ok"] for c in calls) == len(CHAIN) - 1
     assert len(list(RAW.glob("*"))) > 0  # the committed captures are untouched
+    # The release bracket: one upstream_release read per backend before the
+    # walk and one after, in its own file and never among the chain's calls.
+    bracket = json.loads((tmp_path / "raw" / "_upstream_release.json").read_text())
+    assert list(bracket["start"]) == list(bracket["end"]) == list(run_dossier.RELEASE_BACKENDS)
+    for backend in run_dossier.RELEASE_BACKENDS:
+        start, end = bracket["start"][backend], bracket["end"][backend]
+        assert start["backend"] == end["backend"] == backend, (start, end)
+        assert end["read"] > start["read"], (start, end)  # read again, not reused
+    assert (bracket["changed"], bracket["unread"]) == ([], [])
     assert len(first_rows) == 1, first_rows
     assert first_rows[0]["tool"] == CHAIN_FAILING_TOOL
     assert first_rows[0]["kind"] == "error"

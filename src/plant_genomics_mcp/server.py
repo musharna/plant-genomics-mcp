@@ -19,6 +19,7 @@ synthesis tools that compose the live backends:
   - ``gene_tree_members``                 — every gene in a gene_tree_id, optionally one organism's (live, Ensembl Compara)
   - ``ensembl_plants_paralogs``           — a locus's paralogues, incl. the ancient ones Gramene drops (live, Ensembl Compara)
   - ``ensembl_plants_assembly``           — an organism's assembly: seq-region names + lengths (live, Ensembl /info/assembly)
+  - ``upstream_release``                  — the release a backend's own endpoint calls current, for backends whose answers state none (live)
   - ``kegg_pathways``                     — KEGG pathway memberships (live, multi-organism via ``organism=``)
   - ``string_interactions``               — STRING-DB first-neighbor partners (live, per-channel scores)
   - ``atted_coexpression``                — ATTED-II coexpression (live; z for Ath, LSmr elsewhere)
@@ -113,6 +114,7 @@ from plant_genomics_mcp import (
     progress,
     prompts,
     quickgo,
+    releases,
     resources,
     string_db,
     synthesis,
@@ -159,6 +161,7 @@ from plant_genomics_mcp.models import (
     SynthesisEnvelope,
     TfBindingMotifs,
     UniProtLocus,
+    UpstreamRelease,
     VepAnnotation,
 )
 
@@ -1605,6 +1608,42 @@ TOOLS: list[types.Tool] = [
         _meta=_EDAM,
     ),
     types.Tool(
+        name="upstream_release",
+        title="Upstream Release",
+        description=(
+            "Report the release a backend's own release endpoint calls current, "
+            "for the backends whose answers state none (their tools' "
+            "upstream_version is always null). It is read by a SEPARATE request "
+            "at query time, so it is not proof of the release that answered any "
+            "one call: read it before and after a run, and equal values mean no "
+            "release changed in between. Never cached. ensembl_plants: the "
+            "Ensembl Genomes release (e.g. '63'); string: the STRING release "
+            "('12.0'); quickgo: the GO annotation load date and the GO ontology "
+            "date; jaspar: the newest ACTIVE release (several are active at "
+            "once); kegg: the pathway and genes last-update dates (KEGG has no "
+            "release number). pdbe, aragwas and europe_pmc publish no data "
+            "release: release is null and reason says why. Backends whose "
+            "answers state or pin their release (UniProt, InterPro, PANTHER, "
+            "AlphaFold, Gramene, ATTED-II, OrthoDB) are not listed: read "
+            "upstream_version on their answers instead."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "backend": {
+                    "type": "string",
+                    "enum": list(releases.BACKENDS),
+                    "description": "The backend whose current release to read",
+                },
+            },
+            "required": ["backend"],
+            "additionalProperties": False,
+        },
+        output_schema=UpstreamRelease.model_json_schema(),
+        annotations=_READ_ONLY,
+        _meta=_EDAM,
+    ),
+    types.Tool(
         name="orthodb_orthologs",
         title="OrthoDB: Orthologs",
         description=(
@@ -2780,6 +2819,8 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     args["organism"],
                     limit=args.get("limit", ensembl_plants.ASSEMBLY_DEFAULT_LIMIT),
                 )
+            case "upstream_release":
+                return await releases.upstream_release(client, args["backend"])
             case "orthodb_orthologs":
                 return await orthodb.lookup_locus(
                     client,

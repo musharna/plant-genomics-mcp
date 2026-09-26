@@ -34,6 +34,13 @@ Outputs, all next to this file:
   is the size of the JSON-RPC response line on the wire; `kind` is
   `ok` / `error` / `expected` for the call as a whole, and `n_ok` /
   `n_error` / `n_expected` count the loci inside it.
+- `raw/_upstream_release.json` — what each backend's own release endpoint
+  called current (`upstream_release`), read once before the walk and once
+  after it: `start` and `end` by backend, `changed` listing the backends
+  whose two reads disagree and `unread` those whose read failed at either
+  end. These are separate requests, so they bracket the walk rather than
+  name the release that answered any one call; they are not rows of
+  `calls.jsonl`, whose rows are the chain's own calls.
 - `gaps_auto.jsonl` — the machine-detectable gaps (`"auto": true`),
   rewritten from scratch on every run. One row per (chain tool, kind,
   error class), carrying the list of loci it covers and their count:
@@ -108,6 +115,20 @@ LOCUS_BATCHED = frozenset(
     }
 )
 
+# The `upstream_release` tool's `backend` enum, read before and after the walk.
+# Checked against the live schema by `tests/test_arf_chain.py`.
+RELEASE_TOOL = "upstream_release"
+RELEASE_BACKENDS = (
+    "ensembl_plants",
+    "string",
+    "quickgo",
+    "jaspar",
+    "kegg",
+    "pdbe",
+    "aragwas",
+    "europe_pmc",
+)
+
 
 def locus_batch_args(chain_tool: str, loci: list[str], organism: str) -> dict:
     """`batch_locus_call` arguments running `chain_tool` over `loci`."""
@@ -138,6 +159,37 @@ def find_version(obj: object) -> str | None:
             if (r := find_version(v)) is not None:
                 return r
     return None
+
+
+async def read_releases(client: McpClient) -> dict[str, dict]:
+    """One ``upstream_release`` read per backend; a failed read is kept as such."""
+    out: dict[str, dict] = {}
+    for backend in RELEASE_BACKENDS:
+        res = await client.call(RELEASE_TOOL, {"backend": backend})
+        if res.ok and isinstance(res.payload, dict):
+            out[backend] = res.payload
+        else:
+            error = res.error or f"no JSON object in the answer: {res.payload!r}"
+            out[backend] = {"ok": False, "error": error}
+    return out
+
+
+def release_bracket(start: dict[str, dict], end: dict[str, dict]) -> dict:
+    """The two reads, which backends changed between them, and which went unread.
+
+    A backend is ``changed`` only when both reads succeeded and disagree, and
+    ``unread`` when either failed: a failed read says nothing either way, so
+    it must not pass as "no change".
+    """
+    unread = [
+        b for b in RELEASE_BACKENDS if start[b].get("ok") is False or end[b].get("ok") is False
+    ]
+    changed = [
+        b
+        for b in RELEASE_BACKENDS
+        if b not in unread and start[b].get("release") != end[b].get("release")
+    ]
+    return {"start": start, "end": end, "changed": changed, "unread": unread}
 
 
 def is_expected(error: str | None) -> bool:
@@ -375,6 +427,7 @@ async def main(server_cmd: list[str] = SERVER_CMD, here: Path = HERE) -> int:
                 f"the server's initialize response carried no version: {c.server_info!r}"
             )
         runner = Runner(c, here, server_version, server_commit())
+        releases_start = await read_releases(c)
         try:
             for organism, loci in by_organism.items():
                 for tool, build in CHAIN:
@@ -386,6 +439,8 @@ async def main(server_cmd: list[str] = SERVER_CMD, here: Path = HERE) -> int:
                             await runner.single(locus, organism, tool, build)
         finally:
             runner.close()
+        bracket = release_bracket(releases_start, await read_releases(c))
+        (here / "raw" / "_upstream_release.json").write_text(json.dumps(bracket, indent=1) + "\n")
         runner.write_auto_gaps()
     finally:
         await c.close()

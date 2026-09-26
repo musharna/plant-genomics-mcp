@@ -23,7 +23,6 @@ from plant_genomics_mcp import (
     jaspar,
     organisms,
     orthodb,
-    panther,
     pdbe,
     server,
 )
@@ -122,7 +121,7 @@ async def test_gramene_filtered_path_validates_against_its_output_schema(
 
 def test_orthodb_filtered_result_validates_against_its_output_schema() -> None:
     base = orthodb._empty("AT1G01060", "arabidopsis_thaliana")
-    assert base["upstream_version"] is None and "upstream_version" in base
+    assert base["upstream_version"] == orthodb.ORTHODB_RELEASE  # the pinned release answered
     OrthoDbOrthologs.model_validate(base)
     filtered = {
         **base,
@@ -161,7 +160,6 @@ def test_alphafold_reports_the_entry_version_as_a_string() -> None:
 def test_backends_that_state_no_release_carry_the_key_as_null() -> None:
     """Uniform key, honest value: null, not absent, so one pass reads them all."""
     for empty in (
-        panther._empty("AT1G01010"),
         pdbe._empty("Q9SZ92"),
         jaspar._empty("AT1G01010", "Q9SZ92", 3702, ["ARF5"]),
     ):

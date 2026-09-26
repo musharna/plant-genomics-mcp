@@ -22,9 +22,9 @@ LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
 
 _GID = "444580at33090"
-_SEARCH_URL = f"{orthodb.BASE_URL}/current/search?query=AT1G01060&level=33090&limit=1"
-_GROUP_URL = f"{orthodb.BASE_URL}/current/group?id={_GID}"
-_ORTHO_URL = f"{orthodb.BASE_URL}/current/orthologs?id={_GID}"
+_SEARCH_URL = f"{orthodb.BASE_URL}/v12/search?query=AT1G01060&level=33090&limit=1"
+_GROUP_URL = f"{orthodb.BASE_URL}/v12/group?id={_GID}"
+_ORTHO_URL = f"{orthodb.BASE_URL}/v12/orthologs?id={_GID}"
 
 # Real-shaped group + orthologs payloads (key names verified live 2026-07-20).
 _GROUP = {
@@ -79,6 +79,9 @@ async def test_lookup_full(httpx_mock: HTTPXMock) -> None:
     assert r["members"][0]["organism"] == "Abrus precatorius"
     assert r["members"][0]["gene_id"] == "113863481"
     assert r["members"][1]["organism"] == "Arabidopsis thaliana"
+    # The release every request named is the release reported (#121 contract).
+    assert r["upstream_version"] == orthodb.ORTHODB_RELEASE == "v12"
+    assert {req.url.path.split("/")[1] for req in httpx_mock.get_requests()} == {"v12"}
 
 
 @pytest.mark.asyncio
@@ -91,6 +94,8 @@ async def test_lookup_no_group_is_found_false(httpx_mock: HTTPXMock) -> None:
     assert r["group"] is None
     assert r["members"] == []
     assert r["organism_count"] == 0
+    # A not-found answer came from the pinned release too.
+    assert r["upstream_version"] == "v12"
 
 
 @pytest.mark.asyncio
@@ -157,6 +162,29 @@ async def test_live_arabidopsis_orthologs() -> None:
     assert r["found"] is True
     assert r["group"]["id"]
     assert r["organism_count"] > 0
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_the_pinned_release_selects_the_data_and_an_unknown_one_is_refused(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The pin is only provenance if it changes what answers (probed 2026-09-26).
+
+    /v11/ and /v12/ answer the same search with different group ids, so the
+    reported release follows the data; /v99/ is refused, not served as current.
+    """
+    async with httpx.AsyncClient() as client:
+        v12 = await orthodb.lookup_locus(client, "AT1G01010", "arabidopsis", limit=1)
+        monkeypatch.setattr(orthodb, "ORTHODB_RELEASE", "v11")
+        v11 = await orthodb.lookup_locus(client, "AT1G01010", "arabidopsis", limit=1)
+        monkeypatch.setattr(orthodb, "ORTHODB_RELEASE", "v99")
+        with pytest.raises(PlantGenomicsError) as refused:
+            await orthodb.lookup_locus(client, "AT1G01010", "arabidopsis", limit=1)
+    assert (v12["found"], v12["upstream_version"]) == (True, "v12"), v12
+    assert (v11["found"], v11["upstream_version"]) == (True, "v11"), v11
+    assert v12["group"]["id"] != v11["group"]["id"], (v12["group"], v11["group"])
+    assert "302" in str(refused.value), refused.value
 
 
 # --- member_count must describe the DATA, not the returned list -------------
