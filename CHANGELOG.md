@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v1.25.0 — 2026-09-26
+
+**54 tools / 23 backends** — one new tool, `ensembl_plants_paralogs`; no existing tool changes its output (`gramene_homologs` changes only its description).
 
 - **New tool `ensembl_plants_paralogs`.** The paralogues Ensembl Compara
   (plants) records for a locus (`/homology`, `type=paralogues`), closest
