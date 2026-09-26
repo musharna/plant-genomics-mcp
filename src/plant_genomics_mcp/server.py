@@ -18,6 +18,7 @@ synthesis tools that compose the live backends:
   - ``gramene_homologs``                  — Gramene v69 homology (live, ortholog/paralog + gene_tree_id)
   - ``gene_tree_members``                 — every gene in a gene_tree_id, optionally one organism's (live, Ensembl Compara)
   - ``ensembl_plants_paralogs``           — a locus's paralogues, incl. the ancient ones Gramene drops (live, Ensembl Compara)
+  - ``ensembl_plants_assembly``           — an organism's assembly: seq-region names + lengths (live, Ensembl /info/assembly)
   - ``kegg_pathways``                     — KEGG pathway memberships (live, multi-organism via ``organism=``)
   - ``string_interactions``               — STRING-DB first-neighbor partners (live, per-channel scores)
   - ``atted_coexpression``                — ATTED-II coexpression (live; z for Ath, LSmr elsewhere)
@@ -130,6 +131,7 @@ from plant_genomics_mcp.models import (
     BarGeneSummary,
     BatchEnvelope,
     BlastResult,
+    EnsemblAssembly,
     EnsemblParalogs,
     EnsemblPlantsLocus,
     EnsemblRegionFeatures,
@@ -413,6 +415,9 @@ TOOLS: list[types.Tool] = [
             "one of gene / transcript / cds / exon (default gene). Answers "
             "'what genes are in this QTL interval / assembly window' without a "
             "per-locus lookup. Ensembl caps the span — oversized regions error. "
+            "ensembl_plants_assembly lists an organism's region names and their "
+            "lengths; a region outside that list, or a start past its length, "
+            "is an error here. "
             "Defaults to arabidopsis_thaliana; pass organism= for other species."
         ),
         input_schema={
@@ -1557,6 +1562,45 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         output_schema=EnsemblParalogs.model_json_schema(),
+        annotations=_READ_ONLY,
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="ensembl_plants_assembly",
+        title="Ensembl Plants: Assembly",
+        description=(
+            "Describe an organism's Ensembl assembly (rest.ensembl.org "
+            "/info/assembly; free, no key): assembly name, GCA accession and "
+            "date, the karyotype, and every top-level seq-region with its "
+            "length. The names are the region values ensembl_region_query "
+            "takes, and a start past a region's length is refused there, so "
+            "a region walk can be planned before the first call. Karyotype "
+            "regions come first, in karyotype order, then unplaced scaffolds "
+            "and contigs, longest first. Names are Ensembl's: tomato's "
+            "chromosomes are CM001064.4 and so on, not '1'. coord_system labels "
+            "differ between assemblies (chromosome, scaffold, supercontig, "
+            "primary_assembly), so in_karyotype, not coord_system, says which "
+            "regions are chromosomes. total counts every region before limit; "
+            "truncated=true when limit cut some off (soybean has over 1,100)."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                },
+                "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2000,
+                    "default": 100,
+                },
+            },
+            "required": ["organism"],
+            "additionalProperties": False,
+        },
+        output_schema=EnsemblAssembly.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -2728,6 +2772,13 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     args["locus"],
                     organism=args.get("organism", "arabidopsis_thaliana"),
                     limit=args.get("limit", ensembl_plants.PARALOGS_DEFAULT_LIMIT),
+                )
+            case "ensembl_plants_assembly":
+                # The organism is this tool's identifier: required, positional.
+                return await ensembl_plants.assembly(
+                    client,
+                    args["organism"],
+                    limit=args.get("limit", ensembl_plants.ASSEMBLY_DEFAULT_LIMIT),
                 )
             case "orthodb_orthologs":
                 return await orthodb.lookup_locus(

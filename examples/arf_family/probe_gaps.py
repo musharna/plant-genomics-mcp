@@ -60,6 +60,8 @@ PROBES: list[tuple[str, str, dict]] = [
     ),
     # Gramene carries no paralog for this gene; Compara's paralogues do.
     ("paralog-closure-empty", "ensembl_plants_paralogs", {"locus": "AT1G19850", "limit": 1000}),
+    # The walk learned region names and lengths from /overlap refusals.
+    ("no-assembly-metadata", "ensembl_plants_assembly", {"organism": "arabidopsis_thaliana"}),
     # Last: main() follows this probe's next_cursor to its second page.
     ("no-pagination", "gramene_homologs", {"locus": "AT1G19850"}),
 ]
@@ -87,6 +89,7 @@ DESCRIBED = (
     "jaspar_motif",
     "bar_aiv_interactions",
     "ensembl_plants_paralogs",
+    "ensembl_plants_assembly",
 )
 
 

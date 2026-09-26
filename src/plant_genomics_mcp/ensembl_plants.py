@@ -479,3 +479,85 @@ async def paralogs(
         "paralogs": rows[:limit],
         "upstream_version": None,
     }
+
+
+ASSEMBLY_DEFAULT_LIMIT = 100
+ASSEMBLY_MAX_LIMIT = 2000
+
+
+def _region(row: Any, slug: str) -> tuple[str, int, str | None]:
+    try:
+        name = row["name"]
+        length = row["length"]
+    except (KeyError, TypeError) as exc:
+        raise PlantGenomicsError(
+            f"Ensembl /info/assembly/{slug}: top-level region without name or length "
+            f"({exc!r}): {row!r}"
+        ) from exc
+    if not isinstance(name, str) or not isinstance(length, int) or length < 1:
+        raise PlantGenomicsError(
+            f"Ensembl /info/assembly/{slug}: region with unusable name or length: {row!r}"
+        )
+    return name, length, row.get("coord_system")
+
+
+async def assembly(
+    client: httpx.AsyncClient,
+    organism: str | int = organisms.DEFAULT_ORGANISM,
+    limit: int = ASSEMBLY_DEFAULT_LIMIT,
+) -> dict[str, Any]:
+    """An organism's Ensembl assembly: its name, accession, karyotype, and every
+    top-level seq-region with its length, via ``/info/assembly``.
+
+    The names are the ``region`` values ``region_query`` takes; ``/overlap/region``
+    refuses a start past a region's length (an end past it is answered). Karyotype regions
+    come first, in Ensembl's karyotype order, then the rest by length
+    (longest first). ``total`` counts every top-level region before ``limit``
+    cuts. The coordinate-system label differs between assemblies (tomato's
+    chromosomes are ``primary_assembly`` regions named ``CM001064.4`` ...), so
+    ``in_karyotype``, not ``coord_system``, says which regions are chromosomes.
+    """
+    if not 1 <= limit <= ASSEMBLY_MAX_LIMIT:
+        raise ValueError(f"limit must be in 1..{ASSEMBLY_MAX_LIMIT}, got {limit}")
+    slug = organisms.ensembl_slug_for(organism)
+    raw = await _get(client, f"/info/assembly/{slug}")
+    top_level = raw.get("top_level_region") if isinstance(raw, dict) else None
+    if not isinstance(top_level, list) or not top_level:
+        raise PlantGenomicsError(
+            f"Ensembl /info/assembly/{slug} returned no top-level regions: {type(raw).__name__}"
+        )
+    regions = [_region(row, slug) for row in top_level]
+    names = [name for name, _, _ in regions]
+    if len(set(names)) != len(names):
+        dupes = sorted({name for name in names if names.count(name) > 1})
+        raise PlantGenomicsError(f"Ensembl /info/assembly/{slug}: repeated region names {dupes}")
+    karyotype = raw.get("karyotype") or []
+    if not isinstance(karyotype, list) or not all(isinstance(n, str) for n in karyotype):
+        raise PlantGenomicsError(
+            f"Ensembl /info/assembly/{slug}: karyotype is not a list of names: {karyotype!r}"
+        )
+    known = set(names)
+    missing = [name for name in karyotype if name not in known]
+    if missing:
+        raise PlantGenomicsError(
+            f"Ensembl /info/assembly/{slug}: karyotype names regions absent from the "
+            f"top-level list: {missing}"
+        )
+    order = {name: i for i, name in enumerate(karyotype)}
+    regions.sort(key=lambda r: (0, order[r[0]], 0, "") if r[0] in order else (1, 0, -r[1], r[0]))
+    rows = [
+        {"name": name, "length": length, "coord_system": coord, "in_karyotype": name in order}
+        for name, length, coord in regions
+    ]
+    return {
+        "organism": organisms.resolve(organism).canonical,
+        "assembly_name": raw.get("assembly_name"),
+        "assembly_accession": raw.get("assembly_accession"),
+        "assembly_date": raw.get("assembly_date"),
+        "karyotype": list(karyotype),
+        "total": len(rows),
+        "returned": min(len(rows), limit),
+        "truncated": len(rows) > limit,
+        "regions": rows[:limit],
+        "upstream_version": None,
+    }

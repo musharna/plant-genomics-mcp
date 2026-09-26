@@ -82,6 +82,7 @@ async def test_initialize_and_list_tools(server_params: StdioServerParameters) -
                 "biological_context_synth",
                 "blast_sequence",
                 "consensus_homologs",
+                "ensembl_plants_assembly",
                 "ensembl_plants_lookup_locus",
                 "ensembl_plants_paralogs",
                 "ensembl_region_query",
@@ -273,8 +274,15 @@ async def test_tool_schemas_use_organism_param(server_params: StdioServerParamet
     the multi-organism set in v1.1.0 T5; ATTED-II joined in v1.1.0 T6
     (7 organisms with frozen release IDs; 5 unsupported organisms raise
     OrganismNotSupported).
+
+    A tool whose identifier IS the organism (ensembl_plants_assembly) is
+    held to the opposite rule: organism is required and has no default, so a
+    caller who forgets it is refused instead of silently getting
+    Arabidopsis's assembly.
     """
+    organism_is_identifier = {"ensembl_plants_assembly"}
     organism_aware = {
+        "ensembl_plants_assembly",
         "ensembl_plants_lookup_locus",
         "ensembl_plants_paralogs",
         "get_gene_xrefs",
@@ -340,6 +348,14 @@ async def test_tool_schemas_use_organism_param(server_params: StdioServerParamet
                         f"{tool.name}.organism type is {field.get('type')!r}, "
                         "expected ['string', 'integer']"
                     )
+                    if tool.name in organism_is_identifier:
+                        assert "default" not in field, (
+                            f"{tool.name}.organism is its identifier; it must not default"
+                        )
+                        assert "organism" in (tool.input_schema or {}).get("required", []), (
+                            f"{tool.name}.organism is its identifier; it must be required"
+                        )
+                        continue
                     assert field.get("default") == "arabidopsis_thaliana", (
                         f"{tool.name}.organism default is {field.get('default')!r}, "
                         "expected 'arabidopsis_thaliana'"

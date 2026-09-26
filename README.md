@@ -1,7 +1,7 @@
 # 🌱 plant-genomics-mcp
 
-> **54 tools** for plant-genomics locus lookup over the Model Context Protocol —
-> 29 single-locus + 1 motif lookup + 1 region query + 1 variant annotator + 1 gene-set enrichment + 1 BLAST search + 2 member lists (family entry, gene tree) + 13 parallel-batch + 5 cross-source synthesis variants.
+> **55 tools** for plant-genomics locus lookup over the Model Context Protocol —
+> 29 single-locus + 1 motif lookup + 1 region query + 1 assembly listing + 1 variant annotator + 1 gene-set enrichment + 1 BLAST search + 2 member lists (family entry, gene tree) + 13 parallel-batch + 5 cross-source synthesis variants.
 > 23 free, public sources: Ensembl Plants, Phytozome BioMart, UniProtKB,
 > Europe PMC, QuickGO, Planteome, PlantCyc/PMN, g:Profiler, AlphaFold DB, PDBe,
 > InterPro, JASPAR, PANTHER, OrthoDB, AraGWAS, 1001 Genomes, NCBI BLAST,
@@ -70,11 +70,11 @@ A worked 64-call run over 114 genes in three organisms, with the 58 gaps it logg
 
 ## 🛠️ Tools
 
-**54 tools across 23 backends** — Ensembl Plants, Phytozome BioMart,
+**55 tools across 23 backends** — Ensembl Plants, Phytozome BioMart,
 UniProtKB, Europe PMC, QuickGO, Planteome, PlantCyc/PMN, g:Profiler,
 AlphaFold DB, PDBe, InterPro, JASPAR, PANTHER, OrthoDB, AraGWAS, 1001 Genomes, NCBI BLAST,
 Gramene, KEGG, STRING-DB, ATTED-II, ThaleMine, BAR.
-29 single-locus + 1 motif lookup + 1 region query + 1 variant annotator + 1 gene-set
+29 single-locus + 1 motif lookup + 1 region query + 1 assembly listing + 1 variant annotator + 1 gene-set
 enrichment + 1 BLAST search + 2 member lists + 13 parallel-batch + 5 cross-source synthesis. Most take a
 TAIR-style locus (e.g. `AT1G01010`) plus
 optional `organism=` (slug / scientific name / common name / NCBI taxid
@@ -128,6 +128,7 @@ hosts can surface them without a destructive-action confirmation prompt.
 | 38  | Families (live)         | `entry_members`                         | Every protein in one organism carrying an InterPro / Pfam / PANTHER entry, with the locus each maps to (entry → genes; the reverse of tools 23 and 30). UniProt `total` + cursor paging; reviewed-only by default. |
 | 39  | Families (live)         | `gene_tree_members`                     | Every gene in an Ensembl Compara gene tree — the `gene_tree_id` that `gramene_homologs` returns — with locus, protein id, species and organism; `target_organism` keeps one organism's members. `total` + `limit`. |
 | 40  | Homology (live)         | `ensembl_plants_paralogs`               | Paralogues Ensembl Compara records for a locus — `within_species_paralog` and the `other_paralog` ("ancient paralogues") that `gramene_homologs` drops — closest first, with perc_id, taxonomy level and protein id. Not a family list: test membership with `interpro_domains`. `total` + `limit`. |
+| 41  | Region query (live)     | `ensembl_plants_assembly`               | An organism's Ensembl assembly — name, GCA accession, karyotype — and every top-level seq-region with its length: the `region` names `ensembl_region_query` takes, chromosomes first, so a region walk is planned before its first call. `total` + `limit`. |
 
 </details>
 
