@@ -5,14 +5,14 @@
   "organism": "arabidopsis_thaliana",
   "top_n": 10
  },
- "started_at": "2026-09-26T06:48:54Z",
- "elapsed_s": 4.660018605994992,
+ "started_at": "2026-09-26T08:38:20Z",
+ "elapsed_s": 10.396574466998572,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 2.4483890580013394,
+   "elapsed_s": 6.147441294990131,
    "result": null,
    "error": null
   },
@@ -20,23 +20,23 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0008108710026135668,
+   "elapsed_s": 0.0006500320014311001,
    "result": null,
    "error": null
   },
   {
    "step": 3,
    "tool": "get_gene_xrefs",
-   "status": "ok",
-   "elapsed_s": 2.2075384939962532,
+   "status": "error",
+   "elapsed_s": 4.248650130000897,
    "result": null,
-   "error": null
+   "error": "[UpstreamUnavailableError] Ensembl Plants /xrefs/id/AT3G61830 exhausted 3 retries (last HTTP 500)"
   },
   {
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.011974287001066841,
+   "elapsed_s": 0.008206062993849628,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.2905441929906374,
+   "elapsed_s": 0.30929429800016806,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.004093042996828444,
+   "elapsed_s": 0.0015347139997174963,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0009148780081886798,
+   "elapsed_s": 0.0007674910011701286,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00040376999822910875,
+   "elapsed_s": 0.004562952002743259,
    "result": null,
    "error": null
   }
@@ -85,23 +85,23 @@
    ]
   },
   "uniprot_accession": "Q9C5W9",
-  "markdown": "# ARF18 \u2014 `AT3G61830`\n\n*Arabidopsis thaliana* \u00b7 protein_coding \u00b7 3:22,887,889\u201322,891,455 (+) \u00b7 TAIR10\n\nauxin response factor 18 [Source:NCBI gene (formerly Entrezgene);Acc:825356]\n\n## Protein\n**Auxin response factor 18**\nARFR_ARATH \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 602 aa\nUniProt: [Q9C5W9](https://www.uniprot.org/uniprotkb/Q9C5W9)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [126\u2013228]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [289\u2013361]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [125\u2013229]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [484\u2013577]\n- **B3 DNA binding domain** (domain, interpro) [126\u2013230]\n- **Auxin response factor domain** (domain, interpro) [275\u2013356]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [117\u2013257]\n- **AUX/IAA domain** (domain, interpro) [480\u2013573]\n- **Auxin response factor** (family, interpro) [20\u2013577]\n- **PB1-like domain** (domain, interpro) [489\u2013581]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0000976] transcription cis-regulatory region binding (IPI)\n- [GO:0003677] DNA binding (IEA)\n- [GO:0003700] DNA-binding transcription factor activity (ISS)\n- [GO:0005515] protein binding (IPI)\n- [GO:0042802] identical protein binding (IPI)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n\n## Pathways (KEGG)\n- `ath04075` Plant hormone signal transduction - Arabidopsis thaliana (thale cress) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| IAA16 | 0.928 |\n| IAA17 | 0.902 |\n| IAA9 | 0.898 |\n| IAA28 | 0.892 |\n| IAA10 | 0.866 |\n| AUX1 | 0.86 |\n| IAA19 | 0.857 |\n| IAA18 | 0.85 |\n| IAA8 | 0.841 |\n| IAA12 | 0.839 |\n\n## Cross-references\n- NASC Gene ID: AT3G61830\n- TAIR: AT3G61830\n- TAIR Gene Name: ARF18\n- Expression Atlas: AT3G61830\n- KNETMINER_ARA: AT3G61830\n- UniProtKB Gene Name: Q9C5W9\n- WikiGene: 825356\n- UniProtKB Gene Name: A0A1I9LTM9\n- NCBI gene (formerly Entrezgene): 825356\n\n## Literature\n28 hits total; showing top 10.\n- **Conservation and divergence of regulatory architecture in nitrate-responsive plant gene circuits** \u2014 Bian C, Demirer GS, Oz MT, Cai YM, Witham S, Mason GA, Di Z, Deligne F, Zhang P, Shen R, Gaudinier A, Brady SM, Patron NJ. (PMID:40403157; doi:10.1093/plcell/koaf124)\n- **The miR7125-MdARF1 module enhances the resistance of apple to Colletotrichum gloeosporioides by promoting lignin synthesis in response to salicylic acid signalling** \u2014 Liu X, Dai H, Zhang F, Wang J, Shi J, Chen J, He P, Wang F, Ma Y. (PMID:38852059; doi:10.1111/pbi.14401)\n- **A maize semi-dwarf mutant reveals a GRAS transcription factor involved in brassinosteroid signaling** \u2014 Kaur A, Best NB, Hartwig T, Budka J, Khangura RS, McKenzie S, Arag\u00f3n-Raygoza A, Strable J, Schulz B, Dilkes BP. (PMID:38709680; doi:10.1093/plphys/kiae147)\n- **Genome-Wide Identification of &lt;i&gt;GmARF9b&lt;/i&gt;/&lt;i&gt;GmARF2a&lt;/i&gt; Negatively Regulate Root Growth in Soybean** \u2014 Li D, Miao T, Liao H, Zhong Y. (PMID:40429693; doi:10.3390/ijms26104547)\n- **SEOR2 in Arabidopsis mediates Ca<sup>2+</sup> dependent defense against phytoplasmas and reduction of plant growth** \u2014 Omenge K, Viscardo OC, De Oliveira Cantao FR, Santi S, van Bel AJE, Musetti R. (PMID:40404713; doi:10.1038/s41598-025-01374-8)\n- **Genome-wide identification of the <i>B3</i> gene family in soybean and the response to melatonin under cold stress** \u2014 Ren C, Wang H, Zhou Z, Jia J, Zhang Q, Liang C, Li W, Zhang Y, Yu G. (PMID:36714689; doi:10.3389/fpls.2022.1091907)\n- **Comparative transcriptomics revealed differential regulation of defense related genes in Brassica juncea leading to successful and unsuccessful infestation by aphid species** \u2014 Duhlian L, Koramutla MK, Subramanian S, Chamola R, Bhattacharya R. (PMID:32601289; doi:10.1038/s41598-020-66217-0)\n- **Multi-Omics Analysis Reveals Synergistic Enhancement of Nitrogen Assimilation Efficiency via Coordinated Regulation of Nitrogen and Carbon Metabolism by Co-Application of Brassinolide and Pyraclostrobin in Arabidopsis thaliana** \u2014 An Y, Ma D, Xi Z.\n- **Genetic control of tolerance to drought stress in soybean** \u2014 Saleem A, Rold\u00e1n-Ruiz I, Aper J, Muylle H. (PMID:36575367; doi:10.1186/s12870-022-03996-w)\n- **Shade triggers posttranscriptional PHYTOCHROME-INTERACTING FACTOR-dependent increases in H3K4 trimethylation** \u2014 Calderon RH, Dalton J, Zhang Y, Quail PH. (PMID:35674379; doi:10.1093/plphys/kiac282)\n",
+  "markdown": "# ARF18 \u2014 `AT3G61830`\n\n*Arabidopsis thaliana* \u00b7 protein_coding \u00b7 3:22,887,889\u201322,891,455 (+) \u00b7 TAIR10\n\nauxin response factor 18 [Source:NCBI gene (formerly Entrezgene);Acc:825356]\n\n## Protein\n**Auxin response factor 18**\nARFR_ARATH \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 602 aa\nUniProt: [Q9C5W9](https://www.uniprot.org/uniprotkb/Q9C5W9)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [126\u2013228]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [289\u2013361]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [125\u2013229]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [484\u2013577]\n- **B3 DNA binding domain** (domain, interpro) [126\u2013230]\n- **Auxin response factor domain** (domain, interpro) [275\u2013356]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [117\u2013257]\n- **AUX/IAA domain** (domain, interpro) [480\u2013573]\n- **Auxin response factor** (family, interpro) [20\u2013577]\n- **PB1-like domain** (domain, interpro) [489\u2013581]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0000976] transcription cis-regulatory region binding (IPI)\n- [GO:0003677] DNA binding (IEA)\n- [GO:0003700] DNA-binding transcription factor activity (ISS)\n- [GO:0005515] protein binding (IPI)\n- [GO:0042802] identical protein binding (IPI)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n\n## Pathways (KEGG)\n- `ath04075` Plant hormone signal transduction - Arabidopsis thaliana (thale cress) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| IAA16 | 0.928 |\n| IAA17 | 0.902 |\n| IAA9 | 0.898 |\n| IAA28 | 0.892 |\n| IAA10 | 0.866 |\n| AUX1 | 0.86 |\n| IAA19 | 0.857 |\n| IAA18 | 0.85 |\n| IAA8 | 0.841 |\n| IAA12 | 0.839 |\n\n## Cross-references\n_Unavailable \u2014 [UpstreamUnavailableError] Ensembl Plants /xrefs/id/AT3G61830 exhausted 3 retries (last HTTP 500)_\n\n## Literature\n28 hits total; showing top 10.\n- **Conservation and divergence of regulatory architecture in nitrate-responsive plant gene circuits** \u2014 Bian C, Demirer GS, Oz MT, Cai YM, Witham S, Mason GA, Di Z, Deligne F, Zhang P, Shen R, Gaudinier A, Brady SM, Patron NJ. (PMID:40403157; doi:10.1093/plcell/koaf124)\n- **The miR7125-MdARF1 module enhances the resistance of apple to Colletotrichum gloeosporioides by promoting lignin synthesis in response to salicylic acid signalling** \u2014 Liu X, Dai H, Zhang F, Wang J, Shi J, Chen J, He P, Wang F, Ma Y. (PMID:38852059; doi:10.1111/pbi.14401)\n- **A maize semi-dwarf mutant reveals a GRAS transcription factor involved in brassinosteroid signaling** \u2014 Kaur A, Best NB, Hartwig T, Budka J, Khangura RS, McKenzie S, Arag\u00f3n-Raygoza A, Strable J, Schulz B, Dilkes BP. (PMID:38709680; doi:10.1093/plphys/kiae147)\n- **Genome-Wide Identification of &lt;i&gt;GmARF9b&lt;/i&gt;/&lt;i&gt;GmARF2a&lt;/i&gt; Negatively Regulate Root Growth in Soybean** \u2014 Li D, Miao T, Liao H, Zhong Y. (PMID:40429693; doi:10.3390/ijms26104547)\n- **SEOR2 in Arabidopsis mediates Ca<sup>2+</sup> dependent defense against phytoplasmas and reduction of plant growth** \u2014 Omenge K, Viscardo OC, De Oliveira Cantao FR, Santi S, van Bel AJE, Musetti R. (PMID:40404713; doi:10.1038/s41598-025-01374-8)\n- **Genome-wide identification of the <i>B3</i> gene family in soybean and the response to melatonin under cold stress** \u2014 Ren C, Wang H, Zhou Z, Jia J, Zhang Q, Liang C, Li W, Zhang Y, Yu G. (PMID:36714689; doi:10.3389/fpls.2022.1091907)\n- **Comparative transcriptomics revealed differential regulation of defense related genes in Brassica juncea leading to successful and unsuccessful infestation by aphid species** \u2014 Duhlian L, Koramutla MK, Subramanian S, Chamola R, Bhattacharya R. (PMID:32601289; doi:10.1038/s41598-020-66217-0)\n- **Multi-Omics Analysis Reveals Synergistic Enhancement of Nitrogen Assimilation Efficiency via Coordinated Regulation of Nitrogen and Carbon Metabolism by Co-Application of Brassinolide and Pyraclostrobin in Arabidopsis thaliana** \u2014 An Y, Ma D, Xi Z.\n- **Genetic control of tolerance to drought stress in soybean** \u2014 Saleem A, Rold\u00e1n-Ruiz I, Aper J, Muylle H. (PMID:36575367; doi:10.1186/s12870-022-03996-w)\n- **Shade triggers posttranscriptional PHYTOCHROME-INTERACTING FACTOR-dependent increases in H3K4 trimethylation** \u2014 Calderon RH, Dalton J, Zhang Y, Quail PH. (PMID:35674379; doi:10.1093/plphys/kiac282)\n",
   "sections": {
    "annotation": {
-    "display_name": "ARF18",
-    "id": "AT3G61830",
-    "db_type": "core",
-    "logic_name": "araport11",
-    "description": "auxin response factor 18 [Source:NCBI gene (formerly Entrezgene);Acc:825356]",
-    "assembly_name": "TAIR10",
-    "seq_region_name": "3",
-    "source": "araport11",
-    "strand": 1,
-    "biotype": "protein_coding",
-    "start": 22887889,
-    "end": 22891455,
     "canonical_transcript": "AT3G61830.1",
+    "display_name": "ARF18",
+    "logic_name": "araport11",
+    "biotype": "protein_coding",
+    "id": "AT3G61830",
+    "source": "araport11",
+    "db_type": "core",
+    "seq_region_name": "3",
+    "description": "auxin response factor 18 [Source:NCBI gene (formerly Entrezgene);Acc:825356]",
+    "end": 22891455,
     "object_type": "Gene",
+    "strand": 1,
+    "start": 22887889,
+    "assembly_name": "TAIR10",
     "organism": "arabidopsis_thaliana",
     "upstream_version": null
    },
@@ -121,142 +121,7 @@
     "web_url": "https://www.uniprot.org/uniprotkb/Q9C5W9",
     "upstream_version": "2026_03"
    },
-   "xrefs": {
-    "locus": "AT3G61830",
-    "organism": "arabidopsis_thaliana",
-    "count": 9,
-    "xrefs": [
-     {
-      "synonyms": [],
-      "primary_id": "AT3G61830",
-      "description": "auxin response factor 18",
-      "db_display_name": "NASC Gene ID",
-      "version": "0",
-      "dbname": "NASC_GENE_ID",
-      "info_text": "",
-      "info_type": "DIRECT",
-      "display_id": "AT3G61830-TAIR-G"
-     },
-     {
-      "synonyms": [],
-      "primary_id": "AT3G61830",
-      "version": "0",
-      "db_display_name": "TAIR",
-      "description": "auxin response factor 18",
-      "display_id": "AT3G61830",
-      "info_type": "DIRECT",
-      "info_text": "",
-      "dbname": "TAIR_LOCUS"
-     },
-     {
-      "version": "0",
-      "db_display_name": "TAIR Gene Name",
-      "description": "",
-      "display_id": "ARF18",
-      "info_type": "DIRECT",
-      "info_text": "",
-      "dbname": "TAIR_SYMBOL",
-      "synonyms": [],
-      "primary_id": "ARF18"
-     },
-     {
-      "version": "0",
-      "db_display_name": "Expression Atlas",
-      "description": null,
-      "display_id": "AT3G61830",
-      "info_type": "DIRECT",
-      "dbname": "ArrayExpress",
-      "info_text": "",
-      "synonyms": [],
-      "primary_id": "AT3G61830"
-     },
-     {
-      "primary_id": "AT3G61830",
-      "synonyms": [],
-      "info_type": "DEPENDENT",
-      "dbname": "KNETMINER_ARA",
-      "info_text": "",
-      "display_id": "AT3G61830",
-      "db_display_name": "KNETMINER_ARA",
-      "description": null,
-      "version": "0"
-     },
-     {
-      "synonyms": [],
-      "primary_id": "Q9C5W9",
-      "db_display_name": "UniProtKB Gene Name",
-      "description": null,
-      "version": null,
-      "info_type": "DEPENDENT",
-      "dbname": "Uniprot_gn",
-      "info_text": "",
-      "display_id": "ARF18"
-     },
-     {
-      "synonyms": [],
-      "primary_id": "825356",
-      "description": "auxin response factor 18",
-      "db_display_name": "WikiGene",
-      "version": "0",
-      "info_text": "",
-      "dbname": "WikiGene",
-      "info_type": "DEPENDENT",
-      "display_id": "ARF18"
-     },
-     {
-      "synonyms": [],
-      "primary_id": "A0A1I9LTM9",
-      "db_display_name": "UniProtKB Gene Name",
-      "description": null,
-      "version": null,
-      "info_type": "DEPENDENT",
-      "dbname": "Uniprot_gn",
-      "info_text": "",
-      "display_id": "ARF18"
-     },
-     {
-      "primary_id": "825356",
-      "synonyms": [
-       "auxin response factor 18",
-       "F21F14.12"
-      ],
-      "info_text": "",
-      "dbname": "EntrezGene",
-      "info_type": "DEPENDENT",
-      "display_id": "ARF18",
-      "description": "auxin response factor 18",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "version": "0"
-     }
-    ],
-    "by_db": {
-     "NASC_GENE_ID": [
-      "AT3G61830"
-     ],
-     "TAIR_LOCUS": [
-      "AT3G61830"
-     ],
-     "TAIR_SYMBOL": [
-      "ARF18"
-     ],
-     "ArrayExpress": [
-      "AT3G61830"
-     ],
-     "KNETMINER_ARA": [
-      "AT3G61830"
-     ],
-     "Uniprot_gn": [
-      "Q9C5W9",
-      "A0A1I9LTM9"
-     ],
-     "WikiGene": [
-      "825356"
-     ],
-     "EntrezGene": [
-      "825356"
-     ]
-    }
-   },
+   "xrefs": null,
    "pathways": {
     "locus": "AT3G61830",
     "organism": "arabidopsis_thaliana",

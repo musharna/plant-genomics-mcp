@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-26T06:50:04Z",
- "elapsed_s": 4.133340074986336,
+ "started_at": "2026-09-26T08:40:39Z",
+ "elapsed_s": 1.3264054649916943,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 1.5183417209918844,
+   "elapsed_s": 1.020584472003975,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0004927239933749661,
+   "elapsed_s": 0.0006225299875950441,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 4.631199408322573e-05,
+   "elapsed_s": 6.295400089584291e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "error",
-   "elapsed_s": 3.432300582062453e-05,
+   "elapsed_s": 8.248900121543556e-05,
    "result": null,
    "error": "[NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os05g0515400 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 2.6137273229978746,
+   "elapsed_s": 0.3051933770038886,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0002857530053006485,
+   "elapsed_s": 0.0004915320023428649,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00015584300854243338,
+   "elapsed_s": 0.00024149799719452858,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00020113700884394348,
+   "elapsed_s": 0.0003007509949384257,
    "result": null,
    "error": null
   }
@@ -88,19 +88,19 @@
   "markdown": "# OsARF14 (UniProt: ARF14) \u2014 `Os05g0515400`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 5:25,555,850\u201325,561,791 (+) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 14**\nARFN_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 687 aa\nUniProt: [Q0DGS1](https://www.uniprot.org/uniprotkb/Q0DGS1)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [131\u2013233]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [296\u2013369]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [131\u2013235]\n- **B3 DNA binding domain** (domain, interpro) [131\u2013235]\n- **Auxin response factor domain** (domain, interpro) [282\u2013363]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [122\u2013271]\n- **Auxin response factor** (family, interpro) [19\u2013641]\n- **B3 DNA binding domain** (domain, pfam) [133\u2013234]\n- **Auxin response factor ancillary domain** (domain, pfam) [282\u2013363]\n- **B3 DNA-binding domain profile** (domain, profile) [133\u2013235]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os05g0515400 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| IAA12 | 0.91 |\n| IAA5 | 0.876 |\n| IAA19 | 0.876 |\n| IAA13 | 0.87 |\n| IAA1 | 0.867 |\n| IAA15 | 0.867 |\n| IAA16 | 0.864 |\n| IAA9 | 0.863 |\n| IAA3 | 0.86 |\n| IAA17 | 0.86 |\n\n## Cross-references\n- Expression Atlas: Os05g0515400\n\n## Literature\n2 hits total; showing top 2.\n- **Comparative transcriptome analysis of coleorhiza development in japonica and Indica rice** \u2014 Song T, Das D, Ye NH, Wang GQ, Zhu FY, Chen MX, Yang F, Zhang JH. (PMID:34736393; doi:10.1186/s12870-021-03276-z)\n- **Plant root transcriptome profiling reveals a strain-dependent response during Azospirillum-rice cooperation** \u2014 Drogue B, Sanguin H, Chamam A, Mozar M, Llauro C, Panaud O, Prigent-Combaret C, Picault N, Wisniewski-Dy\u00e9 F. (PMID:25414716; doi:10.3389/fpls.2014.00607)\n",
   "sections": {
    "annotation": {
-    "logic_name": "rapdb_genes",
-    "display_name": "OsARF14",
-    "canonical_transcript": "Os05t0515400-01",
+    "object_type": "Gene",
     "biotype": "protein_coding",
+    "canonical_transcript": "Os05t0515400-01",
+    "seq_region_name": "5",
+    "assembly_name": "IRGSP-1.0",
+    "logic_name": "rapdb_genes",
     "source": "RAP2022-09-01",
     "db_type": "core",
-    "seq_region_name": "5",
+    "strand": 1,
+    "display_name": "OsARF14",
+    "end": 25561791,
     "id": "Os05g0515400",
     "start": 25555850,
-    "assembly_name": "IRGSP-1.0",
-    "strand": 1,
-    "end": 25561791,
-    "object_type": "Gene",
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -126,15 +126,15 @@
     "count": 1,
     "xrefs": [
      {
-      "info_type": "DIRECT",
-      "synonyms": [],
-      "description": null,
-      "info_text": "",
-      "display_id": "Os05g0515400",
-      "version": "0",
+      "primary_id": "Os05g0515400",
       "dbname": "ArrayExpress",
       "db_display_name": "Expression Atlas",
-      "primary_id": "Os05g0515400"
+      "version": "0",
+      "description": null,
+      "display_id": "Os05g0515400",
+      "synonyms": [],
+      "info_text": "",
+      "info_type": "DIRECT"
      }
     ],
     "by_db": {

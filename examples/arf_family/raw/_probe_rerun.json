@@ -1,7 +1,7 @@
 {
- "server_version": "1.25.0",
- "server_commit": "6cf5408",
- "tool_count": 54,
+ "server_version": "1.26.0",
+ "server_commit": "0a94a26",
+ "tool_count": 55,
  "tools": {
   "string_interactions": {
    "_meta": {
@@ -4418,6 +4418,197 @@
     "title": "EnsemblParalogs"
    },
    "title": "Ensembl Plants: Paralogs"
+  },
+  "ensembl_plants_assembly": {
+   "_meta": {
+    "edam": {
+     "operation": [
+      "operation_2422"
+     ],
+     "topic": [
+      "topic_0780",
+      "topic_0114"
+     ]
+    }
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true
+   },
+   "description": "Describe an organism's Ensembl assembly (rest.ensembl.org /info/assembly; free, no key): assembly name, GCA accession and date, the karyotype, and every top-level seq-region with its length. The names are the region values ensembl_region_query takes, and a start past a region's length is refused there, so a region walk can be planned before the first call. Karyotype regions come first, in karyotype order, then unplaced scaffolds and contigs, longest first. Names are Ensembl's: tomato's chromosomes are CM001064.4 and so on, not '1'. coord_system labels differ between assemblies (chromosome, scaffold, supercontig, primary_assembly), so in_karyotype, not coord_system, says which regions are chromosomes. total counts every region before limit; truncated=true when limit cut some off (soybean has over 1,100).",
+   "inputSchema": {
+    "properties": {
+     "organism": {
+      "type": [
+       "string",
+       "integer"
+      ],
+      "description": "Plant organism \u2014 accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid"
+     },
+     "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2000,
+      "default": 100
+     }
+    },
+    "required": [
+     "organism"
+    ],
+    "type": "object",
+    "additionalProperties": false
+   },
+   "name": "ensembl_plants_assembly",
+   "outputSchema": {
+    "properties": {
+     "organism": {
+      "description": "Canonical organism slug",
+      "title": "Organism",
+      "type": "string"
+     },
+     "assembly_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Assembly name, e.g. TAIR10, IRGSP-1.0",
+      "title": "Assembly Name"
+     },
+     "assembly_accession": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "INSDC assembly accession (GCA_...)",
+      "title": "Assembly Accession"
+     },
+     "assembly_date": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Assembly date as Ensembl gives it (YYYY-MM); null when Ensembl gives none",
+      "title": "Assembly Date"
+     },
+     "karyotype": {
+      "description": "The chromosomes, in Ensembl's karyotype order",
+      "items": {
+       "type": "string"
+      },
+      "title": "Karyotype",
+      "type": "array"
+     },
+     "total": {
+      "description": "How many top-level regions exist upstream for this query, all pages (pre-cap) (#123)",
+      "title": "Total",
+      "type": "integer"
+     },
+     "returned": {
+      "description": "Rows in this payload (#123)",
+      "title": "Returned",
+      "type": "integer"
+     },
+     "truncated": {
+      "description": "True when limit cut regions off",
+      "title": "Truncated",
+      "type": "boolean"
+     },
+     "regions": {
+      "description": "Karyotype regions first, in karyotype order; then the rest, longest first",
+      "items": {
+       "$ref": "#/$defs/EnsemblAssemblyRegion"
+      },
+      "title": "Regions",
+      "type": "array"
+     },
+     "upstream_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Ensembl release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means Ensembl did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "title": "Upstream Version"
+     }
+    },
+    "required": [
+     "organism",
+     "assembly_name",
+     "assembly_accession",
+     "assembly_date",
+     "karyotype",
+     "total",
+     "returned",
+     "truncated",
+     "regions"
+    ],
+    "type": "object",
+    "$defs": {
+     "EnsemblAssemblyRegion": {
+      "additionalProperties": false,
+      "description": "One top-level seq-region of an Ensembl assembly.",
+      "properties": {
+       "name": {
+        "description": "The seq-region name, as ensembl_region_query's region takes it",
+        "title": "Name",
+        "type": "string"
+       },
+       "length": {
+        "description": "Length in bases; /overlap/region refuses a start past it",
+        "title": "Length",
+        "type": "integer"
+       },
+       "coord_system": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "description": "Ensembl's coordinate-system label (chromosome, scaffold, supercontig, primary_assembly); it differs between assemblies, so in_karyotype, not this, says which regions are chromosomes",
+        "title": "Coord System"
+       },
+       "in_karyotype": {
+        "description": "True when the assembly's karyotype lists this region",
+        "title": "In Karyotype",
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "name",
+       "length",
+       "coord_system",
+       "in_karyotype"
+      ],
+      "title": "EnsemblAssemblyRegion",
+      "type": "object"
+     }
+    },
+    "additionalProperties": false,
+    "description": "An organism's Ensembl assembly and its top-level seq-regions.",
+    "title": "EnsemblAssembly"
+   },
+   "title": "Ensembl Plants: Assembly"
   }
  },
  "missing_tools": [],
@@ -7262,6 +7453,79 @@
    "n_bytes": 8095
   },
   {
+   "row": "no-assembly-metadata",
+   "tool": "ensembl_plants_assembly",
+   "args": {
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": true,
+   "payload": {
+    "organism": "arabidopsis_thaliana",
+    "assembly_name": "TAIR10",
+    "assembly_accession": "GCA_000001735.1",
+    "assembly_date": "2008-04",
+    "karyotype": [
+     "1",
+     "2",
+     "3",
+     "4",
+     "5",
+     "Mt",
+     "Pt"
+    ],
+    "total": 7,
+    "returned": 7,
+    "truncated": false,
+    "regions": [
+     {
+      "name": "1",
+      "length": 30427671,
+      "coord_system": "chromosome",
+      "in_karyotype": true
+     },
+     {
+      "name": "2",
+      "length": 19698289,
+      "coord_system": "chromosome",
+      "in_karyotype": true
+     },
+     {
+      "name": "3",
+      "length": 23459830,
+      "coord_system": "chromosome",
+      "in_karyotype": true
+     },
+     {
+      "name": "4",
+      "length": 18585056,
+      "coord_system": "chromosome",
+      "in_karyotype": true
+     },
+     {
+      "name": "5",
+      "length": 26975502,
+      "coord_system": "chromosome",
+      "in_karyotype": true
+     },
+     {
+      "name": "Mt",
+      "length": 366924,
+      "coord_system": "chromosome",
+      "in_karyotype": true
+     },
+     {
+      "name": "Pt",
+      "length": 154478,
+      "coord_system": "chromosome",
+      "in_karyotype": true
+     }
+    ],
+    "upstream_version": null
+   },
+   "error": null,
+   "n_bytes": 1912
+  },
+  {
    "row": "no-pagination",
    "tool": "gramene_homologs",
    "args": {
@@ -8190,6 +8454,244 @@
    },
    "error": null,
    "n_bytes": 16994
+  },
+  {
+   "row": "no-assembly-metadata",
+   "tool": "ensembl_region_query",
+   "args": {
+    "region": "1",
+    "start": 30427671,
+    "end": 30427671,
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": true,
+   "payload": {
+    "organism": "arabidopsis_thaliana",
+    "region": "1:30427671-30427671",
+    "feature": "gene",
+    "count": 0,
+    "features": []
+   },
+   "error": null,
+   "n_bytes": 351
+  },
+  {
+   "row": "no-assembly-metadata",
+   "tool": "ensembl_region_query",
+   "args": {
+    "region": "1",
+    "start": 30427672,
+    "end": 30427672,
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": false,
+   "payload": null,
+   "error": "Ensembl Plants /overlap/region/arabidopsis_thaliana/1:30427672-30427672 \u2192 HTTP 400: {\"error\":\"Cannot request a slice whose start (30427672) is greater than 30427671 for 1.\"}",
+   "n_bytes": 269
+  },
+  {
+   "row": "no-assembly-metadata",
+   "tool": "ensembl_region_query",
+   "args": {
+    "region": "2",
+    "start": 19698289,
+    "end": 19698289,
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": true,
+   "payload": {
+    "organism": "arabidopsis_thaliana",
+    "region": "2:19698289-19698289",
+    "feature": "gene",
+    "count": 0,
+    "features": []
+   },
+   "error": null,
+   "n_bytes": 351
+  },
+  {
+   "row": "no-assembly-metadata",
+   "tool": "ensembl_region_query",
+   "args": {
+    "region": "2",
+    "start": 19698290,
+    "end": 19698290,
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": false,
+   "payload": null,
+   "error": "Ensembl Plants /overlap/region/arabidopsis_thaliana/2:19698290-19698290 \u2192 HTTP 400: {\"error\":\"Cannot request a slice whose start (19698290) is greater than 19698289 for 2.\"}",
+   "n_bytes": 269
+  },
+  {
+   "row": "no-assembly-metadata",
+   "tool": "ensembl_region_query",
+   "args": {
+    "region": "3",
+    "start": 23459830,
+    "end": 23459830,
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": true,
+   "payload": {
+    "organism": "arabidopsis_thaliana",
+    "region": "3:23459830-23459830",
+    "feature": "gene",
+    "count": 0,
+    "features": []
+   },
+   "error": null,
+   "n_bytes": 351
+  },
+  {
+   "row": "no-assembly-metadata",
+   "tool": "ensembl_region_query",
+   "args": {
+    "region": "3",
+    "start": 23459831,
+    "end": 23459831,
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": false,
+   "payload": null,
+   "error": "Ensembl Plants /overlap/region/arabidopsis_thaliana/3:23459831-23459831 \u2192 HTTP 400: {\"error\":\"Cannot request a slice whose start (23459831) is greater than 23459830 for 3.\"}",
+   "n_bytes": 269
+  },
+  {
+   "row": "no-assembly-metadata",
+   "tool": "ensembl_region_query",
+   "args": {
+    "region": "4",
+    "start": 18585056,
+    "end": 18585056,
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": true,
+   "payload": {
+    "organism": "arabidopsis_thaliana",
+    "region": "4:18585056-18585056",
+    "feature": "gene",
+    "count": 0,
+    "features": []
+   },
+   "error": null,
+   "n_bytes": 351
+  },
+  {
+   "row": "no-assembly-metadata",
+   "tool": "ensembl_region_query",
+   "args": {
+    "region": "4",
+    "start": 18585057,
+    "end": 18585057,
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": false,
+   "payload": null,
+   "error": "Ensembl Plants /overlap/region/arabidopsis_thaliana/4:18585057-18585057 \u2192 HTTP 400: {\"error\":\"Cannot request a slice whose start (18585057) is greater than 18585056 for 4.\"}",
+   "n_bytes": 269
+  },
+  {
+   "row": "no-assembly-metadata",
+   "tool": "ensembl_region_query",
+   "args": {
+    "region": "5",
+    "start": 26975502,
+    "end": 26975502,
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": true,
+   "payload": {
+    "organism": "arabidopsis_thaliana",
+    "region": "5:26975502-26975502",
+    "feature": "gene",
+    "count": 0,
+    "features": []
+   },
+   "error": null,
+   "n_bytes": 351
+  },
+  {
+   "row": "no-assembly-metadata",
+   "tool": "ensembl_region_query",
+   "args": {
+    "region": "5",
+    "start": 26975503,
+    "end": 26975503,
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": false,
+   "payload": null,
+   "error": "Ensembl Plants /overlap/region/arabidopsis_thaliana/5:26975503-26975503 \u2192 HTTP 400: {\"error\":\"Cannot request a slice whose start (26975503) is greater than 26975502 for 5.\"}",
+   "n_bytes": 269
+  },
+  {
+   "row": "no-assembly-metadata",
+   "tool": "ensembl_region_query",
+   "args": {
+    "region": "Mt",
+    "start": 366924,
+    "end": 366924,
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": true,
+   "payload": {
+    "organism": "arabidopsis_thaliana",
+    "region": "Mt:366924-366924",
+    "feature": "gene",
+    "count": 0,
+    "features": []
+   },
+   "error": null,
+   "n_bytes": 345
+  },
+  {
+   "row": "no-assembly-metadata",
+   "tool": "ensembl_region_query",
+   "args": {
+    "region": "Mt",
+    "start": 366925,
+    "end": 366925,
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": false,
+   "payload": null,
+   "error": "Ensembl Plants /overlap/region/arabidopsis_thaliana/Mt:366925-366925 \u2192 HTTP 400: {\"error\":\"Cannot request a slice whose start (366925) is greater than 366924 for Mt.\"}",
+   "n_bytes": 263
+  },
+  {
+   "row": "no-assembly-metadata",
+   "tool": "ensembl_region_query",
+   "args": {
+    "region": "Pt",
+    "start": 154478,
+    "end": 154478,
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": true,
+   "payload": {
+    "organism": "arabidopsis_thaliana",
+    "region": "Pt:154478-154478",
+    "feature": "gene",
+    "count": 0,
+    "features": []
+   },
+   "error": null,
+   "n_bytes": 345
+  },
+  {
+   "row": "no-assembly-metadata",
+   "tool": "ensembl_region_query",
+   "args": {
+    "region": "Pt",
+    "start": 154479,
+    "end": 154479,
+    "organism": "arabidopsis_thaliana"
+   },
+   "ok": false,
+   "payload": null,
+   "error": "Ensembl Plants /overlap/region/arabidopsis_thaliana/Pt:154479-154479 \u2192 HTTP 400: {\"error\":\"Cannot request a slice whose start (154479) is greater than 154478 for Pt.\"}",
+   "n_bytes": 263
   }
  ]
 }

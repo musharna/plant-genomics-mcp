@@ -5,14 +5,14 @@
   "organism": "arabidopsis_thaliana",
   "top_n": 10
  },
- "started_at": "2026-09-26T06:48:54Z",
- "elapsed_s": 0.8663667170039844,
+ "started_at": "2026-09-26T08:38:13Z",
+ "elapsed_s": 12.570169668004382,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.4631076869991375,
+   "elapsed_s": 8.4029768610053,
    "result": null,
    "error": null
   },
@@ -20,23 +20,23 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0004934269963996485,
+   "elapsed_s": 0.0004491099971346557,
    "result": null,
    "error": null
   },
   {
    "step": 3,
    "tool": "get_gene_xrefs",
-   "status": "ok",
-   "elapsed_s": 0.1340736339916475,
+   "status": "error",
+   "elapsed_s": 4.166775860998314,
    "result": null,
-   "error": null
+   "error": "[UpstreamUnavailableError] Ensembl Plants /xrefs/id/AT1G35540 exhausted 3 retries (last HTTP 500)"
   },
   {
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.002155695008696057,
+   "elapsed_s": 0.007446274990797974,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.4024956210050732,
+   "elapsed_s": 0.3325122509995708,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.00076757998613175,
+   "elapsed_s": 0.0010815650020958856,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00024912500521168113,
+   "elapsed_s": 0.0003409630007809028,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0002952579961856827,
+   "elapsed_s": 0.00033788698783610016,
    "result": null,
    "error": null
   }
@@ -85,23 +85,23 @@
    ]
   },
   "uniprot_accession": "Q9LQE8",
-  "markdown": "# ARF14 \u2014 `AT1G35540`\n\n*Arabidopsis thaliana* \u00b7 protein_coding \u00b7 1:13,108,634\u201313,111,700 (+) \u00b7 TAIR10\n\nauxin response factor 14 [Source:NCBI gene (formerly Entrezgene);Acc:840450]\n\n## Protein\n**Putative auxin response factor 14**\nARFN_ARATH \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 605 aa\nUniProt: [Q9LQE8](https://www.uniprot.org/uniprotkb/Q9LQE8)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [125\u2013226]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [287\u2013360]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [123\u2013227]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [506\u2013598]\n- **B3 DNA binding domain** (domain, interpro) [125\u2013228]\n- **Auxin response factor domain** (domain, interpro) [273\u2013354]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [123\u2013248]\n- **AUX/IAA domain** (domain, interpro) [504\u2013546]\n- **Auxin response factor** (family, interpro) [23\u2013598]\n- **PB1-like domain** (domain, interpro) [510\u2013602]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n- [GO:0003700] DNA-binding transcription factor activity (ISS)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (TAS)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n- [GO:0005634] nucleus (ISM)\n\n## Pathways (KEGG)\n- `ath04075` Plant hormone signal transduction - Arabidopsis thaliana (thale cress) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| IAA34 | 0.808 |\n| REM12 | 0.808 |\n| IAA8 | 0.803 |\n| IAA32 | 0.792 |\n| IAA5 | 0.782 |\n| IAA10 | 0.778 |\n| IAA15 | 0.77 |\n| REM17 | 0.758 |\n| IAA11 | 0.755 |\n| MAD2 | 0.747 |\n\n## Cross-references\n- NASC Gene ID: AT1G35540\n- TAIR: AT1G35540\n- TAIR Gene Name: ARF14\n- Plant Reactome Reaction ID: R-ATH-9675504\n- Plant Reactome Pathway ID: R-ATH-9675508\n- Expression Atlas: AT1G35540\n- KNETMINER_ARA: AT1G35540\n- NCBI gene (formerly Entrezgene): 840450\n- UniProtKB Gene Name: Q9LQE8\n- WikiGene: 840450\n\n## Literature\n5 hits total; showing top 5.\n- **The miR7125-MdARF1 module enhances the resistance of apple to Colletotrichum gloeosporioides by promoting lignin synthesis in response to salicylic acid signalling** \u2014 Liu X, Dai H, Zhang F, Wang J, Shi J, Chen J, He P, Wang F, Ma Y. (PMID:38852059; doi:10.1111/pbi.14401)\n- **Single-nucleus RNA-seq reveals that MBD5, MBD6, and SILENZIO maintain silencing in the vegetative cell of developing pollen** \u2014 Ichino L, Picard CL, Yun J, Chotai M, Wang S, Lin EK, Papareddy RK, Xue Y, Jacobsen SE. (PMID:36417865; doi:10.1016/j.celrep.2022.111699)\n- **Spatial and temporal expression patterns of auxin response transcription factors in the syncytium induced by the beet cyst nematode Heterodera schachtii in Arabidopsis** \u2014 Hewezi T, Piya S, Richard G, Rice JH. (PMID:24433277; doi:10.1111/mpp.12121)\n- **Accelerating structure-function mapping using the ViVa webtool to mine natural variation** \u2014 Hamm MO, Moss BL, Leydon AR, Gala HP, Lanctot A, Ramos R, Klaeser H, Lemmex AC, Zahler ML, Nemhauser JL, Wright RC. (PMID:31372596; doi:10.1002/pld3.147)\n- **Constitutive auxin response in Physcomitrella reveals complex interactions between Aux/IAA and ARF proteins** \u2014 Lavy M, Prigge MJ, Tao S, Shain S, Kuo A, Kirchsteiger K, Estelle M. (PMID:27247276; doi:10.7554/elife.13325)\n",
+  "markdown": "# ARF14 \u2014 `AT1G35540`\n\n*Arabidopsis thaliana* \u00b7 protein_coding \u00b7 1:13,108,634\u201313,111,700 (+) \u00b7 TAIR10\n\nauxin response factor 14 [Source:NCBI gene (formerly Entrezgene);Acc:840450]\n\n## Protein\n**Putative auxin response factor 14**\nARFN_ARATH \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 605 aa\nUniProt: [Q9LQE8](https://www.uniprot.org/uniprotkb/Q9LQE8)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [125\u2013226]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [287\u2013360]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [123\u2013227]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [506\u2013598]\n- **B3 DNA binding domain** (domain, interpro) [125\u2013228]\n- **Auxin response factor domain** (domain, interpro) [273\u2013354]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [123\u2013248]\n- **AUX/IAA domain** (domain, interpro) [504\u2013546]\n- **Auxin response factor** (family, interpro) [23\u2013598]\n- **PB1-like domain** (domain, interpro) [510\u2013602]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n- [GO:0003700] DNA-binding transcription factor activity (ISS)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (TAS)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n- [GO:0005634] nucleus (ISM)\n\n## Pathways (KEGG)\n- `ath04075` Plant hormone signal transduction - Arabidopsis thaliana (thale cress) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| IAA34 | 0.808 |\n| REM12 | 0.808 |\n| IAA8 | 0.803 |\n| IAA32 | 0.792 |\n| IAA5 | 0.782 |\n| IAA10 | 0.778 |\n| IAA15 | 0.77 |\n| REM17 | 0.758 |\n| IAA11 | 0.755 |\n| MAD2 | 0.747 |\n\n## Cross-references\n_Unavailable \u2014 [UpstreamUnavailableError] Ensembl Plants /xrefs/id/AT1G35540 exhausted 3 retries (last HTTP 500)_\n\n## Literature\n5 hits total; showing top 5.\n- **The miR7125-MdARF1 module enhances the resistance of apple to Colletotrichum gloeosporioides by promoting lignin synthesis in response to salicylic acid signalling** \u2014 Liu X, Dai H, Zhang F, Wang J, Shi J, Chen J, He P, Wang F, Ma Y. (PMID:38852059; doi:10.1111/pbi.14401)\n- **Single-nucleus RNA-seq reveals that MBD5, MBD6, and SILENZIO maintain silencing in the vegetative cell of developing pollen** \u2014 Ichino L, Picard CL, Yun J, Chotai M, Wang S, Lin EK, Papareddy RK, Xue Y, Jacobsen SE. (PMID:36417865; doi:10.1016/j.celrep.2022.111699)\n- **Spatial and temporal expression patterns of auxin response transcription factors in the syncytium induced by the beet cyst nematode Heterodera schachtii in Arabidopsis** \u2014 Hewezi T, Piya S, Richard G, Rice JH. (PMID:24433277; doi:10.1111/mpp.12121)\n- **Accelerating structure-function mapping using the ViVa webtool to mine natural variation** \u2014 Hamm MO, Moss BL, Leydon AR, Gala HP, Lanctot A, Ramos R, Klaeser H, Lemmex AC, Zahler ML, Nemhauser JL, Wright RC. (PMID:31372596; doi:10.1002/pld3.147)\n- **Constitutive auxin response in Physcomitrella reveals complex interactions between Aux/IAA and ARF proteins** \u2014 Lavy M, Prigge MJ, Tao S, Shain S, Kuo A, Kirchsteiger K, Estelle M. (PMID:27247276; doi:10.7554/elife.13325)\n",
   "sections": {
    "annotation": {
     "display_name": "ARF14",
-    "strand": 1,
     "seq_region_name": "1",
-    "db_type": "core",
-    "end": 13111700,
+    "strand": 1,
     "biotype": "protein_coding",
     "description": "auxin response factor 14 [Source:NCBI gene (formerly Entrezgene);Acc:840450]",
     "id": "AT1G35540",
+    "end": 13111700,
+    "db_type": "core",
     "canonical_transcript": "AT1G35540.1",
-    "object_type": "Gene",
     "assembly_name": "TAIR10",
+    "object_type": "Gene",
     "source": "araport11",
-    "logic_name": "araport11",
     "start": 13108634,
+    "logic_name": "araport11",
     "organism": "arabidopsis_thaliana",
     "upstream_version": null
    },
@@ -121,159 +121,7 @@
     "web_url": "https://www.uniprot.org/uniprotkb/Q9LQE8",
     "upstream_version": "2026_03"
    },
-   "xrefs": {
-    "locus": "AT1G35540",
-    "organism": "arabidopsis_thaliana",
-    "count": 10,
-    "xrefs": [
-     {
-      "dbname": "NASC_GENE_ID",
-      "synonyms": [],
-      "info_text": "",
-      "db_display_name": "NASC Gene ID",
-      "primary_id": "AT1G35540",
-      "description": "auxin response factor 14",
-      "info_type": "DIRECT",
-      "version": "0",
-      "display_id": "AT1G35540-TAIR-G"
-     },
-     {
-      "synonyms": [],
-      "dbname": "TAIR_LOCUS",
-      "info_text": "",
-      "db_display_name": "TAIR",
-      "primary_id": "AT1G35540",
-      "description": "auxin response factor 14",
-      "info_type": "DIRECT",
-      "version": "0",
-      "display_id": "AT1G35540"
-     },
-     {
-      "synonyms": [],
-      "dbname": "TAIR_SYMBOL",
-      "info_text": "",
-      "db_display_name": "TAIR Gene Name",
-      "primary_id": "ARF14",
-      "description": "",
-      "info_type": "DIRECT",
-      "version": "0",
-      "display_id": "ARF14"
-     },
-     {
-      "primary_id": "R-ATH-9675504",
-      "description": "Expression of ARF1",
-      "info_type": "DIRECT",
-      "version": "0",
-      "display_id": "R-ATH-9675504",
-      "dbname": "Plant_Reactome_Reaction",
-      "synonyms": [],
-      "info_text": "Generated via direct",
-      "db_display_name": "Plant Reactome Reaction ID"
-     },
-     {
-      "synonyms": [],
-      "dbname": "Plant_Reactome_Pathway",
-      "info_text": "Generated via direct",
-      "db_display_name": "Plant Reactome Pathway ID",
-      "description": "Root elongation",
-      "primary_id": "R-ATH-9675508",
-      "info_type": "DIRECT",
-      "version": "0",
-      "display_id": "R-ATH-9675508"
-     },
-     {
-      "info_type": "DIRECT",
-      "description": null,
-      "primary_id": "AT1G35540",
-      "display_id": "AT1G35540",
-      "version": "0",
-      "dbname": "ArrayExpress",
-      "synonyms": [],
-      "db_display_name": "Expression Atlas",
-      "info_text": ""
-     },
-     {
-      "description": null,
-      "primary_id": "AT1G35540",
-      "info_type": "DEPENDENT",
-      "version": "0",
-      "display_id": "AT1G35540",
-      "synonyms": [],
-      "dbname": "KNETMINER_ARA",
-      "info_text": "",
-      "db_display_name": "KNETMINER_ARA"
-     },
-     {
-      "synonyms": [
-       "auxin response factor 14",
-       "F15O4.64",
-       "F15O4_64"
-      ],
-      "dbname": "EntrezGene",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "description": "auxin response factor 14",
-      "primary_id": "840450",
-      "display_id": "ARF14",
-      "version": "0"
-     },
-     {
-      "db_display_name": "UniProtKB Gene Name",
-      "info_text": "",
-      "dbname": "Uniprot_gn",
-      "synonyms": [],
-      "display_id": "ARF14",
-      "version": null,
-      "info_type": "DEPENDENT",
-      "primary_id": "Q9LQE8",
-      "description": null
-     },
-     {
-      "info_text": "",
-      "db_display_name": "WikiGene",
-      "synonyms": [],
-      "dbname": "WikiGene",
-      "version": "0",
-      "display_id": "ARF14",
-      "description": "auxin response factor 14",
-      "primary_id": "840450",
-      "info_type": "DEPENDENT"
-     }
-    ],
-    "by_db": {
-     "NASC_GENE_ID": [
-      "AT1G35540"
-     ],
-     "TAIR_LOCUS": [
-      "AT1G35540"
-     ],
-     "TAIR_SYMBOL": [
-      "ARF14"
-     ],
-     "Plant_Reactome_Reaction": [
-      "R-ATH-9675504"
-     ],
-     "Plant_Reactome_Pathway": [
-      "R-ATH-9675508"
-     ],
-     "ArrayExpress": [
-      "AT1G35540"
-     ],
-     "KNETMINER_ARA": [
-      "AT1G35540"
-     ],
-     "EntrezGene": [
-      "840450"
-     ],
-     "Uniprot_gn": [
-      "Q9LQE8"
-     ],
-     "WikiGene": [
-      "840450"
-     ]
-    }
-   },
+   "xrefs": null,
    "pathways": {
     "locus": "AT1G35540",
     "organism": "arabidopsis_thaliana",

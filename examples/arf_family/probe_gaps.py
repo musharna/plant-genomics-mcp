@@ -128,6 +128,21 @@ async def main(server_cmd: list[str] = SERVER_CMD, out: Path = HERE / "raw") -> 
             args = {"locus": "AT1G19850", "cursor": first["next_cursor"]}
             res = await c.call("gramene_homologs", args)
             calls.append(_record("no-pagination", "gramene_homologs", args, res))
+        # Each region the assembly probe lists, asked at its length and one
+        # base past it: the evidence that the names and lengths are the ones
+        # ensembl_region_query enforces, captured rather than asserted.
+        (assembly,) = [c for c in calls if c["tool"] == "ensembl_plants_assembly"]
+        organism = assembly["args"]["organism"]
+        for region in (assembly["payload"] or {}).get("regions", []):
+            for start in (region["length"], region["length"] + 1):
+                args = {
+                    "region": region["name"],
+                    "start": start,
+                    "end": start,
+                    "organism": organism,
+                }
+                res = await c.call("ensembl_region_query", args)
+                calls.append(_record("no-assembly-metadata", "ensembl_region_query", args, res))
         by_name = {t["name"]: t for t in tools}
         doc = {
             "server_version": (c.server_info or {}).get("version"),

@@ -5,14 +5,14 @@
   "organism": "arabidopsis_thaliana",
   "top_n": 10
  },
- "started_at": "2026-09-26T06:48:58Z",
- "elapsed_s": 2.3832117159909103,
+ "started_at": "2026-09-26T08:38:29Z",
+ "elapsed_s": 11.101396219994058,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 2.0989053910016082,
+   "elapsed_s": 7.610037544000079,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0008461959951091558,
+   "elapsed_s": 0.001361856993753463,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.14400462800404057,
+   "elapsed_s": 3.490728920995025,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.0061618449981324375,
+   "elapsed_s": 0.003181906999088824,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.2833805660047801,
+   "elapsed_s": 0.40603575100249145,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.002226912009064108,
+   "elapsed_s": 0.0013950720021966845,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0007232100033434108,
+   "elapsed_s": 0.0004818620072910562,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0004437809984665364,
+   "elapsed_s": 0.0002696209994610399,
    "result": null,
    "error": null
   }
@@ -90,18 +90,18 @@
    "annotation": {
     "object_type": "Gene",
     "biotype": "protein_coding",
-    "logic_name": "araport11",
-    "canonical_transcript": "AT5G62000.1",
     "description": "auxin response factor 2 [Source:NCBI gene (formerly Entrezgene);Acc:836321]",
+    "canonical_transcript": "AT5G62000.1",
     "seq_region_name": "5",
     "assembly_name": "TAIR10",
+    "logic_name": "araport11",
     "db_type": "core",
     "source": "araport11",
+    "strand": 1,
+    "display_name": "ARF2",
     "start": 24910191,
     "end": 24915395,
     "id": "AT5G62000",
-    "display_name": "ARF2",
-    "strand": 1,
     "organism": "arabidopsis_thaliana",
     "upstream_version": null
    },
@@ -127,114 +127,114 @@
     "count": 11,
     "xrefs": [
      {
-      "info_type": "DIRECT",
-      "info_text": "",
-      "display_id": "AT5G62000-TAIR-G",
-      "synonyms": [],
-      "description": "auxin response factor 2",
-      "version": "0",
-      "db_display_name": "NASC Gene ID",
       "dbname": "NASC_GENE_ID",
-      "primary_id": "AT5G62000"
+      "db_display_name": "NASC Gene ID",
+      "info_type": "DIRECT",
+      "synonyms": [],
+      "display_id": "AT5G62000-TAIR-G",
+      "version": "0",
+      "primary_id": "AT5G62000",
+      "description": "auxin response factor 2",
+      "info_text": ""
      },
      {
       "db_display_name": "TAIR",
-      "version": "0",
-      "primary_id": "AT5G62000",
+      "info_type": "DIRECT",
       "dbname": "TAIR_LOCUS",
       "info_text": "",
-      "description": "auxin response factor 2",
-      "synonyms": [],
       "display_id": "AT5G62000",
-      "info_type": "DIRECT"
-     },
-     {
-      "version": "0",
-      "db_display_name": "TAIR Gene Name",
-      "dbname": "TAIR_SYMBOL",
-      "primary_id": "ARF2",
-      "info_text": "",
-      "display_id": "ARF2",
       "synonyms": [],
-      "description": "",
-      "info_type": "DIRECT"
-     },
-     {
-      "dbname": "Plant_Reactome_Reaction",
-      "primary_id": "R-ATH-5608208",
-      "version": "0",
-      "db_display_name": "Plant Reactome Reaction ID",
-      "info_type": "DIRECT",
-      "display_id": "R-ATH-5608208",
-      "synonyms": [],
-      "description": "ARF inactivation by AUX/IAA",
-      "info_text": "Generated via direct"
-     },
-     {
-      "description": "Auxin signalling",
-      "synonyms": [],
-      "display_id": "R-ATH-5608118",
-      "info_text": "Generated via direct",
-      "info_type": "DIRECT",
-      "primary_id": "R-ATH-5608118",
-      "dbname": "Plant_Reactome_Pathway",
-      "db_display_name": "Plant Reactome Pathway ID",
+      "description": "auxin response factor 2",
+      "primary_id": "AT5G62000",
       "version": "0"
      },
      {
-      "dbname": "ArrayExpress",
+      "dbname": "TAIR_SYMBOL",
+      "db_display_name": "TAIR Gene Name",
+      "info_type": "DIRECT",
+      "display_id": "ARF2",
+      "synonyms": [],
+      "description": "",
+      "version": "0",
+      "primary_id": "ARF2",
+      "info_text": ""
+     },
+     {
+      "dbname": "Plant_Reactome_Reaction",
+      "info_type": "DIRECT",
+      "db_display_name": "Plant Reactome Reaction ID",
+      "description": "ARF inactivation by AUX/IAA",
+      "primary_id": "R-ATH-5608208",
+      "version": "0",
+      "display_id": "R-ATH-5608208",
+      "synonyms": [],
+      "info_text": "Generated via direct"
+     },
+     {
+      "info_text": "Generated via direct",
+      "description": "Auxin signalling",
+      "version": "0",
+      "primary_id": "R-ATH-5608118",
+      "display_id": "R-ATH-5608118",
+      "synonyms": [],
+      "info_type": "DIRECT",
+      "db_display_name": "Plant Reactome Pathway ID",
+      "dbname": "Plant_Reactome_Pathway"
+     },
+     {
+      "info_text": "",
+      "display_id": "AT5G62000",
+      "synonyms": [],
+      "description": null,
       "primary_id": "AT5G62000",
       "version": "0",
       "db_display_name": "Expression Atlas",
       "info_type": "DIRECT",
-      "display_id": "AT5G62000",
-      "synonyms": [],
-      "description": null,
-      "info_text": ""
+      "dbname": "ArrayExpress"
      },
      {
+      "info_text": "",
       "primary_id": "AT5G62000",
-      "dbname": "KNETMINER_ARA",
-      "db_display_name": "KNETMINER_ARA",
       "version": "0",
-      "info_type": "DEPENDENT",
       "description": null,
-      "display_id": "AT5G62000",
       "synonyms": [],
-      "info_text": ""
+      "display_id": "AT5G62000",
+      "info_type": "DEPENDENT",
+      "db_display_name": "KNETMINER_ARA",
+      "dbname": "KNETMINER_ARA"
      },
      {
-      "db_display_name": "UniProtKB Gene Name",
+      "description": null,
       "version": null,
       "primary_id": "Q94JM3",
-      "dbname": "Uniprot_gn",
-      "info_text": "",
-      "description": null,
-      "synonyms": [],
       "display_id": "ARF2",
-      "info_type": "DEPENDENT"
+      "synonyms": [],
+      "info_text": "",
+      "dbname": "Uniprot_gn",
+      "info_type": "DEPENDENT",
+      "db_display_name": "UniProtKB Gene Name"
      },
      {
-      "primary_id": "836321",
       "dbname": "WikiGene",
       "db_display_name": "WikiGene",
-      "version": "0",
       "info_type": "DEPENDENT",
-      "description": "auxin response factor 2",
       "display_id": "ARF2",
       "synonyms": [],
+      "description": "auxin response factor 2",
+      "version": "0",
+      "primary_id": "836321",
       "info_text": ""
      },
      {
-      "version": null,
+      "info_type": "DEPENDENT",
       "db_display_name": "UniProtKB Gene Name",
       "dbname": "Uniprot_gn",
-      "primary_id": "F4K536",
       "info_text": "",
-      "synonyms": [],
-      "display_id": "ARF2",
       "description": null,
-      "info_type": "DEPENDENT"
+      "version": null,
+      "primary_id": "F4K536",
+      "display_id": "ARF2",
+      "synonyms": []
      },
      {
       "display_id": "ARF2",
@@ -252,12 +252,12 @@
        "ORESARA 14"
       ],
       "description": "auxin response factor 2",
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "dbname": "EntrezGene",
-      "primary_id": "836321",
       "version": "0",
-      "db_display_name": "NCBI gene (formerly Entrezgene)"
+      "primary_id": "836321",
+      "info_text": "",
+      "dbname": "EntrezGene",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "info_type": "DEPENDENT"
      }
     ],
     "by_db": {
