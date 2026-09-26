@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- **`examples/arf_family/` re-run at `1.26.0` (`75576d0`).** Same 64 calls
+  over the same 114 genes, against the release; every call's ok, error and
+  expected counts match the `1.25.0` run's.
+  38 of the 43 hand-logged gap rows are closed (1 by this run):
+  `ensembl_plants_assembly` lists Arabidopsis's 7 top-level regions and
+  their lengths in one call (chromosome 1: 30,427,671, the length the
+  enumeration's region walk read from a refusal), and
+  `ensembl_region_query` answers each at a start equal to its length and
+  refuses one base past it. Locus-level errors 62, as on the last run.
+
 ## v1.26.0 — 2026-09-26
 
 **55 tools / 23 backends** — one new tool, `ensembl_plants_assembly`; no existing tool changes its output (`ensembl_region_query` changes only its description).

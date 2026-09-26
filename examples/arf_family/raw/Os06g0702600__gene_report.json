@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-26T06:50:05Z",
- "elapsed_s": 2.4522386110038497,
+ "started_at": "2026-09-26T08:40:42Z",
+ "elapsed_s": 1.1571010990010109,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 1.7638878190045943,
+   "elapsed_s": 0.8657614429976093,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0005567999905906618,
+   "elapsed_s": 0.000790463003795594,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 5.460499960463494e-05,
+   "elapsed_s": 8.845599950291216e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "error",
-   "elapsed_s": 3.729900345206261e-05,
+   "elapsed_s": 5.4051997722126544e-05,
    "result": null,
    "error": "[NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os06g0702600 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.686863943003118,
+   "elapsed_s": 0.2904595730069559,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0011975170054938644,
+   "elapsed_s": 0.0061460989963961765,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0001867019891506061,
+   "elapsed_s": 0.00047035299940034747,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00026836399047169834,
+   "elapsed_s": 0.0007537250057794154,
    "result": null,
    "error": null
   }
@@ -88,19 +88,19 @@
   "markdown": "# ARF7A (UniProt: ARF19) \u2014 `Os06g0702600`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 6:29,657,101\u201329,665,060 (+) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 19**\nARFS_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 1161 aa\nUniProt: [Q0D9R7](https://www.uniprot.org/uniprotkb/Q0D9R7)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [153\u2013245]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [318\u2013389]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [151\u2013255]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [1023\u20131116]\n- **B3 DNA binding domain** (domain, interpro) [153\u2013256]\n- **Auxin response factor domain** (domain, interpro) [303\u2013386]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [143\u2013283]\n- **AUX/IAA domain** (domain, interpro) [1025\u20131112]\n- **Auxin response factor** (family, interpro) [46\u20131116]\n- **PB1-like domain** (domain, interpro) [1027\u20131111]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os06g0702600 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| CCC11_ORYSJ | 0.955 |\n| CDKE-1 | 0.954 |\n| Q6Z2J8_ORYSJ | 0.952 |\n| MED10 | 0.948 |\n| Q69TG3_ORYSJ | 0.948 |\n| Q7F8R5_ORYSJ | 0.933 |\n| Q336R8_ORYSJ | 0.923 |\n| Q7XIE0_ORYSJ | 0.923 |\n| A0A0N7KP87 | 0.915 |\n| Q7XM27_ORYSJ | 0.913 |\n\n## Cross-references\n- Expression Atlas: Os06g0702600\n\n## Literature\n9 hits total; showing top 9.\n- **Transcriptomic and Weighted Gene Co-Expression Network Analysis Reveals Molecular Regulatory Mechanisms of Cold Stress in Rice** \u2014 Ma B, Du H, Tan K, Hu J, Wang X, Liu K, Liu R, Mi D, Ma Y, Lai Y. (PMID:42353798; doi:10.3390/genes17060639)\n- **Unveiling novel QTLs for nitrogen use efficiency in temperate Japonica rice** \u2014 Marti-Jerez K, Catal\u00e0-Forner M, Pla E, Marques L, Garc\u00eda-Romeral J, Yannam VRR, Lopes MS, Domingo C. (PMID:41163133; doi:10.1186/s12870-025-07126-0)\n- **Genome-wide association study reveals novel genetic loci involved in anaerobic germination tolerance in <i>Indica</i> rice** \u2014 Liu K, Yang J, Sun K, Li D, Luo L, Zheng T, Wang H, Chen Z, Guo T. (PMID:37313132; doi:10.1007/s11032-022-01345-1)\n- **Temporal regulation of gene expression during auxin-triggered crown root formation in barley: an integrated approach** \u2014 Ko\u0159\u00ednkov\u00e1 N, Techer A, \u010cudejkov\u00e1 MM, Nguyen DT, Kope\u010dn\u00fd D, Contreras-Moreira B, Navr\u00e1tilov\u00e1 P, Gantet P, Bergougnoux V. (PMID:40652302; doi:10.1093/pcp/pcaf077)\n- **Initiation of scutellum-derived callus is regulated by an embryo-like developmental pathway in rice** \u2014 Guo F, Wang H, Lian G, Cai G, Liu W, Zhang H, Li D, Zhou C, Han N, Zhu M, Su Y, Seo PJ, Xu L, Bian H. (PMID:37100819; doi:10.1038/s42003-023-04835-w)\n- **Insights on Phytohormonal Crosstalk in Plant Response to Nitrogen Stress: A Focus on Plant Root Growth and Development** \u2014 Ahmad N, Jiang Z, Zhang L, Hussain I, Yang X. (PMID:36835044; doi:10.3390/ijms24043631)\n- **Knockout of the <i>OsNAC006</i> Transcription Factor Causes Drought and Heat Sensitivity in Rice** \u2014 Wang B, Zhong Z, Wang X, Han X, Yu D, Wang C, Song W, Zheng X, Chen C, Zhang Y. (PMID:32225072; doi:10.3390/ijms21072288)\n- **Plant nitrogen availability and crosstalk with phytohormones signallings and their biotechnology breeding application in crops** \u2014 Xing J, Cao X, Zhang M, Wei X, Zhang J, Wan X. (PMID:36435985; doi:10.1111/pbi.13971)\n- **Genetic differentiation revealed by selective loci of drought-responding EST-SSRs between upland and lowland rice in China** \u2014 Xia H, Zheng X, Chen L, Gao H, Yang H, Long P, Rong J, Lu B, Li J, Luo L. (PMID:25286109; doi:10.1371/journal.pone.0106352)\n",
   "sections": {
    "annotation": {
+    "strand": 1,
+    "seq_region_name": "6",
+    "db_type": "core",
+    "end": 29665060,
+    "biotype": "protein_coding",
+    "id": "Os06g0702600",
+    "display_name": "ARF7A",
     "source": "RAP2022-09-01",
     "logic_name": "rapdb_genes",
     "start": 29657101,
     "canonical_transcript": "Os06t0702600-01",
     "object_type": "Gene",
     "assembly_name": "IRGSP-1.0",
-    "seq_region_name": "6",
-    "strand": 1,
-    "db_type": "core",
-    "end": 29665060,
-    "biotype": "protein_coding",
-    "id": "Os06g0702600",
-    "display_name": "ARF7A",
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -126,15 +126,15 @@
     "count": 1,
     "xrefs": [
      {
-      "display_id": "Os06g0702600",
-      "info_type": "DIRECT",
-      "dbname": "ArrayExpress",
-      "info_text": "",
-      "version": "0",
       "db_display_name": "Expression Atlas",
-      "description": null,
+      "version": "0",
       "primary_id": "Os06g0702600",
-      "synonyms": []
+      "dbname": "ArrayExpress",
+      "info_type": "DIRECT",
+      "info_text": "",
+      "description": null,
+      "synonyms": [],
+      "display_id": "Os06g0702600"
      }
     ],
     "by_db": {

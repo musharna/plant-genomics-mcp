@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-26T06:50:04Z",
- "elapsed_s": 1.4379178719973424,
+ "started_at": "2026-09-26T08:40:31Z",
+ "elapsed_s": 15.135300834008376,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.7746557310019853,
+   "elapsed_s": 14.763458008004818,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0005919660034123808,
+   "elapsed_s": 0.0006024860049365088,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 5.821700324304402e-05,
+   "elapsed_s": 6.44049869151786e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "error",
-   "elapsed_s": 3.6860001273453236e-05,
+   "elapsed_s": 4.337700374890119e-05,
    "result": null,
    "error": "[NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os04g0519700 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.6610349760012468,
+   "elapsed_s": 0.3712909840105567,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0005764269881183282,
+   "elapsed_s": 0.0006825559976277873,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0002705750084714964,
+   "elapsed_s": 0.0008059450046857819,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.007597408999572508,
+   "elapsed_s": 0.0004025329981232062,
    "result": null,
    "error": null
   }
@@ -88,19 +88,19 @@
   "markdown": "# OsARF10 (UniProt: ARF10) \u2014 `Os04g0519700`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 4:26,013,363\u201326,016,187 (+) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 10**\nARFJ_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 699 aa\nUniProt: [Q7XKK6](https://www.uniprot.org/uniprotkb/Q7XKK6)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [124\u2013225]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [318\u2013391]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [123\u2013227]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [613\u2013697]\n- **B3 DNA binding domain** (domain, interpro) [124\u2013227]\n- **Auxin response factor domain** (domain, interpro) [303\u2013386]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [118\u2013227]\n- **Auxin response factor** (family, interpro) [18\u2013692]\n- **PB1-like domain** (domain, interpro) [613\u2013693]\n- **B3 DNA binding domain** (domain, pfam) [125\u2013226]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0007389] pattern specification process (IBA)\n- [GO:0007389] pattern specification process (IEA)\n- [GO:0009725] response to hormone (IEA)\n- [GO:0009733] response to auxin (IBA)\n- [GO:0048829] root cap development (IBA)\n- [GO:0048829] root cap development (IEA)\n- [GO:0051301] cell division (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os04g0519700 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| IAA19 | 0.53 |\n| Q0J9G7_ORYSJ | 0.509 |\n| ARF | 0.487 |\n| IAA10 | 0.466 |\n| Q7XK43_ORYSJ | 0.455 |\n| Q6ZH84_ORYSJ | 0.455 |\n| GAMYB | 0.409 |\n\n## Cross-references\n- Expression Atlas: Os04g0519700\n\n## Literature\n4 hits total; showing top 4.\n- **MIKC-type MADS-box transcription factor OsMADS31 positively regulates salinity tolerance in rice** \u2014 Yin X, Gao Q, Wang F, Liu W, Yu S, Zhong S, Feng J, Bai R, Luo Y, Chen L, Dai X, Liang M. (PMID:40978792; doi:10.3389/fpls.2025.1628305)\n- **Understanding plant-microbe interaction of rice and soybean with two contrasting diazotrophic bacteria through comparative transcriptome analysis** \u2014 Saini MR, Chandran LP, Barbadikar KM, Sevanthi AMV, Chawla G, Kaushik M, Mulani E, Phule AS, Govindannagari R, Sonth B, Sinha SK, Sundaram RM, Mandal PK. (PMID:36483966; doi:10.3389/fpls.2022.939395)\n- **Moderate water stress in rice induces rhizosheath formation associated with abscisic acid and auxin responses** \u2014 Zhang Y, Du H, Gui Y, Xu F, Liu J, Zhang J, Xu W. (PMID:32053723; doi:10.1093/jxb/eraa021)\n- **Genome-wide association study identifies five new cadmium uptake loci in wheat** \u2014 Safdar LB, Almas F, Sarfraz S, Ejaz M, Ali Z, Mahmood Z, Yang L, Tehseen MM, Ikram M, Ikram M, Liu S, Quraishi UM. (PMID:33016603; doi:10.1002/tpg2.20030)\n",
   "sections": {
    "annotation": {
-    "canonical_transcript": "Os04t0519700-01",
-    "seq_region_name": "4",
     "assembly_name": "IRGSP-1.0",
-    "logic_name": "rapdb_genes",
-    "object_type": "Gene",
-    "biotype": "protein_coding",
-    "strand": 1,
-    "display_name": "OsARF10",
-    "end": 26016187,
     "start": 26013363,
-    "id": "Os04g0519700",
-    "db_type": "core",
+    "strand": 1,
+    "end": 26016187,
+    "object_type": "Gene",
     "source": "RAP2022-09-01",
+    "seq_region_name": "4",
+    "db_type": "core",
+    "id": "Os04g0519700",
+    "biotype": "protein_coding",
+    "logic_name": "rapdb_genes",
+    "display_name": "OsARF10",
+    "canonical_transcript": "Os04t0519700-01",
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -126,15 +126,15 @@
     "count": 1,
     "xrefs": [
      {
-      "description": null,
-      "db_display_name": "Expression Atlas",
-      "version": "0",
+      "primary_id": "Os04g0519700",
+      "synonyms": [],
+      "info_type": "DIRECT",
       "info_text": "",
       "dbname": "ArrayExpress",
-      "info_type": "DIRECT",
       "display_id": "Os04g0519700",
-      "synonyms": [],
-      "primary_id": "Os04g0519700"
+      "db_display_name": "Expression Atlas",
+      "description": null,
+      "version": "0"
      }
     ],
     "by_db": {

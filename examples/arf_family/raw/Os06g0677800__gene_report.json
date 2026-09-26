@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-26T06:50:05Z",
- "elapsed_s": 1.3029602659953525,
+ "started_at": "2026-09-26T08:40:40Z",
+ "elapsed_s": 4.3721367079997435,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.8165161880024243,
+   "elapsed_s": 4.079662373987958,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0006334900099318475,
+   "elapsed_s": 0.0007098420028341934,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 7.345399353653193e-05,
+   "elapsed_s": 9.575000149197876e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 5.394199979491532e-05,
+   "elapsed_s": 5.655699351336807e-05,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.48573434399440885,
+   "elapsed_s": 0.2918075529887574,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0011474399943836033,
+   "elapsed_s": 0.0011024120030924678,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00026556399825494736,
+   "elapsed_s": 0.0002467519952915609,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00043768700561486185,
+   "elapsed_s": 0.0003311019972898066,
    "result": null,
    "error": null
   }
@@ -88,19 +88,19 @@
   "markdown": "# OsARF17 (UniProt: ARF17) \u2014 `Os06g0677800`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 6:28,158,519\u201328,164,557 (-) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 17**\nARFQ_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 917 aa\nUniProt: [Q653U3](https://www.uniprot.org/uniprotkb/Q653U3)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [133\u2013234]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [298\u2013370]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [132\u2013235]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [783\u2013875]\n- **B3 DNA binding domain** (domain, interpro) [133\u2013236]\n- **Auxin response factor domain** (domain, interpro) [283\u2013366]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [119\u2013263]\n- **AUX/IAA domain** (domain, interpro) [784\u2013871]\n- **Auxin response factor** (family, interpro) [24\u2013875]\n- **PB1-like domain** (domain, interpro) [786\u2013870]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_No KEGG pathway memberships found._\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| B1153E06.24 | 0.98 |\n| Q0JC85_ORYSJ | 0.912 |\n| Q8LRG9_ORYSJ | 0.905 |\n| Q69MK0_ORYSJ | 0.905 |\n| A0A0P0VV58 | 0.899 |\n| A0A0P0VQD8 | 0.893 |\n| Q0DIX4_ORYSJ | 0.884 |\n| Q0JCJ0_ORYSJ | 0.884 |\n| PRMT5 | 0.879 |\n| Q688U0_ORYSJ | 0.877 |\n\n## Cross-references\n- WikiGene: 4341841\n- Expression Atlas: Os06g0677800\n- NCBI gene (formerly Entrezgene): 4341841\n\n## Literature\n7 hits total; showing top 7.\n- **Identification of Key Genes and Pathways for Anaerobic Germination Tolerance in Rice Using Weighted Gene Co-Expression Network Analysis (WGCNA) in Association with Quantitative Trait Locus (QTL) Mapping** \u2014 Yin M, Zheng Z, Zhang Y, Wang S, Zuo L, Lei Y, Zhao Y, Zhao X, Fu B, Shi Y, Xu J, Wang W. (PMID:38819744; doi:10.1186/s12284-024-00714-y)\n- **Population Structure of Nation-Wide Rice in Thailand** \u2014 Vejchasarn P, Shearman JR, Chaiprom U, Phansenee Y, Suthanthangjai A, Jairin J, Chamarerk V, Tulyananda T, Amornbunchornvej C. (PMID:34693480; doi:10.1186/s12284-021-00528-2)\n- **miR167d-ARFs Module Regulates Flower Opening and Stigma Size in Rice** \u2014 Zhao ZX, Yin XX, Li S, Peng YT, Yan XL, Chen C, Hassan B, Zhou SX, Pu M, Zhao JH, Hu XH, Li GB, Wang H, Zhang JW, Huang YY, Fan J, Li Y, Wang WM. (PMID:35876915; doi:10.1186/s12284-022-00587-z)\n- **Insights on Phytohormonal Crosstalk in Plant Response to Nitrogen Stress: A Focus on Plant Root Growth and Development** \u2014 Ahmad N, Jiang Z, Zhang L, Hussain I, Yang X. (PMID:36835044; doi:10.3390/ijms24043631)\n- **SPOC domain-containing protein Leaf inclination3 interacts with LIP1 to regulate rice leaf inclination through auxin signaling** \u2014 Chen SH, Zhou LJ, Xu P, Xue HW. (PMID:30496185; doi:10.1371/journal.pgen.1007829)\n- **Plant nitrogen availability and crosstalk with phytohormones signallings and their biotechnology breeding application in crops** \u2014 Xing J, Cao X, Zhang M, Wei X, Zhang J, Wan X. (PMID:36435985; doi:10.1111/pbi.13971)\n- **Metabolic and transcriptional regulatory mechanisms underlying the anoxic adaptation of rice coleoptile** \u2014 Lakshmanan M, Mohanty B, Lim SH, Ha SH, Lee DY. (PMID:24894389; doi:10.1093/aobpla/plu026)\n",
   "sections": {
    "annotation": {
-    "source": "RAP2022-09-01",
+    "seq_region_name": "6",
+    "logic_name": "rapdb_genes",
+    "start": 28158519,
+    "canonical_transcript": "Os06t0677800-01",
+    "assembly_name": "IRGSP-1.0",
+    "db_type": "core",
     "display_name": "OsARF17",
-    "object_type": "Gene",
     "strand": -1,
+    "source": "RAP2022-09-01",
+    "object_type": "Gene",
+    "end": 28164557,
     "id": "Os06g0677800",
     "biotype": "protein_coding",
-    "logic_name": "rapdb_genes",
-    "canonical_transcript": "Os06t0677800-01",
-    "end": 28164557,
-    "start": 28158519,
-    "assembly_name": "IRGSP-1.0",
-    "seq_region_name": "6",
-    "db_type": "core",
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -127,36 +127,36 @@
     "xrefs": [
      {
       "synonyms": [],
-      "info_type": "DEPENDENT",
-      "description": "auxin response factor 17-like",
-      "version": "0",
-      "info_text": "",
-      "display_id": "LOC4341841",
-      "db_display_name": "WikiGene",
-      "dbname": "WikiGene",
-      "primary_id": "4341841"
-     },
-     {
-      "info_text": "",
-      "display_id": "Os06g0677800",
-      "version": "0",
-      "dbname": "ArrayExpress",
-      "db_display_name": "Expression Atlas",
-      "primary_id": "Os06g0677800",
-      "info_type": "DIRECT",
-      "synonyms": [],
-      "description": null
-     },
-     {
-      "info_type": "DEPENDENT",
-      "synonyms": [],
-      "description": "auxin response factor 17-like",
-      "display_id": "LOC4341841",
-      "info_text": "",
-      "version": "0",
       "primary_id": "4341841",
+      "version": "0",
+      "description": "auxin response factor 17-like",
+      "db_display_name": "WikiGene",
+      "display_id": "LOC4341841",
+      "info_text": "",
+      "dbname": "WikiGene",
+      "info_type": "DEPENDENT"
+     },
+     {
+      "synonyms": [],
+      "primary_id": "Os06g0677800",
+      "db_display_name": "Expression Atlas",
+      "description": null,
+      "version": "0",
+      "info_type": "DIRECT",
+      "dbname": "ArrayExpress",
+      "info_text": "",
+      "display_id": "Os06g0677800"
+     },
+     {
+      "synonyms": [],
+      "primary_id": "4341841",
+      "version": "0",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "description": "auxin response factor 17-like",
+      "display_id": "LOC4341841",
+      "info_type": "DEPENDENT",
       "dbname": "EntrezGene",
-      "db_display_name": "NCBI gene (formerly Entrezgene)"
+      "info_text": ""
      }
     ],
     "by_db": {

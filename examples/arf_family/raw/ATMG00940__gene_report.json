@@ -5,14 +5,14 @@
   "organism": "arabidopsis_thaliana",
   "top_n": 10
  },
- "started_at": "2026-09-26T06:48:58Z",
- "elapsed_s": 0.816823047993239,
+ "started_at": "2026-09-26T08:38:29Z",
+ "elapsed_s": 10.845454993002932,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.5420178130007116,
+   "elapsed_s": 7.411881512001855,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0003161590138915926,
+   "elapsed_s": 0.0003306110011180863,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.12307874200632796,
+   "elapsed_s": 3.432907707989216,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "error",
-   "elapsed_s": 2.2590000298805535e-05,
+   "elapsed_s": 2.575499820522964e-05,
    "result": null,
    "error": "[NotFoundError] KEGG: no gene record for ATMG00940 (queried as ath:ATMG00940); /list/ath:ATMG00940 is empty"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.274065559002338,
+   "elapsed_s": 0.3770700629975181,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.003376887005288154,
+   "elapsed_s": 0.0008774279995122924,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00010957098857033998,
+   "elapsed_s": 0.000108659005491063,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00015508501383010298,
+   "elapsed_s": 0.00010650200420059264,
    "result": null,
    "error": null
   }
@@ -86,18 +86,18 @@
   "markdown": "# ATMG00940 \u2014 `ATMG00940`\n\n*Arabidopsis thaliana* \u00b7 protein_coding \u00b7 Mt:251,403\u2013251,897 (-) \u00b7 TAIR10\n\n## Protein\n**Uncharacterized mitochondrial protein AtMg00940**\nM940_ARATH \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 164 aa\nUniProt: [P92530](https://www.uniprot.org/uniprotkb/P92530)\n\n## Protein domains\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [108\u2013154]\n- **Auxin response factor domain** (domain, interpro) [93\u2013151]\n- **Auxin response factor** (family, interpro) [2\u2013151]\n- **Auxin response factor ancillary domain** (domain, pfam) [93\u2013151]\n- **AUXIN RESPONSE FACTOR 4-RELATED** (family, panther) [2\u2013151]\n\n## GO annotations\n**Molecular Function**\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IEA)\n- [GO:0005634] nucleus (ISM)\n- [GO:0005739] mitochondrion (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [NotFoundError] KEGG: no gene record for ATMG00940 (queried as ath:ATMG00940); /list/ath:ATMG00940 is empty_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| ATP6-1 | 0.462 |\n| ATP6-2 | 0.429 |\n\n## Cross-references\n- NASC Gene ID: ATMG00940\n- TAIR: ATMG00940\n- TAIR Gene Name: ORF164\n- Expression Atlas: ATMG00940\n- KNETMINER_ARA: ATMG00940\n\n## Literature\n5 hits total; showing top 5.\n- **Genomic and experimental characterization of unique Antarctic temperate phage Perkons reveals multiple integrases and complex lysogenic dynamics in Psychrobacillus sp. L4** \u2014 Zrelovs N, Svanberga K, Priedeslaipa A, Jansons J, Lamsters K, Karuss J, Krievans M, Fridmanis D, Dislers A, Kazaks A. (PMID:42026481; doi:10.1186/s12866-026-05031-6)\n- **Comparison of the Effects of UV-C Light in the Form of Flash or Continuous Exposure: A Transcriptomic Analysis on <i>Arabidopsis thaliana</i> L** \u2014 Jazayeri SM, Aarrouf J, Urban L, Lopez-Lauri F. (PMID:39769480; doi:10.3390/ijms252413718)\n- **Three novel bacteriophages isolated from the East African Rift Valley soda lakes** \u2014 van Zyl LJ, Nemavhulani S, Cass J, Cowan DA, Trindade M. (PMID:27912769; doi:10.1186/s12985-016-0656-6)\n- **Phylogenomic network and comparative genomics reveal a diverged member of the \u03a6KZ-related group, marine vibrio phage \u03a6JM-2012** \u2014 Jang HB, Fagutao FF, Nho SW, Park SB, Cha IS, Yu JE, Lee JS, Im SP, Aoki T, Jung TS. (PMID:24067958; doi:10.1128/jvi.02656-13)\n- **Characterization of the basic replicon of Rhodococcus plasmid pSOX and development of a Rhodococcus-Escherichia coli shuttle vector** \u2014 Denis-Larose C, Bergeron H, Labb\u00e9 D, Greer CW, Hawari J, Grossman MJ, Sankey BM, Lau PC. (PMID:9797291; doi:10.1128/aem.64.11.4363-4367.1998)\n",
   "sections": {
    "annotation": {
-    "end": 251897,
-    "biotype": "protein_coding",
-    "id": "ATMG00940",
-    "db_type": "core",
-    "strand": -1,
-    "seq_region_name": "Mt",
     "start": 251403,
-    "logic_name": "araport11",
-    "source": "araport11",
     "assembly_name": "TAIR10",
-    "object_type": "Gene",
+    "seq_region_name": "Mt",
+    "db_type": "core",
+    "biotype": "protein_coding",
+    "logic_name": "araport11",
+    "end": 251897,
     "canonical_transcript": "ATMG00940.1",
+    "object_type": "Gene",
+    "strand": -1,
+    "id": "ATMG00940",
+    "source": "araport11",
     "organism": "arabidopsis_thaliana",
     "upstream_version": null
    },
@@ -121,59 +121,59 @@
     "count": 5,
     "xrefs": [
      {
-      "info_type": "DIRECT",
+      "synonyms": [],
+      "primary_id": "ATMG00940",
+      "db_display_name": "NASC Gene ID",
       "description": "DNA binding",
-      "display_id": "ATMG00940-TAIR-G",
+      "version": "0",
+      "info_type": "DIRECT",
+      "info_text": "",
+      "dbname": "NASC_GENE_ID",
+      "display_id": "ATMG00940-TAIR-G"
+     },
+     {
+      "primary_id": "ATMG00940",
+      "synonyms": [],
+      "display_id": "ATMG00940",
+      "info_type": "DIRECT",
+      "info_text": "",
+      "dbname": "TAIR_LOCUS",
+      "version": "0",
+      "db_display_name": "TAIR",
+      "description": "DNA binding"
+     },
+     {
+      "primary_id": "ORF164",
       "synonyms": [],
       "info_text": "",
-      "primary_id": "ATMG00940",
-      "dbname": "NASC_GENE_ID",
-      "db_display_name": "NASC Gene ID",
+      "dbname": "TAIR_SYMBOL",
+      "info_type": "DIRECT",
+      "display_id": "ORF164",
+      "description": "",
+      "db_display_name": "TAIR Gene Name",
       "version": "0"
      },
      {
-      "info_type": "DIRECT",
-      "info_text": "",
       "synonyms": [],
-      "display_id": "ATMG00940",
-      "description": "DNA binding",
-      "version": "0",
-      "db_display_name": "TAIR",
-      "dbname": "TAIR_LOCUS",
-      "primary_id": "ATMG00940"
-     },
-     {
-      "version": "0",
-      "db_display_name": "TAIR Gene Name",
-      "dbname": "TAIR_SYMBOL",
-      "primary_id": "ORF164",
-      "info_type": "DIRECT",
-      "info_text": "",
-      "synonyms": [],
-      "display_id": "ORF164",
-      "description": ""
-     },
-     {
+      "primary_id": "ATMG00940",
       "version": "0",
       "db_display_name": "Expression Atlas",
-      "dbname": "ArrayExpress",
-      "primary_id": "ATMG00940",
+      "description": null,
+      "display_id": "ATMG00940",
       "info_type": "DIRECT",
       "info_text": "",
-      "synonyms": [],
-      "display_id": "ATMG00940",
-      "description": null
+      "dbname": "ArrayExpress"
      },
      {
-      "dbname": "KNETMINER_ARA",
-      "primary_id": "ATMG00940",
-      "version": "0",
+      "description": null,
       "db_display_name": "KNETMINER_ARA",
+      "version": "0",
+      "dbname": "KNETMINER_ARA",
+      "info_text": "",
+      "info_type": "DEPENDENT",
       "display_id": "ATMG00940",
       "synonyms": [],
-      "description": null,
-      "info_text": "",
-      "info_type": "DEPENDENT"
+      "primary_id": "ATMG00940"
      }
     ],
     "by_db": {

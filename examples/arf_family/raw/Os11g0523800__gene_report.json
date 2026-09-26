@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-26T06:50:07Z",
- "elapsed_s": 1.2014896209875587,
+ "started_at": "2026-09-26T08:40:44Z",
+ "elapsed_s": 4.353653378988383,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.6910865800018655,
+   "elapsed_s": 4.000274157995591,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0009133959974860772,
+   "elapsed_s": 0.000679788994602859,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 7.598900992888957e-05,
+   "elapsed_s": 4.1942999814637005e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "error",
-   "elapsed_s": 4.1997001972049475e-05,
+   "elapsed_s": 3.4926997614093125e-05,
    "result": null,
    "error": "[NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os11g0523800 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "error",
-   "elapsed_s": 0.5072784019866958,
+   "elapsed_s": 0.3522567979962332,
    "result": null,
    "error": "[NotFoundError] STRING: no interaction partners for Os11g0523800 (queried as Os11g0523800)"
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0013649879983859137,
+   "elapsed_s": 0.005009073007386178,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.05378049399587326,
+   "elapsed_s": 0.00020540200057439506,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00046411799849011004,
+   "elapsed_s": 0.00027500500436872244,
    "result": null,
    "error": null
   }
@@ -88,19 +88,19 @@
   "markdown": "# OsARF1 (UniProt: ARF23) \u2014 `Os11g0523800`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 11:18,935,399\u201318,941,686 (-) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 23**\nARFW_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 853 aa\nUniProt: [Q2R3F5](https://www.uniprot.org/uniprotkb/Q2R3F5)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [147\u2013249]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [312\u2013383]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [146\u2013251]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [721\u2013814]\n- **B3 DNA binding domain** (domain, interpro) [147\u2013251]\n- **Auxin response factor domain** (domain, interpro) [298\u2013380]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [144\u2013278]\n- **AUX/IAA domain** (domain, interpro) [712\u2013812]\n- **Auxin response factor** (family, interpro) [37\u2013814]\n- **PB1-like domain** (domain, interpro) [725\u2013809]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os11g0523800 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene_\n\n## Interaction partners (STRING, top 10)\n_Unavailable \u2014 [NotFoundError] STRING: no interaction partners for Os11g0523800 (queried as Os11g0523800)_\n\n## Cross-references\n- Expression Atlas: Os11g0523800\n\n## Literature\n10 hits total; showing top 10.\n- **Integrated Transcriptome and Metabolome Analyses Reveal Complex Oxidative Damage Mechanisms in Rice Seedling Roots Under Different Carbonate Stresses** \u2014 Cao Y, Hao F, Li J, Zhang B, Li Z, Liu T, Gao Y, Niu X, Liu X, Zhang H, Yang L. (PMID:40563293; doi:10.3390/antiox14060658)\n- **Deciphering the genetic basis of agronomic, yield, and nutritional traits in rice (Oryza sativa L.) using a saturated GBS-based SNP linkage map** \u2014 Calayugan MIC, Hore TK, Palanog AD, Amparado A, Inabangan-Asilo MA, Joshi G, Chintavaram B, Swamy BPM. (PMID:39098874; doi:10.1038/s41598-024-67543-3)\n- **The OsMAPK5-OsWRKY72 module negatively regulates grain length and grain weight in rice** \u2014 Wang F, Lin J, Yang F, Chen X, Liu Y, Yan L, Chen J, Wang Z, Xie H, Zhang J, Xu H, Chen S. (PMID:39474750; doi:10.1111/jipb.13786)\n- **Initiation of scutellum-derived callus is regulated by an embryo-like developmental pathway in rice** \u2014 Guo F, Wang H, Lian G, Cai G, Liu W, Zhang H, Li D, Zhou C, Han N, Zhu M, Su Y, Seo PJ, Xu L, Bian H. (PMID:37100819; doi:10.1038/s42003-023-04835-w)\n- **Identification of Key Genes and Pathways for Anaerobic Germination Tolerance in Rice Using Weighted Gene Co-Expression Network Analysis (WGCNA) in Association with Quantitative Trait Locus (QTL) Mapping** \u2014 Yin M, Zheng Z, Zhang Y, Wang S, Zuo L, Lei Y, Zhao Y, Zhao X, Fu B, Shi Y, Xu J, Wang W. (PMID:38819744; doi:10.1186/s12284-024-00714-y)\n- **A meta-QTL analysis highlights genomic hotspots associated with phosphorus use efficiency in rice (<i>Oryza sativa</i> L.)** \u2014 Navea IP, Maung PP, Yang S, Han JH, Jing W, Shin NH, Zhang W, Chin JH. (PMID:37662146; doi:10.3389/fpls.2023.1226297)\n- **An epigenetic pathway in rice connects genetic variation to anaerobic germination and seedling establishment** \u2014 Castano-Duque L, Castano-Duque L, Ghosal S, Quilloy FA, Mitchell-Olds T, Dixit S. (PMID:33638990; doi:10.1093/plphys/kiab100)\n- **Monitoring of Rice Transcriptional Responses to Contrasted Colonizing Patterns of Phytobeneficial <i>Burkholderia s.l.</i> Reveals a Temporal Shift in JA Systemic Response** \u2014 King E, Wallner A, Rimbault I, Barrachina C, Klonowska A, Moulin L, Czernic P. (PMID:31608089; doi:10.3389/fpls.2019.01141)\n- **Rice actin-binding protein RMD is a key link in the auxin-actin regulatory loop that controls cell growth** \u2014 Li G, Liang W, Zhang X, Ren H, Hu J, Bennett MJ, Zhang D. (PMID:24982173; doi:10.1073/pnas.1401680111)\n- **Plant root transcriptome profiling reveals a strain-dependent response during Azospirillum-rice cooperation** \u2014 Drogue B, Sanguin H, Chamam A, Mozar M, Llauro C, Panaud O, Prigent-Combaret C, Picault N, Wisniewski-Dy\u00e9 F. (PMID:25414716; doi:10.3389/fpls.2014.00607)\n",
   "sections": {
    "annotation": {
-    "object_type": "Gene",
-    "canonical_transcript": "Os11t0523800-02",
     "end": 18941686,
-    "start": 18935399,
-    "biotype": "protein_coding",
-    "seq_region_name": "11",
-    "source": "RAP2022-09-01",
-    "strand": -1,
-    "assembly_name": "IRGSP-1.0",
-    "logic_name": "rapdb_genes",
-    "db_type": "core",
     "id": "Os11g0523800",
+    "start": 18935399,
+    "strand": -1,
     "display_name": "OsARF1",
+    "db_type": "core",
+    "source": "RAP2022-09-01",
+    "logic_name": "rapdb_genes",
+    "canonical_transcript": "Os11t0523800-02",
+    "seq_region_name": "11",
+    "assembly_name": "IRGSP-1.0",
+    "object_type": "Gene",
+    "biotype": "protein_coding",
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -129,12 +129,12 @@
       "primary_id": "Os11g0523800",
       "synonyms": [],
       "display_id": "Os11g0523800",
-      "info_type": "DIRECT",
-      "dbname": "ArrayExpress",
       "info_text": "",
+      "dbname": "ArrayExpress",
+      "info_type": "DIRECT",
       "version": "0",
-      "db_display_name": "Expression Atlas",
-      "description": null
+      "description": null,
+      "db_display_name": "Expression Atlas"
      }
     ],
     "by_db": {
