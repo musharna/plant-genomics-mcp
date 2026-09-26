@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v1.27.0 — 2026-09-26
+
+**56 tools / 23 backends** — one new tool, `upstream_release`; `panther_family` and `orthodb_orthologs` now report `upstream_version` (null before), OrthoDB is pinned to `v12`, and always-null `upstream_version` descriptions name their `upstream_release` backend.
 
 - **New tool `upstream_release`.** The release a backend's own endpoint
   calls current, for the backends whose answers state none (their tools'
