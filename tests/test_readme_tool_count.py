@@ -18,7 +18,17 @@ README = Path(__file__).resolve().parents[1] / "README.md"
 STATED = re.compile(r"\*\*(\d+) tools\b")
 # "29 single-locus + 1 motif lookup + ... + 5 cross-source synthesis", wrapped
 # across lines in one of the two places.
-BREAKDOWN = re.compile(r"(\d+) single-locus((?:\s*\+\s*\d+[^+]*?)+?)cross-source synthesis")
+FIRST = re.compile(r"(\d+) single-locus")
+END = "cross-source synthesis"
+PART = re.compile(r"\+\s*(\d+)")
+
+
+def _breakdown_sums(text: str) -> list[int]:
+    sums = []
+    for match in FIRST.finditer(text):
+        rest = text[match.end() : text.index(END, match.end())]
+        sums.append(int(match.group(1)) + sum(int(n) for n in PART.findall(rest)))
+    return sums
 
 
 def test_every_stated_tool_count_and_breakdown_matches_the_server() -> None:
@@ -26,10 +36,7 @@ def test_every_stated_tool_count_and_breakdown_matches_the_server() -> None:
     tools = len(server.TOOLS)
 
     stated = [int(n) for n in STATED.findall(text)]
-    breakdowns = [
-        int(first) + sum(int(n) for n in re.findall(r"\+\s*(\d+)", rest))
-        for first, rest in BREAKDOWN.findall(text)
-    ]
+    breakdowns = _breakdown_sums(text)
     # Positive control: both statements and both breakdowns are found, so a
     # pattern that matches nothing cannot pass by checking nothing.
     assert len(stated) == 2, stated
