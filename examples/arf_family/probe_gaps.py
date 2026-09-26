@@ -58,6 +58,8 @@ PROBES: list[tuple[str, str, dict]] = [
         "gene_tree_members",
         {"gene_tree_id": "EPlGT00940000167082", "limit": 1000},
     ),
+    # Gramene carries no paralog for this gene; Compara's paralogues do.
+    ("paralog-closure-empty", "ensembl_plants_paralogs", {"locus": "AT1G19850", "limit": 1000}),
     # Last: main() follows this probe's next_cursor to its second page.
     ("no-pagination", "gramene_homologs", {"locus": "AT1G19850"}),
 ]
@@ -84,6 +86,7 @@ DESCRIBED = (
     "panther_family",
     "jaspar_motif",
     "bar_aiv_interactions",
+    "ensembl_plants_paralogs",
 )
 
 

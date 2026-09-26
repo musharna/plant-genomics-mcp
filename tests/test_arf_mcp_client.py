@@ -28,7 +28,7 @@ def test_lists_all_tools_over_real_stdio():
             await c.close()
 
     names = {t["name"] for t in run(go())}
-    assert len(names) == 53
+    assert len(names) == 54
     assert {"interpro_domains", "gramene_homologs", "gene_report"} <= names
 
 
@@ -54,7 +54,7 @@ def test_unknown_tool_is_reported_not_raised():
             await c.close()
 
     tools, r = run(go())
-    assert len(tools) == 53
+    assert len(tools) == 54
     assert r.ok is False and r.error
 
 

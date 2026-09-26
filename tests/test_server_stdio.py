@@ -83,6 +83,7 @@ async def test_initialize_and_list_tools(server_params: StdioServerParameters) -
                 "blast_sequence",
                 "consensus_homologs",
                 "ensembl_plants_lookup_locus",
+                "ensembl_plants_paralogs",
                 "ensembl_region_query",
                 "experimental_interactions",
                 "find_homologs_synth",
@@ -275,6 +276,7 @@ async def test_tool_schemas_use_organism_param(server_params: StdioServerParamet
     """
     organism_aware = {
         "ensembl_plants_lookup_locus",
+        "ensembl_plants_paralogs",
         "get_gene_xrefs",
         "phytozome_lookup_locus",
         "resolve_locus_to_uniprot",

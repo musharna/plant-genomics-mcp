@@ -383,3 +383,99 @@ async def gene_tree_members(
         "members": members[:limit],
         "upstream_version": None,
     }
+
+
+PARALOGS_DEFAULT_LIMIT = 100
+PARALOGS_MAX_LIMIT = 1000
+
+
+def _paralog(row: dict[str, Any], slug: str, prefix: str, locus: str) -> dict[str, Any]:
+    try:
+        target = row["target"]
+        gene = target["id"]
+        species = target["species"]
+        kind = row["type"]
+    except (KeyError, TypeError) as exc:
+        raise PlantGenomicsError(
+            f"Ensembl paralogues of {locus}: row without target id, species or type "
+            f"({exc!r}): {row!r}"
+        ) from exc
+    # A paralogue is same-species by Ensembl's definition; another species here
+    # means the answer is not the one this tool describes.
+    if species != slug:
+        raise PlantGenomicsError(
+            f"Ensembl paralogues of {locus} in {slug}: row names species {species!r} ({gene})"
+        )
+    return {
+        "locus": gene.removeprefix(prefix) if prefix else gene,
+        "type": kind,
+        "taxonomy_level": row.get("taxonomy_level"),
+        "perc_id": target.get("perc_id"),
+        "perc_pos": target.get("perc_pos"),
+        "protein_id": target.get("protein_id"),
+    }
+
+
+async def paralogs(
+    client: httpx.AsyncClient,
+    locus: str,
+    organism: str | int = organisms.DEFAULT_ORGANISM,
+    limit: int = PARALOGS_DEFAULT_LIMIT,
+) -> dict[str, Any]:
+    """The paralogues Ensembl Compara (plants) records for a locus.
+
+    Gramene v69's projection of Compara keeps ``within_species_paralog`` and
+    drops ``other_paralog`` (Ensembl's "ancient paralogues", inferred across
+    a super tree), so a gene can have paralogues here and none in
+    ``gramene_homologs``. Rows are sorted closest first (``perc_id``
+    descending, then locus); ``total`` and ``counts_by_type`` count every row
+    before ``limit`` cuts.
+
+    Compara answers ``{"data": []}`` both for an id Ensembl does not know and
+    for a real gene it keeps no homology for, so on that answer one
+    ``/lookup/id`` call decides: unknown is ``NotFoundError``, known is
+    ``found=False``.
+    """
+    if not 1 <= limit <= PARALOGS_MAX_LIMIT:
+        raise ValueError(f"limit must be in 1..{PARALOGS_MAX_LIMIT}, got {limit}")
+    locus = validators.assert_valid_locus(locus, backend="Ensembl Plants")
+    slug = organisms.ensembl_slug_for(organism)
+    prefix = organisms.ensembl_id_prefix_for(organism)
+    raw = await _get(
+        client,
+        f"/homology/id/{slug}/{wire_id(locus, organism)}",
+        params={"compara": "plants", "type": "paralogues", "sequence": "none"},
+    )
+    data = raw.get("data") if isinstance(raw, dict) else None
+    if not isinstance(data, list):
+        raise PlantGenomicsError(
+            f"Ensembl paralogues of {locus} returned no data list: {type(raw).__name__}"
+        )
+    if not data:
+        # Raises NotFoundError for an id Ensembl does not know.
+        await lookup_locus(client, locus, organism=organism)
+        rows: list[dict[str, Any]] = []
+        found = False
+    else:
+        homologies = data[0].get("homologies") if isinstance(data[0], dict) else None
+        if not isinstance(homologies, list):
+            raise PlantGenomicsError(
+                f"Ensembl paralogues of {locus} returned no homologies list: {data[0]!r}"
+            )
+        rows = [_paralog(row, slug, prefix, locus) for row in homologies]
+        found = True
+    rows.sort(key=lambda p: (-(p["perc_id"] or 0.0), p["locus"]))
+    counts: dict[str, int] = {}
+    for row in rows:
+        counts[row["type"]] = counts.get(row["type"], 0) + 1
+    return {
+        "locus": locus,
+        "organism": organisms.resolve(organism).canonical,
+        "found": found,
+        "total": len(rows),
+        "returned": min(len(rows), limit),
+        "truncated": len(rows) > limit,
+        "counts_by_type": counts,
+        "paralogs": rows[:limit],
+        "upstream_version": None,
+    }
