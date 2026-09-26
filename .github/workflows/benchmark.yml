@@ -1,20 +1,20 @@
 name: benchmark
 
-# Scheduled scientific-validation / drift monitor for the live backends.
-# Runs scripts/benchmark_annotations.py weekly against the ~11 upstream APIs.
+# Scheduled drift monitor for the live backends.
+# Runs scripts/benchmark_annotations.py weekly against the 9 upstream APIs its
+# corpus exercises, comparing to the frozen snapshot in expected.json.
 # Two-strikes: on a non-zero run we re-run ONLY the failing loci and page
 # (Telegram + ntfy + red x) only if the same loci fail twice — so transient
 # network blips (Europe PMC / ATTED) don't wake anyone. NOT run on push/PR
 # (that CI is mocked + offline); schedule + manual only.
 #
-# Notifications mirror the homelab notify.sh fan-out (Telegram bot + the unified
-# self-hosted ntfy topic), but hit both PUBLIC endpoints directly so the runner
-# needs no tailnet access. See followup-ntfy-consolidation memo for notify.sh.
+# Notifications go to a Telegram bot and an ntfy topic, both over their public
+# endpoints. Each is skipped with a warning when its secret is unset.
 #
 # Operator secrets (set via `gh secret set <NAME>`):
-#   TELEGRAM_BOT_TOKEN  BotFather token for the homelab bot (api.telegram.org)
-#   TELEGRAM_CHAT_ID    destination chat id (homelab bot's chat)
-#   BENCHMARK_NTFY_URL  full topic URL, e.g. https://ntfy.sh/mjarnold-homelab-<id>
+#   TELEGRAM_BOT_TOKEN  BotFather token for the bot (api.telegram.org)
+#   TELEGRAM_CHAT_ID    destination chat id
+#   BENCHMARK_NTFY_URL  full topic URL, e.g. https://ntfy.sh/<topic>
 
 on:
   schedule:
