@@ -2,9 +2,10 @@
 
 > **54 tools** for plant-genomics locus lookup over the Model Context Protocol —
 > 29 single-locus + 1 motif lookup + 1 region query + 1 variant annotator + 1 gene-set enrichment + 1 BLAST search + 2 member lists (family entry, gene tree) + 13 parallel-batch + 5 cross-source synthesis variants.
-> Free, public sources: Ensembl Plants, Phytozome BioMart, UniProtKB,
-> Europe PMC, QuickGO, Planteome, PlantCyc/PMN, g:Profiler, NCBI BLAST,
-> Gramene, JASPAR, KEGG, STRING-DB, ATTED-II, ThaleMine, and BAR (Bio-Analytic Resource for
+> 23 free, public sources: Ensembl Plants, Phytozome BioMart, UniProtKB,
+> Europe PMC, QuickGO, Planteome, PlantCyc/PMN, g:Profiler, AlphaFold DB, PDBe,
+> InterPro, JASPAR, PANTHER, OrthoDB, AraGWAS, 1001 Genomes, NCBI BLAST,
+> Gramene, KEGG, STRING-DB, ATTED-II, ThaleMine, and BAR (Bio-Analytic Resource for
 > Plant Biology).
 
 [![PyPI](https://img.shields.io/pypi/v/plant-genomics-mcp)](https://pypi.org/project/plant-genomics-mcp/)
@@ -57,11 +58,13 @@ name any tool or remember the chain:
 > function, GO terms, KEGG pathways, protein-interaction partners, and
 > recent papers."**
 
-Claude fans out across Ensembl Plants, UniProt, QuickGO, KEGG, STRING-DB,
-and Europe PMC in a single turn and hands back one synthesized answer.
-Swap in any locus and pass `organism=` for cross-species — e.g. rice
-`Os01g0100100` (`oryza_sativa`) — and it routes to the right backends
-automatically.
+The server supplies the tools (here: Ensembl Plants, UniProt, QuickGO, KEGG,
+STRING-DB and Europe PMC lookups); which ones get called, in what order and in
+how many turns is up to the client. In the recording at the top of this page
+(a narrower prompt), Claude Code picked the calls itself and returned one
+combined answer. Swap in any locus and pass `organism=` for cross-species —
+e.g. rice `Os01g0100100` (`oryza_sativa`) — and each tool maps the organism to
+that backend's own identifier.
 
 A worked 64-call run over 114 genes in three organisms, with the 58 gaps it logged (36 since closed), is in [`examples/arf_family/PAGE.md`](examples/arf_family/PAGE.md).
 
@@ -118,12 +121,13 @@ hosts can surface them without a destructive-action confirmation prompt.
 | 31  | Orthology (live)        | `orthodb_orthologs`                     | OrthoDB ortholog group (name, evolutionary rate) + cross-species member genes at the Viridiplantae level. organism_count + truncated. All 12 organisms.                                                                                                                                                                                                               |
 | 32  | Diversity (live)        | `aragwas_associations`                  | AraGWAS genome-wide association hits per locus — score, MAF, SNP effect, phenotype/study. Arabidopsis-only.                                                                                                                                                                                                                                                           |
 | 33  | Diversity (live)        | `arabidopsis_natural_variation`         | 1001 Genomes natural-variation SNP effects across 1135 accessions — chr, position, effect, impact, amino-acid change, transcript + gene span. Arabidopsis-only.                                                                                                                                                                                                       |
-| 34  | Batch (live)            | `batch_*` (twelve variants)             | Parallel per-locus fanout for tools 1–6, 8–12, 14. Up to 50 loci per call.                                                                                                                                                                                                                                                                                            |
-| 35  | Synthesis (live)        | `*_synth` / `consensus_homologs` (four) | Compose 2–5 backends in parallel, return a `SynthesisEnvelope` with per-step status.                                                                                                                                                                                                                                                                                  |
-| 36  | Synthesis (live)        | `gene_report`                           | One-shot "tell me about this gene" dossier — annotation + xrefs + protein + domains + GO + KEGG + STRING + literature composed into a rendered Markdown `result.markdown` (+ structured `result.sections`).                                                                                                                                                           |
-| 37  | Families (live)         | `entry_members`                         | Every protein in one organism carrying an InterPro / Pfam / PANTHER entry, with the locus each maps to (entry → genes; the reverse of tools 23 and 30). UniProt `total` + cursor paging; reviewed-only by default. |
-| 38  | Families (live)         | `gene_tree_members`                     | Every gene in an Ensembl Compara gene tree — the `gene_tree_id` that `gramene_homologs` returns — with locus, protein id, species and organism; `target_organism` keeps one organism's members. `total` + `limit`. |
-| 39  | Homology (live)         | `ensembl_plants_paralogs`               | Paralogues Ensembl Compara records for a locus — `within_species_paralog` and the `other_paralog` ("ancient paralogues") that `gramene_homologs` drops — closest first, with perc_id, taxonomy level and protein id. Not a family list: test membership with `interpro_domains`. `total` + `limit`. |
+| 34  | Batch (live)            | `batch_*` (twelve dedicated variants)   | Parallel per-locus fanout for tools 1–6, 8–12, 14. Up to 50 loci per call.                                                                                                                                                                                                                                                                                            |
+| 35  | Batch (live)            | `batch_locus_call`                      | Runs any tool whose only required argument is `locus` (33 tools, including `gene_report` and the synthesis tools) over up to 50 loci; the shared `args` are checked against that tool's schema once, before any call. |
+| 36  | Synthesis (live)        | `*_synth` / `consensus_homologs` (four) | Compose 2–5 backends in parallel, return a `SynthesisEnvelope` with per-step status.                                                                                                                                                                                                                                                                                  |
+| 37  | Synthesis (live)        | `gene_report`                           | One-shot "tell me about this gene" dossier — annotation + xrefs + protein + domains + GO + KEGG + STRING + literature composed into a rendered Markdown `result.markdown` (+ structured `result.sections`).                                                                                                                                                           |
+| 38  | Families (live)         | `entry_members`                         | Every protein in one organism carrying an InterPro / Pfam / PANTHER entry, with the locus each maps to (entry → genes; the reverse of tools 23 and 30). UniProt `total` + cursor paging; reviewed-only by default. |
+| 39  | Families (live)         | `gene_tree_members`                     | Every gene in an Ensembl Compara gene tree — the `gene_tree_id` that `gramene_homologs` returns — with locus, protein id, species and organism; `target_organism` keeps one organism's members. `total` + `limit`. |
+| 40  | Homology (live)         | `ensembl_plants_paralogs`               | Paralogues Ensembl Compara records for a locus — `within_species_paralog` and the `other_paralog` ("ancient paralogues") that `gramene_homologs` drops — closest first, with perc_id, taxonomy level and protein id. Not a family list: test membership with `interpro_domains`. `total` + `limit`. |
 
 </details>
 
@@ -157,11 +161,12 @@ Cross-species — pass `organism=`:
 { "locus": "Os01g0100100", "organism": "oryza_sativa" }
 ```
 
-In Claude Code, the same prompt fans out across Ensembl, UniProtKB, and
-Europe PMC in a single turn ([animated demo](examples/assets/cc-demo.gif)):
+A recorded Claude Code session (2026-05-24) with a narrower prompt — the
+Ensembl record, UniProtKB entry and top three Europe PMC papers for
+AT1G01010 — answered it in one turn ([animated demo](examples/assets/cc-demo.gif)):
 
 <p align="center">
-  <img src="examples/assets/cc-demo.png" alt="Claude Code (Opus 4.7) calling plant-genomics-mcp 8 times to return the AT1G01010 / NAC1_ARATH record with Ensembl, UniProt Q0WV96, and the top-3 Europe PMC papers" width="820">
+  <img src="examples/assets/cc-demo.png" alt="Claude Code (Opus 4.7) calling plant-genomics-mcp 3 times to return the AT1G01010 / NAC1_ARATH record with Ensembl, UniProt Q0WV96, and the top-3 Europe PMC papers" width="820">
 </p>
 
 Full per-tool walkthroughs (with real upstream-API transcripts) live in
@@ -173,8 +178,8 @@ Full per-tool walkthroughs (with real upstream-API transcripts) live in
 | [`analyze_locus_AT1G01010.md`](examples/analyze_locus_AT1G01010.md)                       | Ensembl → xrefs → UniProt → Europe PMC → QuickGO chain (5 tools).                       |
 | [`find_homologs_AT1G01010_NAC_domain.md`](examples/find_homologs_AT1G01010_NAC_domain.md) | BLAST + per-hit UniProt enrichment.                                                     |
 | [`biological_context_AT1G01010.md`](examples/biological_context_AT1G01010.md)             | Gramene + KEGG + UniProt + STRING + ATTED-II (5 tools).                                 |
-| [`v0.8_synthesis_walkthrough.md`](examples/v0.8_synthesis_walkthrough.md)                 | All 4 v0.8 synthesis tools (`*_synth` + `consensus_homologs`) on the same locus.        |
-| [`cross_organism_walkthrough.md`](examples/cross_organism_walkthrough.md)                 | v0.9 multi-organism resolver against rice + maize — per-backend routing on PyPI v1.0.4. |
+| [`v0.8_synthesis_walkthrough.md`](examples/v0.8_synthesis_walkthrough.md)                 | The four v0.8 synthesis tools (`*_synth` + `consensus_homologs`) on one locus. Captured 2026-05-22 at v0.8. |
+| [`cross_organism_walkthrough.md`](examples/cross_organism_walkthrough.md)                 | v0.9 multi-organism resolver against rice + maize — per-backend routing. Captured 2026-05-24 against PyPI v1.0.4. |
 
 ## 📚 Resources & prompts
 
@@ -189,7 +194,7 @@ Clients discover them via `resources/list` and `prompts/list`.
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `pgmcp://cache/stats`         | Per-backend `TTLCache` rollup — `{hits, misses, size}` for each live backend.                                                                          |
 | `pgmcp://organisms/phytozome` | Slug → Phytozome `organism_id` map.                                                                                                                    |
-| `pgmcp://backends/status`     | Per-backend liveness rollup — `name`, `base_url`, `kind`, `subscription_gated`.                                                                        |
+| `pgmcp://backends/status`     | Static per-backend roster — `name`, `base_url`, citation DOI, `subscription_gated`, `kind`. Nothing is probed: `kind` is always `"live"` and says nothing about whether the backend is up right now. |
 | `pgmcp://organisms/coverage`  | Markdown table of all 12 supported plants × 9 ID slots (ncbi_taxid / ensembl / phytozome / string / europe_pmc / kegg / atted / gprofiler / plantcyc). |
 
 **Prompts** (`prompts/get`):
@@ -288,20 +293,29 @@ With `uv`, pass `--extra dev` — a bare `uv sync` omits (and removes) the test
 dependencies. See [CONTRIBUTING.md](CONTRIBUTING.md#dev-setup).
 
 CI runs the unit suite + the stdio smoke on every push/PR (matrix:
-Python 3.11, 3.12, 3.13, 3.14 — the full `requires-python` range). The
-live-network gate is **not** run in CI to avoid flakes from upstream
-availability.
+Python 3.11, 3.12, 3.13, 3.14 — the full `requires-python` range), with a
+dead proxy set so an ungated network call fails. A separate `live-smoke` job
+runs two live test files (`tests/test_verify_genes.py`,
+`tests/test_arf_mcp_client.py`, InterPro and PANTHER) on Python 3.12 on the
+same pushes and PRs; it reports a result but is not a required check, because its result depends on
+third-party services. The rest of the live suite (`PLANT_GENOMICS_MCP_LIVE=1`)
+is not run in CI.
 
-**Scientific validation / drift detection.** `scripts/benchmark_annotations.py`
-drives a curated corpus of canonical loci (27, spanning all 12 organisms)
-through every backend + synthesis pipeline and compares results to a frozen
-baseline, emitting PASS / DRIFT / FAIL plus cross-source consistency
-invariants. It's how upstream data drift is caught. A scheduled GitHub Actions
-workflow (`.github/workflows/benchmark.yml`) runs it weekly and pages on a
-confirmed regression. Operator guide: [`docs/benchmarking.md`](docs/benchmarking.md).
+**Drift detection.** `scripts/benchmark_annotations.py` runs a curated corpus
+of 27 loci (spanning all 12 organisms) through 12 functions — the organism
+resolver plus 11 lookups across 9 of the 23 backends (ATTED-II, BAR, Ensembl
+Plants, Europe PMC, Gramene, KEGG, Phytozome, STRING-DB, UniProt) — and
+compares the results to a frozen snapshot of earlier results
+(`scripts/benchmark_annotations.expected.json`), emitting PASS / DRIFT / FAIL
+plus two cross-source consistency invariants. A change is detected relative to
+that snapshot, not checked against an independent truth. BLAST and the
+synthesis pipelines are registered in the script, but no corpus locus
+exercises them. A scheduled GitHub Actions workflow
+(`.github/workflows/benchmark.yml`) runs it weekly and pages when the same loci
+fail on a re-run. Operator guide: [`docs/benchmarking.md`](docs/benchmarking.md).
 
 ```bash
-.venv/bin/python scripts/benchmark_annotations.py        # full live sweep (~3-5 min)
+.venv/bin/python scripts/benchmark_annotations.py        # full live sweep
 ```
 
 See [`CHANGELOG.md`](CHANGELOG.md) for release notes, including the

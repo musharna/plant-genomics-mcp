@@ -1134,7 +1134,7 @@ Security patch — closes the v1.0.0 fail-open gap on the HTTP transport. **Brea
 
 - **`src/plant_genomics_mcp/server_http.py:build_app()`** — reads `PLANT_GENOMICS_MCP_HTTP_TOKEN` from the env, raises `SystemExit` with an actionable message (suggests `openssl rand -hex 32`) when the value is missing or `< _MIN_TOKEN_LEN = 32` chars. The dead `if expected_token:` guard inside `handle_mcp` is removed — the auth gate now runs unconditionally on every `/mcp` request, since the env var is guaranteed non-empty by construction.
 - **`tests/test_http_transport.py`** — 3 new tests pinning the contract (abort-on-absent, abort-on-short, succeed-at-32-chars); existing tests refactored onto a `_VALID_TOKEN = "x" * 32` constant and an autouse fixture that sets a valid token by default; the obsolete `test_mcp_open_when_token_unset` (which asserted the fail-open mechanism we just removed) is deleted.
-- **Upgrade path.** Existing `~/homelab/plant-genomics-mcp/.env` deployments on the hosted demo endpoint already satisfy the new contract (the 64-char token written during the v1.0.0 deploy is well over 32 chars). Self-hosters who relied on the documented-but-never-shipped fail-open default must now set the env var or the container will refuse to start.
+- **Upgrade path.** The hosted demo deployment's `.env` already satisfies the new contract (the 64-char token written during the v1.0.0 deploy is well over 32 chars). Self-hosters who relied on the documented-but-never-shipped fail-open default must now set the env var or the container will refuse to start.
 
 ## v1.0.0 — 2026-05-23
 
