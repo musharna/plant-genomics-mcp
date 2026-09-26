@@ -72,7 +72,7 @@ UniProtKB, Europe PMC, QuickGO, Planteome, PlantCyc/PMN, g:Profiler,
 AlphaFold DB, PDBe, InterPro, JASPAR, PANTHER, OrthoDB, AraGWAS, 1001 Genomes, NCBI BLAST,
 Gramene, KEGG, STRING-DB, ATTED-II, ThaleMine, BAR.
 28 single-locus + 1 motif lookup + 1 region query + 1 variant annotator + 1 gene-set
-enrichment + 1 BLAST search + 13 parallel-batch + 5 cross-source synthesis. Most take a
+enrichment + 1 BLAST search + 2 member lists + 13 parallel-batch + 5 cross-source synthesis. Most take a
 TAIR-style locus (e.g. `AT1G01010`) plus
 optional `organism=` (slug / scientific name / common name / NCBI taxid
 — 12-plant curated coverage matrix at the `pgmcp://organisms/coverage`

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **README breakdowns sum to the tool count.** The second breakdown lacked
+  the "2 member lists" #130 added to the first, so it summed to 51 under a
+  stated 53; a test now checks both stated counts and both sums against
+  the server's tools.
+
 - **`examples/arf_family/` re-run at `1.24.0` (`55dc6ca`).** Same 64 calls
   over the same 114 genes, against the release.
   36 of the 43 hand-logged gap rows are closed (4 by this run):
