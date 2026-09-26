@@ -45,6 +45,7 @@ from plant_genomics_mcp import (
     phytozome,
     plantcyc,
     planteome,
+    releases,
     server,
     string_db,
     synthesis,
@@ -136,6 +137,8 @@ DISPATCH_SPECS: list[Spec] = [
     Spec("ensembl_plants_paralogs", ensembl_plants, "paralogs", {"locus": L}, L, _DEFAULT_ORG),
     # The organism is this tool's identifier (required): it reaches the backend positionally.
     Spec("ensembl_plants_assembly", ensembl_plants, "assembly", {"organism": "rice"}, "rice", None),
+    # No locus and no organism: the backend name is the only argument.
+    Spec("upstream_release", releases, "upstream_release", {"backend": "kegg"}, "kegg", None),
     Spec("orthodb_orthologs", orthodb, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec("aragwas_associations", aragwas, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec("arabidopsis_natural_variation", onekg, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
