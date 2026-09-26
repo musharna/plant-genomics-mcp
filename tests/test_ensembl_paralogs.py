@@ -314,3 +314,19 @@ async def test_live_tomato_paralogs_are_named_without_the_wire_prefix() -> None:
     loci = [p["locus"] for p in out["paralogs"]]
     assert loci, out
     assert all(locus.startswith("Solyc") for locus in loci), loci
+
+
+@LIVE
+@pytest.mark.asyncio
+async def test_live_a_gene_compara_holds_with_no_paralogue_is_found_and_empty() -> None:
+    """The description's own example: FLS2 (AT5G46330) is in Compara, with
+    orthologues, and Compara records no paralogue for it (live, 2026-09-25:
+    `{"data": [{"homologies": [], "id": "AT5G46330"}]}`). That is found=true
+    with an empty list; the non-coding gene beside it is found=false, so the
+    flag is seen to take both values against the real API."""
+    async with httpx.AsyncClient() as client:
+        fls2 = await ensembl_plants.paralogs(client, "AT5G46330")
+        outside = await ensembl_plants.paralogs(client, "AT4G13495")
+    assert fls2["found"] is True
+    assert (fls2["total"], fls2["paralogs"], fls2["counts_by_type"]) == (0, [], {})
+    assert outside["found"] is False
