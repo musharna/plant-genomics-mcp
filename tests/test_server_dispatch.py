@@ -133,6 +133,7 @@ DISPATCH_SPECS: list[Spec] = [
         "EPlGT00940000167082",
         None,
     ),
+    Spec("ensembl_plants_paralogs", ensembl_plants, "paralogs", {"locus": L}, L, _DEFAULT_ORG),
     Spec("orthodb_orthologs", orthodb, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec("aragwas_associations", aragwas, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec("arabidopsis_natural_variation", onekg, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),

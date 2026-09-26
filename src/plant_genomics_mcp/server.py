@@ -17,6 +17,7 @@ synthesis tools that compose the live backends:
   - ``blast_sequence``                    — NCBI BLAST URLAPI (live, async Put/Get polling)
   - ``gramene_homologs``                  — Gramene v69 homology (live, ortholog/paralog + gene_tree_id)
   - ``gene_tree_members``                 — every gene in a gene_tree_id, optionally one organism's (live, Ensembl Compara)
+  - ``ensembl_plants_paralogs``           — a locus's paralogues, incl. the ancient ones Gramene drops (live, Ensembl Compara)
   - ``kegg_pathways``                     — KEGG pathway memberships (live, multi-organism via ``organism=``)
   - ``string_interactions``               — STRING-DB first-neighbor partners (live, per-channel scores)
   - ``atted_coexpression``                — ATTED-II coexpression (live; z for Ath, LSmr elsewhere)
@@ -129,6 +130,7 @@ from plant_genomics_mcp.models import (
     BarGeneSummary,
     BatchEnvelope,
     BlastResult,
+    EnsemblParalogs,
     EnsemblPlantsLocus,
     EnsemblRegionFeatures,
     EnsemblSequence,
@@ -733,8 +735,11 @@ TOOLS: list[types.Tool] = [
             "Returns target_locus + homology category (type) + shared gene_tree_id "
             "per hit. Rows carry no taxon unless with_organism=true (adds "
             "'organism' per row) or target_organism is given, which filters to "
-            "one organism before the cap and adds 'organism' per row; "
-            "pair with resolve_locus_to_uniprot for protein-level enrichment and "
+            "one organism before the cap and adds 'organism' per row. "
+            "Paralogs here are within_species_paralog only: Gramene drops "
+            "Compara's other_paralog ('ancient paralogues'); "
+            "ensembl_plants_paralogs lists both. "
+            "Pair with resolve_locus_to_uniprot for protein-level enrichment and "
             "with blast_sequence for sequence similarity discovery."
         ),
         input_schema={
@@ -1503,6 +1508,55 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         output_schema=GeneTreeMembers.model_json_schema(),
+        annotations=_READ_ONLY,
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="ensembl_plants_paralogs",
+        title="Ensembl Plants: Paralogs",
+        description=(
+            "List the paralogues Ensembl Compara (plants) records for a plant "
+            "locus (rest.ensembl.org /homology, type=paralogues; free, no key). "
+            "Each row gives the paralogue's locus, its type — "
+            "within_species_paralog, or other_paralog: Ensembl's 'ancient "
+            "paralogues', inferred across a super tree, so the two genes can "
+            "sit in different gene trees — the taxonomy_level of the "
+            "duplication, perc_id/perc_pos and protein_id, closest first. "
+            "gramene_homologs carries only within_species_paralog, so a gene "
+            "can have paralogues here and none there. A paralogue list is not "
+            "a family list: other_paralog can name a gene outside the family "
+            "(AT2G23390, an acyl-CoA N-acyltransferase-like gene, is an "
+            "other_paralog of the ARFs); test membership with "
+            "interpro_domains. An empty list means Compara records no "
+            "paralogue, not that the gene is single-copy (FLS2, AT5G46330, "
+            "has none). found=false when Compara keeps no homology record for "
+            "the gene at all (e.g. a non-coding gene); an id Ensembl does not "
+            "know is a not-found error. total and counts_by_type count before "
+            "limit; truncated=true when limit cut some off."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "locus": {
+                    "type": "string",
+                    "description": "e.g. AT1G19850 (Arabidopsis), Os04g0519700 (rice)",
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "description": "Plant organism — accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+                    "default": "arabidopsis_thaliana",
+                },
+                "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000,
+                    "default": 100,
+                },
+            },
+            "required": ["locus"],
+            "additionalProperties": False,
+        },
+        output_schema=EnsemblParalogs.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -2667,6 +2721,13 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     args["gene_tree_id"],
                     target_organism=args.get("target_organism"),
                     limit=args.get("limit", ensembl_plants.GENE_TREE_MEMBERS_DEFAULT_LIMIT),
+                )
+            case "ensembl_plants_paralogs":
+                return await ensembl_plants.paralogs(
+                    client,
+                    args["locus"],
+                    organism=args.get("organism", "arabidopsis_thaliana"),
+                    limit=args.get("limit", ensembl_plants.PARALOGS_DEFAULT_LIMIT),
                 )
             case "orthodb_orthologs":
                 return await orthodb.lookup_locus(

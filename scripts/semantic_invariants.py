@@ -116,6 +116,7 @@ COUNT_SPECS: tuple[CountSpec, ...] = (
             ("locus_plant_ontology", "annotations", True),
             ("entry_members", "members", True),
             ("gene_tree_members", "members", True),
+            ("ensembl_plants_paralogs", "paralogs", True),
             ("atted_coexpression", "neighbors", False),
             ("string_interactions", "partners", False),
             ("blast_sequence", "hits", False),

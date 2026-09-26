@@ -1093,6 +1093,53 @@ class GeneTreeMembers(BaseModel):
     upstream_version: str | None = upstream_version_field("Ensembl", None)
 
 
+class EnsemblParalog(BaseModel):
+    """One paralogue Ensembl Compara (plants) records for the queried gene."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str = Field(description="The paralogue's gene id as the locus tools accept it")
+    type: str = Field(
+        description=(
+            "Compara's category: within_species_paralog (related by a duplication "
+            "in the gene tree) or other_paralog (Ensembl's 'ancient paralogues', "
+            "inferred across a super tree, so the two genes can sit in different "
+            "gene trees)"
+        )
+    )
+    taxonomy_level: str | None = Field(
+        description="The taxon at the duplication Compara places, e.g. Viridiplantae"
+    )
+    perc_id: float | None = Field(
+        description="Percent of the paralogue's residues identical in the alignment"
+    )
+    perc_pos: float | None = Field(
+        description="Percent of the paralogue's residues similar in the alignment"
+    )
+    protein_id: str | None = Field(description="The paralogue's protein/translation id")
+
+
+class EnsemblParalogs(BaseModel):
+    """The paralogues Ensembl Compara (plants) records for one locus."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    locus: str = Field(description="The locus asked about")
+    organism: str = Field(description="Canonical organism slug")
+    found: bool = Field(
+        description=(
+            "False when Compara keeps no homology record for this gene at all "
+            "(e.g. a non-coding gene); true otherwise, even with no paralogue"
+        )
+    )
+    total: int = total_field("paralogues")
+    returned: int = Field(description=RETURNED_DESCRIPTION)
+    truncated: bool = Field(description="True when limit cut paralogues off")
+    counts_by_type: dict[str, int] = Field(description="Paralogues per type, counted before limit")
+    paralogs: list[EnsemblParalog] = Field(description="Closest first (perc_id descending)")
+    upstream_version: str | None = upstream_version_field("Ensembl", None)
+
+
 class OrthoDbOrthologs(BaseModel):
     """OrthoDB ortholog group + cross-species member genes for a locus.
 

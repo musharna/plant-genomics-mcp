@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+- **New tool `ensembl_plants_paralogs`.** The paralogues Ensembl Compara
+  (plants) records for a locus (`/homology`, `type=paralogues`), closest
+  first, each with its `type`, the `taxonomy_level` of the duplication,
+  `perc_id`/`perc_pos` and `protein_id`. `gramene_homologs` carries Gramene
+  v69's projection of Compara, which keeps `within_species_paralog` and
+  drops `other_paralog` (Ensembl's "ancient paralogues", inferred across a
+  super tree), so AT1G19850 had no paralog there at all; here it has 24,
+  every other Arabidopsis ARF the dossier found among them. The description
+  says a paralogue list is not a family list (an acyl-CoA
+  N-acyltransferase-like gene is an `other_paralog` of the ARFs) and that
+  an empty list is not proof of a single-copy gene. Compara answers the
+  same empty `data` for an unknown id and for a real gene it keeps no
+  homology for (a non-coding gene), so the tool asks `/lookup/id`: unknown
+  is a not-found error, known is `found=false`. `batch_locus_call` takes it.
+  `gramene_homologs`' description now points here for paralogs.
+
+- **README breakdowns sum to the tool count.** The second breakdown lacked
+  the "2 member lists" #130 added to the first, so it summed to 51 under a
+  stated 53; a test now checks both stated counts and both sums against
+  the server's tools.
+
 - **`examples/arf_family/` re-run at `1.24.0` (`55dc6ca`).** Same 64 calls
   over the same 114 genes, against the release.
   36 of the 43 hand-logged gap rows are closed (4 by this run):
