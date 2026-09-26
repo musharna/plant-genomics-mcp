@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v1.26.0 — 2026-09-26
+
+**55 tools / 23 backends** — one new tool, `ensembl_plants_assembly`; no existing tool changes its output (`ensembl_region_query` changes only its description).
 
 - **New tool `ensembl_plants_assembly`.** An organism's Ensembl assembly
   (`/info/assembly`): name, GCA accession, date and karyotype, and every
