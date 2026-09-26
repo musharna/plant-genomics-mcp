@@ -8,10 +8,10 @@ rate), then list its member genes grouped by organism.
 The API is free, needs no key, and takes native gene identifiers, so no UniProt
 hop is required. A locus with no ortholog group returns ``found=False``.
 
-Three-hop flow (each response cached independently):
-    /current/search?query={locus}&level=33090   → group id
-    /current/group?id={gid}                       → group metadata
-    /current/orthologs?id={gid}                   → per-organism member clusters
+Three-hop flow (each response cached independently), pinned to one release:
+    /v12/search?query={locus}&level=33090   → group id
+    /v12/group?id={gid}                       → group metadata
+    /v12/orthologs?id={gid}                   → per-organism member clusters
 """
 
 from __future__ import annotations
@@ -25,6 +25,12 @@ from plant_genomics_mcp import _http, cache, organisms, validators
 from plant_genomics_mcp.errors import PlantGenomicsError
 
 BASE_URL = "https://data.orthodb.org"
+# Every request names the release it asks for, so the release that answered is
+# known by construction (upstream_version). Probed live 2026-09-26: /v12/ answers
+# exactly as /current/ does, /v11/ answers with different group ids, and an
+# unknown release (/v99/) is refused with a 302 rather than served. Bump this
+# when OrthoDB publishes a new release; until then results stay on v12.
+ORTHODB_RELEASE = "v12"
 DEFAULT_TIMEOUT = 30.0
 MAX_RETRIES = 3
 
@@ -153,7 +159,7 @@ def _empty(locus: str, organism: str) -> dict[str, Any]:
         **_http.counted(0, []),
         "next_cursor": None,
         "members": [],
-        "upstream_version": None,
+        "upstream_version": ORTHODB_RELEASE,
     }
 
 
@@ -196,14 +202,16 @@ async def lookup_locus(
         "limit": cap,
     }
     offset = int(_http.decode_cursor("orthodb_orthologs", query, cursor).get("offset", 0))
-    search = await _get(client, "/current/search", {"query": locus, "level": LEVEL, "limit": 1})
+    search = await _get(
+        client, f"/{ORTHODB_RELEASE}/search", {"query": locus, "level": LEVEL, "limit": 1}
+    )
     ids = search.get("data")
     if not isinstance(ids, list) or not ids:
         return _empty(locus, canonical)
     gid = ids[0]
 
-    group = await _get(client, "/current/group", {"id": gid})
-    ortho = await _get(client, "/current/orthologs", {"id": gid})
+    group = await _get(client, f"/{ORTHODB_RELEASE}/group", {"id": gid})
+    ortho = await _get(client, f"/{ORTHODB_RELEASE}/orthologs", {"id": gid})
     clusters = ortho.get("data")
     clusters = clusters if isinstance(clusters, list) else []
     if target is None:
@@ -219,9 +227,8 @@ async def lookup_locus(
             **_http.counted(member_total, members, offset=offset),
             "next_cursor": _next(query, member_total, offset, members),
             "members": members,
-            # Issue #121: uniform key; /current/ names no release and the
-            # response states none (headers probed live 2026-09-22).
-            "upstream_version": None,
+            # Issue #121: the release every request of this answer named.
+            "upstream_version": ORTHODB_RELEASE,
         }
 
     wanted = [
@@ -244,5 +251,5 @@ async def lookup_locus(
         **_http.counted(member_total, members, offset=offset),
         "next_cursor": _next(query, member_total, offset, members),
         "members": members,
-        "upstream_version": None,
+        "upstream_version": ORTHODB_RELEASE,
     }

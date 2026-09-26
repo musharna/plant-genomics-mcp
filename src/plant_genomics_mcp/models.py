@@ -1227,7 +1227,9 @@ class OrthoDbOrthologs(BaseModel):
         default=None,
         description="Whole-group member total (pre-filter, pre-cap); present only when filtered",
     )
-    upstream_version: str | None = upstream_version_field("OrthoDB", None)
+    upstream_version: str | None = upstream_version_field(
+        "OrthoDB", "the release pinned in every request path (/v12/)"
+    )
 
 
 class AraGwasAssociations(BaseModel):

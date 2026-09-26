@@ -121,7 +121,7 @@ async def test_gramene_filtered_path_validates_against_its_output_schema(
 
 def test_orthodb_filtered_result_validates_against_its_output_schema() -> None:
     base = orthodb._empty("AT1G01060", "arabidopsis_thaliana")
-    assert base["upstream_version"] is None and "upstream_version" in base
+    assert base["upstream_version"] == orthodb.ORTHODB_RELEASE  # the pinned release answered
     OrthoDbOrthologs.model_validate(base)
     filtered = {
         **base,
