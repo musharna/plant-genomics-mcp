@@ -1,6 +1,6 @@
 # `string_interactions.accession` is a STRING id, not the UniProt accession the other tools mean by that name
 
-**Filed as [#133](https://github.com/musharna/plant-genomics-mcp/issues/133) — closed.** The issue is closed; the row stays open against this run (see `Returned`). Written from the ARF family dossier in
+**Filed as [#133](https://github.com/musharna/plant-genomics-mcp/issues/133) — fixed.** The row is closed at `55dc6ca`. Written from the ARF family dossier in
 [`examples/arf_family/`](../), re-run at server commit `052e4ec`
 (release `1.21.0`): 64 MCP calls over 114 genes x 16 tools, the family
 itself from a 1163-call enumeration through the same tools. Each section

@@ -5,14 +5,14 @@
   "organism": "arabidopsis_thaliana",
   "top_n": 10
  },
- "started_at": "2026-09-25T11:03:05Z",
- "elapsed_s": 91.26708391399916,
+ "started_at": "2026-09-26T02:32:33Z",
+ "elapsed_s": 2.9766507989988895,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 67.87510033499984,
+   "elapsed_s": 0.5364932759985095,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0005893150000702008,
+   "elapsed_s": 0.0016717690014047548,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 23.391594656000052,
+   "elapsed_s": 2.4392363270017086,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.0060821869992651045,
+   "elapsed_s": 0.1296267049983726,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.30881026899987774,
+   "elapsed_s": 0.42861916399851907,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0012978269996892777,
+   "elapsed_s": 0.12409322199528106,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0034641960000953986,
+   "elapsed_s": 0.001158353996288497,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0003203269998266478,
+   "elapsed_s": 0.00037693599733756855,
    "result": null,
    "error": null
   }
@@ -89,19 +89,19 @@
   "sections": {
    "annotation": {
     "source": "araport11",
+    "seq_region_name": "3",
     "db_type": "core",
+    "description": "auxin response factor 18 [Source:NCBI gene (formerly Entrezgene);Acc:825356]",
+    "id": "AT3G61830",
+    "assembly_name": "TAIR10",
+    "start": 22887889,
+    "object_type": "Gene",
+    "end": 22891455,
     "strand": 1,
     "display_name": "ARF18",
-    "start": 22887889,
-    "end": 22891455,
-    "id": "AT3G61830",
-    "object_type": "Gene",
-    "biotype": "protein_coding",
-    "canonical_transcript": "AT3G61830.1",
-    "description": "auxin response factor 18 [Source:NCBI gene (formerly Entrezgene);Acc:825356]",
-    "seq_region_name": "3",
-    "assembly_name": "TAIR10",
     "logic_name": "araport11",
+    "canonical_transcript": "AT3G61830.1",
+    "biotype": "protein_coding",
     "organism": "arabidopsis_thaliana",
     "upstream_version": null
    },
@@ -127,106 +127,106 @@
     "count": 9,
     "xrefs": [
      {
-      "info_type": "DIRECT",
       "info_text": "",
-      "version": "0",
-      "primary_id": "AT3G61830",
-      "db_display_name": "NASC Gene ID",
       "description": "auxin response factor 18",
+      "synonyms": [],
       "display_id": "AT3G61830-TAIR-G",
-      "dbname": "NASC_GENE_ID",
-      "synonyms": []
+      "info_type": "DIRECT",
+      "db_display_name": "NASC Gene ID",
+      "version": "0",
+      "primary_id": "AT3G61830",
+      "dbname": "NASC_GENE_ID"
      },
      {
       "info_text": "",
-      "info_type": "DIRECT",
-      "version": "0",
-      "primary_id": "AT3G61830",
-      "db_display_name": "TAIR",
       "description": "auxin response factor 18",
-      "dbname": "TAIR_LOCUS",
+      "synonyms": [],
       "display_id": "AT3G61830",
-      "synonyms": []
-     },
-     {
-      "primary_id": "ARF18",
-      "db_display_name": "TAIR Gene Name",
-      "info_text": "",
       "info_type": "DIRECT",
+      "db_display_name": "TAIR",
       "version": "0",
-      "display_id": "ARF18",
-      "dbname": "TAIR_SYMBOL",
-      "synonyms": [],
-      "description": ""
+      "primary_id": "AT3G61830",
+      "dbname": "TAIR_LOCUS"
      },
      {
-      "dbname": "ArrayExpress",
-      "display_id": "AT3G61830",
+      "description": "",
       "synonyms": [],
-      "description": null,
-      "primary_id": "AT3G61830",
-      "db_display_name": "Expression Atlas",
-      "info_type": "DIRECT",
+      "display_id": "ARF18",
       "info_text": "",
+      "info_type": "DIRECT",
+      "primary_id": "ARF18",
+      "dbname": "TAIR_SYMBOL",
+      "db_display_name": "TAIR Gene Name",
       "version": "0"
      },
      {
-      "db_display_name": "KNETMINER_ARA",
       "primary_id": "AT3G61830",
+      "dbname": "ArrayExpress",
+      "db_display_name": "Expression Atlas",
       "version": "0",
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "synonyms": [],
-      "dbname": "KNETMINER_ARA",
-      "display_id": "AT3G61830",
-      "description": null
-     },
-     {
-      "synonyms": [],
-      "display_id": "ARF18",
-      "dbname": "Uniprot_gn",
       "description": null,
-      "db_display_name": "UniProtKB Gene Name",
-      "primary_id": "Q9C5W9",
-      "version": null,
-      "info_type": "DEPENDENT",
-      "info_text": ""
+      "synonyms": [],
+      "display_id": "AT3G61830",
+      "info_text": "",
+      "info_type": "DIRECT"
      },
      {
       "info_text": "",
+      "display_id": "AT3G61830",
+      "synonyms": [],
+      "description": null,
       "info_type": "DEPENDENT",
       "version": "0",
-      "primary_id": "825356",
-      "db_display_name": "WikiGene",
-      "description": "auxin response factor 18",
-      "display_id": "ARF18",
-      "dbname": "WikiGene",
-      "synonyms": []
+      "db_display_name": "KNETMINER_ARA",
+      "dbname": "KNETMINER_ARA",
+      "primary_id": "AT3G61830"
      },
      {
+      "info_type": "DEPENDENT",
+      "info_text": "",
+      "description": null,
+      "display_id": "ARF18",
+      "synonyms": [],
       "db_display_name": "UniProtKB Gene Name",
-      "primary_id": "A0A1I9LTM9",
       "version": null,
+      "primary_id": "Q9C5W9",
+      "dbname": "Uniprot_gn"
+     },
+     {
+      "description": "auxin response factor 18",
+      "synonyms": [],
+      "display_id": "ARF18",
       "info_text": "",
       "info_type": "DEPENDENT",
-      "synonyms": [],
-      "dbname": "Uniprot_gn",
-      "display_id": "ARF18",
-      "description": null
+      "primary_id": "825356",
+      "dbname": "WikiGene",
+      "db_display_name": "WikiGene",
+      "version": "0"
      },
      {
-      "dbname": "EntrezGene",
+      "info_type": "DEPENDENT",
+      "info_text": "",
       "display_id": "ARF18",
+      "synonyms": [],
+      "description": null,
+      "version": null,
+      "db_display_name": "UniProtKB Gene Name",
+      "dbname": "Uniprot_gn",
+      "primary_id": "A0A1I9LTM9"
+     },
+     {
+      "info_type": "DEPENDENT",
       "synonyms": [
        "auxin response factor 18",
        "F21F14.12"
       ],
+      "display_id": "ARF18",
       "description": "auxin response factor 18",
-      "primary_id": "825356",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "info_type": "DEPENDENT",
       "info_text": "",
-      "version": "0"
+      "dbname": "EntrezGene",
+      "primary_id": "825356",
+      "version": "0",
+      "db_display_name": "NCBI gene (formerly Entrezgene)"
      }
     ],
     "by_db": {
@@ -281,7 +281,6 @@
     "partners": [
      {
       "string_id": "3702.O24407",
-      "accession": "3702.O24407",
       "preferred_name": "IAA16",
       "score": 0.928,
       "escore": 0.383,
@@ -291,7 +290,6 @@
      },
      {
       "string_id": "3702.P93830",
-      "accession": "3702.P93830",
       "preferred_name": "IAA17",
       "score": 0.902,
       "escore": 0.622,
@@ -301,7 +299,6 @@
      },
      {
       "string_id": "3702.Q38827",
-      "accession": "3702.Q38827",
       "preferred_name": "IAA9",
       "score": 0.898,
       "escore": 0.258,
@@ -311,7 +308,6 @@
      },
      {
       "string_id": "3702.Q9XFM0",
-      "accession": "3702.Q9XFM0",
       "preferred_name": "IAA28",
       "score": 0.892,
       "escore": 0.547,
@@ -321,7 +317,6 @@
      },
      {
       "string_id": "3702.Q38828",
-      "accession": "3702.Q38828",
       "preferred_name": "IAA10",
       "score": 0.866,
       "escore": 0.383,
@@ -331,7 +326,6 @@
      },
      {
       "string_id": "3702.Q96247",
-      "accession": "3702.Q96247",
       "preferred_name": "AUX1",
       "score": 0.86,
       "escore": 0,
@@ -341,7 +335,6 @@
      },
      {
       "string_id": "3702.O24409",
-      "accession": "3702.O24409",
       "preferred_name": "IAA19",
       "score": 0.857,
       "escore": 0.547,
@@ -351,7 +344,6 @@
      },
      {
       "string_id": "3702.O24408",
-      "accession": "3702.O24408",
       "preferred_name": "IAA18",
       "score": 0.85,
       "escore": 0.433,
@@ -361,7 +353,6 @@
      },
      {
       "string_id": "3702.Q38826",
-      "accession": "3702.Q38826",
       "preferred_name": "IAA8",
       "score": 0.841,
       "escore": 0.076,
@@ -371,7 +362,6 @@
      },
      {
       "string_id": "3702.Q38830",
-      "accession": "3702.Q38830",
       "preferred_name": "IAA12",
       "score": 0.839,
       "escore": 0.453,
@@ -390,7 +380,7 @@
     "total": 28,
     "returned": 10,
     "truncated": true,
-    "next_cursor": "eyJwIjogeyJtYXJrIjogIkFvSUlQc1l3amlnME5qRTJNRE0wTUE9PSIsICJvZmZzZXQiOiAxMH0sICJxIjogeyJxdWVyeSI6ICJBVDNHNjE4MzAiLCAic2l6ZSI6IDEwfSwgInQiOiAibG9jdXNfbGl0ZXJhdHVyZSJ9",
+    "next_cursor": "eyJwIjogeyJtYXJrIjogIkFvSUlQc1laV2lnME5qRTJNRE0wTUE9PSIsICJvZmZzZXQiOiAxMH0sICJxIjogeyJxdWVyeSI6ICJBVDNHNjE4MzAiLCAic2l6ZSI6IDEwfSwgInQiOiAibG9jdXNfbGl0ZXJhdHVyZSJ9",
     "abstracts_included": true,
     "hits": [
      {
@@ -455,7 +445,7 @@
       "journalTitle": "International journal of molecular sciences",
       "pubYear": 2025,
       "firstPublicationDate": "2025-05-09",
-      "citedByCount": 1,
+      "citedByCount": 3,
       "isOpenAccess": true,
       "hasPDF": true,
       "abstractText": "Auxin is the most important phytohormone, regulating root growth and development in plants. ARFs function as central regulators in auxin signaling in model plants, and the functions of ARF activators have been widely investigated, while the functions of ARF repressors remain elusive. In this study, we investigated the family of <i>GmARFs</i> in soybean through a genome-wide expression pattern and functional study of roots highly expressing <i>ARFs</i>. In total, we identified 59 <i>GmARF</i> members in the soybean genome. GmARFs harbor canonical B3 DNA-binding (B3), ARF (Aux rep), and PB1 functional protein domains. We identified two potential repressor genes, <i>GmARF9b</i> (<i>Glyma.03G070500</i>) and <i>GmARF2a</i> (<i>Glyma.05G200800</i>), which are specifically or highly expressed in the roots. Histochemical staining suggested that both genes are primarily expressed in the stele, root tips, and lateral root primordia. Subcellular localization analysis showed they were mainly localized in the nucleus. Overexpression of <i>GmARF9b</i> and <i>GmARF2a</i> significantly inhibited root growth using a transgenic hairy root assay. Root section analysis further suggested that <i>GmARF9b</i> and <i>GmARF2a</i> negatively regulated cortical cell layers and the longitudinal cell length of roots, thereby modulating root growth. Overall, this study has preliminarily identified two <i>GmARFs</i> that inhibit root growth in soybean. This discovery has deepened our understanding of the functions of ARFs in root development and has provided guidance for breeding crop roots with improved nutrient use efficiency.",

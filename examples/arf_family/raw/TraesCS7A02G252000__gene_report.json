@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-25T11:18:03Z",
- "elapsed_s": 15.633137944999362,
+ "started_at": "2026-09-26T02:36:39Z",
+ "elapsed_s": 1.8456667619975633,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 8.555369767999764,
+   "elapsed_s": 1.3340174440018018,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.001554647000375553,
+   "elapsed_s": 0.008177395000529941,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 6.990953582999282,
+   "elapsed_s": 0.2555901090017869,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 2.4298000425915234e-05,
+   "elapsed_s": 5.4192998504731804e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.4050325170001088,
+   "elapsed_s": 0.4029967509995913,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 4.5666999540117104e-05,
+   "elapsed_s": 0.00010487499821465462,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0002762530002655694,
+   "elapsed_s": 0.0005157179984962568,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0003315919993838179,
+   "elapsed_s": 0.004699507997429464,
    "result": null,
    "error": null
   }
@@ -88,18 +88,18 @@
   "markdown": "# LOC123151437 \u2014 `TraesCS7A02G252000`\n\n*Triticum aestivum* \u00b7 protein_coding \u00b7 7A:236,611,658\u2013236,620,693 (+) \u00b7 IWGSC\n\n## Protein\n**Auxin response factor**\nA0A3B6RI26_WHEAT \u00b7 UniProtKB unreviewed (TrEMBL) \u00b7 1087 aa\nUniProt: [A0A3B6RI26](https://www.uniprot.org/uniprotkb/A0A3B6RI26)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [129\u2013219]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [294\u2013364]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [127\u2013231]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [969\u20131063]\n- **B3 DNA binding domain** (domain, interpro) [129\u2013232]\n- **Auxin response factor domain** (domain, interpro) [279\u2013362]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [119\u2013259]\n- **AUX/IAA domain** (domain, interpro) [969\u20131060]\n- **Auxin response factor** (family, interpro) [19\u20131063]\n- **PB1-like domain** (domain, interpro) [974\u20131058]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006351] DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| A0A3B6C887 | 0.7 |\n| A0A3B6DF48 | 0.7 |\n| A0A3B6B100 | 0.7 |\n| A0A3B6I0Z6 | 0.682 |\n| A0A3B6JF47 | 0.682 |\n| A0A3B6IL23 | 0.682 |\n| A0A3B5Z140 | 0.677 |\n| A0A3B6QF02 | 0.677 |\n| A0A3B6G1I4 | 0.673 |\n| A0A3B6TTT1 | 0.665 |\n\n## Cross-references\n- UniProtKB Gene Name: A0A3B6REK3\n- UniProtKB Gene Name: A0A3B6RI00\n- UniProtKB Gene Name: A0A3B6RI28\n- UniProtKB Gene Name: A0A3B6RI26\n- UniProtKB Gene Name: A0A3B6RDY9\n- KNETMINER_WHEAT: TraesCS7A02G252000\n- Wheat Expression: TraesCS7A02G252000\n- WikiGene: 123151437\n- NCBI gene (formerly Entrezgene): 123151437\n- Expression Atlas: TraesCS7A02G252000\n\n## Literature\n_No literature found._\n",
   "sections": {
    "annotation": {
+    "start": 236611658,
+    "end": 236620693,
+    "id": "TraesCS7A02G252000",
+    "strand": 1,
     "source": "IWGSC",
     "db_type": "core",
-    "strand": 1,
-    "id": "TraesCS7A02G252000",
-    "end": 236620693,
-    "start": 236611658,
-    "biotype": "protein_coding",
-    "object_type": "Gene",
+    "logic_name": "iwgsc_high_conf",
+    "seq_region_name": "7A",
     "canonical_transcript": "TraesCS7A02G252000.2",
     "assembly_name": "IWGSC",
-    "seq_region_name": "7A",
-    "logic_name": "iwgsc_high_conf",
+    "object_type": "Gene",
+    "biotype": "protein_coding",
     "organism": "triticum_aestivum",
     "upstream_version": null
    },
@@ -125,92 +125,92 @@
     "count": 10,
     "xrefs": [
      {
-      "primary_id": "A0A3B6REK3",
       "synonyms": [],
-      "display_id": "LOC123151437",
-      "info_type": "DEPENDENT",
-      "dbname": "Uniprot_gn",
-      "info_text": "",
-      "version": null,
+      "primary_id": "A0A3B6REK3",
+      "description": null,
       "db_display_name": "UniProtKB Gene Name",
-      "description": null
+      "version": null,
+      "info_text": "",
+      "dbname": "Uniprot_gn",
+      "info_type": "DEPENDENT",
+      "display_id": "LOC123151437"
      },
      {
       "primary_id": "A0A3B6RI00",
       "synonyms": [],
       "display_id": "LOC123151437",
-      "dbname": "Uniprot_gn",
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "version": null,
-      "description": null,
-      "db_display_name": "UniProtKB Gene Name"
-     },
-     {
-      "version": null,
-      "description": null,
-      "db_display_name": "UniProtKB Gene Name",
-      "display_id": "LOC123151437",
-      "dbname": "Uniprot_gn",
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "synonyms": [],
-      "primary_id": "A0A3B6RI28"
-     },
-     {
-      "primary_id": "A0A3B6RI26",
-      "synonyms": [],
-      "info_text": "",
-      "dbname": "Uniprot_gn",
-      "info_type": "DEPENDENT",
-      "display_id": "LOC123151437",
-      "description": null,
-      "db_display_name": "UniProtKB Gene Name",
-      "version": null
-     },
-     {
-      "display_id": "LOC123151437",
       "info_type": "DEPENDENT",
       "info_text": "",
       "dbname": "Uniprot_gn",
       "version": null,
       "db_display_name": "UniProtKB Gene Name",
-      "description": null,
-      "primary_id": "A0A3B6RDY9",
-      "synonyms": []
-     },
-     {
-      "primary_id": "TraesCS7A02G252000",
-      "synonyms": [],
-      "display_id": "TraesCS7A02G252000",
-      "info_type": "DEPENDENT",
-      "info_text": "",
-      "dbname": "KNETMINER_WHEAT",
-      "version": "0",
-      "db_display_name": "KNETMINER_WHEAT",
       "description": null
      },
      {
-      "primary_id": "TraesCS7A02G252000",
       "synonyms": [],
-      "info_text": "",
-      "dbname": "WHEATEXP_GENE",
-      "info_type": "DEPENDENT",
-      "display_id": "TraesCS7A02G252000",
+      "primary_id": "A0A3B6RI28",
       "description": null,
-      "db_display_name": "Wheat Expression",
-      "version": "0"
-     },
-     {
-      "synonyms": [],
-      "primary_id": "123151437",
-      "description": "auxin response factor 21",
-      "db_display_name": "WikiGene",
-      "version": "0",
-      "dbname": "WikiGene",
+      "db_display_name": "UniProtKB Gene Name",
+      "version": null,
       "info_text": "",
+      "dbname": "Uniprot_gn",
       "info_type": "DEPENDENT",
       "display_id": "LOC123151437"
+     },
+     {
+      "dbname": "Uniprot_gn",
+      "info_text": "",
+      "info_type": "DEPENDENT",
+      "display_id": "LOC123151437",
+      "description": null,
+      "db_display_name": "UniProtKB Gene Name",
+      "version": null,
+      "primary_id": "A0A3B6RI26",
+      "synonyms": []
+     },
+     {
+      "version": null,
+      "description": null,
+      "db_display_name": "UniProtKB Gene Name",
+      "display_id": "LOC123151437",
+      "info_text": "",
+      "dbname": "Uniprot_gn",
+      "info_type": "DEPENDENT",
+      "synonyms": [],
+      "primary_id": "A0A3B6RDY9"
+     },
+     {
+      "display_id": "TraesCS7A02G252000",
+      "info_text": "",
+      "dbname": "KNETMINER_WHEAT",
+      "info_type": "DEPENDENT",
+      "version": "0",
+      "description": null,
+      "db_display_name": "KNETMINER_WHEAT",
+      "primary_id": "TraesCS7A02G252000",
+      "synonyms": []
+     },
+     {
+      "version": "0",
+      "db_display_name": "Wheat Expression",
+      "description": null,
+      "display_id": "TraesCS7A02G252000",
+      "info_type": "DEPENDENT",
+      "info_text": "",
+      "dbname": "WHEATEXP_GENE",
+      "synonyms": [],
+      "primary_id": "TraesCS7A02G252000"
+     },
+     {
+      "display_id": "LOC123151437",
+      "info_text": "",
+      "dbname": "WikiGene",
+      "info_type": "DEPENDENT",
+      "version": "0",
+      "description": "auxin response factor 21",
+      "db_display_name": "WikiGene",
+      "primary_id": "123151437",
+      "synonyms": []
      },
      {
       "version": "0",
@@ -224,15 +224,15 @@
       "primary_id": "123151437"
      },
      {
-      "info_type": "DIRECT",
-      "info_text": "",
-      "dbname": "ArrayExpress",
-      "display_id": "TraesCS7A02G252000",
+      "synonyms": [],
+      "primary_id": "TraesCS7A02G252000",
       "db_display_name": "Expression Atlas",
       "description": null,
       "version": "0",
-      "primary_id": "TraesCS7A02G252000",
-      "synonyms": []
+      "info_type": "DIRECT",
+      "dbname": "ArrayExpress",
+      "info_text": "",
+      "display_id": "TraesCS7A02G252000"
      }
     ],
     "by_db": {
@@ -271,7 +271,6 @@
     "partners": [
      {
       "string_id": "4565.A0A3B6C887",
-      "accession": "4565.A0A3B6C887",
       "preferred_name": "A0A3B6C887",
       "score": 0.7,
       "escore": 0.264,
@@ -281,7 +280,6 @@
      },
      {
       "string_id": "4565.A0A3B6DF48",
-      "accession": "4565.A0A3B6DF48",
       "preferred_name": "A0A3B6DF48",
       "score": 0.7,
       "escore": 0.264,
@@ -291,7 +289,6 @@
      },
      {
       "string_id": "4565.A0A3B6B100",
-      "accession": "4565.A0A3B6B100",
       "preferred_name": "A0A3B6B100",
       "score": 0.7,
       "escore": 0.264,
@@ -301,7 +298,6 @@
      },
      {
       "string_id": "4565.A0A3B6I0Z6",
-      "accession": "4565.A0A3B6I0Z6",
       "preferred_name": "A0A3B6I0Z6",
       "score": 0.682,
       "escore": 0.213,
@@ -311,7 +307,6 @@
      },
      {
       "string_id": "4565.A0A3B6JF47",
-      "accession": "4565.A0A3B6JF47",
       "preferred_name": "A0A3B6JF47",
       "score": 0.682,
       "escore": 0.213,
@@ -321,7 +316,6 @@
      },
      {
       "string_id": "4565.A0A3B6IL23",
-      "accession": "4565.A0A3B6IL23",
       "preferred_name": "A0A3B6IL23",
       "score": 0.682,
       "escore": 0.213,
@@ -331,7 +325,6 @@
      },
      {
       "string_id": "4565.A0A3B5Z140",
-      "accession": "4565.A0A3B5Z140",
       "preferred_name": "A0A3B5Z140",
       "score": 0.677,
       "escore": 0.225,
@@ -341,7 +334,6 @@
      },
      {
       "string_id": "4565.A0A3B6QF02",
-      "accession": "4565.A0A3B6QF02",
       "preferred_name": "A0A3B6QF02",
       "score": 0.677,
       "escore": 0.225,
@@ -351,7 +343,6 @@
      },
      {
       "string_id": "4565.A0A3B6G1I4",
-      "accession": "4565.A0A3B6G1I4",
       "preferred_name": "A0A3B6G1I4",
       "score": 0.673,
       "escore": 0.08,
@@ -361,7 +352,6 @@
      },
      {
       "string_id": "4565.A0A3B6TTT1",
-      "accession": "4565.A0A3B6TTT1",
       "preferred_name": "A0A3B6TTT1",
       "score": 0.665,
       "escore": 0.257,

@@ -1,8 +1,8 @@
 {
  "locus": "TraesCS6A02G138600",
  "release": "v69",
- "total": 65,
- "returned": 65,
+ "total": 66,
+ "returned": 66,
  "truncated": false,
  "next_cursor": null,
  "homologs": [
@@ -330,7 +330,16 @@
    "target_locus": "Dexi1B01G0004870",
    "type": "ortholog_one2many",
    "gene_tree_id": "EPlGT00940000163985"
+  },
+  {
+   "target_locus": "TuG1812G0600001438.01",
+   "type": "syntenic_ortholog_one2one",
+   "gene_tree_id": "EPlGT00940000163985"
   }
  ],
+ "excluded_categories": {
+  "within_species_paralog": 2,
+  "homoeolog_one2one": 2
+ },
  "upstream_version": "v69"
 }

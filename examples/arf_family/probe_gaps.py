@@ -80,6 +80,10 @@ DESCRIBED = (
     "gene_tree_members",
     "entry_members",
     "batch_locus_call",
+    "atted_coexpression",
+    "panther_family",
+    "jaspar_motif",
+    "bar_aiv_interactions",
 )
 
 

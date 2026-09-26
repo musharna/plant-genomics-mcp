@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-25T11:15:22Z",
- "elapsed_s": 12.667994602999897,
+ "started_at": "2026-09-26T02:36:24Z",
+ "elapsed_s": 2.815365426999051,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 9.759614207000595,
+   "elapsed_s": 2.0509051109984284,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.00026033599988295464,
+   "elapsed_s": 0.0005205850029597059,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 2.873326095000266,
+   "elapsed_s": 0.713872831001936,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 2.3196000256575644e-05,
+   "elapsed_s": 3.77589967683889e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.26449404599952686,
+   "elapsed_s": 0.4744363150020945,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.00018172599993704353,
+   "elapsed_s": 0.0002706619998207316,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00019402700036152964,
+   "elapsed_s": 0.00033131599775515497,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00021072700019431068,
+   "elapsed_s": 0.0003340539988130331,
    "result": null,
    "error": null
   }
@@ -89,17 +89,17 @@
   "sections": {
    "annotation": {
     "source": "IWGSC",
-    "start": 649049858,
-    "logic_name": "iwgsc_high_conf",
-    "canonical_transcript": "TraesCS1B02G424700.1",
-    "assembly_name": "IWGSC",
-    "object_type": "Gene",
     "strand": 1,
-    "seq_region_name": "1B",
+    "db_type": "core",
+    "assembly_name": "IWGSC",
     "biotype": "protein_coding",
     "end": 649055625,
     "id": "TraesCS1B02G424700",
-    "db_type": "core",
+    "object_type": "Gene",
+    "seq_region_name": "1B",
+    "canonical_transcript": "TraesCS1B02G424700.1",
+    "start": 649049858,
+    "logic_name": "iwgsc_high_conf",
     "organism": "triticum_aestivum",
     "upstream_version": null
    },
@@ -125,81 +125,81 @@
     "count": 7,
     "xrefs": [
      {
-      "primary_id": "TraesCS1B02G424700",
-      "synonyms": [],
-      "info_text": "",
-      "dbname": "KNETMINER_WHEAT",
-      "info_type": "DEPENDENT",
-      "display_id": "TraesCS1B02G424700",
       "description": null,
+      "info_type": "DEPENDENT",
+      "synonyms": [],
+      "dbname": "KNETMINER_WHEAT",
       "db_display_name": "KNETMINER_WHEAT",
+      "primary_id": "TraesCS1B02G424700",
+      "info_text": "",
+      "display_id": "TraesCS1B02G424700",
       "version": "0"
      },
      {
-      "info_type": "DEPENDENT",
-      "dbname": "WHEATEXP_GENE",
-      "info_text": "",
       "display_id": "TraesCS1B02G424700",
+      "info_text": "",
+      "version": "0",
+      "dbname": "WHEATEXP_GENE",
       "db_display_name": "Wheat Expression",
-      "description": null,
-      "version": "0",
       "primary_id": "TraesCS1B02G424700",
-      "synonyms": []
-     },
-     {
-      "dbname": "Plant_Reactome_Reaction",
-      "info_text": "Generated via direct",
-      "info_type": "DIRECT",
-      "display_id": "R-TAE-5608208",
-      "description": "ARF inactivation by AUX/IAA",
-      "db_display_name": "Plant Reactome Reaction ID",
-      "version": "0",
-      "primary_id": "R-TAE-5608208",
-      "synonyms": []
-     },
-     {
+      "info_type": "DEPENDENT",
       "synonyms": [],
-      "primary_id": "R-TAE-5608118",
-      "version": "0",
-      "db_display_name": "Plant Reactome Pathway ID",
-      "description": "Auxin signalling",
-      "display_id": "R-TAE-5608118",
+      "description": null
+     },
+     {
+      "description": "ARF inactivation by AUX/IAA",
+      "synonyms": [],
       "info_type": "DIRECT",
-      "dbname": "Plant_Reactome_Pathway",
+      "db_display_name": "Plant Reactome Reaction ID",
+      "dbname": "Plant_Reactome_Reaction",
+      "primary_id": "R-TAE-5608208",
+      "version": "0",
+      "display_id": "R-TAE-5608208",
       "info_text": "Generated via direct"
      },
      {
-      "synonyms": [],
-      "primary_id": "123145822",
-      "db_display_name": "WikiGene",
-      "description": "auxin response factor 15",
+      "primary_id": "R-TAE-5608118",
+      "dbname": "Plant_Reactome_Pathway",
+      "db_display_name": "Plant Reactome Pathway ID",
+      "display_id": "R-TAE-5608118",
+      "info_text": "Generated via direct",
       "version": "0",
-      "info_type": "DEPENDENT",
-      "info_text": "",
-      "dbname": "WikiGene",
-      "display_id": "LOC123145822"
+      "description": "Auxin signalling",
+      "info_type": "DIRECT",
+      "synonyms": []
      },
      {
+      "primary_id": "123145822",
+      "dbname": "WikiGene",
+      "db_display_name": "WikiGene",
+      "info_text": "",
+      "display_id": "LOC123145822",
+      "version": "0",
+      "description": "auxin response factor 15",
       "info_type": "DEPENDENT",
-      "dbname": "EntrezGene",
+      "synonyms": []
+     },
+     {
+      "version": "0",
       "info_text": "",
       "display_id": "LOC123145822",
       "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "description": "auxin response factor 15",
-      "version": "0",
+      "dbname": "EntrezGene",
       "primary_id": "123145822",
-      "synonyms": []
+      "synonyms": [],
+      "info_type": "DEPENDENT",
+      "description": "auxin response factor 15"
      },
      {
-      "display_id": "TraesCS1B02G424700",
-      "dbname": "ArrayExpress",
-      "info_text": "",
+      "synonyms": [],
       "info_type": "DIRECT",
-      "version": "0",
       "description": null,
+      "version": "0",
+      "info_text": "",
+      "display_id": "TraesCS1B02G424700",
       "db_display_name": "Expression Atlas",
-      "primary_id": "TraesCS1B02G424700",
-      "synonyms": []
+      "dbname": "ArrayExpress",
+      "primary_id": "TraesCS1B02G424700"
      }
     ],
     "by_db": {
@@ -237,7 +237,6 @@
     "partners": [
      {
       "string_id": "4565.A0A341W2P9",
-      "accession": "4565.A0A341W2P9",
       "preferred_name": "A0A341W2P9",
       "score": 0.888,
       "escore": 0.065,
@@ -247,7 +246,6 @@
      },
      {
       "string_id": "4565.A0A3B5XWR3",
-      "accession": "4565.A0A3B5XWR3",
       "preferred_name": "A0A3B5XWR3",
       "score": 0.881,
       "escore": 0.119,
@@ -257,7 +255,6 @@
      },
      {
       "string_id": "4565.A0A3B5ZR14",
-      "accession": "4565.A0A3B5ZR14",
       "preferred_name": "A0A3B5ZR14",
       "score": 0.881,
       "escore": 0.119,
@@ -267,7 +264,6 @@
      },
      {
       "string_id": "4565.A0A3B5XWW7",
-      "accession": "4565.A0A3B5XWW7",
       "preferred_name": "A0A3B5XWW7",
       "score": 0.874,
       "escore": 0.068,
@@ -277,7 +273,6 @@
      },
      {
       "string_id": "4565.A0A3B5ZRD3",
-      "accession": "4565.A0A3B5ZRD3",
       "preferred_name": "A0A3B5ZRD3",
       "score": 0.874,
       "escore": 0.068,
@@ -287,7 +282,6 @@
      },
      {
       "string_id": "4565.A0A3B5Y6F0",
-      "accession": "4565.A0A3B5Y6F0",
       "preferred_name": "A0A3B5Y6F0",
       "score": 0.854,
       "escore": 0.125,
@@ -297,7 +291,6 @@
      },
      {
       "string_id": "4565.A0A3B5Z3W7",
-      "accession": "4565.A0A3B5Z3W7",
       "preferred_name": "A0A3B5Z3W7",
       "score": 0.854,
       "escore": 0.125,
@@ -307,7 +300,6 @@
      },
      {
       "string_id": "4565.A0A3B6A261",
-      "accession": "4565.A0A3B6A261",
       "preferred_name": "A0A3B6A261",
       "score": 0.854,
       "escore": 0.125,
@@ -317,7 +309,6 @@
      },
      {
       "string_id": "4565.A0A077RUL8",
-      "accession": "4565.A0A077RUL8",
       "preferred_name": "A0A077RUL8",
       "score": 0.847,
       "escore": 0.125,
@@ -327,7 +318,6 @@
      },
      {
       "string_id": "4565.A0A3B6GTJ6",
-      "accession": "4565.A0A3B6GTJ6",
       "preferred_name": "A0A3B6GTJ6",
       "score": 0.847,
       "escore": 0.125,

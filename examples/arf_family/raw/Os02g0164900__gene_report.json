@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-25T11:09:21Z",
- "elapsed_s": 19.80599236299986,
+ "started_at": "2026-09-26T02:33:46Z",
+ "elapsed_s": 0.8677457410012721,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 19.482466356999794,
+   "elapsed_s": 0.5088325760007137,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0006098280000514933,
+   "elapsed_s": 0.0007904480007709935,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 6.982300055824453e-05,
+   "elapsed_s": 7.479799387510866e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.008085885000582493,
+   "elapsed_s": 0.003970543999457732,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.28930789300011384,
+   "elapsed_s": 0.30850813000142807,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0013799809994452517,
+   "elapsed_s": 0.0016955640021478757,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00019522000002325512,
+   "elapsed_s": 0.00025436500436626375,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00026818100013770163,
+   "elapsed_s": 0.00042396400385769084,
    "result": null,
    "error": null
   }
@@ -88,19 +88,19 @@
   "markdown": "# OsARF6a (UniProt: ARF6) \u2014 `Os02g0164900`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 2:3,486,813\u20133,492,905 (+) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 6**\nARFF_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 908 aa\nUniProt: [Q6H6V4](https://www.uniprot.org/uniprotkb/Q6H6V4)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [133\u2013234]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [298\u2013370]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [132\u2013235]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [773\u2013866]\n- **B3 DNA binding domain** (domain, interpro) [133\u2013236]\n- **Auxin response factor domain** (domain, interpro) [283\u2013366]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [119\u2013263]\n- **AUX/IAA domain** (domain, interpro) [824\u2013862]\n- **Auxin response factor** (family, interpro) [24\u2013866]\n- **PB1-like domain** (domain, interpro) [777\u2013861]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n- `osa04075` Plant hormone signal transduction - Oryza sativa japonica (Japanese rice) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| B1153E06.24 | 0.98 |\n| Q0JC85_ORYSJ | 0.912 |\n| Q69MK0_ORYSJ | 0.905 |\n| Q8LRG9_ORYSJ | 0.905 |\n| A0A0P0VV58 | 0.899 |\n| A0A0P0VQD8 | 0.893 |\n| Q0DIX4_ORYSJ | 0.884 |\n| Q0JCJ0_ORYSJ | 0.884 |\n| PRMT5 | 0.879 |\n| TPC1 | 0.877 |\n\n## Cross-references\n- WikiGene: 4328406\n- Expression Atlas: Os02g0164900\n- NCBI gene (formerly Entrezgene): 4328406\n\n## Literature\n12 hits total; showing top 10.\n- **Genetic Analysis and Fine Mapping of a New Rice Mutant, Leaf Tip Senescence 2** \u2014 Cui Y, Song J, Tang L, Xu X, Peng X, Fan H, Wang J. (PMID:39000188; doi:10.3390/ijms25137082)\n- **Rice Heat Stress Response: Physiological Changes and Molecular Regulatory Network Research Progress** \u2014 Ma W, Wang X, Gu C, Lu Z, Ma R, Wang X, Lu Y, Cai K, Tang Z, Zhou Z, Chen Z, Zhou H, Bao X. (PMID:40872196; doi:10.3390/plants14162573)\n- **The OsMAPK5-OsWRKY72 module negatively regulates grain length and grain weight in rice** \u2014 Wang F, Lin J, Yang F, Chen X, Liu Y, Yan L, Chen J, Wang Z, Xie H, Zhang J, Xu H, Chen S. (PMID:39474750; doi:10.1111/jipb.13786)\n- **Genetic dissection of thousand-seed weight in linseed (<i>Linum usitatissimum</i> L.) using multi-locus genome-wide association study** \u2014 Saroha A, Gomashe SS, Kaur V, Pal D, Ujjainwal S, Aravind J, Singh M, Rajkumar S, Singh K, Kumar A, Wankhede DP. (PMID:37332700; doi:10.3389/fpls.2023.1166728)\n- **Genetic Basis of Grain Size and Weight in Rice, Wheat, and Barley** \u2014 Gasparis S, Mi\u0142oszewski MM. (PMID:38069243; doi:10.3390/ijms242316921)\n- **miR167d-ARFs Module Regulates Flower Opening and Stigma Size in Rice** \u2014 Zhao ZX, Yin XX, Li S, Peng YT, Yan XL, Chen C, Hassan B, Zhou SX, Pu M, Zhao JH, Hu XH, Li GB, Wang H, Zhang JW, Huang YY, Fan J, Li Y, Wang WM. (PMID:35876915; doi:10.1186/s12284-022-00587-z)\n- **Insights on Phytohormonal Crosstalk in Plant Response to Nitrogen Stress: A Focus on Plant Root Growth and Development** \u2014 Ahmad N, Jiang Z, Zhang L, Hussain I, Yang X. (PMID:36835044; doi:10.3390/ijms24043631)\n- **Plant nitrogen availability and crosstalk with phytohormones signallings and their biotechnology breeding application in crops** \u2014 Xing J, Cao X, Zhang M, Wei X, Zhang J, Wan X. (PMID:36435985; doi:10.1111/pbi.13971)\n- **Integrated Analysis of the Transcriptome and Metabolome Revealed the Molecular Mechanisms Underlying the Enhanced Salt Tolerance of Rice Due to the Application of Exogenous Melatonin** \u2014 Xie Z, Wang J, Wang W, Wang Y, Xu J, Li Z, Zhao X, Fu B. (PMID:33519878; doi:10.3389/fpls.2020.618680)\n- **Genes and Their Molecular Functions Determining Seed Structure, Components, and Quality of Rice** \u2014 Li P, Chen YH, Lu J, Zhang CQ, Liu QQ, Li QF. (PMID:35303197; doi:10.1186/s12284-022-00562-8)\n",
   "sections": {
    "annotation": {
-    "canonical_transcript": "Os02t0164900-01",
-    "start": 3486813,
-    "end": 3492905,
-    "object_type": "Gene",
-    "db_type": "core",
     "logic_name": "rapdb_genes",
-    "display_name": "OsARF6a",
-    "id": "Os02g0164900",
-    "biotype": "protein_coding",
-    "assembly_name": "IRGSP-1.0",
-    "source": "RAP2022-09-01",
-    "strand": 1,
     "seq_region_name": "2",
+    "canonical_transcript": "Os02t0164900-01",
+    "assembly_name": "IRGSP-1.0",
+    "biotype": "protein_coding",
+    "object_type": "Gene",
+    "end": 3492905,
+    "id": "Os02g0164900",
+    "start": 3486813,
+    "strand": 1,
+    "display_name": "OsARF6a",
+    "source": "RAP2022-09-01",
+    "db_type": "core",
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -137,26 +137,26 @@
       "db_display_name": "WikiGene"
      },
      {
-      "info_text": "",
       "synonyms": [],
       "display_id": "Os02g0164900",
       "version": "0",
       "primary_id": "Os02g0164900",
       "description": null,
+      "info_text": "",
+      "dbname": "ArrayExpress",
       "db_display_name": "Expression Atlas",
-      "info_type": "DIRECT",
-      "dbname": "ArrayExpress"
+      "info_type": "DIRECT"
      },
      {
+      "info_text": "",
+      "primary_id": "4328406",
+      "version": "0",
+      "description": "auxin response factor 6-like",
+      "synonyms": [],
+      "display_id": "LOC4328406",
       "info_type": "DEPENDENT",
       "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "dbname": "EntrezGene",
-      "info_text": "",
-      "description": "auxin response factor 6-like",
-      "version": "0",
-      "primary_id": "4328406",
-      "display_id": "LOC4328406",
-      "synonyms": []
+      "dbname": "EntrezGene"
      }
     ],
     "by_db": {
@@ -196,7 +196,6 @@
     "partners": [
      {
       "string_id": "39947.Q0DA50",
-      "accession": "39947.Q0DA50",
       "preferred_name": "B1153E06.24",
       "score": 0.98,
       "escore": 0.653,
@@ -206,7 +205,6 @@
      },
      {
       "string_id": "39947.Q0JC85",
-      "accession": "39947.Q0JC85",
       "preferred_name": "Q0JC85_ORYSJ",
       "score": 0.912,
       "escore": 0.717,
@@ -216,7 +214,6 @@
      },
      {
       "string_id": "39947.Q69MK0",
-      "accession": "39947.Q69MK0",
       "preferred_name": "Q69MK0_ORYSJ",
       "score": 0.905,
       "escore": 0.725,
@@ -226,7 +223,6 @@
      },
      {
       "string_id": "39947.Q8LRG9",
-      "accession": "39947.Q8LRG9",
       "preferred_name": "Q8LRG9_ORYSJ",
       "score": 0.905,
       "escore": 0.725,
@@ -236,7 +232,6 @@
      },
      {
       "string_id": "39947.A0A0P0VV58",
-      "accession": "39947.A0A0P0VV58",
       "preferred_name": "A0A0P0VV58",
       "score": 0.899,
       "escore": 0.709,
@@ -246,7 +241,6 @@
      },
      {
       "string_id": "39947.A0A0P0VQD8",
-      "accession": "39947.A0A0P0VQD8",
       "preferred_name": "A0A0P0VQD8",
       "score": 0.893,
       "escore": 0.702,
@@ -256,7 +250,6 @@
      },
      {
       "string_id": "39947.Q0DIX4",
-      "accession": "39947.Q0DIX4",
       "preferred_name": "Q0DIX4_ORYSJ",
       "score": 0.884,
       "escore": 0.692,
@@ -266,7 +259,6 @@
      },
      {
       "string_id": "39947.Q0JCJ0",
-      "accession": "39947.Q0JCJ0",
       "preferred_name": "Q0JCJ0_ORYSJ",
       "score": 0.884,
       "escore": 0.625,
@@ -276,7 +268,6 @@
      },
      {
       "string_id": "39947.Q6YXZ7",
-      "accession": "39947.Q6YXZ7",
       "preferred_name": "PRMT5",
       "score": 0.879,
       "escore": 0.672,
@@ -286,7 +277,6 @@
      },
      {
       "string_id": "39947.Q5QM84",
-      "accession": "39947.Q5QM84",
       "preferred_name": "TPC1",
       "score": 0.877,
       "escore": 0.711,
@@ -305,7 +295,7 @@
     "total": 12,
     "returned": 10,
     "truncated": true,
-    "next_cursor": "eyJwIjogeyJtYXJrIjogIkFvSUlQMkMxS1NnME5UWXlPREUzT0E9PSIsICJvZmZzZXQiOiAxMH0sICJxIjogeyJxdWVyeSI6ICJPczAyZzAxNjQ5MDAgQU5EIHJpY2UiLCAic2l6ZSI6IDEwfSwgInQiOiAibG9jdXNfbGl0ZXJhdHVyZSJ9",
+    "next_cursor": "eyJwIjogeyJtYXJrIjogIkFvSUlQMkNkQ0NnME5UWXlPREUzT0E9PSIsICJvZmZzZXQiOiAxMH0sICJxIjogeyJxdWVyeSI6ICJPczAyZzAxNjQ5MDAgQU5EIHJpY2UiLCAic2l6ZSI6IDEwfSwgInQiOiAibG9jdXNfbGl0ZXJhdHVyZSJ9",
     "abstracts_included": true,
     "hits": [
      {

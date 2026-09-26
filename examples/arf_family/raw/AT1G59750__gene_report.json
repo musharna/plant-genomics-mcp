@@ -5,14 +5,14 @@
   "organism": "arabidopsis_thaliana",
   "top_n": 10
  },
- "started_at": "2026-09-25T11:01:41Z",
- "elapsed_s": 26.93777620899982,
+ "started_at": "2026-09-26T02:32:28Z",
+ "elapsed_s": 4.3796583539951826,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 22.7169951220003,
+   "elapsed_s": 3.645077425004274,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.002164397000342433,
+   "elapsed_s": 0.0013734579988522455,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 4.09457582899995,
+   "elapsed_s": 0.1542365850036731,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.008807919999526348,
+   "elapsed_s": 0.005297413001244422,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.35604298999987805,
+   "elapsed_s": 0.61823905500205,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.002474369000083243,
+   "elapsed_s": 0.002228028002718929,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0003424319993428071,
+   "elapsed_s": 0.0006674969990854152,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00023873600002843887,
+   "elapsed_s": 0.0009324040001956746,
    "result": null,
    "error": null
   }
@@ -88,20 +88,20 @@
   "markdown": "# ARF1 \u2014 `AT1G59750`\n\n*Arabidopsis thaliana* \u00b7 protein_coding \u00b7 1:21,979,289\u201321,984,433 (+) \u00b7 TAIR10\n\nauxin response factor 1 [Source:NCBI gene (formerly Entrezgene);Acc:842268]\n\n## Protein\n**Auxin response factor 1**\nARFA_ARATH \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 665 aa\nUniProt: [Q8L7G0](https://www.uniprot.org/uniprotkb/Q8L7G0)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [122\u2013224]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [287\u2013360]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [121\u2013226]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [537\u2013631]\n- **B3 DNA binding domain** (domain, interpro) [122\u2013226]\n- **Auxin response factor domain** (domain, interpro) [273\u2013355]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [113\u2013253]\n- **AUX/IAA domain** (domain, interpro) [535\u2013578, 582\u2013632]\n- **Auxin response factor** (family, interpro) [18\u2013631]\n- **PB1-like domain** (domain, interpro) [542\u2013635]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n- [GO:0003677] DNA binding (IDA)\n- [GO:0003700] DNA-binding transcription factor activity (ISS)\n- [GO:0003700] DNA-binding transcription factor activity (TAS)\n- [GO:0005515] protein binding (IPI)\n- [GO:0042802] identical protein binding (IPI)\n- [GO:0043565] sequence-specific DNA binding (IDA)\n**Biological Process**\n- [GO:0008219] cell death (IMP)\n- [GO:0010150] leaf senescence (IMP)\n- [GO:0006355] regulation of DNA-templated transcription (TAS)\n- [GO:0009733] response to auxin (IEP)\n- [GO:0010150] leaf senescence (IGI)\n- [GO:0045892] negative regulation of DNA-templated transcription (IEP)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n- [GO:0009733] response to auxin (IBA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n- [GO:0005634] nucleus (ISM)\n- [GO:0005634] nucleus (ISS)\n- [GO:0005634] nucleus (IDA)\n- [GO:0005737] cytoplasm (IEA)\n- [GO:0005737] cytoplasm (IDA)\n\n## Pathways (KEGG)\n- `ath04075` Plant hormone signal transduction - Arabidopsis thaliana (thale cress) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| IAA34 | 0.903 |\n| IAA19 | 0.9 |\n| IAA6 | 0.897 |\n| IAA17 | 0.893 |\n| IAA18 | 0.849 |\n| IAA2 | 0.843 |\n| IAA16 | 0.829 |\n| ARF2-A | 0.804 |\n| AUX1 | 0.795 |\n| IAA3 | 0.793 |\n\n## Cross-references\n- NASC Gene ID: AT1G59750\n- TAIR: AT1G59750\n- TAIR Gene Name: ARF1\n- NCBI gene (formerly Entrezgene): 842268\n- KNETMINER_ARA: AT1G59750\n- Expression Atlas: AT1G59750\n- UniProtKB Gene Name: Q8L7G0\n- WikiGene: 842268\n- UniProtKB Gene Name: F4ID31\n\n## Literature\n34 hits total; showing top 10.\n- **Genetic tango: unveiling maize's endosperm filling regulation orchestrated by NAKED ENDOSPERM1, NAKED ENDOSPERM2, and OPAQUE2** \u2014 Rahmati Ishka M. (PMID:37757450; doi:10.1093/plcell/koad245)\n- **Arabidopsis Transcription Regulatory Factor Domain/Domain Interaction Analysis Tool-Liquid/Liquid Phase Separation, Oligomerization, GO Analysis: A Toolkit for Interaction Data-Based Domain Analysis** \u2014 Kang JE, Jun JH, Kwon JH, Lee JH, Hwang K, Kim S, Jeong N. (PMID:37510380; doi:10.3390/genes14071476)\n- **Identification of the Auxin Response Factor gene family in kernel consumption apricot and association analysis of related genes regulating fruit size in distant hybridization** \u2014 Han C, Zhang W, Chen S, Zhang Y, Guo H, Yu L, Liu L, Liu P, Wang L, Zhao H. (PMID:41555233; doi:10.1186/s12870-025-08030-3)\n- **Quantitative proteomics reveals extensive lysine ubiquitination and transcription factor stability states in Arabidopsis** \u2014 Song G, Montes C, Olatunji D, Malik S, Ji C, Clark NM, Pu Y, Kelley DR, Walley JW. (PMID:39570863; doi:10.1093/plcell/koae310)\n- **NAKED ENDOSPERM1, NAKED ENDOSPERM2, and OPAQUE2 interact to regulate gene networks in maize endosperm development** \u2014 Wu H, Galli M, Spears CJ, Zhan J, Liu P, Yadegari R, Dannenhoffer JM, Gallavotti A, Becraft PW. (PMID:37795691; doi:10.1093/plcell/koad247)\n- **The miR7125-MdARF1 module enhances the resistance of apple to Colletotrichum gloeosporioides by promoting lignin synthesis in response to salicylic acid signalling** \u2014 Liu X, Dai H, Zhang F, Wang J, Shi J, Chen J, He P, Wang F, Ma Y. (PMID:38852059; doi:10.1111/pbi.14401)\n- **Large-scale analysis of the ARF and Aux/IAA gene families in 406 horticultural and other plants** \u2014 Feng S, Li N, Chen H, Liu Z, Li C, Zhou R, Zhang Y, Cao R, Ma X, Song X. (PMID:38589963; doi:10.1186/s43897-024-00090-7)\n- **How meristems shape plant architecture in cereals-Cereal Stem Cell Systems (CSCS) Consortium** \u2014 Dresselhaus T, Balboni M, Berg L, Dolata A, Hochholdinger F, Huang Y, Jiang G, von Korff M, Ku JC, van der Linde K, Maika J, Mondragon CL, Raissig MT, Schnittger A, Schnurbusch T, Simon R, Stahl Y, Timmermans M, Thirulogachandar V, Zhao S, Zhou Y. (PMID:40578304; doi:10.1093/plcell/koaf150)\n- **Genome-wide identification and expression profiling of B3 transcription factor genes in &lt;i&gt;Populus alba \u00d7 Populus glandulosa&lt;/i&gt;** \u2014 Wei M, Li H, Wang Q, Liu R, Yang L, Li Q. (PMID:37324718; doi:10.3389/fpls.2023.1193065)\n- **Identification of ARF gene family and functional analysis of CqARF05 under drought and salt stress in quinoa** \u2014 Wang B, Zhu X, Song X, Zhao Y, Yang D, Wang W, Liu W, Wei X. (PMID:39934301; doi:10.1038/s41598-025-89198-4)\n",
   "sections": {
    "annotation": {
-    "canonical_transcript": "AT1G59750.1",
-    "assembly_name": "TAIR10",
-    "description": "auxin response factor 1 [Source:NCBI gene (formerly Entrezgene);Acc:842268]",
     "seq_region_name": "1",
-    "logic_name": "araport11",
-    "object_type": "Gene",
-    "biotype": "protein_coding",
-    "display_name": "ARF1",
     "strand": 1,
-    "id": "AT1G59750",
-    "end": 21984433,
-    "start": 21979289,
     "db_type": "core",
+    "description": "auxin response factor 1 [Source:NCBI gene (formerly Entrezgene);Acc:842268]",
+    "biotype": "protein_coding",
+    "end": 21984433,
+    "id": "AT1G59750",
+    "display_name": "ARF1",
     "source": "araport11",
+    "logic_name": "araport11",
+    "start": 21979289,
+    "canonical_transcript": "AT1G59750.1",
+    "object_type": "Gene",
+    "assembly_name": "TAIR10",
     "organism": "arabidopsis_thaliana",
     "upstream_version": null
    },
@@ -127,107 +127,107 @@
     "count": 9,
     "xrefs": [
      {
-      "primary_id": "AT1G59750",
-      "synonyms": [],
-      "info_text": "",
       "dbname": "NASC_GENE_ID",
-      "info_type": "DIRECT",
-      "display_id": "AT1G59750-TAIR-G",
-      "description": "auxin response factor 1",
+      "synonyms": [],
       "db_display_name": "NASC Gene ID",
+      "info_text": "",
+      "info_type": "DIRECT",
+      "description": "auxin response factor 1",
+      "primary_id": "AT1G59750",
+      "display_id": "AT1G59750-TAIR-G",
       "version": "0"
      },
      {
-      "primary_id": "AT1G59750",
-      "synonyms": [],
       "display_id": "AT1G59750",
-      "info_type": "DIRECT",
-      "dbname": "TAIR_LOCUS",
-      "info_text": "",
       "version": "0",
+      "info_type": "DIRECT",
+      "description": "auxin response factor 1",
+      "primary_id": "AT1G59750",
       "db_display_name": "TAIR",
-      "description": "auxin response factor 1"
+      "info_text": "",
+      "synonyms": [],
+      "dbname": "TAIR_LOCUS"
      },
      {
-      "synonyms": [],
+      "info_type": "DIRECT",
       "primary_id": "ARF1",
-      "version": "0",
-      "db_display_name": "TAIR Gene Name",
       "description": "",
       "display_id": "ARF1",
-      "info_type": "DIRECT",
+      "version": "0",
+      "synonyms": [],
       "dbname": "TAIR_SYMBOL",
+      "db_display_name": "TAIR Gene Name",
       "info_text": ""
      },
      {
+      "version": "0",
+      "display_id": "ARF1",
+      "primary_id": "842268",
+      "description": "auxin response factor 1",
+      "info_type": "DEPENDENT",
+      "info_text": "",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "dbname": "EntrezGene",
       "synonyms": [
        "auxin response factor 1",
        "F23H11.7",
        "F23H11_7"
-      ],
-      "primary_id": "842268",
-      "version": "0",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "description": "auxin response factor 1",
-      "display_id": "ARF1",
-      "info_type": "DEPENDENT",
-      "info_text": "",
-      "dbname": "EntrezGene"
+      ]
      },
      {
-      "synonyms": [],
-      "primary_id": "AT1G59750",
-      "version": "0",
+      "info_text": "",
       "db_display_name": "KNETMINER_ARA",
-      "description": null,
-      "display_id": "AT1G59750",
-      "info_type": "DEPENDENT",
       "dbname": "KNETMINER_ARA",
-      "info_text": ""
-     },
-     {
       "synonyms": [],
+      "version": "0",
+      "display_id": "AT1G59750",
       "primary_id": "AT1G59750",
       "description": null,
-      "db_display_name": "Expression Atlas",
-      "version": "0",
-      "dbname": "ArrayExpress",
-      "info_text": "",
-      "info_type": "DIRECT",
-      "display_id": "AT1G59750"
-     },
-     {
-      "display_id": "ARF1",
-      "info_type": "DEPENDENT",
-      "dbname": "Uniprot_gn",
-      "info_text": "",
-      "version": null,
-      "db_display_name": "UniProtKB Gene Name",
-      "description": null,
-      "primary_id": "Q8L7G0",
-      "synonyms": []
-     },
-     {
-      "db_display_name": "WikiGene",
-      "description": "auxin response factor 1",
-      "version": "0",
-      "info_type": "DEPENDENT",
-      "info_text": "",
-      "dbname": "WikiGene",
-      "display_id": "ARF1",
-      "synonyms": [],
-      "primary_id": "842268"
-     },
-     {
-      "synonyms": [],
-      "primary_id": "F4ID31",
-      "version": null,
-      "description": null,
-      "db_display_name": "UniProtKB Gene Name",
-      "display_id": "ARF1",
-      "info_text": "",
-      "dbname": "Uniprot_gn",
       "info_type": "DEPENDENT"
+     },
+     {
+      "info_text": "",
+      "db_display_name": "Expression Atlas",
+      "dbname": "ArrayExpress",
+      "synonyms": [],
+      "version": "0",
+      "display_id": "AT1G59750",
+      "description": null,
+      "primary_id": "AT1G59750",
+      "info_type": "DIRECT"
+     },
+     {
+      "display_id": "ARF1",
+      "version": null,
+      "info_type": "DEPENDENT",
+      "primary_id": "Q8L7G0",
+      "description": null,
+      "db_display_name": "UniProtKB Gene Name",
+      "info_text": "",
+      "synonyms": [],
+      "dbname": "Uniprot_gn"
+     },
+     {
+      "description": "auxin response factor 1",
+      "primary_id": "842268",
+      "info_type": "DEPENDENT",
+      "version": "0",
+      "display_id": "ARF1",
+      "dbname": "WikiGene",
+      "synonyms": [],
+      "info_text": "",
+      "db_display_name": "WikiGene"
+     },
+     {
+      "primary_id": "F4ID31",
+      "description": null,
+      "info_type": "DEPENDENT",
+      "version": null,
+      "display_id": "ARF1",
+      "dbname": "Uniprot_gn",
+      "synonyms": [],
+      "info_text": "",
+      "db_display_name": "UniProtKB Gene Name"
      }
     ],
     "by_db": {
@@ -282,7 +282,6 @@
     "partners": [
      {
       "string_id": "3702.Q9C5X0",
-      "accession": "3702.Q9C5X0",
       "preferred_name": "IAA34",
       "score": 0.903,
       "escore": 0.45,
@@ -292,7 +291,6 @@
      },
      {
       "string_id": "3702.O24409",
-      "accession": "3702.O24409",
       "preferred_name": "IAA19",
       "score": 0.9,
       "escore": 0.292,
@@ -302,7 +300,6 @@
      },
      {
       "string_id": "3702.Q38824",
-      "accession": "3702.Q38824",
       "preferred_name": "IAA6",
       "score": 0.897,
       "escore": 0,
@@ -312,7 +309,6 @@
      },
      {
       "string_id": "3702.P93830",
-      "accession": "3702.P93830",
       "preferred_name": "IAA17",
       "score": 0.893,
       "escore": 0.392,
@@ -322,7 +318,6 @@
      },
      {
       "string_id": "3702.O24408",
-      "accession": "3702.O24408",
       "preferred_name": "IAA18",
       "score": 0.849,
       "escore": 0.45,
@@ -332,7 +327,6 @@
      },
      {
       "string_id": "3702.P49678",
-      "accession": "3702.P49678",
       "preferred_name": "IAA2",
       "score": 0.843,
       "escore": 0,
@@ -342,7 +336,6 @@
      },
      {
       "string_id": "3702.O24407",
-      "accession": "3702.O24407",
       "preferred_name": "IAA16",
       "score": 0.829,
       "escore": 0.076,
@@ -352,7 +345,6 @@
      },
      {
       "string_id": "3702.Q9LQC8",
-      "accession": "3702.Q9LQC8",
       "preferred_name": "ARF2-A",
       "score": 0.804,
       "escore": 0.089,
@@ -362,7 +354,6 @@
      },
      {
       "string_id": "3702.Q96247",
-      "accession": "3702.Q96247",
       "preferred_name": "AUX1",
       "score": 0.795,
       "escore": 0,
@@ -372,7 +363,6 @@
      },
      {
       "string_id": "3702.Q38822",
-      "accession": "3702.Q38822",
       "preferred_name": "IAA3",
       "score": 0.793,
       "escore": 0,
@@ -391,7 +381,7 @@
     "total": 34,
     "returned": 10,
     "truncated": true,
-    "next_cursor": "eyJwIjogeyJtYXJrIjogIkFvSUlQMUVjbVNnMU1qUXdPREkwT0E9PSIsICJvZmZzZXQiOiAxMH0sICJxIjogeyJxdWVyeSI6ICJBVDFHNTk3NTAiLCAic2l6ZSI6IDEwfSwgInQiOiAibG9jdXNfbGl0ZXJhdHVyZSJ9",
+    "next_cursor": "eyJwIjogeyJtYXJrIjogIkFvSUlQMUQwSlNnMU1qUXdPREkwT0E9PSIsICJvZmZzZXQiOiAxMH0sICJxIjogeyJxdWVyeSI6ICJBVDFHNTk3NTAiLCAic2l6ZSI6IDEwfSwgInQiOiAibG9jdXNfbGl0ZXJhdHVyZSJ9",
     "abstracts_included": true,
     "hits": [
      {

@@ -5,14 +5,14 @@
   "organism": "arabidopsis_thaliana",
   "top_n": 10
  },
- "started_at": "2026-09-25T11:03:38Z",
- "elapsed_s": 51.03905283899985,
+ "started_at": "2026-09-26T02:32:33Z",
+ "elapsed_s": 0.8755660649985657,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 42.24872909399983,
+   "elapsed_s": 0.5351460259989835,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0005285139995976351,
+   "elapsed_s": 0.0009983609998016618,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 8.78954630699991,
+   "elapsed_s": 0.3394241999994847,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.007796278000569146,
+   "elapsed_s": 0.006122746999608353,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.34326600800068263,
+   "elapsed_s": 0.2818037559991353,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.00441464600044128,
+   "elapsed_s": 0.0031796330003999174,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0003651930001069559,
+   "elapsed_s": 0.0006976459990255535,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0002342830002817209,
+   "elapsed_s": 0.00047365500358864665,
    "result": null,
    "error": null
   }
@@ -88,20 +88,20 @@
   "markdown": "# ARF8 \u2014 `AT5G37020`\n\n*Arabidopsis thaliana* \u00b7 protein_coding \u00b7 5:14,629,453\u201314,634,454 (+) \u00b7 TAIR10\n\nauxin response factor 8 [Source:NCBI gene (formerly Entrezgene);Acc:833672]\n\n## Protein\n**Auxin response factor 8**\nARFH_ARATH \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 811 aa\nUniProt: [Q9FGV1](https://www.uniprot.org/uniprotkb/Q9FGV1)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [125\u2013221]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [290\u2013362]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [124\u2013227]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [700\u2013794]\n- **B3 DNA binding domain** (domain, interpro) [125\u2013228]\n- **Auxin response factor domain** (domain, interpro) [275\u2013358]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [112\u2013255]\n- **Auxin response factor** (family, interpro) [17\u2013794]\n- **PB1-like domain** (domain, interpro) [705\u2013789]\n- **B3 DNA binding domain** (domain, pfam) [126\u2013226]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0000976] transcription cis-regulatory region binding (IPI)\n- [GO:0003677] DNA binding (IEA)\n- [GO:0003700] DNA-binding transcription factor activity (TAS)\n- [GO:0003700] DNA-binding transcription factor activity (ISS)\n- [GO:0005515] protein binding (IPI)\n**Biological Process**\n- [GO:0010154] fruit development (IMP)\n- [GO:0006355] regulation of DNA-templated transcription (TAS)\n- [GO:0009733] response to auxin (IMP)\n- [GO:0009908] flower development (IGI)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n- [GO:0009733] response to auxin (IBA)\n- [GO:0009908] flower development (IBA)\n- [GO:0010154] fruit development (IBA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n- [GO:0005634] nucleus (ISM)\n\n## Pathways (KEGG)\n- `ath04075` Plant hormone signal transduction - Arabidopsis thaliana (thale cress) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| BPE | 0.996 |\n| IAA9 | 0.923 |\n| IAA19 | 0.916 |\n| IAA6 | 0.908 |\n| PIF4 | 0.906 |\n| IAA17 | 0.904 |\n| AUX1 | 0.899 |\n| IAA1 | 0.894 |\n| TIR1 | 0.892 |\n| IAA8 | 0.884 |\n\n## Cross-references\n- NASC Gene ID: AT5G37020\n- TAIR: AT5G37020\n- TAIR Gene Name: ARF8\n- Plant Reactome Reaction ID: R-ATH-5608208\n- Plant Reactome Pathway ID: R-ATH-5608118\n- Expression Atlas: AT5G37020\n- KNETMINER_ARA: AT5G37020\n- UniProtKB Gene Name: Q9FGV1\n- WikiGene: 833672\n- UniProtKB Gene Name: A0A1P8BCS5\n\n## Literature\n69 hits total; showing top 10.\n- **On the cutting edge of development: laser-assisted microdissection of the Arabidopsis gynoecium reveals tissue-specific gene expression patterns** \u2014 Lanctot A. (PMID:38246130; doi:10.1093/plphys/kiae030)\n- **A RSL4-CPKs feedback loop integrates auxin and ethylene signals to regulate root hair growth in Arabidopsis** \u2014 Li LS, Chen YX, Ma L, Li S. (PMID:42487264; doi:10.1111/tpj.71049)\n- **MONOPTEROS isoform MP11ir plays a role during somatic embryogenesis in Arabidopsis thaliana** \u2014 W\u00f3jcikowska B, Belaidi S, Mironova V, Citerne S, Robert HS. (PMID:41264810; doi:10.1093/plphys/kiaf602)\n- **Gibberellin transport affects lateral root growth through HY5 in response to far-red light** \u2014 van Gelderen K, van der Velde K, Kang CK, Hollander J, Koppenol A, Petropoulos O, Prasetyaningrum P, Aky\u00fcz T, Pierik R. (PMID:40817834; doi:10.1093/plcell/koaf200)\n- **Identification of the Auxin Response Factor gene family in kernel consumption apricot and association analysis of related genes regulating fruit size in distant hybridization** \u2014 Han C, Zhang W, Chen S, Zhang Y, Guo H, Yu L, Liu L, Liu P, Wang L, Zhao H. (PMID:41555233; doi:10.1186/s12870-025-08030-3)\n- **Genome-wide analysis of the B3 family in apple (Malus domestica Borkh.) and functional identification of MdREM19 involvement in salt stress** \u2014 Tian Y, Yang A, Yan J, Wang B, Guo L, Ma S, Han X, Zhang C. (PMID:41820849; doi:10.1186/s12864-025-12317-y)\n- **Phylogenomic profile of exon-intron organization across angiosperms, their relationships with protein domains, and functional implications** \u2014 Zhang T, Zhang L, Ma H, Wang J. (PMID:41501004; doi:10.1038/s41467-025-66816-3)\n- **The miR7125-MdARF1 module enhances the resistance of apple to Colletotrichum gloeosporioides by promoting lignin synthesis in response to salicylic acid signalling** \u2014 Liu X, Dai H, Zhang F, Wang J, Shi J, Chen J, He P, Wang F, Ma Y. (PMID:38852059; doi:10.1111/pbi.14401)\n- **Genome-wide characterization and expression profiling of B3 superfamily during ethylene-induced flowering in pineapple (Ananas comosus L.)** \u2014 Ruan CC, Chen Z, Hu FC, Fan W, Wang XH, Guo LJ, Fan HY, Luo ZW, Zhang ZL. (PMID:34289810; doi:10.1186/s12864-021-07854-1)\n- **Identification of differentially expressed miRNAs between male sterile and fertile floral buds in watermelon (&lt;i&gt;Citrullus lanatus&lt;/i&gt; L.) via high-throughput sequencing** \u2014 Zhang G, Wei B, Ding Q. (PMID:39345966; doi:10.1007/s13205-024-04084-6)\n",
   "sections": {
    "annotation": {
-    "logic_name": "araport11",
-    "assembly_name": "TAIR10",
-    "canonical_transcript": "AT5G37020.1",
-    "description": "auxin response factor 8 [Source:NCBI gene (formerly Entrezgene);Acc:833672]",
-    "seq_region_name": "5",
-    "object_type": "Gene",
-    "biotype": "protein_coding",
-    "id": "AT5G37020",
-    "end": 14634454,
-    "start": 14629453,
-    "display_name": "ARF8",
-    "strand": 1,
-    "source": "araport11",
     "db_type": "core",
+    "description": "auxin response factor 8 [Source:NCBI gene (formerly Entrezgene);Acc:833672]",
+    "logic_name": "araport11",
+    "display_name": "ARF8",
+    "id": "AT5G37020",
+    "biotype": "protein_coding",
+    "assembly_name": "TAIR10",
+    "source": "araport11",
+    "strand": 1,
+    "seq_region_name": "5",
+    "canonical_transcript": "AT5G37020.1",
+    "start": 14629453,
+    "end": 14634454,
+    "object_type": "Gene",
     "organism": "arabidopsis_thaliana",
     "upstream_version": null
    },
@@ -127,130 +127,130 @@
     "count": 11,
     "xrefs": [
      {
-      "version": "0",
-      "description": "auxin response factor 8",
-      "db_display_name": "NASC Gene ID",
       "display_id": "AT5G37020-TAIR-G",
       "info_text": "",
-      "dbname": "NASC_GENE_ID",
-      "info_type": "DIRECT",
-      "synonyms": [],
-      "primary_id": "AT5G37020"
-     },
-     {
-      "version": "0",
-      "description": "auxin response factor 8",
-      "db_display_name": "TAIR",
-      "display_id": "AT5G37020",
-      "dbname": "TAIR_LOCUS",
-      "info_text": "",
-      "info_type": "DIRECT",
-      "synonyms": [],
-      "primary_id": "AT5G37020"
-     },
-     {
-      "version": "0",
-      "description": "",
-      "db_display_name": "TAIR Gene Name",
-      "display_id": "ARF8",
-      "info_text": "",
-      "dbname": "TAIR_SYMBOL",
-      "info_type": "DIRECT",
-      "synonyms": [],
-      "primary_id": "ARF8"
-     },
-     {
-      "synonyms": [],
-      "primary_id": "R-ATH-5608208",
-      "db_display_name": "Plant Reactome Reaction ID",
-      "description": "ARF inactivation by AUX/IAA",
-      "version": "0",
-      "info_type": "DIRECT",
-      "info_text": "Generated via direct",
-      "dbname": "Plant_Reactome_Reaction",
-      "display_id": "R-ATH-5608208"
-     },
-     {
-      "version": "0",
-      "description": "Auxin signalling",
-      "db_display_name": "Plant Reactome Pathway ID",
-      "display_id": "R-ATH-5608118",
-      "info_text": "Generated via direct",
-      "dbname": "Plant_Reactome_Pathway",
-      "info_type": "DIRECT",
-      "synonyms": [],
-      "primary_id": "R-ATH-5608118"
-     },
-     {
-      "info_type": "DIRECT",
-      "info_text": "",
-      "dbname": "ArrayExpress",
-      "display_id": "AT5G37020",
-      "db_display_name": "Expression Atlas",
-      "description": null,
       "version": "0",
       "primary_id": "AT5G37020",
+      "dbname": "NASC_GENE_ID",
+      "db_display_name": "NASC Gene ID",
+      "info_type": "DIRECT",
+      "synonyms": [],
+      "description": "auxin response factor 8"
+     },
+     {
+      "info_type": "DIRECT",
+      "synonyms": [],
+      "description": "auxin response factor 8",
+      "info_text": "",
+      "display_id": "AT5G37020",
+      "version": "0",
+      "dbname": "TAIR_LOCUS",
+      "db_display_name": "TAIR",
+      "primary_id": "AT5G37020"
+     },
+     {
+      "info_type": "DIRECT",
+      "synonyms": [],
+      "description": "",
+      "display_id": "ARF8",
+      "info_text": "",
+      "version": "0",
+      "primary_id": "ARF8",
+      "dbname": "TAIR_SYMBOL",
+      "db_display_name": "TAIR Gene Name"
+     },
+     {
+      "info_type": "DIRECT",
+      "synonyms": [],
+      "description": "ARF inactivation by AUX/IAA",
+      "info_text": "Generated via direct",
+      "display_id": "R-ATH-5608208",
+      "version": "0",
+      "primary_id": "R-ATH-5608208",
+      "dbname": "Plant_Reactome_Reaction",
+      "db_display_name": "Plant Reactome Reaction ID"
+     },
+     {
+      "synonyms": [],
+      "info_type": "DIRECT",
+      "description": "Auxin signalling",
+      "version": "0",
+      "info_text": "Generated via direct",
+      "display_id": "R-ATH-5608118",
+      "primary_id": "R-ATH-5608118",
+      "db_display_name": "Plant Reactome Pathway ID",
+      "dbname": "Plant_Reactome_Pathway"
+     },
+     {
+      "dbname": "ArrayExpress",
+      "db_display_name": "Expression Atlas",
+      "primary_id": "AT5G37020",
+      "info_text": "",
+      "display_id": "AT5G37020",
+      "version": "0",
+      "description": null,
+      "info_type": "DIRECT",
       "synonyms": []
      },
      {
+      "description": null,
+      "synonyms": [],
+      "info_type": "DEPENDENT",
       "primary_id": "AT5G37020",
-      "synonyms": [],
-      "dbname": "KNETMINER_ARA",
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "display_id": "AT5G37020",
-      "description": null,
       "db_display_name": "KNETMINER_ARA",
-      "version": "0"
-     },
-     {
-      "primary_id": "Q9FGV1",
-      "synonyms": [],
-      "dbname": "Uniprot_gn",
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "display_id": "ARF8",
-      "description": null,
-      "db_display_name": "UniProtKB Gene Name",
-      "version": null
-     },
-     {
-      "synonyms": [],
-      "primary_id": "833672",
+      "dbname": "KNETMINER_ARA",
       "version": "0",
-      "description": "auxin response factor 8",
-      "db_display_name": "WikiGene",
-      "display_id": "ARF8",
-      "dbname": "WikiGene",
       "info_text": "",
-      "info_type": "DEPENDENT"
+      "display_id": "AT5G37020"
      },
      {
-      "db_display_name": "UniProtKB Gene Name",
-      "description": null,
-      "version": null,
-      "info_type": "DEPENDENT",
       "info_text": "",
-      "dbname": "Uniprot_gn",
       "display_id": "ARF8",
+      "version": null,
+      "dbname": "Uniprot_gn",
+      "db_display_name": "UniProtKB Gene Name",
+      "primary_id": "Q9FGV1",
+      "info_type": "DEPENDENT",
       "synonyms": [],
+      "description": null
+     },
+     {
+      "version": "0",
+      "info_text": "",
+      "display_id": "ARF8",
+      "primary_id": "833672",
+      "db_display_name": "WikiGene",
+      "dbname": "WikiGene",
+      "synonyms": [],
+      "info_type": "DEPENDENT",
+      "description": "auxin response factor 8"
+     },
+     {
+      "info_type": "DEPENDENT",
+      "synonyms": [],
+      "description": null,
+      "display_id": "ARF8",
+      "info_text": "",
+      "version": null,
+      "dbname": "Uniprot_gn",
+      "db_display_name": "UniProtKB Gene Name",
       "primary_id": "A0A1P8BCS5"
      },
      {
-      "primary_id": "833672",
+      "description": "auxin response factor 8",
+      "info_type": "DEPENDENT",
       "synonyms": [
        "ATARF8",
        "auxin response factor 8",
        "K15O15.1",
        "K15O15_1"
       ],
-      "display_id": "ARF8",
-      "info_type": "DEPENDENT",
       "dbname": "EntrezGene",
-      "info_text": "",
-      "version": "0",
       "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "description": "auxin response factor 8"
+      "primary_id": "833672",
+      "display_id": "ARF8",
+      "info_text": "",
+      "version": "0"
      }
     ],
     "by_db": {
@@ -311,7 +311,6 @@
     "partners": [
      {
       "string_id": "3702.Q0JXE7",
-      "accession": "3702.Q0JXE7",
       "preferred_name": "BPE",
       "score": 0.996,
       "escore": 0.23,
@@ -321,7 +320,6 @@
      },
      {
       "string_id": "3702.Q38827",
-      "accession": "3702.Q38827",
       "preferred_name": "IAA9",
       "score": 0.923,
       "escore": 0.258,
@@ -331,7 +329,6 @@
      },
      {
       "string_id": "3702.O24409",
-      "accession": "3702.O24409",
       "preferred_name": "IAA19",
       "score": 0.916,
       "escore": 0.627,
@@ -341,7 +338,6 @@
      },
      {
       "string_id": "3702.Q38824",
-      "accession": "3702.Q38824",
       "preferred_name": "IAA6",
       "score": 0.908,
       "escore": 0.45,
@@ -351,7 +347,6 @@
      },
      {
       "string_id": "3702.Q8W2F3",
-      "accession": "3702.Q8W2F3",
       "preferred_name": "PIF4",
       "score": 0.906,
       "escore": 0.042,
@@ -361,7 +356,6 @@
      },
      {
       "string_id": "3702.P93830",
-      "accession": "3702.P93830",
       "preferred_name": "IAA17",
       "score": 0.904,
       "escore": 0.47,
@@ -371,7 +365,6 @@
      },
      {
       "string_id": "3702.Q96247",
-      "accession": "3702.Q96247",
       "preferred_name": "AUX1",
       "score": 0.899,
       "escore": 0,
@@ -381,7 +374,6 @@
      },
      {
       "string_id": "3702.P49677",
-      "accession": "3702.P49677",
       "preferred_name": "IAA1",
       "score": 0.894,
       "escore": 0.61,
@@ -391,7 +383,6 @@
      },
      {
       "string_id": "3702.Q570C0",
-      "accession": "3702.Q570C0",
       "preferred_name": "TIR1",
       "score": 0.892,
       "escore": 0,
@@ -401,7 +392,6 @@
      },
      {
       "string_id": "3702.Q38826",
-      "accession": "3702.Q38826",
       "preferred_name": "IAA8",
       "score": 0.884,
       "escore": 0.624,
@@ -420,7 +410,7 @@
     "total": 69,
     "returned": 10,
     "truncated": true,
-    "next_cursor": "eyJwIjogeyJtYXJrIjogIkFvSUlQemtHb3lnMU1UWXhOakE0TkE9PSIsICJvZmZzZXQiOiAxMH0sICJxIjogeyJxdWVyeSI6ICJBVDVHMzcwMjAiLCAic2l6ZSI6IDEwfSwgInQiOiAibG9jdXNfbGl0ZXJhdHVyZSJ9",
+    "next_cursor": "eyJwIjogeyJtYXJrIjogIkFvSUlQemptUGlnMU1UWXhOakE0TkE9PSIsICJvZmZzZXQiOiAxMH0sICJxIjogeyJxdWVyeSI6ICJBVDVHMzcwMjAiLCAic2l6ZSI6IDEwfSwgInQiOiAibG9jdXNfbGl0ZXJhdHVyZSJ9",
     "abstracts_included": true,
     "hits": [
      {
@@ -468,7 +458,7 @@
       "journalTitle": "Plant physiology",
       "pubYear": 2025,
       "firstPublicationDate": "2025-11-01",
-      "citedByCount": 2,
+      "citedByCount": 3,
       "isOpenAccess": true,
       "hasPDF": true,
       "abstractText": "Auxin is crucial for plant morphogenesis, including embryo development. Exogenous auxin application is necessary for inducing embryogenic responses in in vitro cultured explants of Arabidopsis (Arabidopsis thaliana) and other plants. Thus, components of auxin transport, signaling, and metabolism are key to somatic embryogenesis. AUXIN RESPONSE FACTOR (ARF) transcription factors bind to auxin response elements to control auxin-responsive gene expression and are often repressed by AUXIN/INDOLE-3-ACETIC ACIDs (Aux/IAAs). MONOPTEROS (MP)/ARF5 is especially important in the embryogenic transition, being highly expressed during somatic embryogenesis; its mutant cannot develop somatic embryos. The MP11ir transcript, an alternatively spliced variant of MP, produces a truncated protein missing the Phox and Bem1p (PB1) domain, crucial for ARF-Aux/IAA dimerization. This renders MP11ir insensitive to Aux/IAA repression, suggesting auxin-independent regulation. High levels of MP11ir transcript are observed during auxin- and trichostatin-A-dependent induction of somatic embryogenesis. Both MP and MP11ir are essential for embryo regeneration in the mpS319 mutant. However, overexpression of a truncated MP protein (\u0394ARF5) lacking the PB1 domain inhibits somatic embryogenesis, resulting in callus instead of somatic embryos. Overexpression of \u0394ARF5, lack of MP protein (mp mutant), or interference with MP action by the auxin-resistant BODENLOS (BDL) protein affects the expression of auxin biosynthesis genes. Our results suggest that these auxin-related genes might be targets of MP11ir and/or MP. Consequently, any adjustment to MP activity alters auxin homeostasis and endogenous auxin levels, hindering embryogenic transition.",

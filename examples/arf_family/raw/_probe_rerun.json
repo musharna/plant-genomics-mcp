@@ -1,6 +1,6 @@
 {
- "server_version": "1.23.0",
- "server_commit": "9054886",
+ "server_version": "1.24.0",
+ "server_commit": "55dc6ca",
  "tool_count": 53,
  "tools": {
   "string_interactions": {
@@ -145,19 +145,6 @@
         "default": null,
         "description": "e.g. \"3702.AT3G15500.1\"",
         "title": "String Id"
-       },
-       "accession": {
-        "anyOf": [
-         {
-          "type": "string"
-         },
-         {
-          "type": "null"
-         }
-        ],
-        "default": null,
-        "description": "Deprecated (#133): always equal to string_id, a STRING id \u2014 NOT the UniProt accession other tools mean by 'accession'. Read string_id.",
-        "title": "Accession"
        },
        "preferred_name": {
         "anyOf": [
@@ -631,7 +618,7 @@
     "openWorldHint": true,
     "readOnlyHint": true
    },
-   "description": "Fetch curated transcription-factor DNA binding motifs for a locus from JASPAR (jaspar.elixir.no; free, no key) \u2014 the cis-regulatory view. Resolves the locus \u2192 UniProt accession + gene symbol, searches JASPAR by symbol scoped to the organism's taxid, then CONFIRMS each candidate by matching the accession against the profile's uniprot_ids. Returns per motif the JASPAR matrix id, TF class/family, assay type (SELEX / ChIP-seq / PBM / DAP-seq), an IUPAC consensus derived from the position-frequency matrix (e.g. CACGTG, the G-box/ABRE core), motif length, PubMed refs, and an SVG sequence-logo URL. IMPORTANT: JASPAR's name search is fuzzy, so name-similarity hits belonging to a DIFFERENT gene are returned separately in name_only_matches and must NOT be attributed to this locus; only `motifs` is UniProt-confirmed. found=false means the gene has no curated profile (not a TF, or its family is unprofiled for that species) \u2014 a normal outcome, not an error. Use jaspar_motif to retrieve the raw matrix for any matrix_id. Coverage is Arabidopsis-heavy (1236 profiles) and thin elsewhere (maize 131, soybean 91, wheat 58, tomato 51, rice 10; Brachypodium and sorghum have none). Defaults to arabidopsis_thaliana; pass organism= for other species.",
+   "description": "Fetch curated transcription-factor DNA binding motifs for a locus from JASPAR (jaspar.elixir.no; free, no key) \u2014 the cis-regulatory view. Resolves the locus \u2192 UniProt accession + gene symbol, searches JASPAR by symbol scoped to the organism's taxid, then CONFIRMS each candidate by matching the accession against the profile's uniprot_ids. Returns per motif the JASPAR matrix id, TF class/family, assay type (SELEX / ChIP-seq / PBM / DAP-seq), an IUPAC consensus derived from the position-frequency matrix (e.g. CACGTG, the G-box/ABRE core), motif length, PubMed refs, and the SVG sequence_logo and JASPAR web_url \u2014 links for the client to fetch; no tool on this server retrieves them. IMPORTANT: JASPAR's name search is fuzzy, so name-similarity hits belonging to a DIFFERENT gene are returned separately in name_only_matches and must NOT be attributed to this locus; only `motifs` is UniProt-confirmed. found=false means the gene has no curated profile (not a TF, or its family is unprofiled for that species) \u2014 a normal outcome, not an error. Use jaspar_motif to retrieve the raw matrix for any matrix_id. Coverage is Arabidopsis-heavy (1236 profiles) and thin elsewhere (maize 131, soybean 91, wheat 58, tomato 51, rice 10; Brachypodium and sorghum have none). Defaults to arabidopsis_thaliana; pass organism= for other species.",
    "inputSchema": {
     "properties": {
      "locus": {
@@ -957,7 +944,7 @@
     "openWorldHint": true,
     "readOnlyHint": true
    },
-   "description": "Resolve a plant locus to its canonical UniProtKB record. Prefers reviewed (Swiss-Prot) entries; falls back to unreviewed (TrEMBL) when no curated record exists (common for non-Arabidopsis plants). organism accepts a canonical slug, scientific/common name, or NCBI taxid (default arabidopsis_thaliana; e.g. oryza_sativa, zea_mays). A gene symbol answers only when it names one locus; a symbol shared by several loci (ARF1) is InvalidArguments listing them. Returns primaryAccession, uniProtkbId, entryType, recommendedName, geneNames, organism, taxonId, sequenceLength, web_url. This is the protein-side entry point \u2014 pair with InterPro / AlphaFold / Reactome / structural-bio tools.",
+   "description": "Resolve a plant locus to its canonical UniProtKB record. Prefers reviewed (Swiss-Prot) entries; falls back to unreviewed (TrEMBL) when no curated record exists (common for non-Arabidopsis plants). organism accepts a canonical slug, scientific/common name, or NCBI taxid (default arabidopsis_thaliana; e.g. oryza_sativa, zea_mays). A gene symbol answers only when it names one locus; a symbol shared by several loci (ARF1) is InvalidArguments listing them. Returns primaryAccession, uniProtkbId, entryType, recommendedName, geneNames, organism, taxonId, sequenceLength, web_url (a link for the client to open; no tool on this server retrieves it). This is the protein-side entry point \u2014 pair with InterPro / AlphaFold / Reactome / structural-bio tools.",
    "inputSchema": {
     "properties": {
      "locus": {
@@ -1126,7 +1113,7 @@
     "openWorldHint": true,
     "readOnlyHint": true
    },
-   "description": "Search Europe PMC for literature mentioning a plant locus. Free, no API key. Returns up to `size` results (default 10, capped at 25) with title, authors, journal, year, DOI, PMID, open-access status, citation count, and abstract. For non-Arabidopsis species the species common name is appended to the query to disambiguate locus IDs (rice, maize, ...). Pair with resolve_locus_to_uniprot or ensembl_plants_lookup_locus to ground the locus before fanning out to the literature.",
+   "description": "Search Europe PMC for literature mentioning a plant locus. Free, no API key. Returns up to `size` results (default 10, capped at 25) with title, authors, journal, year, DOI, PMID, open-access status, citation count, abstract, and the article's web_url (a link for the client to open; no tool on this server retrieves it). For non-Arabidopsis species the species common name is appended to the query to disambiguate locus IDs (rice, maize, ...). Pair with resolve_locus_to_uniprot or ensembl_plants_lookup_locus to ground the locus before fanning out to the literature.",
    "inputSchema": {
     "properties": {
      "locus": {
@@ -2551,7 +2538,7 @@
     "openWorldHint": true,
     "readOnlyHint": true
    },
-   "description": "Fetch orthologs and paralogs for a plant locus from Gramene compara (data.gramene.org v69). Default homology_type='ortholog'; pass 'paralog' for in-species duplicates or 'all' for everything. Returns target_locus + homology category (type) + shared gene_tree_id per hit. Rows carry no taxon unless with_organism=true (adds 'organism' per row) or target_organism is given, which filters to one organism before the cap and adds 'organism' per row; pair with resolve_locus_to_uniprot for protein-level enrichment and with blast_sequence for sequence similarity discovery.",
+   "description": "Fetch orthologs and paralogs for a plant locus from Gramene compara (data.gramene.org v69). Default homology_type='ortholog'; pass 'paralog' for in-species duplicates or 'all' for everything. 'ortholog' includes syntenic_ortholog_* rows; homoeologs (polyploid subgenome copies) come back only under 'all', and excluded_categories counts every category the filter left out. Returns target_locus + homology category (type) + shared gene_tree_id per hit. Rows carry no taxon unless with_organism=true (adds 'organism' per row) or target_organism is given, which filters to one organism before the cap and adds 'organism' per row; pair with resolve_locus_to_uniprot for protein-level enrichment and with blast_sequence for sequence similarity discovery.",
    "inputSchema": {
     "properties": {
      "locus": {
@@ -2672,6 +2659,14 @@
       "description": "Homolog total before the organism filter; present only when filtered",
       "title": "Total All Organisms"
      },
+     "excluded_categories": {
+      "additionalProperties": {
+       "type": "integer"
+      },
+      "description": "Homologs Gramene returned that homology_type left out, counted per category (e.g. {'within_species_paralog': 3, 'homoeolog_one2one': 2} under 'ortholog'); empty under 'all'. Counted over every organism, before any target_organism filter",
+      "title": "Excluded Categories",
+      "type": "object"
+     },
      "upstream_version": {
       "anyOf": [
        {
@@ -2691,7 +2686,8 @@
      "locus",
      "release",
      "total",
-     "homologs"
+     "homologs",
+     "excluded_categories"
     ],
     "type": "object",
     "$defs": {
@@ -2721,7 +2717,7 @@
          }
         ],
         "default": null,
-        "description": "Homology category: ortholog_one2one | ortholog_one2many | ortholog_many2many | within_species_paralog | between_species_paralog",
+        "description": "Gramene homology category, as upstream names it, e.g. ortholog_one2one, ortholog_many2many, syntenic_ortholog_one2one, within_species_paralog, homoeolog_one2one (wheat). homology_type='ortholog' keeps the categories whose name contains 'ortholog', 'paralog' those containing 'paralog'",
         "title": "Type"
        },
        "gene_tree_id": {
@@ -3304,6 +3300,921 @@
     "title": "BatchEnvelope"
    },
    "title": "Batch: Any Locus Tool"
+  },
+  "atted_coexpression": {
+   "_meta": {
+    "edam": {
+     "operation": [
+      "operation_2422"
+     ],
+     "topic": [
+      "topic_0780",
+      "topic_0114"
+     ]
+    }
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true
+   },
+   "description": "Fetch co-expressed gene neighbors from ATTED-II (atted.jp, API v5) for a plant locus. Returns top_n neighbors with target locus + NCBI Entrez gene ID + score (higher = stronger coexpression), in the index the release declares as score_type: 'z' for Ath-u.c4-0, 'LSmr' (logit score) for the other releases. The ATTED-II release (e.g. Ath-u.c4-0 for Arabidopsis, Osa-u.c1-0 for rice) is resolved per-organism. Covers: arabidopsis_thaliana, glycine_max, medicago_truncatula, oryza_sativa, solanum_lycopersicum, vitis_vinifera, zea_mays. Any other organism raises OrganismNotSupported before any request (both the single and batch forms). A locus that is not in the organism's release raises NotFoundError. Pairs with string_interactions to surface high-confidence functional partners (interactors that are also coexpressed).",
+   "inputSchema": {
+    "properties": {
+     "locus": {
+      "type": "string",
+      "description": "Plant locus, e.g. AT1G01010 (Arabidopsis) or Os01g0100100 (rice)"
+     },
+     "organism": {
+      "type": [
+       "string",
+       "integer"
+      ],
+      "default": "arabidopsis_thaliana",
+      "description": "Plant organism \u2014 accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid"
+     },
+     "top_n": {
+      "type": "integer",
+      "default": 25,
+      "minimum": 1,
+      "maximum": 300
+     }
+    },
+    "required": [
+     "locus"
+    ],
+    "type": "object",
+    "additionalProperties": false
+   },
+   "name": "atted_coexpression",
+   "outputSchema": {
+    "properties": {
+     "total": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Always null: the upstream returns the top coexpression neighbours asked for and states no total; null means unknown, never zero (#123)",
+      "title": "Total"
+     },
+     "returned": {
+      "description": "Rows in this payload (#123)",
+      "title": "Returned",
+      "type": "integer"
+     },
+     "truncated": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Always null: without a stated total, truncation is unknown (#123)",
+      "title": "Truncated"
+     },
+     "locus": {
+      "title": "Locus",
+      "type": "string"
+     },
+     "atted_release": {
+      "description": "ATTED-II DB identifier, e.g. Ath-u.c4-0 (release version included)",
+      "title": "Atted Release",
+      "type": "string"
+     },
+     "score_type": {
+      "description": "The coexpression index every neighbour's score is in, as ATTED-II declares it: 'z' for Ath-u.c4-0, 'LSmr' (logit score) for the other releases",
+      "title": "Score Type",
+      "type": "string"
+     },
+     "neighbors": {
+      "items": {
+       "$ref": "#/$defs/CoexNeighbor"
+      },
+      "title": "Neighbors",
+      "type": "array"
+     },
+     "upstream_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "ATTED-II release that produced THIS response, as stated by the db= pinned in the request (e.g. 'Ath-u.c4-0'); same value as atted_release. null means ATTED-II did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "title": "Upstream Version"
+     }
+    },
+    "required": [
+     "returned",
+     "locus",
+     "atted_release",
+     "score_type",
+     "neighbors"
+    ],
+    "type": "object",
+    "$defs": {
+     "CoexNeighbor": {
+      "additionalProperties": true,
+      "description": "One ATTED-II co-expression neighbor entry (API v5).",
+      "properties": {
+       "locus": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Target locus (first element of upstream 'other_id' list)",
+        "title": "Locus"
+       },
+       "entrez_gene_id": {
+        "anyOf": [
+         {
+          "type": "integer"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "NCBI Entrez gene ID (upstream 'gene' field)",
+        "title": "Entrez Gene Id"
+       },
+       "score": {
+        "description": "Coexpression score in the release's own index, named by the response's score_type; higher = stronger coexpression",
+        "title": "Score",
+        "type": "number"
+       },
+       "z_score": {
+        "anyOf": [
+         {
+          "type": "number"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "ATTED-II z-score; higher = stronger coexpression. Null unless score_type is 'z' (Ath-u.c4-0); read score for every release",
+        "title": "Z Score"
+       }
+      },
+      "required": [
+       "score"
+      ],
+      "title": "CoexNeighbor",
+      "type": "object"
+     }
+    },
+    "additionalProperties": false,
+    "description": "ATTED-II coexpression response wrapper.",
+    "title": "AttedCoexpression"
+   },
+   "title": "ATTED-II: Coexpression"
+  },
+  "panther_family": {
+   "_meta": {
+    "edam": {
+     "operation": [
+      "operation_2422"
+     ],
+     "topic": [
+      "topic_0780",
+      "topic_0114"
+     ]
+    }
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true
+   },
+   "description": "Fetch the PANTHER protein-family classification for a locus (pantherdb.org; free, no key). Returns the PANTHER family and subfamily (id + name) plus curated GO terms grouped by aspect (molecular_function / biological_process / cellular_component), the PANTHER protein class, and pathways. found=false when PANTHER cannot map the locus; a mapped locus can still have a null family or subfamily, which means PANTHER assigns it none. Complements the sequence-homology tools (gramene_homologs / consensus_homologs) with an evolutionary-family view. Works for all 12 organisms. Defaults to arabidopsis_thaliana; pass organism= for other species.",
+   "inputSchema": {
+    "properties": {
+     "locus": {
+      "type": "string",
+      "description": "e.g. AT1G01060 (Arabidopsis), Os01g0100100 (rice RAP-DB)"
+     },
+     "organism": {
+      "type": [
+       "string",
+       "integer"
+      ],
+      "description": "Plant organism \u2014 accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+      "default": "arabidopsis_thaliana"
+     }
+    },
+    "required": [
+     "locus"
+    ],
+    "type": "object",
+    "additionalProperties": false
+   },
+   "name": "panther_family",
+   "outputSchema": {
+    "properties": {
+     "locus": {
+      "title": "Locus",
+      "type": "string"
+     },
+     "found": {
+      "description": "True if PANTHER mapped the locus; the family fields can still be null",
+      "title": "Found",
+      "type": "boolean"
+     },
+     "accession": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "PANTHER mapped accession",
+      "title": "Accession"
+     },
+     "family_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "PANTHER family id, e.g. PTHR12802; null when PANTHER assigns no family",
+      "title": "Family Id"
+     },
+     "family_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Family Name"
+     },
+     "subfamily_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "e.g. PTHR12802:SF176; null when PANTHER assigns no subfamily, which is PANTHER's answer, not a failed lookup",
+      "title": "Subfamily Id"
+     },
+     "subfamily_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Subfamily Name"
+     },
+     "go_molecular_function": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "title": "Go Molecular Function",
+      "type": "array"
+     },
+     "go_biological_process": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "title": "Go Biological Process",
+      "type": "array"
+     },
+     "go_cellular_component": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "title": "Go Cellular Component",
+      "type": "array"
+     },
+     "protein_class": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "title": "Protein Class",
+      "type": "array"
+     },
+     "pathways": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "title": "Pathways",
+      "type": "array"
+     },
+     "upstream_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "PANTHER release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means PANTHER did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "title": "Upstream Version"
+     }
+    },
+    "required": [
+     "locus",
+     "found"
+    ],
+    "type": "object",
+    "additionalProperties": false,
+    "description": "PANTHER protein-family classification for a locus.\n\n``found=False`` (with null/empty fields) means PANTHER could not map the\nlocus \u2014 a normal outcome, not an error. A mapped locus (``found=True``) can\nstill carry null family and subfamily fields: PANTHER knows the gene and may\nannotate GO terms for it, but assigns it no family (seen live 2026-09-25 for\nan Arabidopsis mitochondrial locus).",
+    "title": "PantherFamily"
+   },
+   "title": "PANTHER: Protein Family"
+  },
+  "jaspar_motif": {
+   "_meta": {
+    "edam": {
+     "operation": [
+      "operation_2422"
+     ],
+     "topic": [
+      "topic_0780",
+      "topic_0114"
+     ]
+    }
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true
+   },
+   "description": "Fetch one JASPAR binding profile by matrix id, including its raw position-frequency matrix (PFM: per-base count vectors keyed A/C/G/T) plus TF class/family, assay type, source species, UniProt accessions, PubMed refs, IUPAC consensus, and the sequence-logo URL (a link for the client to fetch; no tool on this server retrieves it). The drill-down companion to tf_binding_motifs, which returns the derived consensus but not the matrix. Accepts a versioned id (MA0570.1) or a bare base id (MA0570, which resolves to the newest version). Unknown ids raise a typed NotFoundError.",
+   "inputSchema": {
+    "properties": {
+     "matrix_id": {
+      "type": "string",
+      "description": "JASPAR profile id, e.g. MA0570.1 or MA0570 (latest version)"
+     }
+    },
+    "required": [
+     "matrix_id"
+    ],
+    "type": "object",
+    "additionalProperties": false
+   },
+   "name": "jaspar_motif",
+   "outputSchema": {
+    "properties": {
+     "matrix_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "JASPAR profile id, e.g. MA0570.1",
+      "title": "Matrix Id"
+     },
+     "name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "TF name as curated by JASPAR",
+      "title": "Name"
+     },
+     "collection": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "CORE / PBM / UNVALIDATED / \u2026",
+      "title": "Collection"
+     },
+     "base_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Version-less profile id, e.g. MA0570",
+      "title": "Base Id"
+     },
+     "version": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "JASPAR release version of the profile",
+      "title": "Version"
+     },
+     "tf_class": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Structural class, e.g. ['Basic leucine zipper factors (bZIP)']",
+      "title": "Tf Class"
+     },
+     "tf_family": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "TF family, e.g. ['MYB-related']",
+      "title": "Tf Family"
+     },
+     "data_type": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Assay the profile derives from: SELEX / ChIP-seq / PBM / DAP-seq",
+      "title": "Data Type"
+     },
+     "consensus": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "IUPAC consensus derived from the PFM, e.g. 'AAATATCT' (the Evening Element)",
+      "title": "Consensus"
+     },
+     "length": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Motif width in bases",
+      "title": "Length"
+     },
+     "uniprot_ids": {
+      "description": "UniProt accessions JASPAR attributes the profile to",
+      "items": {
+       "type": "string"
+      },
+      "title": "Uniprot Ids",
+      "type": "array"
+     },
+     "pubmed_ids": {
+      "description": "Supporting PubMed IDs",
+      "items": {
+       "type": "string"
+      },
+      "title": "Pubmed Ids",
+      "type": "array"
+     },
+     "sequence_logo": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "URL of the SVG sequence logo \u2014 a link for the client to open or fetch; no tool on this server dereferences it",
+      "title": "Sequence Logo"
+     },
+     "web_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "JASPAR profile page \u2014 a link for the client to open or fetch; no tool on this server dereferences it",
+      "title": "Web Url"
+     },
+     "species": {
+      "description": "Source species [{tax_id, name}]",
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "title": "Species",
+      "type": "array"
+     },
+     "pfm": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "items": {
+          "type": "number"
+         },
+         "type": "array"
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Position-frequency matrix: per-base count vectors keyed A/C/G/T",
+      "title": "Pfm"
+     }
+    },
+    "type": "object",
+    "additionalProperties": true,
+    "description": "A single JASPAR profile including its raw position-frequency matrix.\n\nThe drill-down companion to ``TfBindingMotifs``, which carries the derived\nconsensus but not the matrix itself.",
+    "title": "JasparMotif"
+   },
+   "title": "JASPAR: Motif Matrix"
+  },
+  "bar_aiv_interactions": {
+   "_meta": {
+    "edam": {
+     "operation": [
+      "operation_2422"
+     ],
+     "topic": [
+      "topic_0780",
+      "topic_0114"
+     ]
+    }
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true
+   },
+   "description": "Fetch BAR AIV (Arabidopsis Interactions Viewer) interactions for an Arabidopsis or rice locus. Dispatches by organism: Arabidopsis returns curated GRN paper refs from /interactions/get_paper_by_agi/{locus} (PubMed ID, title, image URL, comments, pipe-split tags; the image is a link for the client to fetch, no tool on this server retrieves it); rice returns predicted PPI partners from /interactions/rice/{locus} with Pearson co-expression r (pcc), evidence hits, and quality score. The `kind` field discriminates the response shape (grn_papers vs ppi_predictions). Rice requires the MSU LOC_Os* locus format \u2014 RAP-DB Os*g* is rejected upstream. Only Arabidopsis and rice are supported by AIV; other organisms raise OrganismNotSupported.",
+   "inputSchema": {
+    "properties": {
+     "locus": {
+      "type": "string",
+      "description": "AGI locus (AT1G01010) for Arabidopsis or MSU locus (LOC_Os01g01080) for rice"
+     },
+     "organism": {
+      "type": [
+       "string",
+       "integer"
+      ],
+      "description": "arabidopsis_thaliana or oryza_sativa \u2014 slug, scientific/common name, or NCBI taxid",
+      "default": "arabidopsis_thaliana"
+     }
+    },
+    "required": [
+     "locus"
+    ],
+    "type": "object",
+    "additionalProperties": false
+   },
+   "name": "bar_aiv_interactions",
+   "outputSchema": {
+    "properties": {
+     "locus": {
+      "title": "Locus",
+      "type": "string"
+     },
+     "organism": {
+      "enum": [
+       "arabidopsis_thaliana",
+       "oryza_sativa"
+      ],
+      "title": "Organism",
+      "type": "string"
+     },
+     "kind": {
+      "description": "Discriminator: grn_papers (Arabidopsis) or ppi_predictions (rice)",
+      "enum": [
+       "grn_papers",
+       "ppi_predictions"
+      ],
+      "title": "Kind",
+      "type": "string"
+     },
+     "count": {
+      "description": "Total rows returned (len of papers or partners)",
+      "title": "Count",
+      "type": "integer"
+     },
+     "papers": {
+      "description": "GRN paper refs (populated when kind=grn_papers)",
+      "items": {
+       "$ref": "#/$defs/BarAIVPaper"
+      },
+      "title": "Papers",
+      "type": "array"
+     },
+     "partners": {
+      "description": "PPI predictions (populated when kind=ppi_predictions)",
+      "items": {
+       "$ref": "#/$defs/BarAIVPartner"
+      },
+      "title": "Partners",
+      "type": "array"
+     },
+     "source_url": {
+      "description": "BAR AIV endpoint URL for traceability \u2014 a link for the client to open or fetch; no tool on this server dereferences it",
+      "title": "Source Url",
+      "type": "string"
+     }
+    },
+    "required": [
+     "locus",
+     "organism",
+     "kind",
+     "count",
+     "source_url"
+    ],
+    "type": "object",
+    "$defs": {
+     "BarAIVPaper": {
+      "additionalProperties": true,
+      "description": "One curated GRN paper row from BAR AIV Arabidopsis lane.\n\nFrom ``/interactions/get_paper_by_agi/{locus}``: each entry is a yeast\none-hybrid / ChIP / curated TF-target study referencing the queried AGI\nas a node. `tags` is pipe-split into a list of ``\"name:type\"`` items\n(e.g. ``\"PLT3:Gene\"``, ``\"auxin:Misc\"``, ``\"wound:Condition\"``).",
+      "properties": {
+       "source_id": {
+        "anyOf": [
+         {
+          "type": "integer"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "BAR internal study ID",
+        "title": "Source Id"
+       },
+       "pmid": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "PubMed ID, e.g. \"29462363\"",
+        "title": "Pmid"
+       },
+       "title": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Study title with citation",
+        "title": "Title"
+       },
+       "image_url": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "BAR-hosted thumbnail of the GRN network diagram \u2014 a link for the client to open or fetch; no tool on this server dereferences it",
+        "title": "Image Url"
+       },
+       "comments": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "BAR curator commentary on the study",
+        "title": "Comments"
+       },
+       "cyjs_layout": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Cytoscape.js layout config (JSON string) for the GRN view",
+        "title": "Cyjs Layout"
+       },
+       "tags": {
+        "description": "Pipe-split \"name:type\" tags, e.g. [\"PLT3:Gene\", \"auxin:Misc\"]",
+        "items": {
+         "type": "string"
+        },
+        "title": "Tags",
+        "type": "array"
+       }
+      },
+      "title": "BarAIVPaper",
+      "type": "object"
+     },
+     "BarAIVPartner": {
+      "additionalProperties": true,
+      "description": "One predicted PPI partner row from BAR AIV Rice lane.\n\nFrom ``/interactions/rice/{locus}``: each entry is a predicted\nprotein-protein interaction where ``protein_1`` is the queried locus\nand ``protein_2`` is the partner. ``partner_locus`` is derived as the\nnon-queried side for ergonomic access.",
+      "properties": {
+       "partner_locus": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "MSU LOC_Os* locus of the predicted interactor",
+        "title": "Partner Locus"
+       },
+       "protein_1": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "First protein in the pair",
+        "title": "Protein 1"
+       },
+       "protein_2": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Second protein in the pair",
+        "title": "Protein 2"
+       },
+       "pcc": {
+        "anyOf": [
+         {
+          "type": "number"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Pearson correlation of co-expression evidence (range -1 to 1)",
+        "title": "Pcc"
+       },
+       "total_hits": {
+        "anyOf": [
+         {
+          "type": "integer"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Count of supporting evidence hits",
+        "title": "Total Hits"
+       },
+       "num_species": {
+        "anyOf": [
+         {
+          "type": "integer"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Species count supporting the prediction (BAR upstream field: Num_species)",
+        "title": "Num Species"
+       },
+       "quality": {
+        "anyOf": [
+         {
+          "type": "integer"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "BAR-internal evidence quality score (upstream: Quality)",
+        "title": "Quality"
+       }
+      },
+      "title": "BarAIVPartner",
+      "type": "object"
+     }
+    },
+    "additionalProperties": false,
+    "description": "BAR AIV response wrapper \u2014 interactions for Arabidopsis or rice.\n\nThe two BAR AIV lanes return completely different shapes, so this\nenvelope uses ``kind`` as a discriminator:\n\n  ``kind=\"grn_papers\"``      \u2192 ``papers`` list populated, ``partners`` empty\n                               (Arabidopsis, curated GRN references)\n  ``kind=\"ppi_predictions\"`` \u2192 ``partners`` list populated, ``papers`` empty\n                               (Rice, predicted PPI pairs with PCC)\n\nOther organisms in the registry have no AIV lane \u2014 the underlying\nbackend raises ``OrganismNotSupported`` before this model is built.",
+    "title": "BarAIVInteractions"
+   },
+   "title": "BAR: Predicted Interactions"
   }
  },
  "missing_tools": [],
@@ -4594,10 +5505,11 @@
       "organism": "aegilops_tauschii"
      }
     ],
+    "excluded_categories": {},
     "upstream_version": "v69"
    },
    "error": null,
-   "n_bytes": 29570
+   "n_bytes": 29624
   },
   {
    "row": "identifier-with-no-tool",
@@ -6445,10 +7357,11 @@
       "gene_tree_id": "EPlGT00940000167082"
      }
     ],
+    "excluded_categories": {},
     "upstream_version": "v69"
    },
    "error": null,
-   "n_bytes": 22914
+   "n_bytes": 22968
   },
   {
    "row": "no-pagination",
@@ -6852,10 +7765,11 @@
       "gene_tree_id": "EPlGT00940000167082"
      }
     ],
+    "excluded_categories": {},
     "upstream_version": "v69"
    },
    "error": null,
-   "n_bytes": 16940
+   "n_bytes": 16994
   }
  ]
 }

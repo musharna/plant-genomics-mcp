@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-25T11:09:52Z",
- "elapsed_s": 17.09067880299972,
+ "started_at": "2026-09-26T02:33:47Z",
+ "elapsed_s": 3.638878014004149,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 16.70585657400079,
+   "elapsed_s": 3.297500325003057,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.00038761399991926737,
+   "elapsed_s": 0.0006569199977093376,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 7.594199996674433e-05,
+   "elapsed_s": 8.182699821190909e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "error",
-   "elapsed_s": 4.664700009016087e-05,
+   "elapsed_s": 5.5735996284056455e-05,
    "result": null,
    "error": "[NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os05g0515400 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.38424431400017056,
+   "elapsed_s": 0.3405983810007456,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0004217910000079428,
+   "elapsed_s": 0.0006619329942623153,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00020723199941130588,
+   "elapsed_s": 0.00041307000356027856,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0002956339994852897,
+   "elapsed_s": 0.00044522200187202543,
    "result": null,
    "error": null
   }
@@ -89,18 +89,18 @@
   "sections": {
    "annotation": {
     "biotype": "protein_coding",
-    "logic_name": "rapdb_genes",
-    "end": 25561791,
-    "canonical_transcript": "Os05t0515400-01",
+    "object_type": "Gene",
     "seq_region_name": "5",
-    "db_type": "core",
-    "start": 25555850,
+    "canonical_transcript": "Os05t0515400-01",
     "assembly_name": "IRGSP-1.0",
+    "logic_name": "rapdb_genes",
+    "db_type": "core",
     "source": "RAP2022-09-01",
     "display_name": "OsARF14",
-    "id": "Os05g0515400",
-    "object_type": "Gene",
     "strand": 1,
+    "end": 25561791,
+    "id": "Os05g0515400",
+    "start": 25555850,
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -126,15 +126,15 @@
     "count": 1,
     "xrefs": [
      {
-      "primary_id": "Os05g0515400",
-      "synonyms": [],
       "display_id": "Os05g0515400",
-      "dbname": "ArrayExpress",
-      "info_text": "",
       "info_type": "DIRECT",
+      "info_text": "",
+      "dbname": "ArrayExpress",
       "version": "0",
+      "db_display_name": "Expression Atlas",
       "description": null,
-      "db_display_name": "Expression Atlas"
+      "primary_id": "Os05g0515400",
+      "synonyms": []
      }
     ],
     "by_db": {
@@ -154,7 +154,6 @@
     "partners": [
      {
       "string_id": "39947.Q75GK1",
-      "accession": "39947.Q75GK1",
       "preferred_name": "IAA12",
       "score": 0.91,
       "escore": 0.085,
@@ -164,7 +163,6 @@
      },
      {
       "string_id": "39947.Q0JKG7",
-      "accession": "39947.Q0JKG7",
       "preferred_name": "IAA5",
       "score": 0.876,
       "escore": 0.141,
@@ -174,7 +172,6 @@
      },
      {
       "string_id": "39947.Q6AT33",
-      "accession": "39947.Q6AT33",
       "preferred_name": "IAA19",
       "score": 0.876,
       "escore": 0.141,
@@ -184,7 +181,6 @@
      },
      {
       "string_id": "39947.Q10D34",
-      "accession": "39947.Q10D34",
       "preferred_name": "IAA13",
       "score": 0.87,
       "escore": 0.102,
@@ -194,7 +190,6 @@
      },
      {
       "string_id": "39947.Q5VRD1",
-      "accession": "39947.Q5VRD1",
       "preferred_name": "IAA1",
       "score": 0.867,
       "escore": 0.087,
@@ -204,7 +199,6 @@
      },
      {
       "string_id": "39947.Q6AT10",
-      "accession": "39947.Q6AT10",
       "preferred_name": "IAA15",
       "score": 0.867,
       "escore": 0.087,
@@ -214,7 +208,6 @@
      },
      {
       "string_id": "39947.P0C127",
-      "accession": "39947.P0C127",
       "preferred_name": "IAA16",
       "score": 0.864,
       "escore": 0.121,
@@ -224,7 +217,6 @@
      },
      {
       "string_id": "39947.Q6K846",
-      "accession": "39947.Q6K846",
       "preferred_name": "IAA9",
       "score": 0.863,
       "escore": 0.058,
@@ -234,7 +226,6 @@
      },
      {
       "string_id": "39947.Q5NB25",
-      "accession": "39947.Q5NB25",
       "preferred_name": "IAA3",
       "score": 0.86,
       "escore": 0.141,
@@ -244,7 +235,6 @@
      },
      {
       "string_id": "39947.Q75GB1",
-      "accession": "39947.Q75GB1",
       "preferred_name": "IAA17",
       "score": 0.86,
       "escore": 0.141,
