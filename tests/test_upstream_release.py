@@ -47,7 +47,8 @@ def _jaspar_row(number: int, active: str, year: str = "2026") -> dict:
 
 
 # backend → (responses to mock, expected release, expected components)
-GOOD = {
+Responses = list[tuple[str, object]]
+GOOD: dict[str, tuple[Responses, str, dict[str, str] | None]] = {
     "ensembl_plants": ([(ENSEMBL, {"version": 63})], "63", {"eg_version": "63"}),
     "string": (
         [(STRING, [{"string_version": "12.0", "stable_address": "https://x"}])],
@@ -84,7 +85,7 @@ GOOD = {
 }
 
 # backend → a changed shape its fetcher must refuse
-BROKEN = {
+BROKEN: dict[str, Responses] = {
     "ensembl_plants": [(ENSEMBL, {"release": 63})],
     "string": [(STRING, {"string_version": "12.0"})],
     "quickgo": [
@@ -96,7 +97,7 @@ BROKEN = {
 }
 
 
-def _mock(httpx_mock: HTTPXMock, responses: list[tuple[str, object]]) -> None:
+def _mock(httpx_mock: HTTPXMock, responses: Responses) -> None:
     for url, body in responses:
         if isinstance(body, str):
             httpx_mock.add_response(url=url, text=body)
@@ -120,7 +121,8 @@ async def test_a_publishing_backend_reports_what_its_endpoint_states(
     assert (r["backend"], r["release"]) == (backend, release), r
     if components is not None:
         assert r["components"] == components, r
-    assert r["endpoints"] and all(u.startswith("https://") for u in r["endpoints"]), r
+    # Provenance is the URL each read actually requested, query included.
+    assert r["endpoints"] == [url for url, _ in responses], r
     assert datetime.fromisoformat(r["observed_at"]).utcoffset() == timedelta(0), r
     assert r["reason"], r
 

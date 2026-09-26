@@ -56,7 +56,7 @@ _KEGG_LINE = re.compile(r"^\t(pathway|genes)\s+[\d,]+\s+(\d{4}/\d{2}/\d{2})$")
 _KEGG_DATABASES = ("pathway", "genes")  # the two kegg_pathways reads
 
 
-# (release, components, endpoints read, what the value is)
+# (release, components, the URLs actually requested, what the value is)
 _Found = tuple[str, dict[str, str], list[str], str]
 
 
@@ -80,26 +80,28 @@ def _text(value: Any, what: str) -> str:
 
 
 async def _ensembl(client: httpx.AsyncClient) -> _Found:
-    url = f"{ensembl_plants.BASE_URL}/info/eg_version"
-    body = _http.json_body(
-        await _get(client, url, "Ensembl /info/eg_version", headers={"Accept": "application/json"}),
+    resp = await _get(
+        client,
+        f"{ensembl_plants.BASE_URL}/info/eg_version",
         "Ensembl /info/eg_version",
+        headers={"Accept": "application/json"},
     )
+    body = _http.json_body(resp, "Ensembl /info/eg_version")
     version = _text(
         (body or {}).get("version") if isinstance(body, dict) else None, "Ensembl eg_version"
     )
     return (
         version,
         {"eg_version": version},
-        [url],
+        [str(resp.url)],
         "The Ensembl Genomes release rest.ensembl.org serves (Ensembl Plants and "
         "Compara plants), current at query time.",
     )
 
 
 async def _string(client: httpx.AsyncClient) -> _Found:
-    url = f"{string_db.BASE_URL}/api/json/version"
-    body = _http.json_body(await _get(client, url, "STRING /api/json/version"), "STRING version")
+    resp = await _get(client, f"{string_db.BASE_URL}/api/json/version", "STRING /api/json/version")
+    body = _http.json_body(resp, "STRING version")
     if not isinstance(body, list) or len(body) != 1 or not isinstance(body[0], dict):
         raise PlantGenomicsError(
             f"STRING /api/json/version returned an unexpected shape: {body!r:.200}"
@@ -108,7 +110,7 @@ async def _string(client: httpx.AsyncClient) -> _Found:
     return (
         version,
         {"string_version": version},
-        [url],
+        [str(resp.url)],
         "The STRING release string-db.org serves, current at query time.",
     )
 
@@ -117,15 +119,17 @@ async def _quickgo(client: httpx.AsyncClient) -> _Found:
     parts: dict[str, str] = {}
     urls = []
     for part, path in (("annotation", "/annotation/about"), ("go", "/ontology/go/about")):
-        url = f"{quickgo.BASE_URL}{path}"
-        body = _http.json_body(
-            await _get(client, url, f"QuickGO {path}", headers={"Accept": "application/json"}),
+        resp = await _get(
+            client,
+            f"{quickgo.BASE_URL}{path}",
             f"QuickGO {path}",
+            headers={"Accept": "application/json"},
         )
+        body = _http.json_body(resp, f"QuickGO {path}")
         block = body.get(part) if isinstance(body, dict) else None
         stamp = block.get("timestamp") if isinstance(block, dict) else None
         parts[part] = _text(stamp, f"QuickGO {path} {part}.timestamp")
-        urls.append(url)
+        urls.append(str(resp.url))
     return (
         f"annotation {parts['annotation']}; go {parts['go']}",
         parts,
@@ -136,11 +140,13 @@ async def _quickgo(client: httpx.AsyncClient) -> _Found:
 
 
 async def _jaspar(client: httpx.AsyncClient) -> _Found:
-    url = f"{jaspar.BASE_URL}/api/v1/releases/"
-    body = _http.json_body(
-        await _get(client, url, "JASPAR /releases", params={"format": "json", "page_size": 100}),
+    resp = await _get(
+        client,
+        f"{jaspar.BASE_URL}/api/v1/releases/",
         "JASPAR /releases",
+        params={"format": "json", "page_size": 100},
     )
+    body = _http.json_body(resp, "JASPAR /releases")
     rows = body.get("results") if isinstance(body, dict) else None
     if not isinstance(rows, list) or body.get("next") is not None:
         raise PlantGenomicsError(f"JASPAR /releases returned an unexpected shape: {body!r:.200}")
@@ -156,7 +162,7 @@ async def _jaspar(client: httpx.AsyncClient) -> _Found:
             "year": _text(newest.get("year"), "JASPAR year"),
             "active_releases": str(len(active)),
         },
-        [f"{url}?format=json&page_size=100"],
+        [str(resp.url)],
         "The newest ACTIVE JASPAR release at query time. Several releases are "
         "active at once and a matrix answer names none, so this is the newest one "
         "on offer, not proof of the one that answered.",
@@ -164,8 +170,8 @@ async def _jaspar(client: httpx.AsyncClient) -> _Found:
 
 
 async def _kegg(client: httpx.AsyncClient) -> _Found:
-    url = f"{kegg.BASE_URL}/info/kegg"
-    text = (await _get(client, url, "KEGG /info/kegg")).text
+    resp = await _get(client, f"{kegg.BASE_URL}/info/kegg", "KEGG /info/kegg")
+    text = resp.text
     dates = {m.group(1): m.group(2) for m in map(_KEGG_LINE.match, text.splitlines()) if m}
     missing = [db for db in _KEGG_DATABASES if db not in dates]
     if missing:
@@ -173,7 +179,7 @@ async def _kegg(client: httpx.AsyncClient) -> _Found:
     return (
         "; ".join(f"{db} {dates[db]}" for db in _KEGG_DATABASES),
         {db: dates[db] for db in _KEGG_DATABASES},
-        [url],
+        [str(resp.url)],
         "KEGG publishes no release number, only each database's last-update date at "
         "query time: 'pathway' and 'genes' are the two kegg_pathways reads.",
     )
