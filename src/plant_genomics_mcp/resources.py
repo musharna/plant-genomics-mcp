@@ -11,9 +11,10 @@ Four resources, all derived from in-process state:
                                       (filtered to records with a non-None
                                       phytozome_int). Replaces the v0.8-era
                                       ``phytozome.KNOWN_ORGANISMS`` module dict.
-  * ``pgmcp://backends/status``     — per-backend liveness rollup
+  * ``pgmcp://backends/status``     — static per-backend roster
                                       (name, base_url, kind=live,
-                                      subscription_gated). Mirrors
+                                      subscription_gated, citation DOI).
+                                      Nothing is probed. Mirrors
                                       the catalog in ``server.py``'s module
                                       docstring but in a parseable form.
   * ``pgmcp://organisms/coverage``  — markdown table of the full 12-organism
@@ -214,7 +215,9 @@ _CITATIONS: dict[str, dict[str, object]] = {
 
 
 def _backends_status_payload() -> list[dict[str, object]]:
-    """Per-backend liveness + subscription-gating rollup.
+    """Static per-backend roster: base URL, subscription gating, citation.
+
+    Nothing is probed; ``kind`` is a fixed label, not a reachability check.
 
     Each entry is ``{name, base_url, kind, subscription_gated, citation}``
     (BLAST also carries ``concurrency_cap``). All backends are currently

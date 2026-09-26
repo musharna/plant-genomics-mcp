@@ -1,10 +1,10 @@
 # Benchmark annotations
 
-Operator guide for `scripts/benchmark_annotations.py` — the v1.6 scientific-validation + drift detector.
+Operator guide for `scripts/benchmark_annotations.py` — the v1.6 drift detector.
 
 ## What it is
 
-A side-channel observability tool that drives ~9 curated canonical loci through every backend module + synthesis pipeline, compares results to `scripts/benchmark_annotations.expected.json`, and emits per-locus-per-tool PASS / DRIFT / FAIL verdicts.
+A side-channel observability tool that runs 27 curated loci (all 12 organisms) through 12 functions — `organisms.resolve` plus 11 lookups across 9 backend modules (ATTED-II, BAR, Ensembl Plants, Europe PMC, Gramene, KEGG, Phytozome, STRING-DB, UniProt) — compares results to the frozen snapshot in `scripts/benchmark_annotations.expected.json`, and emits per-locus-per-tool PASS / DRIFT / FAIL verdicts. It detects change relative to that snapshot; it does not check results against an independent truth. `blast.blast_sequence` and three synthesis pipelines are registered in the script, but no corpus locus exercises them (see `_UNEXERCISED_BY_DESIGN`), so `--include-blast` currently runs nothing extra.
 
 Twin-tier assertions:
 
@@ -15,7 +15,7 @@ Twin-tier assertions:
 ## Running
 
 ```bash
-# Default sweep — ~3-5 min wall, no BLAST
+# Default sweep
 .venv/bin/python scripts/benchmark_annotations.py
 
 # Subset by locus
@@ -24,7 +24,7 @@ Twin-tier assertions:
 # Subset by tool (backend module name)
 .venv/bin/python scripts/benchmark_annotations.py --tools kegg,ensembl_plants
 
-# With BLAST (~5-10 min queue per BLAST call)
+# With BLAST (no corpus locus references BLAST yet, so this adds nothing today)
 .venv/bin/python scripts/benchmark_annotations.py --include-blast
 
 # Quiet (JSON sidecar only, no markdown stdout)
@@ -107,17 +107,17 @@ If FAIL count > 0 at this point, decide before tagging: re-baseline + ship, or i
 
 `.github/workflows/benchmark.yml` runs the benchmark on a schedule so upstream drift is caught between releases, not just at release time.
 
-- **When:** weekly, `cron: '0 11 * * 1'` (Mon 11:00 UTC ≈ 6–7am ET) + manual `workflow_dispatch`. NOT run on push/PR — that CI (`test.yml`) is mocked and offline; this is the only live-calling workflow.
+- **When:** weekly, `cron: '0 11 * * 1'` (Mon 11:00 UTC ≈ 6–7am ET) + manual `workflow_dispatch`. NOT run on push/PR. On push/PR, `test.yml`'s main job is mocked and offline; its separate, non-required `live-smoke` job runs two live test files (InterPro, PANTHER), not this benchmark.
 - **Two-strikes (anti-flake):** run 1 writes `last_run.ci.json`. On a non-zero exit, `scripts/benchmark_failing_loci.py` extracts just the failing `locus_id`s (classified by `benchmark_annotations.EXIT_TRIGGERING_VERDICTS` — the same set the exit code uses) and the workflow re-runs only those (`--loci`). It pages **only if the same loci fail twice**, so a transient ATTED / Europe PMC blip self-heals on the retry. A non-zero exit with _no_ failing locus (a script-level crash) is treated as a confirmed failure — never swallowed.
-- **Surfacing:** on a confirmed failure the workflow pages **Telegram** (`api.telegram.org` `sendMessage`) **and** a **public ntfy topic** (priority high) with the failing loci + run URL, then exits non-zero so GitHub's red ✗ and scheduled-failure email fire too. This mirrors the homelab `notify.sh` fan-out (Telegram bot + unified ntfy topic) but hits both public endpoints directly, so the runner needs no tailnet access. Each notification step is best-effort: a missing/empty secret emits a workflow `::warning::` and is skipped rather than failing the job. Every run uploads `last_run.ci.json` (+ `rerun.ci.json` if a retry happened) as the `benchmark-sidecars` artifact for diffing.
+- **Surfacing:** on a confirmed failure the workflow pages **Telegram** (`api.telegram.org` `sendMessage`) **and** a **public ntfy topic** (priority high) with the failing loci + run URL, then exits non-zero so GitHub's red ✗ and scheduled-failure email fire too. Both are called over their public endpoints. Each notification step is best-effort: a missing/empty secret emits a workflow `::warning::` and is skipped rather than failing the job. Every run uploads `last_run.ci.json` (+ `rerun.ci.json` if a retry happened) as the `benchmark-sidecars` artifact for diffing.
 - **Triage:** a page means run the FAIL/DRIFT triage tables above. Download the artifact to see which assertion moved.
 
 **Operator setup — three repo secrets** (the workflow references them; they are not in the repo):
 
 ```bash
-gh secret set TELEGRAM_BOT_TOKEN   # BotFather token for the homelab bot (api.telegram.org)
+gh secret set TELEGRAM_BOT_TOKEN   # BotFather token for the bot (api.telegram.org)
 gh secret set TELEGRAM_CHAT_ID     # destination chat id for that bot
-gh secret set BENCHMARK_NTFY_URL   # full topic URL, e.g. https://ntfy.sh/mjarnold-homelab-<id>
+gh secret set BENCHMARK_NTFY_URL   # full topic URL, e.g. https://ntfy.sh/<topic>
 ```
 
 After merge, trigger one manual run (`gh workflow run benchmark.yml` or the Actions tab) to validate end-to-end — the schedule alone won't fire until its next slot. A healthy run is green and pages nothing; the notification path only fires on a confirmed two-strikes failure.
