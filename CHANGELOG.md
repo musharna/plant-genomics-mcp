@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+- **`examples/arf_family/` re-run at `1.24.0` (`55dc6ca`).** Same 64 calls
+  over the same 114 genes, against the release.
+  36 of the 43 hand-logged gap rows are closed (4 by this run):
+  `atted_coexpression` scores every rice neighbour under `LSmr` (50 of 50)
+  as well as every Arabidopsis one under `z`; no `string_interactions`
+  partner carries `accession` (0 of 1573); every description that offers
+  a link says no tool fetches it; and `panther_family`'s schema documents
+  its null family fields. `probe_gaps.py` now records the live
+  descriptions of `atted_coexpression`, `panther_family`, `jaspar_motif`
+  and `bar_aiv_interactions`. Locus-level errors 62 (63 on the last run;
+  the KEGG ID-bridge timeout did not recur). A first run of the same
+  commit was discarded after all 48 of its Arabidopsis and rice PANTHER
+  answers timed out, while PANTHER itself answered a direct request with
+  HTTP 500.
+
 ## v1.24.0 — 2026-09-25
 
 **53 tools / 23 backends** — no new tool. A minor release rather than a patch: `atted_coexpression` and `gramene_homologs` change shape (**Behaviour change**), and `string_interactions` partners drop the `accession` deprecated in 1.22.0 (**Breaking**).

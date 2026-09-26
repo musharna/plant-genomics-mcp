@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-25T11:09:21Z",
- "elapsed_s": 75.74418709200017,
+ "started_at": "2026-09-26T02:33:46Z",
+ "elapsed_s": 1.501844215003075,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 75.39453300400055,
+   "elapsed_s": 0.8958127330042771,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0008996959995783982,
+   "elapsed_s": 0.0007315800030482933,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.00012100999992981087,
+   "elapsed_s": 8.569799683755264e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.00275867699929222,
+   "elapsed_s": 0.007469691998267081,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.2812871810001525,
+   "elapsed_s": 0.5224900559987873,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0011440080006650533,
+   "elapsed_s": 0.0010033430007752031,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.000197427999410138,
+   "elapsed_s": 0.0002682920021470636,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0002802160006467602,
+   "elapsed_s": 0.00045656700240215287,
    "result": null,
    "error": null
   }
@@ -88,19 +88,19 @@
   "markdown": "# OsARF4 (UniProt: ARF4) \u2014 `Os01g0927600`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 1:40,695,664\u201340,700,914 (+) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 4**\nARFD_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 808 aa\nUniProt: [Q5JK20](https://www.uniprot.org/uniprotkb/Q5JK20)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [127\u2013229]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [292\u2013363]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [126\u2013231]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [687\u2013781]\n- **B3 DNA binding domain** (domain, interpro) [127\u2013231]\n- **Auxin response factor domain** (domain, interpro) [278\u2013359]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [121\u2013258]\n- **AUX/IAA domain** (domain, interpro) [672\u2013777]\n- **Auxin response factor** (family, interpro) [21\u2013781]\n- **PB1-like domain** (domain, interpro) [692\u2013785]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n- `osa04075` Plant hormone signal transduction - Oryza sativa japonica (Japanese rice) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| ARF | 0.486 |\n\n## Cross-references\n- WikiGene: 4326957\n- Expression Atlas: Os01g0927600\n- NCBI gene (formerly Entrezgene): 4326957\n\n## Literature\n5 hits total; showing top 5.\n- **Sequence-based analysis of the rice CAMTA family: haplotype and network analyses** \u2014 Thongsima N, Khunsanit P, Navapiphat S, Henry IM, Comai L, Buaboocha T. (PMID:39367004; doi:10.1038/s41598-024-73668-2)\n- **Initiation of scutellum-derived callus is regulated by an embryo-like developmental pathway in rice** \u2014 Guo F, Wang H, Lian G, Cai G, Liu W, Zhang H, Li D, Zhou C, Han N, Zhu M, Su Y, Seo PJ, Xu L, Bian H. (PMID:37100819; doi:10.1038/s42003-023-04835-w)\n- **Genetic Basis of Grain Size and Weight in Rice, Wheat, and Barley** \u2014 Gasparis S, Mi\u0142oszewski MM. (PMID:38069243; doi:10.3390/ijms242316921)\n- **A RING-Type E3 Ubiquitin Ligase, <i>OsGW2,</i> Controls Chlorophyll Content and Dark-Induced Senescence in Rice** \u2014 Shim KC, Kim SH, Jeon YA, Lee HS, Adeva C, Kang JW, Kim HJ, Tai TH, Ahn SN. (PMID:32131496; doi:10.3390/ijms21051704)\n- **Unlocking the molecular basis of wheat straw composition and morphological traits through multi-locus GWAS** \u2014 Esposito S, Taranto F, Vitale P, Ficco DBM, Colecchia SA, Stevanato P, De Vita P. (PMID:36344939; doi:10.1186/s12870-022-03900-6)\n",
   "sections": {
    "annotation": {
-    "end": 40700914,
-    "start": 40695664,
-    "canonical_transcript": "Os01t0927600-01",
     "object_type": "Gene",
-    "id": "Os01g0927600",
-    "display_name": "OsARF4",
-    "logic_name": "rapdb_genes",
-    "db_type": "core",
-    "source": "RAP2022-09-01",
-    "seq_region_name": "1",
     "strand": 1,
+    "id": "Os01g0927600",
+    "source": "RAP2022-09-01",
+    "display_name": "OsARF4",
+    "start": 40695664,
     "assembly_name": "IRGSP-1.0",
+    "seq_region_name": "1",
+    "db_type": "core",
+    "logic_name": "rapdb_genes",
     "biotype": "protein_coding",
+    "end": 40700914,
+    "canonical_transcript": "Os01t0927600-01",
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -126,37 +126,37 @@
     "count": 3,
     "xrefs": [
      {
-      "synonyms": [],
-      "primary_id": "4326957",
-      "description": "auxin response factor 4-like",
+      "info_type": "DEPENDENT",
       "db_display_name": "WikiGene",
-      "version": "0",
       "dbname": "WikiGene",
       "info_text": "",
-      "info_type": "DEPENDENT",
-      "display_id": "LOC4326957"
-     },
-     {
-      "db_display_name": "Expression Atlas",
-      "description": null,
+      "description": "auxin response factor 4-like",
       "version": "0",
-      "info_type": "DIRECT",
-      "info_text": "",
-      "dbname": "ArrayExpress",
-      "display_id": "Os01g0927600",
-      "synonyms": [],
-      "primary_id": "Os01g0927600"
+      "primary_id": "4326957",
+      "display_id": "LOC4326957",
+      "synonyms": []
      },
      {
-      "primary_id": "4326957",
+      "info_text": "",
+      "primary_id": "Os01g0927600",
+      "version": "0",
+      "description": null,
       "synonyms": [],
-      "display_id": "LOC4326957",
+      "display_id": "Os01g0927600",
+      "info_type": "DIRECT",
+      "db_display_name": "Expression Atlas",
+      "dbname": "ArrayExpress"
+     },
+     {
+      "info_type": "DEPENDENT",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
       "dbname": "EntrezGene",
       "info_text": "",
-      "info_type": "DEPENDENT",
-      "version": "0",
       "description": "auxin response factor 4-like",
-      "db_display_name": "NCBI gene (formerly Entrezgene)"
+      "version": "0",
+      "primary_id": "4326957",
+      "display_id": "LOC4326957",
+      "synonyms": []
      }
     ],
     "by_db": {
@@ -196,7 +196,6 @@
     "partners": [
      {
       "string_id": "39947.P51823",
-      "accession": "39947.P51823",
       "preferred_name": "ARF",
       "score": 0.486,
       "escore": 0,

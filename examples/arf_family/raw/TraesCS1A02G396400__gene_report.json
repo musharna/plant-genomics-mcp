@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-25T11:15:22Z",
- "elapsed_s": 28.084609288999673,
+ "started_at": "2026-09-26T02:36:24Z",
+ "elapsed_s": 2.1597817500005476,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 17.355872363000344,
+   "elapsed_s": 1.1295626799983438,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0003544529999999213,
+   "elapsed_s": 0.0012311409955145791,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 10.662464023000211,
+   "elapsed_s": 0.5891362059992389,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 5.378600053518312e-05,
+   "elapsed_s": 1.4766003005206585e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.27772354099943186,
+   "elapsed_s": 0.9183734559992445,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0005377970001063659,
+   "elapsed_s": 0.0002751969950622879,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0004987050006093341,
+   "elapsed_s": 0.0002555719984229654,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0005583820002357243,
+   "elapsed_s": 0.0002457699956721626,
    "result": null,
    "error": null
   }
@@ -88,18 +88,18 @@
   "markdown": "# LOC543357 \u2014 `TraesCS1A02G396400`\n\n*Triticum aestivum* \u00b7 protein_coding \u00b7 1A:562,316,367\u2013562,321,517 (+) \u00b7 IWGSC\n\n## Protein\n**Auxin response factor**\nA0A3B5Y6K9_WHEAT \u00b7 UniProtKB unreviewed (TrEMBL) \u00b7 735 aa\nUniProt: [A0A3B5Y6K9](https://www.uniprot.org/uniprotkb/A0A3B5Y6K9)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [177\u2013279]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [342\u2013416]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [177\u2013281]\n- **B3 DNA binding domain** (domain, interpro) [177\u2013281]\n- **Auxin response factor domain** (domain, interpro) [328\u2013409]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [174\u2013295]\n- **Auxin response factor** (family, interpro) [68\u2013732]\n- **B3 DNA binding domain** (domain, pfam) [179\u2013280]\n- **Auxin response factor ancillary domain** (domain, pfam) [328\u2013409]\n- **B3 DNA-binding domain profile** (domain, profile) [179\u2013281]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006351] DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| A0A341W2P9 | 0.888 |\n| A0A3B5XWR3 | 0.881 |\n| A0A3B5ZR14 | 0.881 |\n| A0A3B5ZRD3 | 0.874 |\n| A0A3B5XWW7 | 0.874 |\n| A0A3B5Z3W7 | 0.854 |\n| A0A3B6A261 | 0.854 |\n| A0A3B5Y6F0 | 0.854 |\n| A0A3B6EHX7 | 0.847 |\n| A0A077RUL8 | 0.847 |\n\n## Cross-references\n- WikiGene: 543357\n- UniProtKB Gene Name: A0A3B5Y6K9\n- KNETMINER_WHEAT: TraesCS1A02G396400\n- Wheat Expression: TraesCS1A02G396400\n- Plant Reactome Reaction ID: R-TAE-5608208\n- Plant Reactome Pathway ID: R-TAE-5608118\n- NCBI gene (formerly Entrezgene): 543357\n- Expression Atlas: TraesCS1A02G396400\n\n## Literature\n1 hits total; showing top 1.\n- **The TaTCP4/10-B1 cascade regulates awn elongation in wheat (Triticum aestivum L.)** \u2014 Ke W, Xing J, Chen Z, Zhao Y, Xu W, Tian L, Guo J, Xie X, Du D, Wang Z, Li Y, Xu J, Xin M, Guo W, Hu Z, Su Z, Liu J, Peng H, Yao Y, Sun Q, Ni Z. (PMID:36919240; doi:10.1016/j.xplc.2023.100590)\n",
   "sections": {
    "annotation": {
-    "start": 562316367,
-    "logic_name": "iwgsc_high_conf",
-    "source": "IWGSC",
-    "assembly_name": "IWGSC",
-    "object_type": "Gene",
-    "canonical_transcript": "TraesCS1A02G396400.1",
     "end": 562321517,
-    "biotype": "protein_coding",
+    "start": 562316367,
+    "canonical_transcript": "TraesCS1A02G396400.1",
+    "object_type": "Gene",
     "id": "TraesCS1A02G396400",
+    "logic_name": "iwgsc_high_conf",
     "db_type": "core",
-    "strand": 1,
+    "source": "IWGSC",
     "seq_region_name": "1A",
+    "strand": 1,
+    "assembly_name": "IWGSC",
+    "biotype": "protein_coding",
     "organism": "triticum_aestivum",
     "upstream_version": null
    },
@@ -125,92 +125,92 @@
     "count": 8,
     "xrefs": [
      {
-      "description": "auxin response factor 15",
-      "version": "0",
+      "info_type": "DEPENDENT",
+      "display_id": "LOC543357",
       "primary_id": "543357",
-      "display_id": "LOC543357",
-      "synonyms": [],
+      "description": "auxin response factor 15",
       "info_text": "",
+      "db_display_name": "WikiGene",
       "dbname": "WikiGene",
-      "info_type": "DEPENDENT",
-      "db_display_name": "WikiGene"
+      "synonyms": [],
+      "version": "0"
      },
      {
-      "info_text": "",
-      "version": null,
-      "primary_id": "A0A3B5Y6K9",
-      "description": null,
-      "synonyms": [],
-      "display_id": "LOC543357",
-      "info_type": "DEPENDENT",
       "db_display_name": "UniProtKB Gene Name",
-      "dbname": "Uniprot_gn"
-     },
-     {
-      "info_type": "DEPENDENT",
-      "db_display_name": "KNETMINER_WHEAT",
-      "dbname": "KNETMINER_WHEAT",
-      "info_text": "",
-      "primary_id": "TraesCS1A02G396400",
-      "version": "0",
-      "description": null,
+      "version": null,
       "synonyms": [],
-      "display_id": "TraesCS1A02G396400"
+      "dbname": "Uniprot_gn",
+      "description": null,
+      "display_id": "LOC543357",
+      "primary_id": "A0A3B5Y6K9",
+      "info_type": "DEPENDENT",
+      "info_text": ""
      },
      {
-      "info_text": "",
-      "description": null,
+      "db_display_name": "KNETMINER_WHEAT",
+      "synonyms": [],
       "version": "0",
+      "dbname": "KNETMINER_WHEAT",
       "primary_id": "TraesCS1A02G396400",
       "display_id": "TraesCS1A02G396400",
-      "synonyms": [],
+      "description": null,
       "info_type": "DEPENDENT",
+      "info_text": ""
+     },
+     {
+      "dbname": "WHEATEXP_GENE",
+      "version": "0",
+      "synonyms": [],
       "db_display_name": "Wheat Expression",
-      "dbname": "WHEATEXP_GENE"
+      "info_text": "",
+      "info_type": "DEPENDENT",
+      "primary_id": "TraesCS1A02G396400",
+      "display_id": "TraesCS1A02G396400",
+      "description": null
      },
      {
       "db_display_name": "Plant Reactome Reaction ID",
-      "info_type": "DIRECT",
       "dbname": "Plant_Reactome_Reaction",
-      "info_text": "Generated via direct",
       "synonyms": [],
-      "display_id": "R-TAE-5608208",
       "version": "0",
+      "info_type": "DIRECT",
+      "display_id": "R-TAE-5608208",
       "primary_id": "R-TAE-5608208",
-      "description": "ARF inactivation by AUX/IAA"
+      "description": "ARF inactivation by AUX/IAA",
+      "info_text": "Generated via direct"
      },
      {
+      "dbname": "Plant_Reactome_Pathway",
+      "synonyms": [],
+      "version": "0",
+      "db_display_name": "Plant Reactome Pathway ID",
       "info_text": "Generated via direct",
+      "info_type": "DIRECT",
       "description": "Auxin signalling",
       "primary_id": "R-TAE-5608118",
-      "version": "0",
-      "display_id": "R-TAE-5608118",
-      "synonyms": [],
-      "info_type": "DIRECT",
-      "db_display_name": "Plant Reactome Pathway ID",
-      "dbname": "Plant_Reactome_Pathway"
+      "display_id": "R-TAE-5608118"
      },
      {
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "info_type": "DEPENDENT",
-      "dbname": "EntrezGene",
       "info_text": "",
-      "synonyms": [],
-      "display_id": "LOC543357",
+      "description": "auxin response factor 15",
       "primary_id": "543357",
+      "display_id": "LOC543357",
+      "info_type": "DEPENDENT",
       "version": "0",
-      "description": "auxin response factor 15"
+      "synonyms": [],
+      "dbname": "EntrezGene",
+      "db_display_name": "NCBI gene (formerly Entrezgene)"
      },
      {
-      "dbname": "ArrayExpress",
-      "db_display_name": "Expression Atlas",
-      "info_type": "DIRECT",
-      "display_id": "TraesCS1A02G396400",
-      "synonyms": [],
-      "description": null,
+      "info_text": "",
       "primary_id": "TraesCS1A02G396400",
+      "display_id": "TraesCS1A02G396400",
+      "description": null,
+      "info_type": "DIRECT",
+      "synonyms": [],
       "version": "0",
-      "info_text": ""
+      "dbname": "ArrayExpress",
+      "db_display_name": "Expression Atlas"
      }
     ],
     "by_db": {
@@ -251,7 +251,6 @@
     "partners": [
      {
       "string_id": "4565.A0A341W2P9",
-      "accession": "4565.A0A341W2P9",
       "preferred_name": "A0A341W2P9",
       "score": 0.888,
       "escore": 0.065,
@@ -261,7 +260,6 @@
      },
      {
       "string_id": "4565.A0A3B5XWR3",
-      "accession": "4565.A0A3B5XWR3",
       "preferred_name": "A0A3B5XWR3",
       "score": 0.881,
       "escore": 0.119,
@@ -271,7 +269,6 @@
      },
      {
       "string_id": "4565.A0A3B5ZR14",
-      "accession": "4565.A0A3B5ZR14",
       "preferred_name": "A0A3B5ZR14",
       "score": 0.881,
       "escore": 0.119,
@@ -281,7 +278,6 @@
      },
      {
       "string_id": "4565.A0A3B5ZRD3",
-      "accession": "4565.A0A3B5ZRD3",
       "preferred_name": "A0A3B5ZRD3",
       "score": 0.874,
       "escore": 0.068,
@@ -291,7 +287,6 @@
      },
      {
       "string_id": "4565.A0A3B5XWW7",
-      "accession": "4565.A0A3B5XWW7",
       "preferred_name": "A0A3B5XWW7",
       "score": 0.874,
       "escore": 0.068,
@@ -301,7 +296,6 @@
      },
      {
       "string_id": "4565.A0A3B5Z3W7",
-      "accession": "4565.A0A3B5Z3W7",
       "preferred_name": "A0A3B5Z3W7",
       "score": 0.854,
       "escore": 0.125,
@@ -311,7 +305,6 @@
      },
      {
       "string_id": "4565.A0A3B6A261",
-      "accession": "4565.A0A3B6A261",
       "preferred_name": "A0A3B6A261",
       "score": 0.854,
       "escore": 0.125,
@@ -321,7 +314,6 @@
      },
      {
       "string_id": "4565.A0A3B5Y6F0",
-      "accession": "4565.A0A3B5Y6F0",
       "preferred_name": "A0A3B5Y6F0",
       "score": 0.854,
       "escore": 0.125,
@@ -331,7 +323,6 @@
      },
      {
       "string_id": "4565.A0A3B6EHX7",
-      "accession": "4565.A0A3B6EHX7",
       "preferred_name": "A0A3B6EHX7",
       "score": 0.847,
       "escore": 0.125,
@@ -341,7 +332,6 @@
      },
      {
       "string_id": "4565.A0A077RUL8",
-      "accession": "4565.A0A077RUL8",
       "preferred_name": "A0A077RUL8",
       "score": 0.847,
       "escore": 0.125,

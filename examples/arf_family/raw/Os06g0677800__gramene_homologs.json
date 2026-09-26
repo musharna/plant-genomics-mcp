@@ -1,8 +1,8 @@
 {
  "locus": "Os06g0677800",
  "release": "v69",
- "total": 68,
- "returned": 68,
+ "total": 70,
+ "returned": 70,
  "truncated": false,
  "next_cursor": null,
  "homologs": [
@@ -345,7 +345,20 @@
    "target_locus": "Et_2A_016916",
    "type": "ortholog_one2many",
    "gene_tree_id": "EPlGT00940000163985"
+  },
+  {
+   "target_locus": "ONIVA02G35510",
+   "type": "syntenic_ortholog_one2one",
+   "gene_tree_id": "EPlGT00940000163985"
+  },
+  {
+   "target_locus": "SETIT_005802mg",
+   "type": "syntenic_ortholog_one2one",
+   "gene_tree_id": "EPlGT00940000163985"
   }
  ],
+ "excluded_categories": {
+  "within_species_paralog": 3
+ },
  "upstream_version": "v69"
 }

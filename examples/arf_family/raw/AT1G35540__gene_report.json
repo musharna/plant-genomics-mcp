@@ -5,14 +5,14 @@
   "organism": "arabidopsis_thaliana",
   "top_n": 10
  },
- "started_at": "2026-09-25T11:02:37Z",
- "elapsed_s": 35.431166666000536,
+ "started_at": "2026-09-26T02:32:31Z",
+ "elapsed_s": 1.0733351809976739,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 10.21432266299962,
+   "elapsed_s": 0.5437965500022983,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.00047188999997160863,
+   "elapsed_s": 0.0006881579975015484,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 25.216256155999872,
+   "elapsed_s": 0.26340618199901655,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.003607972999816411,
+   "elapsed_s": 0.007399011999950744,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.5100128039994161,
+   "elapsed_s": 0.5277022940063034,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0013977440003145603,
+   "elapsed_s": 0.004754376001073979,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00037218300076347077,
+   "elapsed_s": 0.000506883006892167,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.000509538999722281,
+   "elapsed_s": 0.0004763120014104061,
    "result": null,
    "error": null
   }
@@ -89,19 +89,19 @@
   "sections": {
    "annotation": {
     "start": 13108634,
-    "end": 13111700,
-    "canonical_transcript": "AT1G35540.1",
-    "object_type": "Gene",
-    "display_name": "ARF14",
-    "id": "AT1G35540",
-    "db_type": "core",
-    "description": "auxin response factor 14 [Source:NCBI gene (formerly Entrezgene);Acc:840450]",
     "logic_name": "araport11",
+    "description": "auxin response factor 14 [Source:NCBI gene (formerly Entrezgene);Acc:840450]",
+    "canonical_transcript": "AT1G35540.1",
+    "seq_region_name": "1",
+    "object_type": "Gene",
+    "biotype": "protein_coding",
+    "end": 13111700,
+    "id": "AT1G35540",
+    "strand": 1,
+    "display_name": "ARF14",
+    "db_type": "core",
     "assembly_name": "TAIR10",
     "source": "araport11",
-    "seq_region_name": "1",
-    "strand": 1,
-    "biotype": "protein_coding",
     "organism": "arabidopsis_thaliana",
     "upstream_version": null
    },
@@ -128,117 +128,117 @@
     "xrefs": [
      {
       "info_type": "DIRECT",
+      "display_id": "AT1G35540-TAIR-G",
       "synonyms": [],
       "description": "auxin response factor 14",
       "info_text": "",
-      "display_id": "AT1G35540-TAIR-G",
-      "version": "0",
-      "primary_id": "AT1G35540",
       "dbname": "NASC_GENE_ID",
+      "primary_id": "AT1G35540",
+      "version": "0",
       "db_display_name": "NASC Gene ID"
      },
      {
-      "description": "auxin response factor 14",
-      "synonyms": [],
       "info_type": "DIRECT",
-      "db_display_name": "TAIR",
+      "display_id": "AT1G35540",
+      "synonyms": [],
+      "description": "auxin response factor 14",
+      "info_text": "",
       "dbname": "TAIR_LOCUS",
       "primary_id": "AT1G35540",
       "version": "0",
-      "info_text": "",
-      "display_id": "AT1G35540"
+      "db_display_name": "TAIR"
      },
      {
-      "version": "0",
+      "info_type": "DIRECT",
       "info_text": "",
+      "synonyms": [],
       "display_id": "ARF14",
-      "primary_id": "ARF14",
+      "description": "",
+      "version": "0",
       "db_display_name": "TAIR Gene Name",
       "dbname": "TAIR_SYMBOL",
-      "synonyms": [],
-      "info_type": "DIRECT",
-      "description": ""
+      "primary_id": "ARF14"
      },
      {
-      "primary_id": "R-ATH-9675504",
-      "dbname": "Plant_Reactome_Reaction",
+      "version": "0",
       "db_display_name": "Plant Reactome Reaction ID",
+      "dbname": "Plant_Reactome_Reaction",
+      "primary_id": "R-ATH-9675504",
+      "info_text": "Generated via direct",
+      "synonyms": [],
       "display_id": "R-ATH-9675504",
-      "info_text": "Generated via direct",
-      "version": "0",
       "description": "Expression of ARF1",
-      "info_type": "DIRECT",
-      "synonyms": []
+      "info_type": "DIRECT"
      },
      {
-      "version": "0",
-      "info_text": "Generated via direct",
+      "description": "Root elongation",
+      "synonyms": [],
       "display_id": "R-ATH-9675508",
+      "info_text": "Generated via direct",
+      "info_type": "DIRECT",
       "primary_id": "R-ATH-9675508",
-      "db_display_name": "Plant Reactome Pathway ID",
       "dbname": "Plant_Reactome_Pathway",
-      "synonyms": [],
-      "info_type": "DIRECT",
-      "description": "Root elongation"
-     },
-     {
-      "description": null,
-      "info_type": "DIRECT",
-      "synonyms": [],
-      "dbname": "ArrayExpress",
-      "db_display_name": "Expression Atlas",
-      "primary_id": "AT1G35540",
-      "info_text": "",
-      "display_id": "AT1G35540",
+      "db_display_name": "Plant Reactome Pathway ID",
       "version": "0"
      },
      {
-      "dbname": "KNETMINER_ARA",
-      "db_display_name": "KNETMINER_ARA",
+      "dbname": "ArrayExpress",
       "primary_id": "AT1G35540",
-      "info_text": "",
-      "display_id": "AT1G35540",
       "version": "0",
+      "db_display_name": "Expression Atlas",
+      "display_id": "AT1G35540",
+      "synonyms": [],
       "description": null,
-      "info_type": "DEPENDENT",
-      "synonyms": []
+      "info_text": "",
+      "info_type": "DIRECT"
      },
      {
-      "info_text": "",
-      "display_id": "ARF14",
       "version": "0",
-      "primary_id": "840450",
-      "dbname": "EntrezGene",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "db_display_name": "KNETMINER_ARA",
+      "dbname": "KNETMINER_ARA",
+      "primary_id": "AT1G35540",
       "info_type": "DEPENDENT",
+      "info_text": "",
+      "synonyms": [],
+      "display_id": "AT1G35540",
+      "description": null
+     },
+     {
+      "dbname": "EntrezGene",
+      "primary_id": "840450",
+      "version": "0",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "display_id": "ARF14",
       "synonyms": [
        "auxin response factor 14",
        "F15O4.64",
        "F15O4_64"
       ],
-      "description": "auxin response factor 14"
+      "description": "auxin response factor 14",
+      "info_text": "",
+      "info_type": "DEPENDENT"
      },
      {
-      "description": null,
-      "synonyms": [],
       "info_type": "DEPENDENT",
-      "primary_id": "Q9LQE8",
+      "info_text": "",
+      "synonyms": [],
+      "display_id": "ARF14",
+      "description": null,
+      "version": null,
       "db_display_name": "UniProtKB Gene Name",
       "dbname": "Uniprot_gn",
-      "version": null,
-      "display_id": "ARF14",
-      "info_text": ""
+      "primary_id": "Q9LQE8"
      },
      {
-      "version": "0",
-      "info_text": "",
+      "info_type": "DEPENDENT",
       "display_id": "ARF14",
-      "db_display_name": "WikiGene",
+      "synonyms": [],
+      "description": "auxin response factor 14",
+      "info_text": "",
       "dbname": "WikiGene",
       "primary_id": "840450",
-      "synonyms": [],
-      "info_type": "DEPENDENT",
-      "description": "auxin response factor 14"
+      "version": "0",
+      "db_display_name": "WikiGene"
      }
     ],
     "by_db": {
@@ -298,7 +298,6 @@
     "partners": [
      {
       "string_id": "3702.Q9C5X0",
-      "accession": "3702.Q9C5X0",
       "preferred_name": "IAA34",
       "score": 0.808,
       "escore": 0,
@@ -308,7 +307,6 @@
      },
      {
       "string_id": "3702.P0CAP4",
-      "accession": "3702.P0CAP4",
       "preferred_name": "REM12",
       "score": 0.808,
       "escore": 0,
@@ -318,7 +316,6 @@
      },
      {
       "string_id": "3702.Q38826",
-      "accession": "3702.Q38826",
       "preferred_name": "IAA8",
       "score": 0.803,
       "escore": 0.258,
@@ -328,7 +325,6 @@
      },
      {
       "string_id": "3702.Q8RYC6",
-      "accession": "3702.Q8RYC6",
       "preferred_name": "IAA32",
       "score": 0.792,
       "escore": 0,
@@ -338,7 +334,6 @@
      },
      {
       "string_id": "3702.P33078",
-      "accession": "3702.P33078",
       "preferred_name": "IAA5",
       "score": 0.782,
       "escore": 0.23,
@@ -348,7 +343,6 @@
      },
      {
       "string_id": "3702.Q38828",
-      "accession": "3702.Q38828",
       "preferred_name": "IAA10",
       "score": 0.778,
       "escore": 0.076,
@@ -358,7 +352,6 @@
      },
      {
       "string_id": "3702.Q9C966",
-      "accession": "3702.Q9C966",
       "preferred_name": "IAA15",
       "score": 0.77,
       "escore": 0,
@@ -368,7 +361,6 @@
      },
      {
       "string_id": "3702.Q84WP3",
-      "accession": "3702.Q84WP3",
       "preferred_name": "REM17",
       "score": 0.758,
       "escore": 0,
@@ -378,7 +370,6 @@
      },
      {
       "string_id": "3702.Q38829",
-      "accession": "3702.Q38829",
       "preferred_name": "IAA11",
       "score": 0.755,
       "escore": 0.076,
@@ -388,7 +379,6 @@
      },
      {
       "string_id": "3702.Q9LU93",
-      "accession": "3702.Q9LU93",
       "preferred_name": "MAD2",
       "score": 0.747,
       "escore": 0.522,
