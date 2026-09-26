@@ -1,7 +1,7 @@
 {
- "server_version": "1.24.0",
- "server_commit": "55dc6ca",
- "tool_count": 53,
+ "server_version": "1.25.0",
+ "server_commit": "6cf5408",
+ "tool_count": 54,
  "tools": {
   "string_interactions": {
    "_meta": {
@@ -2538,7 +2538,7 @@
     "openWorldHint": true,
     "readOnlyHint": true
    },
-   "description": "Fetch orthologs and paralogs for a plant locus from Gramene compara (data.gramene.org v69). Default homology_type='ortholog'; pass 'paralog' for in-species duplicates or 'all' for everything. 'ortholog' includes syntenic_ortholog_* rows; homoeologs (polyploid subgenome copies) come back only under 'all', and excluded_categories counts every category the filter left out. Returns target_locus + homology category (type) + shared gene_tree_id per hit. Rows carry no taxon unless with_organism=true (adds 'organism' per row) or target_organism is given, which filters to one organism before the cap and adds 'organism' per row; pair with resolve_locus_to_uniprot for protein-level enrichment and with blast_sequence for sequence similarity discovery.",
+   "description": "Fetch orthologs and paralogs for a plant locus from Gramene compara (data.gramene.org v69). Default homology_type='ortholog'; pass 'paralog' for in-species duplicates or 'all' for everything. 'ortholog' includes syntenic_ortholog_* rows; homoeologs (polyploid subgenome copies) come back only under 'all', and excluded_categories counts every category the filter left out. Returns target_locus + homology category (type) + shared gene_tree_id per hit. Rows carry no taxon unless with_organism=true (adds 'organism' per row) or target_organism is given, which filters to one organism before the cap and adds 'organism' per row. Paralogs here are within_species_paralog only: Gramene drops Compara's other_paralog ('ancient paralogues'); ensembl_plants_paralogs lists both. Pair with resolve_locus_to_uniprot for protein-level enrichment and with blast_sequence for sequence similarity discovery.",
    "inputSchema": {
     "properties": {
      "locus": {
@@ -3212,6 +3212,7 @@
        "biological_context_synth",
        "consensus_homologs",
        "ensembl_plants_lookup_locus",
+       "ensembl_plants_paralogs",
        "experimental_interactions",
        "experimental_structures",
        "gene_report",
@@ -4215,6 +4216,208 @@
     "title": "BarAIVInteractions"
    },
    "title": "BAR: Predicted Interactions"
+  },
+  "ensembl_plants_paralogs": {
+   "_meta": {
+    "edam": {
+     "operation": [
+      "operation_2422"
+     ],
+     "topic": [
+      "topic_0780",
+      "topic_0114"
+     ]
+    }
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true
+   },
+   "description": "List the paralogues Ensembl Compara (plants) records for a plant locus (rest.ensembl.org /homology, type=paralogues; free, no key). Each row gives the paralogue's locus, its type \u2014 within_species_paralog, or other_paralog: Ensembl's 'ancient paralogues', inferred across a super tree, so the two genes can sit in different gene trees \u2014 the taxonomy_level of the duplication, perc_id/perc_pos and protein_id, closest first. gramene_homologs carries only within_species_paralog, so a gene can have paralogues here and none there. A paralogue list is not a family list: other_paralog can name a gene outside the family (AT2G23390, an acyl-CoA N-acyltransferase-like gene, is an other_paralog of the ARFs); test membership with interpro_domains. An empty list means Compara records no paralogue, not that the gene is single-copy (FLS2, AT5G46330, has none). found=false when Compara keeps no homology record for the gene at all (e.g. a non-coding gene); an id Ensembl does not know is a not-found error. total and counts_by_type count before limit; truncated=true when limit cut some off.",
+   "inputSchema": {
+    "properties": {
+     "locus": {
+      "type": "string",
+      "description": "e.g. AT1G19850 (Arabidopsis), Os04g0519700 (rice)"
+     },
+     "organism": {
+      "type": [
+       "string",
+       "integer"
+      ],
+      "description": "Plant organism \u2014 accepts canonical slug (arabidopsis_thaliana), scientific or common name, or NCBI taxid",
+      "default": "arabidopsis_thaliana"
+     },
+     "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "default": 100
+     }
+    },
+    "required": [
+     "locus"
+    ],
+    "type": "object",
+    "additionalProperties": false
+   },
+   "name": "ensembl_plants_paralogs",
+   "outputSchema": {
+    "properties": {
+     "locus": {
+      "description": "The locus asked about",
+      "title": "Locus",
+      "type": "string"
+     },
+     "organism": {
+      "description": "Canonical organism slug",
+      "title": "Organism",
+      "type": "string"
+     },
+     "found": {
+      "description": "False when Compara keeps no homology record for this gene at all (e.g. a non-coding gene); true otherwise, even with no paralogue",
+      "title": "Found",
+      "type": "boolean"
+     },
+     "total": {
+      "description": "How many paralogues exist upstream for this query, all pages (pre-cap) (#123)",
+      "title": "Total",
+      "type": "integer"
+     },
+     "returned": {
+      "description": "Rows in this payload (#123)",
+      "title": "Returned",
+      "type": "integer"
+     },
+     "truncated": {
+      "description": "True when limit cut paralogues off",
+      "title": "Truncated",
+      "type": "boolean"
+     },
+     "counts_by_type": {
+      "additionalProperties": {
+       "type": "integer"
+      },
+      "description": "Paralogues per type, counted before limit",
+      "title": "Counts By Type",
+      "type": "object"
+     },
+     "paralogs": {
+      "description": "Closest first (perc_id descending)",
+      "items": {
+       "$ref": "#/$defs/EnsemblParalog"
+      },
+      "title": "Paralogs",
+      "type": "array"
+     },
+     "upstream_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Ensembl release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means Ensembl did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "title": "Upstream Version"
+     }
+    },
+    "required": [
+     "locus",
+     "organism",
+     "found",
+     "total",
+     "returned",
+     "truncated",
+     "counts_by_type",
+     "paralogs"
+    ],
+    "type": "object",
+    "$defs": {
+     "EnsemblParalog": {
+      "additionalProperties": false,
+      "description": "One paralogue Ensembl Compara (plants) records for the queried gene.",
+      "properties": {
+       "locus": {
+        "description": "The paralogue's gene id as the locus tools accept it",
+        "title": "Locus",
+        "type": "string"
+       },
+       "type": {
+        "description": "Compara's category: within_species_paralog (related by a duplication in the gene tree) or other_paralog (Ensembl's 'ancient paralogues', inferred across a super tree, so the two genes can sit in different gene trees)",
+        "title": "Type",
+        "type": "string"
+       },
+       "taxonomy_level": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "description": "The taxon at the duplication Compara places, e.g. Viridiplantae",
+        "title": "Taxonomy Level"
+       },
+       "perc_id": {
+        "anyOf": [
+         {
+          "type": "number"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "description": "Percent of the paralogue's residues identical in the alignment",
+        "title": "Perc Id"
+       },
+       "perc_pos": {
+        "anyOf": [
+         {
+          "type": "number"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "description": "Percent of the paralogue's residues similar in the alignment",
+        "title": "Perc Pos"
+       },
+       "protein_id": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "description": "The paralogue's protein/translation id",
+        "title": "Protein Id"
+       }
+      },
+      "required": [
+       "locus",
+       "type",
+       "taxonomy_level",
+       "perc_id",
+       "perc_pos",
+       "protein_id"
+      ],
+      "title": "EnsemblParalog",
+      "type": "object"
+     }
+    },
+    "additionalProperties": false,
+    "description": "The paralogues Ensembl Compara (plants) records for one locus.",
+    "title": "EnsemblParalogs"
+   },
+   "title": "Ensembl Plants: Paralogs"
   }
  },
  "missing_tools": [],
@@ -6840,6 +7043,223 @@
    },
    "error": null,
    "n_bytes": 58002
+  },
+  {
+   "row": "paralog-closure-empty",
+   "tool": "ensembl_plants_paralogs",
+   "args": {
+    "locus": "AT1G19850",
+    "limit": 1000
+   },
+   "ok": true,
+   "payload": {
+    "locus": "AT1G19850",
+    "organism": "arabidopsis_thaliana",
+    "found": true,
+    "total": 24,
+    "returned": 24,
+    "truncated": false,
+    "counts_by_type": {
+     "other_paralog": 24
+    },
+    "paralogs": [
+     {
+      "locus": "AT1G43950",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 41.4414,
+      "perc_pos": 54.5045,
+      "protein_id": "AT1G43950.1"
+     },
+     {
+      "locus": "AT5G37020",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 38.5943,
+      "perc_pos": 52.0345,
+      "protein_id": "AT5G37020.1"
+     },
+     {
+      "locus": "AT3G61830",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 38.206,
+      "perc_pos": 52.4917,
+      "protein_id": "AT3G61830.1"
+     },
+     {
+      "locus": "AT4G23980",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 36.9906,
+      "perc_pos": 51.4107,
+      "protein_id": "AT4G23980.1"
+     },
+     {
+      "locus": "AT1G59750",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 36.6917,
+      "perc_pos": 50.0752,
+      "protein_id": "AT1G59750.1"
+     },
+     {
+      "locus": "AT1G30330",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 36.6845,
+      "perc_pos": 48.5561,
+      "protein_id": "AT1G30330.3"
+     },
+     {
+      "locus": "AT2G46530",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 35.6913,
+      "perc_pos": 50.6431,
+      "protein_id": "AT2G46530.3"
+     },
+     {
+      "locus": "AT1G19220",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 33.9779,
+      "perc_pos": 43.8306,
+      "protein_id": "AT1G19220.1"
+     },
+     {
+      "locus": "AT1G35240",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 33.277,
+      "perc_pos": 49.1554,
+      "protein_id": "AT1G35240.1"
+     },
+     {
+      "locus": "AT1G34410",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 33.0033,
+      "perc_pos": 48.8449,
+      "protein_id": "AT1G34410.1"
+     },
+     {
+      "locus": "AT1G34390",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 32.9431,
+      "perc_pos": 48.6622,
+      "protein_id": "AT1G34390.1"
+     },
+     {
+      "locus": "AT1G34310",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 32.8836,
+      "perc_pos": 47.7234,
+      "protein_id": "AT1G34310.1"
+     },
+     {
+      "locus": "AT1G35520",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 32.5464,
+      "perc_pos": 48.2293,
+      "protein_id": "AT1G35520.1"
+     },
+     {
+      "locus": "AT1G35540",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 32.3967,
+      "perc_pos": 48.7603,
+      "protein_id": "AT1G35540.1"
+     },
+     {
+      "locus": "AT1G34170",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 31.685,
+      "perc_pos": 48.1685,
+      "protein_id": "AT1G34170.3"
+     },
+     {
+      "locus": "AT5G20730",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 31.4163,
+      "perc_pos": 41.8884,
+      "protein_id": "AT5G20730.1"
+     },
+     {
+      "locus": "AT2G33860",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 31.25,
+      "perc_pos": 43.5855,
+      "protein_id": "AT2G33860.1"
+     },
+     {
+      "locus": "AT5G62000",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 29.6857,
+      "perc_pos": 41.9092,
+      "protein_id": "AT5G62000.1"
+     },
+     {
+      "locus": "AT5G60450",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 28.934,
+      "perc_pos": 41.3706,
+      "protein_id": "AT5G60450.1"
+     },
+     {
+      "locus": "AT4G30080",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 27.9104,
+      "perc_pos": 42.3881,
+      "protein_id": "AT4G30080.1"
+     },
+     {
+      "locus": "AT2G28350",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 27.7056,
+      "perc_pos": 40.9812,
+      "protein_id": "AT2G28350.1"
+     },
+     {
+      "locus": "AT1G77850",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 24.1611,
+      "perc_pos": 35.906,
+      "protein_id": "AT1G77850.2"
+     },
+     {
+      "locus": "ATMG00940",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 21.3415,
+      "perc_pos": 32.3171,
+      "protein_id": "ATMG00940.1"
+     },
+     {
+      "locus": "AT2G23390",
+      "type": "other_paralog",
+      "taxonomy_level": "Viridiplantae",
+      "perc_id": 17.0576,
+      "perc_pos": 31.9829,
+      "protein_id": "AT2G23390.1"
+     }
+    ],
+    "upstream_version": null
+   },
+   "error": null,
+   "n_bytes": 8095
   },
   {
    "row": "no-pagination",

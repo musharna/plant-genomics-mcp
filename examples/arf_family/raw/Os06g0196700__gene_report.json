@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-26T02:33:48Z",
- "elapsed_s": 2.5301121529992088,
+ "started_at": "2026-09-26T06:50:05Z",
+ "elapsed_s": 1.9475632719986606,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 2.1677601219998905,
+   "elapsed_s": 1.341349533002358,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0007385850040009245,
+   "elapsed_s": 0.000801467991550453,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.00010301699512638152,
+   "elapsed_s": 0.00010221399134024978,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 9.103600314119831e-05,
+   "elapsed_s": 6.547699740622193e-05,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.3614011000026949,
+   "elapsed_s": 0.5880651810002746,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.001029727005516179,
+   "elapsed_s": 0.0007126410055207089,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00042851299804169685,
+   "elapsed_s": 0.0003391579957678914,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0006526020006276667,
+   "elapsed_s": 0.0003874269896186888,
    "result": null,
    "error": null
   }
@@ -89,8 +89,8 @@
   "sections": {
    "annotation": {
     "assembly_name": "IRGSP-1.0",
-    "source": "RAP2022-09-01",
     "seq_region_name": "6",
+    "source": "RAP2022-09-01",
     "strand": 1,
     "biotype": "protein_coding",
     "id": "Os06g0196700",
@@ -125,37 +125,37 @@
     "count": 3,
     "xrefs": [
      {
-      "version": "0",
-      "db_display_name": "WikiGene",
-      "description": "auxin response factor 16-like",
+      "primary_id": "9270361",
       "display_id": "LOC9270361",
+      "description": "auxin response factor 16-like",
       "info_type": "DEPENDENT",
       "info_text": "",
-      "dbname": "WikiGene",
+      "db_display_name": "WikiGene",
       "synonyms": [],
-      "primary_id": "9270361"
+      "version": "0",
+      "dbname": "WikiGene"
      },
      {
-      "primary_id": "Os06g0196700",
-      "synonyms": [],
       "info_text": "",
-      "dbname": "ArrayExpress",
       "info_type": "DIRECT",
-      "display_id": "Os06g0196700",
       "description": null,
-      "db_display_name": "Expression Atlas",
-      "version": "0"
+      "display_id": "Os06g0196700",
+      "primary_id": "Os06g0196700",
+      "dbname": "ArrayExpress",
+      "synonyms": [],
+      "version": "0",
+      "db_display_name": "Expression Atlas"
      },
      {
       "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "description": "auxin response factor 16-like",
+      "dbname": "EntrezGene",
+      "synonyms": [],
       "version": "0",
       "info_type": "DEPENDENT",
-      "info_text": "",
-      "dbname": "EntrezGene",
       "display_id": "LOC9270361",
-      "synonyms": [],
-      "primary_id": "9270361"
+      "primary_id": "9270361",
+      "description": "auxin response factor 16-like",
+      "info_text": ""
      }
     ],
     "by_db": {

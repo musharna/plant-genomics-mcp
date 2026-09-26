@@ -1,6 +1,6 @@
 # One family, 64 calls: a worked run of plant-genomics-mcp
 
-`plant-genomics-mcp` publishes 53 MCP tools over free, public
+`plant-genomics-mcp` publishes 54 MCP tools over free, public
 plant-genomics backends. This page is what happened when 16 of them were
 run end to end over a whole gene family — 23 _Arabidopsis thaliana_
 members found through the tools alone, and the 25 _Oryza sativa_ and 66
@@ -8,31 +8,31 @@ _Triticum aestivum_ members the tools could name and verify — in a
 single sitting: every response captured to [`raw/`](raw), and every
 place an answer came back unusable, inconsistent or silently short
 written down as it was found. It is a showcase and a defect list at the
-same time. The recipes below are what the tools do well; the 22 open rows
-under **Known gaps** are what they do not, and the 36 closed ones are what
+same time. The recipes below are what the tools do well; the 21 open rows
+under **Known gaps** are what they do not, and the 37 closed ones are what
 the fix passes between the runs did about it.
 
-Provenance: run 2026-09-25 against server version `1.24.0` at commit
-`55dc6ca`, the release itself — 64 MCP calls over 114 genes × 16 tools,
+Provenance: run 2026-09-26 against server version `1.25.0` at commit
+`6cf5408`, the release itself — 64 MCP calls over 114 genes × 16 tools,
 one call per organism per 50 loci: 8 tools through their own `batch_`
 form and 8 through `batch_locus_call`. 49 calls ok, 7 expected refusals,
 8 calls carrying 62 locus-level errors, 6 minutes wall. 31 of the errors
 are loci outside ATTED-II's co-expression releases; 22 are STRING: 18
 wheat proteins it does not carry, and 2 rice and 2 wheat genes with no
 partners; 8 are KEGG; 1 is AraGWAS.
-A first run of the same commit minutes earlier was discarded: all 48 of its
-Arabidopsis and rice `panther_family` answers were PANTHER read timeouts,
-and a direct PANTHER request made outside the server at the time returned
-HTTP 500 after 44 seconds. This run started once PANTHER answered twice
-running in under 5 seconds. OrthoDB, PANTHER and
+A first run of the same commit minutes earlier was discarded: 47 of its
+`panther_family` answers (14 of 23 Arabidopsis, all 25 rice, 8 of 50
+wheat) were PANTHER read timeouts. This run started once PANTHER answered
+seven requests in a row, and then 25 at once, outside the server in under
+2 seconds each. OrthoDB, PANTHER and
 `gene_report` answer for all 114 genes; on the 2026-09-23 run they lost 87 answers to
 OrthoDB refusing the batch's eight-wide fan-out as "too high request
 rate", 63 to PANTHER timeouts in an upstream outage, and 18 reports to
 an Ensembl failure that emptied them (the closed rows
 `batch-fanout-rate-limit` and `failed-step-empties-report` below), and
 STRING answered none of the 66 wheat genes (`wheat-string-unresolvable`).
-The earlier runs: 2026-09-25 at `9054886` (`1.23.0`), 64 calls with 63
-locus-level errors; 2026-09-25 at `2fc3f92`, 64 calls with 62; 2026-09-23 at `052e4ec`, 64 calls with 262; 2026-09-22 at `967bc36`, 400 calls over 48 genes; 2026-09-21
+The earlier runs: 2026-09-25 at `55dc6ca` (`1.24.0`), 64 calls with 62
+locus-level errors; 2026-09-25 at `9054886` (`1.23.0`), 64 calls with 63; 2026-09-25 at `2fc3f92`, 64 calls with 62; 2026-09-23 at `052e4ec`, 64 calls with 262; 2026-09-22 at `967bc36`, 400 calls over 48 genes; 2026-09-21
 against `1.21.0` as released, 248 calls over 29 genes. The
 rows below that the chain does not answer were asked again by
 [`probe_gaps.py`](probe_gaps.py) ([`raw/_probe_rerun.json`](raw/_probe_rerun.json)).
@@ -196,17 +196,17 @@ characters.
 
 ```json
 {
-  "elapsed_s": 2.2185625950005488,
+  "elapsed_s": 3.2657140329974936,
   "steps": [
     {
       "tool": "ensembl_plants_lookup_locus",
-      "elapsed_s": 1.533417353995901,
+      "elapsed_s": 2.3969313700072234,
       "result": null,
       "error": null
     },
     {
       "tool": "resolve_locus_to_uniprot",
-      "elapsed_s": 0.0016833629997563548,
+      "elapsed_s": 0.0016318470006808639,
       "result": null,
       "error": null
     }
@@ -245,8 +245,8 @@ rest of the report rendered — `failed-step-empties-report` below, closed.
 Sizes are bytes of the JSON-RPC response line, which carries each payload
 as both text and `structuredContent`; the files in `raw/` are the parsed
 payload, re-indented. A batch call's line carries every locus in it —
-2,301,407 B for the 23 Arabidopsis `gene_report`s — so one gene's size is
-its parsed payload: 66,038 B by `json.dumps` for this gene, of which
+2,301,435 B for the 23 Arabidopsis `gene_report`s — so one gene's size is
+its parsed payload: 66,042 B by `json.dumps` for this gene, of which
 `result.sections` is 58,811 B, read back from
 `raw/AT1G19850__gene_report.json`.
 
@@ -291,7 +291,7 @@ last open rows at this run.
 
 ## Known gaps
 
-All 22 open rows, one line each: what was attempted, what came back, what was expected instead. The 36 rows logged against an earlier run that a later run no longer reproduces are listed last, with what it returned instead. Full text and the raw response each row was read from are in [`gaps.jsonl`](gaps.jsonl) and [`gaps_auto.jsonl`](gaps_auto.jsonl).
+All 21 open rows, one line each: what was attempted, what came back, what was expected instead. The 37 rows logged against an earlier run that a later run no longer reproduces are listed last, with what it returned instead. Full text and the raw response each row was read from are in [`gaps.jsonl`](gaps.jsonl) and [`gaps_auto.jsonl`](gaps_auto.jsonl).
 
 ### Defects in this tool
 
@@ -307,7 +307,7 @@ All 22 open rows, one line each: what was attempted, what came back, what was ex
 - **`locus_go_annotations`** (oversize) — 114 loci: over 200 kB on the wire (batch), largest 657583 bytes — expected: a usable answer within 200 kB
 - **`kegg_pathways`** (error) — ATMG00940: [NotFoundError] KEGG: no gene record for <locus> (queried as ath:<locus>); /list/ath:<locus> is empty — expected: a usable answer
 - **`locus_literature`** (oversize) — 48 loci: over 200 kB on the wire (batch), largest 869175 bytes — expected: a usable answer within 200 kB
-- **`gene_report`** (oversize) — 114 loci: over 200 kB on the wire (batch), largest 2301407 bytes — expected: a usable answer within 200 kB
+- **`gene_report`** (oversize) — 114 loci: over 200 kB on the wire (batch), largest 2301435 bytes — expected: a usable answer within 200 kB
 - **`atted_coexpression`** (error) — 23 loci: [NotFoundError] ATTED-II: <locus> is not in the Osa-u.N-N co-expression release (no neighbour ranking exists… — expected: a usable answer
 - **`string_interactions`** (error) — 2 loci: [NotFoundError] STRING: no interaction partners for <locus> (queried as <locus>) — expected: a usable answer
 - **`kegg_pathways`** (error) — 7 loci: [NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for <locus>… — expected: a usable answer
@@ -319,10 +319,6 @@ All 22 open rows, one line each: what was attempted, what came back, what was ex
 - **`ensembl_plants_lookup_locus`** (free-text-not-a-label) — AT1G19850: 'Transcriptional factor B3 family protein / auxin-responsive factor AUX/IAA-like protein [Source:NCBI gene… — expected: a structured family field; the free text cannot be matched or grepped consistently even within one family
 - **`atted_coexpression`** (enrichment-ask) — each of the 25 neighbours is {locus, entrez_gene_id, z_score} - no symbol, no description. The shape is documented… — expected: a symbol per neighbour, as string_interactions does
 - **several tools** (free-text-null-outside-arabidopsis) — ensembl_region_query 1:1-1000000 on oryza_sativa returns 165 protein-coding genes with description on 1; 1A:1-1000000… — expected: a structured family or domain field per gene, the same in every organism
-
-### Not attributable from inside the MCP
-
-- **`gramene_homologs`** (paralog-closure-empty) — total 0 and an empty homologs list for AT1G19850 and AT1G59750; 3 hits for AT2G28350 (AT4G30080, AT1G77850… — expected: the in-species paralogs of a locus, or a statement that the projection has none
 
 ### Closed by a later run
 
@@ -349,6 +345,7 @@ All 22 open rows, one line each: what was attempted, what came back, what was ex
 - **`alphafold_structure`** (undefined-bands) — was: four fractions named very_low / low / confident / very_high (0.516 / 0.027 / 0.120 / 0.338 for AT1G19850) beside… — now, at `052e4ec`: plddt_band_ranges gives the cutoffs beside the fractions: very_low [0, 50], low [50, 70], confident [70, 90]…
 - **`gramene_homologs`** (identifier-with-no-tool) — was: each homolog is {target_locus, type, gene_tree_id} - e.g. {'C5167_014531', 'ortholog_one2many'… — now, at `9054886`: gene_tree_members takes the gene_tree_id gramene_homologs hands back (#130): EPlGT00940000167082 lists 187 members…
 - **several tools** (browser-needed-assets) — was: the only pointers to a structure, a PAE plot or a motif logo are URLs the tools cannot dereference: cif_url / pdb_url… — now, at `55dc6ca`: every tool description that offers a URL, logo or image now says it is a link no tool fetches: alphafold_structure…
+- **`gramene_homologs`** (paralog-closure-empty) — was: total 0 and an empty homologs list for AT1G19850 and AT1G59750; 3 hits for AT2G28350 (AT4G30080, AT1G77850… — now, at `6cf5408`: ensembl_plants_paralogs(AT1G19850) answers 24 paralogues, all other_paralog (Ensembl Compara's ancient paralogues…
 - **`interpro_domains`** (family-enumeration-cost) — was: 52 ensembl_region_query calls (5 chromosomes in 4 Mb windows, 8 of the 52 failed: HTTP 500 or ReadTimeout after the… — now, at `052e4ec`: entry_members answers it in one call: 23 loci for IPR010525 in Arabidopsis, set-equal to the 23 the walk finds. The…
 - **`gramene_homologs`** (ortholog-cap-hides-organisms) — was: gramene_homologs: total 177 / 211 / 340 for the three seeds, 100 returned, and zero rows shaped like a rice or wheat… — now, at `967bc36`: with target_organism on both tools the filter runs before the cap: over the 41 member queries gramene_homologs names a…
 - **several tools** (ortholog-tools-disagree) — was: one disagreement class, not a per-gene one: gramene_homologs names a rice or wheat locus for 16 of 26 queries… — now, at `052e4ec`: both tools answer for the organism asked: gramene_homologs names a rice or wheat locus for 88 of 93 queries…

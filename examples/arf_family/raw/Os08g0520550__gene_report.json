@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-26T02:33:49Z",
- "elapsed_s": 0.896111980000569,
+ "started_at": "2026-09-26T06:50:06Z",
+ "elapsed_s": 2.1139532640081597,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.5378708079952048,
+   "elapsed_s": 1.3609355039952789,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.000691444001859054,
+   "elapsed_s": 0.00048221500765066594,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 6.0355996538419276e-05,
+   "elapsed_s": 3.088300582021475e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "error",
-   "elapsed_s": 4.395999712869525e-05,
+   "elapsed_s": 3.1172006856650114e-05,
    "result": null,
    "error": "[NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os08g0520550 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.3575198230028036,
+   "elapsed_s": 0.7505909909959882,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 5.1937997341156006e-05,
+   "elapsed_s": 3.8869999116286635e-05,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0003005779944942333,
+   "elapsed_s": 0.0001804670027922839,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0003108649980276823,
+   "elapsed_s": 0.0001952110033016652,
    "result": null,
    "error": null
   }
@@ -87,17 +87,17 @@
   "sections": {
    "annotation": {
     "canonical_transcript": "Os08t0520550-01",
-    "start": 25873389,
-    "logic_name": "rapdb_genes",
-    "seq_region_name": "8",
-    "end": 25877678,
-    "id": "Os08g0520550",
-    "biotype": "protein_coding",
+    "assembly_name": "IRGSP-1.0",
     "object_type": "Gene",
     "source": "RAP2022-09-01",
-    "assembly_name": "IRGSP-1.0",
-    "db_type": "core",
+    "start": 25873389,
+    "logic_name": "rapdb_genes",
     "strand": -1,
+    "seq_region_name": "8",
+    "biotype": "protein_coding",
+    "end": 25877678,
+    "id": "Os08g0520550",
+    "db_type": "core",
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -121,14 +121,14 @@
     "count": 1,
     "xrefs": [
      {
+      "dbname": "ArrayExpress",
+      "synonyms": [],
+      "version": "0",
       "db_display_name": "Expression Atlas",
       "info_text": "",
-      "synonyms": [],
-      "dbname": "ArrayExpress",
-      "display_id": "Os08g0520550",
-      "version": "0",
       "info_type": "DIRECT",
       "description": null,
+      "display_id": "Os08g0520550",
       "primary_id": "Os08g0520550"
      }
     ],

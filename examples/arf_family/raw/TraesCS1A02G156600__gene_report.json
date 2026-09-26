@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-26T02:36:24Z",
- "elapsed_s": 2.14450891600427,
+ "started_at": "2026-09-26T06:52:39Z",
+ "elapsed_s": 1.010854804990231,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 1.1319343510040198,
+   "elapsed_s": 0.6272260119876591,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0009756439976627007,
+   "elapsed_s": 0.0006317869992926717,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.5956870070003788,
+   "elapsed_s": 0.18420109699945897,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 2.2713000362273306e-05,
+   "elapsed_s": 2.522500290069729e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.8708772719983244,
+   "elapsed_s": 0.2688510470034089,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.000385714003641624,
+   "elapsed_s": 0.00039131198718678206,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0004285989998606965,
+   "elapsed_s": 0.00031240200041793287,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.000366537002264522,
+   "elapsed_s": 0.0003252750029787421,
    "result": null,
    "error": null
   }
@@ -96,9 +96,9 @@
     "id": "TraesCS1A02G156600",
     "object_type": "Gene",
     "biotype": "protein_coding",
-    "seq_region_name": "1A",
-    "canonical_transcript": "TraesCS1A02G156600.1",
     "assembly_name": "IWGSC",
+    "canonical_transcript": "TraesCS1A02G156600.1",
+    "seq_region_name": "1A",
     "logic_name": "iwgsc_high_conf",
     "organism": "triticum_aestivum",
     "upstream_version": null
@@ -125,81 +125,81 @@
     "count": 7,
     "xrefs": [
      {
-      "description": "auxin response factor 22",
-      "synonyms": [],
-      "display_id": "LOC123045925",
-      "info_text": "",
       "info_type": "DEPENDENT",
-      "primary_id": "123045925",
-      "dbname": "WikiGene",
       "db_display_name": "WikiGene",
-      "version": "0"
-     },
-     {
-      "info_type": "DEPENDENT",
+      "dbname": "WikiGene",
       "info_text": "",
-      "display_id": "TraesCS1A02G156600",
-      "synonyms": [],
-      "description": null,
+      "description": "auxin response factor 22",
       "version": "0",
-      "db_display_name": "KNETMINER_WHEAT",
-      "dbname": "KNETMINER_WHEAT",
-      "primary_id": "TraesCS1A02G156600"
+      "primary_id": "123045925",
+      "display_id": "LOC123045925",
+      "synonyms": []
      },
      {
-      "display_id": "TraesCS1A02G156600",
-      "synonyms": [],
-      "description": null,
-      "info_text": "",
+      "dbname": "KNETMINER_WHEAT",
       "info_type": "DEPENDENT",
-      "dbname": "WHEATEXP_GENE",
+      "db_display_name": "KNETMINER_WHEAT",
+      "description": null,
       "primary_id": "TraesCS1A02G156600",
       "version": "0",
-      "db_display_name": "Wheat Expression"
+      "display_id": "TraesCS1A02G156600",
+      "synonyms": [],
+      "info_text": ""
      },
      {
+      "db_display_name": "Wheat Expression",
+      "info_type": "DEPENDENT",
+      "dbname": "WHEATEXP_GENE",
+      "info_text": "",
+      "synonyms": [],
+      "display_id": "TraesCS1A02G156600",
+      "version": "0",
+      "primary_id": "TraesCS1A02G156600",
+      "description": null
+     },
+     {
+      "db_display_name": "Plant Reactome Reaction ID",
       "info_type": "DIRECT",
+      "dbname": "Plant_Reactome_Reaction",
       "info_text": "Generated via direct",
       "synonyms": [],
       "display_id": "R-TAE-5608208",
-      "description": "ARF inactivation by AUX/IAA",
       "version": "0",
-      "db_display_name": "Plant Reactome Reaction ID",
-      "dbname": "Plant_Reactome_Reaction",
-      "primary_id": "R-TAE-5608208"
+      "primary_id": "R-TAE-5608208",
+      "description": "ARF inactivation by AUX/IAA"
      },
      {
-      "info_text": "Generated via direct",
-      "display_id": "R-TAE-5608118",
-      "synonyms": [],
-      "description": "Auxin signalling",
-      "info_type": "DIRECT",
-      "version": "0",
-      "db_display_name": "Plant Reactome Pathway ID",
       "dbname": "Plant_Reactome_Pathway",
-      "primary_id": "R-TAE-5608118"
-     },
-     {
-      "version": "0",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "dbname": "EntrezGene",
-      "primary_id": "123045925",
-      "info_text": "",
-      "display_id": "LOC123045925",
-      "synonyms": [],
-      "description": "auxin response factor 22",
-      "info_type": "DEPENDENT"
-     },
-     {
-      "info_text": "",
-      "synonyms": [],
-      "display_id": "TraesCS1A02G156600",
-      "description": null,
       "info_type": "DIRECT",
+      "db_display_name": "Plant Reactome Pathway ID",
+      "primary_id": "R-TAE-5608118",
       "version": "0",
-      "db_display_name": "Expression Atlas",
+      "description": "Auxin signalling",
+      "synonyms": [],
+      "display_id": "R-TAE-5608118",
+      "info_text": "Generated via direct"
+     },
+     {
+      "dbname": "EntrezGene",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "info_type": "DEPENDENT",
+      "synonyms": [],
+      "display_id": "LOC123045925",
+      "version": "0",
+      "primary_id": "123045925",
+      "description": "auxin response factor 22",
+      "info_text": ""
+     },
+     {
+      "description": null,
+      "primary_id": "TraesCS1A02G156600",
+      "version": "0",
+      "display_id": "TraesCS1A02G156600",
+      "synonyms": [],
+      "info_text": "",
       "dbname": "ArrayExpress",
-      "primary_id": "TraesCS1A02G156600"
+      "info_type": "DIRECT",
+      "db_display_name": "Expression Atlas"
      }
     ],
     "by_db": {

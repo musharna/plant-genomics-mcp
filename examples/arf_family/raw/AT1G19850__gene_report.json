@@ -5,14 +5,14 @@
   "organism": "arabidopsis_thaliana",
   "top_n": 10
  },
- "started_at": "2026-09-26T02:32:28Z",
- "elapsed_s": 2.2185625950005488,
+ "started_at": "2026-09-26T06:48:50Z",
+ "elapsed_s": 3.2657140329974936,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 1.533417353995901,
+   "elapsed_s": 2.3969313700072234,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0016833629997563548,
+   "elapsed_s": 0.0016318470006808639,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.2916703279988724,
+   "elapsed_s": 0.7130042569915531,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.15328024000336882,
+   "elapsed_s": 0.0035281120071886107,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.44376021399511956,
+   "elapsed_s": 0.3092940130009083,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.02424846400390379,
+   "elapsed_s": 0.001666875003138557,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.006995178999204654,
+   "elapsed_s": 0.0006227529956959188,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0004924700042465702,
+   "elapsed_s": 0.0003180319909006357,
    "result": null,
    "error": null
   }
@@ -88,20 +88,20 @@
   "markdown": "# MP (UniProt: ARF5) \u2014 `AT1G19850`\n\n*Arabidopsis thaliana* \u00b7 protein_coding \u00b7 1:6,886,669\u20136,891,404 (+) \u00b7 TAIR10\n\nTranscriptional factor B3 family protein / auxin-responsive factor AUX/IAA-like protein [Source:NCBI gene (formerly Entrezgene);Acc:838573]\n\n## Protein\n**Auxin response factor 5**\nARFE_ARATH \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 902 aa\nUniProt: [P93024](https://www.uniprot.org/uniprotkb/P93024)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [157\u2013258]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [322\u2013394]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [155\u2013259]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [789\u2013882]\n- **B3 DNA binding domain** (domain, interpro) [157\u2013260]\n- **Auxin response factor domain** (domain, interpro) [307\u2013389]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [148\u2013287]\n- **AUX/IAA domain** (domain, interpro) [785\u2013879]\n- **Auxin response factor** (family, interpro) [50\u2013883]\n- **PB1-like domain** (domain, interpro) [793\u2013877]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0000976] transcription cis-regulatory region binding (IDA)\n- [GO:0000976] transcription cis-regulatory region binding (IPI)\n- [GO:0003677] DNA binding (IEA)\n- [GO:0003700] DNA-binding transcription factor activity (ISS)\n- [GO:0003700] DNA-binding transcription factor activity (TAS)\n- [GO:0005515] protein binding (IPI)\n- [GO:0042802] identical protein binding (IPI)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEP)\n- [GO:0009733] response to auxin (IEP)\n- [GO:0009793] embryo development ending in seed dormancy (IGI)\n- [GO:0009908] flower development (IGI)\n- [GO:0009942] longitudinal axis specification (IMP)\n- [GO:0010051] xylem and phloem pattern formation (IMP)\n- [GO:0010305] leaf vascular tissue pattern formation (IGI)\n- [GO:0048364] root development (IGI)\n- [GO:0048507] meristem development (IGI)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n- [GO:0005634] nucleus (ISM)\n\n## Pathways (KEGG)\n- `ath04075` Plant hormone signal transduction - Arabidopsis thaliana (thale cress) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| IAA17 | 0.998 |\n| IAA12 | 0.995 |\n| IAA19 | 0.982 |\n| IAA1 | 0.981 |\n| IAA3 | 0.98 |\n| IAA14 | 0.979 |\n| IAA8 | 0.971 |\n| AUX1 | 0.971 |\n| IAA9 | 0.956 |\n| IAA6 | 0.954 |\n\n## Cross-references\n- NASC Gene ID: AT1G19850\n- TAIR: AT1G19850\n- TAIR Gene Name: MP\n- Plant Reactome Reaction ID: R-ATH-5608208\n- Plant Reactome Pathway ID: R-ATH-5608118\n- Expression Atlas: AT1G19850\n- KNETMINER_ARA: AT1G19850\n- NCBI gene (formerly Entrezgene): 838573\n- UniProtKB Gene Name: P93024\n- WikiGene: 838573\n\n## Literature\n91 hits total; showing top 10.\n- **A Comparative Analysis of Transfected and Integrated Auxin Reporter Systems Reveals Sensitivity Advantages in Protoplast Transient Expression Assays** \u2014 Taylor JS, Villase\u00f1or EA, Rashkovsky J, Simson J, Wright RC, Bargmann BOR. (PMID:40093823; doi:10.17912/micropub.biology.001481)\n- **Silencing of the <i>MP</i> Gene via dsRNA Affects Root Development and Growth in the Invasive Weed <i>Mikania micrantha</i>** \u2014 Ou Z, Zhang Y, Wu Q, Wang K, Zhang G, Qiao X, Yan Y, Qian W, Wan F, Liu B. (PMID:39684389; doi:10.3390/ijms252312678)\n- **MONOPTEROS isoform MP11ir plays a role during somatic embryogenesis in Arabidopsis thaliana** \u2014 W\u00f3jcikowska B, Belaidi S, Mironova V, Citerne S, Robert HS. (PMID:41264810; doi:10.1093/plphys/kiaf602)\n- **A RSL4-CPKs feedback loop integrates auxin and ethylene signals to regulate root hair growth in Arabidopsis** \u2014 Li LS, Chen YX, Ma L, Li S. (PMID:42487264; doi:10.1111/tpj.71049)\n- **Arabidopsis Transcription Regulatory Factor Domain/Domain Interaction Analysis Tool-Liquid/Liquid Phase Separation, Oligomerization, GO Analysis: A Toolkit for Interaction Data-Based Domain Analysis** \u2014 Kang JE, Jun JH, Kwon JH, Lee JH, Hwang K, Kim S, Jeong N. (PMID:37510380; doi:10.3390/genes14071476)\n- **Identification of key regulators for the development of Prunus leaves using single-cell RNA sequencing** \u2014 Li M, Gao X, Nie P, Li G, Gong Q, Dong X, Zhang A. (PMID:41680607; doi:10.1186/s12870-026-08348-6)\n- **The miR7125-MdARF1 module enhances the resistance of apple to Colletotrichum gloeosporioides by promoting lignin synthesis in response to salicylic acid signalling** \u2014 Liu X, Dai H, Zhang F, Wang J, Shi J, Chen J, He P, Wang F, Ma Y. (PMID:38852059; doi:10.1111/pbi.14401)\n- **Regulatory Mechanism of the GmMYB14 Transcription Factor on Auxin-Related Proteins in Soybean** \u2014 Peng L, Liu Y, Yang H, Guo W, Hao Q, Chen S, Yuan S, Zhang C, Yang Z, Han B, Huang Y, Shan Z, Chen L, Chen H. (PMID:40869083; doi:10.3390/ijms26167763)\n- **Identification of the Auxin Response Factor gene family in kernel consumption apricot and association analysis of related genes regulating fruit size in distant hybridization** \u2014 Han C, Zhang W, Chen S, Zhang Y, Guo H, Yu L, Liu L, Liu P, Wang L, Zhao H. (PMID:41555233; doi:10.1186/s12870-025-08030-3)\n- **Dynamic chromatin accessibility reveals BrKAN2 as a key regulator of Chinese cabbage leaf heading** \u2014 Guo H, Li F, Zhang L, Zhang Y, Cai X, Chen H, Zheng X, Wu J, Wang X, Liang J. (PMID:42415222; doi:10.1186/s43897-026-00239-6)\n",
   "sections": {
    "annotation": {
-    "biotype": "protein_coding",
-    "logic_name": "araport11",
-    "display_name": "MP",
     "canonical_transcript": "AT1G19850.1",
     "start": 6886669,
-    "assembly_name": "TAIR10",
-    "strand": 1,
     "end": 6891404,
     "object_type": "Gene",
-    "description": "Transcriptional factor B3 family protein / auxin-responsive factor AUX/IAA-like protein [Source:NCBI gene (formerly Entrezgene);Acc:838573]",
-    "source": "araport11",
-    "seq_region_name": "1",
     "db_type": "core",
+    "description": "Transcriptional factor B3 family protein / auxin-responsive factor AUX/IAA-like protein [Source:NCBI gene (formerly Entrezgene);Acc:838573]",
+    "logic_name": "araport11",
+    "display_name": "MP",
     "id": "AT1G19850",
+    "biotype": "protein_coding",
+    "assembly_name": "TAIR10",
+    "source": "araport11",
+    "strand": 1,
+    "seq_region_name": "1",
     "organism": "arabidopsis_thaliana",
     "upstream_version": null
    },
@@ -127,88 +127,86 @@
     "count": 11,
     "xrefs": [
      {
+      "info_text": "",
       "db_display_name": "NASC Gene ID",
       "synonyms": [],
-      "version": "0",
       "dbname": "NASC_GENE_ID",
+      "version": "0",
       "display_id": "AT1G19850-TAIR-G",
       "primary_id": "AT1G19850",
       "description": "Transcriptional factor B3 family protein / auxin-responsive factor AUX/IAA-related",
-      "info_type": "DIRECT",
-      "info_text": ""
-     },
-     {
-      "info_text": "",
-      "display_id": "AT1G19850",
-      "primary_id": "AT1G19850",
-      "description": "Transcriptional factor B3 family protein / auxin-responsive factor AUX/IAA-related",
-      "info_type": "DIRECT",
-      "version": "0",
-      "synonyms": [],
-      "dbname": "TAIR_LOCUS",
-      "db_display_name": "TAIR"
-     },
-     {
-      "info_text": "",
-      "description": "",
-      "primary_id": "MP",
-      "display_id": "MP",
-      "info_type": "DIRECT",
-      "version": "0",
-      "synonyms": [],
-      "dbname": "TAIR_SYMBOL",
-      "db_display_name": "TAIR Gene Name"
-     },
-     {
-      "db_display_name": "Plant Reactome Reaction ID",
-      "version": "0",
-      "synonyms": [],
-      "dbname": "Plant_Reactome_Reaction",
-      "primary_id": "R-ATH-5608208",
-      "display_id": "R-ATH-5608208",
-      "description": "ARF inactivation by AUX/IAA",
-      "info_type": "DIRECT",
-      "info_text": "Generated via direct"
-     },
-     {
-      "db_display_name": "Plant Reactome Pathway ID",
-      "dbname": "Plant_Reactome_Pathway",
-      "synonyms": [],
-      "version": "0",
-      "info_type": "DIRECT",
-      "primary_id": "R-ATH-5608118",
-      "display_id": "R-ATH-5608118",
-      "description": "Auxin signalling",
-      "info_text": "Generated via direct"
-     },
-     {
-      "synonyms": [],
-      "version": "0",
-      "dbname": "ArrayExpress",
-      "db_display_name": "Expression Atlas",
-      "info_text": "",
-      "description": null,
-      "display_id": "AT1G19850",
-      "primary_id": "AT1G19850",
       "info_type": "DIRECT"
      },
      {
-      "dbname": "KNETMINER_ARA",
-      "synonyms": [],
+      "info_type": "DIRECT",
+      "primary_id": "AT1G19850",
+      "description": "Transcriptional factor B3 family protein / auxin-responsive factor AUX/IAA-related",
+      "display_id": "AT1G19850",
       "version": "0",
+      "synonyms": [],
+      "dbname": "TAIR_LOCUS",
+      "db_display_name": "TAIR",
+      "info_text": ""
+     },
+     {
+      "info_type": "DIRECT",
+      "description": "",
+      "primary_id": "MP",
+      "display_id": "MP",
+      "version": "0",
+      "dbname": "TAIR_SYMBOL",
+      "synonyms": [],
+      "db_display_name": "TAIR Gene Name",
+      "info_text": ""
+     },
+     {
+      "synonyms": [],
+      "dbname": "Plant_Reactome_Reaction",
+      "info_text": "Generated via direct",
+      "db_display_name": "Plant Reactome Reaction ID",
+      "primary_id": "R-ATH-5608208",
+      "description": "ARF inactivation by AUX/IAA",
+      "info_type": "DIRECT",
+      "version": "0",
+      "display_id": "R-ATH-5608208"
+     },
+     {
+      "info_type": "DIRECT",
+      "primary_id": "R-ATH-5608118",
+      "description": "Auxin signalling",
+      "display_id": "R-ATH-5608118",
+      "version": "0",
+      "dbname": "Plant_Reactome_Pathway",
+      "synonyms": [],
+      "db_display_name": "Plant Reactome Pathway ID",
+      "info_text": "Generated via direct"
+     },
+     {
+      "display_id": "AT1G19850",
+      "version": "0",
+      "info_type": "DIRECT",
+      "primary_id": "AT1G19850",
+      "description": null,
+      "db_display_name": "Expression Atlas",
+      "info_text": "",
+      "synonyms": [],
+      "dbname": "ArrayExpress"
+     },
+     {
       "db_display_name": "KNETMINER_ARA",
       "info_text": "",
+      "synonyms": [],
+      "dbname": "KNETMINER_ARA",
+      "display_id": "AT1G19850",
+      "version": "0",
       "info_type": "DEPENDENT",
       "description": null,
-      "primary_id": "AT1G19850",
-      "display_id": "AT1G19850"
+      "primary_id": "AT1G19850"
      },
      {
       "info_text": "",
-      "description": "Transcriptional factor B3 family protein / auxin-responsive factor AUX/IAA-like protein",
-      "display_id": "MP",
-      "primary_id": "838573",
-      "info_type": "DEPENDENT",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "dbname": "EntrezGene",
       "synonyms": [
        "ARF5",
        "AUXIN RESPONSE FACTOR 5",
@@ -220,41 +218,43 @@
        "TRANSCRIPTION FACTOR IAA24"
       ],
       "version": "0",
-      "dbname": "EntrezGene",
-      "db_display_name": "NCBI gene (formerly Entrezgene)"
+      "display_id": "MP",
+      "description": "Transcriptional factor B3 family protein / auxin-responsive factor AUX/IAA-like protein",
+      "primary_id": "838573",
+      "info_type": "DEPENDENT"
      },
      {
-      "info_type": "DEPENDENT",
-      "primary_id": "P93024",
+      "version": null,
       "display_id": "ARF5",
+      "primary_id": "P93024",
       "description": null,
+      "info_type": "DEPENDENT",
       "info_text": "",
       "db_display_name": "UniProtKB Gene Name",
-      "dbname": "Uniprot_gn",
-      "version": null,
-      "synonyms": []
+      "synonyms": [],
+      "dbname": "Uniprot_gn"
      },
      {
       "info_type": "DEPENDENT",
       "description": "Transcriptional factor B3 family protein / auxin-responsive factor AUX/IAA-like protein",
       "primary_id": "838573",
       "display_id": "MP",
-      "info_text": "",
-      "db_display_name": "WikiGene",
+      "version": "0",
       "dbname": "WikiGene",
       "synonyms": [],
-      "version": "0"
+      "db_display_name": "WikiGene",
+      "info_text": ""
      },
      {
-      "description": null,
-      "display_id": "MP",
-      "primary_id": "A0A1P8AQ60",
-      "info_type": "DEPENDENT",
+      "synonyms": [],
+      "dbname": "Uniprot_gn",
       "info_text": "",
       "db_display_name": "UniProtKB Gene Name",
-      "synonyms": [],
+      "description": null,
+      "primary_id": "A0A1P8AQ60",
+      "info_type": "DEPENDENT",
       "version": null,
-      "dbname": "Uniprot_gn"
+      "display_id": "MP"
      }
     ],
     "by_db": {

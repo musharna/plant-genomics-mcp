@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-26T02:33:46Z",
- "elapsed_s": 2.6522056000030716,
+ "started_at": "2026-09-26T06:50:02Z",
+ "elapsed_s": 1.4550287070014747,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 2.273003718997643,
+   "elapsed_s": 0.7667127960012294,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0006708139990223572,
+   "elapsed_s": 0.00040620499930810183,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 6.610200216528028e-05,
+   "elapsed_s": 5.202100146561861e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "error",
-   "elapsed_s": 4.894800076726824e-05,
+   "elapsed_s": 4.2005995055660605e-05,
    "result": null,
    "error": "[NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os02g0141100 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.3097041239961982,
+   "elapsed_s": 0.6340947550052078,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.00155584800086217,
+   "elapsed_s": 0.0012425140012055635,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0003381080023245886,
+   "elapsed_s": 0.00027104499167762697,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0005745140006183647,
+   "elapsed_s": 0.00044642399006988853,
    "result": null,
    "error": null
   }
@@ -88,19 +88,19 @@
   "markdown": "# OsARF5 (UniProt: ARF5) \u2014 `Os02g0141100`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 2:2,207,998\u20132,214,514 (-) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 5**\nARFE_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 1142 aa\nUniProt: [Q6Z2W3](https://www.uniprot.org/uniprotkb/Q6Z2W3)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [147\u2013248]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [312\u2013383]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [145\u2013249]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [1005\u20131098]\n- **B3 DNA binding domain** (domain, interpro) [147\u2013250]\n- **Auxin response factor domain** (domain, interpro) [297\u2013380]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [137\u2013277]\n- **AUX/IAA domain** (domain, interpro) [1007\u20131094]\n- **Auxin response factor** (family, interpro) [40\u2013693]\n- **PB1-like domain** (domain, interpro) [1009\u20131093]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os02g0141100 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| C7J1U6_ORYSJ | 0.849 |\n| Q0JCJ0_ORYSJ | 0.677 |\n| PES | 0.67 |\n| BOP1 | 0.624 |\n| WDR12 | 0.617 |\n| Q651Y0_ORYSJ | 0.61 |\n| Q2QWN0_ORYSJ | 0.61 |\n| Q5JNF8_ORYSJ | 0.61 |\n| Q0D724_ORYSJ | 0.61 |\n| A0A0P0V2D3 | 0.561 |\n\n## Cross-references\n- Expression Atlas: Os02g0141100\n\n## Literature\n6 hits total; showing top 6.\n- **An auxin response factor regulates tiller angle and shoot gravitropism by directly activating related gene expression in rice** \u2014 Hu Y, Xue D, Wang S, Zhang Q, Zhang X, Yang J, Lv Y, Yan B, Yin Y, Cui Z, Li T, Chen W, Wang X. (PMID:40015454; doi:10.1016/j.jare.2025.02.026)\n- **Initiation of scutellum-derived callus is regulated by an embryo-like developmental pathway in rice** \u2014 Guo F, Wang H, Lian G, Cai G, Liu W, Zhang H, Li D, Zhou C, Han N, Zhu M, Su Y, Seo PJ, Xu L, Bian H. (PMID:37100819; doi:10.1038/s42003-023-04835-w)\n- **Insights on Phytohormonal Crosstalk in Plant Response to Nitrogen Stress: A Focus on Plant Root Growth and Development** \u2014 Ahmad N, Jiang Z, Zhang L, Hussain I, Yang X. (PMID:36835044; doi:10.3390/ijms24043631)\n- **Plant nitrogen availability and crosstalk with phytohormones signallings and their biotechnology breeding application in crops** \u2014 Xing J, Cao X, Zhang M, Wei X, Zhang J, Wan X. (PMID:36435985; doi:10.1111/pbi.13971)\n- **Integrated Analysis of the Transcriptome and Metabolome Revealed the Molecular Mechanisms Underlying the Enhanced Salt Tolerance of Rice Due to the Application of Exogenous Melatonin** \u2014 Xie Z, Wang J, Wang W, Wang Y, Xu J, Li Z, Zhao X, Fu B. (PMID:33519878; doi:10.3389/fpls.2020.618680)\n- **Decoding regulatory landscape of somatic embryogenesis reveals differential regulatory networks between japonica and indica rice subspecies** \u2014 Indoliya Y, Tiwari P, Chauhan AS, Goel R, Shri M, Bag SK, Chakrabarty D. (PMID:26973288; doi:10.1038/srep23050)\n",
   "sections": {
    "annotation": {
-    "assembly_name": "IRGSP-1.0",
-    "seq_region_name": "2",
-    "source": "RAP2022-09-01",
-    "strand": -1,
     "biotype": "protein_coding",
     "display_name": "OsARF5",
-    "id": "Os02g0141100",
-    "db_type": "core",
     "logic_name": "rapdb_genes",
-    "object_type": "Gene",
+    "canonical_transcript": "Os02t0141100-00",
+    "assembly_name": "IRGSP-1.0",
     "start": 2207998,
     "end": 2214514,
-    "canonical_transcript": "Os02t0141100-00",
+    "object_type": "Gene",
+    "strand": -1,
+    "source": "RAP2022-09-01",
+    "db_type": "core",
+    "seq_region_name": "2",
+    "id": "Os02g0141100",
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -126,15 +126,15 @@
     "count": 1,
     "xrefs": [
      {
-      "info_type": "DIRECT",
-      "primary_id": "Os02g0141100",
-      "description": null,
-      "display_id": "Os02g0141100",
-      "version": "0",
-      "synonyms": [],
       "dbname": "ArrayExpress",
       "db_display_name": "Expression Atlas",
-      "info_text": ""
+      "primary_id": "Os02g0141100",
+      "display_id": "Os02g0141100",
+      "info_text": "",
+      "version": "0",
+      "description": null,
+      "info_type": "DIRECT",
+      "synonyms": []
      }
     ],
     "by_db": {

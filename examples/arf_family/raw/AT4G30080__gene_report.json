@@ -5,14 +5,14 @@
   "organism": "arabidopsis_thaliana",
   "top_n": 10
  },
- "started_at": "2026-09-26T02:32:33Z",
- "elapsed_s": 1.1739577960033785,
+ "started_at": "2026-09-26T06:48:55Z",
+ "elapsed_s": 2.9930244749994017,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.621812724006304,
+   "elapsed_s": 0.7273307239956921,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0008414609983447008,
+   "elapsed_s": 0.003862771001877263,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.13968808299978264,
+   "elapsed_s": 2.26528226499795,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.007981159003975336,
+   "elapsed_s": 0.003974088991526514,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.5069972910059732,
+   "elapsed_s": 0.3253694859886309,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0018494169999030419,
+   "elapsed_s": 0.0017285499925492331,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0006406270040315576,
+   "elapsed_s": 0.000598259997786954,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0003410179997445084,
+   "elapsed_s": 0.00035526200372260064,
    "result": null,
    "error": null
   }
@@ -88,20 +88,20 @@
   "markdown": "# ARF16 \u2014 `AT4G30080`\n\n*Arabidopsis thaliana* \u00b7 protein_coding \u00b7 4:14,703,065\u201314,706,354 (-) \u00b7 TAIR10\n\nauxin response factor 16 [Source:NCBI gene (formerly Entrezgene);Acc:829131]\n\n## Protein\n**Auxin response factor 16**\nARFP_ARATH \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 670 aa\nUniProt: [Q93YR9](https://www.uniprot.org/uniprotkb/Q93YR9)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [118\u2013220]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [317\u2013389]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [118\u2013222]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [582\u2013668]\n- **B3 DNA binding domain** (domain, interpro) [118\u2013222]\n- **Auxin response factor domain** (domain, interpro) [302\u2013385]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [115\u2013223]\n- **Auxin response factor** (family, interpro) [14\u2013663]\n- **PB1-like domain** (domain, interpro) [584\u2013664]\n- **B3 DNA binding domain** (domain, pfam) [120\u2013221]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n- [GO:0003700] DNA-binding transcription factor activity (ISS)\n- [GO:0005515] protein binding (IPI)\n- [GO:0035198] miRNA binding (ISS)\n**Biological Process**\n- [GO:0007389] pattern specification process (IDA)\n- [GO:0009733] response to auxin (IEP)\n- [GO:0048829] root cap development (IMP)\n- [GO:0048829] root cap development (IGI)\n- [GO:0051301] cell division (IGI)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0007389] pattern specification process (IBA)\n- [GO:0007389] pattern specification process (IEA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n- [GO:0005634] nucleus (ISM)\n- [GO:0005634] nucleus (IDA)\n\n## Pathways (KEGG)\n- `ath04075` Plant hormone signal transduction - Arabidopsis thaliana (thale cress) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| IAA31 | 0.869 |\n| ABI3 | 0.843 |\n| IAA5 | 0.837 |\n| IAA33 | 0.823 |\n| TIR1 | 0.804 |\n| IAA17 | 0.798 |\n| AUX1 | 0.794 |\n| AFB2 | 0.793 |\n| WOX5 | 0.792 |\n| IAA12 | 0.754 |\n\n## Cross-references\n- NASC Gene ID: AT4G30080\n- TAIR: AT4G30080\n- TAIR Gene Name: ARF16\n- Plant Reactome Reaction ID: R-ATH-5608208\n- Plant Reactome Pathway ID: R-ATH-5608118\n- Expression Atlas: AT4G30080\n- KNETMINER_ARA: AT4G30080\n- UniProtKB Gene Name: Q93YR9\n- WikiGene: 829131\n- NCBI gene (formerly Entrezgene): 829131\n\n## Literature\n61 hits total; showing top 10.\n- **Auxin-mediated seed germination and crosstalk with other phytohormones** \u2014 Ament A, Kucha\u0159ov\u00e1 A, Vladeji\u0107 J, B\u011bl\u00ed\u010dek J, Brunoni F, Nov\u00e1k O. (PMID:41626343; doi:10.3389/fpls.2025.1746472)\n- **Integrating predictive models and GWAS to identify candidate loci and genes for agronomic traits in rice** \u2014 Zhou Q, Wang F, Yang Y, Dong L, Cao Y, Li S, Zhang G. (PMID:42698716; doi:10.3389/fpls.2026.1942478)\n- **&lt;i&gt;CpARF6&lt;/i&gt; Controls Lobed Leaf Formation in Zucchini** \u2014 Jiang S, Shi L, Fei S, Zhang M, Zhou Y, Hu Z, Yang J, Zhang M, Lyu X. (PMID:41155342; doi:10.3390/ijms262010042)\n- **The miR7125-MdARF1 module enhances the resistance of apple to Colletotrichum gloeosporioides by promoting lignin synthesis in response to salicylic acid signalling** \u2014 Liu X, Dai H, Zhang F, Wang J, Shi J, Chen J, He P, Wang F, Ma Y. (PMID:38852059; doi:10.1111/pbi.14401)\n- **Regulatory Mechanism of the GmMYB14 Transcription Factor on Auxin-Related Proteins in Soybean** \u2014 Peng L, Liu Y, Yang H, Guo W, Hao Q, Chen S, Yuan S, Zhang C, Yang Z, Han B, Huang Y, Shan Z, Chen L, Chen H. (PMID:40869083; doi:10.3390/ijms26167763)\n- **Identification of the Auxin Response Factor gene family in kernel consumption apricot and association analysis of related genes regulating fruit size in distant hybridization** \u2014 Han C, Zhang W, Chen S, Zhang Y, Guo H, Yu L, Liu L, Liu P, Wang L, Zhao H. (PMID:41555233; doi:10.1186/s12870-025-08030-3)\n- **Predicting and testing a gene network regulating seed germination in &lt;i&gt;Arabidopsis&lt;/i&gt;** \u2014 Yang M, Wang Y. (PMID:40642330; doi:10.7717/peerj.19599)\n- **Large-scale analysis of the ARF and Aux/IAA gene families in 406 horticultural and other plants** \u2014 Feng S, Li N, Chen H, Liu Z, Li C, Zhou R, Zhang Y, Cao R, Ma X, Song X. (PMID:38589963; doi:10.1186/s43897-024-00090-7)\n- **Dissecting the role of strigolactone perception in barley tolerance to cadmium or zinc stress based on the receptor mutant analysis** \u2014 Buchcik W, Sitko K, Marzec M. (PMID:41272468; doi:10.1186/s12870-025-07683-4)\n- **Plasma-treated water applied as a foliar spray promotes root growth in barley** \u2014 Kr\u00fcger A, Schl\u00f6mer S, Simm S, Bold J, St\u00f6hr C. (PMID:40983938; doi:10.1186/s12870-025-07394-w)\n",
   "sections": {
    "annotation": {
-    "canonical_transcript": "AT4G30080.1",
-    "end": 14706354,
-    "start": 14703065,
-    "object_type": "Gene",
     "logic_name": "araport11",
+    "display_name": "ARF16",
+    "canonical_transcript": "AT4G30080.1",
+    "biotype": "protein_coding",
     "description": "auxin response factor 16 [Source:NCBI gene (formerly Entrezgene);Acc:829131]",
     "db_type": "core",
-    "id": "AT4G30080",
-    "display_name": "ARF16",
-    "biotype": "protein_coding",
-    "seq_region_name": "4",
     "source": "araport11",
-    "strand": -1,
+    "seq_region_name": "4",
+    "id": "AT4G30080",
     "assembly_name": "TAIR10",
+    "start": 14703065,
+    "strand": -1,
+    "end": 14706354,
+    "object_type": "Gene",
     "organism": "arabidopsis_thaliana",
     "upstream_version": null
    },
@@ -128,117 +128,117 @@
     "xrefs": [
      {
       "synonyms": [],
-      "display_id": "AT4G30080-TAIR-G",
       "primary_id": "AT4G30080",
       "version": "0",
       "description": "auxin response factor 16",
+      "db_display_name": "NASC Gene ID",
+      "display_id": "AT4G30080-TAIR-G",
       "info_text": "",
       "dbname": "NASC_GENE_ID",
-      "db_display_name": "NASC Gene ID",
       "info_type": "DIRECT"
      },
      {
-      "dbname": "TAIR_LOCUS",
-      "info_type": "DIRECT",
-      "db_display_name": "TAIR",
-      "description": "auxin response factor 16",
       "primary_id": "AT4G30080",
-      "version": "0",
-      "display_id": "AT4G30080",
       "synonyms": [],
-      "info_text": ""
+      "display_id": "AT4G30080",
+      "info_type": "DIRECT",
+      "info_text": "",
+      "dbname": "TAIR_LOCUS",
+      "version": "0",
+      "db_display_name": "TAIR",
+      "description": "auxin response factor 16"
      },
      {
-      "info_type": "DIRECT",
-      "db_display_name": "TAIR Gene Name",
-      "dbname": "TAIR_SYMBOL",
-      "info_text": "",
       "primary_id": "ARF16",
+      "synonyms": [],
+      "display_id": "ARF16",
+      "info_text": "",
+      "dbname": "TAIR_SYMBOL",
+      "info_type": "DIRECT",
       "version": "0",
       "description": "",
-      "synonyms": [],
-      "display_id": "ARF16"
+      "db_display_name": "TAIR Gene Name"
      },
      {
-      "version": "0",
       "primary_id": "R-ATH-5608208",
-      "description": "ARF inactivation by AUX/IAA",
       "synonyms": [],
       "display_id": "R-ATH-5608208",
       "info_text": "Generated via direct",
       "dbname": "Plant_Reactome_Reaction",
       "info_type": "DIRECT",
+      "version": "0",
+      "description": "ARF inactivation by AUX/IAA",
       "db_display_name": "Plant Reactome Reaction ID"
      },
      {
-      "dbname": "Plant_Reactome_Pathway",
-      "db_display_name": "Plant Reactome Pathway ID",
-      "info_type": "DIRECT",
       "synonyms": [],
-      "display_id": "R-ATH-5608118",
-      "version": "0",
       "primary_id": "R-ATH-5608118",
       "description": "Auxin signalling",
-      "info_text": "Generated via direct"
-     },
-     {
-      "info_text": "",
-      "description": null,
+      "db_display_name": "Plant Reactome Pathway ID",
       "version": "0",
-      "primary_id": "AT4G30080",
-      "display_id": "AT4G30080",
-      "synonyms": [],
+      "info_text": "Generated via direct",
+      "dbname": "Plant_Reactome_Pathway",
       "info_type": "DIRECT",
-      "db_display_name": "Expression Atlas",
-      "dbname": "ArrayExpress"
+      "display_id": "R-ATH-5608118"
      },
      {
-      "db_display_name": "KNETMINER_ARA",
-      "info_type": "DEPENDENT",
-      "dbname": "KNETMINER_ARA",
-      "info_text": "",
-      "display_id": "AT4G30080",
+      "primary_id": "AT4G30080",
       "synonyms": [],
+      "info_text": "",
+      "dbname": "ArrayExpress",
+      "info_type": "DIRECT",
+      "display_id": "AT4G30080",
       "description": null,
+      "db_display_name": "Expression Atlas",
+      "version": "0"
+     },
+     {
       "version": "0",
+      "description": null,
+      "db_display_name": "KNETMINER_ARA",
+      "display_id": "AT4G30080",
+      "info_text": "",
+      "dbname": "KNETMINER_ARA",
+      "info_type": "DEPENDENT",
+      "synonyms": [],
       "primary_id": "AT4G30080"
      },
      {
-      "dbname": "Uniprot_gn",
-      "db_display_name": "UniProtKB Gene Name",
-      "info_type": "DEPENDENT",
+      "primary_id": "Q93YR9",
       "synonyms": [],
       "display_id": "ARF16",
+      "info_text": "",
+      "dbname": "Uniprot_gn",
+      "info_type": "DEPENDENT",
       "version": null,
-      "primary_id": "Q93YR9",
       "description": null,
-      "info_text": ""
+      "db_display_name": "UniProtKB Gene Name"
      },
      {
+      "synonyms": [],
+      "primary_id": "829131",
+      "version": "0",
+      "description": "auxin response factor 16",
       "db_display_name": "WikiGene",
-      "info_type": "DEPENDENT",
+      "display_id": "ARF16",
       "dbname": "WikiGene",
       "info_text": "",
-      "synonyms": [],
-      "display_id": "ARF16",
-      "version": "0",
-      "primary_id": "829131",
-      "description": "auxin response factor 16"
+      "info_type": "DEPENDENT"
      },
      {
+      "primary_id": "829131",
       "synonyms": [
        "auxin response factor 16",
        "F6G3.110",
        "F6G3_110"
       ],
-      "display_id": "ARF16",
-      "version": "0",
-      "primary_id": "829131",
-      "description": "auxin response factor 16",
+      "info_type": "DEPENDENT",
       "info_text": "",
       "dbname": "EntrezGene",
+      "display_id": "ARF16",
       "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "info_type": "DEPENDENT"
+      "description": "auxin response factor 16",
+      "version": "0"
      }
     ],
     "by_db": {
