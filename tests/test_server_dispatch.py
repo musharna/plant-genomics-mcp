@@ -134,6 +134,8 @@ DISPATCH_SPECS: list[Spec] = [
         None,
     ),
     Spec("ensembl_plants_paralogs", ensembl_plants, "paralogs", {"locus": L}, L, _DEFAULT_ORG),
+    # The organism is this tool's identifier (required): it reaches the backend positionally.
+    Spec("ensembl_plants_assembly", ensembl_plants, "assembly", {"organism": "rice"}, "rice", None),
     Spec("orthodb_orthologs", orthodb, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec("aragwas_associations", aragwas, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec("arabidopsis_natural_variation", onekg, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),

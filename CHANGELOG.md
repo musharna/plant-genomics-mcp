@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- **New tool `ensembl_plants_assembly`.** An organism's Ensembl assembly
+  (`/info/assembly`): name, GCA accession, date and karyotype, and every
+  top-level seq-region with its length and coordinate system, karyotype
+  regions first, the rest longest first (`limit` 100, max 2000; soybean has
+  1,190). The dossier's region walk learned names and lengths only from
+  `/overlap/region` refusals ("No slice found for location 6:1-4000000";
+  "Cannot request a slice whose start (32000001) is greater than 30427671
+  for 1."); the names this tool lists are the ones `ensembl_region_query`
+  takes, and a start past a listed length is the one it refuses (an end
+  past it is answered). `in_karyotype`, not the coordinate-system label,
+  says which regions are chromosomes: tomato's, barley's, grape's and
+  Medicago's are all `primary_assembly`. `organism` is required, with no
+  default: it is what the tool is about, so a call that forgets it is
+  refused rather than answered with Arabidopsis's assembly (every other
+  tool's `organism` still defaults to `arabidopsis_thaliana`).
+  `ensembl_region_query`'s description now points here.
+
 - **`examples/arf_family/` re-run at `1.25.0` (`6cf5408`).** Same 64 calls
   over the same 114 genes, against the release; every call's ok, error and
   expected counts match the `1.24.0` run's.

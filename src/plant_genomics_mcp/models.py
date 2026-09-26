@@ -1140,6 +1140,44 @@ class EnsemblParalogs(BaseModel):
     upstream_version: str | None = upstream_version_field("Ensembl", None)
 
 
+class EnsemblAssemblyRegion(BaseModel):
+    """One top-level seq-region of an Ensembl assembly."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(description="The seq-region name, as ensembl_region_query's region takes it")
+    length: int = Field(description="Length in bases; /overlap/region refuses a start past it")
+    coord_system: str | None = Field(
+        description=(
+            "Ensembl's coordinate-system label (chromosome, scaffold, supercontig, "
+            "primary_assembly); it differs between assemblies, so in_karyotype, not "
+            "this, says which regions are chromosomes"
+        )
+    )
+    in_karyotype: bool = Field(description="True when the assembly's karyotype lists this region")
+
+
+class EnsemblAssembly(BaseModel):
+    """An organism's Ensembl assembly and its top-level seq-regions."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    organism: str = Field(description="Canonical organism slug")
+    assembly_name: str | None = Field(description="Assembly name, e.g. TAIR10, IRGSP-1.0")
+    assembly_accession: str | None = Field(description="INSDC assembly accession (GCA_...)")
+    assembly_date: str | None = Field(
+        description="Assembly date as Ensembl gives it (YYYY-MM); null when Ensembl gives none"
+    )
+    karyotype: list[str] = Field(description="The chromosomes, in Ensembl's karyotype order")
+    total: int = total_field("top-level regions")
+    returned: int = Field(description=RETURNED_DESCRIPTION)
+    truncated: bool = Field(description="True when limit cut regions off")
+    regions: list[EnsemblAssemblyRegion] = Field(
+        description="Karyotype regions first, in karyotype order; then the rest, longest first"
+    )
+    upstream_version: str | None = upstream_version_field("Ensembl", None)
+
+
 class OrthoDbOrthologs(BaseModel):
     """OrthoDB ortholog group + cross-species member genes for a locus.
 
