@@ -253,7 +253,9 @@ def _arabidopsis_arf_members() -> set[str]:
 @pytest.mark.asyncio
 async def test_live_arf_paralogs_cover_the_family_gramene_left_empty() -> None:
     """The gap row's gene: Gramene gave it no paralog; Compara's paralogues hold
-    every other Arabidopsis member the dossier found, as other_paralog rows."""
+    every other Arabidopsis member the dossier found, as other_paralog rows.
+    The description's non-member example is among them too: AT2G23390, an
+    acyl-CoA N-acyltransferase-like gene outside the family."""
     family = _arabidopsis_arf_members()
     assert len(family) == 23
     async with httpx.AsyncClient() as client:
@@ -263,6 +265,9 @@ async def test_live_arf_paralogs_cover_the_family_gramene_left_empty() -> None:
     got = {p["locus"] for p in out["paralogs"]}
     assert family - {"AT1G19850"} <= got, sorted(family - {"AT1G19850"} - got)
     assert out["counts_by_type"].get("other_paralog", 0) > 0
+    types = {p["locus"]: p["type"] for p in out["paralogs"]}
+    assert "AT2G23390" not in family
+    assert types.get("AT2G23390") == "other_paralog", types.get("AT2G23390")
 
 
 @LIVE
