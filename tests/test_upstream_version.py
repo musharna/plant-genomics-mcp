@@ -23,7 +23,6 @@ from plant_genomics_mcp import (
     jaspar,
     organisms,
     orthodb,
-    panther,
     pdbe,
     server,
 )
@@ -161,7 +160,6 @@ def test_alphafold_reports_the_entry_version_as_a_string() -> None:
 def test_backends_that_state_no_release_carry_the_key_as_null() -> None:
     """Uniform key, honest value: null, not absent, so one pass reads them all."""
     for empty in (
-        panther._empty("AT1G01010"),
         pdbe._empty("Q9SZ92"),
         jaspar._empty("AT1G01010", "Q9SZ92", 3702, ["ARF5"]),
     ):

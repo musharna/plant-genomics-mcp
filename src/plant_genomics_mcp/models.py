@@ -1016,7 +1016,9 @@ class PantherFamily(BaseModel):
     go_cellular_component: list[dict[str, Any]] = Field(default_factory=list)
     protein_class: list[dict[str, Any]] = Field(default_factory=list)
     pathways: list[dict[str, Any]] = Field(default_factory=list)
-    upstream_version: str | None = upstream_version_field("PANTHER", None)
+    upstream_version: str | None = upstream_version_field(
+        "PANTHER", "the answer's search.product.version"
+    )
 
 
 class EntryMember(BaseModel):

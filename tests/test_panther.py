@@ -135,6 +135,54 @@ async def test_lookup_malformed_raises(httpx_mock: HTTPXMock) -> None:
             await panther.lookup_locus(client, "AT1G01060", "arabidopsis")
 
 
+@pytest.mark.asyncio
+async def test_upstream_version_is_the_release_the_answer_states(httpx_mock: HTTPXMock) -> None:
+    """Mapped AND unmapped answers carry ``product.version`` (live 2026-09-26: 19).
+
+    The value is read from each answer, never a constant: a mapped answer that
+    states 18 reports "18", and an answer that states no product reports null.
+    """
+    unmapped = {"search": {"product": {"source": "PANTHERDB", "version": 18}, "unmapped_list": {}}}
+    httpx_mock.add_response(url=_URL, json=unmapped)
+    async with httpx.AsyncClient() as client:
+        r = await panther.lookup_locus(client, "AT1G01060", "arabidopsis")
+    assert (r["found"], r["upstream_version"]) == (False, "18")
+
+    panther._CACHE.clear()
+    httpx_mock.add_response(url=_URL, json=_resp({"gene": _GENE}))
+    async with httpx.AsyncClient() as client:
+        r = await panther.lookup_locus(client, "AT1G01060", "arabidopsis")
+    assert (r["found"], r["upstream_version"]) == (True, "19")
+
+    for search in ({"mapped_genes": {"gene": _GENE}}, {"product": {}, "mapped_genes": {}}):
+        panther._CACHE.clear()
+        httpx_mock.add_response(url=_URL, json={"search": search})
+        async with httpx.AsyncClient() as client:
+            r = await panther.lookup_locus(client, "AT1G01060", "arabidopsis")
+        assert r["upstream_version"] is None, search
+
+
+@pytest.mark.parametrize(
+    "product",
+    [["PANTHERDB", 19], {"version": True}, {"version": 19.0}, {"version": "  "}],
+    ids=["product-not-object", "bool", "float", "blank"],
+)
+@pytest.mark.asyncio
+async def test_an_unusable_stated_release_raises(httpx_mock: HTTPXMock, product) -> None:
+    """A release read from a payload we no longer understand is a guess: refuse it."""
+    httpx_mock.add_response(url=_URL, json={"search": {"product": product, "mapped_genes": {}}})
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(PlantGenomicsError, match=r"PANTHER geneinfo product"):
+            await panther.lookup_locus(client, "AT1G01060", "arabidopsis")
+    # Positive control: the same answer with a well-formed product is accepted.
+    panther._CACHE.clear()
+    good = {"search": {"product": {"version": "19"}, "mapped_genes": {}}}
+    httpx_mock.add_response(url=_URL, json=good)
+    async with httpx.AsyncClient() as client:
+        r = await panther.lookup_locus(client, "AT1G01060", "arabidopsis")
+    assert r["upstream_version"] == "19"
+
+
 @live_only
 @pytest.mark.asyncio
 async def test_live_arabidopsis_family() -> None:
@@ -143,6 +191,8 @@ async def test_live_arabidopsis_family() -> None:
         r = await panther.lookup_locus(client, "AT1G01060", "arabidopsis")
     assert r["found"] is True
     assert r["family_id"].startswith("PTHR")
+    # The release comes from the same answer as the family (live 2026-09-26: 19).
+    assert r["upstream_version"] and r["upstream_version"].isdigit(), r["upstream_version"]
 
 
 @live_only
