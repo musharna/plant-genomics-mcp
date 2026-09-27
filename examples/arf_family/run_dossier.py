@@ -31,7 +31,10 @@ Outputs, all next to this file:
 - `calls.jsonl` — one row per MCP call, batch or single. `tool` is the
   tool actually called; `chain_tool` is the chain entry it served;
   `locus` is set for a single call and `loci` for a batch call; `n_bytes`
-  is the size of the JSON-RPC response line on the wire; `kind` is
+  is the size of the JSON-RPC response line on the wire, which carries
+  each payload twice (`structuredContent` and a JSON text copy);
+  `max_answer_chars` is the largest single locus's answer as a client
+  reads it, one JSON copy (`OVERSIZE_CHARS`); `kind` is
   `ok` / `error` / `expected` for the call as a whole, and `n_ok` /
   `n_error` / `n_expected` count the loci inside it.
 - `raw/_upstream_release.json` — what each backend's own release endpoint
@@ -78,7 +81,14 @@ from examples.arf_family.chain import CHAIN
 from examples.arf_family.mcp_client import SERVER_CMD, McpClient
 
 HERE = Path(__file__).parent
-OVERSIZE = 200_000  # bytes; larger responses are auto-logged as gaps
+# A locus's answer as a client reads it, one JSON copy, over this many
+# characters is auto-logged as a gap. Claude Code's default cap on one tool
+# result is 25,000 tokens; these answers counted 1.88-2.59 characters per
+# token (count_tokens on seven of them, 2026-09-27), so 25,000 x 1.88 is the
+# most characters that surely fit. A batch is the sum of the answers its
+# caller asked for, so its size on the wire is recorded, not logged as a gap.
+OVERSIZE_CHARS = 47_000
+OVERSIZE_TOKENS = 25_000
 WALLTIME_S = 4 * 3600
 BATCH_MAX = 50  # every batch_* tool's `maxItems` on the live schema
 
@@ -192,6 +202,12 @@ def release_bracket(start: dict[str, dict], end: dict[str, dict]) -> dict:
     return {"start": start, "end": end, "changed": changed, "unread": unread}
 
 
+def answer_size(payload: object) -> int:
+    """Characters of one answer as a client reads it: the server's own JSON
+    text copy is `json.dumps(payload)` with default separators."""
+    return len(json.dumps(payload))
+
+
 def is_expected(error: str | None) -> bool:
     return error is not None and any(tag in error for tag in EXPECTED_ERROR_TAGS)
 
@@ -243,7 +259,7 @@ class Runner:
         self.calls = open(here / "calls.jsonl", "w")  # noqa: SIM115
         # (chain_tool, kind, error class) -> loci
         self.auto: dict[tuple[str, str, str], list[str]] = defaultdict(list)
-        # (chain_tool, "oversize", cls) -> largest response seen, bytes
+        # (chain_tool, "oversize", cls) -> largest answer seen, characters
         self.largest: dict[tuple[str, str, str], int] = defaultdict(int)
         self.batch_seq: dict[str, int] = defaultdict(int)
 
@@ -261,13 +277,13 @@ class Runner:
             json.dumps(raw, indent=1) + "\n"
         )
 
-    def _note(self, locus: str, chain_tool: str, ok: bool, error, n_bytes: int) -> str:
+    def _note(self, locus: str, chain_tool: str, ok: bool, error, answer_chars: int) -> str:
         """Record the per-locus outcome; return its kind."""
         if ok:
-            if n_bytes > OVERSIZE:
-                key = (chain_tool, "oversize", f"over {OVERSIZE // 1000} kB on the wire")
+            if answer_chars > OVERSIZE_CHARS:
+                key = (chain_tool, "oversize", f"over {OVERSIZE_CHARS:,} characters")
                 self.auto[key].append(locus)
-                self.largest[key] = max(self.largest[key], n_bytes)
+                self.largest[key] = max(self.largest[key], answer_chars)
             return "ok"
         if is_expected(error):
             return "expected"
@@ -286,7 +302,8 @@ class Runner:
     async def single(self, locus: str, organism: str, chain_tool: str, build) -> None:
         args = build(locus, organism)
         res = await self.c.call(chain_tool, args)
-        kind = self._note(locus, chain_tool, res.ok, res.error, res.n_bytes)
+        answer_chars = answer_size(res.payload) if res.ok else 0
+        kind = self._note(locus, chain_tool, res.ok, res.error, answer_chars)
         self._write_raw(locus, chain_tool, res.ok, res.payload, res.error)
         self._log_call(
             organism=organism,
@@ -303,6 +320,7 @@ class Runner:
             n_expected=int(kind == "expected"),
             elapsed_s=round(res.elapsed_s, 2),
             n_bytes=res.n_bytes,
+            max_answer_chars=answer_chars,
             upstream_version=find_version(res.payload),
         )
         print(f"{locus} {chain_tool}: {kind} {res.n_bytes}B", file=sys.stderr)
@@ -324,6 +342,7 @@ class Runner:
             + "\n"
         )
         counts = {"ok": 0, "error": 0, "expected": 0}
+        max_answer_chars = 0
         if res.ok:
             if res.payload is None:
                 raise RuntimeError(f"{batch_tool}: ok=True with no payload")
@@ -331,7 +350,9 @@ class Runner:
             errors = res.payload.get("errors", {})
             for locus in loci:
                 if locus in results:
-                    kind = self._note(locus, chain_tool, True, None, 0)
+                    answer_chars = answer_size(results[locus])
+                    max_answer_chars = max(max_answer_chars, answer_chars)
+                    kind = self._note(locus, chain_tool, True, None, answer_chars)
                     self._write_raw(locus, chain_tool, True, results[locus], None)
                 elif locus in errors:
                     kind = self._note(locus, chain_tool, False, errors[locus], 0)
@@ -341,10 +362,6 @@ class Runner:
                     kind = self._note(locus, chain_tool, False, missing, 0)
                     self._write_raw(locus, chain_tool, False, None, missing)
                 counts[kind] += 1
-            if res.n_bytes > OVERSIZE:
-                key = (chain_tool, "oversize", f"over {OVERSIZE // 1000} kB on the wire (batch)")
-                self.auto[key].extend(loci)
-                self.largest[key] = max(self.largest[key], res.n_bytes)
             # An ok envelope whose every locus was refused is a refused call,
             # not an ok one: the call row must not read better than its rows.
             if counts["error"]:
@@ -375,6 +392,7 @@ class Runner:
             n_expected=counts["expected"],
             elapsed_s=round(res.elapsed_s, 2),
             n_bytes=res.n_bytes,
+            max_answer_chars=max_answer_chars,
             upstream_version=find_version(res.payload),
         )
         print(
@@ -387,7 +405,7 @@ class Runner:
             for (chain_tool, kind, cls), loci in self.auto.items():
                 returned = cls[:300]
                 if kind == "oversize":
-                    returned = f"{cls}, largest {self.largest[(chain_tool, kind, cls)]} bytes"
+                    returned = f"{cls}, largest {self.largest[(chain_tool, kind, cls)]:,}"
                 gaps.write(
                     json.dumps(
                         {
@@ -397,7 +415,10 @@ class Runner:
                             "loci": loci,
                             "attempted": f"{chain_tool} on {len(loci)} loci",
                             "returned": returned,
-                            "expected": "a usable answer within 200 kB"
+                            "expected": (
+                                f"one answer within Claude Code's {OVERSIZE_TOKENS:,}-token "
+                                "default cap"
+                            )
                             if kind == "oversize"
                             else "a usable answer",
                             "auto": True,

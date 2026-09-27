@@ -841,11 +841,29 @@ async def gene_report(
             _GENE_REPORT_STEPS[4],
             string_db.lookup_partners(client, locus, limit=top_n, organism=organism),
         ),
-        (6, _GENE_REPORT_STEPS[5], europe_pmc.lookup_locus(client, locus, organism=organism)),
+        # No abstracts: the Markdown lists title, authors and ids, and with them
+        # 10 of the ARF dossier's 114 reports were over Claude Code's 25k-token
+        # cap (2026-09-27). The section says so (abstracts_included: false);
+        # locus_literature returns them.
+        (
+            6,
+            _GENE_REPORT_STEPS[5],
+            europe_pmc.lookup_locus(client, locus, organism=organism, include_abstract=False),
+        ),
     ]
     if uniprot_row.status == "ok":
         acc = _result_dict(uniprot_row)["primaryAccession"]
-        phase2_items.append((7, _GENE_REPORT_STEPS[6], quickgo.lookup_by_uniprot(client, acc)))
+        # Every GO row is fetched: the Markdown dedups them by aspect before
+        # its top_n cap, so fewer rows would thin the summary itself. withFrom
+        # is not (the Markdown never reads it; ~2/3 of an IPI row): with
+        # abstracts gone the ARF5 report was still 24,776 tokens live.
+        phase2_items.append(
+            (
+                7,
+                _GENE_REPORT_STEPS[6],
+                quickgo.lookup_by_uniprot(client, acc, include_with_from=False),
+            )
+        )
         phase2_items.append((8, _GENE_REPORT_STEPS[7], interpro.lookup_by_uniprot(client, acc)))
 
     p2 = await _gather_phase2(phase2_items)

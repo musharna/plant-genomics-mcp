@@ -104,8 +104,13 @@ async def lookup_by_uniprot(
     accession: str,
     limit: int = DEFAULT_LIMIT,
     cursor: str | None = None,
+    include_with_from: bool = True,
 ) -> dict[str, Any]:
     """Fetch GO annotations for a UniProt accession.
+
+    ``include_with_from=False`` nulls every ``withFrom`` (the partner or
+    source cross-refs behind an IPI/ISS/IEA call), about two thirds of an
+    IPI row, and the payload's ``with_from_included`` says it was left out.
 
     ``cursor`` is a ``next_cursor`` from the previous page (#123); it resumes
     at QuickGO's own 1-based ``page``. ``by_aspect`` rolls up THIS page.
@@ -135,6 +140,10 @@ async def lookup_by_uniprot(
             f"QuickGO /annotation/search results is not a list: {type(results).__name__}"
         )
     annotations = [_normalize(r) for r in results if isinstance(r, dict)]
+    if not include_with_from:
+        # _normalize built new dicts: the cached upstream rows keep theirs.
+        for ann in annotations:
+            ann["withFrom"] = None
     total = _http.stated_count(raw, "numberOfHits", service="QuickGO /annotation/search")
     return {
         "uniprot_accession": accession,
@@ -149,6 +158,8 @@ async def lookup_by_uniprot(
         # Issue #132: the rollup is a dedup of annotations[], not a cut of it;
         # say so in the payload, not only in the tool description.
         "by_aspect_deduped_on": "goId",
+        # A null withFrom must not read as "no partner": say whether it was asked.
+        "with_from_included": include_with_from,
         # Issue #121: uniform key; null because this backend states no release on
         # the answering response (headers probed live 2026-09-22).
         "upstream_version": None,

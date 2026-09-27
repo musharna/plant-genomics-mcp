@@ -22,6 +22,8 @@ LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
 
 _URL = f"{aragwas.BASE_URL}/api/genes/AT1G01060/associations/"
+# The first page asks for the default limit (one 25-row page).
+_FIRST = f"{_URL}?limit=25"
 _NEXT = f"{_URL}?limit=25&offset=25"
 
 # Real-shaped association (key names verified live 2026-07-20, AT1G01060).
@@ -73,7 +75,7 @@ _ASSOC: dict[str, Any] = {
 @pytest.mark.asyncio
 async def test_lookup_full_matches_gene_annotation(httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
-        url=_URL, json={"count": 1, "links": {"next": None}, "results": [_ASSOC]}
+        url=_FIRST, json={"count": 1, "links": {"next": None}, "results": [_ASSOC]}
     )
     async with httpx.AsyncClient() as client:
         r = await aragwas.lookup_locus(client, "AT1G01060", "arabidopsis")
@@ -95,7 +97,7 @@ async def test_lookup_full_matches_gene_annotation(httpx_mock: HTTPXMock) -> Non
 @pytest.mark.asyncio
 async def test_lookup_paginates(httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
-        url=_URL, json={"count": 2, "links": {"next": _NEXT}, "results": [_ASSOC]}
+        url=_FIRST, json={"count": 2, "links": {"next": _NEXT}, "results": [_ASSOC]}
     )
     httpx_mock.add_response(
         url=_NEXT, json={"count": 2, "links": {"next": None}, "results": [_ASSOC]}
@@ -115,7 +117,7 @@ async def test_lookup_does_not_follow_off_host_next(httpx_mock: HTTPXMock) -> No
     fail as an unexpected request; the request count pins the mechanism."""
     off_host = f"{aragwas.BASE_URL}.evil.example/api/genes/x/associations/?offset=25"
     httpx_mock.add_response(
-        url=_URL, json={"count": 2, "links": {"next": off_host}, "results": [_ASSOC]}
+        url=_FIRST, json={"count": 2, "links": {"next": off_host}, "results": [_ASSOC]}
     )
     async with httpx.AsyncClient() as client:
         r = await aragwas.lookup_locus(client, "AT1G01060", "arabidopsis")
@@ -133,7 +135,7 @@ async def test_lookup_non_json_200_raises_typed(httpx_mock: HTTPXMock) -> None:
     # Body is non-JSON but NOT html: this is the L3 path proper. An html body
     # is now intercepted upstream in _http as an interposed page (see the
     # companion test below), so it can no longer reach the "non-JSON" branch.
-    httpx_mock.add_response(url=_URL, text="upstream error, not json", status_code=200)
+    httpx_mock.add_response(url=_FIRST, text="upstream error, not json", status_code=200)
     async with httpx.AsyncClient() as client:
         with pytest.raises(PlantGenomicsError, match="non-JSON"):
             await aragwas.lookup_locus(client, "AT1G01060", "arabidopsis")
@@ -157,7 +159,7 @@ async def test_lookup_html_200_is_interposed_page(
 
     monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
     for _ in range(3):
-        httpx_mock.add_response(url=_URL, text="<html>upstream error</html>", status_code=200)
+        httpx_mock.add_response(url=_FIRST, text="<html>upstream error</html>", status_code=200)
     async with httpx.AsyncClient() as client:
         with pytest.raises(UpstreamUnavailableError):
             await aragwas.lookup_locus(client, "AT1G01060", "arabidopsis")
@@ -169,7 +171,7 @@ async def test_lookup_page_cap_truncates(
 ) -> None:
     monkeypatch.setattr(aragwas, "MAX_PAGES", 1)
     httpx_mock.add_response(
-        url=_URL, json={"count": 200, "links": {"next": _NEXT}, "results": [_ASSOC]}
+        url=_FIRST, json={"count": 200, "links": {"next": _NEXT}, "results": [_ASSOC]}
     )
     async with httpx.AsyncClient() as client:
         r = await aragwas.lookup_locus(client, "AT1G01060", "arabidopsis")
@@ -180,7 +182,7 @@ async def test_lookup_page_cap_truncates(
 
 @pytest.mark.asyncio
 async def test_lookup_empty_is_found_true(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(url=_URL, json={"count": 0, "links": {"next": None}, "results": []})
+    httpx_mock.add_response(url=_FIRST, json={"count": 0, "links": {"next": None}, "results": []})
     async with httpx.AsyncClient() as client:
         r = await aragwas.lookup_locus(client, "AT1G01060", "arabidopsis")
     assert r["found"] is True
@@ -195,7 +197,7 @@ async def test_lookup_annotation_fallback_and_empty(httpx_mock: HTTPXMock) -> No
     no_match["snp"] = {**no_match["snp"], "annotations": [{"geneName": "OTHER", "effect": "E1"}]}
     no_ann = {**_ASSOC, "snp": {"chr": "chr1", "position": 1, "annotations": []}}
     httpx_mock.add_response(
-        url=_URL, json={"count": 2, "links": {"next": None}, "results": [no_match, no_ann]}
+        url=_FIRST, json={"count": 2, "links": {"next": None}, "results": [no_match, no_ann]}
     )
     async with httpx.AsyncClient() as client:
         r = await aragwas.lookup_locus(client, "AT1G01060", "arabidopsis")
@@ -205,7 +207,7 @@ async def test_lookup_annotation_fallback_and_empty(httpx_mock: HTTPXMock) -> No
 
 @pytest.mark.asyncio
 async def test_lookup_malformed_raises(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(url=_URL, json=["unexpected", "list"])
+    httpx_mock.add_response(url=_FIRST, json=["unexpected", "list"])
     async with httpx.AsyncClient() as client:
         with pytest.raises(PlantGenomicsError, match="unexpected payload"):
             await aragwas.lookup_locus(client, "AT1G01060", "arabidopsis")
@@ -236,10 +238,10 @@ async def test_a_lowercase_agi_is_asked_for_in_its_canonical_spelling(
     """Audit 2026-09-22 L7: AGI_RE is case-insensitive, so 'at1g01060' passed
     validation and went out as typed; AraGWAS answers a lowercase AGI with
     HTTP 500, which the retry layer reports as an outage."""
-    lower = f"{aragwas.BASE_URL}/api/genes/at1g01060/associations/"
+    lower = f"{aragwas.BASE_URL}/api/genes/at1g01060/associations/?limit=25"
     httpx_mock.add_response(url=lower, status_code=500, text="Server Error", is_reusable=True)
     httpx_mock.add_response(
-        url=_URL, json={"count": 1, "links": {"next": None}, "results": [_ASSOC]}
+        url=_FIRST, json={"count": 1, "links": {"next": None}, "results": [_ASSOC]}
     )
     async with httpx.AsyncClient() as client:
         r = await aragwas.lookup_locus(client, "at1g01060", "arabidopsis")
@@ -307,3 +309,100 @@ async def test_live_score_is_minus_log10_p_on_the_thresholds_scale() -> None:
         t["bonferroni_threshold05"], -math.log10(0.05 / t["total_associations"]), rel_tol=1e-6
     )
     assert "(" not in study["name"]
+
+
+# --- default page size (2026-09-27) -------------------------------------------
+# At the old default (every row up to 4 x 25-row pages) each Arabidopsis answer
+# in the ARF dossier was 36-40k tokens, over Claude Code's 25k default cap on
+# its own: 22 of 22 loci. The default is now one upstream page, strongest first.
+
+
+def _serve(total: int, urls: list[str], *, honour_limit: bool = True) -> Any:
+    """A fake `_get` paging like AraGWAS: `?limit=` (default 25) and `?offset=`,
+    rows strongest first, a `next` link while rows remain."""
+
+    async def fake(client: Any, url: str) -> dict[str, Any]:
+        urls.append(url)
+        params = httpx.URL(url).params
+        limit = int(params.get("limit", 25)) if honour_limit else 25
+        offset = int(params.get("offset", 0))
+        end = min(offset + limit, total)
+        nxt = f"{_URL}?limit={limit}&offset={end}" if end < total else None
+        rows = [{**_ASSOC, "score": float(total - i)} for i in range(offset, end)]
+        return {"count": total, "links": {"next": nxt}, "results": rows}
+
+    return fake
+
+
+@pytest.mark.asyncio
+async def test_the_default_answer_is_one_page_of_the_strongest_25(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    urls: list[str] = []
+    monkeypatch.setattr(aragwas, "_get", _serve(126, urls))
+    async with httpx.AsyncClient() as client:
+        first = await aragwas.lookup_locus(client, "AT1G01060")
+        rest = await aragwas.lookup_locus(client, "AT1G01060", cursor=first["next_cursor"])
+    assert len(urls) == 2  # one upstream request per answer
+    assert [a["score"] for a in first["associations"]] == [float(126 - i) for i in range(25)]
+    assert (first["association_count"], first["returned"], first["truncated"]) == (126, 25, True)
+    # Positive control: the cursor carries on at row 26, nothing skipped.
+    assert rest["associations"][0]["score"] == 101.0 and rest["returned"] == 25
+
+
+@pytest.mark.asyncio
+async def test_pages_of_any_limit_concatenate_to_the_whole_list(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(aragwas, "_get", _serve(60, []))
+    async with httpx.AsyncClient() as client:
+        whole = await aragwas.lookup_locus(client, "AT1G01060", limit=100)
+        walked: list[dict[str, Any]] = []
+        cursor = None
+        while True:
+            page = await aragwas.lookup_locus(client, "AT1G01060", limit=25, cursor=cursor)
+            walked += page["associations"]
+            cursor = page["next_cursor"]
+            if cursor is None:
+                break
+    assert (whole["returned"], whole["truncated"]) == (60, False)
+    assert walked == whole["associations"]
+
+
+@pytest.mark.asyncio
+async def test_a_page_longer_than_the_limit_is_cut_and_resumed_exactly(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """If AraGWAS ignored `?limit=` and sent its 25 rows, the answer must still
+    hold `limit` rows and the cursor resume at the first row not returned."""
+    monkeypatch.setattr(aragwas, "_get", _serve(40, [], honour_limit=False))
+    async with httpx.AsyncClient() as client:
+        first = await aragwas.lookup_locus(client, "AT1G01060", limit=10)
+        second = await aragwas.lookup_locus(
+            client, "AT1G01060", limit=10, cursor=first["next_cursor"]
+        )
+    assert [a["score"] for a in first["associations"]] == [float(40 - i) for i in range(10)]
+    assert [a["score"] for a in second["associations"]] == [float(30 - i) for i in range(10)]
+
+
+def test_a_limit_out_of_range_is_clamped_not_obeyed() -> None:
+    assert aragwas._resolve_limit(None) == aragwas.DEFAULT_LIMIT == 25
+    assert aragwas._resolve_limit(0) == 1
+    assert aragwas._resolve_limit(-3) == 1
+    assert aragwas._resolve_limit(10_000) == aragwas.MAX_LIMIT == 100
+    assert aragwas._resolve_limit(40) == 40  # an in-range limit is kept
+
+
+@pytest.mark.asyncio
+async def test_the_tool_takes_limit_and_passes_it_through(monkeypatch: pytest.MonkeyPatch) -> None:
+    from plant_genomics_mcp import server
+
+    urls: list[str] = []
+    monkeypatch.setattr(aragwas, "_get", _serve(126, urls))
+    args = {"locus": "AT1G01060", "limit": 60}
+    server._validate_arguments("aragwas_associations", args)  # the schema accepts it
+    r = await server._dispatch("aragwas_associations", args)
+    assert r["returned"] == 60 and "limit=60" in urls[0]
+    # Positive control: without limit the tool answers with the default page.
+    r = await server._dispatch("aragwas_associations", {"locus": "AT1G01060"})
+    assert r["returned"] == aragwas.DEFAULT_LIMIT
