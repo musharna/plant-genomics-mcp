@@ -156,3 +156,59 @@ async def test_the_wrapper_records_each_answer_and_its_problems() -> None:
 
     assert "aragwas_associations: declared key absent: $.organism" in recorded
     assert oc.validated_calls["aragwas_associations"] == before + 2
+
+
+# project_lookup rewrites canonical_transcript in place when the record
+# carries it (strips Ensembl's trailing "."); it never creates the key.
+_REWRITTEN_IN_PLACE = {("ensembl_plants.project_lookup", "canonical_transcript")}
+
+
+def test_passthrough_keys_are_never_written_by_the_code_that_answers() -> None:
+    """An exempt passthrough key is exempt because this code cannot rename it.
+
+    That holds only while the functions that build the answer never write
+    the key themselves; the day one does, a rename there becomes possible
+    and the exemption has to go.
+    """
+
+    def build(raw: dict[str, Any]) -> dict[str, Any]:
+        out = {"biotype": raw.get("x")}
+        out["strand"] = 1
+        return out
+
+    assert oc.keys_written(build) == {"biotype", "strand"}  # the scanner sees writes
+
+    for tool, (producers, _, keys) in oc.PASSTHROUGH.items():
+        for producer in producers:
+            module_name, fn_name = producer.split(".")
+            module = __import__(f"plant_genomics_mcp.{module_name}", fromlist=[fn_name])
+            fn = getattr(module, fn_name)
+            fn = getattr(fn, "__wrapped__", fn)  # conftest's wrapper, if any
+            written = {
+                k
+                for k in oc.keys_written(fn) & set(keys)
+                if (producer, k) not in _REWRITTEN_IN_PLACE
+            }
+            assert written == set(), (tool, producer, written)
+
+
+def test_a_union_answer_is_checked_against_the_branch_it_is() -> None:
+    """A correct answer of one shape must not be held to another shape's keys."""
+    schema = {
+        "$defs": {
+            "A": {
+                "type": "object",
+                "properties": {"kind": {"const": "a"}, "x": {"type": "integer"}},
+                "required": ["kind"],
+            },
+            "B": {
+                "type": "object",
+                "properties": {"kind": {"const": "b"}, "y": {"type": "integer"}},
+                "required": ["kind"],
+            },
+        },
+        "anyOf": [{"$ref": "#/$defs/A"}, {"$ref": "#/$defs/B"}],
+    }
+    assert oc.missing_declared({"kind": "a", "x": 1}, schema, schema, "$") == []
+    assert oc.missing_declared({"kind": "b", "y": 2}, schema, schema, "$") == []
+    assert oc.missing_declared({"kind": "a"}, schema, schema, "$") == ["$.x"]

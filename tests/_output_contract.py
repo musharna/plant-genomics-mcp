@@ -45,18 +45,18 @@ from plant_genomics_mcp import server
 violations: list[str] = []
 validated_calls: Counter[str] = Counter()
 
-_ENSEMBL_PASSTHROUGH = (
-    "Ensembl's record is passed through and its fields vary per record "
-    "(live 2026-09-27: Os01g0100100 carries no description or display_name)"
-)
 _WITH_FILTER = "written only when the call filters by organism"
 
-# Declared keys an answer may leave out, by tool and path ("[]" for any row),
-# each with the reason. Everything else a schema declares must be present.
-ABSENT_OK: dict[str, dict[str, str]] = {
-    "ensembl_plants_lookup_locus": {
-        f"$.{key}": _ENSEMBL_PASSTHROUGH
-        for key in (
+# Answers built by copying an upstream record: this code never writes these
+# keys, so it cannot rename one, and which of them the record carries varies
+# (live 2026-09-27: Ensembl's Os01g0100100 has no description or
+# display_name). Presence would test the fixture, not the code.
+# test_output_contract checks that the named producers write none of the keys.
+PASSTHROUGH: dict[str, tuple[tuple[str, ...], str, tuple[str, ...]]] = {
+    "ensembl_plants_lookup_locus": (
+        ("ensembl_plants.lookup_locus", "ensembl_plants.project_lookup"),
+        "$.",
+        (
             "assembly_name",
             "biotype",
             "canonical_transcript",
@@ -70,11 +70,12 @@ ABSENT_OK: dict[str, dict[str, str]] = {
             "source",
             "start",
             "strand",
-        )
-    },
-    "get_gene_xrefs": {
-        f"$.xrefs[].{key}": _ENSEMBL_PASSTHROUGH
-        for key in (
+        ),
+    ),
+    "get_gene_xrefs": (
+        ("ensembl_plants.lookup_xrefs",),
+        "$.xrefs[].",
+        (
             "db_display_name",
             "description",
             "display_id",
@@ -82,11 +83,21 @@ ABSENT_OK: dict[str, dict[str, str]] = {
             "info_type",
             "synonyms",
             "version",
-        )
-    },
-    "ensembl_region_query": {
-        f"$.features[].{key}": _ENSEMBL_PASSTHROUGH
-        for key in ("assembly_name", "description", "source")
+        ),
+    ),
+    "ensembl_region_query": (
+        ("ensembl_plants.region_query",),
+        "$.features[].",
+        ("assembly_name", "description", "source"),
+    ),
+}
+
+# Declared keys an answer may leave out, by tool and path ("[]" for any row),
+# each with the reason. Everything else a schema declares must be present.
+ABSENT_OK: dict[str, dict[str, str]] = {
+    **{
+        tool: {f"{prefix}{key}": "copied from the upstream record" for key in keys}
+        for tool, (_, prefix, keys) in PASSTHROUGH.items()
     },
     "gramene_homologs": {
         "$.homologs[].organism": "written only with with_organism or target_organism",
@@ -174,8 +185,21 @@ def missing_declared(
     value: Any, schema: dict[str, Any], root: dict[str, Any], path: str
 ) -> list[str]:
     """Paths of properties the schema declares that `value` does not carry."""
+    branches = list(_branches(schema, root))
+    if len(branches) > 1:
+        # A union: check the answer against the branch it is, not against
+        # every alternative. Among the branches it validates against, the one
+        # it is missing least from; if it matches none, validation reports it.
+        defs = {"$defs": root.get("$defs", {})}
+        fits = [
+            b
+            for b in branches
+            if jsonschema.validators.validator_for(b)({**b, **defs}).is_valid(value)
+        ]
+        results = [missing_declared(value, b, root, path) for b in fits or branches]
+        return min(results, key=len)
     out: list[str] = []
-    for branch in _branches(schema, root):
+    for branch in branches:
         if isinstance(value, dict) and "properties" in branch:
             for key, sub in branch["properties"].items():
                 if key not in value:
@@ -185,6 +209,23 @@ def missing_declared(
         elif isinstance(value, list) and "items" in branch:
             for i, item in enumerate(value):
                 out.extend(missing_declared(item, branch["items"], root, f"{path}[{i}]"))
+    return out
+
+
+def keys_written(fn: Callable[..., Any]) -> set[str]:
+    """String keys `fn` writes: dict-literal keys and `x["key"] = ...` targets."""
+    tree = ast.parse(textwrap.dedent(inspect.getsource(fn)))
+    out: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Dict):
+            out |= {
+                k.value
+                for k in node.keys
+                if isinstance(k, ast.Constant) and isinstance(k.value, str)
+            }
+        elif isinstance(node, ast.Subscript) and isinstance(node.ctx, ast.Store):
+            if isinstance(node.slice, ast.Constant) and isinstance(node.slice.value, str):
+                out.add(node.slice.value)
     return out
 
 
