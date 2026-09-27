@@ -13,6 +13,20 @@
   answer against the 47,000-character line. `upstream_release` read all 8
   backends before and after the walk and none changed or went unread.
 
+- **Every tool answer the test suite produces is checked against the tool's
+  published `outputSchema`.** The unit tests call the backend functions
+  directly, so no test compared an answer with the schema a client validates
+  it against, and the nightly mutation run kept 377 mutants that rename an
+  output key. For every test, the functions `server._dispatch` routes the 49
+  single-call tools to are wrapped: each answer must validate and carry every
+  key its schema declares, except keys listed with a reason (Ensembl fields
+  passed through, keys written only under an organism filter, not-found
+  echoes). A run of the whole suite fails if any tool's answers went
+  unchecked. Surviving mutants fall from 2,289 to 2,085 (188 of the 377
+  renamed keys killed; mutmut 3.7.0 at `d4c4f32` and at this change). Eight
+  Ensembl lookup fixtures now carry `species`, which the live endpoint always
+  sends. Test-only: no tool's behaviour changes.
+
 ## v1.28.0 — 2026-09-27
 
 **56 tools / 23 backends** — no new tool. A minor release rather than a patch: `aragwas_associations` answers 25 rows by default and gains `limit`, and `gene_report` leaves abstracts and GO `withFrom` out of its sections (**Behaviour change** for both), so neither answers over Claude Code's 25,000-token default cap by itself.
