@@ -123,6 +123,8 @@ async def test_lookup_does_not_follow_off_host_next(httpx_mock: HTTPXMock) -> No
         r = await aragwas.lookup_locus(client, "AT1G01060", "arabidopsis")
     assert r["found"] is True
     assert len(httpx_mock.get_requests()) == 1  # off-host next was not fetched
+    # The count still says a second row exists, so the answer says so too.
+    assert r["truncated"] is True and r["next_cursor"] is not None
 
 
 @pytest.mark.asyncio
@@ -216,8 +218,14 @@ async def test_lookup_malformed_raises(httpx_mock: HTTPXMock) -> None:
 @pytest.mark.asyncio
 async def test_lookup_non_arabidopsis_raises() -> None:
     async with httpx.AsyncClient() as client:
-        with pytest.raises(OrganismNotSupported):
+        with pytest.raises(OrganismNotSupported) as exc:
             await aragwas.lookup_locus(client, "Os01g0100100", "rice")
+    # The error names what the caller can do instead, not just that it failed.
+    assert (exc.value.backend, exc.value.organism, exc.value.supported) == (
+        "aragwas",
+        "oryza_sativa",
+        ["arabidopsis_thaliana"],
+    )
 
 
 @pytest.mark.asyncio
@@ -317,14 +325,15 @@ async def test_live_score_is_minus_log10_p_on_the_thresholds_scale() -> None:
 # its own: 22 of 22 loci. The default is now one upstream page, strongest first.
 
 
-def _serve(total: int, urls: list[str], *, honour_limit: bool = True) -> Any:
+def _serve(total: int, urls: list[str], *, honour_limit: bool = True, page: int = 25) -> Any:
     """A fake `_get` paging like AraGWAS: `?limit=` (default 25) and `?offset=`,
-    rows strongest first, a `next` link while rows remain."""
+    rows strongest first, a `next` link while rows remain. With
+    ``honour_limit=False`` it sends ``page`` rows whatever `?limit=` says."""
 
     async def fake(client: Any, url: str) -> dict[str, Any]:
         urls.append(url)
         params = httpx.URL(url).params
-        limit = int(params.get("limit", 25)) if honour_limit else 25
+        limit = int(params.get("limit", 25)) if honour_limit else page
         offset = int(params.get("offset", 0))
         end = min(offset + limit, total)
         nxt = f"{_URL}?limit={limit}&offset={end}" if end < total else None
@@ -406,3 +415,227 @@ async def test_the_tool_takes_limit_and_passes_it_through(monkeypatch: pytest.Mo
     # Positive control: without limit the tool answers with the default page.
     r = await server._dispatch("aragwas_associations", {"locus": "AT1G01060"})
     assert r["returned"] == aragwas.DEFAULT_LIMIT
+
+
+# --- every projected field, from a verbatim live row (#96 mutation triage) ----
+# A test that reads three fields of a row cannot see the other fifteen: 51
+# mutants renaming an output key or the upstream key it reads survived here.
+
+# Row 7 of AT1G01060's associations (?limit=100, live 2026-09-27), verbatim
+# except that annotations are cut to the first two and study.genotype and the
+# "suggest" lists are dropped (none is read). Every field _project reads is on
+# every live row at AT1G01060 and AT1G19850 (100/100 each; snp.geneName 96 and
+# 88 of 100), and this row's three significance flags are not all equal.
+_LIVE_ROW: dict[str, Any] = {
+    "mac": 1,
+    "maf": 0.00199600798403194,
+    "score": 12.850055994675705,
+    "created": "2019-09-25T15:32:11.098609",
+    "study": {
+        "id": 591,
+        "name": "('clim-gs_tmin_raw_Full imputed genotype_amm',)",
+        "transformation": "raw",
+        "method": "amm",
+        "phenotype": {
+            "id": 591,
+            "name": "clim-gs tmin",
+            "studyName": "Lifetime fitness in Germany and Spain under rainfall manipulation",
+            "description": "Minimum temperature average within growing season (_C)",
+            "date": "2019-03-12T19:08:54.452000Z",
+        },
+        "nHitsBonf": 4,
+        "nHitsPerm": 1,
+        "nHitsThr": 1836835,
+        "thresholds": [
+            {"name": "bonferroni_threshold05", "value": 8.250514951149334},
+            {"name": "bonferroni_threshold01", "value": 8.949484955485353},
+            {"name": "bh_threshold", "value": 4.553475160679959},
+            {"name": "total_associations", "value": 8901946},
+            {"name": "permutation_threshold", "value": 12.923181305939378},
+        ],
+    },
+    "overFDR": True,
+    "overBonferroni": True,
+    "overPermutation": False,
+    "snp": {
+        "coding": True,
+        "alt": "T",
+        "chr": "chr1",
+        "position": 35368,
+        "anc": "A",
+        "annotations": [
+            {
+                "function": "MISSENSE",
+                "rank": 8,
+                "geneName": "AT1G01060",
+                "impact": "MODERATE",
+                "transcriptId": "AT1G01060.5",
+                "codonChange": "gTg/gAg",
+                "aminoAcidChange": "V210E",
+                "effect": "NON_SYNONYMOUS_CODING",
+            },
+            {
+                "function": "MISSENSE",
+                "rank": 6,
+                "geneName": "Exon_1_36810_36836",
+                "impact": "MODERATE",
+                "transcriptId": "AT1G01060.5-Protein",
+                "codonChange": "gTg/gAg",
+                "aminoAcidChange": "V210E",
+                "effect": "NON_SYNONYMOUS_CODING",
+            },
+        ],
+        "ref": "A",
+        "geneName": "AT1G01060",
+    },
+}
+
+# Written out by hand from the row above, not produced by the code under test.
+_LIVE_ROW_PROJECTED: dict[str, Any] = {
+    "score": 12.850055994675705,
+    "maf": 0.00199600798403194,
+    "mac": 1,
+    "over_bonferroni": True,
+    "over_fdr": True,
+    "over_permutation": False,
+    "snp": {
+        "chr": "chr1",
+        "position": 35368,
+        "ref": "A",
+        "alt": "T",
+        "coding": True,
+        "gene": "AT1G01060",
+        "effect": "NON_SYNONYMOUS_CODING",
+        "impact": "MODERATE",
+        "amino_acid_change": "V210E",
+        "transcript": "AT1G01060.5",
+    },
+    "study": {
+        "name": "clim-gs_tmin_raw_Full imputed genotype_amm",
+        "method": "amm",
+        "phenotype": "clim-gs tmin",
+        "phenotype_description": "Minimum temperature average within growing season (_C)",
+        "thresholds": {
+            "bonferroni_threshold05": 8.250514951149334,
+            "bonferroni_threshold01": 8.949484955485353,
+            "bh_threshold": 4.553475160679959,
+            "total_associations": 8901946,
+            "permutation_threshold": 12.923181305939378,
+        },
+    },
+}
+
+
+def _leaves(value: Any) -> list[Any]:
+    if isinstance(value, dict):
+        return [leaf for v in value.values() for leaf in _leaves(v)]
+    return [value]
+
+
+@pytest.mark.asyncio
+async def test_a_live_row_is_projected_field_for_field(httpx_mock: HTTPXMock) -> None:
+    # match_headers: a request without the JSON Accept header gets no response.
+    httpx_mock.add_response(
+        url=_FIRST,
+        match_headers={"Accept": "application/json"},
+        json={"count": 1, "links": {"next": None}, "results": [_LIVE_ROW]},
+    )
+    async with httpx.AsyncClient() as client:
+        r = await aragwas.lookup_locus(client, "AT1G01060")
+    assert r["associations"] == [_LIVE_ROW_PROJECTED]
+    # The request is bounded by the backend's own timeout, not left unbounded.
+    (request,) = httpx_mock.get_requests()
+    assert request.extensions["timeout"]["read"] == aragwas.DEFAULT_TIMEOUT
+    # The fixture can fail: no expected value is null, so a mutant that reads
+    # a key the row lacks (null) cannot match the expected row by accident.
+    assert None not in _leaves(_LIVE_ROW_PROJECTED)
+
+
+def test_thresholds_keep_named_entries_and_skip_the_rest() -> None:
+    study = {
+        "thresholds": [
+            {"name": "bh_threshold", "value": 4.55},
+            "not a threshold",
+            {"name": 7, "value": 1.0},
+            {"value": 2.0},
+        ]
+    }
+    assert aragwas._thresholds(study) == {"bh_threshold": 4.55}
+
+
+@pytest.mark.asyncio
+async def test_an_upstream_paging_short_is_followed_for_max_pages(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """If AraGWAS paged at 20 whatever `?limit=` said, a 100-row ask stops at
+    MAX_PAGES (4) upstream pages, 80 rows, and the cursor resumes at row 81."""
+    urls: list[str] = []
+    monkeypatch.setattr(aragwas, "_get", _serve(200, urls, honour_limit=False, page=20))
+    async with httpx.AsyncClient() as client:
+        r = await aragwas.lookup_locus(client, "AT1G01060", limit=100)
+        pages = len(urls)
+        rest = await aragwas.lookup_locus(client, "AT1G01060", cursor=r["next_cursor"])
+    assert pages == aragwas.MAX_PAGES == 4
+    assert [a["score"] for a in r["associations"]] == [float(200 - i) for i in range(80)]
+    assert (r["returned"], r["truncated"]) == (80, True)
+    assert rest["associations"][0]["score"] == 120.0  # nothing skipped
+
+
+@pytest.mark.asyncio
+async def test_a_next_link_past_the_stated_count_still_means_more(httpx_mock: HTTPXMock) -> None:
+    """When the row cap stops the walk, a same-host next link still set says
+    more rows exist even if the stated count says none are left."""
+    one = f"{aragwas.BASE_URL}/api/genes/AT1G01060/associations/?limit=1"
+    httpx_mock.add_response(
+        url=one,
+        json={"count": 1, "links": {"next": f"{one}&offset=1"}, "results": [_ASSOC]},
+    )
+    # Positive control: count and link agree nothing is left.
+    done = f"{aragwas.BASE_URL}/api/genes/AT1G01070/associations/?limit=1"
+    httpx_mock.add_response(
+        url=done, json={"count": 1, "links": {"next": None}, "results": [_ASSOC]}
+    )
+    async with httpx.AsyncClient() as client:
+        more = await aragwas.lookup_locus(client, "AT1G01060", limit=1)
+        last = await aragwas.lookup_locus(client, "AT1G01070", limit=1)
+    assert (more["truncated"], more["next_cursor"] is not None) == (True, True)
+    assert (last["truncated"], last["next_cursor"]) == (False, None)
+
+
+# Fields on every live row probed (100/100 at AT1G01060 and at AT1G19850,
+# 2026-09-27). The annotation-derived fields and snp.geneName are not on
+# every row, so they are left to the verbatim-row test above.
+_ALWAYS_SENT = (
+    ("score",),
+    ("maf",),
+    ("mac",),
+    ("over_bonferroni",),
+    ("over_fdr",),
+    ("over_permutation",),
+    ("snp", "chr"),
+    ("snp", "position"),
+    ("snp", "ref"),
+    ("snp", "alt"),
+    ("snp", "coding"),
+    ("study", "name"),
+    ("study", "method"),
+    ("study", "phenotype"),
+    ("study", "phenotype_description"),
+    ("study", "thresholds"),
+)
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_rows_fill_every_field_upstream_always_sends() -> None:
+    """The fixture above is one row as AraGWAS sent it on one day; this is
+    what notices AraGWAS renaming a field later (projected as null)."""
+    async with httpx.AsyncClient() as client:
+        r = await aragwas.lookup_locus(client, "AT1G01060")
+    assert r["returned"] == aragwas.DEFAULT_LIMIT  # a full page was checked
+    for row in r["associations"]:
+        for path in _ALWAYS_SENT:
+            value: Any = row
+            for key in path:
+                value = value[key]
+            assert value not in (None, {}), (path, row)
