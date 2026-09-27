@@ -1,6 +1,6 @@
 # 81% of responses report no upstream release, and three report one under a key nothing reads
 
-**Filed as [#121](https://github.com/musharna/plant-genomics-mcp/issues/121) — closed.** `version-under-another-key` is closed at `967bc36`. `provenance-null-rate` stays open. Written from the ARF family dossier in
+**Filed as [#121](https://github.com/musharna/plant-genomics-mcp/issues/121) — closed.** `version-under-another-key` is closed at `967bc36`, and `provenance-null-rate` at `e43b45a` (`upstream_release`). Written from the ARF family dossier in
 [`examples/arf_family/`](../), re-run at server commit `052e4ec`
 (release `1.21.0`): 64 MCP calls over 114 genes x 16 tools, the family
 itself from a 1163-call enumeration through the same tools. Each section

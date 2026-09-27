@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+- **`examples/arf_family/` re-run at `1.27.0` (`e43b45a`).** Same 64 calls
+  over the same 114 genes, against the release; every call's ok, error and
+  expected counts match the `1.26.0` run's.
+  39 of the 43 hand-logged gap rows are closed (1 by this run):
+  `provenance-null-rate`. Calls with no
+  `upstream_version` fall from 42 to 34 of 64, `panther_family` (`19`) and
+  `orthodb_orthologs` (`v12`) now stating one on all 114 answers. The other
+  8 tools' backends state no release on a response; `upstream_release` read
+  all 8 before and after the walk and none changed or went unread
+  (`raw/_upstream_release.json`). Three earlier runs of the commit were
+  discarded (an Ensembl HTTP 500 on the closing release read, a run stopped
+  for low memory, PANTHER read timeouts on 47 loci), as the page records.
+
 ## v1.27.0 — 2026-09-26
 
 **56 tools / 23 backends** — one new tool, `upstream_release`; `panther_family` and `orthodb_orthologs` now report `upstream_version` (null before), OrthoDB is pinned to `v12`, and always-null `upstream_version` descriptions name their `upstream_release` backend.
