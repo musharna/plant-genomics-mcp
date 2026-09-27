@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-27T00:32:46Z",
- "elapsed_s": 0.761731640988728,
+ "started_at": "2026-09-27T06:34:56Z",
+ "elapsed_s": 1.8084753309958614,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.4500221509952098,
+   "elapsed_s": 1.4912601679970976,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0004656599776353687,
+   "elapsed_s": 0.0003402849833946675,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 5.108301411382854e-05,
+   "elapsed_s": 5.959498230367899e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.00133756099967286,
+   "elapsed_s": 0.0012813229986932129,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.22945881201303564,
+   "elapsed_s": 0.24960685000405647,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.00031201698584482074,
+   "elapsed_s": 0.0002728629915509373,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0001636129745747894,
+   "elapsed_s": 0.0001722619927022606,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.00021533799008466303,
+   "elapsed_s": 0.00017884699627757072,
    "result": null,
    "error": null
   }
@@ -88,19 +88,19 @@
   "markdown": "# OsARF2 (UniProt: ARF2) \u2014 `Os01g0670800`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 1:27,501,506\u201327,507,181 (-) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 2**\nARFB_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 718 aa\nUniProt: [Q0JKI9](https://www.uniprot.org/uniprotkb/Q0JKI9)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [145\u2013247]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [310\u2013384]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [145\u2013249]\n- **B3 DNA binding domain** (domain, interpro) [145\u2013249]\n- **Auxin response factor domain** (domain, interpro) [296\u2013376]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [144\u2013284]\n- **Auxin response factor** (family, interpro) [35\u2013715]\n- **B3 DNA binding domain** (domain, pfam) [147\u2013248]\n- **Auxin response factor ancillary domain** (domain, pfam) [296\u2013376]\n- **B3 DNA-binding domain profile** (domain, profile) [147\u2013249]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n- `osa04075` Plant hormone signal transduction - Oryza sativa japonica (Japanese rice) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| IAA8 | 0.882 |\n| IAA19 | 0.867 |\n| IAA5 | 0.867 |\n| IAA7 | 0.864 |\n| IAA18 | 0.864 |\n| IAA6 | 0.864 |\n| IAA13 | 0.861 |\n| IAA10 | 0.86 |\n| IAA1 | 0.859 |\n| IAA15 | 0.859 |\n\n## Cross-references\n- WikiGene: 4325895\n- UniProtKB Gene Name: Q0JKI9\n- Expression Atlas: Os01g0670800\n- NCBI gene (formerly Entrezgene): 4325895\n\n## Literature\n3 hits total; showing top 3.\n- **Meta-Analysis of Yield-Related and N-Responsive Genes Reveals Chromosomal Hotspots, Key Processes and Candidate Genes for Nitrogen-Use Efficiency in Rice** \u2014 Kumari S, Sharma N, Raghuram N. (PMID:34168661; doi:10.3389/fpls.2021.627955)\n- **Moderate water stress in rice induces rhizosheath formation associated with abscisic acid and auxin responses** \u2014 Zhang Y, Du H, Gui Y, Xu F, Liu J, Zhang J, Xu W. (PMID:32053723; doi:10.1093/jxb/eraa021)\n- **Epidermal cells that undergo cell death differentially express cell identity genes** \u2014 Steffens B, Sauter M. (PMID:19721764; doi:10.4161/psb.4.3.7957)\n",
   "sections": {
    "annotation": {
-    "db_type": "core",
     "source": "RAP2022-09-01",
-    "strand": -1,
     "display_name": "OsARF2",
-    "end": 27507181,
     "id": "Os01g0670800",
-    "start": 27501506,
-    "biotype": "protein_coding",
     "object_type": "Gene",
-    "assembly_name": "IRGSP-1.0",
-    "canonical_transcript": "Os01t0670800-02",
-    "seq_region_name": "1",
+    "strand": -1,
+    "biotype": "protein_coding",
     "logic_name": "rapdb_genes",
+    "canonical_transcript": "Os01t0670800-02",
+    "end": 27507181,
+    "seq_region_name": "1",
+    "db_type": "core",
+    "start": 27501506,
+    "assembly_name": "IRGSP-1.0",
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -126,48 +126,48 @@
     "count": 4,
     "xrefs": [
      {
-      "db_display_name": "WikiGene",
       "dbname": "WikiGene",
-      "primary_id": "4325895",
-      "version": "0",
-      "display_id": "LOC4325895",
-      "info_text": "",
-      "description": "auxin response factor 2-like",
+      "db_display_name": "WikiGene",
+      "info_type": "DEPENDENT",
       "synonyms": [],
-      "info_type": "DEPENDENT"
+      "display_id": "LOC4325895",
+      "version": "0",
+      "primary_id": "4325895",
+      "description": "auxin response factor 2-like",
+      "info_text": ""
      },
      {
-      "display_id": "ARF2",
-      "info_text": "",
+      "dbname": "Uniprot_gn",
+      "info_type": "DEPENDENT",
+      "db_display_name": "UniProtKB Gene Name",
       "version": null,
       "primary_id": "Q0JKI9",
-      "dbname": "Uniprot_gn",
-      "db_display_name": "UniProtKB Gene Name",
-      "info_type": "DEPENDENT",
+      "description": null,
       "synonyms": [],
-      "description": null
+      "display_id": "ARF2",
+      "info_text": ""
      },
      {
-      "info_type": "DIRECT",
-      "synonyms": [],
-      "description": null,
-      "info_text": "",
-      "display_id": "Os01g0670800",
-      "version": "0",
       "dbname": "ArrayExpress",
       "db_display_name": "Expression Atlas",
-      "primary_id": "Os01g0670800"
+      "info_type": "DIRECT",
+      "synonyms": [],
+      "display_id": "Os01g0670800",
+      "version": "0",
+      "primary_id": "Os01g0670800",
+      "description": null,
+      "info_text": ""
      },
      {
-      "primary_id": "4325895",
-      "dbname": "EntrezGene",
       "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "display_id": "LOC4325895",
-      "info_text": "",
-      "version": "0",
-      "description": "auxin response factor 2-like",
       "info_type": "DEPENDENT",
-      "synonyms": []
+      "dbname": "EntrezGene",
+      "info_text": "",
+      "display_id": "LOC4325895",
+      "synonyms": [],
+      "description": "auxin response factor 2-like",
+      "version": "0",
+      "primary_id": "4325895"
      }
     ],
     "by_db": {
@@ -310,7 +310,7 @@
     "returned": 3,
     "truncated": false,
     "next_cursor": null,
-    "abstracts_included": true,
+    "abstracts_included": false,
     "hits": [
      {
       "id": "34168661",
@@ -326,7 +326,7 @@
       "citedByCount": 23,
       "isOpenAccess": true,
       "hasPDF": true,
-      "abstractText": "Nitrogen-use efficiency (NUE) is a function of N-response and yield that is controlled by many genes and phenotypic parameters that are poorly characterized. This study compiled all known yield-related genes in rice and mined them from the N-responsive microarray data to find 1,064 NUE-related genes. Many of them are novel genes hitherto unreported as related to NUE, including 80 transporters, 235 transcription factors (TFs), 44 MicroRNAs (miRNAs), 91 kinases, and 8 phosphatases. They were further shortlisted to 62 NUE-candidate genes following hierarchical methods, including quantitative trait locus (QTL) co-localization, functional evaluation in the literature, and protein-protein interactions (PPIs). They were localized to chromosomes 1, 3, 5, and 9, of which chromosome 1 with 26 genes emerged as a hotspot for NUE spanning 81% of the chromosomes. Further, co-localization of the NUE genes on NUE-QTLs resolved differences in the earlier studies that relied mainly on N-responsive genes regardless of their role in yield. Functional annotations and PPIs for all the 1,064 NUE-related genes and also the shortlisted 62 candidates revealed transcription, redox, phosphorylation, transport, development, metabolism, photosynthesis, water deprivation, and hormonal and stomatal function among the prominent processes. <i>In silico</i> expression analysis confirmed differential expression of the 62 NUE-candidate genes in a tissue/stage-specific manner. Experimental validation in two contrasting genotypes revealed that high NUE rice shows better photosynthetic performance, transpiration efficiency and internal water-use efficiency in comparison to low NUE rice. Feature Selection Analysis independently identified one-third of the common genes at every stage of hierarchical shortlisting, offering 6 priority targets to validate for improving the crop NUE.",
+      "abstractText": null,
       "web_url": "https://europepmc.org/article/PMC/PMC8217879"
      },
      {
@@ -343,7 +343,7 @@
       "citedByCount": 28,
       "isOpenAccess": true,
       "hasPDF": true,
-      "abstractText": "The rhizosheath is known to be beneficial for drought resistance in many plants, but the regulation of rhizosheath formation in rice plants is unclear. Here, we investigate rhizosheath formation in different rice varieties and root hair mutants. Our results showed that moderate water stress in rice induced rhizosheath formation. The soil porosity and water content were higher in the rice rhizosheath than in the rice bulk soil under moderate water stress. Additionally, rhizosheath formation in short root hair mutants was lower than in wild-type rice under moderate water stress. Moreover, transcriptomic results indicated that abscisic acid (ABA) and auxin were involved in root and root hair responses in rhizosheath formation. Further, blocking ABA and auxin pathways in wild type and in rhl1-1, the shortest root hair mutant, rhizosheath formation and root hair length were significantly decreased under moderate water stress. However, wild type plants maintained a higher root ABA content, root basipetal auxin transport, root hair length, and amount of rhizosheath than did rhl1-1. Our results suggest that moderate water stress in rice induces rhizosheath formation by modulating the ABA and auxin responses to regulate root and root hair growth, which may be used to breed rice varieties resistant to drought.",
+      "abstractText": null,
       "web_url": "https://europepmc.org/article/PMC/PMC7210750"
      },
      {
@@ -388,104 +388,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20250130",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19220"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19850"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G34310"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G34390"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G77850"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G33860"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G46530"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT3G61830"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT4G23980"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G37020"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G60450"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN000774836"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q0JKI9",
@@ -501,32 +404,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR003340"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q0JKI9",
@@ -542,24 +420,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q0JKI9",
@@ -575,48 +436,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20250130",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19850"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G59750"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G20730"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G62000"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN000774836"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q0JKI9",
@@ -632,24 +452,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q0JKI9",
@@ -665,88 +468,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260529",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19220"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G30330"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G59750"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G33860"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT4G30080"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G20730"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G62000"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN000774836"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "K4DF01"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "Q2LAJ3"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q0JKI9",
@@ -762,24 +484,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB-SubCell",
-          "id": "SL-0191"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      }
     ],
     "by_aspect": {
@@ -811,6 +516,7 @@
      ]
     },
     "by_aspect_deduped_on": "goId",
+    "with_from_included": false,
     "upstream_version": null
    },
    "domains": {

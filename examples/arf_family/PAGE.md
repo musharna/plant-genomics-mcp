@@ -8,25 +8,18 @@ _Triticum aestivum_ members the tools could name and verify — in a
 single sitting: every response captured to [`raw/`](raw), and every
 place an answer came back unusable, inconsistent or silently short
 written down as it was found. It is a showcase and a defect list at the
-same time. The recipes below are what the tools do well; the 19 open rows
+same time. The recipes below are what the tools do well; the 12 open rows
 under **Known gaps** are what they do not, and the 39 closed ones are what
 the fix passes between the runs did about it.
 
-Provenance: run 2026-09-26 against server version `1.27.0` at commit
-`e43b45a`, the release itself — 64 MCP calls over 114 genes × 16 tools,
+Provenance: run 2026-09-27 against server version `1.28.0` at commit
+`12a5ec6`, the release itself — 64 MCP calls over 114 genes × 16 tools,
 one call per organism per 50 loci: 8 tools through their own `batch_`
 form and 8 through `batch_locus_call`. 49 calls ok, 7 expected refusals,
 8 calls carrying 62 locus-level errors, 5 minutes wall. 31 of the errors
 are loci outside ATTED-II's co-expression releases; 22 are STRING: 18
 wheat proteins it does not carry, and 2 rice and 2 wheat genes with no
 partners; 8 are KEGG; 1 is AraGWAS.
-Three earlier runs of the same commit were discarded. The first read
-Ensembl's release as 63 before the walk and got HTTP 500 three times
-after it, so the release under the whole walk could not be shown; the
-second was stopped after 15 of 64 calls when the machine ran low on
-memory; the third lost 47 `panther_family` answers (22 of 23
-Arabidopsis, all 25 rice) to PANTHER read timeouts. This run started
-once PANTHER answered three requests in under a second each.
 OrthoDB, PANTHER and
 `gene_report` answer for all 114 genes; on the 2026-09-23 run they lost 87 answers to
 OrthoDB refusing the batch's eight-wide fan-out as "too high request
@@ -34,8 +27,8 @@ rate", 63 to PANTHER timeouts in an upstream outage, and 18 reports to
 an Ensembl failure that emptied them (the closed rows
 `batch-fanout-rate-limit` and `failed-step-empties-report` below), and
 STRING answered none of the 66 wheat genes (`wheat-string-unresolvable`).
-The earlier runs: 2026-09-26 at `75576d0` (`1.26.0`), 64 calls with 62
-locus-level errors; 2026-09-26 at `6cf5408` (`1.25.0`), 64 calls with 62; 2026-09-25 at `55dc6ca` (`1.24.0`), 64 calls with 62; 2026-09-25 at `9054886` (`1.23.0`), 64 calls with 63; 2026-09-25 at `2fc3f92`, 64 calls with 62; 2026-09-23 at `052e4ec`, 64 calls with 262; 2026-09-22 at `967bc36`, 400 calls over 48 genes; 2026-09-21
+The earlier runs: 2026-09-26 at `e43b45a` (`1.27.0`), 64 calls with 62
+locus-level errors; 2026-09-26 at `75576d0` (`1.26.0`), 64 calls with 62; 2026-09-26 at `6cf5408` (`1.25.0`), 64 calls with 62; 2026-09-25 at `55dc6ca` (`1.24.0`), 64 calls with 62; 2026-09-25 at `9054886` (`1.23.0`), 64 calls with 63; 2026-09-25 at `2fc3f92`, 64 calls with 62; 2026-09-23 at `052e4ec`, 64 calls with 262; 2026-09-22 at `967bc36`, 400 calls over 48 genes; 2026-09-21
 against `1.21.0` as released, 248 calls over 29 genes. The
 rows below that the chain does not answer were asked again by
 [`probe_gaps.py`](probe_gaps.py) ([`raw/_probe_rerun.json`](raw/_probe_rerun.json)).
@@ -256,17 +249,33 @@ its parsed payload: 66,041 B by `json.dumps` for this gene, of which
 
 ## What 64 responses cost, and what they say about their source
 
-![Response size on the wire for each of the 64 MCP calls on a log10 axis, one row per chain tool and the batch form that ran it, ordered by median size, offset and shaped by organism with exact ties drawn on one point, coloured by whether the tool reports an upstream release under upstream_version or not at all; hollow points are documented organism refusals; a dashed line marks the 200 kB oversize threshold, crossed by 22 calls of 7 tools](coverage.png)
+![Largest single answer in each of the 64 MCP calls, in characters as a client reads it, on a log10 axis, one row per chain tool and the batch form that ran it, ordered by median, offset and shaped by organism with exact ties drawn on one point, coloured by whether the tool reports an upstream release under upstream_version or not at all; a dashed line marks the 47,000-character cap, which no answer crosses; the 7 calls that answered no locus are not drawn](coverage.png)
 
-Response sizes on the wire span 11,070×, from 318 B
-(`batch_atted_coexpression` refusing the wheat loci) to 3,520 kB
-(`batch_locus_call` running `aragwas_associations` over the 23
-Arabidopsis loci). Every chain tool is called through a batch form, one
-call per organism per 50 loci — four calls, since wheat's 66 loci take
-two — and exact ties draw on one point: 3 positions for
-`batch_atted_coexpression` and `batch_kegg_pathways`, 4 for the other 14
-(each of the two has a pair of wheat refusals that tie). The
-vertical offset is by organism. Eight of the 16 tools called put the upstream release in
+Each point is the largest single answer in one call, measured as a
+client reads it: one JSON copy of one locus's payload. A batch reply on
+the wire carries every payload twice and up to 50 of them, so it
+measures the batch rather than an answer; [`calls.jsonl`](calls.jsonl)
+keeps both, as `n_bytes` and `max_answer_chars`. A batch reply as a whole
+is the sum of the answers asked for, and 27 of the 60 saved here are over
+47,000 characters, up to 882,699 (`gene_report` over 50 wheat loci);
+Claude Code saves a result over its cap to a file rather than dropping
+it. The largest answers
+span 226×, from 199 characters (`experimental_structures` on rice) to
+44,985 (`gene_report` on `AT1G19850`, 21,870 tokens by `count_tokens`),
+and none crosses the runner's 47,000-character line: Claude Code's
+25,000-token default cap on a tool result, at the fewest characters per
+token counted (1.88). At `1.27.0` every Arabidopsis
+`aragwas_associations` answer was over that cap by itself (22 of 22), and
+so were 10 of 114 `gene_report` answers; `1.28.0` answers AraGWAS 25 rows
+at a time (the largest is now 11,596 tokens) and leaves abstracts and GO
+`withFrom` out of the report's sections. Every chain tool is called
+through a batch form, one call per organism per 50 loci — four calls,
+since wheat's 66 loci take two — and exact ties draw on one point: 4
+positions for 9 tools, 3 for `ensembl_plants_lookup_locus`,
+`experimental_structures`, `panther_family` and `tf_binding_motifs`
+(their two wheat calls tie), 2 for `atted_coexpression` and
+`kegg_pathways`, 1 for `aragwas_associations`. The vertical offset is by
+organism. Eight of the 16 tools called put the upstream release in
 `upstream_version`: `interpro_domains`, `resolve_locus_to_uniprot` and
 `gene_report`; since the fix pass (#121) `gramene_homologs`,
 `atted_coexpression` and `alphafold_structure`, which on the first run
@@ -281,14 +290,10 @@ for all 8 before and after the walk and nothing changed
 `63`, STRING `12.0`, JASPAR `11`, and QuickGO's and KEGG's update dates;
 PDBe, AraGWAS and Europe PMC publish no data release. Those 16 reads are
 not rows of `calls.jsonl`, so the table lists `upstream_release` as
-unused. A batch answer
-carries up to 50 payloads, so its size grows with the loci in it: 22
-calls of 7 tools are over the runner's 200 kB oversize threshold, all 4
-of `gene_report`, `batch_gramene_homologs`,
-`batch_locus_go_annotations` and `orthodb_orthologs` among them. The hollow points are the
-refusals the descriptions say the tools will make:
-`aragwas_associations` on rice and wheat, `atted_coexpression` and
-`kegg_pathways` on wheat. Per-tool table: [`coverage.tsv`](coverage.tsv).
+unused.
+The 7 calls not drawn answered no locus: the refusals the descriptions
+say the tools will make, `aragwas_associations` on rice and wheat,
+`atted_coexpression` and `kegg_pathways` on wheat. Per-tool table: [`coverage.tsv`](coverage.tsv).
 
 Every row below is one line of [`gaps.jsonl`](gaps.jsonl), rendered by
 [`render_gaps.py`](render_gaps.py) so the page cannot drift from the log.
@@ -304,21 +309,14 @@ last open rows at `55dc6ca`, and 05 (#121) at `e43b45a`.
 
 ## Known gaps
 
-All 19 open rows, one line each: what was attempted, what came back, what was expected instead. The 39 rows logged against an earlier run that a later run no longer reproduces are listed last, with what it returned instead. Full text and the raw response each row was read from are in [`gaps.jsonl`](gaps.jsonl) and [`gaps_auto.jsonl`](gaps_auto.jsonl).
+All 12 open rows, one line each: what was attempted, what came back, what was expected instead. The 39 rows logged against an earlier run that a later run no longer reproduces are listed last, with what it returned instead. Full text and the raw response each row was read from are in [`gaps.jsonl`](gaps.jsonl) and [`gaps_auto.jsonl`](gaps_auto.jsonl).
 
 ### Defects in this tool
 
 - **several tools** (symbol-rejected-elsewhere) — all four refuse ARF1 now, for two different reasons: ensembl_plants_lookup_locus ('[NotFoundError] Ensembl Plants… — expected: one behaviour for a symbol in a `locus` argument across tools that share the argument name
-- **`interpro_domains`** (oversize) — 98 loci: over 200 kB on the wire (batch), largest 466038 bytes — expected: a usable answer within 200 kB
-- **`orthodb_orthologs`** (oversize) — 114 loci: over 200 kB on the wire (batch), largest 1133198 bytes — expected: a usable answer within 200 kB
-- **`gramene_homologs`** (oversize) — 114 loci: over 200 kB on the wire (batch), largest 1121720 bytes — expected: a usable answer within 200 kB
 - **`atted_coexpression`** (error) — 8 loci: [NotFoundError] ATTED-II: <locus> is not in the Ath-u.N-N co-expression release (no neighbour ranking exists… — expected: a usable answer
 - **`aragwas_associations`** (error) — ATMG00940: [UpstreamUnavailableError] AraGWAS associations exhausted N retries (last HTTP N) — expected: a usable answer
-- **`aragwas_associations`** (oversize) — 23 loci: over 200 kB on the wire (batch), largest 3520158 bytes — expected: a usable answer within 200 kB
-- **`locus_go_annotations`** (oversize) — 114 loci: over 200 kB on the wire (batch), largest 657583 bytes — expected: a usable answer within 200 kB
 - **`kegg_pathways`** (error) — ATMG00940: [NotFoundError] KEGG: no gene record for <locus> (queried as ath:<locus>); /list/ath:<locus> is empty — expected: a usable answer
-- **`locus_literature`** (oversize) — 48 loci: over 200 kB on the wire (batch), largest 869175 bytes — expected: a usable answer within 200 kB
-- **`gene_report`** (oversize) — 114 loci: over 200 kB on the wire (batch), largest 2301486 bytes — expected: a usable answer within 200 kB
 - **`atted_coexpression`** (error) — 23 loci: [NotFoundError] ATTED-II: <locus> is not in the Osa-u.N-N co-expression release (no neighbour ranking exists… — expected: a usable answer
 - **`string_interactions`** (error) — 2 loci: [NotFoundError] STRING: no interaction partners for <locus> (queried as <locus>) — expected: a usable answer
 - **`kegg_pathways`** (error) — 7 loci: [NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for <locus>… — expected: a usable answer

@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-27T00:32:46Z",
- "elapsed_s": 2.2921272659732495,
+ "started_at": "2026-09-27T06:34:57Z",
+ "elapsed_s": 1.5758499460062012,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 2.004975114017725,
+   "elapsed_s": 1.3071665700117592,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0003809700137935579,
+   "elapsed_s": 0.0007613310008309782,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 5.6792981922626495e-05,
+   "elapsed_s": 5.574600072577596e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.0013620550162158906,
+   "elapsed_s": 0.0014399700157810003,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.26076637001824565,
+   "elapsed_s": 0.24925421801162884,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.00016104700625874102,
+   "elapsed_s": 0.0001684419985394925,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00020414000027813017,
+   "elapsed_s": 0.00023158002295531332,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0003063449985347688,
+   "elapsed_s": 0.0003565909864846617,
    "result": null,
    "error": null
   }
@@ -90,17 +90,17 @@
    "annotation": {
     "display_name": "OsARF7",
     "strand": 1,
-    "start": 21098190,
+    "seq_region_name": "2",
+    "biotype": "protein_coding",
     "end": 21103974,
     "id": "Os02g0557200",
-    "source": "RAP2022-09-01",
     "db_type": "core",
     "canonical_transcript": "Os02t0557200-01",
-    "seq_region_name": "2",
     "assembly_name": "IRGSP-1.0",
-    "logic_name": "rapdb_genes",
     "object_type": "Gene",
-    "biotype": "protein_coding",
+    "source": "RAP2022-09-01",
+    "start": 21098190,
+    "logic_name": "rapdb_genes",
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -126,48 +126,48 @@
     "count": 4,
     "xrefs": [
      {
+      "info_text": "",
+      "description": "auxin response factor 7-like",
+      "synonyms": [],
+      "display_id": "LOC4329672",
+      "info_type": "DEPENDENT",
+      "db_display_name": "WikiGene",
+      "version": "0",
       "primary_id": "4329672",
-      "description": "auxin response factor 7-like",
-      "info_type": "DEPENDENT",
-      "version": "0",
-      "display_id": "LOC4329672",
-      "synonyms": [],
-      "dbname": "WikiGene",
-      "info_text": "",
-      "db_display_name": "WikiGene"
+      "dbname": "WikiGene"
      },
      {
-      "info_type": "DEPENDENT",
-      "description": null,
-      "primary_id": "Q6YVY0",
+      "info_text": "",
+      "synonyms": [],
       "display_id": "ARF7",
-      "version": null,
-      "synonyms": [],
-      "dbname": "Uniprot_gn",
-      "db_display_name": "UniProtKB Gene Name",
-      "info_text": ""
-     },
-     {
-      "info_text": "",
-      "db_display_name": "Expression Atlas",
-      "dbname": "ArrayExpress",
-      "synonyms": [],
-      "version": "0",
-      "display_id": "Os02g0557200",
       "description": null,
-      "primary_id": "Os02g0557200",
-      "info_type": "DIRECT"
+      "info_type": "DEPENDENT",
+      "version": null,
+      "db_display_name": "UniProtKB Gene Name",
+      "dbname": "Uniprot_gn",
+      "primary_id": "Q6YVY0"
      },
      {
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "info_text": "",
+      "info_type": "DIRECT",
+      "display_id": "Os02g0557200",
       "synonyms": [],
-      "dbname": "EntrezGene",
-      "display_id": "LOC4329672",
+      "description": null,
+      "info_text": "",
+      "dbname": "ArrayExpress",
+      "primary_id": "Os02g0557200",
       "version": "0",
-      "info_type": "DEPENDENT",
+      "db_display_name": "Expression Atlas"
+     },
+     {
+      "info_text": "",
       "description": "auxin response factor 7-like",
-      "primary_id": "4329672"
+      "display_id": "LOC4329672",
+      "synonyms": [],
+      "info_type": "DEPENDENT",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "version": "0",
+      "primary_id": "4329672",
+      "dbname": "EntrezGene"
      }
     ],
     "by_db": {
@@ -310,7 +310,7 @@
     "returned": 1,
     "truncated": false,
     "next_cursor": null,
-    "abstracts_included": true,
+    "abstracts_included": false,
     "hits": [
      {
       "id": "37353931",
@@ -326,7 +326,7 @@
       "citedByCount": 12,
       "isOpenAccess": true,
       "hasPDF": true,
-      "abstractText": "Nitrate is an important nitrogen source and signaling molecule that regulates plant growth and development. Although several components of the nitrate signaling pathway have been identified, the detailed mechanisms are still unclear. Our previous results showed that OsMADS25 can regulate root development in response to nitrate signals, but the mechanism is still unknown. Here, we try to answer two key questions: how does OsMADS25 move from the cytoplasm to the nucleus, and what are the direct target genes activated by OsMADS25 to regulate root growth after it moves to the nucleus in response to nitrate? Our results demonstrated that OsMADS25 moves from the cytoplasm to the nucleus in the presence of nitrate\u00a0in an OsNAR2.1-dependent manner. Chromatin immunoprecipitation sequencing, chromatin immunoprecipitation qPCR, yeast one-hybrid, and luciferase experiments showed that OsMADS25 directly activates the expression of OsMADS27 and OsARF7, which are reported to be associated with root growth. Finally, OsMADS25-RNAi lines, the Osnar2.1 mutant, and OsMADS25-RNAi Osnar2.1 lines exhibited significantly reduced root growth compared with the wild type in response to nitrate supply, and expression of OsMADS27 and OsARF7 was significantly suppressed in these lines. Collectively, these results reveal\u00a0a new mechanism by which OsMADS25 interacts with OsNAR2.1. This interaction is required for nuclear accumulation of OsMADS25, which promotes OsMADS27 and OsARF7 expression and root growth in a nitrate-dependent manner.",
+      "abstractText": null,
       "web_url": "https://europepmc.org/article/PMC/PMC10721473"
      }
     ],
@@ -354,104 +354,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20250130",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19220"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19850"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G34310"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G34390"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G77850"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G33860"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G46530"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT3G61830"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT4G23980"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G37020"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G60450"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN000774836"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q6YVY0",
@@ -467,32 +370,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR003340"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q6YVY0",
@@ -508,24 +386,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q6YVY0",
@@ -541,48 +402,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20250130",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19850"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G59750"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G20730"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G62000"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN000774836"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q6YVY0",
@@ -598,24 +418,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q6YVY0",
@@ -631,24 +434,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20250130",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G59750"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN004817213"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q6YVY0",
@@ -664,24 +450,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20250130",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G59750"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN004817213"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q6YVY0",
@@ -697,88 +466,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260529",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19220"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G30330"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G59750"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G33860"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT4G30080"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G20730"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G62000"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN000774836"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "K4DF01"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "Q2LAJ3"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q6YVY0",
@@ -794,24 +482,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB-SubCell",
-          "id": "SL-0191"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      }
     ],
     "by_aspect": {
@@ -851,6 +522,7 @@
      ]
     },
     "by_aspect_deduped_on": "goId",
+    "with_from_included": false,
     "upstream_version": null
    },
    "domains": {

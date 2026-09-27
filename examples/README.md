@@ -12,7 +12,7 @@ underlying client functions directly — the MCP envelope is identical to
 what the server serializes around these dicts, so going through stdio adds
 latency without showing anything new).
 
-A worked 64-call run of 16 tools over 114 genes, with the 58 gaps it
+A worked 64-call run of 16 tools over 114 genes, with the 51 gaps it
 logged (39 since closed), is in [`arf_family/PAGE.md`](arf_family/PAGE.md).
 
 ## Transcripts

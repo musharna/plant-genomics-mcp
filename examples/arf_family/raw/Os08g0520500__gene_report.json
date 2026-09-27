@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-27T00:32:50Z",
- "elapsed_s": 0.7902745390019845,
+ "started_at": "2026-09-27T06:34:59Z",
+ "elapsed_s": 4.188632414996391,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.4212013040087186,
+   "elapsed_s": 3.963036524975905,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.00043976400047540665,
+   "elapsed_s": 0.0007923619996290654,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 8.892299956642091e-05,
+   "elapsed_s": 9.44889907259494e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "error",
-   "elapsed_s": 6.548900273628533e-05,
+   "elapsed_s": 4.135601921007037e-05,
    "result": null,
    "error": "[NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os08g0520500 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.36846810701536015,
+   "elapsed_s": 0.2248686350067146,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0003698459768202156,
+   "elapsed_s": 0.00018195100710727274,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0003602570213843137,
+   "elapsed_s": 0.00015400900156237185,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0006548909877892584,
+   "elapsed_s": 0.0002354180032853037,
    "result": null,
    "error": null
   }
@@ -88,19 +88,19 @@
   "markdown": "# OsARF7b (UniProt: ARF21) \u2014 `Os08g0520500`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 8:25,870,837\u201325,871,444 (-) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 21**\nARFU_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 1116 aa\nUniProt: [Q6YZW0](https://www.uniprot.org/uniprotkb/Q6YZW0)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [131\u2013221]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [296\u2013366]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [129\u2013233]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [993\u20131087]\n- **B3 DNA binding domain** (domain, interpro) [131\u2013234]\n- **Auxin response factor domain** (domain, interpro) [281\u2013364]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [122\u2013261]\n- **AUX/IAA domain** (domain, interpro) [990\u20131084]\n- **Auxin response factor** (family, interpro) [21\u20131087]\n- **PB1-like domain** (domain, interpro) [998\u20131082]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [NotFoundError] KEGG bridge (Ensembl Plants /xrefs): [NotFoundError] KEGG: no Entrez Gene ID for Os08g0520500 (oryza_sativa) \u2014 Ensembl Plants /xrefs returned 1 cross-ref, none from EntrezGene_\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| C7J1U6_ORYSJ | 0.849 |\n| Q0JCJ0_ORYSJ | 0.677 |\n| PES | 0.67 |\n| BOP1 | 0.624 |\n| WDR12 | 0.617 |\n| Q651Y0_ORYSJ | 0.61 |\n| Q2QWN0_ORYSJ | 0.61 |\n| Q5JNF8_ORYSJ | 0.61 |\n| Q0D724_ORYSJ | 0.61 |\n| A0A0P0V2D3 | 0.558 |\n\n## Cross-references\n- Expression Atlas: Os08g0520500\n\n## Literature\n1 hits total; showing top 1.\n- **Gene Expression Profiles Deciphering the Pathways of Coronatine Alleviating Water Stress in Rice (<i>Oryza sativa</i> L.) Cultivar Nipponbare (Japonica)** \u2014 Gao W, Yu C, Ai L, Zhou Y, Duan L, Duan L. (PMID:31126161; doi:10.3390/ijms20102543)\n",
   "sections": {
    "annotation": {
-    "strand": -1,
-    "seq_region_name": "8",
-    "id": "Os08g0520500",
     "biotype": "protein_coding",
-    "end": 25871444,
-    "db_type": "core",
-    "display_name": "OsARF7b",
-    "source": "RAP2022-09-01",
-    "start": 25870837,
-    "logic_name": "rapdb_genes",
     "canonical_transcript": "Os08t0520500-01",
-    "assembly_name": "IRGSP-1.0",
+    "logic_name": "rapdb_genes",
+    "display_name": "OsARF7b",
+    "strand": -1,
+    "end": 25871444,
     "object_type": "Gene",
+    "start": 25870837,
+    "assembly_name": "IRGSP-1.0",
+    "id": "Os08g0520500",
+    "source": "RAP2022-09-01",
+    "seq_region_name": "8",
+    "db_type": "core",
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -126,15 +126,15 @@
     "count": 1,
     "xrefs": [
      {
+      "primary_id": "Os08g0520500",
+      "synonyms": [],
       "info_type": "DIRECT",
       "info_text": "",
-      "synonyms": [],
-      "display_id": "Os08g0520500",
-      "description": null,
-      "version": "0",
-      "db_display_name": "Expression Atlas",
       "dbname": "ArrayExpress",
-      "primary_id": "Os08g0520500"
+      "display_id": "Os08g0520500",
+      "db_display_name": "Expression Atlas",
+      "description": null,
+      "version": "0"
      }
     ],
     "by_db": {
@@ -254,7 +254,7 @@
     "returned": 1,
     "truncated": false,
     "next_cursor": null,
-    "abstracts_included": true,
+    "abstracts_included": false,
     "hits": [
      {
       "id": "31126161",
@@ -270,7 +270,7 @@
       "citedByCount": 4,
       "isOpenAccess": true,
       "hasPDF": true,
-      "abstractText": "Coronatine (COR) is a structural and functional analog of methyl jasmonic acid (MeJA), which can alleviate stress on plant. We studied the effects of COR on the drought stress of rice (<i>Oryza sativa</i> L.). Pre-treatment with COR significantly increased the biomass, relative water and proline content, and DPPH (1,1-diphenyl-2-picrylhydrazyl)-radical scavenging activity, decreased the electrolyte leakage and MDA (Malondialdehyde) content in order to maintain the stability of cell membrane. Meanwhile, we determined how COR alleviates water stress by Nipponbare gene expression profiles and cDNA microarray analyses. Seedlings were treated with 0.1 \u03bcmol L<sup>-1</sup> COR at the three leafed stage for 12 h, followed with 17.5% polyethylene glycol (PEG). Whole genome transcript analysis was determined by employing the Rice Gene Chip (Affymetrix), a total of 870 probe sets were identified to be up or downregulated due to COR treatment under drought stress. Meanwhile, the real-time quantitative PCR (RT-qPCR) method was used to verify some genes; it indicated that there was a good agreement between the microarray data and RT-qPCR results. Our data showed that the differentially expressed genes were involved in stress response, signal transduction, metabolism and tissue structure development. Some important genes response to stress were induced by COR, which may enhance the expression of functional genes implicated in many kinds of metabolism, and play a role in defense response of rice seedling to drought stress. This study will aid in the analysis of the expressed gene induced by COR.",
+      "abstractText": null,
       "web_url": "https://europepmc.org/article/PMC/PMC6567010"
      }
     ],
@@ -298,104 +298,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20250130",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19220"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19850"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G34310"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G34390"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G77850"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G33860"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G46530"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT3G61830"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT4G23980"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G37020"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G60450"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN000774836"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q6YZW0",
@@ -411,32 +314,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR003340"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q6YZW0",
@@ -452,24 +330,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q6YZW0",
@@ -485,48 +346,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20250130",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19850"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G59750"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G20730"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G62000"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN000774836"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q6YZW0",
@@ -542,24 +362,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q6YZW0",
@@ -575,88 +378,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260529",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19220"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G30330"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G59750"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G33860"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT4G30080"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G20730"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G62000"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN000774836"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "K4DF01"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "Q2LAJ3"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q6YZW0",
@@ -672,24 +394,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB-SubCell",
-          "id": "SL-0191"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      }
     ],
     "by_aspect": {
@@ -721,6 +426,7 @@
      ]
     },
     "by_aspect_deduped_on": "goId",
+    "with_from_included": false,
     "upstream_version": null
    },
    "domains": {

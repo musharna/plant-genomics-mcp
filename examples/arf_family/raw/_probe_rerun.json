@@ -1,6 +1,6 @@
 {
- "server_version": "1.27.0",
- "server_commit": "e43b45a",
+ "server_version": "1.28.0",
+ "server_commit": "12a5ec6",
  "tool_count": 56,
  "tools": {
   "string_interactions": {
@@ -1690,7 +1690,7 @@
     "openWorldHint": true,
     "readOnlyHint": true
    },
-   "description": "Fetch AraGWAS genome-wide association study hits for an Arabidopsis locus (aragwas.1001genomes.org; free, no key). Returns each significant SNP association overlapping the gene with its score (-log10 p), minor-allele frequency, the SNP's predicted molecular effect (impact, amino-acid change), and the phenotype/study it came from, including the study's own significance thresholds on the score's scale (study.thresholds), which the over_bonferroni / over_fdr / over_permutation flags are taken against. association_count is the true total even when page-capped. ARABIDOPSIS-ONLY \u2014 any other organism raises OrganismNotSupported. Defaults to arabidopsis_thaliana.",
+   "description": "Fetch AraGWAS genome-wide association study hits for an Arabidopsis locus (aragwas.1001genomes.org; free, no key). Returns each significant SNP association overlapping the gene with its score (-log10 p), minor-allele frequency, the SNP's predicted molecular effect (impact, amino-acid change), and the phenotype/study it came from, including the study's own significance thresholds on the score's scale (study.thresholds), which the over_bonferroni / over_fdr / over_permutation flags are taken against. Rows come strongest first, 25 per answer by default (limit, up to 100); next_cursor resumes at the first row not returned. association_count is the true total even when page-capped. ARABIDOPSIS-ONLY \u2014 any other organism raises OrganismNotSupported. Defaults to arabidopsis_thaliana.",
    "inputSchema": {
     "properties": {
      "locus": {
@@ -1704,6 +1704,13 @@
       ],
       "description": "Arabidopsis only (the 1001 Genomes panel is A. thaliana)",
       "default": "arabidopsis_thaliana"
+     },
+     "limit": {
+      "type": "integer",
+      "description": "Max associations, strongest first (1\u2013100, default 25)",
+      "default": 25,
+      "minimum": 1,
+      "maximum": 100
      },
      "cursor": {
       "type": "string",
@@ -2291,6 +2298,12 @@
       "description": "The key by_aspect collapses annotations[] on: a dedup, not a truncation",
       "title": "By Aspect Deduped On",
       "type": "string"
+     },
+     "with_from_included": {
+      "default": true,
+      "description": "False when withFrom was not asked for (gene_report's GO section), in which case every withFrom is null because it was left out \u2014 not because the annotation has no partner or source cross-ref.",
+      "title": "With From Included",
+      "type": "boolean"
      },
      "upstream_version": {
       "anyOf": [

@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-27T00:35:09Z",
- "elapsed_s": 2.351025195006514,
+ "started_at": "2026-09-27T06:37:22Z",
+ "elapsed_s": 0.849848120007664,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.5806099189794622,
+   "elapsed_s": 0.4950943379953969,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.00047936299233697355,
+   "elapsed_s": 0.000301093008602038,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 1.7025123369821813,
+   "elapsed_s": 0.15875712601700798,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 5.106098251417279e-05,
+   "elapsed_s": 1.887700636871159e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.2817673950048629,
+   "elapsed_s": 0.30007569599547423,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0005305520026013255,
+   "elapsed_s": 0.00021366600412875414,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00045344600221142173,
+   "elapsed_s": 0.00018845300655812025,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0005492600030265749,
+   "elapsed_s": 0.00017363502411171794,
    "result": null,
    "error": null
   }
@@ -89,17 +89,17 @@
   "sections": {
    "annotation": {
     "logic_name": "iwgsc_high_conf",
-    "biotype": "protein_coding",
-    "end": 562321517,
-    "canonical_transcript": "TraesCS1A02G396400.1",
     "start": 562316367,
-    "assembly_name": "IWGSC",
+    "canonical_transcript": "TraesCS1A02G396400.1",
     "seq_region_name": "1A",
+    "object_type": "Gene",
+    "end": 562321517,
+    "id": "TraesCS1A02G396400",
+    "biotype": "protein_coding",
+    "assembly_name": "IWGSC",
+    "strand": 1,
     "db_type": "core",
     "source": "IWGSC",
-    "object_type": "Gene",
-    "strand": 1,
-    "id": "TraesCS1A02G396400",
     "organism": "triticum_aestivum",
     "upstream_version": null
    },
@@ -125,92 +125,92 @@
     "count": 8,
     "xrefs": [
      {
+      "info_text": "",
+      "display_id": "LOC543357",
+      "synonyms": [],
       "description": "auxin response factor 15",
-      "primary_id": "543357",
       "info_type": "DEPENDENT",
       "version": "0",
-      "display_id": "LOC543357",
+      "db_display_name": "WikiGene",
       "dbname": "WikiGene",
-      "synonyms": [],
-      "info_text": "",
-      "db_display_name": "WikiGene"
+      "primary_id": "543357"
      },
      {
-      "display_id": "LOC543357",
-      "version": null,
-      "info_type": "DEPENDENT",
-      "primary_id": "A0A3B5Y6K9",
-      "description": null,
-      "db_display_name": "UniProtKB Gene Name",
       "info_text": "",
+      "description": null,
       "synonyms": [],
+      "display_id": "LOC543357",
+      "info_type": "DEPENDENT",
+      "db_display_name": "UniProtKB Gene Name",
+      "version": null,
+      "primary_id": "A0A3B5Y6K9",
       "dbname": "Uniprot_gn"
      },
      {
-      "display_id": "TraesCS1A02G396400",
+      "primary_id": "TraesCS1A02G396400",
+      "dbname": "KNETMINER_WHEAT",
+      "db_display_name": "KNETMINER_WHEAT",
       "version": "0",
       "info_type": "DEPENDENT",
-      "primary_id": "TraesCS1A02G396400",
       "description": null,
-      "db_display_name": "KNETMINER_WHEAT",
-      "info_text": "",
+      "display_id": "TraesCS1A02G396400",
       "synonyms": [],
-      "dbname": "KNETMINER_WHEAT"
+      "info_text": ""
      },
      {
-      "version": "0",
+      "info_text": "",
+      "synonyms": [],
       "display_id": "TraesCS1A02G396400",
-      "primary_id": "TraesCS1A02G396400",
       "description": null,
       "info_type": "DEPENDENT",
-      "info_text": "",
+      "version": "0",
       "db_display_name": "Wheat Expression",
       "dbname": "WHEATEXP_GENE",
-      "synonyms": []
+      "primary_id": "TraesCS1A02G396400"
      },
      {
-      "version": "0",
-      "display_id": "R-TAE-5608208",
-      "description": "ARF inactivation by AUX/IAA",
-      "primary_id": "R-TAE-5608208",
-      "info_type": "DIRECT",
-      "info_text": "Generated via direct",
       "db_display_name": "Plant Reactome Reaction ID",
+      "version": "0",
+      "primary_id": "R-TAE-5608208",
       "dbname": "Plant_Reactome_Reaction",
+      "info_type": "DIRECT",
+      "info_text": "Generated via direct",
+      "description": "ARF inactivation by AUX/IAA",
+      "display_id": "R-TAE-5608208",
       "synonyms": []
      },
      {
-      "dbname": "Plant_Reactome_Pathway",
-      "synonyms": [],
-      "info_text": "Generated via direct",
-      "db_display_name": "Plant Reactome Pathway ID",
-      "description": "Auxin signalling",
       "primary_id": "R-TAE-5608118",
-      "info_type": "DIRECT",
+      "dbname": "Plant_Reactome_Pathway",
+      "db_display_name": "Plant Reactome Pathway ID",
       "version": "0",
-      "display_id": "R-TAE-5608118"
+      "info_type": "DIRECT",
+      "description": "Auxin signalling",
+      "display_id": "R-TAE-5608118",
+      "synonyms": [],
+      "info_text": "Generated via direct"
      },
      {
-      "version": "0",
-      "display_id": "LOC543357",
-      "description": "auxin response factor 15",
-      "primary_id": "543357",
       "info_type": "DEPENDENT",
       "info_text": "",
+      "synonyms": [],
+      "display_id": "LOC543357",
+      "description": "auxin response factor 15",
+      "version": "0",
       "db_display_name": "NCBI gene (formerly Entrezgene)",
       "dbname": "EntrezGene",
-      "synonyms": []
+      "primary_id": "543357"
      },
      {
-      "synonyms": [],
       "dbname": "ArrayExpress",
-      "db_display_name": "Expression Atlas",
-      "info_text": "",
-      "info_type": "DIRECT",
       "primary_id": "TraesCS1A02G396400",
-      "description": null,
+      "version": "0",
+      "db_display_name": "Expression Atlas",
       "display_id": "TraesCS1A02G396400",
-      "version": "0"
+      "synonyms": [],
+      "description": null,
+      "info_text": "",
+      "info_type": "DIRECT"
      }
     ],
     "by_db": {
@@ -351,7 +351,7 @@
     "returned": 1,
     "truncated": false,
     "next_cursor": null,
-    "abstracts_included": true,
+    "abstracts_included": false,
     "hits": [
      {
       "id": "36919240",
@@ -367,7 +367,7 @@
       "citedByCount": 6,
       "isOpenAccess": true,
       "hasPDF": true,
-      "abstractText": "Awns are important morphological markers for wheat and exert a strong physiological effect on wheat yield. The awn elongation suppressor B1 has recently been cloned through association and linkage analysis in wheat. However, the mechanism of awn inhibition centered around B1 remains to be clarified. Here, we identified an allelic variant in the coding region of B1 through analysis of re-sequencing data; this variant causes an amino acid substitution and premature termination, resulting in a long-awn phenotype. Transcriptome analysis indicated that B1 inhibited awn elongation by impeding cytokinin- and auxin-promoted cell division. Moreover, B1 directly repressed the expression of TaRAE2 and TaLks2, whose orthologs\u00a0have been reported to promote awn development in rice or barley. More importantly, we found that TaTCP4 and TaTCP10 synergistically inhibited the expression of B1, and a G-to-A mutation in the B1 promoter attenuated its inhibition by TaTCP4/10. Taken together, our results reveal novel mechanisms of awn development and provide genetic resources for trait improvement in wheat.",
+      "abstractText": null,
       "web_url": "https://europepmc.org/article/PMC/PMC10363512"
      }
     ],
@@ -395,104 +395,7 @@
       "taxonId": 4565,
       "taxonName": "Triticum aestivum",
       "date": "20250130",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19220"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19850"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G34310"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G34390"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G77850"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G33860"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G46530"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT3G61830"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT4G23980"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G37020"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G60450"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN000774836"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:A0A3B5Y6K9",
@@ -508,40 +411,7 @@
       "taxonId": 4565,
       "taxonName": "Triticum aestivum",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR003340"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniRule",
-          "id": "UR000399996"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:A0A3B5Y6K9",
@@ -557,16 +427,7 @@
       "taxonId": 4565,
       "taxonName": "Triticum aestivum",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniRule",
-          "id": "UR000399996"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:A0A3B5Y6K9",
@@ -582,48 +443,7 @@
       "taxonId": 4565,
       "taxonName": "Triticum aestivum",
       "date": "20250130",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19850"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G59750"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G20730"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G62000"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN000774836"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:A0A3B5Y6K9",
@@ -639,32 +459,7 @@
       "taxonId": 4565,
       "taxonName": "Triticum aestivum",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniRule",
-          "id": "UR000399996"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:A0A3B5Y6K9",
@@ -680,24 +475,7 @@
       "taxonId": 4565,
       "taxonName": "Triticum aestivum",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:A0A3B5Y6K9",
@@ -713,88 +491,7 @@
       "taxonId": 4565,
       "taxonName": "Triticum aestivum",
       "date": "20260529",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19220"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G30330"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G59750"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G33860"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT4G30080"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G20730"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G62000"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN000774836"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "K4DF01"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "Q2LAJ3"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:A0A3B5Y6K9",
@@ -810,32 +507,7 @@
       "taxonId": 4565,
       "taxonName": "Triticum aestivum",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB-SubCell",
-          "id": "SL-0191"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniRule",
-          "id": "UR000399996"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      }
     ],
     "by_aspect": {
@@ -871,6 +543,7 @@
      ]
     },
     "by_aspect_deduped_on": "goId",
+    "with_from_included": false,
     "upstream_version": null
    },
    "domains": {

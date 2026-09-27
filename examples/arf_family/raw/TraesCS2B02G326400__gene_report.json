@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-27T00:35:11Z",
- "elapsed_s": 2.0072398940101266,
+ "started_at": "2026-09-27T06:37:24Z",
+ "elapsed_s": 0.7165558990091085,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 1.802270537998993,
+   "elapsed_s": 0.46663536797859706,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0005732580029871315,
+   "elapsed_s": 0.0006204729725141078,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.11553951201494783,
+   "elapsed_s": 0.1607297180162277,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 1.6834994312375784e-05,
+   "elapsed_s": 2.1124986233189702e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "error",
-   "elapsed_s": 0.20432348200120032,
+   "elapsed_s": 0.2491849500220269,
    "result": null,
    "error": "[NotFoundError] STRING has no protein for TraesCS2B02G326400 in triticum_aestivum (queried as A0A3B6C7I4): STRING /api/json/interaction_partners \u2192 HTTP 404: [{ \"Error\" : \"not found\", \"ErrorMessage\" : \"<p>Sorry, STRING did not find a protein called 'A0A3B6C7I4' in the taxon '4565'.</p><p>Generally, STRING understands a number of different names/symbols for"
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.00012827300815843046,
+   "elapsed_s": 0.004219125024974346,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 9.046698687598109e-05,
+   "elapsed_s": 0.0001350539969280362,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0002267560048494488,
+   "elapsed_s": 0.00026942597469314933,
    "result": null,
    "error": null
   }
@@ -88,18 +88,18 @@
   "markdown": "# LOC123045540 \u2014 `TraesCS2B02G326400`\n\n*Triticum aestivum* \u00b7 protein_coding \u00b7 2B:466,189,430\u2013466,195,033 (-) \u00b7 IWGSC\n\n## Protein\n**Auxin response factor**\nA0A3B6C7I4_WHEAT \u00b7 UniProtKB unreviewed (TrEMBL) \u00b7 650 aa\nUniProt: [A0A3B6C7I4](https://www.uniprot.org/uniprotkb/A0A3B6C7I4)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [122\u2013220]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [283\u2013358]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [121\u2013222]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [523\u2013617]\n- **B3 DNA binding domain** (domain, interpro) [122\u2013222]\n- **Auxin response factor domain** (domain, interpro) [269\u2013354]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [111\u2013249]\n- **AUX/IAA domain** (domain, interpro) [513\u2013619]\n- **Auxin response factor** (family, interpro) [18\u2013616]\n- **PB1-like domain** (domain, interpro) [528\u2013621]\n\n## GO annotations\n**Molecular Function**\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006351] DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']_\n\n## Interaction partners (STRING, top 10)\n_Unavailable \u2014 [NotFoundError] STRING has no protein for TraesCS2B02G326400 in triticum_aestivum (queried as A0A3B6C7I4): STRING /api/json/interaction_partners \u2192 HTTP 404: [{ \"Error\" : \"not found\", \"ErrorMessage\" : \"<p>Sorry, STRING did not find a protein called 'A0A3B6C7I4' in the taxon '4565'.</p><p>Generally, STRING understands a number of different names/symbols for_\n\n## Cross-references\n- WikiGene: 123045540\n- KNETMINER_WHEAT: TraesCS2B02G326400\n- Wheat Expression: TraesCS2B02G326400\n- Plant Reactome Reaction ID: R-TAE-5608208\n- Plant Reactome Pathway ID: R-TAE-5608118\n- NCBI gene (formerly Entrezgene): 123045540\n- Expression Atlas: TraesCS2B02G326400\n\n## Literature\n1 hits total; showing top 1.\n- **Identification of genomic regions of wheat associated with grain Fe and Zn content under drought and heat stress using genome-wide association study** \u2014 Devate NB, Krishna H, Sunilkumar VP, Manjunath KK, Mishra CN, Jain N, Singh GP, Singh PK. (PMID:36338980; doi:10.3389/fgene.2022.1034947)\n",
   "sections": {
    "annotation": {
+    "assembly_name": "IWGSC",
+    "object_type": "Gene",
+    "canonical_transcript": "TraesCS2B02G326400.1",
+    "start": 466189430,
+    "logic_name": "iwgsc_high_conf",
+    "source": "IWGSC",
+    "end": 466195033,
+    "biotype": "protein_coding",
     "id": "TraesCS2B02G326400",
     "db_type": "core",
-    "logic_name": "iwgsc_high_conf",
-    "assembly_name": "IWGSC",
     "strand": -1,
-    "source": "IWGSC",
     "seq_region_name": "2B",
-    "biotype": "protein_coding",
-    "start": 466189430,
-    "end": 466195033,
-    "canonical_transcript": "TraesCS2B02G326400.1",
-    "object_type": "Gene",
     "organism": "triticum_aestivum",
     "upstream_version": null
    },
@@ -125,81 +125,81 @@
     "count": 7,
     "xrefs": [
      {
-      "info_text": "",
-      "dbname": "WikiGene",
-      "info_type": "DEPENDENT",
-      "display_id": "LOC123045540",
-      "description": "auxin response factor 9",
-      "db_display_name": "WikiGene",
-      "version": "0",
       "primary_id": "123045540",
-      "synonyms": []
+      "synonyms": [],
+      "display_id": "LOC123045540",
+      "info_type": "DEPENDENT",
+      "dbname": "WikiGene",
+      "info_text": "",
+      "version": "0",
+      "db_display_name": "WikiGene",
+      "description": "auxin response factor 9"
      },
      {
-      "db_display_name": "KNETMINER_WHEAT",
-      "description": null,
       "version": "0",
-      "info_type": "DEPENDENT",
-      "info_text": "",
-      "dbname": "KNETMINER_WHEAT",
+      "description": null,
+      "db_display_name": "KNETMINER_WHEAT",
       "display_id": "TraesCS2B02G326400",
+      "dbname": "KNETMINER_WHEAT",
+      "info_text": "",
+      "info_type": "DEPENDENT",
       "synonyms": [],
       "primary_id": "TraesCS2B02G326400"
      },
      {
-      "info_type": "DEPENDENT",
-      "dbname": "WHEATEXP_GENE",
-      "info_text": "",
-      "display_id": "TraesCS2B02G326400",
-      "db_display_name": "Wheat Expression",
-      "description": null,
       "version": "0",
-      "primary_id": "TraesCS2B02G326400",
-      "synonyms": []
+      "description": null,
+      "db_display_name": "Wheat Expression",
+      "display_id": "TraesCS2B02G326400",
+      "info_text": "",
+      "dbname": "WHEATEXP_GENE",
+      "info_type": "DEPENDENT",
+      "synonyms": [],
+      "primary_id": "TraesCS2B02G326400"
      },
      {
       "synonyms": [],
       "primary_id": "R-TAE-5608208",
       "version": "0",
-      "db_display_name": "Plant Reactome Reaction ID",
       "description": "ARF inactivation by AUX/IAA",
+      "db_display_name": "Plant Reactome Reaction ID",
       "display_id": "R-TAE-5608208",
-      "info_type": "DIRECT",
       "dbname": "Plant_Reactome_Reaction",
-      "info_text": "Generated via direct"
+      "info_text": "Generated via direct",
+      "info_type": "DIRECT"
      },
      {
-      "version": "0",
       "db_display_name": "Plant Reactome Pathway ID",
       "description": "Auxin signalling",
-      "display_id": "R-TAE-5608118",
+      "version": "0",
       "info_type": "DIRECT",
-      "info_text": "Generated via direct",
       "dbname": "Plant_Reactome_Pathway",
+      "info_text": "Generated via direct",
+      "display_id": "R-TAE-5608118",
       "synonyms": [],
       "primary_id": "R-TAE-5608118"
      },
      {
-      "primary_id": "123045540",
-      "synonyms": [],
-      "dbname": "EntrezGene",
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "display_id": "LOC123045540",
       "description": "auxin response factor 9",
       "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "version": "0"
+      "version": "0",
+      "info_text": "",
+      "dbname": "EntrezGene",
+      "info_type": "DEPENDENT",
+      "display_id": "LOC123045540",
+      "synonyms": [],
+      "primary_id": "123045540"
      },
      {
-      "display_id": "TraesCS2B02G326400",
-      "info_type": "DIRECT",
-      "dbname": "ArrayExpress",
-      "info_text": "",
-      "version": "0",
-      "db_display_name": "Expression Atlas",
-      "description": null,
       "primary_id": "TraesCS2B02G326400",
-      "synonyms": []
+      "synonyms": [],
+      "info_text": "",
+      "dbname": "ArrayExpress",
+      "info_type": "DIRECT",
+      "display_id": "TraesCS2B02G326400",
+      "description": null,
+      "db_display_name": "Expression Atlas",
+      "version": "0"
      }
     ],
     "by_db": {
@@ -237,7 +237,7 @@
     "returned": 1,
     "truncated": false,
     "next_cursor": null,
-    "abstracts_included": true,
+    "abstracts_included": false,
     "hits": [
      {
       "id": "36338980",
@@ -253,7 +253,7 @@
       "citedByCount": 11,
       "isOpenAccess": true,
       "hasPDF": true,
-      "abstractText": "Wheat is the staple food crop of global importance for its grain nutrient quality. Grain iron and zinc content of the wheat grain is an important quantitatively inherited trait that is influenced by the environmental factors such as drought and heat stress. Phenotypic evaluation of 295 advanced breeding lines from the wheat stress breeding program of IARI was carried out under timely sown irrigated (IR), restricted irrigated, and late-sown conditions at New Delhi during the cropping season of 2020-21, and grain iron (GFeC) and zinc (GZnC) contents were estimated from both control and treatments. A statistically significant increase in GFeC and GZnC was observed under stress conditions compared to that of the control. Genotyping was carried out with the SNPs from the 35K Axiom Breeder's array, and marker-trait association was identified by GWAS analysis. Of the 23 MTAs identified, seven were linked with GFeC and sixteen were linked with GZnC. <i>In silico</i> analysis revealed a few important transcripts involved in various plant metabolism, growth, and development activities such as <i>auxin response factor</i>, <i>root UVB sensitive proteins</i>, <i>potassium transporter</i>, <i>glycosyl transferase</i>, <i>COBRA</i>, and <i>F-box-like domain.</i> The identified MTAs can be used for molecular breeding after validation and also for rapid development of micronutrient-rich varieties of wheat to mitigate hidden hunger.",
+      "abstractText": null,
       "web_url": "https://europepmc.org/article/PMC/PMC9634069"
      }
     ],
@@ -281,40 +281,7 @@
       "taxonId": 4565,
       "taxonName": "Triticum aestivum",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR003340"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniRule",
-          "id": "UR000399996"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:A0A3B6C7I4",
@@ -330,16 +297,7 @@
       "taxonId": 4565,
       "taxonName": "Triticum aestivum",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniRule",
-          "id": "UR000399996"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:A0A3B6C7I4",
@@ -355,32 +313,7 @@
       "taxonId": 4565,
       "taxonName": "Triticum aestivum",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniRule",
-          "id": "UR000399996"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:A0A3B6C7I4",
@@ -396,24 +329,7 @@
       "taxonId": 4565,
       "taxonName": "Triticum aestivum",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:A0A3B6C7I4",
@@ -429,32 +345,7 @@
       "taxonId": 4565,
       "taxonName": "Triticum aestivum",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB-SubCell",
-          "id": "SL-0191"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniRule",
-          "id": "UR000399996"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      }
     ],
     "by_aspect": {
@@ -486,6 +377,7 @@
      ]
     },
     "by_aspect_deduped_on": "goId",
+    "with_from_included": false,
     "upstream_version": null
    },
    "domains": {
