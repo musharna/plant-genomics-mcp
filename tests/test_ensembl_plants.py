@@ -49,7 +49,7 @@ async def test_lookup_locus_at1g01010_returns_nac001(httpx_mock: HTTPXMock) -> N
 async def test_lookup_locus_default_species_is_arabidopsis(httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         url="https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0",
-        json={"id": "AT1G01010", "display_name": "NAC001"},
+        json={"id": "AT1G01010", "display_name": "NAC001", "species": "arabidopsis_thaliana"},
     )
     async with httpx.AsyncClient() as client:
         result = await ensembl_plants.lookup_locus(client, "AT1G01010")
@@ -65,7 +65,7 @@ async def test_lookup_locus_retries_on_429_then_succeeds(httpx_mock: HTTPXMock) 
     )
     httpx_mock.add_response(
         url="https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0",
-        json={"id": "AT1G01010", "display_name": "NAC001"},
+        json={"id": "AT1G01010", "display_name": "NAC001", "species": "arabidopsis_thaliana"},
     )
     async with httpx.AsyncClient() as client:
         result = await ensembl_plants.lookup_locus(client, "AT1G01010")
@@ -98,7 +98,7 @@ async def test_retry_after_capped_at_60s(
     )
     httpx_mock.add_response(
         url="https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0",
-        json={"id": "AT1G01010", "display_name": "NAC001"},
+        json={"id": "AT1G01010", "display_name": "NAC001", "species": "arabidopsis_thaliana"},
     )
     async with httpx.AsyncClient() as client:
         result = await ensembl_plants.lookup_locus(client, "AT1G01010")
@@ -218,7 +218,7 @@ def test_lookup_locus_accepts_organism_alias(httpx_mock: HTTPXMock) -> None:
     """The new organism= param accepts common names + taxids."""
     httpx_mock.add_response(
         url="https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0",
-        json={"id": "AT1G01010", "biotype": "protein_coding"},
+        json={"id": "AT1G01010", "biotype": "protein_coding", "species": "arabidopsis_thaliana"},
     )
     import asyncio
 

@@ -192,7 +192,7 @@ async def test_ensembl_get_caches_second_call(httpx_mock: HTTPXMock) -> None:
     """
     httpx_mock.add_response(
         url="https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0",
-        json={"id": "AT1G01010", "display_name": "NAC001"},
+        json={"id": "AT1G01010", "display_name": "NAC001", "species": "arabidopsis_thaliana"},
     )
     async with httpx.AsyncClient() as client:
         a = await ensembl_plants.lookup_locus(client, "AT1G01010")
@@ -236,7 +236,7 @@ async def test_disabled_cache_forces_second_http_call(
     """
     monkeypatch.setenv("PLANT_GENOMICS_MCP_CACHE_DISABLED", "1")
     url = "https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0"
-    payload = {"id": "AT1G01010", "display_name": "NAC001"}
+    payload = {"id": "AT1G01010", "display_name": "NAC001", "species": "arabidopsis_thaliana"}
     httpx_mock.add_response(url=url, json=payload)
     httpx_mock.add_response(url=url, json=payload)
     async with httpx.AsyncClient() as client:

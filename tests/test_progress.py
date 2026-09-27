@@ -93,7 +93,7 @@ async def test_reporter_step_param_advances_counter() -> None:
 async def test_ensembl_429_then_200_emits_retry_notification(httpx_mock: HTTPXMock) -> None:
     url = "https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0"
     httpx_mock.add_response(url=url, status_code=429, headers={"Retry-After": "0"})
-    httpx_mock.add_response(url=url, json={"id": "AT1G01010"})
+    httpx_mock.add_response(url=url, json={"id": "AT1G01010", "species": "arabidopsis_thaliana"})
     reporter, log = _recording_reporter()
     token = progress.set_reporter(reporter)
     try:
@@ -193,7 +193,7 @@ async def test_retry_with_no_reporter_does_not_raise(httpx_mock: HTTPXMock) -> N
     """The no-reporter branch is the common case; it must not blow up."""
     url = "https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0"
     httpx_mock.add_response(url=url, status_code=429, headers={"Retry-After": "0"})
-    httpx_mock.add_response(url=url, json={"id": "AT1G01010"})
+    httpx_mock.add_response(url=url, json={"id": "AT1G01010", "species": "arabidopsis_thaliana"})
     assert progress.get_reporter() is None
     async with httpx.AsyncClient() as client:
         out: Any = await ensembl_plants.lookup_locus(client, "AT1G01010")
