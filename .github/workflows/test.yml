@@ -77,4 +77,18 @@ jobs:
       - name: Live ARF checks (InterPro, PANTHER)
         env:
           PLANT_GENOMICS_MCP_LIVE: "1"
-        run: pytest -q tests/test_verify_genes.py tests/test_arf_mcp_client.py
+          # An upstream outage skips the check (tests/_live_outage.py) and
+          # writes why here, for the step below to raise as a warning.
+          LIVE_SMOKE_OUTAGE_REPORT: ${{ runner.temp }}/live-smoke-outage.txt
+        run: pytest -q -rs tests/test_verify_genes.py tests/test_arf_mcp_client.py
+      - name: Warn on an upstream outage
+        if: always()
+        env:
+          REPORT: ${{ runner.temp }}/live-smoke-outage.txt
+        run: |
+          if [ -s "$REPORT" ]; then
+            while IFS= read -r line; do
+              echo "::warning title=live-smoke skipped: upstream outage::${line//%/%25}"
+            done < "$REPORT"
+            { echo "### live-smoke skipped: upstream outage"; cat "$REPORT"; } >> "$GITHUB_STEP_SUMMARY"
+          fi

@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- **`live-smoke` tells an upstream outage from a regression.** Its 4
+  failures in 60 runs were all `[UpstreamUnavailableError]` (PANTHER
+  timing out 3 times, UniProt answering 503 once), each needing a manual
+  re-run. When every failure in the live `verify_genes` check is that class
+  and a direct request to the failing tool's backend fails too, the check
+  is skipped and the job raises a warning naming the backend. If the
+  backend answers directly, or anything else failed, it stays red. The
+  probe URLs are written in the test, not imported from `src/`, so a
+  server regression cannot also break the probe
+  (`tests/_live_outage.py`); `verify_genes.verify_flags` keeps each failed
+  call's tool and error class as fields.
+
 - **`examples/arf_family/` re-run at `1.27.0` (`e43b45a`).** Same 64 calls
   over the same 114 genes, against the release; every call's ok, error and
   expected counts match the `1.26.0` run's.

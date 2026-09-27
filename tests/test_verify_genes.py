@@ -7,7 +7,8 @@ from pathlib import Path
 import pytest
 
 from examples.arf_family.mcp_client import SERVER_CMD
-from examples.arf_family.verify_genes import GENES_TSV, ManifestError, verify
+from examples.arf_family.verify_genes import GENES_TSV, ManifestError, verify, verify_flags
+from tests._live_outage import BACKENDS, outage, probe
 
 FAKE_SERVER = Path(__file__).parent / "_fake_mcp_server.py"
 FAKE_ARF = [sys.executable, str(FAKE_SERVER), "arf"]
@@ -313,12 +314,28 @@ def test_verify_genes_over_real_stdio_passes_the_manifest_and_catches_a_planted_
     planted = _row("AT1G23490", "ARF1", "PTHR31384:SF96", "true")
     genes = _write_genes_tsv(tmp_path, [*real_rows, planted])
 
-    bad = run(verify(genes, SERVER_CMD))
+    flags = run(verify_flags(genes, SERVER_CMD))
+    bad = [(f.locus, f.symbol, f.reason) for f in flags]
 
     # The message carries every flagged row's reason, so a live failure says
     # which call failed and how, not only which loci.
     report = "\n".join(f"{locus} {symbol}: {reason}" for locus, symbol, reason in bad)
-    assert [locus for locus, _, _ in bad] == ["AT1G23490"], report
+    # An upstream outage is a skip with a CI warning, not a red run: only
+    # when every failure is one and a direct probe finds the backend down
+    # too (tests/_live_outage.py). Anything else stays a failure.
+    skip, note = outage(flags, "AT1G23490")
+    if skip is not None:
+        report_path = os.environ.get("LIVE_SMOKE_OUTAGE_REPORT")
+        if report_path:
+            with open(report_path, "a") as f:
+                f.write(skip + "\n")
+        pytest.skip(skip)
+    assert [locus for locus, _, _ in bad] == ["AT1G23490"], f"{report}\n{note}"
     # The planted row must be caught by the discriminator, not by a failed
     # call — a 404 for AT1G23490 alone would otherwise pass as "caught".
     assert "IPR010525 absent" in bad[0][2], report
+    # The probes that would rule an outage in or out answer now, when every
+    # backend just did: a probe gone stale fails here, not in an outage.
+    for tool, backends in BACKENDS.items():
+        for name, url in backends:
+            assert probe(url) is None, f"{tool}: {name} probe {url}"

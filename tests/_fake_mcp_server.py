@@ -183,8 +183,9 @@ _release_reads = 0
 # and `subfamily_id` (a single structured field). `None` for a tool means
 # that tool call fails for this locus (isError), for the "a failed call must
 # not read as absence" case. A `list` value is a legitimately-decoded,
-# ok=True non-dict payload (verify_genes.py's payload-shape defect).
-ARF_FIXTURES: dict[str, dict[str, dict | list | None]] = {
+# ok=True non-dict payload (verify_genes.py's payload-shape defect). A `str`
+# value is the error text the call fails with, verbatim.
+ARF_FIXTURES: dict[str, dict[str, dict | list | str | None]] = {
     "GOOD_ARF_PB1": {
         "interpro_domains": {
             "locus": "GOOD_ARF_PB1",
@@ -292,6 +293,14 @@ ARF_FIXTURES: dict[str, dict[str, dict | list | None]] = {
 
 
 ARF_FIXTURE_ORGANISM: dict[str, str] = {"Os01g0000100": "oryza_sativa"}
+# PANTHER's outage as CI saw it (live-smoke job 108338291560): the ARF
+# answers from InterPro, the PANTHER call fails past its retries.
+ARF_FIXTURES["PANTHER_OUTAGE"] = {
+    "interpro_domains": ARF_FIXTURES["GOOD_ARF_PB1"]["interpro_domains"],
+    "panther_family": (
+        "[UpstreamUnavailableError] PANTHER geneinfo exhausted 3 retries (ReadTimeout: )"
+    ),
+}
 # A member PANTHER does not classify: `subfamily_id` is null.
 ARF_FIXTURES["UNCLASSIFIED_ARF"] = {
     "interpro_domains": ARF_FIXTURES["GOOD_ARF_NO_PB1"]["interpro_domains"],
@@ -425,6 +434,8 @@ def main() -> None:
                     )
                 elif fixture is None:
                     _respond(req_id, result=_error_result(f"no fixture for {name}({locus!r})"))
+                elif isinstance(fixture, str):
+                    _respond(req_id, result=_error_result(fixture))
                 else:
                     _respond(req_id, result=_text_result(fixture))
             elif name == "echo":
