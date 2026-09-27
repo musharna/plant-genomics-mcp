@@ -174,9 +174,10 @@ def test_passthrough_keys_are_never_written_by_the_code_that_answers() -> None:
     def build(raw: dict[str, Any]) -> dict[str, Any]:
         out = {"biotype": raw.get("x")}
         out["strand"] = 1
-        return out
+        return {**out, **dict(source=raw.get("y"))}
 
-    assert oc.keys_written(build) == {"biotype", "strand"}  # the scanner sees writes
+    # The scanner sees each form of write it claims to.
+    assert oc.keys_written(build) == {"biotype", "strand", "source"}
 
     for tool, (producers, _, keys) in oc.PASSTHROUGH.items():
         for producer in producers:

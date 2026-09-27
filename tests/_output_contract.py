@@ -213,7 +213,13 @@ def missing_declared(
 
 
 def keys_written(fn: Callable[..., Any]) -> set[str]:
-    """String keys `fn` writes: dict-literal keys and `x["key"] = ...` targets."""
+    """String keys `fn` writes: dict-literal keys, `dict(key=...)` keywords
+    and `x["key"] = ...` targets.
+
+    A key computed at run time (`x[name] = ...`, a spread of a built dict)
+    cannot be seen here; a producer that writes one is not checkable by this
+    scan and does not belong in PASSTHROUGH.
+    """
     tree = ast.parse(textwrap.dedent(inspect.getsource(fn)))
     out: set[str] = set()
     for node in ast.walk(tree):
@@ -223,6 +229,12 @@ def keys_written(fn: Callable[..., Any]) -> set[str]:
                 for k in node.keys
                 if isinstance(k, ast.Constant) and isinstance(k.value, str)
             }
+        elif (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "dict"
+        ):
+            out |= {kw.arg for kw in node.keywords if kw.arg is not None}
         elif (
             isinstance(node, ast.Subscript)
             and isinstance(node.ctx, ast.Store)
