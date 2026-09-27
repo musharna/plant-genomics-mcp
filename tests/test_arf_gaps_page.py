@@ -25,6 +25,7 @@ input cannot be shown to discriminate:
 from __future__ import annotations
 
 import json
+import re
 
 import pytest
 
@@ -252,8 +253,22 @@ def test_prose_counts_of_open_and_closed_rows_match_the_gap_log() -> None:
         assert f"{len(hand) + len(auto)} gaps it" in text, readme
         assert f"({n_closed} since closed)" in text, readme
 
-    changelog = render_gaps.PAGE_PATH.parents[2] / "CHANGELOG.md"
-    assert f"{n_closed} of the {len(hand)} hand-logged gap rows" in changelog.read_text()
+    # CHANGELOG.md is newest first and keeps every earlier run's split, so a
+    # substring search over the whole file passes on an older entry that
+    # happens to state the same numbers. Only the newest statement counts.
+    changelog = (render_gaps.PAGE_PATH.parents[2] / "CHANGELOG.md").read_text()
+    assert _newest_changelog_split(changelog) == (n_closed, len(hand))
+
+    # Negative control, the shape of the miss: a stale newest entry above an
+    # older one that states the current split must fail.
+    # The newest entry wraps its sentence across lines, so this one does too.
+    stale = f"- {n_closed - 1} of the {len(hand)}\n  hand-logged gap rows.\n" + changelog
+    assert _newest_changelog_split(stale) == (n_closed - 1, len(hand))
+
+
+def _newest_changelog_split(text: str) -> tuple[int, int] | None:
+    match = re.search(r"(\d+)\s+of\s+the\s+(\d+)\s+hand-logged", text)
+    return (int(match[1]), int(match[2])) if match else None
 
 
 def test_main_check_exits_zero_against_the_committed_page() -> None:

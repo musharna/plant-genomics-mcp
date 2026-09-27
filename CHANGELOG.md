@@ -9,7 +9,7 @@
   `AT1G19850`), and AraGWAS's 11,596 tokens, where at `1.27.0` all 22
   Arabidopsis AraGWAS answers and 10 of 114 reports were over the cap. The
   runner's rows fall from 15 to 8, all locus-level errors; 39 of the 43
-  hand-logged rows stay closed. The figure now plots each call's largest
+  hand-logged gap rows stay closed. The figure now plots each call's largest
   answer against the 47,000-character line. `upstream_release` read all 8
   backends before and after the walk and none changed or went unread.
 
