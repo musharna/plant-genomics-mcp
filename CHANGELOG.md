@@ -2,6 +2,37 @@
 
 ## Unreleased
 
+- **`aragwas_associations` answers 25 rows by default and takes `limit`
+  (1–100) — Behaviour change.** It used to follow up to 4 upstream pages to
+  100 rows, and every Arabidopsis answer in the ARF dossier was then
+  36,000–40,000 tokens, over Claude Code's 25,000-token default cap on a
+  tool result by itself (22 of 22 loci; `count_tokens`). Rows still come
+  strongest first, one upstream request per answer, and `next_cursor`
+  resumes at the first row not returned; a cursor from an earlier call
+  still works. `limit=100` gives the old answer.
+
+- **`gene_report` leaves abstracts and GO `withFrom` out of its sections —
+  Behaviour change.** Its Markdown lists each paper's title, authors and ids
+  and each GO term with its evidence code, and never read either. With them,
+  10 of the ARF dossier's 114 reports were over Claude Code's 25,000-token
+  default cap on a tool result and 62 over its 10,000-token warning. Live,
+  the `AT1G19850` report falls from 30,253 to 21,868 tokens (`count_tokens`;
+  without abstracts alone it was 24,776). Every GO row is still fetched, as
+  the Markdown groups them before its `top_n` cap. The sections say what was
+  left out (`abstracts_included: false`, and a new `with_from_included`
+  on GO answers), and `locus_literature` and `locus_go_annotations` still
+  return both by default.
+
+- **The ARF dossier measures one answer, not one batch call on the wire.**
+  Its oversize check flagged batch calls over 200 kB on the wire, where
+  every payload travels twice (as `structuredContent` and as a JSON text
+  copy; a client reads one of the two). Each locus's answer is now measured
+  as a client reads it, against 47,000 characters (the 25,000-token cap at
+  the fewest characters per token counted, 1.88), and each call row records
+  `max_answer_chars`. A batch is the sum of the answers its caller asked
+  for; over the cap, Claude Code saves a result to a file rather than
+  dropping it.
+
 - **`live-smoke` tells an upstream outage from a regression.** Its 4
   failures in 60 runs were all `[UpstreamUnavailableError]` (PANTHER
   timing out 3 times, UniProt answering 503 once), each needing a manual

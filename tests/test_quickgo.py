@@ -249,3 +249,23 @@ async def test_both_tool_forms_ship_every_field_the_output_schema_declares(
         LocusGoAnnotations.model_validate(payload)  # extra="forbid": nothing undeclared
         assert payload["truncated"] is True and payload["upstream_version"] is None, form
     assert env["errors"] == {}  # positive control: the batch call itself succeeded
+
+
+@pytest.mark.asyncio
+async def test_with_from_can_be_left_out_and_the_payload_says_so(httpx_mock: HTTPXMock) -> None:
+    """gene_report's Markdown never reads withFrom, and on an IPI-heavy gene it
+    was about two thirds of every row (2026-09-27): the report leaves it out,
+    and a null withFrom must not read as "no interaction partner"."""
+    partner = [{"connectedXrefs": [{"db": "AGI_LocusCode", "id": "AT1G19220"}]}]
+    rows = [_ann("GO:0005515", "molecular_function", withFrom=partner)]
+    httpx_mock.add_response(url=_SEARCH_URL, json={"numberOfHits": 1, "results": rows})
+    async with httpx.AsyncClient() as client:
+        lean = await quickgo.lookup_by_uniprot(client, "Q0WV96", include_with_from=False)
+        full = await quickgo.lookup_by_uniprot(client, "Q0WV96")  # the same cached page
+    assert lean["with_from_included"] is False
+    assert [a["withFrom"] for a in lean["annotations"]] == [None]
+    # Positive control: by default withFrom is there, and leaving it out of one
+    # answer did not strip it from the cached upstream page.
+    assert full["with_from_included"] is True
+    assert [a["withFrom"] for a in full["annotations"]] == [partner]
+    assert lean["annotations"][0]["goId"] == full["annotations"][0]["goId"] == "GO:0005515"

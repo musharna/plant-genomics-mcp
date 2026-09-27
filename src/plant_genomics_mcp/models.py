@@ -394,6 +394,14 @@ class LocusGoAnnotations(BaseModel):
     by_aspect_deduped_on: Literal["goId"] = Field(
         description="The key by_aspect collapses annotations[] on: a dedup, not a truncation",
     )
+    with_from_included: bool = Field(
+        default=True,
+        description=(
+            "False when withFrom was not asked for (gene_report's GO section), in "
+            "which case every withFrom is null because it was left out — not "
+            "because the annotation has no partner or source cross-ref."
+        ),
+    )
     upstream_version: str | None = upstream_version_field(
         "QuickGO", None, current_release="quickgo"
     )

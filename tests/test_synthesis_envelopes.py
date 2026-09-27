@@ -956,8 +956,16 @@ async def test_gene_report_happy_path_calls_steps_and_result_exact(monkeypatch):
     assert recs["xr"].calls == [((CLIENT, "AT1G01010"), {"organism": "rice"})]
     assert recs["kg"].calls == [((CLIENT, "AT1G01010"), {"organism": "rice"})]
     assert recs["st"].calls == [((CLIENT, "AT1G01010"), {"limit": 3, "organism": "rice"})]
-    assert recs["lit"].calls == [((CLIENT, "AT1G01010"), {"organism": "rice"})]
-    assert recs["go"].calls == [((CLIENT, "Q0WV96"), {})]
+    # Abstracts are not asked for: the Markdown lists title, authors and ids,
+    # and with them 10 of the ARF dossier's 114 reports were over Claude Code's
+    # 25k-token cap (2026-09-27). locus_literature still returns them.
+    assert recs["lit"].calls == [
+        ((CLIENT, "AT1G01010"), {"organism": "rice", "include_abstract": False})
+    ]
+    # Every GO row is fetched (the Markdown dedups them by aspect before its
+    # cap), without withFrom, which the Markdown never reads: with abstracts
+    # gone the ARF5 report was still 24,776 tokens live, beside the 25k cap.
+    assert recs["go"].calls == [((CLIENT, "Q0WV96"), {"include_with_from": False})]
     assert recs["ip"].calls == [((CLIENT, "Q0WV96"), {})]
     d = shape(env)
     assert d["input"] == {"locus": "AT1G01010", "organism": "rice", "top_n": 3}

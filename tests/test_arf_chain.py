@@ -32,7 +32,7 @@ from examples.arf_family.chain import CHAIN
 from examples.arf_family.mcp_client import SERVER_CMD, McpClient
 from examples.arf_family.run_dossier import BATCH_FORMS
 
-from ._fake_mcp_server import CHAIN_FAILING_TOOL, CHAIN_UNSUPPORTED_ORGANISM
+from ._fake_mcp_server import CHAIN_BIG_LOCUS, CHAIN_FAILING_TOOL, CHAIN_UNSUPPORTED_ORGANISM
 
 LOCUS = "AT1G19850"
 ORGANISM = "arabidopsis_thaliana"
@@ -388,3 +388,30 @@ def test_error_class_groups_one_failure_across_loci_by_its_wording() -> None:
     ath = run_dossier.error_class("ATTED-II: X is not in the Ath-u.c4-0 release", "X")
     osa = run_dossier.error_class("ATTED-II: X is not in the Osa-u.c3-0 release", "X")
     assert ath != osa
+
+
+def test_oversize_is_one_answer_as_a_client_reads_it_not_a_batch_on_the_wire(tmp_path):
+    # 2026-09-27: the check used to flag a whole batch call over 200 kB on the
+    # wire, where every payload travels twice (structuredContent and a JSON
+    # text copy). A client reads one copy of one locus's answer, so that is
+    # what is measured: 40 small answers in one batch are not a gap, one
+    # answer over the cap is.
+    (tmp_path / "genes.tsv").write_text(
+        "locus\tsymbol\torganism\tpanther_subfamily\thas_pb1_domain\n"
+        + "".join(f"PAD{i}\tP{i}\tarabidopsis_thaliana\tPTHR0\tfalse\n" for i in range(40))
+        + f"{CHAIN_BIG_LOCUS}\tB\tarabidopsis_thaliana\tPTHR0\tfalse\n"
+    )
+    _run_once(tmp_path)
+    calls = [json.loads(line) for line in (tmp_path / "calls.jsonl").read_text().splitlines()]
+    ok_batches = [c for c in calls if c["loci"] and c["chain_tool"] != CHAIN_FAILING_TOOL]
+    # Positive control: the batches really are large on the wire.
+    assert ok_batches and all(c["n_bytes"] > 200_000 for c in ok_batches)
+    gaps = [json.loads(line) for line in (tmp_path / "gaps_auto.jsonl").read_text().splitlines()]
+    oversize = [g for g in gaps if g["kind"] == "oversize"]
+    assert all(g["loci"] == [CHAIN_BIG_LOCUS] for g in oversize), "a small answer was flagged"
+    # ...and the one answer over the cap is flagged for every tool it came from.
+    assert {g["tool"] for g in oversize} == {c["chain_tool"] for c in ok_batches}
+    # Each call records its largest answer as a client reads it: one JSON copy.
+    for c in ok_batches:
+        big = {"tool": c["chain_tool"], "locus": CHAIN_BIG_LOCUS, "pad": "x" * 60_000}
+        assert c["max_answer_chars"] == len(json.dumps(big)), c["chain_tool"]

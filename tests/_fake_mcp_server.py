@@ -172,6 +172,21 @@ CHAIN_FAILING_TOOL = "kegg_pathways"
 # shape — so the runner's "expected, not a gap" classification is testable.
 CHAIN_UNSUPPORTED_ORGANISM = "fake_unsupported"
 _UNSUPPORTED = "[OrganismNotSupported] backend 'fake' has no ID for 'fake_unsupported'"
+# Two padded answer sizes, for the runner's oversize check: one locus whose
+# every answer is over the per-answer cap on its own, and loci whose answers
+# are each well under it but whose batch is large on the wire.
+CHAIN_BIG_LOCUS = "BIG1"
+CHAIN_PAD_PREFIX = "PAD"
+
+
+def _chain_padding(locus: object) -> dict:
+    if locus == CHAIN_BIG_LOCUS:
+        return {"pad": "x" * 60_000}
+    if isinstance(locus, str) and locus.startswith(CHAIN_PAD_PREFIX):
+        return {"pad": "x" * 6_000}
+    return {}
+
+
 # `chain` mode answers `upstream_release` with a read number, so a test can
 # tell a second read from the first one reused.
 _release_reads = 0
@@ -401,7 +416,9 @@ def main() -> None:
                         envelope = {
                             "tool": base,
                             "count": len(loci),
-                            "results": {lo: {"tool": base, "locus": lo} for lo in loci},
+                            "results": {
+                                lo: {"tool": base, "locus": lo, **_chain_padding(lo)} for lo in loci
+                            },
                             "errors": {},
                         }
                     _respond(req_id, result=_text_result(envelope))

@@ -1716,7 +1716,9 @@ TOOLS: list[types.Tool] = [
             "including the study's own significance thresholds on the score's "
             "scale (study.thresholds), which the over_bonferroni / over_fdr / "
             "over_permutation flags are taken against. "
-            "association_count is the true total even when page-capped. "
+            f"Rows come strongest first, {aragwas.DEFAULT_LIMIT} per answer by default "
+            f"(limit, up to {aragwas.MAX_LIMIT}); next_cursor resumes at the first row "
+            "not returned. association_count is the true total even when page-capped. "
             "ARABIDOPSIS-ONLY — any other organism raises OrganismNotSupported. "
             "Defaults to arabidopsis_thaliana."
         ),
@@ -1731,6 +1733,16 @@ TOOLS: list[types.Tool] = [
                     "type": ["string", "integer"],
                     "description": "Arabidopsis only (the 1001 Genomes panel is A. thaliana)",
                     "default": "arabidopsis_thaliana",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": (
+                        f"Max associations, strongest first (1–{aragwas.MAX_LIMIT}, "
+                        f"default {aragwas.DEFAULT_LIMIT})"
+                    ),
+                    "default": aragwas.DEFAULT_LIMIT,
+                    "minimum": 1,
+                    "maximum": aragwas.MAX_LIMIT,
                 },
                 "cursor": {
                     "type": "string",
@@ -2394,7 +2406,10 @@ TOOLS: list[types.Tool] = [
             "result.markdown is a rendered Markdown gene dossier (the headline "
             "output) alongside a structured result.sections mirror; each "
             "backend payload appears once, under sections, while steps[] carries "
-            "status and per-step timing only. result.gene_names labels the "
+            "status and per-step timing only. The literature section carries no "
+            "abstracts (abstracts_included: false) and the GO section no withFrom "
+            "(with_from_included: false); locus_literature and "
+            "locus_go_annotations return them. result.gene_names labels the "
             "Ensembl and UniProt gene names separately when they differ. Any "
             "single backend failure degrades that section to an 'Unavailable' "
             "note; the rest of the dossier still renders."
@@ -2836,6 +2851,7 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     args["locus"],
                     organism=args.get("organism", "arabidopsis_thaliana"),
                     cursor=args.get("cursor"),
+                    limit=args.get("limit", aragwas.DEFAULT_LIMIT),
                 )
             case "arabidopsis_natural_variation":
                 return await onekg.lookup_locus(

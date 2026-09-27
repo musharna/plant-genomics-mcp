@@ -29,11 +29,28 @@ BASE_URL = "https://aragwas.1001genomes.org"
 DEFAULT_TIMEOUT = 30.0
 MAX_RETRIES = 3
 
-# Follow at most this many 25-row pages (≈100 top associations). ``association_count``
-# always reports the true total (from the API ``count``) even when page-capped.
+# Rows per answer. The default is one upstream page: at the old 100-row default
+# every Arabidopsis answer in the ARF dossier was 36-40k tokens, over Claude
+# Code's 25k default cap on its own (22 of 22 loci, 2026-09-27). Rows come
+# strongest first; ``next_cursor`` resumes at the first row not returned.
+DEFAULT_LIMIT = 25
+MAX_LIMIT = 100
+
+# Follow at most this many upstream pages per answer: AraGWAS honours
+# ``?limit=`` (checked live, 100 rows on one page), so this only bounds an
+# upstream that pages shorter than asked. ``association_count`` always reports
+# the true total (from the API ``count``) even when page-capped.
 MAX_PAGES = 4
 
 _CACHE = cache.TTLCache()
+
+
+def _resolve_limit(limit: int | None) -> int:
+    """Clamp a caller's ``limit`` into ``1..MAX_LIMIT`` (gramene's rule): a
+    non-positive limit is nonsense, not a request for everything."""
+    if limit is None:
+        return DEFAULT_LIMIT
+    return max(1, min(int(limit), MAX_LIMIT))
 
 
 async def _get(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
@@ -133,11 +150,14 @@ async def lookup_locus(
     locus: str,
     organism: str | int = organisms.DEFAULT_ORGANISM,
     cursor: str | None = None,
+    limit: int | None = None,
 ) -> dict[str, Any]:
     """Fetch AraGWAS GWAS associations for an Arabidopsis locus.
 
-    ``cursor`` is a ``next_cursor`` from the previous call (#123); it resumes
-    at AraGWAS's own ``offset``.
+    ``limit`` caps the rows (default ``DEFAULT_LIMIT``, clamped to
+    ``1..MAX_LIMIT``). ``cursor`` is a ``next_cursor`` from the previous call
+    (#123); it resumes at AraGWAS's own ``offset``, whatever ``limit`` either
+    call used.
 
     Raises ``OrganismNotSupported`` for any non-Arabidopsis organism (the panel
     is *A. thaliana* only). Follows pagination up to ``MAX_PAGES``;
@@ -151,12 +171,13 @@ async def lookup_locus(
     locus = validators.assert_valid_agi(locus, backend="AraGWAS")
     query = {"locus": locus}
     offset = int(_http.decode_cursor("aragwas_associations", query, cursor).get("offset", 0))
-    first = f"{BASE_URL}/api/genes/{locus}/associations/"
-    url: str | None = f"{first}?offset={offset}" if offset else first
+    cap = _resolve_limit(limit)
+    first = f"{BASE_URL}/api/genes/{locus}/associations/?limit={cap}"
+    url: str | None = f"{first}&offset={offset}" if offset else first
     associations: list[dict[str, Any]] = []
     total = 0
     pages = 0
-    while url and pages < MAX_PAGES:
+    while url and pages < MAX_PAGES and len(associations) < cap:
         page = await _get(client, url)
         total = _http.stated_count(page, "count", service="AraGWAS associations")
         for assoc in page.get("results") or []:
@@ -174,6 +195,9 @@ async def lookup_locus(
             next_url if isinstance(next_url, str) and next_url.startswith(BASE_URL + "/") else None
         )
         pages += 1
+    # An upstream page longer than asked is cut here; the cursor below resumes
+    # at the first row not returned, so the cut rows come next, not never.
+    associations = associations[:cap]
     return {
         "locus": locus,
         "organism": canonical,
