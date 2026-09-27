@@ -25,12 +25,48 @@ from __future__ import annotations
 import asyncio
 import csv
 import json
+import re
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 from examples.arf_family.mcp_client import SERVER_CMD, McpClient
 
 GENES_TSV = Path(__file__).parent / "genes.tsv"
+
+# Every tool error opens with its class in brackets, `[NotFoundError] ...`:
+# the server's wire contract for routing on the kind of failure
+# (src/plant_genomics_mcp/errors.py).
+_ERROR_CLASS = re.compile(r"\[(\w+)\] ")
+
+
+@dataclass(frozen=True)
+class Reason:
+    """One reason a row failed. `tool` names the call it is about (None for
+    a manifest problem); `error_class` is the bracketed error class that a
+    failed call's error opened with, None when the call answered or the
+    error had none."""
+
+    text: str
+    tool: str | None = None
+    error_class: str | None = None
+
+
+@dataclass(frozen=True)
+class Flag:
+    locus: str
+    symbol: str
+    reasons: tuple[Reason, ...]
+
+    @property
+    def reason(self) -> str:
+        return "; ".join(r.text for r in self.reasons)
+
+
+def _call_failed(tool: str, error: str | None) -> Reason:
+    match = _ERROR_CLASS.match(error or "")
+    return Reason(f"{tool} call failed: {error}", tool, match.group(1) if match else None)
+
 
 REQUIRED_COLUMNS = {"locus", "symbol", "organism", "panther_subfamily", "has_pb1_domain"}
 
@@ -83,6 +119,13 @@ async def verify(genes_path: Path, server_cmd: list[str]) -> list[tuple[str, str
     verification; an empty list means every row is clean. Raises
     `ManifestError` if the header itself is missing or has extra columns.
     """
+    return [(f.locus, f.symbol, f.reason) for f in await verify_flags(genes_path, server_cmd)]
+
+
+async def verify_flags(genes_path: Path, server_cmd: list[str]) -> list[Flag]:
+    """`verify`, with each row's reasons kept apart and each failed call's
+    tool and error class as fields, so a caller can tell an upstream outage
+    from a wrong answer without parsing the joined reason."""
     with open(genes_path) as f:
         reader = csv.DictReader(f, delimiter="\t")
         if set(reader.fieldnames or []) != REQUIRED_COLUMNS:
@@ -92,7 +135,7 @@ async def verify(genes_path: Path, server_cmd: list[str]) -> list[tuple[str, str
             )
         rows = list(reader)
 
-    bad: list[tuple[str, str, str]] = []
+    bad: list[Flag] = []
     to_check: list[dict] = []
     for row in rows:
         reason = _validate_row(row)
@@ -101,7 +144,7 @@ async def verify(genes_path: Path, server_cmd: list[str]) -> list[tuple[str, str
         else:
             locus = row.get("locus") or "<missing locus>"
             symbol = row.get("symbol") or "<missing symbol>"
-            bad.append((locus, symbol, reason))
+            bad.append(Flag(locus, symbol, (Reason(reason),)))
 
     if not to_check:
         return bad
@@ -116,41 +159,55 @@ async def verify(genes_path: Path, server_cmd: list[str]) -> list[tuple[str, str
             # full-family run has members PANTHER does not classify); it
             # must match a live null and nothing else.
             declared_subfamily = row["panther_subfamily"] or None
-            reasons: list[str] = []
+            reasons: list[Reason] = []
 
             interpro_res = await c.call("interpro_domains", {"locus": locus, "organism": organism})
             if not interpro_res.ok:
-                reasons.append(f"interpro_domains call failed: {interpro_res.error}")
+                reasons.append(_call_failed("interpro_domains", interpro_res.error))
             elif not isinstance(interpro_res.payload, dict):
                 reasons.append(
-                    f"interpro_domains returned a non-dict payload: {interpro_res.payload!r}"
+                    Reason(
+                        f"interpro_domains returned a non-dict payload: {interpro_res.payload!r}",
+                        "interpro_domains",
+                    )
                 )
             elif not _is_arf_family(interpro_res.payload):
-                reasons.append("not ARF family: InterPro entry IPR010525 absent")
+                reasons.append(
+                    Reason("not ARF family: InterPro entry IPR010525 absent", "interpro_domains")
+                )
             else:
                 live_pb1 = _has_pb1_domain(interpro_res.payload)
                 if live_pb1 != declared_pb1:
                     reasons.append(
-                        f"has_pb1_domain mismatch: declared={declared_pb1} live={live_pb1}"
+                        Reason(
+                            f"has_pb1_domain mismatch: declared={declared_pb1} live={live_pb1}",
+                            "interpro_domains",
+                        )
                     )
 
             panther_res = await c.call("panther_family", {"locus": locus, "organism": organism})
             if not panther_res.ok:
-                reasons.append(f"panther_family call failed: {panther_res.error}")
+                reasons.append(_call_failed("panther_family", panther_res.error))
             elif not isinstance(panther_res.payload, dict):
                 reasons.append(
-                    f"panther_family returned a non-dict payload: {panther_res.payload!r}"
+                    Reason(
+                        f"panther_family returned a non-dict payload: {panther_res.payload!r}",
+                        "panther_family",
+                    )
                 )
             else:
                 live_subfamily = panther_res.payload.get("subfamily_id")
                 if live_subfamily != declared_subfamily:
                     reasons.append(
-                        "panther_subfamily mismatch: "
-                        f"declared={declared_subfamily!r} live={live_subfamily!r}"
+                        Reason(
+                            "panther_subfamily mismatch: "
+                            f"declared={declared_subfamily!r} live={live_subfamily!r}",
+                            "panther_family",
+                        )
                     )
 
             if reasons:
-                bad.append((locus, symbol, "; ".join(reasons)))
+                bad.append(Flag(locus, symbol, tuple(reasons)))
     finally:
         await c.close()
     return bad
