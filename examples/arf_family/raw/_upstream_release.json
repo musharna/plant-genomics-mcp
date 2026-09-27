@@ -1,0 +1,186 @@
+{
+ "start": {
+  "ensembl_plants": {
+   "backend": "ensembl_plants",
+   "release": "63",
+   "components": {
+    "eg_version": "63"
+   },
+   "endpoints": [
+    "https://rest.ensembl.org/info/eg_version"
+   ],
+   "observed_at": "2026-09-27T00:30:12+00:00",
+   "reason": "The Ensembl Genomes release rest.ensembl.org serves (Ensembl Plants and Compara plants), current at query time."
+  },
+  "string": {
+   "backend": "string",
+   "release": "12.0",
+   "components": {
+    "string_version": "12.0"
+   },
+   "endpoints": [
+    "https://string-db.org/api/json/version"
+   ],
+   "observed_at": "2026-09-27T00:30:12+00:00",
+   "reason": "The STRING release string-db.org serves, current at query time."
+  },
+  "quickgo": {
+   "backend": "quickgo",
+   "release": "annotation 2026-07-28 10:08; go 2026-09-22",
+   "components": {
+    "annotation": "2026-07-28 10:08",
+    "go": "2026-09-22"
+   },
+   "endpoints": [
+    "https://www.ebi.ac.uk/QuickGO/services/annotation/about",
+    "https://www.ebi.ac.uk/QuickGO/services/ontology/go/about"
+   ],
+   "observed_at": "2026-09-27T00:30:13+00:00",
+   "reason": "QuickGO's two dates at query time: 'annotation' is the GO annotation (GOA) load locus_go_annotations reads, 'go' the GO ontology release."
+  },
+  "jaspar": {
+   "backend": "jaspar",
+   "release": "11",
+   "components": {
+    "release_number": "11",
+    "year": "2026",
+    "active_releases": "7"
+   },
+   "endpoints": [
+    "https://jaspar.elixir.no/api/v1/releases/?format=json&page_size=100"
+   ],
+   "observed_at": "2026-09-27T00:30:14+00:00",
+   "reason": "The newest ACTIVE JASPAR release at query time. Several releases are active at once and a matrix answer names none, so this is the newest one on offer, not proof of the one that answered."
+  },
+  "kegg": {
+   "backend": "kegg",
+   "release": "pathway 2026/09/25; genes 2026/09/26",
+   "components": {
+    "pathway": "2026/09/25",
+    "genes": "2026/09/26"
+   },
+   "endpoints": [
+    "https://rest.kegg.jp/info/kegg"
+   ],
+   "observed_at": "2026-09-27T00:30:15+00:00",
+   "reason": "KEGG publishes no release number, only each database's last-update date at query time: 'pathway' and 'genes' are the two kegg_pathways reads."
+  },
+  "pdbe": {
+   "backend": "pdbe",
+   "release": null,
+   "components": {},
+   "endpoints": [],
+   "observed_at": "2026-09-27T00:30:15+00:00",
+   "reason": "PDBe states no archive release: its answers carry no release header or field, and /pdbe/api/status, /pdbe/api/pdb/release and /pdbe/api/v2/status are 404 (probed 2026-09-26). Per-entry release dates are not an archive release."
+  },
+  "aragwas": {
+   "backend": "aragwas",
+   "release": null,
+   "components": {},
+   "endpoints": [],
+   "observed_at": "2026-09-27T00:30:15+00:00",
+   "reason": "AraGWAS states no release: its answers carry no release header or field, and its /api/ root lists resources only (probed 2026-09-26)."
+  },
+  "europe_pmc": {
+   "backend": "europe_pmc",
+   "release": null,
+   "components": {},
+   "endpoints": [],
+   "observed_at": "2026-09-27T00:30:15+00:00",
+   "reason": "Europe PMC's index is updated continuously and has no data release; the 'version' on its answers (6.9 on 2026-09-26) is the REST API's version."
+  }
+ },
+ "end": {
+  "ensembl_plants": {
+   "backend": "ensembl_plants",
+   "release": "63",
+   "components": {
+    "eg_version": "63"
+   },
+   "endpoints": [
+    "https://rest.ensembl.org/info/eg_version"
+   ],
+   "observed_at": "2026-09-27T00:35:30+00:00",
+   "reason": "The Ensembl Genomes release rest.ensembl.org serves (Ensembl Plants and Compara plants), current at query time."
+  },
+  "string": {
+   "backend": "string",
+   "release": "12.0",
+   "components": {
+    "string_version": "12.0"
+   },
+   "endpoints": [
+    "https://string-db.org/api/json/version"
+   ],
+   "observed_at": "2026-09-27T00:35:30+00:00",
+   "reason": "The STRING release string-db.org serves, current at query time."
+  },
+  "quickgo": {
+   "backend": "quickgo",
+   "release": "annotation 2026-07-28 10:08; go 2026-09-22",
+   "components": {
+    "annotation": "2026-07-28 10:08",
+    "go": "2026-09-22"
+   },
+   "endpoints": [
+    "https://www.ebi.ac.uk/QuickGO/services/annotation/about",
+    "https://www.ebi.ac.uk/QuickGO/services/ontology/go/about"
+   ],
+   "observed_at": "2026-09-27T00:35:31+00:00",
+   "reason": "QuickGO's two dates at query time: 'annotation' is the GO annotation (GOA) load locus_go_annotations reads, 'go' the GO ontology release."
+  },
+  "jaspar": {
+   "backend": "jaspar",
+   "release": "11",
+   "components": {
+    "release_number": "11",
+    "year": "2026",
+    "active_releases": "7"
+   },
+   "endpoints": [
+    "https://jaspar.elixir.no/api/v1/releases/?format=json&page_size=100"
+   ],
+   "observed_at": "2026-09-27T00:35:31+00:00",
+   "reason": "The newest ACTIVE JASPAR release at query time. Several releases are active at once and a matrix answer names none, so this is the newest one on offer, not proof of the one that answered."
+  },
+  "kegg": {
+   "backend": "kegg",
+   "release": "pathway 2026/09/25; genes 2026/09/26",
+   "components": {
+    "pathway": "2026/09/25",
+    "genes": "2026/09/26"
+   },
+   "endpoints": [
+    "https://rest.kegg.jp/info/kegg"
+   ],
+   "observed_at": "2026-09-27T00:35:32+00:00",
+   "reason": "KEGG publishes no release number, only each database's last-update date at query time: 'pathway' and 'genes' are the two kegg_pathways reads."
+  },
+  "pdbe": {
+   "backend": "pdbe",
+   "release": null,
+   "components": {},
+   "endpoints": [],
+   "observed_at": "2026-09-27T00:35:32+00:00",
+   "reason": "PDBe states no archive release: its answers carry no release header or field, and /pdbe/api/status, /pdbe/api/pdb/release and /pdbe/api/v2/status are 404 (probed 2026-09-26). Per-entry release dates are not an archive release."
+  },
+  "aragwas": {
+   "backend": "aragwas",
+   "release": null,
+   "components": {},
+   "endpoints": [],
+   "observed_at": "2026-09-27T00:35:32+00:00",
+   "reason": "AraGWAS states no release: its answers carry no release header or field, and its /api/ root lists resources only (probed 2026-09-26)."
+  },
+  "europe_pmc": {
+   "backend": "europe_pmc",
+   "release": null,
+   "components": {},
+   "endpoints": [],
+   "observed_at": "2026-09-27T00:35:32+00:00",
+   "reason": "Europe PMC's index is updated continuously and has no data release; the 'version' on its answers (6.9 on 2026-09-26) is the REST API's version."
+  }
+ },
+ "changed": [],
+ "unread": []
+}

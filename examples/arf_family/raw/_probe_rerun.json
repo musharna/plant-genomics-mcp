@@ -1,7 +1,7 @@
 {
- "server_version": "1.26.0",
- "server_commit": "0a94a26",
- "tool_count": 55,
+ "server_version": "1.27.0",
+ "server_commit": "e43b45a",
+ "tool_count": 56,
  "tools": {
   "string_interactions": {
    "_meta": {
@@ -116,7 +116,7 @@
        }
       ],
       "default": null,
-      "description": "STRING release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means STRING did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "description": "STRING release that produced THIS response, \u2014 always null today: this backend states no release on its responses; upstream_release(backend='string') reports the release its own endpoint calls current at query time, or why there is none. null means STRING did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
       "title": "Upstream Version"
      }
     },
@@ -717,7 +717,7 @@
        }
       ],
       "default": null,
-      "description": "JASPAR release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means JASPAR did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "description": "JASPAR release that produced THIS response, \u2014 always null today: this backend states no release on its responses; upstream_release(backend='jaspar') reports the release its own endpoint calls current at query time, or why there is none. null means JASPAR did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
       "title": "Upstream Version"
      }
     },
@@ -1223,7 +1223,7 @@
        }
       ],
       "default": null,
-      "description": "Europe PMC release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means Europe PMC did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "description": "Europe PMC release that produced THIS response, \u2014 always null today: this backend states no release on its responses; upstream_release(backend='europe_pmc') reports the release its own endpoint calls current at query time, or why there is none. null means Europe PMC did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
       "title": "Upstream Version"
      }
     },
@@ -1537,7 +1537,7 @@
        }
       ],
       "default": null,
-      "description": "KEGG release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means KEGG did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "description": "KEGG release that produced THIS response, \u2014 always null today: this backend states no release on its responses; upstream_release(backend='kegg') reports the release its own endpoint calls current at query time, or why there is none. null means KEGG did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
       "title": "Upstream Version"
      }
     },
@@ -1785,7 +1785,7 @@
        }
       ],
       "default": null,
-      "description": "AraGWAS release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means AraGWAS did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "description": "AraGWAS release that produced THIS response, \u2014 always null today: this backend states no release on its responses; upstream_release(backend='aragwas') reports the release its own endpoint calls current at query time, or why there is none. null means AraGWAS did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
       "title": "Upstream Version"
      }
     },
@@ -2032,7 +2032,7 @@
        }
       ],
       "default": null,
-      "description": "Ensembl Plants release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means Ensembl Plants did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "description": "Ensembl Plants release that produced THIS response, \u2014 always null today: this backend states no release on its responses; upstream_release(backend='ensembl_plants') reports the release its own endpoint calls current at query time, or why there is none. null means Ensembl Plants did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
       "title": "Upstream Version"
      }
     },
@@ -2148,7 +2148,7 @@
        }
       ],
       "default": null,
-      "description": "PDBe release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means PDBe did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "description": "PDBe release that produced THIS response, \u2014 always null today: this backend states no release on its responses; upstream_release(backend='pdbe') reports the release its own endpoint calls current at query time, or why there is none. null means PDBe did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
       "title": "Upstream Version"
      }
     },
@@ -2302,7 +2302,7 @@
        }
       ],
       "default": null,
-      "description": "QuickGO release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means QuickGO did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "description": "QuickGO release that produced THIS response, \u2014 always null today: this backend states no release on its responses; upstream_release(backend='quickgo') reports the release its own endpoint calls current at query time, or why there is none. null means QuickGO did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
       "title": "Upstream Version"
      }
     },
@@ -2855,7 +2855,7 @@
        }
       ],
       "default": null,
-      "description": "Ensembl release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means Ensembl did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "description": "Ensembl release that produced THIS response, \u2014 always null today: this backend states no release on its responses; upstream_release(backend='ensembl_plants') reports the release its own endpoint calls current at query time, or why there is none. null means Ensembl did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
       "title": "Upstream Version"
      }
     },
@@ -3653,7 +3653,7 @@
        }
       ],
       "default": null,
-      "description": "PANTHER release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means PANTHER did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "description": "PANTHER release that produced THIS response, as stated by the answer's search.product.version. null means PANTHER did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
       "title": "Upstream Version"
      }
     },
@@ -4322,7 +4322,7 @@
        }
       ],
       "default": null,
-      "description": "Ensembl release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means Ensembl did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "description": "Ensembl release that produced THIS response, \u2014 always null today: this backend states no release on its responses; upstream_release(backend='ensembl_plants') reports the release its own endpoint calls current at query time, or why there is none. null means Ensembl did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
       "title": "Upstream Version"
      }
     },
@@ -4545,7 +4545,7 @@
        }
       ],
       "default": null,
-      "description": "Ensembl release that produced THIS response, \u2014 always null today: this backend states no release on its responses. null means Ensembl did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
+      "description": "Ensembl release that produced THIS response, \u2014 always null today: this backend states no release on its responses; upstream_release(backend='ensembl_plants') reports the release its own endpoint calls current at query time, or why there is none. null means Ensembl did not state one \u2014 never that no release exists, and never inferred from a separate metadata call, which can describe a different release than the one that answered.",
       "title": "Upstream Version"
      }
     },
