@@ -223,9 +223,13 @@ def keys_written(fn: Callable[..., Any]) -> set[str]:
                 for k in node.keys
                 if isinstance(k, ast.Constant) and isinstance(k.value, str)
             }
-        elif isinstance(node, ast.Subscript) and isinstance(node.ctx, ast.Store):
-            if isinstance(node.slice, ast.Constant) and isinstance(node.slice.value, str):
-                out.add(node.slice.value)
+        elif (
+            isinstance(node, ast.Subscript)
+            and isinstance(node.ctx, ast.Store)
+            and isinstance(node.slice, ast.Constant)
+            and isinstance(node.slice.value, str)
+        ):
+            out.add(node.slice.value)
     return out
 
 
