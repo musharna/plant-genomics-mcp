@@ -27,6 +27,16 @@
   Ensembl lookup fixtures now carry `species`, which the live endpoint always
   sends. Test-only: no tool's behaviour changes.
 
+- **`aragwas_associations` rows are tested field for field.** The row list
+  has no per-key schema, so the check above cannot see inside it, and 51
+  mutants that rename a row key or the AraGWAS key it is read from survived.
+  A verbatim live row (AT1G01060) is now projected and compared with the
+  whole expected row, written out by hand; a live-gated test checks that the
+  16 fields AraGWAS sent on all 200 rows probed are filled on a real page.
+  New tests also pin the page cap, the next-link truncation rule, the
+  Accept header and timeout sent, and the fields of the unsupported-organism
+  error. Each of the 78 targeted mutants now fails a named test. Test-only.
+
 ## v1.28.0 — 2026-09-27
 
 **56 tools / 23 backends** — no new tool. A minor release rather than a patch: `aragwas_associations` answers 25 rows by default and gains `limit`, and `gene_report` leaves abstracts and GO `withFrom` out of its sections (**Behaviour change** for both), so neither answers over Claude Code's 25,000-token default cap by itself.
