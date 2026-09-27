@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-27T00:35:21Z",
- "elapsed_s": 2.5717171109863557,
+ "started_at": "2026-09-27T06:37:28Z",
+ "elapsed_s": 0.6337055909971241,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 2.302277556009358,
+   "elapsed_s": 0.43307956200442277,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0014078730018809438,
+   "elapsed_s": 0.002883406006731093,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.1714862739900127,
+   "elapsed_s": 0.13767756498418748,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 5.2091985708102584e-05,
+   "elapsed_s": 2.0291015971451998e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "error",
-   "elapsed_s": 0.2679463130189106,
+   "elapsed_s": 0.19962656201096252,
    "result": null,
    "error": "[NotFoundError] STRING has no protein for TraesCS6D02G127600 in triticum_aestivum (queried as A0A3B6QEX9): STRING /api/json/interaction_partners \u2192 HTTP 404: [{ \"Error\" : \"not found\", \"ErrorMessage\" : \"<p>Sorry, STRING did not find a protein called 'A0A3B6QEX9' in the taxon '4565'.</p><p>Generally, STRING understands a number of different names/symbols for"
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.00022640099632553756,
+   "elapsed_s": 0.00016541199875064194,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 9.398697875440121e-05,
+   "elapsed_s": 8.071499178186059e-05,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0002585180045571178,
+   "elapsed_s": 0.00021841999841853976,
    "result": null,
    "error": null
   }
@@ -89,17 +89,17 @@
   "sections": {
    "annotation": {
     "db_type": "core",
-    "logic_name": "iwgsc_high_conf",
-    "id": "TraesCS6D02G127600",
-    "biotype": "protein_coding",
-    "assembly_name": "IWGSC",
     "source": "IWGSC",
-    "seq_region_name": "6D",
     "strand": 1,
-    "canonical_transcript": "TraesCS6D02G127600.2",
     "start": 91516586,
     "end": 91522540,
+    "id": "TraesCS6D02G127600",
     "object_type": "Gene",
+    "biotype": "protein_coding",
+    "seq_region_name": "6D",
+    "canonical_transcript": "TraesCS6D02G127600.2",
+    "assembly_name": "IWGSC",
+    "logic_name": "iwgsc_high_conf",
     "organism": "triticum_aestivum",
     "upstream_version": null
    },
@@ -125,103 +125,103 @@
     "count": 9,
     "xrefs": [
      {
-      "synonyms": [],
+      "dbname": "Uniprot_gn",
       "primary_id": "A0A3B6QEX9",
       "version": null,
-      "description": null,
       "db_display_name": "UniProtKB Gene Name",
       "display_id": "LOC123143962",
-      "dbname": "Uniprot_gn",
+      "synonyms": [],
+      "description": null,
       "info_text": "",
       "info_type": "DEPENDENT"
      },
      {
+      "display_id": "LOC123143962",
+      "synonyms": [],
+      "description": null,
+      "info_text": "",
       "info_type": "DEPENDENT",
       "dbname": "Uniprot_gn",
-      "info_text": "",
-      "display_id": "LOC123143962",
-      "db_display_name": "UniProtKB Gene Name",
-      "description": null,
-      "version": null,
       "primary_id": "A0A3B6QC06",
+      "version": null,
+      "db_display_name": "UniProtKB Gene Name"
+     },
+     {
+      "db_display_name": "KNETMINER_WHEAT",
+      "version": "0",
+      "primary_id": "TraesCS6D02G127600",
+      "dbname": "KNETMINER_WHEAT",
+      "info_type": "DEPENDENT",
+      "info_text": "",
+      "description": null,
+      "display_id": "TraesCS6D02G127600",
       "synonyms": []
      },
      {
-      "synonyms": [],
-      "primary_id": "TraesCS6D02G127600",
-      "version": "0",
-      "db_display_name": "KNETMINER_WHEAT",
-      "description": null,
-      "display_id": "TraesCS6D02G127600",
-      "info_type": "DEPENDENT",
-      "info_text": "",
-      "dbname": "KNETMINER_WHEAT"
-     },
-     {
-      "synonyms": [],
-      "primary_id": "TraesCS6D02G127600",
-      "version": "0",
-      "description": null,
-      "db_display_name": "Wheat Expression",
-      "display_id": "TraesCS6D02G127600",
-      "info_text": "",
       "dbname": "WHEATEXP_GENE",
-      "info_type": "DEPENDENT"
-     },
-     {
-      "synonyms": [],
-      "primary_id": "123143962",
-      "description": "auxin response factor 6",
-      "db_display_name": "WikiGene",
+      "primary_id": "TraesCS6D02G127600",
       "version": "0",
-      "dbname": "WikiGene",
-      "info_text": "",
+      "db_display_name": "Wheat Expression",
       "info_type": "DEPENDENT",
-      "display_id": "LOC123143962"
-     },
-     {
-      "primary_id": "123132397",
+      "display_id": "TraesCS6D02G127600",
       "synonyms": [],
-      "info_text": "",
-      "dbname": "WikiGene",
-      "info_type": "DEPENDENT",
-      "display_id": "LOC123132397",
-      "description": "auxin response factor 6",
-      "db_display_name": "WikiGene",
-      "version": "0"
-     },
-     {
-      "synonyms": [],
-      "primary_id": "123143962",
-      "version": "0",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "description": "auxin response factor 6",
-      "display_id": "LOC123143962",
-      "info_type": "DEPENDENT",
-      "dbname": "EntrezGene",
+      "description": null,
       "info_text": ""
      },
      {
-      "synonyms": [],
-      "primary_id": "123132397",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "description": "auxin response factor 6",
-      "version": "0",
-      "info_type": "DEPENDENT",
       "info_text": "",
-      "dbname": "EntrezGene",
-      "display_id": "LOC123132397"
+      "description": "auxin response factor 6",
+      "display_id": "LOC123143962",
+      "synonyms": [],
+      "info_type": "DEPENDENT",
+      "db_display_name": "WikiGene",
+      "version": "0",
+      "primary_id": "123143962",
+      "dbname": "WikiGene"
      },
      {
-      "dbname": "ArrayExpress",
+      "version": "0",
+      "db_display_name": "WikiGene",
+      "dbname": "WikiGene",
+      "primary_id": "123132397",
       "info_text": "",
+      "synonyms": [],
+      "display_id": "LOC123132397",
+      "description": "auxin response factor 6",
+      "info_type": "DEPENDENT"
+     },
+     {
+      "version": "0",
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "dbname": "EntrezGene",
+      "primary_id": "123143962",
+      "info_type": "DEPENDENT",
+      "info_text": "",
+      "display_id": "LOC123143962",
+      "synonyms": [],
+      "description": "auxin response factor 6"
+     },
+     {
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "version": "0",
+      "primary_id": "123132397",
+      "dbname": "EntrezGene",
+      "info_type": "DEPENDENT",
+      "info_text": "",
+      "description": "auxin response factor 6",
+      "display_id": "LOC123132397",
+      "synonyms": []
+     },
+     {
       "info_type": "DIRECT",
-      "display_id": "TraesCS6D02G127600",
+      "info_text": "",
       "description": null,
+      "synonyms": [],
+      "display_id": "TraesCS6D02G127600",
       "db_display_name": "Expression Atlas",
       "version": "0",
       "primary_id": "TraesCS6D02G127600",
-      "synonyms": []
+      "dbname": "ArrayExpress"
      }
     ],
     "by_db": {
@@ -259,7 +259,7 @@
     "returned": 1,
     "truncated": false,
     "next_cursor": null,
-    "abstracts_included": true,
+    "abstracts_included": false,
     "hits": [
      {
       "id": "41254527",
@@ -275,7 +275,7 @@
       "citedByCount": 0,
       "isOpenAccess": true,
       "hasPDF": true,
-      "abstractText": "Wheat (Triticum aestivum L.) production is increasingly constrained by drought, heat, and their combination, especially in arid regions like Xinjiang, China. While previous studies have focused on single-stress responses, the molecular mechanisms underlying wheat adaptation to combined drought and heat stress (HD) remain elusive. Here, we performed transcriptome profiling at three key spike developmental stages-Jointing Stage (JS), Stamen and Pistil Primordial Differentiation Stage (SPDS), and Tetrad Stage (TS)-under drought (DS), heat (HS), and combined HD conditions. Comparative analysis revealed that HD triggered the most extensive transcriptional reprogramming, with 3,884, 5,230, and 2,793 stage-specific upregulated genes across JS, SPDS, and TS, respectively. Notably, the overlap between HS- and HD-responsive genes was higher than that between DS and HD during early stages, indicating stress-specific transcriptional shifts. Functional enrichment highlighted pathways related to osmotic adjustment, oxidative defense, and phytohormone signaling, particularly ABA and JA biosynthesis. Among stress-responsive transcription factors, the AP2/ERF family showed prominent enrichment, with TaEREBP1-L (TraesCS5A02G215900) identified as a central regulator. Dual-luciferase reporter assays confirmed that TaEREBP1-L directly activated the promoters of ABA- and JA-pathway genes (AAO3, AOC2). Co-expression analysis further revealed its coordination with membrane transporters (e.g., ABC and MATE families), suggesting an integrative regulatory function under HD conditions. Transgenic Arabidopsis overexpressing TaEREBP1-L displayed significantly enhanced drought and heat tolerance, evidenced by increased proline content, antioxidant enzyme activity (SOD, CAT), and elevated ABA/JA levels. These results demonstrate that TaEREBP1-L confers broad-spectrum stress tolerance by orchestrating hormonal and physiological pathways. Our findings provide valuable insights into combinatorial stress adaptation and identify TaEREBP1-L as a promising target for improving wheat resilience under climate-related challenges.",
+      "abstractText": null,
       "web_url": "https://europepmc.org/article/PMC/PMC12625192"
      }
     ],
@@ -303,40 +303,7 @@
       "taxonId": 4565,
       "taxonName": "Triticum aestivum",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR003340"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniRule",
-          "id": "UR000399996"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:A0A3B6QEX9",
@@ -352,16 +319,7 @@
       "taxonId": 4565,
       "taxonName": "Triticum aestivum",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniRule",
-          "id": "UR000399996"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:A0A3B6QEX9",
@@ -377,32 +335,7 @@
       "taxonId": 4565,
       "taxonName": "Triticum aestivum",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniRule",
-          "id": "UR000399996"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:A0A3B6QEX9",
@@ -418,24 +351,7 @@
       "taxonId": 4565,
       "taxonName": "Triticum aestivum",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:A0A3B6QEX9",
@@ -451,32 +367,7 @@
       "taxonId": 4565,
       "taxonName": "Triticum aestivum",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB-SubCell",
-          "id": "SL-0191"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniRule",
-          "id": "UR000399996"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      }
     ],
     "by_aspect": {
@@ -508,6 +399,7 @@
      ]
     },
     "by_aspect_deduped_on": "goId",
+    "with_from_included": false,
     "upstream_version": null
    },
    "domains": {

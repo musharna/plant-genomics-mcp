@@ -5,14 +5,14 @@
   "organism": "triticum_aestivum",
   "top_n": 10
  },
- "started_at": "2026-09-27T00:35:25Z",
- "elapsed_s": 4.235388057015371,
+ "started_at": "2026-09-27T06:37:33Z",
+ "elapsed_s": 1.6563354670070112,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 3.9089797680207994,
+   "elapsed_s": 1.4404722879990004,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0008436979842372239,
+   "elapsed_s": 0.000755718006985262,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.11743672098964453,
+   "elapsed_s": 0.12316370799089782,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "skipped",
-   "elapsed_s": 2.3071974283084273e-05,
+   "elapsed_s": 1.8040998838841915e-05,
    "result": null,
    "error": "[OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']"
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "error",
-   "elapsed_s": 0.3253789189911913,
+   "elapsed_s": 0.21519835898652673,
    "result": null,
    "error": "[NotFoundError] STRING has no protein for TraesCS7B02G363100 in triticum_aestivum (queried as A0A3B6SSA7): STRING /api/json/interaction_partners \u2192 HTTP 404: [{ \"Error\" : \"not found\", \"ErrorMessage\" : \"<p>Sorry, STRING did not find a protein called 'A0A3B6SSA7' in the taxon '4565'.</p><p>Generally, STRING understands a number of different names/symbols for"
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.00017873701290227473,
+   "elapsed_s": 0.00010599498637020588,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00012381101259961724,
+   "elapsed_s": 0.00012768202577717602,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0003089520032517612,
+   "elapsed_s": 0.00024427700554952025,
    "result": null,
    "error": null
   }
@@ -88,18 +88,18 @@
   "markdown": "# LOC123162439 \u2014 `TraesCS7B02G363100`\n\n*Triticum aestivum* \u00b7 protein_coding \u00b7 7B:625,296,433\u2013625,302,193 (-) \u00b7 IWGSC\n\n## Protein\n**Auxin response factor**\nA0A3B6SSA7_WHEAT \u00b7 UniProtKB unreviewed (TrEMBL) \u00b7 907 aa\nUniProt: [A0A3B6SSA7](https://www.uniprot.org/uniprotkb/A0A3B6SSA7)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [134\u2013235]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [297\u2013369]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [133\u2013237]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [765\u2013857]\n- **B3 DNA binding domain** (domain, interpro) [134\u2013237]\n- **Auxin response factor domain** (domain, interpro) [282\u2013365]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [120\u2013264]\n- **AUX/IAA domain** (domain, interpro) [766\u2013854]\n- **Auxin response factor** (family, interpro) [25\u2013857]\n- **PB1-like domain** (domain, interpro) [768\u2013852]\n\n## GO annotations\n**Molecular Function**\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006351] DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_Unavailable \u2014 [OrganismNotSupported] backend 'kegg' has no ID for 'triticum_aestivum'; supported by 'kegg': ['arabidopsis_thaliana', 'brachypodium_distachyon', 'glycine_max', 'hordeum_vulgare', 'oryza_sativa', 'populus_trichocarpa', 'zea_mays']_\n\n## Interaction partners (STRING, top 10)\n_Unavailable \u2014 [NotFoundError] STRING has no protein for TraesCS7B02G363100 in triticum_aestivum (queried as A0A3B6SSA7): STRING /api/json/interaction_partners \u2192 HTTP 404: [{ \"Error\" : \"not found\", \"ErrorMessage\" : \"<p>Sorry, STRING did not find a protein called 'A0A3B6SSA7' in the taxon '4565'.</p><p>Generally, STRING understands a number of different names/symbols for_\n\n## Cross-references\n- UniProtKB Gene Name: A0A3B6SLT7\n- KNETMINER_WHEAT: TraesCS7B02G363100\n- Wheat Expression: TraesCS7B02G363100\n- Plant Reactome Reaction ID: R-TAE-5608208\n- Plant Reactome Pathway ID: R-TAE-5608118\n- WikiGene: 123162439\n- NCBI gene (formerly Entrezgene): 123162439\n- Expression Atlas: TraesCS7B02G363100\n\n## Literature\n1 hits total; showing top 1.\n- **Synergistic interaction between wheat streak mosaic virus and Triticum mosaic virus modulates wheat transcriptome to favor disease severity** \u2014 Nunna H, Palmer NA, Sarath G, Wegulo SN, Tatineni S. (PMID:39845488; doi:10.3389/fpls.2024.1504482)\n",
   "sections": {
    "annotation": {
-    "canonical_transcript": "TraesCS7B02G363100.1",
-    "logic_name": "iwgsc_high_conf",
-    "start": 625296433,
-    "seq_region_name": "7B",
-    "id": "TraesCS7B02G363100",
-    "end": 625302193,
-    "biotype": "protein_coding",
-    "object_type": "Gene",
     "source": "IWGSC",
-    "assembly_name": "IWGSC",
-    "db_type": "core",
+    "object_type": "Gene",
     "strand": -1,
+    "id": "TraesCS7B02G363100",
+    "logic_name": "iwgsc_high_conf",
+    "biotype": "protein_coding",
+    "end": 625302193,
+    "canonical_transcript": "TraesCS7B02G363100.1",
+    "start": 625296433,
+    "assembly_name": "IWGSC",
+    "seq_region_name": "7B",
+    "db_type": "core",
     "organism": "triticum_aestivum",
     "upstream_version": null
    },
@@ -125,35 +125,35 @@
     "count": 8,
     "xrefs": [
      {
-      "info_type": "DEPENDENT",
       "primary_id": "A0A3B6SLT7",
       "description": null,
-      "display_id": "LOC123162439",
+      "info_type": "DEPENDENT",
       "version": null,
-      "dbname": "Uniprot_gn",
+      "display_id": "LOC123162439",
       "synonyms": [],
-      "db_display_name": "UniProtKB Gene Name",
-      "info_text": ""
+      "dbname": "Uniprot_gn",
+      "info_text": "",
+      "db_display_name": "UniProtKB Gene Name"
      },
      {
-      "info_text": "",
-      "db_display_name": "KNETMINER_WHEAT",
-      "dbname": "KNETMINER_WHEAT",
-      "synonyms": [],
       "version": "0",
       "display_id": "TraesCS7B02G363100",
       "description": null,
       "primary_id": "TraesCS7B02G363100",
-      "info_type": "DEPENDENT"
+      "info_type": "DEPENDENT",
+      "info_text": "",
+      "db_display_name": "KNETMINER_WHEAT",
+      "synonyms": [],
+      "dbname": "KNETMINER_WHEAT"
      },
      {
-      "dbname": "WHEATEXP_GENE",
       "synonyms": [],
+      "dbname": "WHEATEXP_GENE",
       "db_display_name": "Wheat Expression",
       "info_text": "",
       "info_type": "DEPENDENT",
-      "primary_id": "TraesCS7B02G363100",
       "description": null,
+      "primary_id": "TraesCS7B02G363100",
       "display_id": "TraesCS7B02G363100",
       "version": "0"
      },
@@ -165,47 +165,47 @@
       "display_id": "R-TAE-5608208",
       "version": "0",
       "info_type": "DIRECT",
-      "primary_id": "R-TAE-5608208",
-      "description": "ARF inactivation by AUX/IAA"
+      "description": "ARF inactivation by AUX/IAA",
+      "primary_id": "R-TAE-5608208"
      },
      {
-      "version": "0",
-      "display_id": "R-TAE-5608118",
-      "description": "Auxin signalling",
-      "primary_id": "R-TAE-5608118",
-      "info_type": "DIRECT",
-      "info_text": "Generated via direct",
       "db_display_name": "Plant Reactome Pathway ID",
+      "info_text": "Generated via direct",
       "dbname": "Plant_Reactome_Pathway",
+      "synonyms": [],
+      "display_id": "R-TAE-5608118",
+      "version": "0",
+      "info_type": "DIRECT",
+      "description": "Auxin signalling",
+      "primary_id": "R-TAE-5608118"
+     },
+     {
+      "display_id": "LOC123162439",
+      "version": "0",
+      "info_type": "DEPENDENT",
+      "primary_id": "123162439",
+      "description": "auxin response factor 17",
+      "db_display_name": "WikiGene",
+      "info_text": "",
+      "dbname": "WikiGene",
       "synonyms": []
      },
      {
-      "synonyms": [],
-      "dbname": "WikiGene",
       "info_text": "",
-      "db_display_name": "WikiGene",
-      "description": "auxin response factor 17",
-      "primary_id": "123162439",
-      "info_type": "DEPENDENT",
-      "version": "0",
-      "display_id": "LOC123162439"
-     },
-     {
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "dbname": "EntrezGene",
+      "synonyms": [],
       "version": "0",
       "display_id": "LOC123162439",
       "primary_id": "123162439",
       "description": "auxin response factor 17",
-      "info_type": "DEPENDENT",
-      "info_text": "",
-      "db_display_name": "NCBI gene (formerly Entrezgene)",
-      "synonyms": [],
-      "dbname": "EntrezGene"
+      "info_type": "DEPENDENT"
      },
      {
       "db_display_name": "Expression Atlas",
       "info_text": "",
-      "synonyms": [],
       "dbname": "ArrayExpress",
+      "synonyms": [],
       "display_id": "TraesCS7B02G363100",
       "version": "0",
       "info_type": "DIRECT",
@@ -251,7 +251,7 @@
     "returned": 1,
     "truncated": false,
     "next_cursor": null,
-    "abstracts_included": true,
+    "abstracts_included": false,
     "hits": [
      {
       "id": "39845488",
@@ -267,7 +267,7 @@
       "citedByCount": 5,
       "isOpenAccess": true,
       "hasPDF": true,
-      "abstractText": "Wheat streak mosaic virus (WSMV; <i>Tritimovirus tritici</i>) and Triticum mosaic virus (TriMV; <i>Poacevirus tritici</i>), the type members of the genera <i>Tritimovirus</i> and <i>Poacevirus</i>, respectively, in the family <i>Potyviridae</i>, are economically important wheat viruses in the Great Plains region of the USA. Co-infection of wheat by WSMV and TriMV results in disease synergism. Wheat transcriptome from singly (WSMV or TriMV) and doubly (WSMV+TriMV) infected upper uninoculated leaves were analyzed by RNA-Seq at 9, 12, and 21 days postinoculation. A total of 31,754 differentially expressed wheat genes were identified among all comparisons. Weighted gene co-expression network analysis resulted in 11 co-expression modules that broadly indicated gene expression profiles attributable to control, single, and double infections. Gene ontology, protein domain and KEGG (Kyoto Encyclopedia of Genes and Genomes) pathway enrichment analysis revealed that genes specifically related to photosynthesis, growth, stress, senescence, and defense were differentially enriched. Analyses of transcription factor families indicated that genes encoding MADS-Box and ARFs were strongly enriched in control plants, moderately repressed in TriMV-infected plants, and more strongly repressed in WSMV- and doubly-infected plants, whereas genes encoding WRKYs and NACs were more enriched in WSMV or doubly infected plants. Synergistic interactions between WSMV and TriMV drastically enhanced disease phenotype compared to individual virus infections. The progression of disease phenotype was correlated to transcriptomic changes, indicating the strong disruption to plant metabolism and likely channeling of energy and metabolites for viral replication. There also appeared to be a connection between viral replication and plastid health, with stronger downregulation of genes needed for chloroplast functions and integrity and increased synergism between TriMV and WSMV. This study provides an overview of transcriptomic changes distinctly influenced by TriMV and WSMV either singly or in combination and provides a good correlation between specific transcription factors and genes associated with metabolism to observed phenotypic changes in plant growth and disease synergism.",
+      "abstractText": null,
       "web_url": "https://europepmc.org/article/PMC/PMC11750876"
      }
     ],
@@ -295,40 +295,7 @@
       "taxonId": 4565,
       "taxonName": "Triticum aestivum",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR003340"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniRule",
-          "id": "UR000399996"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:A0A3B6SSA7",
@@ -344,16 +311,7 @@
       "taxonId": 4565,
       "taxonName": "Triticum aestivum",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniRule",
-          "id": "UR000399996"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:A0A3B6SSA7",
@@ -369,32 +327,7 @@
       "taxonId": 4565,
       "taxonName": "Triticum aestivum",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniRule",
-          "id": "UR000399996"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:A0A3B6SSA7",
@@ -410,24 +343,7 @@
       "taxonId": 4565,
       "taxonName": "Triticum aestivum",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:A0A3B6SSA7",
@@ -443,32 +359,7 @@
       "taxonId": 4565,
       "taxonName": "Triticum aestivum",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB-SubCell",
-          "id": "SL-0191"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniRule",
-          "id": "UR000399996"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      }
     ],
     "by_aspect": {
@@ -500,6 +391,7 @@
      ]
     },
     "by_aspect_deduped_on": "goId",
+    "with_from_included": false,
     "upstream_version": null
    },
    "domains": {

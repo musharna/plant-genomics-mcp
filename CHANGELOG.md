@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- **`examples/arf_family/` re-run at `1.28.0` (`12a5ec6`).** Same 64 calls
+  over the same 114 genes, against the release; every call's ok, error and
+  expected counts match the `1.27.0` run's, and no run was discarded. No
+  answer is over 47,000 characters: the largest is 44,985 (`gene_report` on
+  `AT1G19850`), and AraGWAS's 11,596 tokens, where at `1.27.0` all 22
+  Arabidopsis AraGWAS answers and 10 of 114 reports were over the cap. The
+  runner's rows fall from 15 to 8, all locus-level errors; 39 of the 43
+  hand-logged gap rows stay closed. The figure now plots each call's largest
+  answer against the 47,000-character line. `upstream_release` read all 8
+  backends before and after the walk and none changed or went unread.
+
 ## v1.28.0 — 2026-09-27
 
 **56 tools / 23 backends** — no new tool. A minor release rather than a patch: `aragwas_associations` answers 25 rows by default and gains `limit`, and `gene_report` leaves abstracts and GO `withFrom` out of its sections (**Behaviour change** for both), so neither answers over Claude Code's 25,000-token default cap by itself.

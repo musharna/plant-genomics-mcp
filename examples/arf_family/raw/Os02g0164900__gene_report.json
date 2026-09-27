@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-27T00:32:46Z",
- "elapsed_s": 0.7428579859843012,
+ "started_at": "2026-09-27T06:34:57Z",
+ "elapsed_s": 1.1109570040134713,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.43853272299747914,
+   "elapsed_s": 0.6731788099859841,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0003426549956202507,
+   "elapsed_s": 0.0004956790071446449,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 6.13229931332171e-05,
+   "elapsed_s": 9.10470262169838e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.005984732008073479,
+   "elapsed_s": 0.0029495010094251484,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "ok",
-   "elapsed_s": 0.2637646549846977,
+   "elapsed_s": 0.40939452801831067,
    "result": null,
    "error": null
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.004767588019603863,
+   "elapsed_s": 0.0014644410111941397,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.00018410899792797863,
+   "elapsed_s": 0.00020440900698304176,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0002531750069465488,
+   "elapsed_s": 0.00028011799440719187,
    "result": null,
    "error": null
   }
@@ -88,10 +88,6 @@
   "markdown": "# OsARF6a (UniProt: ARF6) \u2014 `Os02g0164900`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 2:3,486,813\u20133,492,905 (+) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 6**\nARFF_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 908 aa\nUniProt: [Q6H6V4](https://www.uniprot.org/uniprotkb/Q6H6V4)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [133\u2013234]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [298\u2013370]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [132\u2013235]\n- **Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1** (homologous_superfamily, cathgene3d) [773\u2013866]\n- **B3 DNA binding domain** (domain, interpro) [133\u2013236]\n- **Auxin response factor domain** (domain, interpro) [283\u2013366]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [119\u2013263]\n- **AUX/IAA domain** (domain, interpro) [824\u2013862]\n- **Auxin response factor** (family, interpro) [24\u2013866]\n- **PB1-like domain** (domain, interpro) [777\u2013861]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n- `osa04075` Plant hormone signal transduction - Oryza sativa japonica (Japanese rice) \u2014 Environmental Information Processing; Signal transduction\n\n## Interaction partners (STRING, top 10)\n| Partner | Score |\n| --- | --- |\n| B1153E06.24 | 0.98 |\n| Q0JC85_ORYSJ | 0.912 |\n| Q69MK0_ORYSJ | 0.905 |\n| Q8LRG9_ORYSJ | 0.905 |\n| A0A0P0VV58 | 0.899 |\n| A0A0P0VQD8 | 0.893 |\n| Q0DIX4_ORYSJ | 0.884 |\n| Q0JCJ0_ORYSJ | 0.884 |\n| PRMT5 | 0.879 |\n| TPC1 | 0.877 |\n\n## Cross-references\n- WikiGene: 4328406\n- Expression Atlas: Os02g0164900\n- NCBI gene (formerly Entrezgene): 4328406\n\n## Literature\n12 hits total; showing top 10.\n- **Genetic Analysis and Fine Mapping of a New Rice Mutant, Leaf Tip Senescence 2** \u2014 Cui Y, Song J, Tang L, Xu X, Peng X, Fan H, Wang J. (PMID:39000188; doi:10.3390/ijms25137082)\n- **Rice Heat Stress Response: Physiological Changes and Molecular Regulatory Network Research Progress** \u2014 Ma W, Wang X, Gu C, Lu Z, Ma R, Wang X, Lu Y, Cai K, Tang Z, Zhou Z, Chen Z, Zhou H, Bao X. (PMID:40872196; doi:10.3390/plants14162573)\n- **The OsMAPK5-OsWRKY72 module negatively regulates grain length and grain weight in rice** \u2014 Wang F, Lin J, Yang F, Chen X, Liu Y, Yan L, Chen J, Wang Z, Xie H, Zhang J, Xu H, Chen S. (PMID:39474750; doi:10.1111/jipb.13786)\n- **Genetic dissection of thousand-seed weight in linseed (<i>Linum usitatissimum</i> L.) using multi-locus genome-wide association study** \u2014 Saroha A, Gomashe SS, Kaur V, Pal D, Ujjainwal S, Aravind J, Singh M, Rajkumar S, Singh K, Kumar A, Wankhede DP. (PMID:37332700; doi:10.3389/fpls.2023.1166728)\n- **Genetic Basis of Grain Size and Weight in Rice, Wheat, and Barley** \u2014 Gasparis S, Mi\u0142oszewski MM. (PMID:38069243; doi:10.3390/ijms242316921)\n- **miR167d-ARFs Module Regulates Flower Opening and Stigma Size in Rice** \u2014 Zhao ZX, Yin XX, Li S, Peng YT, Yan XL, Chen C, Hassan B, Zhou SX, Pu M, Zhao JH, Hu XH, Li GB, Wang H, Zhang JW, Huang YY, Fan J, Li Y, Wang WM. (PMID:35876915; doi:10.1186/s12284-022-00587-z)\n- **Insights on Phytohormonal Crosstalk in Plant Response to Nitrogen Stress: A Focus on Plant Root Growth and Development** \u2014 Ahmad N, Jiang Z, Zhang L, Hussain I, Yang X. (PMID:36835044; doi:10.3390/ijms24043631)\n- **Plant nitrogen availability and crosstalk with phytohormones signallings and their biotechnology breeding application in crops** \u2014 Xing J, Cao X, Zhang M, Wei X, Zhang J, Wan X. (PMID:36435985; doi:10.1111/pbi.13971)\n- **Integrated Analysis of the Transcriptome and Metabolome Revealed the Molecular Mechanisms Underlying the Enhanced Salt Tolerance of Rice Due to the Application of Exogenous Melatonin** \u2014 Xie Z, Wang J, Wang W, Wang Y, Xu J, Li Z, Zhao X, Fu B. (PMID:33519878; doi:10.3389/fpls.2020.618680)\n- **Genes and Their Molecular Functions Determining Seed Structure, Components, and Quality of Rice** \u2014 Li P, Chen YH, Lu J, Zhang CQ, Liu QQ, Li QF. (PMID:35303197; doi:10.1186/s12284-022-00562-8)\n",
   "sections": {
    "annotation": {
-    "end": 3492905,
-    "start": 3486813,
-    "canonical_transcript": "Os02t0164900-01",
-    "object_type": "Gene",
     "id": "Os02g0164900",
     "display_name": "OsARF6a",
     "logic_name": "rapdb_genes",
@@ -101,6 +97,10 @@
     "seq_region_name": "2",
     "assembly_name": "IRGSP-1.0",
     "biotype": "protein_coding",
+    "end": 3492905,
+    "start": 3486813,
+    "canonical_transcript": "Os02t0164900-01",
+    "object_type": "Gene",
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -126,37 +126,37 @@
     "count": 3,
     "xrefs": [
      {
-      "dbname": "WikiGene",
-      "synonyms": [],
-      "version": "0",
-      "db_display_name": "WikiGene",
-      "info_text": "",
-      "info_type": "DEPENDENT",
-      "description": "auxin response factor 6-like",
-      "primary_id": "4328406",
-      "display_id": "LOC4328406"
-     },
-     {
-      "db_display_name": "Expression Atlas",
-      "dbname": "ArrayExpress",
-      "synonyms": [],
-      "version": "0",
-      "info_type": "DIRECT",
-      "primary_id": "Os02g0164900",
-      "display_id": "Os02g0164900",
-      "description": null,
-      "info_text": ""
-     },
-     {
-      "info_text": "",
       "description": "auxin response factor 6-like",
       "primary_id": "4328406",
       "display_id": "LOC4328406",
       "info_type": "DEPENDENT",
+      "info_text": "",
+      "db_display_name": "WikiGene",
       "synonyms": [],
       "version": "0",
+      "dbname": "WikiGene"
+     },
+     {
+      "info_type": "DIRECT",
+      "description": null,
+      "display_id": "Os02g0164900",
+      "primary_id": "Os02g0164900",
+      "info_text": "",
+      "db_display_name": "Expression Atlas",
+      "dbname": "ArrayExpress",
+      "version": "0",
+      "synonyms": []
+     },
+     {
+      "db_display_name": "NCBI gene (formerly Entrezgene)",
+      "version": "0",
+      "synonyms": [],
       "dbname": "EntrezGene",
-      "db_display_name": "NCBI gene (formerly Entrezgene)"
+      "description": "auxin response factor 6-like",
+      "display_id": "LOC4328406",
+      "primary_id": "4328406",
+      "info_type": "DEPENDENT",
+      "info_text": ""
      }
     ],
     "by_db": {
@@ -296,7 +296,7 @@
     "returned": 10,
     "truncated": true,
     "next_cursor": "eyJwIjogeyJtYXJrIjogIkFvSUlQMkNFN1NnME5UWXlPREUzT0E9PSIsICJvZmZzZXQiOiAxMH0sICJxIjogeyJxdWVyeSI6ICJPczAyZzAxNjQ5MDAgQU5EIHJpY2UiLCAic2l6ZSI6IDEwfSwgInQiOiAibG9jdXNfbGl0ZXJhdHVyZSJ9",
-    "abstracts_included": true,
+    "abstracts_included": false,
     "hits": [
      {
       "id": "39000188",
@@ -312,7 +312,7 @@
       "citedByCount": 3,
       "isOpenAccess": true,
       "hasPDF": true,
-      "abstractText": "Premature leaf senescence significantly reduces rice yields. Despite identifying numerous factors influencing these processes, the intricate genetic regulatory networks governing leaf senescence demand further exploration. We report the characterization of a stably inherited, ethyl methanesulfonate(EMS)-induced rice mutant with wilted leaf tips from seedling till harvesting, designated <i>lts2</i>. This mutant exhibits dwarfism and early senescence at the leaf tips and margins from the seedling stage when compared to the wild type. Furthermore, <i>lts2</i> displays a substantial decline in both photosynthetic activity and chlorophyll content. Transmission electron microscopy revealed the presence of numerous osmiophilic granules in chloroplast cells near the senescent leaf tips, indicative of advanced cellular senescence. There was also a significant accumulation of H<sub>2</sub>O<sub>2</sub>, alongside the up-regulation of senescence-associated genes within the leaf tissues. Genetic mapping situated <i>lts2</i> between SSR markers Q1 and L12, covering a physical distance of approximately 212 kb in chr.1. No similar genes controlling a premature senescence leaf phenotype have been identified in the region, and subsequent DNA and bulk segregant analysis (BSA) sequencing analyses only identified a single nucleotide substitution (C-T) in the exon of LOC_Os01g35860. These findings position the <i>lts2</i> mutant as a valuable genetic model for elucidating chlorophyll metabolism and for further functional analysis of the gene in rice.",
+      "abstractText": null,
       "web_url": "https://europepmc.org/article/PMC/PMC11241029"
      },
      {
@@ -329,7 +329,7 @@
       "citedByCount": 5,
       "isOpenAccess": true,
       "hasPDF": true,
-      "abstractText": "Global climate change has markedly increased the frequency of heat stress events in rice, severely threatening both yield and grain quality and posing a substantial challenge to global food security. Understanding the molecular mechanisms underlying heat tolerance in rice is therefore essential to facilitate the breeding of thermotolerant cultivars. This review provides a comprehensive overview of the effects of heat stress on rice agronomic traits across various developmental stages. We summarize key physiological and metabolic alterations induced by high temperatures and discuss recent advances in unraveling the molecular regulatory networks involved in heat stress responses. By integrating findings from gene cloning, functional genomics, and advanced breeding strategies, this review outlines practical approaches for improving rice heat tolerance and identifies critical knowledge gaps that warrant further investigation.",
+      "abstractText": null,
       "web_url": "https://europepmc.org/article/PMC/PMC12389009"
      },
      {
@@ -346,7 +346,7 @@
       "citedByCount": 14,
       "isOpenAccess": true,
       "hasPDF": true,
-      "abstractText": "Grain size and grain weight are important determinants for grain yield. In this study, we identify a novel OsMAPK5-OsWRKY72 module that negatively regulates grain length and grain weight in rice. We found that loss-of-function of OsMAPK5 leads to larger cell size of the rice spikelet hulls and a significant increase in both grain length and grain weight in an indica variety Minghui 86 (MH86). OsMAPK5 interacts with OsMAPKK3/4/5 and OsWRKY72 and phosphorylates OsWRKY72 at T86 and S88. Similar to the osmapk5 MH86 mutants, the oswrky72 knockout MH86 mutants exhibited larger size of spikelet hull cells and increased grain length and grain weight, whereas the OsWRKY72-overexpression MH86 plants showed opposite phenotypes. OsWRKY72 targets the W-box motifs in the promoter of OsARF6, an auxin response factor involved in auxin signaling. Dual-luciferase reporter assays demonstrated that OsWRKY72 activates OsARF6 expression. The activation effect of the phosphorylation-mimicking OsWRKY72<sup>T86D/S88D</sup> on OsARF6 expression was significantly enhanced, whereas the effects of the OsWRKY72 phosphorylation-null mutants were significantly reduced. In addition, auxin levels in young panicles of the osmapk5 and oswrky72 mutants were significantly higher than that in the wild-type MH86. Collectively, our study uncovered novel connections of the OsMAPKK3/4/5-OsMAPK5-mediated MAPK signaling, OsWRKY72-mediated transcription regulation, and OsARF6-mediated auxin signaling pathways in regulating grain length and grain weight in an indica-type rice, providing promising targets for molecular breeding of rice varieties with high yield and quality.",
+      "abstractText": null,
       "web_url": "https://europepmc.org/article/PMC/PMC11622537"
      },
      {
@@ -363,7 +363,7 @@
       "citedByCount": 2,
       "isOpenAccess": true,
       "hasPDF": true,
-      "abstractText": "Flaxseed/linseed is an important oilseed crop having applications in the food, nutraceutical, and paint industry. Seed weight is one of the most crucial determinants of seed yield in linseed. Here, quantitative trait nucleotides (QTNs) associated with thousand-seed weight (TSW) have been identified using multi-locus genome-wide association study (ML-GWAS). Field evaluation was carried out in five environments in multi-year-location trials. SNP genotyping information of the AM panel of 131 accessions comprising 68,925 SNPs was employed for ML-GWAS. From the six ML-GWAS methods employed, five methods helped identify a total of 84 unique significant QTNs for TSW. QTNs identified in \u2265 2 methods/environments were designated as stable QTNs. Accordingly, 30 stable QTNs have been identified for TSW accounting up to 38.65% trait variation. Alleles with positive effect on trait were analyzed for 12 strong QTNs with <i>r</i> <sup>2</sup> \u2265 10.00%, which showed significant association of specific alleles with higher trait value in three or more environments. A total of 23 candidate genes have been identified for TSW, which included <i>B3 domain-containing transcription factor</i>, <i>SUMO-activating enzyme</i>, <i>protein SCARECROW</i>, <i>shaggy-related protein kinase/BIN2</i>, <i>ANTIAUXIN-RESISTANT 3</i>, <i>RING-type E3 ubiquitin transferase E4</i>, <i>auxin response factors</i>, <i>WRKY transcription factor</i>, and <i>CBS domain-containing protein</i>. <i>In silico</i> expression analysis of candidate genes was performed to validate their possible role in different stages of seed development process. The results from this study provide significant insight and elevate our understanding on genetic architecture of TSW trait in linseed.",
+      "abstractText": null,
       "web_url": "https://europepmc.org/article/PMC/PMC10272591"
      },
      {
@@ -380,7 +380,7 @@
       "citedByCount": 25,
       "isOpenAccess": true,
       "hasPDF": true,
-      "abstractText": "Grain size is a key component of grain yield in cereals. It is a complex quantitative trait controlled by multiple genes. Grain size is determined via several factors in different plant development stages, beginning with early tillering, spikelet formation, and assimilates accumulation during the pre-anthesis phase, up to grain filling and maturation. Understanding the genetic and molecular mechanisms that control grain size is a prerequisite for improving grain yield potential. The last decade has brought significant progress in genomic studies of grain size control. Several genes underlying grain size and weight were identified and characterized in rice, which is a model plant for cereal crops. A molecular function analysis revealed most genes are involved in different cell signaling pathways, including phytohormone signaling, transcriptional regulation, ubiquitin-proteasome pathway, and other physiological processes. Compared to rice, the genetic background of grain size in other important cereal crops, such as wheat and barley, remains largely unexplored. However, the high level of conservation of genomic structure and sequences between closely related cereal crops should facilitate the identification of functional orthologs in other species. This review provides a comprehensive overview of the genetic and molecular bases of grain size and weight in wheat, barley, and rice, focusing on the latest discoveries in the field. We also present possibly the most updated list of experimentally validated genes that have a strong effect on grain size and discuss their molecular function.",
+      "abstractText": null,
       "web_url": "https://europepmc.org/article/PMC/PMC10706642"
      },
      {
@@ -397,7 +397,7 @@
       "citedByCount": 14,
       "isOpenAccess": true,
       "hasPDF": true,
-      "abstractText": "Flower opening and stigma exertion are two critical traits for cross-pollination during seed production of hybrid rice (Oryza sativa L.). In this study, we demonstrate that the miR167d-ARFs module regulates stigma size and flower opening that is associated with the elongation of stamen filaments and the cell arrangement of lodicules. The overexpression of miR167d (OX167d) resulted in failed elongation of stamen filaments, increased stigma size, and morphological alteration of lodicule, resulting in cleistogamy. Blocking miR167d by target mimicry also led to a morphological alteration of the individual floral organs, including a reduction in stigma size and alteration of lodicule cell morphology, but did not show the cleistogamous phenotype. In addition, the four target genes of miR167d, namely ARF6, ARF12, ARF17, and ARF25, have overlapping functions in flower opening and stigma size. The loss-of-function of a single ARF gene did not influence the flower opening and stigma size, but arf12 single mutant showed a reduced plant height and aborted apical spikelets. However, mutation in ARF12 together with mutation in either ARF6, ARF17, or ARF25 led to the same defective phenotypes that were observed in OX167d, including the failed elongation of stamen filaments, increased stigma size, and morphological alteration of lodicule. These findings indicate that the appropriate expression of miR167d is crucial and the miR167d-ARFs module plays important roles in the regulation of flower opening and stigma size in rice.",
+      "abstractText": null,
       "web_url": "https://europepmc.org/article/PMC/PMC9314575"
      },
      {
@@ -414,7 +414,7 @@
       "citedByCount": 26,
       "isOpenAccess": true,
       "hasPDF": true,
-      "abstractText": "Nitrogen (N) is a vital mineral component that can restrict the growth and development of plants if supplied inappropriately. In order to benefit their growth and development, plants have complex physiological and structural responses to changes in their nitrogen supply. As higher plants have multiple organs with varying functions and nutritional requirements, they coordinate their responses at the whole-plant level based on local and long-distance signaling pathways. It has been suggested that phytohormones are signaling substances in such pathways. The nitrogen signaling pathway is closely associated with phytohormones such as auxin (AUX), abscisic acid (ABA), cytokinins (CKs), ethylene (ETH), brassinosteroid (BR), strigolactones (SLs), jasmonic acid (JA), and salicylic acid (SA). Recent research has shed light on how nitrogen and phytohormones interact to modulate physiology and morphology. This review provides a summary of the research on how phytohormone signaling affects root system architecture (RSA) in response to nitrogen availability. Overall, this review contributes to identifying recent developments in the interaction between phytohormones and N, as well as serving as a foundation for further study.",
+      "abstractText": null,
       "web_url": "https://europepmc.org/article/PMC/PMC9958644"
      },
      {
@@ -431,7 +431,7 @@
       "citedByCount": 49,
       "isOpenAccess": true,
       "hasPDF": true,
-      "abstractText": "Nitrogen (N), one of the most important nutrients, limits plant growth and crop yields in sustainable agriculture system, in which phytohormones are known to play essential roles in N availability. Hence, it is not surprising that massive studies about the crosstalk between N and phytohormones have been constantly emerging. In this review, with the intellectual landscape of N and phytohormones crosstalk provided by the bibliometric analysis, we trace the research story of best-known crosstalk between N and various phytohormones over the last 20\u2009years. Then, we discuss how N regulates various phytohormones biosynthesis and transport in plants. In reverse, we also summarize how phytohormones signallings modulate root system architecture (RSA) in response to N availability. Besides, we expand to outline how phytohormones signallings regulate uptake, transport, and assimilation of N in plants. Further, we conclude advanced biotechnology strategies, explain their application, and provide potential phytohormones-regulated N use efficiency (NUE) targets in crops. Collectively, this review provides not only a better understanding on the recent progress of crosstalk between N and phytohormones, but also targeted strategies for improvement of NUE to increase crop yields in future biotechnology breeding of crops.",
+      "abstractText": null,
       "web_url": "https://europepmc.org/article/PMC/PMC10281611"
      },
      {
@@ -448,7 +448,7 @@
       "citedByCount": 59,
       "isOpenAccess": true,
       "hasPDF": true,
-      "abstractText": "High salinity is one of the major abiotic stresses limiting rice production. Melatonin has been implicated in the salt tolerance of rice. However, the molecular basis of melatonin-mediated salt tolerance in rice remains unclear. In the present study, we performed an integrated transcriptome and metabolome profiling of rice seedlings treated with salt, melatonin, or salt + melatonin. The application of exogenous melatonin increased the salt tolerance of rice plants by decreasing the sodium content to maintain Na<sup>+</sup>/K<sup>+</sup> homeostasis, alleviating membrane lipid oxidation, and enhancing chlorophyll contention. A comparative transcriptome analysis revealed that complex molecular pathways contribute to melatonin-mediated salt tolerance. More specifically, the AP2/EREBP-HB-WRKY transcriptional cascade and phytohormone (e.g., auxin and abscisic acid) signaling pathways were activated by an exogenous melatonin treatment. On the basis of metabolome profiles, 64 metabolites, such as amino acids, organic acids, nucleotides, and secondary metabolites, were identified with increased abundances only in plants treated with salt + melatonin. Several of these metabolites including endogenous melatonin and its intermediates (5-hydroxy-L-tryptophan, <i>N</i> <sup>1</sup>-acetyl-<i>N</i> <sup>2</sup>-formyl-5-methoxykynuramine), gallic acid, diosmetin, and cyanidin 3-<i>O</i>-galactoside had antioxidant functions, suggesting melatonin activates multiple antioxidant pathways to alleviate the detrimental effects of salt stress. Combined transcriptome and metabolome analyses revealed a few gene-metabolite networks related to various pathways, including linoleic acid metabolism and amino acid metabolism that are important for melatonin-mediated salt tolerance. The data presented herein may be useful for further elucidating the multiple regulatory roles of melatonin in plant responses to abiotic stresses.",
+      "abstractText": null,
       "web_url": "https://europepmc.org/article/PMC/PMC7840565"
      },
      {
@@ -465,7 +465,7 @@
       "citedByCount": 104,
       "isOpenAccess": true,
       "hasPDF": true,
-      "abstractText": "With the improvement of people's living standards and rice trade worldwide, the demand for high-quality rice is increasing. Therefore, breeding high quality rice is critical to meet the market demand. However, progress in improving rice grain quality lags far behind that of rice yield. This might be because of the complexity of rice grain quality research, and the lack of consensus definition and evaluation standards for high quality rice. In general, the main components of rice grain quality are milling quality (MQ), appearance quality (AQ), eating and cooking quality (ECQ), and nutritional quality (NQ). Importantly, all these quality traits are determined directly or indirectly by the structure and composition of the rice seeds. Structurally, rice seeds mainly comprise the spikelet hull, seed coat, aleurone layer, embryo, and endosperm. Among them, the size of spikelet hull is the key determinant of rice grain size, which usually affects rice AQ, MQ, and ECQ. The endosperm, mainly composed of starch and protein, is the major edible part of the rice seed. Therefore, the content, constitution, and physicochemical properties of starch and protein are crucial for multiple rice grain quality traits. Moreover, the other substances, such as lipids, minerals, vitamins, and phytochemicals, included in different parts of the rice seed, also contribute significantly to rice grain quality, especially the NQ. Rice seed growth and development are precisely controlled by many genes; therefore, cloning and dissecting these quality-related genes will enhance our knowledge of rice grain quality and will assist with the breeding of high quality rice. This review focuses on summarizing the recent progress on cloning key genes and their functions in regulating rice seed structure and composition, and their corresponding contributions to rice grain quality. This information will facilitate and advance future high quality rice breeding programs.",
+      "abstractText": null,
       "web_url": "https://europepmc.org/article/PMC/PMC8933604"
      }
     ],
@@ -493,104 +493,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20250130",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19220"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19850"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G34310"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G34390"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G77850"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G33860"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G46530"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT3G61830"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT4G23980"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G37020"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G60450"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN000774836"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q6H6V4",
@@ -606,32 +509,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR003340"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q6H6V4",
@@ -647,24 +525,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q6H6V4",
@@ -680,48 +541,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20250130",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19850"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G59750"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G20730"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G62000"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN000774836"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q6H6V4",
@@ -737,24 +557,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q6H6V4",
@@ -770,88 +573,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260529",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19220"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G30330"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G59750"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G33860"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT4G30080"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G20730"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G62000"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN000774836"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "K4DF01"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "Q2LAJ3"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q6H6V4",
@@ -867,24 +589,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB-SubCell",
-          "id": "SL-0191"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      }
     ],
     "by_aspect": {
@@ -916,6 +621,7 @@
      ]
     },
     "by_aspect_deduped_on": "goId",
+    "with_from_included": false,
     "upstream_version": null
    },
    "domains": {

@@ -5,14 +5,14 @@
   "organism": "oryza_sativa",
   "top_n": 10
  },
- "started_at": "2026-09-27T00:32:48Z",
- "elapsed_s": 0.7163425860053394,
+ "started_at": "2026-09-27T06:34:58Z",
+ "elapsed_s": 1.183311202999903,
  "steps": [
   {
    "step": 1,
    "tool": "ensembl_plants_lookup_locus",
    "status": "ok",
-   "elapsed_s": 0.4618500620126724,
+   "elapsed_s": 0.9154063140158542,
    "result": null,
    "error": null
   },
@@ -20,7 +20,7 @@
    "step": 2,
    "tool": "resolve_locus_to_uniprot",
    "status": "ok",
-   "elapsed_s": 0.0004192299966234714,
+   "elapsed_s": 0.0005143650050740689,
    "result": null,
    "error": null
   },
@@ -28,7 +28,7 @@
    "step": 3,
    "tool": "get_gene_xrefs",
    "status": "ok",
-   "elapsed_s": 0.00015034200623631477,
+   "elapsed_s": 6.774399662390351e-05,
    "result": null,
    "error": null
   },
@@ -36,7 +36,7 @@
    "step": 4,
    "tool": "kegg_pathways",
    "status": "ok",
-   "elapsed_s": 0.00011521400301717222,
+   "elapsed_s": 5.120897549204528e-05,
    "result": null,
    "error": null
   },
@@ -44,7 +44,7 @@
    "step": 5,
    "tool": "string_interactions",
    "status": "error",
-   "elapsed_s": 0.25351180098368786,
+   "elapsed_s": 0.26739287801319733,
    "result": null,
    "error": "[NotFoundError] STRING: no interaction partners for Os04g0690600 (queried as Os04g0690600)"
   },
@@ -52,7 +52,7 @@
    "step": 6,
    "tool": "locus_literature",
    "status": "ok",
-   "elapsed_s": 0.0006371180061250925,
+   "elapsed_s": 0.0004873420111835003,
    "result": null,
    "error": null
   },
@@ -60,7 +60,7 @@
    "step": 7,
    "tool": "locus_go_annotations",
    "status": "ok",
-   "elapsed_s": 0.0001959000073838979,
+   "elapsed_s": 0.0002477999951224774,
    "result": null,
    "error": null
   },
@@ -68,7 +68,7 @@
    "step": 8,
    "tool": "interpro_domains",
    "status": "ok",
-   "elapsed_s": 0.0002454129862599075,
+   "elapsed_s": 0.00020400798530317843,
    "result": null,
    "error": null
   }
@@ -88,19 +88,19 @@
   "markdown": "# OsARF13 (UniProt: ARF13) \u2014 `Os04g0690600`\n\n*Oryza sativa* \u00b7 protein_coding \u00b7 4:35,329,565\u201335,333,095 (-) \u00b7 IRGSP-1.0\n\n## Protein\n**Auxin response factor 13**\nARFM_ORYSJ \u00b7 UniProtKB reviewed (Swiss-Prot) \u00b7 529 aa\nUniProt: [Q7XSS9](https://www.uniprot.org/uniprotkb/Q7XSS9)\n\n## Protein domains\n- **Plant-specific B3-DNA binding domain** (domain, cdd) [126\u2013232]\n- **G3DSA:2.30.30.1040** (homologous_superfamily, cathgene3d) [294\u2013360]\n- **DNA-binding pseudobarrel domain** (homologous_superfamily, cathgene3d) [125\u2013234]\n- **B3 DNA binding domain** (domain, interpro) [126\u2013234]\n- **Auxin response factor domain** (domain, interpro) [279\u2013358]\n- **DNA-binding pseudobarrel domain superfamily** (homologous_superfamily, interpro) [117\u2013237]\n- **Auxin response factor** (family, interpro) [26\u2013483]\n- **B3 DNA binding domain** (domain, pfam) [129\u2013233]\n- **Auxin response factor ancillary domain** (domain, pfam) [279\u2013358]\n- **B3 DNA-binding domain profile** (domain, profile) [128\u2013234]\n\n## GO annotations\n**Molecular Function**\n- [GO:0000976] transcription cis-regulatory region binding (IBA)\n- [GO:0003677] DNA binding (IEA)\n**Biological Process**\n- [GO:0006355] regulation of DNA-templated transcription (IEA)\n- [GO:0006355] regulation of DNA-templated transcription (IBA)\n- [GO:0009725] response to hormone (IEA)\n**Cellular Component**\n- [GO:0005634] nucleus (IBA)\n- [GO:0005634] nucleus (IEA)\n\n## Pathways (KEGG)\n_No KEGG pathway memberships found._\n\n## Interaction partners (STRING, top 10)\n_Unavailable \u2014 [NotFoundError] STRING: no interaction partners for Os04g0690600 (queried as Os04g0690600)_\n\n## Cross-references\n- UniProtKB Gene Name: Q7XSS9\n- WikiGene: 9269399\n- Expression Atlas: Os04g0690600\n- NCBI gene (formerly Entrezgene): 9269399\n\n## Literature\n3 hits total; showing top 3.\n- **Initiation of scutellum-derived callus is regulated by an embryo-like developmental pathway in rice** \u2014 Guo F, Wang H, Lian G, Cai G, Liu W, Zhang H, Li D, Zhou C, Han N, Zhu M, Su Y, Seo PJ, Xu L, Bian H. (PMID:37100819; doi:10.1038/s42003-023-04835-w)\n- **Overexpression of <i>OsERF83</i>, a Vascular Tissue-Specific Transcription Factor Gene, Confers Drought Tolerance in Rice** \u2014 Jung SE, Bang SW, Kim SH, Seo JS, Yoon HB, Kim YS, Kim JK. (PMID:34299275; doi:10.3390/ijms22147656)\n- **Moderate water stress in rice induces rhizosheath formation associated with abscisic acid and auxin responses** \u2014 Zhang Y, Du H, Gui Y, Xu F, Liu J, Zhang J, Xu W. (PMID:32053723; doi:10.1093/jxb/eraa021)\n",
   "sections": {
    "annotation": {
-    "id": "Os04g0690600",
-    "display_name": "OsARF13",
-    "logic_name": "rapdb_genes",
-    "db_type": "core",
+    "biotype": "protein_coding",
     "strand": -1,
     "source": "RAP2022-09-01",
     "seq_region_name": "4",
     "assembly_name": "IRGSP-1.0",
-    "biotype": "protein_coding",
+    "logic_name": "rapdb_genes",
+    "db_type": "core",
+    "id": "Os04g0690600",
+    "display_name": "OsARF13",
+    "object_type": "Gene",
+    "canonical_transcript": "Os04t0690600-01",
     "end": 35333095,
     "start": 35329565,
-    "canonical_transcript": "Os04t0690600-01",
-    "object_type": "Gene",
     "organism": "oryza_sativa",
     "upstream_version": null
    },
@@ -126,44 +126,44 @@
     "count": 4,
     "xrefs": [
      {
-      "info_type": "DEPENDENT",
-      "primary_id": "Q7XSS9",
-      "display_id": "ARF13",
-      "description": null,
-      "info_text": "",
       "db_display_name": "UniProtKB Gene Name",
       "dbname": "Uniprot_gn",
       "synonyms": [],
-      "version": null
-     },
-     {
-      "db_display_name": "WikiGene",
-      "dbname": "WikiGene",
-      "synonyms": [],
-      "version": "0",
+      "version": null,
       "info_type": "DEPENDENT",
-      "primary_id": "9269399",
-      "display_id": "LOC9269399",
-      "description": "auxin response factor 13-like",
+      "description": null,
+      "primary_id": "Q7XSS9",
+      "display_id": "ARF13",
       "info_text": ""
      },
      {
+      "info_text": "",
+      "info_type": "DEPENDENT",
+      "primary_id": "9269399",
+      "display_id": "LOC9269399",
+      "description": "auxin response factor 13-like",
+      "dbname": "WikiGene",
+      "version": "0",
+      "synonyms": [],
+      "db_display_name": "WikiGene"
+     },
+     {
+      "db_display_name": "Expression Atlas",
       "dbname": "ArrayExpress",
       "synonyms": [],
       "version": "0",
-      "db_display_name": "Expression Atlas",
-      "info_text": "",
       "info_type": "DIRECT",
       "description": null,
+      "display_id": "Os04g0690600",
       "primary_id": "Os04g0690600",
-      "display_id": "Os04g0690600"
+      "info_text": ""
      },
      {
       "info_text": "",
       "info_type": "DEPENDENT",
-      "description": "auxin response factor 13-like",
-      "display_id": "LOC9269399",
       "primary_id": "9269399",
+      "display_id": "LOC9269399",
+      "description": "auxin response factor 13-like",
       "dbname": "EntrezGene",
       "synonyms": [],
       "version": "0",
@@ -204,7 +204,7 @@
     "returned": 3,
     "truncated": false,
     "next_cursor": null,
-    "abstracts_included": true,
+    "abstracts_included": false,
     "hits": [
      {
       "id": "37100819",
@@ -220,7 +220,7 @@
       "citedByCount": 11,
       "isOpenAccess": true,
       "hasPDF": true,
-      "abstractText": "In rice (Oryza sativa) tissue culture, callus can be induced from the scutellum in embryo or from the vasculature of non-embryonic organs such as leaves, nodes, or roots. Here we show that the auxin signaling pathway triggers cell division in the epidermis of the scutellum to form an embryo-like structure, which leads to callus formation. Our transcriptome data show that embryo-, stem cell-, and auxin-related genes are upregulated during scutellum-derived callus initiation. Among those genes, the embryo-specific gene OsLEC1 is activated by auxin and involved in scutellum-derived callus initiation. However, OsLEC1 is not required for vasculature-derived callus initiation from roots. In addition, OsIAA11 and OsCRL1, which are involved in root development, are required for vasculature-derived callus formation but not for scutellum-derived callus formation. Overall, our data indicate that scutellum-derived callus initiation is regulated by an embryo-like development program, and this is different from vasculature-derived callus initiation which borrows a root development program.",
+      "abstractText": null,
       "web_url": "https://europepmc.org/article/PMC/PMC10130139"
      },
      {
@@ -237,7 +237,7 @@
       "citedByCount": 39,
       "isOpenAccess": true,
       "hasPDF": true,
-      "abstractText": "Abiotic stresses severely affect plant growth and productivity. To cope with abiotic stresses, plants have evolved tolerance mechanisms that are tightly regulated by reprogramming transcription factors (TFs). APETALA2/ethylene-responsive factor (AP2/ERF) transcription factors are known to play an important role in various abiotic stresses. However, our understanding of the molecular mechanisms remains incomplete. In this study, we identified the role of <i>OsERF83</i>, a member of the AP2/ERF transcription factor family, in response to drought stress. OsERF83 is a transcription factor localized to the nucleus and induced in response to various abiotic stresses, such as drought and abscisic acid (ABA). Overexpression of <i>OsERF83</i> in transgenic plants (<i>OsERF83<sup>OX</sup></i>) significantly increased drought tolerance, with higher photochemical efficiency in rice. <i>OsERF83<sup>OX</sup></i> was also associated with growth retardation, with reduced grain yields under normal growth conditions. <i>OsERF83</i> is predominantly expressed in the vascular tissue of all organs. Transcriptome analysis revealed that <i>OsERF83</i> regulates drought response genes, which are related to the transporter (<i>OsNPF8.10, OsNPF8.17, OsLH1),</i> lignin biosynthesis (<i>OsLAC17, OsLAC10, CAD8D)</i>, terpenoid synthesis (<i>OsTPS33, OsTPS14, OsTPS3)</i>, cytochrome P450 family (<i>Oscyp71Z4, CYP76M10</i>), and abiotic stress-related genes (<i>OsSAP, OsLEA14, PCC13-62). OsERF83</i> also up-regulates biotic stress-associated genes, including <i>PATHOGENESIS-RELATED PROTEIN</i> (<i>PR</i>), <i>WALL-ASSOCIATED KINASE</i> (<i>WAK</i>), <i>CELLULOSE SYNTHASE-LIKE PROTEIN E1</i> (<i>CslE1</i>), and <i>LYSM RECEPTOR-LIKE KINASE</i> (<i>RLK</i>) genes. Our results provide new insight into the multiple roles of <i>OsERF83</i> in the cross-talk between abiotic and biotic stress signaling pathways.",
+      "abstractText": null,
       "web_url": "https://europepmc.org/article/PMC/PMC8304134"
      },
      {
@@ -254,7 +254,7 @@
       "citedByCount": 28,
       "isOpenAccess": true,
       "hasPDF": true,
-      "abstractText": "The rhizosheath is known to be beneficial for drought resistance in many plants, but the regulation of rhizosheath formation in rice plants is unclear. Here, we investigate rhizosheath formation in different rice varieties and root hair mutants. Our results showed that moderate water stress in rice induced rhizosheath formation. The soil porosity and water content were higher in the rice rhizosheath than in the rice bulk soil under moderate water stress. Additionally, rhizosheath formation in short root hair mutants was lower than in wild-type rice under moderate water stress. Moreover, transcriptomic results indicated that abscisic acid (ABA) and auxin were involved in root and root hair responses in rhizosheath formation. Further, blocking ABA and auxin pathways in wild type and in rhl1-1, the shortest root hair mutant, rhizosheath formation and root hair length were significantly decreased under moderate water stress. However, wild type plants maintained a higher root ABA content, root basipetal auxin transport, root hair length, and amount of rhizosheath than did rhl1-1. Our results suggest that moderate water stress in rice induces rhizosheath formation by modulating the ABA and auxin responses to regulate root and root hair growth, which may be used to breed rice varieties resistant to drought.",
+      "abstractText": null,
       "web_url": "https://europepmc.org/article/PMC/PMC7210750"
      }
     ],
@@ -282,104 +282,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20250130",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19220"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19850"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G34310"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G34390"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G77850"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G33860"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G46530"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT3G61830"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT4G23980"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G37020"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G60450"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN000774836"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q7XSS9",
@@ -395,32 +298,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR003340"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q7XSS9",
@@ -436,24 +314,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q7XSS9",
@@ -469,48 +330,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20250130",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19850"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G59750"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G20730"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G62000"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN000774836"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q7XSS9",
@@ -526,24 +346,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR044835"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q7XSS9",
@@ -559,88 +362,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260529",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G19220"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G30330"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT1G59750"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT2G33860"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT4G30080"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G20730"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "AGI_LocusCode",
-          "id": "AT5G62000"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "PANTHER",
-          "id": "PTN000774836"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "K4DF01"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB",
-          "id": "Q2LAJ3"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      },
      {
       "geneProductId": "UniProtKB:Q7XSS9",
@@ -656,24 +378,7 @@
       "taxonId": 39947,
       "taxonName": "Oryza sativa subsp. japonica",
       "date": "20260727",
-      "withFrom": [
-       {
-        "connectedXrefs": [
-         {
-          "db": "InterPro",
-          "id": "IPR010525"
-         }
-        ]
-       },
-       {
-        "connectedXrefs": [
-         {
-          "db": "UniProtKB-SubCell",
-          "id": "SL-0191"
-         }
-        ]
-       }
-      ]
+      "withFrom": null
      }
     ],
     "by_aspect": {
@@ -705,6 +410,7 @@
      ]
     },
     "by_aspect_deduped_on": "goId",
+    "with_from_included": false,
     "upstream_version": null
    },
    "domains": {
