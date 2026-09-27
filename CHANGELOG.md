@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v1.28.0 — 2026-09-27
+
+**56 tools / 23 backends** — no new tool. A minor release rather than a patch: `aragwas_associations` answers 25 rows by default and gains `limit`, and `gene_report` leaves abstracts and GO `withFrom` out of its sections (**Behaviour change** for both), so neither answers over Claude Code's 25,000-token default cap by itself.
 
 - **`aragwas_associations` answers 25 rows by default and takes `limit`
   (1–100) — Behaviour change.** It used to follow up to 4 upstream pages to
