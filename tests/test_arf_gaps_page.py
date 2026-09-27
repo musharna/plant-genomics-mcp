@@ -265,6 +265,14 @@ def test_prose_counts_of_open_and_closed_rows_match_the_gap_log() -> None:
     stale = f"- {n_closed - 1} of the {len(hand)}\n  hand-logged gap rows.\n" + changelog
     assert _newest_changelog_split(stale) == (n_closed - 1, len(hand))
 
+    # Not scoped to the top `## ` section, on purpose: the split changes only
+    # when the gap log does, so a later entry about something else need not
+    # restate it, and the newest statement stays the claim to check. An entry
+    # that changes the log without stating the new split leaves the older
+    # statement stale, and the first assertion fails on it.
+    unrelated = "## Unreleased\n\n- A change that does not touch the gap log.\n\n"
+    assert _newest_changelog_split(unrelated + changelog) == (n_closed, len(hand))
+
 
 def _newest_changelog_split(text: str) -> tuple[int, int] | None:
     match = re.search(r"(\d+)\s+of\s+the\s+(\d+)\s+hand-logged", text)
