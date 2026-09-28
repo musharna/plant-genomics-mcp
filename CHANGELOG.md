@@ -50,6 +50,27 @@
   now fail a named test; the other 4 are equivalent (defaults that match, and
   httpx upper-casing the method). Test-only.
 
+- **Fixed: `vep_annotate` no longer promises PolyPhen.** Its description, its
+  own docstring and the README said each coding-missense row carries
+  SIFT/PolyPhen. Ensembl runs PolyPhen for human only ("Human only", VEP
+  options page), and 0 of 10 missense consequences checked live in
+  Arabidopsis and rice carried it, against 10 of 10 with SIFT, so
+  `polyphen_prediction` and `polyphen_score` are always null here. They now
+  say so; the fields stay, so the schema is unchanged. A live-gated test
+  checks a plant missense has SIFT and no PolyPhen.
+
+- **`locus_variants` and `vep_annotate` answers are tested whole.** Their row
+  lists have no per-key schema and the tests read four or five keys, so 45
+  mutants renaming a row key or the Ensembl key it is read from survived,
+  and 15 misreading the VEP entry's own fields. A verbatim live variant row
+  and VEP answer (AT1G01010, 1:3767 A/G) are now compared whole; new tests
+  also pin the lookup arguments, each missing coordinate, the caller's
+  `limit`, and the Accept header and timeout sent. Live-gated: every field of
+  every variant row at AT1G01010 is filled. 76 of 86 targeted mutants now
+  fail a named test; the other 10 are equivalent (PolyPhen is never sent,
+  argument defaults match, and no Ensembl 400 on these endpoints says "not
+  found").
+
 ## v1.28.0 — 2026-09-27
 
 **56 tools / 23 backends** — no new tool. A minor release rather than a patch: `aragwas_associations` answers 25 rows by default and gains `limit`, and `gene_report` leaves abstracts and GO `withFrom` out of its sections (**Behaviour change** for both), so neither answers over Claude Code's 25,000-token default cap by itself.
