@@ -37,6 +37,19 @@
   Accept header and timeout sent, and the fields of the unsupported-organism
   error. Each of the 78 targeted mutants now fails a named test. Test-only.
 
+- **`alphafold_structure` answers are tested whole, through the tool.** The
+  no-model tests called the accession-level helper, which the schema check
+  above does not wrap, and read two or three keys, so 20 mutants renaming a
+  key of the no-model answer survived, and 8 reading the model date or
+  description under another name. The found, 404 and empty-array answers now
+  go through the tool's own function and are compared whole; new tests also
+  pin per-accession caching, the locus and organism passed to UniProt, and
+  the method, Accept header and timeout sent. Live-gated tests check every
+  field of a real model is filled and that an accession with no model
+  (Q8WZ42, a live 404) answers `found=false`. 43 of the 47 targeted mutants
+  now fail a named test; the other 4 are equivalent (defaults that match, and
+  httpx upper-casing the method). Test-only.
+
 ## v1.28.0 — 2026-09-27
 
 **56 tools / 23 backends** — no new tool. A minor release rather than a patch: `aragwas_associations` answers 25 rows by default and gains `limit`, and `gene_report` leaves abstracts and GO `withFrom` out of its sections (**Behaviour change** for both), so neither answers over Claude Code's 25,000-token default cap by itself.

@@ -49,10 +49,15 @@ _PREDICTION = [
 _PRED_URL = f"{alphafold.BASE_URL}/api/prediction/Q9SZ92"
 
 
-def _fake_uniprot(acc: str | None):
-    """Return a monkeypatch stand-in for uniprot.lookup_locus."""
+def _fake_uniprot(acc: str | None, calls: list[tuple[object, ...]] | None = None):
+    """Return a monkeypatch stand-in for uniprot.lookup_locus.
 
-    async def _lookup(client, locus, organism="arabidopsis"):  # noqa: ANN001, ARG001
+    ``calls`` collects each call's (client, locus, organism).
+    """
+
+    async def _lookup(client, locus, organism="arabidopsis"):  # noqa: ANN001
+        if calls is not None:
+            calls.append((client, locus, organism))
         if acc is None:
             raise NotFoundError(f"no UniProt entry for {locus!r}")
         return {"primaryAccession": acc, "uniProtkbId": "CK3_ARATH"}
@@ -208,3 +213,166 @@ async def test_every_reported_band_carries_its_plddt_range(httpx_mock: HTTPXMock
     assert ranges["confident"] == [70, 90]  # EMBL-EBI: "90 > pLDDT > 70"
     # A definition, not data: the no-model answer states it too.
     assert missing["found"] is False and missing["plddt_band_ranges"] == ranges
+
+
+# ---------- the tool's whole answer (#96 mutation triage) ----------
+# The no-model tests above call lookup_by_uniprot, which conftest's output-
+# contract check does not wrap (the tool's dispatch target is lookup_locus),
+# and they read two or three keys: 20 mutants renaming a key of the no-model
+# answer survived, and 8 reading modelCreatedDate / uniprotDescription under
+# another name. These go through lookup_locus, so every answer is also checked
+# against the tool's schema (extra="forbid"), and compare the answer whole.
+# _PREDICTION's values match the live Q9SZ92 entry field for field (2026-09-27).
+
+_RANGES = {"very_low": [0, 50], "low": [50, 70], "confident": [70, 90], "very_high": [90, 100]}
+
+# Written out by hand from _PREDICTION, not produced by the code under test.
+_FOUND = {
+    "locus": "AT4G09760",
+    "accession": "Q9SZ92",
+    "found": True,
+    "model_entity_id": "AF-Q9SZ92-F1",
+    "mean_plddt": 90.25,
+    "plddt_bands": {"very_low": 0.017, "low": 0.04, "confident": 0.243, "very_high": 0.699},
+    "plddt_band_ranges": _RANGES,
+    "latest_version": 6,
+    "model_created": "2025-08-01T00:00:00Z",
+    "residue_range": {"start": 1, "end": 346},
+    "organism": "Arabidopsis thaliana",
+    "gene": "At4g09760",
+    "description": "Probable choline kinase 3",
+    "cif_url": "https://alphafold.ebi.ac.uk/files/AF-Q9SZ92-F1-model_v6.cif",
+    "pdb_url": "https://alphafold.ebi.ac.uk/files/AF-Q9SZ92-F1-model_v6.pdb",
+    "pae_image_url": "https://alphafold.ebi.ac.uk/files/AF-Q9SZ92-F1-predicted_aligned_error_v6.png",
+    "upstream_version": "6",
+}
+
+_NO_MODEL = {
+    "locus": "AT4G09760",
+    "accession": "Q9SZ92",
+    "found": False,
+    "model_entity_id": None,
+    "mean_plddt": None,
+    "plddt_bands": None,
+    "plddt_band_ranges": _RANGES,
+    "latest_version": None,
+    "model_created": None,
+    "residue_range": None,
+    "organism": None,
+    "gene": None,
+    "description": None,
+    "cif_url": None,
+    "pdb_url": None,
+    "pae_image_url": None,
+    "upstream_version": None,
+}
+
+
+def _leaves(value: object) -> list[object]:
+    if isinstance(value, dict):
+        return [leaf for v in value.values() for leaf in _leaves(v)]
+    return [value]
+
+
+@pytest.mark.asyncio
+async def test_the_tool_answers_a_model_whole(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(uniprot, "lookup_locus", _fake_uniprot("Q9SZ92"))
+    # method + match_headers: a request of another method or without the JSON
+    # Accept header gets no response.
+    httpx_mock.add_response(
+        url=_PRED_URL,
+        method="GET",
+        match_headers={"Accept": "application/json"},
+        json=_PREDICTION,
+    )
+    async with httpx.AsyncClient() as client:
+        r = await alphafold.lookup_locus(client, "AT4G09760")
+    assert r == _FOUND
+    (request,) = httpx_mock.get_requests()
+    assert request.extensions["timeout"]["read"] == alphafold.DEFAULT_TIMEOUT
+    # The fixture can fail: no expected value is null, so a mutant that reads
+    # a key the entry lacks (null) cannot match by accident.
+    assert None not in _leaves(_FOUND)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "response",
+    [{"status_code": 404, "json": {}}, {"json": []}],  # live Q8WZ42 sends the 404
+    ids=["404", "empty-array"],
+)
+async def test_the_tool_answers_no_model_whole(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch, response: dict[str, object]
+) -> None:
+    monkeypatch.setattr(uniprot, "lookup_locus", _fake_uniprot("Q9SZ92"))
+    httpx_mock.add_response(url=_PRED_URL, **response)  # type: ignore[arg-type]
+    async with httpx.AsyncClient() as client:
+        r = await alphafold.lookup_locus(client, "AT4G09760")
+    assert r == _NO_MODEL
+    # Positive control: the same answer from the cache, still whole.
+    async with httpx.AsyncClient() as client:
+        assert await alphafold.lookup_locus(client, "AT4G09760") == _NO_MODEL
+    assert len(httpx_mock.get_requests()) == 1
+
+
+@pytest.mark.asyncio
+async def test_each_accession_is_cached_under_its_own_key(httpx_mock: HTTPXMock) -> None:
+    """One response each, not reusable: a refetch would find no response, and
+    a shared key would answer one accession with the other's model."""
+    other = f"{alphafold.BASE_URL}/api/prediction/Q8WZ42"
+    httpx_mock.add_response(url=_PRED_URL, json=_PREDICTION)
+    httpx_mock.add_response(url=other, status_code=404, json={})
+    async with httpx.AsyncClient() as client:
+        answers = [
+            await alphafold.lookup_by_uniprot(client, acc)
+            for acc in ("Q9SZ92", "Q8WZ42", "Q9SZ92", "Q8WZ42")
+        ]
+    assert [(a["accession"], a["found"]) for a in answers] == [
+        ("Q9SZ92", True),
+        ("Q8WZ42", False),
+        ("Q9SZ92", True),
+        ("Q8WZ42", False),
+    ]
+    assert answers[0] == answers[2] and answers[1] == answers[3]
+    assert len(httpx_mock.get_requests()) == 2
+
+
+@pytest.mark.asyncio
+async def test_the_locus_and_organism_reach_uniprot_as_given(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[tuple[object, ...]] = []
+    monkeypatch.setattr(uniprot, "lookup_locus", _fake_uniprot("Q9SZ92", calls))
+    httpx_mock.add_response(url=_PRED_URL, json=_PREDICTION)
+    async with httpx.AsyncClient() as client:
+        r = await alphafold.lookup_locus(client, "Os01g0100100", organism="oryza_sativa")
+        assert calls == [(client, "Os01g0100100", "oryza_sativa")]
+    assert r["locus"] == "Os01g0100100" and r["found"] is True
+
+
+def test_version_str() -> None:
+    assert alphafold._version_str(6) == "6"
+    assert alphafold._version_str("") is None
+    assert alphafold._version_str(None) is None
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_every_field_of_a_model_is_filled() -> None:
+    """_PREDICTION is Q9SZ92 as AlphaFold DB sent it on one day; this is what
+    notices a renamed field later (projected as null)."""
+    async with httpx.AsyncClient() as client:
+        r = await alphafold.lookup_locus(client, "AT4G09760", "arabidopsis")
+    assert r["found"] is True
+    assert None not in _leaves(r), r
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_an_accession_without_a_model_is_found_false() -> None:
+    """Human titin (Q8WZ42) has no AlphaFold DB model: a 404 (live 2026-09-27)."""
+    async with httpx.AsyncClient() as client:
+        r = await alphafold.lookup_by_uniprot(client, "Q8WZ42")
+    assert (r["accession"], r["found"], r["model_entity_id"]) == ("Q8WZ42", False, None)
