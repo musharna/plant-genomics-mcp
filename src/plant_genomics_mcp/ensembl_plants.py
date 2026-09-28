@@ -13,7 +13,8 @@ tolerated. We retry on 429 and 5xx with exponential backoff.
 from __future__ import annotations
 
 import re
-from typing import Any
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 import httpx
 
@@ -45,6 +46,7 @@ NOT_FOUND_400_RE = re.compile(r"\bnot found\b", re.IGNORECASE)
 
 # Per-module response cache. See plant_genomics_mcp.cache for env knobs.
 _CACHE = cache.TTLCache()
+_T = TypeVar("_T")
 
 # Re-export so existing imports (`from plant_genomics_mcp.ensembl_plants import
 # PlantGenomicsError`) keep working. New code should import from
@@ -57,7 +59,9 @@ async def _get(
     path: str,
     params: dict[str, Any] | None = None,
     not_found_400_pattern: re.Pattern[str] = NOT_FOUND_400_RE,
-) -> object:
+    *,
+    shape: Callable[[object], _T],
+) -> _T:
     """GET an Ensembl REST endpoint with retry on 429/5xx.
 
     Thin cache wrapper over the shared :func:`_http.request_with_retry`
@@ -74,6 +78,7 @@ async def _get(
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
         not_found_400_pattern=not_found_400_pattern,
+        shape=shape,
     )
 
 
@@ -130,11 +135,7 @@ async def lookup_locus(
     slug = organisms.ensembl_slug_for(organism)
     wire = wire_id(locus, organism)
     params: dict[str, Any] = {"species": slug, "expand": 0}
-    raw = await _get(client, f"/lookup/id/{wire}", params=params)
-    if not isinstance(raw, dict):
-        raise PlantGenomicsError(
-            f"Ensembl /lookup/id/{locus} returned unexpected payload: {type(raw).__name__}"
-        )
+    raw = await _get(client, f"/lookup/id/{wire}", params=params, shape=_http.expect_object)
     if "species" in raw:
         return project_lookup(raw)
     return raw
@@ -159,15 +160,9 @@ async def lookup_xrefs(
     slug = organisms.ensembl_slug_for(organism)
     wire = wire_id(locus, organism)
     params: dict[str, Any] = {"species": slug}
-    raw = await _get(client, f"/xrefs/id/{wire}", params=params)
-    if not isinstance(raw, list):
-        raise PlantGenomicsError(
-            f"Ensembl /xrefs/id/{locus} returned non-list payload: {type(raw).__name__}"
-        )
+    rows = await _get(client, f"/xrefs/id/{wire}", params=params, shape=_http.object_rows)
     by_db: dict[str, list[str]] = {}
-    for entry in raw:
-        if not isinstance(entry, dict):
-            continue
+    for entry in rows:
         dbname = entry.get("dbname")
         primary_id = entry.get("primary_id")
         if dbname and primary_id:
@@ -175,8 +170,8 @@ async def lookup_xrefs(
     return {
         "locus": locus,
         "organism": slug,
-        "count": len(raw),
-        "xrefs": raw,
+        "count": len(rows),
+        "xrefs": rows,
         "by_db": by_db,
     }
 
@@ -211,6 +206,13 @@ async def _product_id(client: httpx.AsyncClient, locus: str, organism: str | int
     return validators.assert_valid_locus(target, backend="Ensembl Plants")
 
 
+def _sequence_shape(raw: object) -> dict[str, Any]:
+    body = _http.expect_object(raw)
+    if "seq" not in body:
+        raise _http.UnreadableBody(f"no seq in {str(body)[:120]}")
+    return body
+
+
 async def get_sequence(
     client: httpx.AsyncClient,
     locus: str,
@@ -235,12 +237,7 @@ async def get_sequence(
     if seq_type != "genomic":
         wire = await _product_id(client, locus, organism)
     params: dict[str, Any] = {"species": slug, "type": seq_type}
-    raw = await _get(client, f"/sequence/id/{wire}", params=params)
-    if not isinstance(raw, dict) or "seq" not in raw:
-        raise PlantGenomicsError(
-            f"Ensembl /sequence/id/{locus} (type={seq_type}) returned unexpected payload: "
-            f"{type(raw).__name__}"
-        )
+    raw = await _get(client, f"/sequence/id/{wire}", params=params, shape=_sequence_shape)
     seq = raw.get("seq") or ""
     return {
         "locus": locus,
@@ -288,17 +285,18 @@ async def region_query(
     validators.assert_no_path_metachars(region, field="region", backend="Ensembl Plants")
     slug = organisms.ensembl_slug_for(organism)
     region_str = f"{region}:{start}-{end}"
-    raw = await _get(client, f"/overlap/region/{slug}/{region_str}", params={"feature": feature})
-    if not isinstance(raw, list):
-        raise PlantGenomicsError(
-            f"Ensembl /overlap/region/{region_str} returned non-list payload: {type(raw).__name__}"
-        )
+    rows = await _get(
+        client,
+        f"/overlap/region/{slug}/{region_str}",
+        params={"feature": feature},
+        shape=_http.object_rows,
+    )
     return {
         "organism": slug,
         "region": region_str,
         "feature": feature,
-        "count": len(raw),
-        "features": raw,
+        "count": len(rows),
+        "features": rows,
     }
 
 
@@ -345,6 +343,13 @@ def _gene_tree_member(leaf: dict[str, Any], gene_tree_id: str) -> dict[str, Any]
     }
 
 
+def _gene_tree_shape(raw: object) -> dict[str, Any]:
+    body = _http.expect_object(raw)
+    if not isinstance(body.get("tree"), dict):
+        raise _http.UnreadableBody(f"no tree object in {str(body)[:120]}")
+    return body
+
+
 async def gene_tree_members(
     client: httpx.AsyncClient,
     gene_tree_id: str,
@@ -368,12 +373,9 @@ async def gene_tree_members(
         f"/genetree/id/{gene_tree_id}",
         params={"compara": "plants", "aligned": 0, "sequence": "none"},
         not_found_400_pattern=_GENE_TREE_NOT_FOUND_RE,
+        shape=_gene_tree_shape,
     )
-    tree = raw.get("tree") if isinstance(raw, dict) else None
-    if not isinstance(tree, dict):
-        raise PlantGenomicsError(
-            f"Ensembl genetree {gene_tree_id} returned no tree: {type(raw).__name__}"
-        )
+    tree = raw["tree"]
     members = [_gene_tree_member(leaf, gene_tree_id) for leaf in _gene_tree_leaves(tree)]
     if wanted is not None:
         members = [m for m in members if m["organism"] == wanted.canonical]
@@ -420,6 +422,16 @@ def _paralog(row: dict[str, Any], slug: str, prefix: str, locus: str) -> dict[st
     }
 
 
+def _paralogues_shape(raw: object) -> dict[str, Any]:
+    body = _http.expect_object(raw)
+    data = body.get("data")
+    if not isinstance(data, list):
+        raise _http.UnreadableBody(f"no data list in {str(body)[:120]}")
+    if data and not (isinstance(data[0], dict) and isinstance(data[0].get("homologies"), list)):
+        raise _http.UnreadableBody(f"no homologies list in {data[0]!r:.120}")
+    return body
+
+
 async def paralogs(
     client: httpx.AsyncClient,
     locus: str,
@@ -449,24 +461,16 @@ async def paralogs(
         client,
         f"/homology/id/{slug}/{wire_id(locus, organism)}",
         params={"compara": "plants", "type": "paralogues", "sequence": "none"},
+        shape=_paralogues_shape,
     )
-    data = raw.get("data") if isinstance(raw, dict) else None
-    if not isinstance(data, list):
-        raise PlantGenomicsError(
-            f"Ensembl paralogues of {locus} returned no data list: {type(raw).__name__}"
-        )
+    data = raw["data"]
     if not data:
         # Raises NotFoundError for an id Ensembl does not know.
         await lookup_locus(client, locus, organism=organism)
         rows: list[dict[str, Any]] = []
         found = False
     else:
-        homologies = data[0].get("homologies") if isinstance(data[0], dict) else None
-        if not isinstance(homologies, list):
-            raise PlantGenomicsError(
-                f"Ensembl paralogues of {locus} returned no homologies list: {data[0]!r}"
-            )
-        rows = [_paralog(row, slug, prefix, locus) for row in homologies]
+        rows = [_paralog(row, slug, prefix, locus) for row in data[0]["homologies"]]
         found = True
     rows.sort(key=lambda p: (-(p["perc_id"] or 0.0), p["locus"]))
     counts: dict[str, int] = {}
@@ -505,6 +509,17 @@ def _region(row: Any, slug: str) -> tuple[str, int, str | None]:
     return name, length, row.get("coord_system")
 
 
+def _assembly_shape(raw: object) -> dict[str, Any]:
+    body = _http.expect_object(raw)
+    top_level = body.get("top_level_region")
+    if not isinstance(top_level, list) or not top_level:
+        raise _http.UnreadableBody(f"no top-level regions in {str(body)[:120]}")
+    karyotype = body.get("karyotype") or []
+    if not isinstance(karyotype, list) or not all(isinstance(n, str) for n in karyotype):
+        raise _http.UnreadableBody(f"karyotype is not a list of names: {karyotype!r:.120}")
+    return body
+
+
 async def assembly(
     client: httpx.AsyncClient,
     organism: str | int = organisms.DEFAULT_ORGANISM,
@@ -524,22 +539,13 @@ async def assembly(
     if not 1 <= limit <= ASSEMBLY_MAX_LIMIT:
         raise ValueError(f"limit must be in 1..{ASSEMBLY_MAX_LIMIT}, got {limit}")
     slug = organisms.ensembl_slug_for(organism)
-    raw = await _get(client, f"/info/assembly/{slug}")
-    top_level = raw.get("top_level_region") if isinstance(raw, dict) else None
-    if not isinstance(raw, dict) or not isinstance(top_level, list) or not top_level:
-        raise PlantGenomicsError(
-            f"Ensembl /info/assembly/{slug} returned no top-level regions: {type(raw).__name__}"
-        )
-    regions = [_region(row, slug) for row in top_level]
+    raw = await _get(client, f"/info/assembly/{slug}", shape=_assembly_shape)
+    regions = [_region(row, slug) for row in raw["top_level_region"]]
     names = [name for name, _, _ in regions]
     if len(set(names)) != len(names):
         dupes = sorted({name for name in names if names.count(name) > 1})
         raise PlantGenomicsError(f"Ensembl /info/assembly/{slug}: repeated region names {dupes}")
-    karyotype = raw.get("karyotype") or []
-    if not isinstance(karyotype, list) or not all(isinstance(n, str) for n in karyotype):
-        raise PlantGenomicsError(
-            f"Ensembl /info/assembly/{slug}: karyotype is not a list of names: {karyotype!r}"
-        )
+    karyotype: list[str] = raw.get("karyotype") or []
     known = set(names)
     missing = [name for name in karyotype if name not in known]
     if missing:

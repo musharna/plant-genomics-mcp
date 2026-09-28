@@ -18,7 +18,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import planteome
-from plant_genomics_mcp.errors import PlantGenomicsError
+from plant_genomics_mcp.errors import UpstreamUnavailableError
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
@@ -161,26 +161,40 @@ async def test_lookup_locus_rejects_empty_locus() -> None:
 
 @pytest.mark.asyncio
 async def test_lookup_locus_non_dict_payload_raises(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(json=["not", "a", "dict"])
+    httpx_mock.add_response(json=["not", "a", "dict"], is_reusable=True)
     async with httpx.AsyncClient() as client:
-        with pytest.raises(PlantGenomicsError, match="non-dict payload"):
+        with pytest.raises(
+            UpstreamUnavailableError,
+            match=r"answered 200 twice without a readable result \(list, not an object\)",
+        ):
             await planteome.lookup_locus(client, "AT1G01010")
+    assert len(httpx_mock.get_requests()) == 2
 
 
 @pytest.mark.asyncio
 async def test_lookup_locus_missing_response_raises(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(json={"responseHeader": {"status": 0}})
+    httpx_mock.add_response(json={"responseHeader": {"status": 0}}, is_reusable=True)
     async with httpx.AsyncClient() as client:
-        with pytest.raises(PlantGenomicsError, match="missing 'response'"):
+        with pytest.raises(
+            UpstreamUnavailableError,
+            match=r"answered 200 twice without a readable result \(no 'response' object: got NoneType\)",
+        ):
             await planteome.lookup_locus(client, "AT1G01010")
+    assert len(httpx_mock.get_requests()) == 2
 
 
 @pytest.mark.asyncio
 async def test_lookup_locus_docs_not_list_raises(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(json={"response": {"numFound": 1, "docs": {"oops": 1}}})
+    httpx_mock.add_response(
+        json={"response": {"numFound": 1, "docs": {"oops": 1}}}, is_reusable=True
+    )
     async with httpx.AsyncClient() as client:
-        with pytest.raises(PlantGenomicsError, match="docs is not a list"):
+        with pytest.raises(
+            UpstreamUnavailableError,
+            match=r"answered 200 twice without a readable result \(response.docs is not a list: dict\)",
+        ):
             await planteome.lookup_locus(client, "AT1G01010")
+    assert len(httpx_mock.get_requests()) == 2
 
 
 # ---------- live integration (real-execution check) ----------

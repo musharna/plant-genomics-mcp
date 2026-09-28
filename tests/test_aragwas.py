@@ -16,7 +16,12 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import aragwas
-from plant_genomics_mcp.errors import NotFoundError, OrganismNotSupported, PlantGenomicsError
+from plant_genomics_mcp.errors import (
+    NotFoundError,
+    OrganismNotSupported,
+    PlantGenomicsError,
+    UpstreamUnavailableError,
+)
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
@@ -132,7 +137,6 @@ async def test_lookup_non_json_200_raises_typed(httpx_mock: HTTPXMock) -> None:
     """A 200 carrying a non-JSON body surfaces as a typed PlantGenomicsError,
     not a raw JSONDecodeError (bug audit L3) — covers the ``cached``/literal-
     service _get shape shared with onekg."""
-    from plant_genomics_mcp.errors import PlantGenomicsError
 
     # Body is non-JSON but NOT html: this is the L3 path proper. An html body
     # is now intercepted upstream in _http as an interposed page (see the
@@ -209,10 +213,14 @@ async def test_lookup_annotation_fallback_and_empty(httpx_mock: HTTPXMock) -> No
 
 @pytest.mark.asyncio
 async def test_lookup_malformed_raises(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(url=_FIRST, json=["unexpected", "list"])
+    httpx_mock.add_response(url=_FIRST, json=["unexpected", "list"], is_reusable=True)
     async with httpx.AsyncClient() as client:
-        with pytest.raises(PlantGenomicsError, match="unexpected payload"):
+        with pytest.raises(
+            UpstreamUnavailableError,
+            match=r"answered 200 twice without a readable result \(list, not an object\)",
+        ):
             await aragwas.lookup_locus(client, "AT1G01060", "arabidopsis")
+    assert len(httpx_mock.get_requests(url=_FIRST)) == 2
 
 
 @pytest.mark.asyncio

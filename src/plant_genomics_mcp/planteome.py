@@ -18,12 +18,12 @@ Solr endpoint: https://browser.planteome.org/solr/select (AmiGO2 GOlr).
 
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 import httpx
 
 from plant_genomics_mcp import _http, cache, organisms
-from plant_genomics_mcp.errors import PlantGenomicsError
 
 BASE_URL = "https://browser.planteome.org/solr"
 SELECT_PATH = "/select"
@@ -39,13 +39,28 @@ _QUERY_FIELDS = "bioentity_label_searchable synonym bioentity_name_searchable"
 
 # Per-module response cache. See plant_genomics_mcp.cache for env knobs.
 _CACHE = cache.TTLCache()
+_T = TypeVar("_T")
+
+
+def _select_shape(raw: object) -> dict[str, Any]:
+    """The ``response`` object of a /select body, holding a ``docs`` list."""
+    response = _http.expect_object(raw).get("response")
+    if not isinstance(response, dict):
+        raise _http.UnreadableBody(f"no 'response' object: got {type(response).__name__}")
+    if not isinstance(response.get("docs"), list):
+        raise _http.UnreadableBody(
+            f"response.docs is not a list: {type(response.get('docs')).__name__}"
+        )
+    return response
 
 
 async def _get(
     client: httpx.AsyncClient,
     path: str,
     params: dict[str, Any] | None = None,
-) -> object:
+    *,
+    shape: Callable[[object], _T],
+) -> _T:
     """GET a Planteome Solr endpoint with retry on 429/5xx."""
     return await _http.cached_get(
         client,
@@ -56,6 +71,7 @@ async def _get(
         headers={"Accept": "application/json"},
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
+        shape=shape,
     )
 
 
@@ -142,21 +158,8 @@ async def lookup_locus(
         "rows": limit,
         "wt": "json",
     }
-    raw = await _get(client, SELECT_PATH, params=params)
-    if not isinstance(raw, dict):
-        raise PlantGenomicsError(
-            f"Planteome {SELECT_PATH} returned non-dict payload: {type(raw).__name__}"
-        )
-    response = raw.get("response")
-    if not isinstance(response, dict):
-        raise PlantGenomicsError(
-            f"Planteome {SELECT_PATH} payload missing 'response' object: got {type(response).__name__}"
-        )
-    docs = response.get("docs")
-    if not isinstance(docs, list):
-        raise PlantGenomicsError(
-            f"Planteome {SELECT_PATH} response.docs is not a list: {type(docs).__name__}"
-        )
+    response = await _get(client, SELECT_PATH, params=params, shape=_select_shape)
+    docs = response["docs"]
 
     annotations = [_normalize(d) for d in docs if isinstance(d, dict)]
     total = _http.stated_count(response, "numFound", service=f"Planteome {SELECT_PATH}")

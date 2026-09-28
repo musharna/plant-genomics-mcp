@@ -158,12 +158,15 @@ async def lookup_locus(
             timeout=DEFAULT_TIMEOUT,
             max_retries=MAX_RETRIES,
         )
-        cached = _http.json_body(resp, "PANTHER geneinfo")
-        _CACHE.set(key, cached)
-    if not isinstance(cached, dict):
-        raise PlantGenomicsError(
-            f"PANTHER geneinfo returned unexpected payload: {type(cached).__name__}"
-        )
+        body = _http.json_body(resp, "PANTHER geneinfo")
+        # Checked before it is stored: a body stored first was served back
+        # as the same failure for the whole TTL without asking again (#96).
+        if not isinstance(body, dict):
+            raise PlantGenomicsError(
+                f"PANTHER geneinfo returned unexpected payload: {type(body).__name__}"
+            )
+        _CACHE.set(key, body)
+        cached = body
     search = cached.get("search") or {}
     release = _release(search)
     mapped = search.get("mapped_genes") or {}

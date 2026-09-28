@@ -24,7 +24,7 @@ from typing import Any
 import httpx
 
 from plant_genomics_mcp import _http, cache, organisms, validators
-from plant_genomics_mcp.errors import OrganismNotSupported, PlantGenomicsError
+from plant_genomics_mcp.errors import OrganismNotSupported
 
 BASE_URL = "https://tools.1001genomes.org"
 DEFAULT_TIMEOUT = 30.0
@@ -60,7 +60,7 @@ _CACHE = cache.TTLCache()
 
 async def _get(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
     """GET a 1001 Genomes endpoint (cached by full URL), returning the parsed dict."""
-    body = await _http.cached_get(
+    return await _http.cached_get(
         client,
         _CACHE,
         url,
@@ -68,10 +68,8 @@ async def _get(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
         headers={"Accept": "application/json"},
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
+        shape=_http.expect_object,
     )
-    if not isinstance(body, dict):
-        raise PlantGenomicsError(f"1001 Genomes returned unexpected payload: {type(body).__name__}")
-    return body
 
 
 def _project_effect(row: Any) -> dict[str, Any] | None:

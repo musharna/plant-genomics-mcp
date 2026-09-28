@@ -143,10 +143,18 @@ async def test_lookup_locus_resolves_frame_for_query(httpx_mock: HTTPXMock) -> N
 
 @pytest.mark.asyncio
 async def test_lookup_locus_malformed_xml_raises(httpx_mock: HTTPXMock) -> None:
-    _install_router(httpx_mock, frames={"AT3G51240": "<<not xml>>"})
+    frames = {**_FRAMES, "AT3G51240": "<<not xml>>"}
+    _install_router(httpx_mock, frames=frames)
     async with httpx.AsyncClient() as client:
         with pytest.raises(PlantGenomicsError, match="unparseable XML"):
             await plantcyc.lookup_locus(client, "AT3G51240", "arabidopsis")
+        # Positive control, same locus: the unparseable frame was not stored
+        # (#96), so it is fetched again and the traversal answers.
+        frames["AT3G51240"] = _GENE
+        result = await plantcyc.lookup_locus(client, "AT3G51240", "arabidopsis")
+    assert result["found"] is True
+    gene = [r for r in httpx_mock.get_requests() if r.url.query.decode() == "ARA:AT3G51240"]
+    assert len(gene) == 2
 
 
 @pytest.mark.asyncio

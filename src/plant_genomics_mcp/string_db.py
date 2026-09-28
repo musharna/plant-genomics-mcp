@@ -21,7 +21,8 @@ hardcode ``plant-genomics-mcp``.
 from __future__ import annotations
 
 import re
-from typing import Any
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 import httpx
 
@@ -41,6 +42,7 @@ MAX_LIMIT = 500
 CALLER_IDENTITY = "plant-genomics-mcp"
 
 _CACHE = cache.TTLCache(default_ttl=CACHE_TTL_SECONDS)
+_T = TypeVar("_T")
 
 # Community locus spellings STRING's alias table does not carry, and the
 # UniProt ORF-name spelling it does, per organism. Each pair was probed live
@@ -97,7 +99,9 @@ async def _get(
     client: httpx.AsyncClient,
     path: str,
     params: dict[str, Any] | None = None,
-) -> object:
+    *,
+    shape: Callable[[object], _T],
+) -> _T:
     return await _http.cached_get(
         client,
         _CACHE,
@@ -107,6 +111,7 @@ async def _get(
         headers={"Accept": "application/json"},
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
+        shape=shape,
     )
 
 
@@ -179,7 +184,7 @@ async def lookup_partners(
         identifier = entry["primaryAccession"]
 
     try:
-        raw = await _get(
+        rows = await _get(
             client,
             "/api/json/interaction_partners",
             params={
@@ -188,17 +193,14 @@ async def lookup_partners(
                 "limit": limit,
                 "caller_identity": CALLER_IDENTITY,
             },
+            shape=_http.object_rows,
         )
     except NotFoundError as exc:
         raise NotFoundError(
             f"STRING has no protein for {query} in {record.canonical} "
             f"(queried as {identifier}): {exc.args[0]}"
         ) from exc
-    if not isinstance(raw, list):
-        raise PlantGenomicsError(
-            f"STRING /api/json/interaction_partners returned non-list: {type(raw).__name__}"
-        )
-    if not raw:
+    if not rows:
         raise NotFoundError(
             f"STRING: no interaction partners for {query} (queried as {identifier})"
         )
@@ -206,10 +208,10 @@ async def lookup_partners(
     # STRING returns stringId_A as "{taxid}.{accession}"; the accession is
     # STRING's species-canonical pick, which may differ from the input
     # (e.g. locus → accession resolution, or one of several UniProt accessions).
-    string_id_a = raw[0].get("stringId_A", "") if isinstance(raw[0], dict) else ""
+    string_id_a = rows[0].get("stringId_A", "")
     canonical_accession = string_id_a.split(".", 1)[1] if "." in string_id_a else query
 
-    partners = [_normalize(r, canonical_accession) for r in raw if isinstance(r, dict)]
+    partners = [_normalize(r, canonical_accession) for r in rows]
     return {
         "query": query,
         "accession": canonical_accession,

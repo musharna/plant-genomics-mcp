@@ -26,7 +26,8 @@ the /interactions/rice/ lane.
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 import httpx
 
@@ -48,6 +49,7 @@ CACHE_TTL_SECONDS = 3600.0  # 1h — BAR doesn't version-stamp releases
 # all match the shared [A-Za-z0-9._-] class.
 
 _CACHE = cache.TTLCache(default_ttl=CACHE_TTL_SECONDS)
+_T = TypeVar("_T")
 
 
 def _user_agent() -> str:
@@ -58,7 +60,9 @@ async def _get(
     client: httpx.AsyncClient,
     path: str,
     params: dict[str, Any] | None = None,
-) -> object:
+    *,
+    shape: Callable[[object], _T],
+) -> _T:
     """GET JSON from BAR with retry + cache. Raises typed errors on failure."""
     return await _http.cached_get(
         client,
@@ -69,6 +73,7 @@ async def _get(
         headers={"Accept": "application/json", "User-Agent": _user_agent()},
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
+        shape=shape,
     )
 
 
@@ -105,7 +110,7 @@ _GI_TAIR_SHORT = 8
 async def _gather_envelopes(
     client: httpx.AsyncClient,
     locus: str,
-) -> tuple[Any | BaseException, Any | BaseException]:
+) -> tuple[dict[str, Any] | BaseException, dict[str, Any] | BaseException]:
     """Fetch thalemine + gaia envelopes concurrently, never raising.
 
     Wraps ``asyncio.gather(..., return_exceptions=True)`` so callers get an
@@ -113,8 +118,8 @@ async def _gather_envelopes(
     determine the unpacked element types ([has-type]).
     """
     return await asyncio.gather(
-        _get(client, f"/thalemine/gene_information/{locus}"),
-        _get(client, f"/gaia/aliases/{locus}"),
+        _get(client, f"/thalemine/gene_information/{locus}", shape=_http.expect_object),
+        _get(client, f"/gaia/aliases/{locus}", shape=_http.expect_object),
         return_exceptions=True,
     )
 
@@ -145,8 +150,8 @@ async def gene_summary(
     gi_env, aliases_env = await _gather_envelopes(client, locus)
     if isinstance(gi_env, BaseException):
         raise gi_env
-    if not isinstance(gi_env, dict) or not gi_env.get("wasSuccessful"):
-        err = gi_env.get("error") if isinstance(gi_env, dict) else "non-dict response"
+    if not gi_env.get("wasSuccessful"):
+        err = gi_env.get("error")
         raise NotFoundError(f"BAR /thalemine/gene_information/{locus}: {err}")
     results = gi_env.get("results") or []
     if not results:
@@ -162,11 +167,7 @@ async def gene_summary(
 
     ncbi_gene_id: str | None = None
     aliases_list: list[str] = []
-    if (
-        not isinstance(aliases_env, BaseException)
-        and isinstance(aliases_env, dict)
-        and aliases_env.get("wasSuccessful")
-    ):
+    if not isinstance(aliases_env, BaseException) and aliases_env.get("wasSuccessful"):
         entries = aliases_env.get("data") or []
         # /gaia/aliases/ can return multiple entries per locus (case-variant
         # rows, e.g. At1g01010 + AT1G01010 — only the uppercase one carries
@@ -238,9 +239,9 @@ async def efp_expression(
     """
     locus = validators.assert_valid_locus(locus, backend="BAR")
     path = f"/microarray_gene_expression/world_efp/arabidopsis/{locus}"
-    env = await _get(client, path)
-    if not isinstance(env, dict) or not env.get("wasSuccessful"):
-        err = env.get("error") if isinstance(env, dict) else "non-dict response"
+    env = await _get(client, path, shape=_http.expect_object)
+    if not env.get("wasSuccessful"):
+        err = env.get("error")
         # Map upstream "There are no data found..." through to NotFoundError so
         # callers get a typed miss rather than a generic upstream error.
         raise NotFoundError(f"BAR {path}: {err}")
@@ -394,10 +395,9 @@ async def aiv_interactions(
             organism=canonical,
             supported=list(_AIV_SUPPORTED_ORGANISMS),
         )
-    env = await _get(client, path)
-    if not isinstance(env, dict) or not env.get("wasSuccessful"):
-        err = env.get("error") if isinstance(env, dict) else "non-dict response"
-        raise NotFoundError(f"BAR {path}: {err}")
+    env = await _get(client, path, shape=_http.expect_object)
+    if not env.get("wasSuccessful"):
+        raise NotFoundError(f"BAR {path}: {env.get('error')}")
     data = env.get("data") or []
     if not isinstance(data, list):
         raise NotFoundError(f"BAR {path}: malformed data ({type(data).__name__})")

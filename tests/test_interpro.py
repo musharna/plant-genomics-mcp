@@ -17,7 +17,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import interpro, uniprot
-from plant_genomics_mcp.errors import NotFoundError, PlantGenomicsError
+from plant_genomics_mcp.errors import NotFoundError, PlantGenomicsError, UpstreamUnavailableError
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
@@ -176,10 +176,14 @@ async def test_lookup_by_uniprot_page_cap_truncates(
 
 @pytest.mark.asyncio
 async def test_lookup_by_uniprot_malformed_raises(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(url=_URL, json=["not", "a", "dict"])
+    httpx_mock.add_response(url=_URL, json=["not", "a", "dict"], is_reusable=True)
     async with httpx.AsyncClient() as client:
-        with pytest.raises(PlantGenomicsError, match="unexpected payload"):
+        with pytest.raises(
+            UpstreamUnavailableError,
+            match=r"answered 200 twice without a readable result \(list, not an object\)",
+        ):
             await interpro.lookup_by_uniprot(client, "Q9SZ92")
+    assert len(httpx_mock.get_requests(url=_URL)) == 2
 
 
 # ---------- mocked unit tests: lookup_locus (uniprot monkeypatched) ----------

@@ -23,7 +23,7 @@ from typing import Any
 import httpx
 
 from plant_genomics_mcp import _http, cache, organisms, validators
-from plant_genomics_mcp.errors import OrganismNotSupported, PlantGenomicsError
+from plant_genomics_mcp.errors import OrganismNotSupported
 
 BASE_URL = "https://aragwas.1001genomes.org"
 DEFAULT_TIMEOUT = 30.0
@@ -55,7 +55,7 @@ def _resolve_limit(limit: int | None) -> int:
 
 async def _get(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
     """GET one AraGWAS page (cached by full URL), returning the parsed dict."""
-    body = await _http.cached_get(
+    return await _http.cached_get(
         client,
         _CACHE,
         url,
@@ -63,12 +63,8 @@ async def _get(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
         headers={"Accept": "application/json"},
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
+        shape=_http.expect_object,
     )
-    if not isinstance(body, dict):
-        raise PlantGenomicsError(
-            f"AraGWAS associations returned unexpected payload: {type(body).__name__}"
-        )
-    return body
 
 
 def _annotation_for(snp: dict[str, Any], locus: str) -> dict[str, Any]:

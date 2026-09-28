@@ -13,8 +13,7 @@ https://europepmc.org/RestfulWebService.
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any, cast
+from typing import Any
 
 import httpx
 
@@ -52,8 +51,8 @@ _HIT_FIELDS = (
 )
 
 
-def _search_shape_problem(raw: Any) -> str | None:
-    """Why a /search body cannot be read as an answer, or None if it can.
+def _search_shape(raw: object) -> dict[str, Any]:
+    """A /search body that can be read as an answer, else ``UnreadableBody``.
 
     Issue #141: Europe PMC intermittently answers 200 with ``{"version":"6.9"}``
     and nothing else. Read with defaults, that is hitCount 0 and no hits — a
@@ -61,26 +60,25 @@ def _search_shape_problem(raw: Any) -> str | None:
     A genuine zero states ``"hitCount": 0`` and an empty ``resultList``.
     """
     if not isinstance(raw, dict):
-        return f"non-dict payload: {type(raw).__name__}"
+        raise _http.UnreadableBody(f"non-dict payload: {type(raw).__name__}")
     hit_count = raw.get("hitCount")
     if isinstance(hit_count, bool) or not isinstance(hit_count, int):
-        return f"no integer hitCount in {str(raw)[:120]}"
+        raise _http.UnreadableBody(f"no integer hitCount in {str(raw)[:120]}")
     result_list = raw.get("resultList")
     if not isinstance(result_list, dict) or not isinstance(result_list.get("result"), list):
-        return f"no resultList.result list in {str(raw)[:120]}"
-    return None
+        raise _http.UnreadableBody(f"no resultList.result list in {str(raw)[:120]}")
+    return raw
 
 
 async def _get(
     client: httpx.AsyncClient,
     path: str,
     params: dict[str, Any] | None = None,
-    shape_problem: Callable[[Any], str | None] | None = None,
-) -> object:
-    """GET an Europe PMC endpoint with retry on 429/5xx.
+) -> dict[str, Any]:
+    """GET a Europe PMC /search page with retry on 429/5xx.
 
-    With ``shape_problem``, a body it rejects is asked for once more, then
-    raised as :class:`UpstreamUnavailableError` — and is never cached, so one
+    A body :func:`_search_shape` refuses is asked for once more, then raised
+    as :class:`UpstreamUnavailableError`, and is never cached, so one
     malformed answer cannot be served as the answer for the cache TTL.
     """
     return await _http.cached_get(
@@ -92,7 +90,7 @@ async def _get(
         headers={"Accept": "application/json"},
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
-        reject=shape_problem,
+        shape=_search_shape,
     )
 
 
@@ -208,13 +206,9 @@ async def lookup_locus(
     # 2026-09-23: same ids, same nextCursorMark), so it is sent only to continue.
     if "mark" in position:
         params["cursorMark"] = position["mark"]
-    # cached_get never returns a body _search_shape_problem rejected, so this is
-    # a dict holding both fields: no defaults here, because a defaulted missing
-    # count is exactly how #141's false zeros were made.
-    raw = cast(
-        dict[str, Any],
-        await _get(client, "/search", params=params, shape_problem=_search_shape_problem),
-    )
+    # _search_shape has vouched for both fields: no defaults here, because a
+    # defaulted missing count is exactly how #141's false zeros were made.
+    raw = await _get(client, "/search", params=params)
     results = raw["resultList"]["result"]
     hits = [_normalize(r, include_abstract) for r in results if isinstance(r, dict)]
     return {
