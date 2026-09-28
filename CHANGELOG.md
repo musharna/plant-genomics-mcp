@@ -37,6 +37,40 @@
   Accept header and timeout sent, and the fields of the unsupported-organism
   error. Each of the 78 targeted mutants now fails a named test. Test-only.
 
+- **`alphafold_structure` answers are tested whole, through the tool.** The
+  no-model tests called the accession-level helper, which the schema check
+  above does not wrap, and read two or three keys, so 20 mutants renaming a
+  key of the no-model answer survived, and 8 reading the model date or
+  description under another name. The found, 404 and empty-array answers now
+  go through the tool's own function and are compared whole; new tests also
+  pin per-accession caching, the locus and organism passed to UniProt, and
+  the method, Accept header and timeout sent. Live-gated tests check every
+  field of a real model is filled and that an accession with no model
+  (Q8WZ42, a live 404) answers `found=false`. 43 of the 47 targeted mutants
+  now fail a named test; the other 4 are equivalent (defaults that match, and
+  httpx upper-casing the method). Test-only.
+
+- **Fixed: `vep_annotate` no longer promises PolyPhen.** Its description, its
+  own docstring and the README said each coding-missense row carries
+  SIFT/PolyPhen. Ensembl runs PolyPhen for human only ("Human only", VEP
+  options page), and 0 of 10 missense consequences checked live in
+  Arabidopsis and rice carried it, against 10 of 10 with SIFT, so
+  `polyphen_prediction` and `polyphen_score` are always null here. They now
+  say so; the fields stay, so the schema is unchanged. A live-gated test
+  checks a plant missense has SIFT and no PolyPhen.
+
+- **`locus_variants` and `vep_annotate` answers are tested whole.** Their row
+  lists have no per-key schema and the tests read four or five keys, so 45
+  mutants renaming a row key or the Ensembl key it is read from survived,
+  and 15 misreading the VEP entry's own fields. A verbatim live variant row
+  and VEP answer (AT1G01010, 1:3767 A/G) are now compared whole; new tests
+  also pin the lookup arguments, each missing coordinate, the caller's
+  `limit`, and the Accept header and timeout sent. Live-gated: every field of
+  every variant row at AT1G01010 is filled. 76 of 86 targeted mutants now
+  fail a named test; the other 10 are equivalent (PolyPhen is never sent,
+  argument defaults match, and no Ensembl 400 on these endpoints says "not
+  found").
+
 - **`entry_members` answers are tested whole, with an unreviewed member.**
   Every mocked member was a hand-made reviewed hit named by
   `recommendedName`, and the request's own parameters were never read back,
