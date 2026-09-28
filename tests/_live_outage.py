@@ -19,6 +19,7 @@ regression: this errs toward red, as the check did before.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable, Iterable
 
 import httpx
@@ -46,17 +47,26 @@ BACKENDS: dict[str, tuple[tuple[str, str], ...]] = {
 }
 
 
+# InterPro's error object. Its overloaded database answers ``{"Error":1040}``
+# on a 200 or a 404 (2026-09-28), which the status alone read as up, or as a
+# broken probe. Written here rather than imported, like the URLs above.
+ERROR_BODY = re.compile(r'\A\s*\{\s*"Error"\s*:')
+
+
 class ProbeBroken(AssertionError):
     """A probe got an answer that is neither up nor down: the probe is wrong."""
 
 
 def probe(url: str, timeout_s: float = 30.0) -> str | None:
-    """None when the backend answers 200; why it is down on a 5xx, a timeout
-    or no connection. Anything else raises `ProbeBroken`."""
+    """None when the backend answers 200; why it is down on a 5xx, a timeout,
+    no connection, or a body naming the service's own error at any status.
+    Anything else raises `ProbeBroken`."""
     try:
         resp = httpx.get(url, timeout=timeout_s)
     except httpx.TransportError as e:
         return f"{type(e).__name__}: {e}" if str(e) else type(e).__name__
+    if ERROR_BODY.search(resp.text):
+        return f"HTTP {resp.status_code} {' '.join(resp.text.split())[:100]}"
     if resp.status_code == 200:
         return None
     if resp.status_code >= 500:

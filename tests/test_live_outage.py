@@ -107,10 +107,24 @@ def test_an_outage_beside_any_other_failure_stays_a_failure(tmp_path):
     assert "the planted row GOOD_ARF_PB1 was not flagged" in note
 
 
+# InterPro's overloaded database, on a 404 and on a 200 (live, 2026-09-28).
+_OVERLOADED = b'{"Error":1040}'
+_ANSWERS = {
+    "/up": (200, b""),
+    "/down": (503, b""),
+    "/gone": (404, b""),
+    "/overloaded": (404, _OVERLOADED),
+    "/overloaded-200": (200, _OVERLOADED),
+}
+
+
 class _Status(BaseHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802 (http.server's name)
-        self.send_response({"/up": 200, "/down": 503, "/gone": 404}[self.path])
+        status, body = _ANSWERS[self.path]
+        self.send_response(status)
+        self.send_header("Content-Length", str(len(body)))
         self.end_headers()
+        self.wfile.write(body)
 
     def log_message(self, *args: object) -> None:
         pass
@@ -148,3 +162,7 @@ def test_probe_reads_up_and_down_and_refuses_anything_else(local_http):
     # A 404 is neither: the probe's own URL is wrong, and it says so.
     with pytest.raises(ProbeBroken, match="HTTP 404"):
         probe(f"{local_http}/gone")
+    # Unless the body is the service's own error: InterPro's overloaded
+    # database, read as a broken probe on a 404 and as up on a 200.
+    assert probe(f"{local_http}/overloaded") == 'HTTP 404 {"Error":1040}'
+    assert probe(f"{local_http}/overloaded-200") == 'HTTP 200 {"Error":1040}'
