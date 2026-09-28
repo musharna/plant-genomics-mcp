@@ -27,28 +27,73 @@ from plant_genomics_mcp.errors import PlantGenomicsError
 _SRC = pathlib.Path(__file__).resolve().parent.parent / "src" / "plant_genomics_mcp"
 
 
-def _json_calls(path: pathlib.Path) -> list[str]:
-    """``file:line`` of every bare ``<expr>.json()`` call in ``path``."""
-    tree = ast.parse(path.read_text(encoding="utf-8"))
-    return [
-        f"{path.name}:{node.lineno}"
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Attribute)
-        and node.func.attr == "json"
-        and not node.args
-        and not node.keywords
+def _json_reads(source: str) -> list[int]:
+    """Lines of ``source`` that decode JSON: ``<expr>.json(...)`` with any
+    arguments, and ``json.loads(...)`` under any import name (``import json as
+    j``, ``from json import loads as f``).
+
+    It cannot see a call whose name is computed at run time, such as
+    ``getattr(resp, "json")()``.
+    """
+    tree = ast.parse(source)
+    modules, functions = set(), set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            modules |= {a.asname or a.name for a in node.names if a.name == "json"}
+        elif isinstance(node, ast.ImportFrom) and node.module == "json":
+            functions |= {a.asname or a.name for a in node.names if a.name == "loads"}
+    lines = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        f = node.func
+        if (
+            (isinstance(f, ast.Attribute) and f.attr == "json")
+            or (
+                isinstance(f, ast.Attribute)
+                and f.attr == "loads"
+                and isinstance(f.value, ast.Name)
+                and f.value.id in modules
+            )
+            or (isinstance(f, ast.Name) and f.id in functions)
+        ):
+            lines.append(node.lineno)
+    return sorted(lines)
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "resp.json()",
+        "resp.json(strict=False)",
+        "r.json(parse_float=str)",
+        "import json\njson.loads(resp.text)",
+        "import json as j\nj.loads(resp.content)",
+        "from json import loads\nloads(resp.text)",
+        "from json import loads as f\nf(resp.text)",
+    ],
+)
+def test_the_scan_sees_each_way_of_decoding_a_body(source: str) -> None:
+    assert _json_reads(source) == [source.count("\n") + 1]
+    # Positive control: the same module without the decode is clean.
+    assert _json_reads("import json\nfrom json import loads\nresp.text") == []
+
+
+def test_no_module_but_http_decodes_json() -> None:
+    sites = [
+        f"{p.name}:{line}"
+        for p in sorted(_SRC.glob("*.py"))
+        if p.name != "_http.py"
+        for line in _json_reads(p.read_text(encoding="utf-8"))
     ]
-
-
-def test_no_module_but_http_reads_a_body_as_json() -> None:
-    sites = [s for p in sorted(_SRC.glob("*.py")) if p.name != "_http.py" for s in _json_calls(p)]
     assert sites == []
-    # Positive control: the scan does see a .json() call, the one in json_body.
-    http_sites = _json_calls(_SRC / "_http.py")
-    line = int(http_sites[0].split(":")[1])
-    assert len(http_sites) == 1
-    assert "return resp.json()" in (_SRC / "_http.py").read_text().splitlines()[line - 1]
+    # Positive control: in _http the scan finds json_body's read and the
+    # cursor decode, and nothing else.
+    text = (_SRC / "_http.py").read_text(encoding="utf-8")
+    found = [text.splitlines()[n - 1].strip() for n in _json_reads(text)]
+    assert len(found) == 2
+    assert found[0].startswith("state = json.loads(base64.urlsafe_b64decode(")
+    assert found[1] == "return resp.json()"
 
 
 _Call = Callable[[Any, httpx.AsyncClient], Awaitable[Any]]
