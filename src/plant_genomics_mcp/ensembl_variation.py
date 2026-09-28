@@ -161,8 +161,10 @@ async def vep_annotate(
     ``region`` is Ensembl's ``chr:start-end:strand`` (e.g. ``"1:10000-10000:1"``)
     and ``allele`` the alternate base(s) (e.g. ``"C"``). Returns the most-severe
     consequence plus one projected row per overlapping transcript (consequence
-    terms, IMPACT, and SIFT/PolyPhen when the variant is missense in a coding
-    transcript). ``found=False`` when Ensembl reports no overlapping feature.
+    terms, IMPACT, and SIFT when the variant is missense in a coding
+    transcript). ``polyphen_*`` stay null: Ensembl VEP runs PolyPhen for human
+    only (VEP options page, read 2026-09-27; 0 of 10 plant missense rows
+    live). ``found=False`` when Ensembl reports no overlapping feature.
     """
     if not region or not allele:
         raise ValueError("vep_annotate requires non-empty region and allele")
