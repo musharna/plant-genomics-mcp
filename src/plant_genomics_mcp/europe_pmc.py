@@ -14,7 +14,7 @@ https://europepmc.org/RestfulWebService.
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 import httpx
 
@@ -76,7 +76,7 @@ async def _get(
     path: str,
     params: dict[str, Any] | None = None,
     shape_problem: Callable[[Any], str | None] | None = None,
-) -> Any:
+) -> object:
     """GET an Europe PMC endpoint with retry on 429/5xx.
 
     With ``shape_problem``, a body it rejects is asked for once more, then
@@ -208,9 +208,13 @@ async def lookup_locus(
     # 2026-09-23: same ids, same nextCursorMark), so it is sent only to continue.
     if "mark" in position:
         params["cursorMark"] = position["mark"]
-    raw = await _get(client, "/search", params=params, shape_problem=_search_shape_problem)
-    # _search_shape_problem has vouched for both: no defaults here, because a
-    # defaulted missing count is exactly how #141's false zeros were made.
+    # cached_get never returns a body _search_shape_problem rejected, so this is
+    # a dict holding both fields: no defaults here, because a defaulted missing
+    # count is exactly how #141's false zeros were made.
+    raw = cast(
+        dict[str, Any],
+        await _get(client, "/search", params=params, shape_problem=_search_shape_problem),
+    )
     results = raw["resultList"]["result"]
     hits = [_normalize(r, include_abstract) for r in results if isinstance(r, dict)]
     return {

@@ -38,7 +38,7 @@ MAX_PAGES = 5
 _CACHE = cache.TTLCache()
 
 
-def _page(resp: httpx.Response) -> Any:
+def _page(resp: httpx.Response) -> object:
     """One InterPro response as a page.
 
     Audit 2026-09-22 M4: InterPro answers a protein with no entries with HTTP
@@ -71,7 +71,7 @@ async def _get(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
     return body
 
 
-def _stamped(resp: httpx.Response) -> Any:
+def _stamped(resp: httpx.Response) -> object:
     """The parsed body, carrying the release the ANSWERING response reported.
 
     Stashed inside the cached value: cached separately it would be dropped on

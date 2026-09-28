@@ -58,7 +58,7 @@ async def _get(
     client: httpx.AsyncClient,
     path: str,
     params: dict[str, Any] | None = None,
-) -> Any:
+) -> object:
     """GET JSON from BAR with retry + cache. Raises typed errors on failure."""
     return await _http.cached_get(
         client,

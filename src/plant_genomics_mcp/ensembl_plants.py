@@ -57,7 +57,7 @@ async def _get(
     path: str,
     params: dict[str, Any] | None = None,
     not_found_400_pattern: re.Pattern[str] = NOT_FOUND_400_RE,
-) -> Any:
+) -> object:
     """GET an Ensembl REST endpoint with retry on 429/5xx.
 
     Thin cache wrapper over the shared :func:`_http.request_with_retry`
@@ -131,7 +131,11 @@ async def lookup_locus(
     wire = wire_id(locus, organism)
     params: dict[str, Any] = {"species": slug, "expand": 0}
     raw = await _get(client, f"/lookup/id/{wire}", params=params)
-    if isinstance(raw, dict) and "species" in raw:
+    if not isinstance(raw, dict):
+        raise PlantGenomicsError(
+            f"Ensembl /lookup/id/{locus} returned unexpected payload: {type(raw).__name__}"
+        )
+    if "species" in raw:
         return project_lookup(raw)
     return raw
 
@@ -522,7 +526,7 @@ async def assembly(
     slug = organisms.ensembl_slug_for(organism)
     raw = await _get(client, f"/info/assembly/{slug}")
     top_level = raw.get("top_level_region") if isinstance(raw, dict) else None
-    if not isinstance(top_level, list) or not top_level:
+    if not isinstance(raw, dict) or not isinstance(top_level, list) or not top_level:
         raise PlantGenomicsError(
             f"Ensembl /info/assembly/{slug} returned no top-level regions: {type(raw).__name__}"
         )

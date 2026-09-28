@@ -19,7 +19,7 @@ import os
 import re
 import weakref
 from collections.abc import Callable, Mapping, Sized
-from typing import Any
+from typing import Any, TypeVar, overload
 
 import httpx
 
@@ -467,12 +467,51 @@ async def request_with_retry(
     )
 
 
-def json_body(resp: httpx.Response, service: str) -> Any:
-    """``resp`` parsed as JSON; a body that is not JSON is a typed error."""
+def json_body(resp: httpx.Response, service: str) -> object:
+    """``resp`` parsed as JSON; a body that is not JSON is a typed error.
+
+    Typed ``object``, not ``Any``: a 200 can carry any JSON value, and a
+    caller that reads it as a dict without checking leaks ``AttributeError``
+    on an array or a scalar (#96). ``object`` makes mypy refuse that read
+    until the caller has narrowed the shape itself.
+    """
     try:
         return resp.json()
     except ValueError as e:
         raise PlantGenomicsError(f"{service} returned non-JSON: {resp.text[:200]}") from e
+
+
+_T = TypeVar("_T")
+
+
+@overload
+async def cached_get(
+    client: httpx.AsyncClient,
+    store: cache.TTLCache,
+    url: str,
+    *,
+    service: str,
+    params: Mapping[str, Any] | None = ...,
+    headers: Mapping[str, str] | None = ...,
+    parse: None = ...,
+    reject: Callable[[Any], str | None] | None = ...,
+    **retry: Any,
+) -> object: ...
+
+
+@overload
+async def cached_get(
+    client: httpx.AsyncClient,
+    store: cache.TTLCache,
+    url: str,
+    *,
+    service: str,
+    params: Mapping[str, Any] | None = ...,
+    headers: Mapping[str, str] | None = ...,
+    parse: Callable[[httpx.Response], _T],
+    reject: Callable[[Any], str | None] | None = ...,
+    **retry: Any,
+) -> _T: ...
 
 
 async def cached_get(
@@ -486,7 +525,7 @@ async def cached_get(
     parse: Callable[[Any], Any] | None = None,
     reject: Callable[[Any], str | None] | None = None,
     **retry: Any,
-) -> Any:
+) -> object:
     """GET ``url`` through ``store``: the one cache contract every backend uses (#96).
 
     A hit is returned as stored. A miss goes through :func:`request_with_retry`

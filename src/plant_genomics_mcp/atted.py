@@ -63,7 +63,7 @@ async def _get(
     client: httpx.AsyncClient,
     path: str,
     params: dict[str, Any] | None = None,
-) -> Any:
+) -> object:
     return await _http.cached_get(
         client,
         _CACHE,

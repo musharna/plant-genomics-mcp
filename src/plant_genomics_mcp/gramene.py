@@ -36,7 +36,7 @@ async def _get(
     client: httpx.AsyncClient,
     path: str,
     params: dict[str, Any] | None = None,
-) -> Any:
+) -> object:
     """GET a Gramene endpoint with retry on 429/5xx and per-call caching."""
     return await _http.cached_get(
         client,

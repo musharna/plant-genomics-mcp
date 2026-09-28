@@ -97,6 +97,21 @@
   module but `_http` calls `.json()`, and each of the ten reads is tested
   with a body that is not JSON and then one that is.
 
+- **Fixed: a 200 whose JSON is the wrong shape is a typed error from every
+  tool.** A JSON array, string, number or `null` where an object was expected
+  reached `.get` and leaked `'list' object has no attribute 'get'`, with no
+  service and no error class, from 13 tools: UniProt search (behind
+  `resolve_locus_to_uniprot`, `locus_go_annotations`, `alphafold_structure`,
+  `experimental_structures`, `interpro_domains`, `tf_binding_motifs` and two
+  batch forms), `entry_members`, and the Ensembl locus lookup (behind
+  `get_sequence`, `locus_variants`, `analyze_locus_synth` and `gene_report`).
+  `ensembl_plants_lookup_locus` answered the stray value itself, breaking its
+  schema. Each now names the service (`UniProt search returned unexpected
+  payload: list`). The parsed body is typed `object` rather than `Any`, from
+  the shared parser through every backend's fetch helper, so mypy refuses an
+  unchecked read in new code, and a test fails if a helper hands the body on
+  as `Any` again. A test drives all 56 tools with each such body.
+
 ## v1.28.0 — 2026-09-27
 
 **56 tools / 23 backends** — no new tool. A minor release rather than a patch: `aragwas_associations` answers 25 rows by default and gains `limit`, and `gene_report` leaves abstracts and GO `withFrom` out of its sections (**Behaviour change** for both), so neither answers over Claude Code's 25,000-token default cap by itself.

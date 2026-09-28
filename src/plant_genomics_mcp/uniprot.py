@@ -116,6 +116,10 @@ async def _search(
         max_retries=MAX_RETRIES,
     )
     data = _http.json_body(resp, "UniProt search")
+    if not isinstance(data, dict):
+        raise PlantGenomicsError(
+            f"UniProt search returned unexpected payload: {type(data).__name__}"
+        )
     results = list(data.get("results", []))
     # Carry the release UniProt reported on the response that produced these
     # rows INSIDE the cached value, so a warm hit reports the release it was
@@ -215,8 +219,11 @@ async def _fetch_by_accession(
     except NotFoundError:
         raise NotFoundError(f"UniProt has no entry for accession={bare!r}") from None
     data = _http.json_body(resp, "UniProt accession fetch")
-    if isinstance(data, dict):
-        data["_upstream_version"] = _http.upstream_version(resp)
+    if not isinstance(data, dict):
+        raise PlantGenomicsError(
+            f"UniProt accession fetch returned unexpected payload: {type(data).__name__}"
+        )
+    data["_upstream_version"] = _http.upstream_version(resp)
     _CACHE.set(key, data)
     return data
 
@@ -505,7 +512,12 @@ async def entry_members(
         total = _http.stated_count(
             {"x-total-results": stated}, "x-total-results", service="UniProt search"
         )
-        results = _http.json_body(resp, "UniProt search (entry members)").get("results")
+        body = _http.json_body(resp, "UniProt search (entry members)")
+        if not isinstance(body, dict):
+            raise PlantGenomicsError(
+                f"UniProt search (entry members) returned unexpected payload: {type(body).__name__}"
+            )
+        results = body.get("results")
         if not isinstance(results, list):
             raise PlantGenomicsError(
                 f"UniProt search results is not a list: {type(results).__name__}"
