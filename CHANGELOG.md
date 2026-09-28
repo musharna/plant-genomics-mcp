@@ -37,8 +37,8 @@
   Accept header and timeout sent, and the fields of the unsupported-organism
   error. Each of the 78 targeted mutants now fails a named test. Test-only.
 
-- **Fixed: `vep_annotate` no longer promises PolyPhen.** Its description, the
-  module docstring and the README said each coding-missense row carries
+- **Fixed: `vep_annotate` no longer promises PolyPhen.** Its description, its
+  own docstring and the README said each coding-missense row carries
   SIFT/PolyPhen. Ensembl runs PolyPhen for human only ("Human only", VEP
   options page), and 0 of 10 missense consequences checked live in
   Arabidopsis and rice carried it, against 10 of 10 with SIFT, so
