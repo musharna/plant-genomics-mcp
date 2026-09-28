@@ -37,6 +37,20 @@
   Accept header and timeout sent, and the fields of the unsupported-organism
   error. Each of the 78 targeted mutants now fails a named test. Test-only.
 
+- **`entry_members` answers are tested whole, with an unreviewed member.**
+  Every mocked member was a hand-made reviewed hit named by
+  `recommendedName`, and the request's own parameters were never read back,
+  so mutants that judge an unreviewed entry reviewed, drop the
+  `submissionNames` fallback, or rename `format`/`fields`/`size` survived.
+  Two verbatim live hits now go through the tool: C0LGF4 (reviewed) and
+  Q9ZVD4 (unreviewed, named only by submission names, as 44 of 500
+  unreviewed Arabidopsis entries sampled are). The whole answer, the
+  request's parameters, caching, the page-size clamp, and the method,
+  Accept header and timeout are pinned. A live-gated test pages PF00069 in
+  Arabidopsis and checks every member is named and both kinds appear. 66 of
+  99 mutants in `_member` and `entry_members` now fail a named test; the
+  other 33 are equivalent or reach only error text. Test-only.
+
 ## v1.28.0 — 2026-09-27
 
 **56 tools / 23 backends** — no new tool. A minor release rather than a patch: `aragwas_associations` answers 25 rows by default and gains `limit`, and `gene_report` leaves abstracts and GO `withFrom` out of its sections (**Behaviour change** for both), so neither answers over Claude Code's 25,000-token default cap by itself.

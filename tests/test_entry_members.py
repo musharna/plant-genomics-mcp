@@ -290,3 +290,190 @@ async def test_live_the_arf_domain_returns_the_dossiers_family() -> None:
     mapped = [m for m in wheat_rows if m["locus"] is not None]
     assert all(str(m["locus"]).startswith("TraesCS") for m in mapped) and len(mapped) > 100
     assert all(m["locus_source"] is None for m in wheat_rows if m["locus"] is None)
+
+
+# ---------- the whole answer, from verbatim live hits (#96 mutation triage) ----
+# The rows above are all hand-made reviewed hits named by recommendedName, and
+# the request's own parameters were never read back: 16 mutants in how a
+# member is named or judged reviewed, and 8 renaming a request parameter,
+# survived. Both hits below are UniProt's own (live 2026-09-27, the fields
+# entry_members asks for): C0LGF4 is reviewed and named by recommendedName;
+# Q9ZVD4 is unreviewed and named only by two submissionNames, the first of
+# which is its name (44 of 500 unreviewed Arabidopsis entries sampled are
+# named this way).
+
+C0LGF4: dict[str, Any] = {
+    "entryType": "UniProtKB reviewed (Swiss-Prot)",
+    "primaryAccession": "C0LGF4",
+    "proteinDescription": {
+        "recommendedName": {
+            "fullName": {"value": "LRR receptor-like serine/threonine-protein kinase FEI 1"},
+            "ecNumbers": [{"value": "2.7.11.1"}],
+        },
+        "flag": "Precursor",
+    },
+    "genes": [{"geneName": {"value": "FEI1"}, "orderedLocusNames": [{"value": "At1g31420"}]}],
+    "uniProtKBCrossReferences": [
+        {
+            "database": "Araport",
+            "id": "AT1G31420",
+            "properties": [{"key": "Description", "value": "-"}],
+        },
+        {
+            "database": "TAIR",
+            "id": "AT1G31420",
+            "properties": [{"key": "GeneName", "value": "FEI1"}],
+        },
+    ],
+    "extraAttributes": {"uniParcId": "UPI0000196F6B"},
+}
+Q9ZVD4: dict[str, Any] = {
+    "entryType": "UniProtKB unreviewed (TrEMBL)",
+    "primaryAccession": "Q9ZVD4",
+    "proteinDescription": {
+        "submissionNames": [
+            {
+                "fullName": {
+                    "evidences": [
+                        {"evidenceCode": "ECO:0000313", "source": "EMBL", "id": "ACN59298.1"}
+                    ],
+                    "value": "Leucine-rich repeat receptor-like protein kinase",
+                }
+            },
+            {
+                "fullName": {
+                    "evidences": [
+                        {"evidenceCode": "ECO:0000313", "source": "EMBL", "id": "BAE98772.1"}
+                    ],
+                    "value": "Putative receptor-like protein kinase",
+                }
+            },
+        ]
+    },
+    "genes": [
+        {
+            "geneName": {
+                "evidences": [
+                    {"evidenceCode": "ECO:0000313", "source": "EMBL", "id": "ACN59298.1"}
+                ],
+                "value": "LRR-RLK",
+            },
+            "orderedLocusNames": [
+                {
+                    "evidences": [
+                        {"evidenceCode": "ECO:0000313", "source": "EMBL", "id": "BAE98772.1"}
+                    ],
+                    "value": "At2g27060",
+                }
+            ],
+        }
+    ],
+    "uniProtKBCrossReferences": [
+        {"database": "TAIR", "id": "AT2G27060", "properties": [{"key": "GeneName", "value": "-"}]}
+    ],
+    "extraAttributes": {"uniParcId": "UPI0000048595"},
+}
+
+# Written out by hand from the hits above, not produced by the code under test.
+_WHOLE = {
+    "entry": "PF00069",
+    "entry_database": "pfam",
+    "organism": "arabidopsis_thaliana",
+    "taxid": 3702,
+    "reviewed_only": False,
+    "query": "xref:pfam-PF00069 AND organism_id:3702",
+    "total": 2,
+    "returned": 2,
+    "truncated": False,
+    "next_cursor": None,
+    "members": [
+        {
+            "accession": "C0LGF4",
+            "reviewed": True,
+            "symbol": "FEI1",
+            "protein_name": "LRR receptor-like serine/threonine-protein kinase FEI 1",
+            "locus": "AT1G31420",
+            "loci": ["AT1G31420"],
+            "locus_source": "Araport",
+        },
+        {
+            "accession": "Q9ZVD4",
+            "reviewed": False,
+            "symbol": "LRR-RLK",
+            "protein_name": "Leucine-rich repeat receptor-like protein kinase",
+            "locus": "AT2G27060",
+            "loci": ["AT2G27060"],
+            "locus_source": "TAIR",
+        },
+    ],
+    "upstream_version": "2026_03",
+}
+
+
+@pytest.mark.asyncio
+async def test_live_hits_are_answered_whole_and_the_request_is_read_back(
+    httpx_mock: HTTPXMock,
+) -> None:
+    # match_headers: a request without the JSON Accept header gets no response.
+    httpx_mock.add_response(
+        url=SEARCH,
+        method="GET",
+        match_headers={"Accept": "application/json"},
+        json={"results": [C0LGF4, Q9ZVD4]},
+        headers={"x-total-results": "2", "x-uniprot-release": "2026_03"},
+    )
+    async with httpx.AsyncClient() as client:
+        r = await uniprot.entry_members(client, "PF00069", reviewed_only=False)
+        again = await uniprot.entry_members(client, "PF00069", reviewed_only=False)
+    assert r == _WHOLE
+    # One response only: the second answer came from the cache, whole.
+    assert again == _WHOLE and len(httpx_mock.get_requests()) == 1
+    (request,) = httpx_mock.get_requests()
+    assert dict(request.url.params) == {
+        "query": "xref:pfam-PF00069 AND organism_id:3702",
+        "format": "json",
+        "fields": (
+            "accession,reviewed,gene_primary,gene_oln,protein_name,"
+            "xref_ensemblplants,xref_araport,xref_tair"
+        ),
+        "size": "100",
+    }
+    assert request.extensions["timeout"]["read"] == uniprot.DEFAULT_TIMEOUT
+
+
+@pytest.mark.asyncio
+async def test_the_page_size_is_clamped_to_uniprots_range(httpx_mock: HTTPXMock) -> None:
+    httpx_mock.add_response(
+        url=SEARCH, json={"results": []}, headers={"x-total-results": "0"}, is_reusable=True
+    )
+    async with httpx.AsyncClient() as client:
+        for asked in (0, 1, 7, 500, 501):
+            uniprot._CACHE.clear()  # equal clamped sizes would otherwise share a page
+            await uniprot.entry_members(client, "PF00069", page_size=asked)
+    sizes = [req.url.params["size"] for req in httpx_mock.get_requests()]
+    assert sizes == ["1", "1", "7", "500", "500"]
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_a_submission_named_trembl_hit_is_named_and_unreviewed() -> None:
+    """Q9ZVD4's shape is UniProt's on one day; this notices a change in how an
+    unreviewed, submission-named entry arrives (name null, reviewed wrong)."""
+    async with httpx.AsyncClient() as client:
+        r = await uniprot.entry_members(client, "PF00069", reviewed_only=False, page_size=500)
+        pages = [r]
+        while pages[-1]["next_cursor"] is not None and len(pages) < 10:
+            pages.append(
+                await uniprot.entry_members(
+                    client,
+                    "PF00069",
+                    reviewed_only=False,
+                    page_size=500,
+                    cursor=pages[-1]["next_cursor"],
+                )
+            )
+    members = [m for p in pages for m in p["members"]]
+    assert {m["reviewed"] for m in members} == {True, False}  # both kinds present
+    assert all(m["protein_name"] for m in members), [
+        m["accession"] for m in members if not m["protein_name"]
+    ]
