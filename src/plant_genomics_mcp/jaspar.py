@@ -162,7 +162,7 @@ def _project(detail: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-async def _get_json(client: httpx.AsyncClient, path: str, params: dict[str, str] | None) -> Any:
+async def _get_json(client: httpx.AsyncClient, path: str, params: dict[str, str] | None) -> object:
     """GET a JASPAR API path with retry + caching, returning decoded JSON.
 
     Returns ``None`` on 404 so callers can distinguish "no such matrix" from a

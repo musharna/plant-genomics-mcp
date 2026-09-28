@@ -38,7 +38,9 @@ MAX_VARIANTS = 500
 _CACHE = cache.TTLCache()
 
 
-async def _get(client: httpx.AsyncClient, path: str, params: dict[str, Any] | None = None) -> Any:
+async def _get(
+    client: httpx.AsyncClient, path: str, params: dict[str, Any] | None = None
+) -> object:
     """GET an Ensembl REST endpoint (own cache), returning parsed JSON."""
     return await _http.cached_get(
         client,

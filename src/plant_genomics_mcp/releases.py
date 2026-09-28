@@ -148,7 +148,7 @@ async def _jaspar(client: httpx.AsyncClient) -> _Found:
     )
     body = _http.json_body(resp, "JASPAR /releases")
     rows = body.get("results") if isinstance(body, dict) else None
-    if not isinstance(rows, list) or body.get("next") is not None:
+    if not isinstance(body, dict) or not isinstance(rows, list) or body.get("next") is not None:
         raise PlantGenomicsError(f"JASPAR /releases returned an unexpected shape: {body!r:.200}")
     active = [r for r in rows if isinstance(r, dict) and r.get("active") == "Yes"]
     if not active:
