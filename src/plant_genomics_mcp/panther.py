@@ -158,7 +158,7 @@ async def lookup_locus(
             timeout=DEFAULT_TIMEOUT,
             max_retries=MAX_RETRIES,
         )
-        cached = resp.json()
+        cached = _http.json_body(resp, "PANTHER geneinfo")
         _CACHE.set(key, cached)
     if not isinstance(cached, dict):
         raise PlantGenomicsError(

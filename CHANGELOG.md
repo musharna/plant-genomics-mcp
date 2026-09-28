@@ -85,6 +85,18 @@
   99 mutants in `_member` and `entry_members` now fail a named test; the
   other 33 are equivalent or reach only error text. Test-only.
 
+- **Fixed: a 200 whose body is not JSON is a typed error from every backend.**
+  PANTHER, UniProt (search, accession fetch, entry members), AlphaFold, PDBe,
+  JASPAR, ThaleMine and g:Profiler read the body with `resp.json()`
+  themselves, so an empty, truncated or plain-text 200 reached the caller as
+  `Expecting value: line 1 column 1 (char 0)`, with no service and no error
+  class; PANTHER sent one live on 2026-09-27. They now read it through the
+  shared parser, which names the service (`PANTHER geneinfo returned
+  non-JSON: …`); an HTML page on a 200 was already retried. The batch
+  lookup's hand-written copy of that parser is gone. A test fails if any
+  module but `_http` calls `.json()`, and each of the ten reads is tested
+  with a body that is not JSON and then one that is.
+
 ## v1.28.0 — 2026-09-27
 
 **56 tools / 23 backends** — no new tool. A minor release rather than a patch: `aragwas_associations` answers 25 rows by default and gains `limit`, and `gene_report` leaves abstracts and GO `withFrom` out of its sections (**Behaviour change** for both), so neither answers over Claude Code's 25,000-token default cap by itself.

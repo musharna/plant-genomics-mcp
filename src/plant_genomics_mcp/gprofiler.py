@@ -166,7 +166,7 @@ async def go_enrichment(
             timeout=DEFAULT_TIMEOUT,
             max_retries=MAX_RETRIES,
         )
-        cached = resp.json()
+        cached = _http.json_body(resp, "g:Profiler g:GOSt")
         _CACHE.set(key, cached)
 
     if not isinstance(cached, dict):

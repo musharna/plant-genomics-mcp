@@ -93,7 +93,7 @@ async def lookup_by_uniprot(client: httpx.AsyncClient, accession: str) -> dict[s
             # it is what keeps a repeated lookup off the wire.
             _CACHE.set(key, cache.NEGATIVE)
             return _empty(accession)
-        cached = resp.json()
+        cached = _http.json_body(resp, f"PDBe {path}")
         _CACHE.set(key, cached)
     if not isinstance(cached, dict):
         raise PlantGenomicsError(

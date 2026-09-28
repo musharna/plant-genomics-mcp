@@ -188,7 +188,7 @@ async def _get_json(client: httpx.AsyncClient, path: str, params: dict[str, str]
     if resp is None:
         _CACHE.set(key, cache.NEGATIVE)
         return None
-    data = resp.json()
+    data = _http.json_body(resp, f"JASPAR {path}")
     _CACHE.set(key, data)
     return data
 
