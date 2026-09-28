@@ -172,7 +172,13 @@ async def batch_ensembl_plants_lookup_locus(
         if record is None:
             errors[locus] = f"[NotFoundError] Ensembl Plants /lookup/id: no record for {locus}"
         elif isinstance(record, dict):
-            results[locus] = ensembl_plants.project_lookup(record)
+            try:
+                results[locus] = ensembl_plants.project_lookup(record)
+            except _http.UnreadableBody as e:
+                errors[locus] = (
+                    f"[PlantGenomicsError] Ensembl Plants returned an unreadable record "
+                    f"for {locus}: {e.args[0]}"
+                )
         else:
             errors[locus] = (
                 f"[PlantGenomicsError] Ensembl Plants returned non-dict for {locus}: "

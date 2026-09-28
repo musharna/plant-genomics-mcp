@@ -650,6 +650,30 @@ async def test_single_and_batch_lookups_project_a_record_the_same_way(
 
 
 @pytest.mark.asyncio
+async def test_a_batch_record_that_does_not_name_itself_is_an_error_for_that_locus(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """The batch POST projected any dict it got per id: ``{}`` landed in
+    ``results`` as ``{"upstream_version": None}``, a silent bad answer."""
+    from plant_genomics_mcp import batch
+
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/lookup/id",
+        method="POST",
+        json={"AT1G19850": _LIVE_RECORD, "AT1G01010": {}},
+    )
+    async with httpx.AsyncClient() as client:
+        env = await batch.batch_ensembl_plants_lookup_locus(client, ["AT1G19850", "AT1G01010"])
+    assert "AT1G01010" not in env["results"]
+    assert env["errors"]["AT1G01010"] == (
+        "[PlantGenomicsError] Ensembl Plants returned an unreadable record for "
+        "AT1G01010: no string 'id' in {}"
+    )
+    # Positive control, same batch: the real record is projected.
+    assert env["results"]["AT1G19850"]["organism"] == "arabidopsis_thaliana"
+
+
+@pytest.mark.asyncio
 async def test_a_lookup_record_that_does_not_name_itself_is_asked_again_and_never_stored(
     httpx_mock: HTTPXMock,
 ) -> None:
