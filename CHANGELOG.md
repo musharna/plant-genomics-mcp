@@ -130,6 +130,19 @@
   and `locus_variants` skipped bad rows silently. A test makes every tool's
   failed call twice and fails if the second never reaches upstream.
 
+- **Fixed: an overloaded InterPro is an outage, not a missing protein.**
+  InterPro answers an absent protein with 204, but its overloaded database
+  with `{"Error":1040}` (MySQL "too many connections") on a 404 or a 200.
+  `interpro_domains` read the 404 as `NotFoundError`, telling a caller the
+  protein had no InterPro record, and stored the 200 before finding it had no
+  count, so the same call failed for the whole TTL. The 404 is now retried
+  and raises `UpstreamUnavailableError` quoting the body (`_http`'s new
+  `retry_404_pattern`, opt-in and body-matched like `retry_403_pattern`); the
+  200 is asked once more and never stored. The live-smoke check read the same
+  episode as a regression (three runs in a row on 2026-09-28): its probe of
+  InterPro now reads the error body as down at any status, so an InterPro
+  overload is a skip with a warning, like a PANTHER timeout.
+
 ## v1.28.0 — 2026-09-27
 
 **56 tools / 23 backends** — no new tool. A minor release rather than a patch: `aragwas_associations` answers 25 rows by default and gains `limit`, and `gene_report` leaves abstracts and GO `withFrom` out of its sections (**Behaviour change** for both), so neither answers over Claude Code's 25,000-token default cap by itself.

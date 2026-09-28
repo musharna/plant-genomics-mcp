@@ -241,6 +241,7 @@ async def request_with_retry(
     allow_html: bool = False,
     no_content_ok: bool = False,
     retry_403_pattern: re.Pattern[str] | None = None,
+    retry_404_pattern: re.Pattern[str] | None = None,
     limit: UpstreamLimit | None = None,
 ) -> httpx.Response | Any:
     """Issue ``method url`` with the shared retry + classification policy.
@@ -277,11 +278,21 @@ async def request_with_retry(
     ``RateLimitError`` quoting the page. Opt-in and body-matched, like
     ``not_found_400_pattern``: any other 403 stays terminal.
 
+    ``retry_404_pattern=<compiled regex>`` covers upstreams that report their
+    own failure with 404 plus a body marker. InterPro answers an absent
+    protein with 204, but an overloaded database with ``404 {"Error":1040}``
+    (MySQL "too many connections", live 2026-09-28): read as ``NotFoundError``
+    it told a caller the protein has no InterPro record. A matching 404 is
+    retried on the 5xx backoff and, once the budget is spent, raises
+    ``UpstreamUnavailableError`` quoting the body; any other 404 stays
+    ``NotFoundError``.
+
     ``limit=<UpstreamLimit>`` caps this upstream's requests in flight; see
     :class:`UpstreamLimit`.
     """
     delay = 1.0
     last_refusal: str | None = None
+    last_fault: str | None = None
     last_status: int | None = None
     last_exc: httpx.TransportError | None = None
     last_html_media: str | None = None
@@ -362,6 +373,7 @@ async def request_with_retry(
         last_status = resp.status_code
         last_html_media = None
         last_refusal = None
+        last_fault = None
 
         if resp.status_code == 200:
             if allow_html or not _is_interposed_html(resp):
@@ -388,7 +400,14 @@ async def request_with_retry(
         if resp.status_code == 204 and no_content_ok:
             return resp
 
-        if resp.status_code == 404 and not_found_returns is not _RAISE:
+        faulted = (
+            resp.status_code == 404
+            and retry_404_pattern is not None
+            and retry_404_pattern.search(resp.text) is not None
+        )
+        if faulted:
+            last_fault = " ".join(resp.text.split())[:200]
+        elif resp.status_code == 404 and not_found_returns is not _RAISE:
             return not_found_returns
 
         refused = (
@@ -398,7 +417,7 @@ async def request_with_retry(
         )
         if refused:
             last_refusal = " ".join(resp.text.split())[:200]
-        if resp.status_code in _RETRYABLE_STATUSES or refused:
+        if resp.status_code in _RETRYABLE_STATUSES or refused or faulted:
             if attempt < max_retries - 1:
                 retry_after_hdr = resp.headers.get("Retry-After")
                 try:
@@ -451,6 +470,10 @@ async def request_with_retry(
     if last_refusal is not None:
         raise RateLimitError(
             f"{service} exhausted {max_retries} retries (HTTP 403: {last_refusal})"
+        )
+    if last_fault is not None:
+        raise UpstreamUnavailableError(
+            f"{service} exhausted {max_retries} retries (HTTP 404: {last_fault})"
         )
     if last_html_media is not None:
         # Name the real problem. The pre-fix path let this body reach the

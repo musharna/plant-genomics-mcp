@@ -16,7 +16,7 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from plant_genomics_mcp import interpro, uniprot
+from plant_genomics_mcp import _http, interpro, uniprot
 from plant_genomics_mcp.errors import NotFoundError, PlantGenomicsError, UpstreamUnavailableError
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
@@ -184,6 +184,61 @@ async def test_lookup_by_uniprot_malformed_raises(httpx_mock: HTTPXMock) -> None
         ):
             await interpro.lookup_by_uniprot(client, "Q9SZ92")
     assert len(httpx_mock.get_requests(url=_URL)) == 2
+
+
+# InterPro's answer when its database is overloaded (MySQL 1040, "too many
+# connections"), verbatim from live 404s and 200s on 2026-09-28.
+_OVERLOADED = {"Error": 1040}
+
+
+async def _no_sleep(_seconds: float) -> None:
+    pass
+
+
+@pytest.mark.asyncio
+async def test_an_overloaded_404_is_an_outage_not_a_missing_protein(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """InterPro answers an absent protein with 204; its 404 ``{"Error":1040}``
+    was read as NotFoundError, telling a caller the protein had no record."""
+    monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
+    for _ in range(3):
+        httpx_mock.add_response(url=_URL, status_code=404, json=_OVERLOADED)
+    httpx_mock.add_response(url=_URL, json=_PAGE)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError, match=r"HTTP 404: \{\"Error\":1040\}"):
+            await interpro.lookup_by_uniprot(client, "Q9SZ92")
+        # Positive control, same cache: once InterPro answers, so does the call.
+        r = await interpro.lookup_by_uniprot(client, "Q9SZ92")
+    assert (r["found"], r["domain_count"]) == (True, 2)
+    assert len(httpx_mock.get_requests(url=_URL)) == 4
+
+
+@pytest.mark.asyncio
+async def test_an_overloaded_200_is_asked_again_and_never_stored(httpx_mock: HTTPXMock) -> None:
+    """The same answer on a 200 was stored before its missing count was read,
+    so the call failed for the whole TTL without asking InterPro again."""
+    for _ in range(2):
+        httpx_mock.add_response(url=_URL, json=_OVERLOADED)
+    httpx_mock.add_response(url=_URL, json=_PAGE)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(
+            UpstreamUnavailableError,
+            match=r"answered 200 twice without a readable result "
+            r"\(no integer 'count' in \{'Error': 1040\}\)",
+        ):
+            await interpro.lookup_by_uniprot(client, "Q9SZ92")
+        r = await interpro.lookup_by_uniprot(client, "Q9SZ92")
+        assert (r["found"], r["domain_count"]) == (True, 2)
+        assert len(httpx_mock.get_requests(url=_URL)) == 3
+
+        # One overloaded answer then a page: the second ask answers the call.
+        other = _URL.replace("Q9SZ92", "Q0WV96")
+        httpx_mock.add_response(url=other, json=_OVERLOADED)
+        httpx_mock.add_response(url=other, json=_PAGE)
+        r = await interpro.lookup_by_uniprot(client, "Q0WV96")
+    assert (r["found"], r["domain_count"]) == (True, 2)
+    assert len(httpx_mock.get_requests(url=other)) == 2
 
 
 # ---------- mocked unit tests: lookup_locus (uniprot monkeypatched) ----------

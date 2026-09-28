@@ -18,6 +18,7 @@ Endpoint: https://www.ebi.ac.uk/interpro/api/entry/all/protein/uniprot/{acc}/
 
 from __future__ import annotations
 
+import re
 from collections import Counter
 from typing import Any
 
@@ -35,6 +36,11 @@ MAX_RETRIES = 3
 MAX_PAGES = 5
 
 _CACHE = cache.TTLCache()
+
+# InterPro's own error object. An absent protein is a 204 (``_page``); a 404
+# carrying ``{"Error": ...}`` is the service failing, e.g. ``{"Error":1040}``,
+# MySQL "too many connections" (live 2026-09-28, on 404s and 200s alike).
+FAULT_404_RE = re.compile(r'\A\s*\{\s*"Error"\s*:')
 
 
 def _page(resp: httpx.Response) -> object:
@@ -61,9 +67,25 @@ async def _get(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
         no_content_ok=True,
+        retry_404_pattern=FAULT_404_RE,
         parse=_stamped,
-        shape=_http.expect_object,
+        shape=_page_shape,
     )
+
+
+def _page_shape(value: object) -> dict[str, Any]:
+    """A page states its integer ``count``; anything else is not an answer.
+
+    Checked here, before the store: ``{"Error":1040}`` also arrives as a 200,
+    and read afterwards by ``stated_count`` it was stored first, so the same
+    call failed for the whole TTL without asking InterPro again.
+    """
+    page = _http.expect_object(value)
+    count = page.get("count")
+    if isinstance(count, bool) or not isinstance(count, int):
+        body = {k: v for k, v in page.items() if k != "_upstream_version"}
+        raise _http.UnreadableBody(f"no integer 'count' in {str(body)[:200]}")
+    return page
 
 
 def _stamped(resp: httpx.Response) -> object:

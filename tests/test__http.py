@@ -938,6 +938,84 @@ async def test_exhausted_403_refusals_say_what_the_upstream_said(
             )
 
 
+_FAULT = re.compile(r'\A\s*\{\s*"Error"\s*:')
+# InterPro's overload answer, verbatim from a live 404 (2026-09-28).
+_FAULT_BODY = '{"Error":1040}'
+
+
+@pytest.mark.asyncio
+async def test_a_404_matching_the_fault_pattern_is_retried(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
+    httpx_mock.add_response(url="https://example.test/f404", status_code=404, text=_FAULT_BODY)
+    httpx_mock.add_response(url="https://example.test/f404", json={"ok": True})
+    async with httpx.AsyncClient() as client:
+        resp = await _http.request_with_retry(
+            client, "GET", "https://example.test/f404", service="example", retry_404_pattern=_FAULT
+        )
+    assert resp.json() == {"ok": True}
+
+
+@pytest.mark.asyncio
+async def test_a_404_stays_not_found_without_the_pattern_or_on_another_body(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """The opt-in is body-matched: any other 404 is still "no such record"."""
+    httpx_mock.add_response(url="https://example.test/a", status_code=404, text=_FAULT_BODY)
+    httpx_mock.add_response(url="https://example.test/b", status_code=404, text="Not Found")
+    httpx_mock.add_response(url="https://example.test/c", status_code=404, text="Not Found")
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match=r"HTTP 404: \{\"Error\":1040\}"):
+            await _http.request_with_retry(
+                client, "GET", "https://example.test/a", service="example"
+            )
+        with pytest.raises(NotFoundError, match="HTTP 404: Not Found"):
+            await _http.request_with_retry(
+                client, "GET", "https://example.test/b", service="example", retry_404_pattern=_FAULT
+            )
+        # The "no record" sentinel still answers a 404 that is not a fault.
+        missing = object()
+        assert (
+            await _http.request_with_retry(
+                client,
+                "GET",
+                "https://example.test/c",
+                service="example",
+                retry_404_pattern=_FAULT,
+                not_found_returns=missing,
+            )
+            is missing
+        )
+    # One request each: none was retried.
+
+
+@pytest.mark.asyncio
+async def test_exhausted_404_faults_are_an_outage_quoting_the_body(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Not "no such record": the class an outage check and a caller read."""
+    monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
+    httpx_mock.add_response(
+        url="https://example.test/f404x", status_code=404, text=_FAULT_BODY, is_reusable=True
+    )
+    async with httpx.AsyncClient() as client:
+        for sentinel in ({}, {"not_found_returns": None}):
+            with pytest.raises(
+                UpstreamUnavailableError,
+                match=r"exhausted 3 retries \(HTTP 404: \{\"Error\":1040\}\)",
+            ):
+                await _http.request_with_retry(
+                    client,
+                    "GET",
+                    "https://example.test/f404x",
+                    service="example",
+                    retry_404_pattern=_FAULT,
+                    **sentinel,
+                )
+    assert len(httpx_mock.get_requests(url="https://example.test/f404x")) == 6
+
+
 def _counting_transport(
     peak: list[int], status_when_crowded: int | None = None
 ) -> httpx.MockTransport:
