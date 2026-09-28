@@ -115,7 +115,7 @@ async def _search(
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
     )
-    data = resp.json()
+    data = _http.json_body(resp, "UniProt search")
     results = list(data.get("results", []))
     # Carry the release UniProt reported on the response that produced these
     # rows INSIDE the cached value, so a warm hit reports the release it was
@@ -214,7 +214,7 @@ async def _fetch_by_accession(
         )
     except NotFoundError:
         raise NotFoundError(f"UniProt has no entry for accession={bare!r}") from None
-    data = resp.json()
+    data = _http.json_body(resp, "UniProt accession fetch")
     if isinstance(data, dict):
         data["_upstream_version"] = _http.upstream_version(resp)
     _CACHE.set(key, data)
@@ -505,7 +505,7 @@ async def entry_members(
         total = _http.stated_count(
             {"x-total-results": stated}, "x-total-results", service="UniProt search"
         )
-        results = resp.json().get("results")
+        results = _http.json_body(resp, "UniProt search (entry members)").get("results")
         if not isinstance(results, list):
             raise PlantGenomicsError(
                 f"UniProt search results is not a list: {type(results).__name__}"

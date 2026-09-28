@@ -130,7 +130,7 @@ async def lookup_by_uniprot(client: httpx.AsyncClient, accession: str) -> dict[s
         if resp is None:  # 404 sentinel — no deposited model
             _CACHE.set(key, cache.NEGATIVE)
             return _empty(accession)
-        cached = resp.json()
+        cached = _http.json_body(resp, f"AlphaFold {path}")
         _CACHE.set(key, cached)
     if not isinstance(cached, list):
         raise PlantGenomicsError(

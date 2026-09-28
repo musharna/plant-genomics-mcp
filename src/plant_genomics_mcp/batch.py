@@ -160,13 +160,7 @@ async def batch_ensembl_plants_lookup_locus(
         timeout=ensembl_plants.DEFAULT_TIMEOUT,
         not_found_400_pattern=ensembl_plants.NOT_FOUND_400_RE,
     )
-    # request_with_retry returns the raw httpx.Response on 2xx.
-    try:
-        raw = resp.json()
-    except ValueError as e:
-        raise PlantGenomicsError(
-            f"Ensembl Plants /lookup/id (batch) returned non-JSON: {resp.text[:200]}"
-        ) from e
+    raw = _http.json_body(resp, "Ensembl Plants /lookup/id (batch)")
     if not isinstance(raw, dict):
         raise PlantGenomicsError(
             f"Ensembl Plants /lookup/id (batch) returned non-dict payload: {type(raw).__name__}"

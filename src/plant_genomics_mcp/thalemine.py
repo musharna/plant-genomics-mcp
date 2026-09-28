@@ -154,7 +154,7 @@ async def _rows(client: httpx.AsyncClient, xml: str) -> list[list[Any]]:
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
     )
-    data = resp.json()
+    data = _http.json_body(resp, "ThaleMine query")
     if not isinstance(data, dict):
         raise PlantGenomicsError(
             f"ThaleMine query returned unexpected payload: {type(data).__name__}"
