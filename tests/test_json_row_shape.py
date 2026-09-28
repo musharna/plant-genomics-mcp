@@ -228,3 +228,22 @@ def test_the_shape_helpers_name_the_shape_they_refuse() -> None:
         with pytest.raises(_http.UnreadableBody) as err:
             check(value)
         assert err.value.args == (detail,)
+
+
+def test_expect_count_needs_an_integer_count_and_names_what_came_instead() -> None:
+    count = _http.expect_count("count")
+    assert count({"count": 0}) == {"count": 0}  # a real zero is an answer
+    stamped = {"count": 3, "_upstream_version": "110.0"}
+    assert count(stamped) is stamped
+    cases: list[tuple[object, str]] = [
+        ({}, "no integer 'count' in {}"),
+        # InterPro's overload answer; the release this package stamps is left out.
+        ({"Error": 1040, "_upstream_version": None}, "no integer 'count' in {'Error': 1040}"),
+        ({"count": True}, "no integer 'count' in {'count': True}"),
+        ({"count": "3"}, "no integer 'count' in {'count': '3'}"),
+        ([], "list, not an object"),
+    ]
+    for value, detail in cases:
+        with pytest.raises(_http.UnreadableBody) as err:
+            count(value)
+        assert err.value.args == (detail,)

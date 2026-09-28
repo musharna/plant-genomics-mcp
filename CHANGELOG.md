@@ -143,6 +143,19 @@
   InterPro now reads the error body as down at any status, so an InterPro
   overload is a skip with a warning, like a PANTHER timeout.
 
+- **Fixed: an object missing the fields a backend reads is no longer stored
+  or served as an answer.** A 200 of `{}`, or InterPro's `{"Error":1040}`,
+  passed the "is an object" check. `ensembl_plants_lookup_locus` returned it
+  as its answer, which its own schema rejects, and `get_sequence`,
+  `locus_variants` and the synthesis tools built on the lookup then failed on
+  it for the whole cache TTL without asking Ensembl again; AraGWAS read its
+  count only after storing the page, with the same result. The Ensembl lookup
+  now requires the `id` and `species` every live record carries, and AraGWAS
+  (like InterPro, through the new `_http.expect_count`) requires its integer
+  count, both before the store: such a body is asked for once more, never
+  stored, and a second one is `UpstreamUnavailableError`. `{}` is now among
+  the bodies every tool is driven with.
+
 ## v1.28.0 — 2026-09-27
 
 **56 tools / 23 backends** — no new tool. A minor release rather than a patch: `aragwas_associations` answers 25 rows by default and gains `limit`, and `gene_report` leaves abstracts and GO `withFrom` out of its sections (**Behaviour change** for both), so neither answers over Claude Code's 25,000-token default cap by itself.

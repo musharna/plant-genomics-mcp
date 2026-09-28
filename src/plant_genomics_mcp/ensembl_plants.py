@@ -135,10 +135,24 @@ async def lookup_locus(
     slug = organisms.ensembl_slug_for(organism)
     wire = wire_id(locus, organism)
     params: dict[str, Any] = {"species": slug, "expand": 0}
-    raw = await _get(client, f"/lookup/id/{wire}", params=params, shape=_http.expect_object)
-    if "species" in raw:
-        return project_lookup(raw)
-    return raw
+    raw = await _get(client, f"/lookup/id/{wire}", params=params, shape=_lookup_shape)
+    return project_lookup(raw)
+
+
+def _lookup_shape(value: object) -> dict[str, Any]:
+    """A /lookup/id record names itself: a string ``id`` and ``species``.
+
+    Every live record has both (gene, transcript, rice; 2026-09-28), and an
+    unknown id is a 400. A record without them used to pass through
+    unprojected: ``{}`` was the tool's answer, breaking its schema, and
+    ``get_sequence`` and ``locus_variants`` failed on it after it was stored,
+    so for the whole TTL without asking again.
+    """
+    record = _http.expect_object(value)
+    for key in ("id", "species"):
+        if not isinstance(record.get(key), str):
+            raise _http.UnreadableBody(f"no string {key!r} in {str(record)[:120]}")
+    return record
 
 
 async def lookup_xrefs(

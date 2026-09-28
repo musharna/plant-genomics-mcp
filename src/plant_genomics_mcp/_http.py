@@ -519,6 +519,27 @@ def expect_object(value: object) -> dict[str, Any]:
     return value
 
 
+def expect_count(key: str) -> Callable[[object], dict[str, Any]]:
+    """A shape: a JSON object stating an integer ``key``, else :class:`UnreadableBody`.
+
+    For an upstream whose page states its total (InterPro, AraGWAS). A count
+    read after :func:`cached_get` returns was read from a body already stored:
+    InterPro's ``{"Error":1040}`` on a 200 then failed the same call for the
+    whole TTL. Keys this package stamps on a body (``_upstream_version``) are
+    left out of the message.
+    """
+
+    def shape(value: object) -> dict[str, Any]:
+        body = expect_object(value)
+        count = body.get(key)
+        if isinstance(count, bool) or not isinstance(count, int):
+            shown = {k: v for k, v in body.items() if not str(k).startswith("_")}
+            raise UnreadableBody(f"no integer {key!r} in {str(shown)[:200]}")
+        return body
+
+    return shape
+
+
 def object_rows(value: object) -> list[dict[str, Any]]:
     """``value`` when it is a list of JSON objects, else :class:`UnreadableBody`.
 

@@ -69,23 +69,8 @@ async def _get(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
         no_content_ok=True,
         retry_404_pattern=FAULT_404_RE,
         parse=_stamped,
-        shape=_page_shape,
+        shape=_http.expect_count("count"),
     )
-
-
-def _page_shape(value: object) -> dict[str, Any]:
-    """A page states its integer ``count``; anything else is not an answer.
-
-    Checked here, before the store: ``{"Error":1040}`` also arrives as a 200,
-    and read afterwards by ``stated_count`` it was stored first, so the same
-    call failed for the whole TTL without asking InterPro again.
-    """
-    page = _http.expect_object(value)
-    count = page.get("count")
-    if isinstance(count, bool) or not isinstance(count, int):
-        body = {k: v for k, v in page.items() if k != "_upstream_version"}
-        raise _http.UnreadableBody(f"no integer 'count' in {str(body)[:200]}")
-    return page
 
 
 def _stamped(resp: httpx.Response) -> object:

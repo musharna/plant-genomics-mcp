@@ -20,7 +20,12 @@ narrowed by ``isinstance`` has ``Any`` elements, so a wrong-shaped row
 (tests/test_json_row_shape.py) and is among the bodies here.
 
 A failed call must also not be stored: the same call made again asks
-upstream, with every body, for every tool.
+upstream, with every body, for every tool. ``{}`` is an object that states
+none of the fields a backend reads, the shape of InterPro's overload answer
+``{"Error":1040}``: a check of such a field made after the store failed the
+same call for the whole TTL (AraGWAS, and Ensembl's lookup behind
+``get_sequence`` and ``locus_variants``), and a lookup that passed it through
+answered ``{}``, which the tool's schema rejects.
 """
 
 from __future__ import annotations
@@ -46,7 +51,7 @@ _MODULES = [
     for m in pkgutil.iter_modules(plant_genomics_mcp.__path__)
 ]
 
-_BODIES = [[], [1], "x", 7, None]
+_BODIES = [[], [1], "x", 7, None, {}]
 _SRC = pathlib.Path(__file__).resolve().parent.parent / "src" / "plant_genomics_mcp"
 
 

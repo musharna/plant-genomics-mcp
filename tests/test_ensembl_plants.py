@@ -647,3 +647,28 @@ async def test_single_and_batch_lookups_project_a_record_the_same_way(
     assert "upstream_version" in single
     # Positive control: an id with no empty-version dot is left as it came.
     assert env["results"]["Zm1"]["canonical_transcript"] == "Zm00001eb000010_T001"
+
+
+@pytest.mark.asyncio
+async def test_a_lookup_record_that_does_not_name_itself_is_asked_again_and_never_stored(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """``{}`` was passed through as the answer (schema-breaking), and
+    get_sequence / locus_variants then failed on it from the cache."""
+    from plant_genomics_mcp.errors import UpstreamUnavailableError
+
+    url = "https://rest.ensembl.org/lookup/id/AT1G19850?species=arabidopsis_thaliana&expand=0"
+    httpx_mock.add_response(url=url, json={})
+    httpx_mock.add_response(url=url, json={"id": "AT1G19850"})  # no species
+    httpx_mock.add_response(url=url, json=_LIVE_RECORD)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(
+            UpstreamUnavailableError,
+            match=r"answered 200 twice without a readable result "
+            r"\(no string 'species' in \{'id': 'AT1G19850'\}\)",
+        ):
+            await ensembl_plants.lookup_locus(client, "AT1G19850")
+        # Positive control, same cache: the next real record is fetched and projected.
+        record = await ensembl_plants.lookup_locus(client, "AT1G19850")
+    assert (record["id"], record["organism"]) == ("AT1G19850", "arabidopsis_thaliana")
+    assert len(httpx_mock.get_requests(url=url)) == 3
