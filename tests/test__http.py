@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import re
+from typing import Any
 
 import httpx
 import pytest
@@ -1204,19 +1205,25 @@ async def test_cached_get_sends_a_get_with_the_callers_headers(httpx_mock: HTTPX
 
 @pytest.mark.asyncio
 async def test_cached_get_asks_a_rejected_body_exactly_once_more(httpx_mock: HTTPXMock) -> None:
-    """A body ``reject`` refuses is fetched twice in all, not three times,
-    and the error says so in full (survivors: ``range(3 ...)`` and the
-    message). Positive control: a rejection followed by a good body is
-    served and stored."""
+    """A body ``shape`` refuses is fetched twice in all, not three times,
+    stored never, and the error says so in full (survivors: ``range(3 ...)``
+    and the message). Positive control: a rejection followed by a good body
+    is served, narrowed, and stored."""
     from plant_genomics_mcp import cache
+
+    def shape(v: object) -> dict[str, Any]:
+        body = _http.expect_object(v)
+        if body["rows"] is None:
+            raise _http.UnreadableBody("rows is null")
+        return body
 
     bad = "https://example.test/bad"
     httpx_mock.add_response(url=bad, json={"rows": None}, is_reusable=True)
-    reject = lambda v: "rows is null" if v["rows"] is None else None  # noqa: E731
     store = cache.TTLCache()
     async with httpx.AsyncClient() as client:
         with pytest.raises(UpstreamUnavailableError) as excinfo:
-            await _http.cached_get(client, store, bad, service="svc", reject=reject)
+            await _http.cached_get(client, store, bad, service="svc", shape=shape)
+        assert store.stats()["size"] == 0
         assert len(httpx_mock.get_requests(url=bad)) == 2
         assert str(excinfo.value) == (
             "[UpstreamUnavailableError] svc answered 200 twice without a readable "
@@ -1225,7 +1232,7 @@ async def test_cached_get_asks_a_rejected_body_exactly_once_more(httpx_mock: HTT
         good = "https://example.test/good"
         httpx_mock.add_response(url=good, json={"rows": None})
         httpx_mock.add_response(url=good, json={"rows": [1]})
-        assert await _http.cached_get(client, store, good, service="svc", reject=reject) == {
+        assert await _http.cached_get(client, store, good, service="svc", shape=shape) == {
             "rows": [1]
         }
     assert store.stats()["size"] == 1

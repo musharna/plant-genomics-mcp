@@ -18,7 +18,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import ensembl_plants, ensembl_variation
-from plant_genomics_mcp.errors import NotFoundError, PlantGenomicsError
+from plant_genomics_mcp.errors import NotFoundError, PlantGenomicsError, UpstreamUnavailableError
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
@@ -142,10 +142,14 @@ async def test_locus_variants_malformed_raises(
     httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(ensembl_plants, "lookup_locus", _fake_lookup(_GENE))
-    httpx_mock.add_response(url=_OVERLAP_URL, json={"unexpected": "object"})
+    httpx_mock.add_response(url=_OVERLAP_URL, json={"unexpected": "object"}, is_reusable=True)
     async with httpx.AsyncClient() as client:
-        with pytest.raises(PlantGenomicsError, match="non-list payload"):
+        with pytest.raises(
+            UpstreamUnavailableError,
+            match=r"answered 200 twice without a readable result \(dict, not a list\)",
+        ):
             await ensembl_variation.locus_variants(client, "AT1G01010", "arabidopsis")
+    assert len(httpx_mock.get_requests(url=_OVERLAP_URL)) == 2
 
 
 @pytest.mark.asyncio
@@ -187,10 +191,14 @@ async def test_vep_annotate_empty_is_not_found(httpx_mock: HTTPXMock) -> None:
 
 @pytest.mark.asyncio
 async def test_vep_annotate_malformed_raises(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(url=_VEP_URL, json={"unexpected": "object"})
+    httpx_mock.add_response(url=_VEP_URL, json={"unexpected": "object"}, is_reusable=True)
     async with httpx.AsyncClient() as client:
-        with pytest.raises(PlantGenomicsError, match="non-list payload"):
+        with pytest.raises(
+            UpstreamUnavailableError,
+            match=r"answered 200 twice without a readable result \(dict, not a list\)",
+        ):
             await ensembl_variation.vep_annotate(client, "1:300-300:1", "C", "arabidopsis")
+    assert len(httpx_mock.get_requests(url=_VEP_URL)) == 2
 
 
 @pytest.mark.asyncio

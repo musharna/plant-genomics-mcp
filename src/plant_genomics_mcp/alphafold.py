@@ -130,12 +130,15 @@ async def lookup_by_uniprot(client: httpx.AsyncClient, accession: str) -> dict[s
         if resp is None:  # 404 sentinel — no deposited model
             _CACHE.set(key, cache.NEGATIVE)
             return _empty(accession)
-        cached = _http.json_body(resp, f"AlphaFold {path}")
-        _CACHE.set(key, cached)
-    if not isinstance(cached, list):
-        raise PlantGenomicsError(
-            f"AlphaFold {path} returned unexpected payload: {type(cached).__name__}"
-        )
+        body = _http.json_body(resp, f"AlphaFold {path}")
+        # Checked before it is stored: a body stored first was served back
+        # as the same failure for the whole TTL without asking again (#96).
+        if not isinstance(body, list):
+            raise PlantGenomicsError(
+                f"AlphaFold {path} returned unexpected payload: {type(body).__name__}"
+            )
+        _CACHE.set(key, body)
+        cached = body
     if not cached:
         return _empty(accession)
     return _project(accession, cached[0])

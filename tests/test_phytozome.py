@@ -90,9 +90,15 @@ async def test_lookup_locus_raises_on_biomart_query_error(httpx_mock: HTTPXMock)
         method="POST",
         text="Query ERROR: caught BioMart::Exception::Usage: Filter organism_id NOT FOUND",
     )
+    httpx_mock.add_response(url=_BIOMART_URL, method="POST", text=_AT1G01010_TSV)
     async with httpx.AsyncClient() as client:
         with pytest.raises(phytozome.PlantGenomicsError, match="Query ERROR"):
             await phytozome.lookup_locus(client, "AT1G01010")
+        # Positive control, same query: the error body was not stored (#96),
+        # so BioMart is asked again and its answer is read.
+        result = await phytozome.lookup_locus(client, "AT1G01010")
+    assert result["gene_name"] == "AT1G01010"
+    assert len(httpx_mock.get_requests()) == 2
 
 
 @pytest.mark.asyncio

@@ -12,7 +12,8 @@ Endpoint docs (swagger): https://github.com/warelab/gramene-swagger.
 
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 import httpx
 
@@ -30,13 +31,16 @@ MAX_RETRIES = 3
 CACHE_TTL_SECONDS = 86400.0  # 24h — Gramene v69 is a frozen release.
 
 _CACHE = cache.TTLCache(default_ttl=CACHE_TTL_SECONDS)
+_T = TypeVar("_T")
 
 
 async def _get(
     client: httpx.AsyncClient,
     path: str,
     params: dict[str, Any] | None = None,
-) -> object:
+    *,
+    shape: Callable[[object], _T],
+) -> _T:
     """GET a Gramene endpoint with retry on 429/5xx and per-call caching."""
     return await _http.cached_get(
         client,
@@ -47,6 +51,7 @@ async def _get(
         headers={"Accept": "application/json"},
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
+        shape=shape,
     )
 
 
@@ -162,12 +167,9 @@ async def fetch_homolog_enrichment_batch(
             client,
             f"/{GRAMENE_RELEASE}/genes",
             params={"idList": ",".join(chunk), "fl": "_id,xrefs,system_name", "rows": len(chunk)},
+            shape=_http.object_rows,
         )
-        if not isinstance(raw, list):
-            continue
         for record in raw:
-            if not isinstance(record, dict):
-                continue
             rid = record.get("_id")
             if not isinstance(rid, str) or rid not in result:
                 continue
@@ -249,14 +251,11 @@ async def lookup_homologs(
         client,
         f"/{GRAMENE_RELEASE}/genes",
         params={"idList": locus, "fl": "homology"},
+        shape=_http.object_rows,
     )
-    if not isinstance(raw, list) or not raw:
+    if not raw:
         raise NotFoundError(f"Gramene: no record for locus {locus} in {GRAMENE_RELEASE}")
     record = raw[0]
-    if not isinstance(record, dict):
-        raise PlantGenomicsError(
-            f"Gramene: unexpected payload shape for {locus}: {type(record).__name__}"
-        )
     homology = record.get("homology") or {}
     if not isinstance(homology, dict):
         raise PlantGenomicsError(

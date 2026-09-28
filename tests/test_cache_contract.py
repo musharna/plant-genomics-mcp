@@ -20,6 +20,8 @@ share. Real HTTP for each backend is covered by its own live tests.
 from __future__ import annotations
 
 import importlib
+import inspect
+import json
 from typing import Any
 
 import httpx
@@ -45,13 +47,32 @@ BACKENDS_PATH = ["kegg"]
 ALL = BACKENDS_PATH_PARAMS + BACKENDS_URL + BACKENDS_PATH
 
 
+def _body(name: str, n: int) -> dict[str, Any]:
+    """A JSON body the backend's ``_get`` reads as an answer, distinct per ``n``.
+
+    Europe PMC's ``_get`` holds the #141 shape itself: an answer states its
+    count and its result list.
+    """
+    if name == "europe_pmc":
+        return {"n": n, "hitCount": n, "resultList": {"result": [n]}}
+    return {"n": n, "data": [n]}
+
+
+async def _get(mod: Any, c: httpx.AsyncClient, *args: Any) -> Any:
+    """``mod._get(c, *args)``, stating the object shape where ``_get`` asks for one."""
+    if "shape" in inspect.signature(mod._get).parameters:
+        return await mod._get(c, *args, shape=_http.expect_object)
+    return await mod._get(c, *args)
+
+
 class Upstream:
     """Stands in for ``_http.request_with_retry``; counts what reaches it."""
 
-    def __init__(self, text: bool) -> None:
+    def __init__(self, text: bool, name: str) -> None:
         self.calls: list[tuple[str, dict[str, Any] | None]] = []
         self.fail_next = False
         self.text = text
+        self.name = name
 
     async def __call__(
         self, client: Any, method: str, url: str, *, params: Any = None, **kw: Any
@@ -64,7 +85,7 @@ class Upstream:
         request = httpx.Request(method, url, params=params)
         if self.text:
             return httpx.Response(200, text=f"body {n}", request=request)
-        return httpx.Response(200, json={"n": n, "data": [n]}, request=request)
+        return httpx.Response(200, json=_body(self.name, n), request=request)
 
 
 def _requests(name: str) -> tuple[tuple[Any, ...], tuple[Any, ...], tuple[Any, ...]]:
@@ -82,7 +103,7 @@ def _requests(name: str) -> tuple[tuple[Any, ...], tuple[Any, ...], tuple[Any, .
 def backend(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> Any:
     mod = importlib.import_module(f"plant_genomics_mcp.{request.param}")
     mod._CACHE.clear()
-    upstream = Upstream(text=request.param in BACKENDS_PATH)
+    upstream = Upstream(text=request.param in BACKENDS_PATH, name=request.param)
     monkeypatch.setattr(_http, "request_with_retry", upstream)
     yield mod, upstream, _requests(request.param)
     mod._CACHE.clear()
@@ -92,17 +113,17 @@ def backend(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> 
 async def test_a_repeat_is_served_from_cache_and_any_change_is_not(backend: Any) -> None:
     mod, upstream, (base, other_params, other_path) = backend
     async with httpx.AsyncClient() as c:
-        first = await mod._get(c, *base)
-        again = await mod._get(c, *base)
+        first = await _get(mod, c, *base)
+        again = await _get(mod, c, *base)
         assert len(upstream.calls) == 1, upstream.calls
         assert again == first
         for changed in (other_params, other_path):
             before = len(upstream.calls)
-            fresh = await mod._get(c, *changed)
+            fresh = await _get(mod, c, *changed)
             assert len(upstream.calls) == before + 1, (changed, upstream.calls)
             assert fresh != first, changed
         # The first answer is still the one cached for the first request.
-        assert await mod._get(c, *base) == first
+        assert await _get(mod, c, *base) == first
     assert len(upstream.calls) == 3
 
 
@@ -112,10 +133,10 @@ async def test_a_failure_is_not_cached(backend: Any) -> None:
     upstream.fail_next = True
     async with httpx.AsyncClient() as c:
         with pytest.raises(UpstreamUnavailableError, match="fake outage"):
-            await mod._get(c, *base)
+            await _get(mod, c, *base)
         # Positive control, same request: it goes upstream again and answers.
-        answer = await mod._get(c, *base)
-        assert await mod._get(c, *base) == answer
+        answer = await _get(mod, c, *base)
+        assert await _get(mod, c, *base) == answer
     assert len(upstream.calls) == 2
 
 
@@ -128,7 +149,8 @@ async def test_a_body_that_is_not_json_is_a_typed_error_and_not_cached(
     InterPro) called ``resp.json()`` bare and leaked ``JSONDecodeError``."""
     mod = importlib.import_module(f"plant_genomics_mcp.{name}")
     mod._CACHE.clear()
-    bodies = [b"<not json>", b'{"n": 1}']
+    good = _body(name, 1)
+    bodies = [b"<not json>", json.dumps(good).encode()]
 
     async def upstream(client: Any, method: str, url: str, **kw: Any) -> httpx.Response:
         return httpx.Response(200, content=bodies.pop(0), request=httpx.Request(method, url))
@@ -137,11 +159,11 @@ async def test_a_body_that_is_not_json_is_a_typed_error_and_not_cached(
     base = _requests(name)[0]
     async with httpx.AsyncClient() as c:
         with pytest.raises(PlantGenomicsError, match="returned non-JSON") as err:
-            await mod._get(c, *base)
+            await _get(mod, c, *base)
         assert not isinstance(err.value, ValueError)
         # Positive control: the next answer is JSON, fetched fresh, and served.
-        answer = await mod._get(c, *base)
+        answer = await _get(mod, c, *base)
         answer.pop("_upstream_version", None)  # InterPro stamps its release
-        assert answer == {"n": 1}
+        assert answer == good
     assert bodies == []
     mod._CACHE.clear()

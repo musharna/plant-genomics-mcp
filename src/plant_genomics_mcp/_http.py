@@ -481,7 +481,71 @@ def json_body(resp: httpx.Response, service: str) -> object:
         raise PlantGenomicsError(f"{service} returned non-JSON: {resp.text[:200]}") from e
 
 
+class UnreadableBody(PlantGenomicsError):
+    """A parsed body that is not an answer: raised by a ``shape`` function.
+
+    :func:`cached_get` catches it, asks once more and stores nothing; it is
+    not meant to reach a caller.
+    """
+
+
+def expect_object(value: object) -> dict[str, Any]:
+    """``value`` when it is a JSON object, else :class:`UnreadableBody`."""
+    if not isinstance(value, dict):
+        raise UnreadableBody(f"{type(value).__name__}, not an object")
+    return value
+
+
+def object_rows(value: object) -> list[dict[str, Any]]:
+    """``value`` when it is a list of JSON objects, else :class:`UnreadableBody`.
+
+    Narrowing a body to ``list`` leaves its rows ``Any``, and a row that was
+    not an object used to be skipped or passed through: VEP answered
+    ``found: false`` for a variant it had annotated, STRING answered zero
+    partners, and xrefs and region rows broke the tool's schema (#96). No
+    live row of these endpoints is anything but an object, so such a row
+    means the body is not an answer.
+    """
+    if not isinstance(value, list):
+        raise UnreadableBody(f"{type(value).__name__}, not a list")
+    for i, row in enumerate(value):
+        if not isinstance(row, dict):
+            raise UnreadableBody(f"row {i} is {type(row).__name__}, not an object")
+    return value
+
+
 _T = TypeVar("_T")
+_P = TypeVar("_P")
+
+
+@overload
+async def cached_get(
+    client: httpx.AsyncClient,
+    store: cache.TTLCache,
+    url: str,
+    *,
+    service: str,
+    params: Mapping[str, Any] | None = ...,
+    headers: Mapping[str, str] | None = ...,
+    parse: Callable[[httpx.Response], object] | None = ...,
+    shape: Callable[[object], _T],
+    **retry: Any,
+) -> _T: ...
+
+
+@overload
+async def cached_get(
+    client: httpx.AsyncClient,
+    store: cache.TTLCache,
+    url: str,
+    *,
+    service: str,
+    params: Mapping[str, Any] | None = ...,
+    headers: Mapping[str, str] | None = ...,
+    parse: Callable[[httpx.Response], _P],
+    shape: None = ...,
+    **retry: Any,
+) -> _P: ...
 
 
 @overload
@@ -494,24 +558,9 @@ async def cached_get(
     params: Mapping[str, Any] | None = ...,
     headers: Mapping[str, str] | None = ...,
     parse: None = ...,
-    reject: Callable[[Any], str | None] | None = ...,
+    shape: None = ...,
     **retry: Any,
 ) -> object: ...
-
-
-@overload
-async def cached_get(
-    client: httpx.AsyncClient,
-    store: cache.TTLCache,
-    url: str,
-    *,
-    service: str,
-    params: Mapping[str, Any] | None = ...,
-    headers: Mapping[str, str] | None = ...,
-    parse: Callable[[httpx.Response], _T],
-    reject: Callable[[Any], str | None] | None = ...,
-    **retry: Any,
-) -> _T: ...
 
 
 async def cached_get(
@@ -522,8 +571,8 @@ async def cached_get(
     service: str,
     params: Mapping[str, Any] | None = None,
     headers: Mapping[str, str] | None = None,
-    parse: Callable[[Any], Any] | None = None,
-    reject: Callable[[Any], str | None] | None = None,
+    parse: Callable[[httpx.Response], object] | None = None,
+    shape: Callable[[object], object] | None = None,
     **retry: Any,
 ) -> object:
     """GET ``url`` through ``store``: the one cache contract every backend uses (#96).
@@ -533,9 +582,13 @@ async def cached_get(
     parsed (``parse``, default :func:`json_body`) and stored under a key made
     of the URL and params. Nothing is stored on a failure.
 
-    ``reject`` names what is wrong with a parsed body that must not be served
-    as an answer (#141): such a body is asked for once more, never stored, and
-    a second rejection is :class:`UpstreamUnavailableError`.
+    ``shape`` checks the parsed body and returns it narrowed to what the
+    caller reads, raising :class:`UnreadableBody` for a body that must not be
+    served as an answer (#141): such a body is asked for once more, never
+    stored, and a second one is :class:`UpstreamUnavailableError`. A check
+    made after this returns would run on a body already stored, so one bad
+    200 was served back as the same failure for the whole TTL without asking
+    upstream again.
 
     Fourteen backends carried their own copy of these lines; the copies drifted
     (six leaked a raw ``JSONDecodeError`` on a non-JSON body) and no test
@@ -545,16 +598,20 @@ async def cached_get(
     hit = store.get(key)
     if hit is not None:
         return hit
-    problem: str | None = None
-    for _attempt in range(2 if reject else 1):
+    problem = ""
+    for _attempt in range(2 if shape else 1):
         resp = await request_with_retry(
             client, "GET", url, service=service, params=params, headers=headers, **retry
         )
         value = parse(resp) if parse else json_body(resp, service)
-        problem = reject(value) if reject else None
-        if problem is None:
-            store.set(key, value)
-            return value
+        if shape:
+            try:
+                value = shape(value)
+            except UnreadableBody as e:
+                problem = e.args[0]
+                continue
+        store.set(key, value)
+        return value
     raise UpstreamUnavailableError(
         f"{service} answered 200 twice without a readable result ({problem}); "
         "this is not a count of zero"

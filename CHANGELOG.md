@@ -112,6 +112,24 @@
   unchecked read in new code, and a test fails if a helper hands the body on
   as `Any` again. A test drives all 56 tools with each such body.
 
+- **Fixed: one bad body no longer fails the same call for the whole cache
+  TTL.** Most backends stored a parsed body first and checked its shape after,
+  so one wrong-shaped 200 was served back as the same error for ten minutes
+  without asking upstream again: 24 of 56 tools, plus PlantCyc's unparseable
+  XML and Phytozome's `Query ERROR`. Each backend now states the shape it
+  expects to `cached_get`, which checks it before storing, asks once more,
+  and raises `UpstreamUnavailableError` (`… answered 200 twice without a
+  readable result (row 0 is int, not an object)`) if the second body is bad
+  too; backends that cache by hand check before they store. A "no record"
+  answer is still cached. The shape now covers rows: `vep_annotate` answered
+  `found: false` for a variant whose rows were not objects,
+  `string_interactions` answered zero partners, and `get_gene_xrefs`, its
+  batch form and `ensembl_region_query` returned rows that broke their
+  schema. Also corrected: BAR's non-object body was "not found", JASPAR's
+  release and search reads answered "not found" or `[]` for one, and Gramene
+  and `locus_variants` skipped bad rows silently. A test makes every tool's
+  failed call twice and fails if the second never reaches upstream.
+
 ## v1.28.0 — 2026-09-27
 
 **56 tools / 23 backends** — no new tool. A minor release rather than a patch: `aragwas_associations` answers 25 rows by default and gains `limit`, and `gene_report` leaves abstracts and GO `withFrom` out of its sections (**Behaviour change** for both), so neither answers over Claude Code's 25,000-token default cap by itself.

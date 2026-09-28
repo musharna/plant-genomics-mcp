@@ -14,9 +14,13 @@ The mechanism was the type: ``json_body``, ``cached_get`` and nine backend
 had checked. They now return ``object``, and mypy refuses the read until the
 caller narrows; a scan below keeps a new helper from annotating the body
 ``Any`` again. The main test drives every tool through the real dispatch arm
-with each wrong-shaped body. It sees only the top level: a list narrowed by
-``isinstance`` has ``Any`` elements, so a wrong-shaped row (``[1]``) is out of
-its reach and out of this test's bodies.
+with each wrong-shaped body. The type sees only the top level: a list
+narrowed by ``isinstance`` has ``Any`` elements, so a wrong-shaped row
+(``[1]``) is checked by the shape a backend states to ``cached_get``
+(tests/test_json_row_shape.py) and is among the bodies here.
+
+A failed call must also not be stored: the same call made again asks
+upstream, with every body, for every tool.
 """
 
 from __future__ import annotations
@@ -34,7 +38,7 @@ import pytest
 
 import plant_genomics_mcp
 from plant_genomics_mcp import _http, cache, server
-from plant_genomics_mcp.errors import PlantGenomicsError
+from plant_genomics_mcp.errors import NotFoundError, PlantGenomicsError
 from tests.test_server_dispatch import DISPATCH_SPECS
 
 _MODULES = [
@@ -42,7 +46,7 @@ _MODULES = [
     for m in pkgutil.iter_modules(plant_genomics_mcp.__path__)
 ]
 
-_BODIES = [[], "x", 7, None]
+_BODIES = [[], [1], "x", 7, None]
 _SRC = pathlib.Path(__file__).resolve().parent.parent / "src" / "plant_genomics_mcp"
 
 
@@ -113,8 +117,11 @@ def _clear_caches() -> None:
                 value.clear()
 
 
-async def _outcome(tool: str, args: dict[str, Any], body: Any, mp: pytest.MonkeyPatch) -> tuple:
-    """(upstream calls, the exception the call raised or None)."""
+async def _outcomes(
+    tool: str, args: dict[str, Any], body: Any, mp: pytest.MonkeyPatch, n: int
+) -> list[tuple[int, BaseException | None]]:
+    """The same call ``n`` times over one cache, starting cold: per call, the
+    upstream requests it made and the exception it raised or None."""
     calls: list[str] = []
 
     async def upstream(client: Any, method: str, url: str, **kw: Any) -> httpx.Response:
@@ -128,13 +135,40 @@ async def _outcome(tool: str, args: dict[str, Any], body: Any, mp: pytest.Monkey
 
     mp.setattr(_http, "request_with_retry", upstream)
     _clear_caches()
+    seen: list[tuple[int, BaseException | None]] = []
     try:
-        await server._dispatch(tool, dict(args))
-    except Exception as e:  # noqa: BLE001 - the class is what is under test
-        return len(calls), e
+        for _ in range(n):
+            before, err = len(calls), None
+            try:
+                await server._dispatch(tool, dict(args))
+            except Exception as e:  # noqa: BLE001 - the class is what is under test
+                err = e
+            seen.append((len(calls) - before, err))
     finally:
         _clear_caches()
-    return len(calls), None
+    return seen
+
+
+async def _outcome(tool: str, args: dict[str, Any], body: Any, mp: pytest.MonkeyPatch) -> tuple:
+    """(upstream calls, the exception the call raised or None)."""
+    [(calls, err)] = await _outcomes(tool, args, body, mp, 1)
+    return calls, err
+
+
+async def _stuck(tool: str, args: dict[str, Any], mp: pytest.MonkeyPatch) -> list[str]:
+    """Bodies whose failure the next identical call served without asking.
+
+    A failure that is not a "no record" answer says nothing lasting about the
+    record, so it must not be stored: the same call made again goes upstream.
+    ``NotFoundError`` is exempt, because a real empty answer is cached.
+    """
+    stuck = []
+    for body in _BODIES:
+        (asked, err), (again, _) = await _outcomes(tool, args, body, mp, 2)
+        failed = isinstance(err, PlantGenomicsError) and not isinstance(err, NotFoundError)
+        if asked and failed and again == 0:
+            stuck.append(f"{json.dumps(body)} -> {err}")
+    return stuck
 
 
 @pytest.fixture
@@ -186,3 +220,32 @@ async def test_the_harness_reports_a_leak(monkeypatch: pytest.MonkeyPatch) -> No
     assert calls == 1
     assert isinstance(err, PlantGenomicsError)
     assert str(err) == "UniProt search returned unexpected payload: list"
+
+
+@pytest.mark.parametrize("spec", DISPATCH_SPECS, ids=lambda s: s.tool)
+@pytest.mark.usefixtures("no_network")
+async def test_a_failed_call_is_followed_by_a_fresh_upstream_request(
+    spec: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A shape check that ran after the store served one bad body back as the
+    same error for the whole TTL (24 of 56 tools, #96)."""
+    assert await _stuck(spec.tool, spec.args, monkeypatch) == []
+
+
+@pytest.mark.usefixtures("no_network")
+async def test_the_harness_reports_a_stuck_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The check above can fail: ``cached_get`` made to store a body before
+    its shape is checked, the old order, is reported, and the real one is not."""
+    real = _http.cached_get
+
+    async def store_then_check(*args: Any, shape: Any = None, **kw: Any) -> Any:
+        value = await real(*args, **kw)
+        return shape(value) if shape else value
+
+    args = {"locus": "AT1G01010"}
+    monkeypatch.setattr(_http, "cached_get", store_then_check)
+    stuck = await _stuck("string_interactions", args, monkeypatch)
+    assert "[1] -> [UnreadableBody] row 0 is int, not an object" in stuck
+
+    monkeypatch.setattr(_http, "cached_get", real)
+    assert await _stuck("string_interactions", args, monkeypatch) == []

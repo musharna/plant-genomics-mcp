@@ -43,7 +43,8 @@ Endpoints (free, no key):
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 import httpx
 
@@ -70,6 +71,7 @@ MAX_CANDIDATES = 25
 _DETAIL_CONCURRENCY = 5
 
 _CACHE = cache.TTLCache()
+_T = TypeVar("_T")
 
 # IUPAC nucleotide ambiguity codes, keyed by the sorted set of bases they cover.
 # Used to render a PFM column that no single base dominates.
@@ -162,11 +164,19 @@ def _project(detail: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-async def _get_json(client: httpx.AsyncClient, path: str, params: dict[str, str] | None) -> object:
+async def _get_json(
+    client: httpx.AsyncClient,
+    path: str,
+    params: dict[str, str] | None,
+    *,
+    shape: Callable[[object], _T],
+) -> _T | None:
     """GET a JASPAR API path with retry + caching, returning decoded JSON.
 
     Returns ``None`` on 404 so callers can distinguish "no such matrix" from a
-    transport failure.
+    transport failure. ``shape`` checks the body before it is stored: a body
+    stored first was served back as the same failure for the whole TTL
+    without asking again (#96).
     """
     key = cache.make_key("GET", BASE_URL, path, params)
     cached = _CACHE.get(key)
@@ -188,21 +198,21 @@ async def _get_json(client: httpx.AsyncClient, path: str, params: dict[str, str]
     if resp is None:
         _CACHE.set(key, cache.NEGATIVE)
         return None
-    data = _http.json_body(resp, f"JASPAR {path}")
+    try:
+        data = shape(_http.json_body(resp, f"JASPAR {path}"))
+    except _http.UnreadableBody as e:
+        raise PlantGenomicsError(
+            f"JASPAR {path} returned unexpected payload: {e.args[0]}"
+        ) from None
     _CACHE.set(key, data)
     return data
 
 
 async def fetch_matrix(client: httpx.AsyncClient, matrix_id: str) -> dict[str, Any] | None:
     """Fetch one JASPAR matrix detail record. ``None`` when JASPAR answers 404."""
-    data = await _get_json(client, f"{API_PREFIX}/matrix/{matrix_id}/", None)
-    if data is None:
-        return None
-    if not isinstance(data, dict):
-        raise PlantGenomicsError(
-            f"JASPAR matrix/{matrix_id} returned unexpected payload: {type(data).__name__}"
-        )
-    return data
+    return await _get_json(
+        client, f"{API_PREFIX}/matrix/{matrix_id}/", None, shape=_http.expect_object
+    )
 
 
 def _version_key(row: dict[str, Any]) -> int:
@@ -232,8 +242,10 @@ async def _resolve_latest_version(client: httpx.AsyncClient, base_id: str) -> st
     ``count: 0`` for an unknown base id — so we settle existence there and only
     ever fetch a *versioned* detail path.
     """
-    data = await _get_json(client, f"{API_PREFIX}/matrix/{base_id}/versions/", None)
-    results = data.get("results") if isinstance(data, dict) else None
+    data = await _get_json(
+        client, f"{API_PREFIX}/matrix/{base_id}/versions/", None, shape=_http.expect_object
+    )
+    results = data.get("results") if data is not None else None
     versions = [r for r in results if isinstance(r, dict)] if isinstance(results, list) else []
     if not versions:
         raise NotFoundError(f"JASPAR has no matrix with id={base_id!r}")
@@ -277,8 +289,9 @@ async def _search_candidates(
         client,
         f"{API_PREFIX}/matrix/",
         {"search": name, "tax_id": str(tax_id), "page_size": str(MAX_CANDIDATES)},
+        shape=_http.expect_object,
     )
-    if not isinstance(data, dict):
+    if data is None:
         return []
     results = data.get("results")
     return [r for r in results if isinstance(r, dict)] if isinstance(results, list) else []

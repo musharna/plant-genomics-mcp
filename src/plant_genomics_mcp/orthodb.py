@@ -22,7 +22,6 @@ from typing import Any
 import httpx
 
 from plant_genomics_mcp import _http, cache, organisms, validators
-from plant_genomics_mcp.errors import PlantGenomicsError
 
 BASE_URL = "https://data.orthodb.org"
 # Every request names the release it asks for, so the release that answered is
@@ -54,7 +53,7 @@ _CACHE = cache.TTLCache()
 
 async def _get(client: httpx.AsyncClient, path: str, params: dict[str, Any]) -> dict[str, Any]:
     """GET an OrthoDB endpoint (own cache), returning the parsed dict."""
-    body = await _http.cached_get(
+    return await _http.cached_get(
         client,
         _CACHE,
         f"{BASE_URL}{path}",
@@ -65,12 +64,8 @@ async def _get(client: httpx.AsyncClient, path: str, params: dict[str, Any]) -> 
         max_retries=MAX_RETRIES,
         retry_403_pattern=REFUSED_403_RE,
         limit=_LIMIT,
+        shape=_http.expect_object,
     )
-    if not isinstance(body, dict):
-        raise PlantGenomicsError(
-            f"OrthoDB {path} returned unexpected payload: {type(body).__name__}"
-        )
-    return body
 
 
 def _project_group(data: dict[str, Any]) -> dict[str, Any]:

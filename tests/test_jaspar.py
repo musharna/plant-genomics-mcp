@@ -259,8 +259,16 @@ async def test_search_candidates_filters_junk(httpx_mock: HTTPXMock) -> None:
 
 @pytest.mark.asyncio
 async def test_search_candidates_non_dict_payload(httpx_mock: HTTPXMock) -> None:
+    """A search body that is not an object is an error, not an empty
+    candidate list, and is not stored."""
     httpx_mock.add_response(url=_search_url("ABF1"), json=["unexpected"])
+    httpx_mock.add_response(url=_search_url("ABF1"), json={"results": []})
     async with httpx.AsyncClient() as client:
+        with pytest.raises(
+            PlantGenomicsError, match="returned unexpected payload: list, not an object"
+        ):
+            await jaspar._search_candidates(client, "ABF1", 3702)
+        # Positive control: the same search is asked again and answered.
         assert await jaspar._search_candidates(client, "ABF1", 3702) == []
 
 

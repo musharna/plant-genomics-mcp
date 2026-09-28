@@ -149,11 +149,15 @@ async def test_aragwas_resumes_at_its_own_offset(monkeypatch: pytest.MonkeyPatch
 async def test_quickgo_resumes_at_its_own_page(monkeypatch: pytest.MonkeyPatch) -> None:
     sent: list[dict[str, Any]] = []
 
-    async def fake(client: Any, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def fake(
+        client: Any, path: str, params: dict[str, Any] | None = None, *, shape: Any
+    ) -> dict[str, Any]:
         sent.append(dict(params or {}))
         page = int((params or {}).get("page", 1))
         n = min(2, 5 - (page - 1) * 2)
-        return {"numberOfHits": 5, "results": [{"goId": f"GO:{page}{i}"} for i in range(n)]}
+        body = {"numberOfHits": 5, "results": [{"goId": f"GO:{page}{i}"} for i in range(n)]}
+        result: dict[str, Any] = shape(body)
+        return result
 
     monkeypatch.setattr(quickgo, "_get", fake)
     async with httpx.AsyncClient() as c:

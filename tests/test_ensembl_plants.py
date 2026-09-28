@@ -10,6 +10,7 @@ Two tiers (mirrors the genomics-mcp sibling pattern):
 from __future__ import annotations
 
 import os
+import re
 
 import httpx
 import pytest
@@ -180,10 +181,15 @@ async def test_lookup_xrefs_raises_on_non_list_payload(httpx_mock: HTTPXMock) ->
     httpx_mock.add_response(
         url="https://rest.ensembl.org/xrefs/id/AT1G01010?species=arabidopsis_thaliana",
         json={"error": "unexpected object shape"},
+        is_reusable=True,
     )
     async with httpx.AsyncClient() as client:
-        with pytest.raises(ensembl_plants.PlantGenomicsError, match="non-list payload"):
+        with pytest.raises(
+            ensembl_plants.UpstreamUnavailableError,
+            match=r"answered 200 twice without a readable result \(dict, not a list\)",
+        ):
             await ensembl_plants.lookup_xrefs(client, "AT1G01010")
+    assert len(httpx_mock.get_requests(url=re.compile(".*/xrefs/id/"))) == 2
 
 
 # ---------- live integration (real-execution check) ----------
@@ -446,7 +452,7 @@ async def test_get_sequence_rejects_invalid_seq_type() -> None:
 
 @pytest.mark.asyncio
 async def test_get_sequence_raises_on_unexpected_payload(httpx_mock: HTTPXMock) -> None:
-    from plant_genomics_mcp.errors import PlantGenomicsError
+    from plant_genomics_mcp.errors import UpstreamUnavailableError
 
     httpx_mock.add_response(
         url=_AT_LOOKUP.format("AT1G01010"), json=_gene("AT1G01010", "AT1G01010.1")
@@ -454,10 +460,15 @@ async def test_get_sequence_raises_on_unexpected_payload(httpx_mock: HTTPXMock) 
     httpx_mock.add_response(
         url="https://rest.ensembl.org/sequence/id/AT1G01010.1?species=arabidopsis_thaliana&type=protein",
         json=[{"seq": "X"}],  # Ensembl should hand back a dict, not a list.
+        is_reusable=True,
     )
     async with httpx.AsyncClient() as client:
-        with pytest.raises(PlantGenomicsError, match="unexpected payload"):
+        with pytest.raises(
+            UpstreamUnavailableError,
+            match=r"answered 200 twice without a readable result \(list, not an object\)",
+        ):
             await ensembl_plants.get_sequence(client, "AT1G01010")
+    assert len(httpx_mock.get_requests(url=re.compile(".*/sequence/id/"))) == 2
 
 
 @pytest.mark.asyncio
@@ -547,15 +558,20 @@ async def test_region_query_rejects_end_before_start() -> None:
 
 @pytest.mark.asyncio
 async def test_region_query_raises_on_non_list_payload(httpx_mock: HTTPXMock) -> None:
-    from plant_genomics_mcp.errors import PlantGenomicsError
+    from plant_genomics_mcp.errors import UpstreamUnavailableError
 
     httpx_mock.add_response(
         url="https://rest.ensembl.org/overlap/region/arabidopsis_thaliana/1:3000-10000?feature=gene",
         json={"error": "something"},  # Ensembl overlap returns an array on success.
+        is_reusable=True,
     )
     async with httpx.AsyncClient() as client:
-        with pytest.raises(PlantGenomicsError, match="non-list payload"):
+        with pytest.raises(
+            UpstreamUnavailableError,
+            match=r"answered 200 twice without a readable result \(dict, not a list\)",
+        ):
             await ensembl_plants.region_query(client, "1", 3000, 10000)
+    assert len(httpx_mock.get_requests(url=re.compile(".*/overlap/region/"))) == 2
 
 
 @live_only

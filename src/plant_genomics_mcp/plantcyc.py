@@ -84,8 +84,11 @@ async def _getxml(client: httpx.AsyncClient, orgid: str, frame: str) -> ET.Eleme
         _CACHE.set(key, cache.NEGATIVE)
         return None
     text = resp.text
+    # Parsed before it is stored: a body stored first was served back as the
+    # same failure for the whole TTL without asking again (#96).
+    root = _parse(text, f"getxml {orgid}:{frame}")
     _CACHE.set(key, text)
-    return _parse(text, f"getxml {orgid}:{frame}")
+    return root
 
 
 def _parse(text: str, source: str) -> ET.Element:

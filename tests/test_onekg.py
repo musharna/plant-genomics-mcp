@@ -15,7 +15,11 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import onekg
-from plant_genomics_mcp.errors import NotFoundError, OrganismNotSupported, PlantGenomicsError
+from plant_genomics_mcp.errors import (
+    NotFoundError,
+    OrganismNotSupported,
+    UpstreamUnavailableError,
+)
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
@@ -117,10 +121,14 @@ async def test_lookup_truncates(httpx_mock: HTTPXMock, monkeypatch: pytest.Monke
 @pytest.mark.asyncio
 async def test_lookup_malformed_raises(httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(url=_COORDS_URL, json=_COORDS)
-    httpx_mock.add_response(url=_EFF_URL, json=["unexpected", "list"])
+    httpx_mock.add_response(url=_EFF_URL, json=["unexpected", "list"], is_reusable=True)
     async with httpx.AsyncClient() as client:
-        with pytest.raises(PlantGenomicsError, match="unexpected payload"):
+        with pytest.raises(
+            UpstreamUnavailableError,
+            match=r"answered 200 twice without a readable result \(list, not an object\)",
+        ):
             await onekg.lookup_locus(client, "AT1G01060", "arabidopsis")
+    assert len(httpx_mock.get_requests(url=_EFF_URL)) == 2
 
 
 @pytest.mark.asyncio

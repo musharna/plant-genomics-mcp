@@ -13,14 +13,12 @@ Endpoint docs: https://www.ebi.ac.uk/QuickGO/api/index.html.
 
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 import httpx
 
 from plant_genomics_mcp import _http, cache
-from plant_genomics_mcp.errors import (
-    PlantGenomicsError,
-)
 
 BASE_URL = "https://www.ebi.ac.uk/QuickGO/services"
 DEFAULT_TIMEOUT = 30.0
@@ -30,6 +28,7 @@ MAX_LIMIT = 100  # QuickGO documents a 100/page upper bound on /search
 
 # Per-module response cache. See plant_genomics_mcp.cache for env knobs.
 _CACHE = cache.TTLCache()
+_T = TypeVar("_T")
 
 
 # Fields we surface from each annotation row. QuickGO returns ~18 fields per
@@ -53,11 +52,22 @@ _ANN_FIELDS = (
 )
 
 
+def _search_shape(raw: object) -> dict[str, Any]:
+    """An /annotation/search body whose ``results``, if present, is a list."""
+    body = _http.expect_object(raw)
+    results = body.get("results") or []
+    if not isinstance(results, list):
+        raise _http.UnreadableBody(f"results is not a list: {type(results).__name__}")
+    return body
+
+
 async def _get(
     client: httpx.AsyncClient,
     path: str,
     params: dict[str, Any] | None = None,
-) -> object:
+    *,
+    shape: Callable[[object], _T],
+) -> _T:
     """GET a QuickGO endpoint with retry on 429/5xx."""
     return await _http.cached_get(
         client,
@@ -68,6 +78,7 @@ async def _get(
         headers={"Accept": "application/json"},
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
+        shape=shape,
     )
 
 
@@ -129,16 +140,8 @@ async def lookup_by_uniprot(
     }
     if page > 1:
         params["page"] = page
-    raw = await _get(client, "/annotation/search", params=params)
-    if not isinstance(raw, dict):
-        raise PlantGenomicsError(
-            f"QuickGO /annotation/search returned non-dict payload: {type(raw).__name__}"
-        )
+    raw = await _get(client, "/annotation/search", params=params, shape=_search_shape)
     results = raw.get("results") or []
-    if not isinstance(results, list):
-        raise PlantGenomicsError(
-            f"QuickGO /annotation/search results is not a list: {type(results).__name__}"
-        )
     annotations = [_normalize(r) for r in results if isinstance(r, dict)]
     if not include_with_from:
         # _normalize built new dicts: the cached upstream rows keep theirs.

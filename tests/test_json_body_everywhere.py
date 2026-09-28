@@ -112,7 +112,11 @@ _CASES: dict[str, tuple[str, _Call, Any]] = {
         lambda m, c: m.go_enrichment(c, ["AT1G01010"], "arabidopsis_thaliana"),
         {"result": []},
     ),
-    "jaspar": ("jaspar", lambda m, c: m._get_json(c, "/matrix/MA0001.1/", None), {}),
+    "jaspar": (
+        "jaspar",
+        lambda m, c: m._get_json(c, "/matrix/MA0001.1/", None, shape=_http.expect_object),
+        {},
+    ),
     "panther": (
         "panther",
         lambda m, c: m.lookup_locus(c, "AT1G01010", "arabidopsis_thaliana"),

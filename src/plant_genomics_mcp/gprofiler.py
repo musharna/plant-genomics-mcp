@@ -166,18 +166,21 @@ async def go_enrichment(
             timeout=DEFAULT_TIMEOUT,
             max_retries=MAX_RETRIES,
         )
-        cached = _http.json_body(resp, "g:Profiler g:GOSt")
-        _CACHE.set(key, cached)
-
-    if not isinstance(cached, dict):
-        raise PlantGenomicsError(
-            f"g:Profiler {PROFILE_PATH} returned non-dict payload: {type(cached).__name__}"
-        )
-    results = cached.get("result")
-    if not isinstance(results, list):
-        raise PlantGenomicsError(
-            f"g:Profiler {PROFILE_PATH} 'result' is not a list: {type(results).__name__}"
-        )
+        body = _http.json_body(resp, "g:Profiler g:GOSt")
+        # Checked before it is stored: a body stored first was served back
+        # as the same failure for the whole TTL without asking again (#96).
+        if not isinstance(body, dict):
+            raise PlantGenomicsError(
+                f"g:Profiler {PROFILE_PATH} returned non-dict payload: {type(body).__name__}"
+            )
+        if not isinstance(body.get("result"), list):
+            raise PlantGenomicsError(
+                f"g:Profiler {PROFILE_PATH} 'result' is not a list: "
+                f"{type(body.get('result')).__name__}"
+            )
+        _CACHE.set(key, body)
+        cached = body
+    results = cached["result"]
 
     terms = [_project_term(r) for r in results if isinstance(r, dict)]
     terms.sort(key=lambda t: (t.get("p_value") is None, t.get("p_value", 1.0)))

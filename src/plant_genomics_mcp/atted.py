@@ -33,7 +33,8 @@ into a flat list of neighbors.
 
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 import httpx
 
@@ -53,6 +54,7 @@ DEFAULT_TOP_N = 25
 MAX_TOP_N = 300
 
 _CACHE = cache.TTLCache(default_ttl=CACHE_TTL_SECONDS)
+_T = TypeVar("_T")
 
 
 def _user_agent() -> str:
@@ -63,7 +65,9 @@ async def _get(
     client: httpx.AsyncClient,
     path: str,
     params: dict[str, Any] | None = None,
-) -> object:
+    *,
+    shape: Callable[[object], _T],
+) -> _T:
     return await _http.cached_get(
         client,
         _CACHE,
@@ -73,6 +77,7 @@ async def _get(
         headers={"Accept": "application/json", "User-Agent": _user_agent()},
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
+        shape=shape,
     )
 
 
@@ -129,9 +134,8 @@ async def lookup_coexpression(
         client,
         API_PATH,
         params={"gene": locus, "topN": top_n, "db": release},
+        shape=_http.expect_object,
     )
-    if not isinstance(raw, dict):
-        raise PlantGenomicsError(f"ATTED-II {API_PATH} returned non-dict: {type(raw).__name__}")
     # Issue #140: an empty answer here is NOT "a gene with zero neighbours" —
     # a top-N ranking of every gene in the release is never empty for a gene
     # that is in it. ATTED-II says so itself for AT1G34170 (live, 2026-09-22):

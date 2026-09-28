@@ -95,6 +95,12 @@ async def _post(client: httpx.AsyncClient, xml_payload: str) -> str:
         max_retries=MAX_RETRIES,
     )
     text = resp.text
+    # BioMart returns 200 with a "Query ERROR:" body on filter / dataset
+    # mis-configuration. Checked before it is stored: a body stored first was
+    # served back as the same failure for the whole TTL without asking again
+    # (#96).
+    if text.startswith("Query ERROR"):
+        raise PlantGenomicsError(f"Phytozome: {text.strip()[:300]}")
     _CACHE.set(key, text)
     await progress.notify("Phytozome BioMart: query complete")
     return text
@@ -129,11 +135,6 @@ async def lookup_locus(
 
     xml_payload = _QUERY_TEMPLATE.format(organism_id=phyto_id, locus=locus)
     body = await _post(client, xml_payload)
-
-    # BioMart returns 200 with a "Query ERROR:" body on filter / dataset
-    # mis-configuration. Detect that before TSV parsing.
-    if body.startswith("Query ERROR"):
-        raise PlantGenomicsError(f"Phytozome: {body.strip()[:300]}")
 
     # Split on \n, drop trailing blanks. With header="1" we always get the
     # header line first (when the response is non-empty).

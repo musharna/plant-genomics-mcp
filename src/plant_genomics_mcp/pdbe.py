@@ -93,12 +93,15 @@ async def lookup_by_uniprot(client: httpx.AsyncClient, accession: str) -> dict[s
             # it is what keeps a repeated lookup off the wire.
             _CACHE.set(key, cache.NEGATIVE)
             return _empty(accession)
-        cached = _http.json_body(resp, f"PDBe {path}")
-        _CACHE.set(key, cached)
-    if not isinstance(cached, dict):
-        raise PlantGenomicsError(
-            f"PDBe {path} returned unexpected payload: {type(cached).__name__}"
-        )
+        body = _http.json_body(resp, f"PDBe {path}")
+        # Checked before it is stored: a body stored first was served back
+        # as the same failure for the whole TTL without asking again (#96).
+        if not isinstance(body, dict):
+            raise PlantGenomicsError(
+                f"PDBe {path} returned unexpected payload: {type(body).__name__}"
+            )
+        _CACHE.set(key, body)
+        cached = body
     entries = cached.get(accession)
     if not isinstance(entries, list):
         return _empty(accession)

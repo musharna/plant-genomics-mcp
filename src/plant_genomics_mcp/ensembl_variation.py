@@ -18,7 +18,8 @@ keeps its own response cache. No auth. 12/12 organisms.
 
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 import httpx
 
@@ -36,11 +37,16 @@ MAX_RETRIES = 3
 MAX_VARIANTS = 500
 
 _CACHE = cache.TTLCache()
+_T = TypeVar("_T")
 
 
 async def _get(
-    client: httpx.AsyncClient, path: str, params: dict[str, Any] | None = None
-) -> object:
+    client: httpx.AsyncClient,
+    path: str,
+    params: dict[str, Any] | None = None,
+    *,
+    shape: Callable[[object], _T],
+) -> _T:
     """GET an Ensembl REST endpoint (own cache), returning parsed JSON."""
     return await _http.cached_get(
         client,
@@ -54,6 +60,7 @@ async def _get(
         # Same REST service, same 400-means-not-found dialect. Imported rather
         # than re-declared so there is one pattern to keep correct.
         not_found_400_pattern=ensembl_plants.NOT_FOUND_400_RE,
+        shape=shape,
     )
 
 
@@ -110,14 +117,13 @@ async def locus_variants(
         )
     region_str = f"{seq_region}:{start}-{end}"
     raw = await _get(
-        client, f"/overlap/region/{slug}/{region_str}", params={"feature": "variation"}
+        client,
+        f"/overlap/region/{slug}/{region_str}",
+        params={"feature": "variation"},
+        shape=_http.object_rows,
     )
-    if not isinstance(raw, list):
-        raise PlantGenomicsError(
-            f"Ensembl /overlap/region/{region_str} returned non-list payload: {type(raw).__name__}"
-        )
     total = len(raw)
-    rows = [_project_variant(v) for v in raw[: _resolve_limit(limit)] if isinstance(v, dict)]
+    rows = [_project_variant(v) for v in raw[: _resolve_limit(limit)]]
     return {
         "locus": locus,
         "organism": slug,
@@ -125,11 +131,8 @@ async def locus_variants(
         "gene_start": start,
         "gene_end": end,
         "variant_count": total,
-        # Compared against the rows actually returned, not against the cap.
-        # `total > MAX_VARIANTS` under-reported: non-dict entries are skipped
-        # during projection, so a list shortened by malformed rows could come
-        # back flagged untruncated. The count and the flag must agree with what
-        # the caller is holding.
+        # Compared against the rows actually returned, not against the cap,
+        # so the count and the flag agree with what the caller is holding.
         **_http.counted(total, rows),
         "variants": rows,
     }
@@ -150,6 +153,17 @@ def _project_consequence(c: dict[str, Any]) -> dict[str, Any]:
         "polyphen_score": c.get("polyphen_score"),
         "distance": c.get("distance"),
     }
+
+
+def _vep_shape(raw: object) -> list[dict[str, Any]]:
+    """VEP's rows, and the first row's transcript consequences, all objects."""
+    rows = _http.object_rows(raw)
+    if rows:
+        try:
+            _http.object_rows(rows[0].get("transcript_consequences") or [])
+        except _http.UnreadableBody as e:
+            raise _http.UnreadableBody(f"transcript_consequences {e.args[0]}") from None
+    return rows
 
 
 async def vep_annotate(
@@ -173,12 +187,8 @@ async def vep_annotate(
     validators.assert_no_path_metachars(region, field="region", backend="Ensembl VEP")
     validators.assert_no_path_metachars(allele, field="allele", backend="Ensembl VEP")
     slug = organisms.ensembl_slug_for(organism)
-    raw = await _get(client, f"/vep/{slug}/region/{region}/{allele}")
-    if not isinstance(raw, list):
-        raise PlantGenomicsError(
-            f"Ensembl /vep/{slug}/region returned non-list payload: {type(raw).__name__}"
-        )
-    if not raw or not isinstance(raw[0], dict):
+    rows = await _get(client, f"/vep/{slug}/region/{region}/{allele}", shape=_vep_shape)
+    if not rows:
         return {
             "organism": slug,
             "region": region,
@@ -188,12 +198,8 @@ async def vep_annotate(
             "assembly_name": None,
             "transcript_consequences": [],
         }
-    entry = raw[0]
-    cons = [
-        _project_consequence(c)
-        for c in entry.get("transcript_consequences") or []
-        if isinstance(c, dict)
-    ]
+    entry = rows[0]
+    cons = [_project_consequence(c) for c in entry.get("transcript_consequences") or []]
     return {
         "organism": slug,
         "region": region,
