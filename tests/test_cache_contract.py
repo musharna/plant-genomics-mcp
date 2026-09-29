@@ -50,12 +50,13 @@ ALL = BACKENDS_PATH_PARAMS + BACKENDS_URL + BACKENDS_PATH
 def _body(name: str, n: int) -> dict[str, Any]:
     """A JSON body the backend's ``_get`` reads as an answer, distinct per ``n``.
 
-    Europe PMC's and InterPro's ``_get`` hold the #141 shape themselves: an
-    answer states its count (and, for Europe PMC, its result list).
+    Europe PMC's, InterPro's and AraGWAS's ``_get`` hold the #141 shape
+    themselves: an answer states its count (and, for Europe PMC, its result
+    list).
     """
     if name == "europe_pmc":
         return {"n": n, "hitCount": n, "resultList": {"result": [n]}}
-    if name == "interpro":
+    if name in ("interpro", "aragwas"):
         return {"n": n, "count": n, "results": []}
     return {"n": n, "data": [n]}
 

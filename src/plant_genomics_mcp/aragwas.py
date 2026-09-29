@@ -63,7 +63,9 @@ async def _get(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
         headers={"Accept": "application/json"},
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
-        shape=_http.expect_object,
+        # The count is checked before the store: read afterwards, a page
+        # without one was stored first and failed the call for the whole TTL.
+        shape=_http.expect_count("count"),
     )
 
 

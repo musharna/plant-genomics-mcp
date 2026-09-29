@@ -82,16 +82,34 @@ async def _get(
     )
 
 
+def _lookup_shape(value: object) -> dict[str, Any]:
+    """A /lookup/id record names itself: a string ``id`` and ``species``.
+
+    Every live record has both (gene, transcript, rice; 2026-09-28), and an
+    unknown id is a 400. A record without them used to pass through
+    unprojected: ``{}`` was the tool's answer, breaking its schema, and
+    ``get_sequence`` and ``locus_variants`` failed on it after it was stored,
+    so for the whole TTL without asking again. ``project_lookup`` holds it
+    too, so the batch POST, which projects each record itself, cannot answer
+    with one (#196 review).
+    """
+    record = _http.expect_object(value)
+    for key in ("id", "species"):
+        if not isinstance(record.get(key), str):
+            raise _http.UnreadableBody(f"no string {key!r} in {str(record)[:120]}")
+    return record
+
+
 def project_lookup(raw: dict[str, Any]) -> dict[str, Any]:
     """One /lookup/id record, as both tool forms return it (issue #137).
 
     The single and batch forms used to project separately, and the batch form
     passed Ensembl's record through raw: ``species`` not renamed, no
     ``upstream_version``. Built fresh rather than mutating ``raw`` (audit P5).
+    A record that does not name itself raises :class:`_http.UnreadableBody`.
     """
-    out = {**raw}
-    if "species" in out:
-        out["organism"] = out.pop("species")
+    out = {**_lookup_shape(raw)}
+    out["organism"] = out.pop("species")
     # Ensembl spells canonical_transcript "<id>.<version>", and plant genes
     # carry version None, so the id arrives as "AT1G19850.1." (live, 2026-09-22)
     # while aragwas_associations spells the same transcript "AT1G19850.1".
@@ -135,10 +153,8 @@ async def lookup_locus(
     slug = organisms.ensembl_slug_for(organism)
     wire = wire_id(locus, organism)
     params: dict[str, Any] = {"species": slug, "expand": 0}
-    raw = await _get(client, f"/lookup/id/{wire}", params=params, shape=_http.expect_object)
-    if "species" in raw:
-        return project_lookup(raw)
-    return raw
+    raw = await _get(client, f"/lookup/id/{wire}", params=params, shape=_lookup_shape)
+    return project_lookup(raw)
 
 
 async def lookup_xrefs(
