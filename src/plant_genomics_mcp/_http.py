@@ -540,6 +540,25 @@ def expect_count(key: str) -> Callable[[object], dict[str, Any]]:
     return shape
 
 
+def expect_fields(**kinds: type) -> Callable[[object], dict[str, Any]]:
+    """A shape: a JSON object whose named fields each have the given type.
+
+    ``{}`` passes :func:`expect_object`, and a reader that defaulted a missing
+    field (``body.get("results") or []``) took it for the upstream's own "no
+    record": "UniProt has no entry", no variants, no motif (#96, 2026-09-28).
+    Naming the fields a reader needs makes such a body :class:`UnreadableBody`.
+    """
+
+    def shape(value: object) -> dict[str, Any]:
+        body = expect_object(value)
+        for key, kind in kinds.items():
+            if not isinstance(body.get(key), kind):
+                raise UnreadableBody(f"no {kind.__name__} {key!r} in {str(body)[:120]}")
+        return body
+
+    return shape
+
+
 def object_rows(value: object) -> list[dict[str, Any]]:
     """``value`` when it is a list of JSON objects, else :class:`UnreadableBody`.
 

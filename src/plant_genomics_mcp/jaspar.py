@@ -208,10 +208,16 @@ async def _get_json(
     return data
 
 
+# ``versions/`` and the name search answer no match with ``{"count": 0,
+# "results": []}`` (live, 2026-09-28); ``{}`` was read as that match-nothing,
+# and ``{}`` as a matrix became a record of nulls.
+_RESULTS = _http.expect_fields(results=list)
+
+
 async def fetch_matrix(client: httpx.AsyncClient, matrix_id: str) -> dict[str, Any] | None:
     """Fetch one JASPAR matrix detail record. ``None`` when JASPAR answers 404."""
     return await _get_json(
-        client, f"{API_PREFIX}/matrix/{matrix_id}/", None, shape=_http.expect_object
+        client, f"{API_PREFIX}/matrix/{matrix_id}/", None, shape=_http.expect_fields(matrix_id=str)
     )
 
 
@@ -242,9 +248,7 @@ async def _resolve_latest_version(client: httpx.AsyncClient, base_id: str) -> st
     ``count: 0`` for an unknown base id — so we settle existence there and only
     ever fetch a *versioned* detail path.
     """
-    data = await _get_json(
-        client, f"{API_PREFIX}/matrix/{base_id}/versions/", None, shape=_http.expect_object
-    )
+    data = await _get_json(client, f"{API_PREFIX}/matrix/{base_id}/versions/", None, shape=_RESULTS)
     results = data.get("results") if data is not None else None
     versions = [r for r in results if isinstance(r, dict)] if isinstance(results, list) else []
     if not versions:
@@ -289,7 +293,7 @@ async def _search_candidates(
         client,
         f"{API_PREFIX}/matrix/",
         {"search": name, "tax_id": str(tax_id), "page_size": str(MAX_CANDIDATES)},
-        shape=_http.expect_object,
+        shape=_RESULTS,
     )
     if data is None:
         return []

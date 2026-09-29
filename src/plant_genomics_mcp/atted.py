@@ -110,6 +110,19 @@ def _normalize(row: dict[str, Any], score_type: str = "z") -> dict[str, Any]:
     }
 
 
+def _answer_shape(value: object) -> dict[str, Any]:
+    """An ATTED-II answer carries its ``result_set``, or says why not in ``error``.
+
+    A gene outside the release answers 200 ``{"error": "... is not included in
+    the database.", "status_code": 404}`` (live, 2026-09-28). ``{}`` says
+    neither, and was read as "not in the release".
+    """
+    body = _http.expect_object(value)
+    if not isinstance(body.get("result_set"), list) and not isinstance(body.get("error"), str):
+        raise _http.UnreadableBody(f"neither a result_set nor an error in {str(body)[:120]}")
+    return body
+
+
 async def lookup_coexpression(
     client: httpx.AsyncClient,
     locus: str,
@@ -134,7 +147,7 @@ async def lookup_coexpression(
         client,
         API_PATH,
         params={"gene": locus, "topN": top_n, "db": release},
-        shape=_http.expect_object,
+        shape=_answer_shape,
     )
     # Issue #140: an empty answer here is NOT "a gene with zero neighbours" —
     # a top-N ranking of every gene in the release is never empty for a gene

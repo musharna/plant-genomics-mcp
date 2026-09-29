@@ -120,7 +120,7 @@ _CASES: dict[str, tuple[str, _Call, Any]] = {
     "panther": (
         "panther",
         lambda m, c: m.lookup_locus(c, "AT1G01010", "arabidopsis_thaliana"),
-        {},
+        {"search": {"unmapped_list": {"unmapped": "AT1G01010"}}},
     ),
     "pdbe": ("pdbe", lambda m, c: m.lookup_by_uniprot(c, "Q9SZ92"), {}),
     "thalemine": ("thalemine", lambda m, c: m._rows(c, "<query/>"), {"results": []}),

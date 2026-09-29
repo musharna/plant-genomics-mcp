@@ -202,6 +202,38 @@ async def test_a_wrong_shaped_body_is_a_typed_error_or_an_answer(
     assert asked >= len(_BODIES), asked
 
 
+def _folds_calls(tool: str) -> bool:
+    """A tool that folds many calls into one envelope reports a failed call
+    inside its answer, per item or per step, instead of raising."""
+    return (
+        tool.startswith("batch_")
+        or tool.endswith("_synth")
+        or tool in {"gene_report", "consensus_homologs"}
+    )
+
+
+@pytest.mark.parametrize(
+    "spec", [s for s in DISPATCH_SPECS if not _folds_calls(s.tool)], ids=lambda s: s.tool
+)
+@pytest.mark.usefixtures("no_network")
+async def test_an_object_that_states_none_of_its_fields_is_neither_an_answer_nor_a_miss(
+    spec: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """``{}`` states nothing, so it is not "no record" and not an empty result.
+
+    Every upstream here says "no record" in a form of its own, probed live
+    (2026-09-28): UniProt ``{"results": []}``, ATTED an ``error`` string, BAR
+    ``wasSuccessful: false``, OrthoDB ``status: ok`` with no data, PANTHER an
+    ``unmapped_list``, Phytozome its header line. ``{}`` was read as each of
+    them: "UniProt has no entry" behind seven tools, a JASPAR matrix of nulls,
+    PANTHER ``found: false``, no orthologs, no variants, no pathways.
+    """
+    calls, err = await _outcome(spec.tool, spec.args, {}, monkeypatch)
+    assert calls >= 1
+    what = "an answer" if err is None else f"{type(err).__name__}: {err}"
+    assert isinstance(err, PlantGenomicsError) and not isinstance(err, NotFoundError), what
+
+
 @pytest.mark.usefixtures("no_network")
 async def test_the_harness_reports_a_leak(monkeypatch: pytest.MonkeyPatch) -> None:
     """The check above can fail: a backend that reads ``.get`` off the body

@@ -28,6 +28,7 @@ _ORTHO_URL = f"{orthodb.BASE_URL}/v12/orthologs?id={_GID}"
 
 # Real-shaped group + orthologs payloads (key names verified live 2026-07-20).
 _GROUP = {
+    "status": "ok",
     "data": {
         "id": _GID,
         "public_id": _GID,
@@ -35,7 +36,7 @@ _GROUP = {
         "evolutionary_rate": 1.451,
         "level_name": "Viridiplantae",
         "tax_id": 33090,
-    }
+    },
 }
 _ORTHO = {
     "status": "ok",
@@ -63,7 +64,7 @@ _ORTHO = {
 
 @pytest.mark.asyncio
 async def test_lookup_full(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(url=_SEARCH_URL, json={"count": "1", "data": [_GID]})
+    httpx_mock.add_response(url=_SEARCH_URL, json={"status": "ok", "count": "1", "data": [_GID]})
     httpx_mock.add_response(url=_GROUP_URL, json=_GROUP)
     httpx_mock.add_response(url=_ORTHO_URL, json=_ORTHO)
     async with httpx.AsyncClient() as client:
@@ -87,7 +88,7 @@ async def test_lookup_full(httpx_mock: HTTPXMock) -> None:
 @pytest.mark.asyncio
 async def test_lookup_no_group_is_found_false(httpx_mock: HTTPXMock) -> None:
     """Empty search result → found=False, no group/orthologs calls."""
-    httpx_mock.add_response(url=_SEARCH_URL, json={"count": "0", "data": []})
+    httpx_mock.add_response(url=_SEARCH_URL, json={"status": "ok", "count": "0", "data": []})
     async with httpx.AsyncClient() as client:
         r = await orthodb.lookup_locus(client, "AT1G01060", "arabidopsis")
     assert r["found"] is False
@@ -101,7 +102,7 @@ async def test_lookup_no_group_is_found_false(httpx_mock: HTTPXMock) -> None:
 @pytest.mark.asyncio
 async def test_lookup_truncates(httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(orthodb, "MAX_MEMBERS", 1)
-    httpx_mock.add_response(url=_SEARCH_URL, json={"count": "1", "data": [_GID]})
+    httpx_mock.add_response(url=_SEARCH_URL, json={"status": "ok", "count": "1", "data": [_GID]})
     httpx_mock.add_response(url=_GROUP_URL, json=_GROUP)
     httpx_mock.add_response(url=_ORTHO_URL, json=_ORTHO)
     async with httpx.AsyncClient() as client:
@@ -146,15 +147,22 @@ async def test_lookup_malformed_raises(httpx_mock: HTTPXMock) -> None:
 
 @pytest.mark.asyncio
 async def test_lookup_orthologs_non_list_data(httpx_mock: HTTPXMock) -> None:
-    """orthologs data that isn't a list → zero members, still found=True."""
-    httpx_mock.add_response(url=_SEARCH_URL, json={"count": "1", "data": [_GID]})
+    """A group's orthologs answer always lists its clusters (live, 2026-09-28).
+
+    ``data: null`` there was read as a group with no members: ``found: true``,
+    ``organism_count: 0``. It is an error, and it is not stored.
+    """
+    httpx_mock.add_response(url=_SEARCH_URL, json={"status": "ok", "count": "1", "data": [_GID]})
     httpx_mock.add_response(url=_GROUP_URL, json=_GROUP)
     httpx_mock.add_response(url=_ORTHO_URL, json={"status": "ok", "data": None})
+    httpx_mock.add_response(url=_ORTHO_URL, json={"status": "ok", "data": None})
+    httpx_mock.add_response(url=_ORTHO_URL, json=_ORTHO)
     async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError, match="twice without a readable result"):
+            await orthodb.lookup_locus(client, "AT1G01060", "arabidopsis")
+        # Positive control: the next real answer is read, not the refused one.
         r = await orthodb.lookup_locus(client, "AT1G01060", "arabidopsis")
-    assert r["found"] is True
-    assert r["organism_count"] == 0
-    assert r["members"] == []
+    assert r["found"] is True and r["member_count"] == 2
 
 
 @live_only
@@ -261,7 +269,7 @@ async def test_target_organism_filters_members_before_the_cap(
 ) -> None:
     monkeypatch.setattr(orthodb, "MAX_MEMBERS", 3)
     ortho = _ortho_with([("Abrus precatorius", 2), ("Lupinus albus", 2), ("Oryza sativa", 2)])
-    httpx_mock.add_response(url=_SEARCH_URL, json={"count": "1", "data": [_GID]})
+    httpx_mock.add_response(url=_SEARCH_URL, json={"status": "ok", "count": "1", "data": [_GID]})
     httpx_mock.add_response(url=_GROUP_URL, json=_GROUP)
     httpx_mock.add_response(url=_ORTHO_URL, json=ortho)
     async with httpx.AsyncClient() as client:
@@ -273,7 +281,7 @@ async def test_target_organism_filters_members_before_the_cap(
     assert r["truncated"] is False
     # Positive control: without the filter the cap of 3 stops inside Lupinus.
     orthodb._CACHE.clear()
-    httpx_mock.add_response(url=_SEARCH_URL, json={"count": "1", "data": [_GID]})
+    httpx_mock.add_response(url=_SEARCH_URL, json={"status": "ok", "count": "1", "data": [_GID]})
     httpx_mock.add_response(url=_GROUP_URL, json=_GROUP)
     httpx_mock.add_response(url=_ORTHO_URL, json=ortho)
     async with httpx.AsyncClient() as client:
@@ -311,7 +319,7 @@ def _crowd_refusing_transport(refused: list[str]) -> httpx.MockTransport:
                 )
             path = request.url.path
             if path.endswith("/search"):
-                return httpx.Response(200, json={"count": "1", "data": [_GID]})
+                return httpx.Response(200, json={"status": "ok", "count": "1", "data": [_GID]})
             if path.endswith("/group"):
                 return httpx.Response(200, json=_GROUP)
             return httpx.Response(200, json=_ORTHO)

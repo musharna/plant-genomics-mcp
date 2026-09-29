@@ -62,8 +62,13 @@ def _body(name: str, n: int) -> dict[str, Any]:
 
 
 async def _get(mod: Any, c: httpx.AsyncClient, *args: Any) -> Any:
-    """``mod._get(c, *args)``, stating the object shape where ``_get`` asks for one."""
-    if "shape" in inspect.signature(mod._get).parameters:
+    """``mod._get(c, *args)``, stating the object shape where ``_get`` asks for one.
+
+    KEGG's ``_get`` reads text and defaults its own shape; an object shape
+    there would refuse every body.
+    """
+    shape = inspect.signature(mod._get).parameters.get("shape")
+    if shape is not None and shape.default is inspect.Parameter.empty:
         return await mod._get(c, *args, shape=_http.expect_object)
     return await mod._get(c, *args)
 

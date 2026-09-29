@@ -19,6 +19,7 @@ Two hops:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 import httpx
@@ -58,7 +59,9 @@ _EFFECT_COLUMNS = (
 _CACHE = cache.TTLCache()
 
 
-async def _get(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
+async def _get(
+    client: httpx.AsyncClient, url: str, shape: Callable[[object], dict[str, Any]]
+) -> dict[str, Any]:
     """GET a 1001 Genomes endpoint (cached by full URL), returning the parsed dict."""
     return await _http.cached_get(
         client,
@@ -68,7 +71,7 @@ async def _get(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
         headers={"Accept": "application/json"},
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
-        shape=_http.expect_object,
+        shape=shape,
     )
 
 
@@ -106,13 +109,20 @@ async def lookup_locus(
         _http.decode_cursor("arabidopsis_natural_variation", query, cursor).get("offset", 0)
     )
 
-    coords = await _get(client, f"{BASE_URL}/api/v2/gi2coords/{ANNOTATION}/{tx}")
-    regions = coords.get("regions") or []
+    # Both answers carry their list (live, 2026-09-28); ``{}`` was read as a
+    # transcript with no region and no variants.
+    coords = await _get(
+        client, f"{BASE_URL}/api/v2/gi2coords/{ANNOTATION}/{tx}", _http.expect_fields(regions=list)
+    )
+    regions = coords["regions"]
     region = regions[0].get("reg_str") if regions and isinstance(regions[0], dict) else None
 
-    eff = await _get(client, f"{BASE_URL}/api/v1.1/effects.json?type=snps;accs=all;gid={tx}")
-    data = eff.get("data")
-    data = data if isinstance(data, list) else []
+    eff = await _get(
+        client,
+        f"{BASE_URL}/api/v1.1/effects.json?type=snps;accs=all;gid={tx}",
+        _http.expect_fields(data=list),
+    )
+    data = eff["data"]
     total = len(data)
     page = data[offset : offset + MAX_EFFECTS]
     variants = [p for row in page if (p := _project_effect(row)) is not None]

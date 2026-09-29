@@ -30,6 +30,7 @@ from plant_genomics_mcp import _http, cache, organisms, progress, validators
 from plant_genomics_mcp.errors import (
     NotFoundError,
     PlantGenomicsError,
+    UpstreamUnavailableError,
 )
 
 BASE_URL = "https://phytozome-next.jgi.doe.gov/biomart/martservice"
@@ -54,6 +55,19 @@ _QUERY_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
     <Attribute name="gene_description"/>
   </Dataset>
 </Query>"""
+
+# BioMart's header for the template's attributes, in order (live, 2026-09-28).
+_HEADER = "\t".join(
+    (
+        "Organism Name",
+        "Gene Name",
+        "Chromosome Name",
+        "Gene Start (bp)",
+        "Gene End (bp)",
+        "Strand",
+        "Description",
+    )
+)
 
 # Output field order MUST match the <Attribute> order in the template.
 _FIELDS = (
@@ -101,6 +115,13 @@ async def _post(client: httpx.AsyncClient, xml_payload: str) -> str:
     # (#96).
     if text.startswith("Query ERROR"):
         raise PlantGenomicsError(f"Phytozome: {text.strip()[:300]}")
+    # A zero-row match is the header line alone (live, 2026-09-28). A body that
+    # does not open with it is not an answer: ``{}`` was read as "not found".
+    if text.strip() and text.splitlines()[0].rstrip("\r") != _HEADER:
+        raise UpstreamUnavailableError(
+            f"Phytozome BioMart answered without its header line ({text[:120]!r}); "
+            "this is not a missing locus"
+        )
     _CACHE.set(key, text)
     await progress.notify("Phytozome BioMart: query complete")
     return text

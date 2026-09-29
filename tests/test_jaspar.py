@@ -230,10 +230,20 @@ async def test_lookup_matrix_unversioned_unknown_is_not_found(httpx_mock: HTTPXM
 
 @pytest.mark.asyncio
 async def test_lookup_matrix_unversioned_malformed_versions_payload(httpx_mock: HTTPXMock) -> None:
+    """A versions answer always carries its results list, empty when no version
+    matches (live, 2026-09-28); one without it was read as "no matrix with id"."""
     httpx_mock.add_response(url=_versions_url("MA0570"), json={"results": "not-a-list"})
+    httpx_mock.add_response(
+        url=_versions_url("MA0571"),
+        json={"count": 1, "results": [{"matrix_id": "MA0571.1", "version": 1}]},
+    )
+    httpx_mock.add_response(url=_detail_url("MA0571.1"), json={**_DETAIL, "matrix_id": "MA0571.1"})
     async with httpx.AsyncClient() as client:
-        with pytest.raises(NotFoundError, match="no matrix with id"):
+        with pytest.raises(PlantGenomicsError, match="unexpected payload: no list 'results'") as e:
             await jaspar.lookup_matrix(client, "MA0570")
+        assert not isinstance(e.value, NotFoundError)
+        # Positive control: a versions answer with its list resolves.
+        assert (await jaspar.lookup_matrix(client, "MA0571"))["matrix_id"] == "MA0571.1"
 
 
 @pytest.mark.asyncio
@@ -274,9 +284,16 @@ async def test_search_candidates_non_dict_payload(httpx_mock: HTTPXMock) -> None
 
 @pytest.mark.asyncio
 async def test_search_candidates_results_not_a_list(httpx_mock: HTTPXMock) -> None:
+    """A search that matches nothing is ``{"count": 0, "results": []}`` (live,
+    2026-09-28); ``results: null`` was read as that no-match."""
     httpx_mock.add_response(url=_search_url("ABF1"), json={"results": None})
+    httpx_mock.add_response(url=_search_url("ABF2"), json={"count": 0, "results": []})
     async with httpx.AsyncClient() as client:
-        assert await jaspar._search_candidates(client, "ABF1", 3702) == []
+        with pytest.raises(PlantGenomicsError, match="unexpected payload: no list 'results'") as e:
+            await jaspar._search_candidates(client, "ABF1", 3702)
+        assert not isinstance(e.value, NotFoundError)
+        # Positive control: the live no-match form is still zero candidates.
+        assert await jaspar._search_candidates(client, "ABF2", 3702) == []
 
 
 # ---------- lookup_locus ----------

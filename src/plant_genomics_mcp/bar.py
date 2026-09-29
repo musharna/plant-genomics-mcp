@@ -107,6 +107,26 @@ _GI_CURATOR = 7
 _GI_TAIR_SHORT = 8
 
 
+def _envelope(payload: str, kind: type) -> Callable[[object], dict[str, Any]]:
+    """A BAR answer states ``wasSuccessful``: on success its ``payload`` of
+    ``kind``, on failure an ``error`` string (live, every endpoint here,
+    2026-09-28). ``{}`` states neither, and was read as a failure whose error
+    was None: "not found"."""
+
+    def shape(value: object) -> dict[str, Any]:
+        env = _http.expect_object(value)
+        ok = env.get("wasSuccessful")
+        if (ok is True and isinstance(env.get(payload), kind)) or (
+            ok is False and isinstance(env.get("error"), str)
+        ):
+            return env
+        raise _http.UnreadableBody(
+            f"no wasSuccessful with {payload!r} or 'error' in {str(env)[:120]}"
+        )
+
+    return shape
+
+
 async def _gather_envelopes(
     client: httpx.AsyncClient,
     locus: str,
@@ -118,8 +138,8 @@ async def _gather_envelopes(
     determine the unpacked element types ([has-type]).
     """
     return await asyncio.gather(
-        _get(client, f"/thalemine/gene_information/{locus}", shape=_http.expect_object),
-        _get(client, f"/gaia/aliases/{locus}", shape=_http.expect_object),
+        _get(client, f"/thalemine/gene_information/{locus}", shape=_envelope("results", list)),
+        _get(client, f"/gaia/aliases/{locus}", shape=_envelope("data", list)),
         return_exceptions=True,
     )
 
@@ -239,7 +259,7 @@ async def efp_expression(
     """
     locus = validators.assert_valid_locus(locus, backend="BAR")
     path = f"/microarray_gene_expression/world_efp/arabidopsis/{locus}"
-    env = await _get(client, path, shape=_http.expect_object)
+    env = await _get(client, path, shape=_envelope("data", dict))
     if not env.get("wasSuccessful"):
         err = env.get("error")
         # Map upstream "There are no data found..." through to NotFoundError so
@@ -395,10 +415,7 @@ async def aiv_interactions(
             organism=canonical,
             supported=list(_AIV_SUPPORTED_ORGANISMS),
         )
-    env = await _get(client, path, shape=_http.expect_object)
-    if not env.get("wasSuccessful"):
-        raise NotFoundError(f"BAR {path}: {env.get('error')}")
-    data = env.get("data") or []
-    if not isinstance(data, list):
-        raise NotFoundError(f"BAR {path}: malformed data ({type(data).__name__})")
-    return builder(locus, data)
+    env = await _get(client, path, shape=_envelope("data", list))
+    if not env["wasSuccessful"]:
+        raise NotFoundError(f"BAR {path}: {env['error']}")
+    return builder(locus, env["data"])
