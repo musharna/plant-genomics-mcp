@@ -357,3 +357,66 @@ async def test_eight_parallel_lookups_stay_under_orthodb_rate_limit(
     monkeypatch.setattr(orthodb, "MAX_RETRIES", 1)
     answered, refused = await _eight_lookups()
     assert answered < 8 and refused
+
+
+# --- _project_group, field for field (#96 mutation survivors) -----------------
+
+# /v12/group?id=444580at33090 as OrthoDB sent it on 2026-09-28: the projected
+# fields, plus two it does not read. Its id and public_id are equal live.
+_LIVE_GROUP = {
+    "status": "ok",
+    "data": {
+        "id": "444580at33090",
+        "name": "LHY protein",
+        "tax_id": 33090,
+        "public_id": "444580at33090",
+        "level_name": "Viridiplantae",
+        "phyletic_profile": {
+            "gene_count": 605,
+            "multi_copy": 162,
+            "present_in": 336,
+            "single_copy": 174,
+            "species_count": 416,
+        },
+        "evolutionary_rate": 1.451,
+        "cellular_component": [
+            {
+                "id": "GO:0005634",
+                "name": "GO:0005634",
+                "type": "GeneOntology",
+                "count": 269,
+                "description": "nucleus",
+            }
+        ],
+    },
+}
+
+
+@pytest.mark.asyncio
+async def test_the_group_is_projected_whole(httpx_mock: HTTPXMock) -> None:
+    httpx_mock.add_response(url=_SEARCH_URL, json={"status": "ok", "count": "1", "data": [_GID]})
+    httpx_mock.add_response(url=_GROUP_URL, json=_LIVE_GROUP)
+    httpx_mock.add_response(url=_ORTHO_URL, json=_ORTHO)
+    async with httpx.AsyncClient() as client:
+        r = await orthodb.lookup_locus(client, "AT1G01060", "arabidopsis")
+    assert r["group"] == {
+        "id": "444580at33090",
+        "public_id": "444580at33090",
+        "name": "LHY protein",
+        "evolutionary_rate": 1.451,
+        "level_name": "Viridiplantae",
+        "tax_id": 33090,
+    }
+    # No expected value is null, so a field read under another name (null)
+    # cannot match by accident.
+    assert None not in r["group"].values()
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_every_group_field_is_filled() -> None:
+    """_LIVE_GROUP is one day's answer; this notices a field OrthoDB renames."""
+    async with httpx.AsyncClient() as client:
+        r = await orthodb.lookup_locus(client, "AT1G01060", "arabidopsis", limit=1)
+    assert r["found"] is True
+    assert None not in r["group"].values(), r["group"]

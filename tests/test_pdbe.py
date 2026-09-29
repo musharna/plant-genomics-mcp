@@ -119,7 +119,7 @@ async def test_lookup_by_uniprot_no_residue_range(httpx_mock: HTTPXMock) -> None
 async def test_lookup_by_uniprot_malformed_raises(httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(url=_URL, json=["unexpected", "list"])
     async with httpx.AsyncClient() as client:
-        with pytest.raises(PlantGenomicsError, match="unexpected payload"):
+        with pytest.raises(PlantGenomicsError, match="unexpected payload: list"):
             await pdbe.lookup_by_uniprot(client, "Q9SZ92")
 
 
@@ -250,5 +250,154 @@ async def test_payload_without_the_accession_key_is_found_false(httpx_mock: HTTP
     httpx_mock.add_response(url=_URL, json={"SOMETHING-ELSE": [_ENTRY]})
     async with httpx.AsyncClient() as client:
         r = await pdbe.lookup_by_uniprot(client, "Q9SZ92")
-    assert r["found"] is False
-    assert r["structure_count"] == 0
+    # Whole: the answer names the accession asked about, like every other miss.
+    assert r == {k: v for k, v in _NONE.items() if k != "locus"}
+
+
+# ---------- #96 mutation survivors: the tool path, whole ----------
+# The not-found tests above called lookup_by_uniprot, not lookup_locus (the
+# tool's dispatch target), and asserted a few keys: an answer naming the wrong
+# accession, a shared cache key and the request itself went unchecked.
+
+_FOUND = {
+    "locus": "AT4G09760",
+    "accession": "Q9SZ92",
+    "found": True,
+    "structure_count": 2,
+    "entry_count": 2,
+    "total": 2,
+    "returned": 2,
+    "truncated": False,
+    "structures": [
+        {
+            "pdb_id": pdb_id,
+            "chain_id": "A",
+            "experimental_method": "X-ray diffraction",
+            "resolution": 1.6,
+            "coverage": 1.0,
+            "residue_range": {"start": 1, "end": 475},
+        }
+        for pdb_id in ("8ruc", "1rcx")
+    ],
+    "upstream_version": None,
+}
+_NONE = {
+    "locus": "AT4G09760",
+    "accession": "Q9SZ92",
+    "found": False,
+    "structure_count": 0,
+    "entry_count": 0,
+    "total": 0,
+    "returned": 0,
+    "truncated": False,
+    "structures": [],
+    "upstream_version": None,
+}
+
+
+def _recording_uniprot(acc: str, calls: list[tuple[object, ...]]):
+    async def _lookup(client, locus, organism="arabidopsis_thaliana"):  # noqa: ANN001
+        calls.append((client, locus, organism))
+        return {"primaryAccession": acc}
+
+    return _lookup
+
+
+@pytest.mark.asyncio
+async def test_the_tool_answers_structures_whole(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(uniprot, "lookup_locus", _fake_uniprot("Q9SZ92"))
+    # method + match_headers: a request of another method or without the JSON
+    # Accept header gets no response.
+    httpx_mock.add_response(
+        url=_URL,
+        method="GET",
+        match_headers={"Accept": "application/json"},
+        json={"Q9SZ92": [_ENTRY, {**_ENTRY, "pdb_id": "1rcx"}]},
+    )
+    async with httpx.AsyncClient() as client:
+        r = await pdbe.lookup_locus(client, "AT4G09760")
+        # Positive control: a repeat is answered whole from the cache.
+        assert await pdbe.lookup_locus(client, "AT4G09760") == _FOUND
+    assert r == _FOUND
+    (request,) = httpx_mock.get_requests()
+    assert request.extensions["timeout"]["read"] == pdbe.DEFAULT_TIMEOUT
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "response",
+    [{"status_code": 404, "text": "Not Found"}, {"json": {"Q9SZ92": []}}],
+    ids=["404", "empty-mapping"],
+)
+async def test_the_tool_answers_no_structure_whole(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch, response: dict[str, object]
+) -> None:
+    monkeypatch.setattr(uniprot, "lookup_locus", _fake_uniprot("Q9SZ92"))
+    httpx_mock.add_response(url=_URL, **response)  # type: ignore[arg-type]
+    async with httpx.AsyncClient() as client:
+        assert await pdbe.lookup_locus(client, "AT4G09760") == _NONE
+        # The same answer from the cache, still whole.
+        assert await pdbe.lookup_locus(client, "AT4G09760") == _NONE
+    assert len(httpx_mock.get_requests()) == 1
+
+
+@pytest.mark.asyncio
+async def test_each_accession_is_cached_under_its_own_key(httpx_mock: HTTPXMock) -> None:
+    """One response each, not reusable: a refetch would find no response, and
+    a shared key would answer one accession with the other's structures."""
+    other = f"{pdbe.BASE_URL}/pdbe/api/mappings/best_structures/P00875"
+    httpx_mock.add_response(url=_URL, json={"Q9SZ92": [{**_ENTRY, "pdb_id": "1rcx"}]})
+    httpx_mock.add_response(url=other, json={"P00875": [_ENTRY]})
+    async with httpx.AsyncClient() as client:
+        answers = [
+            await pdbe.lookup_by_uniprot(client, acc)
+            for acc in ("Q9SZ92", "P00875", "Q9SZ92", "P00875")
+        ]
+    assert [(a["accession"], a["structures"][0]["pdb_id"]) for a in answers] == [
+        ("Q9SZ92", "1rcx"),
+        ("P00875", "8ruc"),
+        ("Q9SZ92", "1rcx"),
+        ("P00875", "8ruc"),
+    ]
+    assert len(httpx_mock.get_requests()) == 2
+
+
+@pytest.mark.asyncio
+async def test_the_locus_and_organism_reach_uniprot_as_given(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[tuple[object, ...]] = []
+    monkeypatch.setattr(uniprot, "lookup_locus", _recording_uniprot("Q9SZ92", calls))
+    httpx_mock.add_response(url=_URL, json={"Q9SZ92": [_ENTRY]})
+    async with httpx.AsyncClient() as client:
+        r = await pdbe.lookup_locus(client, "Os01g0100100", organism="oryza_sativa")
+        assert calls == [(client, "Os01g0100100", "oryza_sativa")]
+    assert (r["locus"], r["accession"], r["found"]) == ("Os01g0100100", "Q9SZ92", True)
+
+
+@pytest.mark.asyncio
+async def test_an_invalid_locus_is_refused_in_pdbe_s_name(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(uniprot, "lookup_locus", _fake_uniprot("Q9SZ92"))
+    httpx_mock.add_response(url=_URL, json={"Q9SZ92": [_ENTRY]})
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match=r"PDBe: invalid locus 'AT1G01010/x'"):
+            await pdbe.lookup_locus(client, "AT1G01010/x")
+        # Positive control: a valid locus goes through.
+        assert (await pdbe.lookup_locus(client, "AT4G09760"))["found"] is True
+
+
+@pytest.mark.asyncio
+async def test_a_refusal_names_the_pdbe_request(httpx_mock: HTTPXMock) -> None:
+    httpx_mock.add_response(url=_URL, status_code=400, text="bad request")
+    httpx_mock.add_response(url=_URL, json={"Q9SZ92": [_ENTRY]})
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(
+            PlantGenomicsError, match=r"^PDBe /pdbe/api/mappings/best_structures/Q9SZ92 → HTTP 400"
+        ):
+            await pdbe.lookup_by_uniprot(client, "Q9SZ92")
+        # Positive control: the refusal was not stored; the next answer is read.
+        assert (await pdbe.lookup_by_uniprot(client, "Q9SZ92"))["found"] is True

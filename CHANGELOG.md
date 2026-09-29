@@ -171,6 +171,22 @@
   of the form it answers. A body without it is an error that is not stored.
   Live answers, including every "no record" form, are read as before.
 
+- **The BLAST submission, the OrthoDB group, Planteome annotations and the
+  InterPro and PDBe tool paths are tested value for value.** These were the
+  nightly mutation run's last high-priority survivors: no test read the form
+  BLAST posts to NCBI, three OrthoDB group fields and six Planteome fields
+  could be read under another name as null, and the InterPro and PDBe tests
+  called the accession helper rather than the tool, so the locus and
+  organism handed to UniProt, InterPro's page cap and PDBe's not-found
+  answers went unchecked. Fixtures are the live answers of 2026-09-28, and
+  live tests check that every field read is still sent. Of 127 mutants
+  applied to these functions, 107 now fail a named test and 14 are
+  equivalent (a default equal to the one passed, a re-cased HTTP method, a
+  self-consistent cache key, InterPro's count label behind a page shape that
+  refuses the page first); the other 6 are on lines that no longer exist.
+  `blast.submit` no longer repeats `blast_sequence`'s defaults. No tool's
+  behaviour changes.
+
 ## v1.28.0 — 2026-09-27
 
 **56 tools / 23 backends** — no new tool. A minor release rather than a patch: `aragwas_associations` answers 25 rows by default and gains `limit`, and `gene_report` leaves abstracts and GO `withFrom` out of its sections (**Behaviour change** for both), so neither answers over Claude Code's 25,000-token default cap by itself.

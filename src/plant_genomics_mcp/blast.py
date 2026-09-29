@@ -226,15 +226,17 @@ async def submit(
     program: str,
     database: str,
     *,
-    hitlist_size: int = 10,
-    expect: float = 10.0,
-    megablast: bool = False,
+    hitlist_size: int,
+    expect: float,
+    megablast: bool,
 ) -> tuple[str, int]:
     """Submit a BLAST search — returns (RID, RTOE in seconds).
 
     ``sequence`` may be raw or FASTA-formatted. ``database`` is the NCBI
     BLAST database slug (e.g. core_nt, swissprot, refseq_protein).
     ``megablast=True`` enables megablast (only meaningful for blastn).
+    The search parameters have no defaults here: ``blast_sequence`` holds the
+    one set, and a second copy could drift from it unseen.
     """
     program = _supported_program(program)
     data = {

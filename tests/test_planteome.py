@@ -221,3 +221,65 @@ async def test_live_thin_organism_returns_empty_not_error() -> None:
         result = await planteome.lookup_locus(client, "HORVU.MOREX.r3.1HG0000020", "barley")
     assert result["returned"] == 0
     assert result["annotations"] == []
+
+
+# ---------- _normalize, field for field (#96 mutation survivors) ----------
+
+# One doc of Planteome's AT1G01060 answer as sent on 2026-09-28: every field
+# _normalize reads, plus some it does not (source, evidence, date, ...).
+_LIVE_DOC = {
+    "document_category": "annotation",
+    "source": "TAIR",
+    "bioentity": "TAIR:locus:2200970",
+    "bioentity_label": "LHY",
+    "annotation_class": "PO:0000013",
+    "annotation_class_label": "cauline leaf",
+    "aspect": "A",
+    "bioentity_name": "AT1G01060",
+    "type": "protein",
+    "date": "20081209",
+    "assigned_by": "TAIR",
+    "taxon": "NCBITaxon:3702",
+    "taxon_label": "Arabidopsis thaliana",
+    "evidence_type": "IEP",
+    "evidence": "ECO:0000270",
+    "reference": ["TAIR:Publication:501715286", "PMID:15806101"],
+}
+
+
+@pytest.mark.asyncio
+async def test_an_annotation_is_projected_whole(httpx_mock: HTTPXMock) -> None:
+    httpx_mock.add_response(json=_payload([_LIVE_DOC]))
+    async with httpx.AsyncClient() as client:
+        result = await planteome.lookup_locus(client, "AT1G01060", "arabidopsis")
+    assert result["annotations"] == [
+        {
+            "term_id": "PO:0000013",
+            "term_name": "cauline leaf",
+            "ontology": "PO",
+            "aspect": "A",
+            "evidence": "IEP",
+            "taxon": "NCBITaxon:3702",
+            "taxon_label": "Arabidopsis thaliana",
+            "reference": ["TAIR:Publication:501715286", "PMID:15806101"],
+            "assigned_by": "TAIR",
+            "bioentity_label": "LHY",
+        }
+    ]
+    # No expected value is null, so a field read under another name (null)
+    # cannot match by accident.
+    assert None not in result["annotations"][0].values()
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_every_field_normalize_reads_is_sent() -> None:
+    """_LIVE_DOC is one day's answer; this notices a field Planteome renames.
+    All 36 AT1G01060 annotations carried every field on 2026-09-28."""
+    async with httpx.AsyncClient() as client:
+        result = await planteome.lookup_locus(
+            client, "AT1G01060", "arabidopsis", limit=planteome.MAX_LIMIT
+        )
+    assert result["returned"] > 0
+    nulls = {k for a in result["annotations"] for k, v in a.items() if v is None}
+    assert nulls == set(), nulls

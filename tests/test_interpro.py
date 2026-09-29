@@ -316,3 +316,62 @@ async def test_upstream_version_is_none_when_interpro_states_none(
     async with httpx.AsyncClient() as client:
         r = await interpro.lookup_by_uniprot(client, "Q0WV97")
     assert r["upstream_version"] is None
+
+
+# ---------- #96 mutation survivors: the page cap and the tool path ----------
+
+
+@pytest.mark.asyncio
+async def test_the_page_cap_is_the_number_of_pages_fetched(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """At MAX_PAGES=1 a page counter stuck at 1, or one counting two a page,
+    still fetches one page; at 3 either fetches a different number."""
+    monkeypatch.setattr(interpro, "MAX_PAGES", 3)
+    urls = [_URL] + [f"{_URL}?page={n}" for n in range(2, 6)]
+    for n in range(3):
+        httpx_mock.add_response(
+            url=urls[n],
+            json={
+                "count": 5,
+                "next": urls[n + 1],
+                "previous": urls[n - 1] if n else None,
+                "results": [_row(f"PF0000{n}", f"d{n}", "pfam", "domain", None, 1, 10)],
+            },
+        )
+    async with httpx.AsyncClient() as client:
+        r = await interpro.lookup_by_uniprot(client, "Q9SZ92")
+    assert [str(req.url) for req in httpx_mock.get_requests()] == urls[:3]
+    assert [d["accession"] for d in r["domains"]] == ["PF00000", "PF00001", "PF00002"]
+    assert (r["domain_count"], r["truncated"]) == (5, True)
+
+
+@pytest.mark.asyncio
+async def test_the_locus_and_organism_reach_uniprot_as_given(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[tuple[object, ...]] = []
+
+    async def _lookup(client, locus, organism="arabidopsis_thaliana"):  # noqa: ANN001
+        calls.append((client, locus, organism))
+        return {"primaryAccession": "Q9SZ92"}
+
+    monkeypatch.setattr(uniprot, "lookup_locus", _lookup)
+    httpx_mock.add_response(url=_URL, json=_PAGE)
+    async with httpx.AsyncClient() as client:
+        r = await interpro.lookup_locus(client, "Os01g0100100", organism="oryza_sativa")
+        assert calls == [(client, "Os01g0100100", "oryza_sativa")]
+    assert (r["locus"], r["accession"], r["found"]) == ("Os01g0100100", "Q9SZ92", True)
+
+
+@pytest.mark.asyncio
+async def test_an_invalid_locus_is_refused_in_interpro_s_name(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(uniprot, "lookup_locus", _fake_uniprot("Q9SZ92"))
+    httpx_mock.add_response(url=_URL, json=_PAGE)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match=r"InterPro: invalid locus 'AT1G01010/x'"):
+            await interpro.lookup_locus(client, "AT1G01010/x")
+        # Positive control: a valid locus goes through.
+        assert (await interpro.lookup_locus(client, "AT4G09760"))["found"] is True
