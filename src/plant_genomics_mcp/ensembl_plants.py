@@ -229,6 +229,24 @@ def _sequence_shape(raw: object) -> dict[str, Any]:
     return body
 
 
+def _protein_shape(raw: object) -> dict[str, Any]:
+    """A protein holds no stop symbol: 0 of 694,518 proteins in the current
+    Ensembl Plants pep.all FASTA of all 12 organisms have a ``*`` anywhere
+    (2026-09-29). During an Ensembl incident that night, /sequence served
+    AT1G01010 at 430 aa (its CDS is 430 codons with the stop; the protein
+    429) and a wrong-frame protein strewn with ``*``, which the tool passed
+    on as the answer. Checked on the type asked for, not on the body's own
+    ``molecule``."""
+    body = _sequence_shape(raw)
+    seq = body["seq"]
+    if isinstance(seq, str) and "*" in seq:
+        raise _http.UnreadableBody(
+            f"protein {body.get('id')!r} has a stop symbol at residue "
+            f"{seq.index('*') + 1} of {len(seq)}: not a translation Ensembl serves"
+        )
+    return body
+
+
 async def get_sequence(
     client: httpx.AsyncClient,
     locus: str,
@@ -253,7 +271,8 @@ async def get_sequence(
     if seq_type != "genomic":
         wire = await _product_id(client, locus, organism)
     params: dict[str, Any] = {"species": slug, "type": seq_type}
-    raw = await _get(client, f"/sequence/id/{wire}", params=params, shape=_sequence_shape)
+    shape = _protein_shape if seq_type == "protein" else _sequence_shape
+    raw = await _get(client, f"/sequence/id/{wire}", params=params, shape=shape)
     seq = raw.get("seq") or ""
     return {
         "locus": locus,

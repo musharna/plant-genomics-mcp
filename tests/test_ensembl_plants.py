@@ -17,6 +17,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import _http, ensembl_plants  # noqa: F401
+from plant_genomics_mcp.errors import UpstreamUnavailableError
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
@@ -353,6 +354,44 @@ async def test_get_sequence_default_type_is_protein(httpx_mock: HTTPXMock) -> No
     assert result["sequence"].startswith("MEDQ")
     assert result["length"] == len("MEDQVGFGFRPNDEELVGHYL")
     assert result["ensembl_id"] == "AT1G01010.1"
+
+
+_AT1G01010_PROTEIN_URL = (
+    "https://rest.ensembl.org/sequence/id/AT1G01010.1?species=arabidopsis_thaliana&type=protein"
+)
+# AT1G01010.1's live CDS (1290 nt, 2026-09-29) translated one frame off: as
+# long as the real protein and strewn with stops, like the wrong-frame protein
+# /sequence served for another gene during that night's Ensembl incident.
+_WRONG_FRAME = "WRIKLGLGSVRTTRSSLVTISVTKSKETLAATLK*PSARSTSVATILGTCASSQSTNREM"
+# The real protein's opening, and the same with a stop on the end: its CDS is
+# 430 codons with the stop, and /sequence answered 430 aa that night.
+_REAL = "MEDQVGFGFRPNDEELVGHYL"
+
+
+def _protein(seq: str) -> dict[str, object]:
+    return {"id": "AT1G01010.1", "query": "AT1G01010.1", "molecule": "protein", "seq": seq}
+
+
+@pytest.mark.asyncio
+async def test_a_protein_with_a_stop_symbol_is_not_an_answer(httpx_mock: HTTPXMock) -> None:
+    """No Ensembl Plants protein holds a ``*`` (0 of 694,518, all 12
+    organisms); get_sequence passed a wrong-frame one on as the answer."""
+    httpx_mock.add_response(
+        url=_AT_LOOKUP.format("AT1G01010"), json=_gene("AT1G01010", "AT1G01010.1")
+    )
+    for bad in (_WRONG_FRAME, _WRONG_FRAME, _REAL + "*", _REAL + "*"):
+        httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, json=_protein(bad))
+    httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, json=_protein(_REAL))
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError, match=r"stop symbol at residue 35 of 60"):
+            await ensembl_plants.get_sequence(client, "AT1G01010")
+        with pytest.raises(UpstreamUnavailableError, match=r"stop symbol at residue 22 of 22"):
+            await ensembl_plants.get_sequence(client, "AT1G01010")
+        # Positive control, same cache: nothing bad was stored, and a protein
+        # without a stop is the answer.
+        result = await ensembl_plants.get_sequence(client, "AT1G01010")
+    assert (result["sequence"], result["length"]) == (_REAL, len(_REAL))
+    assert len(httpx_mock.get_requests(url=_AT1G01010_PROTEIN_URL)) == 5
 
 
 @pytest.mark.asyncio
