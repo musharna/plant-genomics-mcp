@@ -10,7 +10,10 @@ Quirks worth knowing:
     response bodies beginning with ``Query ERROR:``. We detect that and raise
     ``PlantGenomicsError``.
   * Zero-row filter matches return only the header line (or empty body).
-    Treated as a 404-equivalent here.
+    Treated as a 404-equivalent here. A real HTTP 404 is therefore never a
+    missing locus: it is the endpoint itself gone (Apache's own 404 page at
+    every BioMart path on 2026-09-29, site root 200), raised as
+    ``UpstreamUnavailableError``.
   * The ``organism_id`` filter is a Phytozome proteome integer ID, NOT a
     species slug. Per-organism IDs live in ``organisms.ORGANISMS`` (the
     ``phytozome_int`` slot); ``organisms.phytozome_int_for()`` raises
@@ -22,6 +25,7 @@ the server dispatch can handle one exception class for all backends.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import httpx
@@ -36,6 +40,11 @@ from plant_genomics_mcp.errors import (
 BASE_URL = "https://phytozome-next.jgi.doe.gov/biomart/martservice"
 DEFAULT_TIMEOUT = 30.0
 MAX_RETRIES = 3
+
+# Every 404 is the service, never the locus: BioMart answers a miss with 200 and
+# its header line alone. Matches any body, so each 404 is retried and then
+# raised as UpstreamUnavailableError quoting the page.
+ANY_404 = re.compile("")
 
 # Per-module response cache. See plant_genomics_mcp.cache for env knobs.
 _CACHE = cache.TTLCache()
@@ -90,7 +99,8 @@ async def _post(client: httpx.AsyncClient, xml_payload: str) -> str:
     after the POST so clients that opted in see "BioMart still working"
     instead of a silent stall.
 
-    Retries on 429 / 5xx with exponential backoff, honoring ``Retry-After``.
+    Retries on 429 / 5xx / 404 (see ``ANY_404``) with exponential backoff,
+    honoring ``Retry-After``.
     BioMart application-level errors (``Query ERROR:``) are returned as 200
     and surfaced upstream — they are NOT retried here.
     """
@@ -107,6 +117,7 @@ async def _post(client: httpx.AsyncClient, xml_payload: str) -> str:
         data={"query": xml_payload},
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
+        retry_404_pattern=ANY_404,
     )
     text = resp.text
     # BioMart returns 200 with a "Query ERROR:" body on filter / dataset

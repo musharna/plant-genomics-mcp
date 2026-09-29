@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **A Phytozome 404 is an outage, not a missing gene.** BioMart answers a
+  locus it lacks with 200 and its header line alone, but a 404 was mapped to
+  `NotFoundError`, so while every BioMart path answered Apache's own 404 page
+  (2026-09-29, site root 200), `phytozome_lookup_locus` told callers
+  that AT1G01010 does not exist. Every 404 is now retried and raised as
+  `UpstreamUnavailableError` quoting the page. The outage itself is JGI's.
+
 - **Every live test runs nightly.** Per PR, `live-smoke` runs only the ARF
   `verify_genes` pair; the other 105 of the 107 live tests ran in no CI
   job, so a live-only break went unseen until someone ran them by hand. The

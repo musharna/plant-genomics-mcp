@@ -16,7 +16,8 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from plant_genomics_mcp import phytozome
+from plant_genomics_mcp import _http, phytozome
+from plant_genomics_mcp.errors import NotFoundError, UpstreamUnavailableError
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
@@ -111,6 +112,44 @@ async def test_lookup_locus_raises_on_empty_results(httpx_mock: HTTPXMock) -> No
     async with httpx.AsyncClient() as client:
         with pytest.raises(phytozome.PlantGenomicsError, match="not found"):
             await phytozome.lookup_locus(client, "AT9G99999")
+
+
+# The page the BioMart endpoint answered with on 2026-09-29, verbatim: Apache's
+# own 404 for a path it no longer serves, while the site root answered 200.
+_APACHE_404 = (
+    '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">\n'
+    "<html><head>\n<title>404 Not Found</title>\n</head><body>\n"
+    "<h1>Not Found</h1>\n<p>The requested URL was not found on this server.</p>\n"
+    "</body></html>\n"
+)
+
+
+async def _no_sleep(_seconds: float) -> None:
+    pass
+
+
+@pytest.mark.asyncio
+async def test_a_404_is_the_service_missing_not_the_locus(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """BioMart answers a locus it lacks with 200 and the header line alone; a
+    404 was read as NotFoundError, telling a caller the gene does not exist."""
+    monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
+    header_only = _AT1G01010_TSV.splitlines(keepends=True)[0]
+    for _ in range(phytozome.MAX_RETRIES):
+        httpx_mock.add_response(url=_BIOMART_URL, method="POST", status_code=404, text=_APACHE_404)
+    httpx_mock.add_response(url=_BIOMART_URL, method="POST", text=header_only)
+    httpx_mock.add_response(url=_BIOMART_URL, method="POST", text=_AT1G01010_TSV)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError, match=r"HTTP 404: .*404 Not Found"):
+            await phytozome.lookup_locus(client, "AT1G01010")
+        # Positive controls, same cache: a real miss is still NotFoundError, and
+        # once BioMart answers, so does the call.
+        with pytest.raises(NotFoundError, match="AT9G99999 not found"):
+            await phytozome.lookup_locus(client, "AT9G99999")
+        result = await phytozome.lookup_locus(client, "AT1G01010")
+    assert result["gene_name"] == "AT1G01010"
+    assert len(httpx_mock.get_requests()) == phytozome.MAX_RETRIES + 2
 
 
 @pytest.mark.asyncio
