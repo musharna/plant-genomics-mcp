@@ -978,3 +978,70 @@ async def test_a_lookup_record_that_does_not_name_itself_is_asked_again_and_neve
         record = await ensembl_plants.lookup_locus(client, "AT1G19850")
     assert (record["id"], record["organism"]) == ("AT1G19850", "arabidopsis_thaliana")
     assert len(httpx_mock.get_requests(url=url)) == 3
+
+
+# ---------- a tomato id in Ensembl's own spelling is the same gene ----------
+
+_TOMATO_ID = "gene-Solyc04g011850.1"
+_TOMATO_Q = "species=solanum_lycopersicum_gca000188115v5cm"
+# Ensembl's record for it, trimmed (live, 2026-09-29).
+_TOMATO_LOOKUP = {
+    "id": _TOMATO_ID,
+    "species": "solanum_lycopersicum_gca000188115v5cm",
+    "object_type": "Gene",
+    "biotype": "protein_coding",
+    "canonical_transcript": "mRNA-Solyc04g011850.1.1.",
+    "version": None,
+}
+
+
+@pytest.mark.asyncio
+async def test_ensembls_spelling_of_a_tomato_id_is_not_prefixed_again(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """``gene-Solyc...``, the ``id`` lookup_locus itself returns, was prefixed
+    again: Ensembl answered /lookup/id/gene-gene-... with 400, a false
+    NotFound for a real gene. The bare locus (positive control), Ensembl's id
+    and its upper-case spelling all reach the one wire id, in every form."""
+    from plant_genomics_mcp import batch
+
+    base = "https://rest.ensembl.org"
+    lookup = f"{base}/lookup/id/{_TOMATO_ID}?{_TOMATO_Q}&expand=0"
+    xrefs = f"{base}/xrefs/id/{_TOMATO_ID}?{_TOMATO_Q}"
+    httpx_mock.add_response(url=lookup, json=_TOMATO_LOOKUP)
+    httpx_mock.add_response(url=xrefs, json=[{"dbname": "EntrezGene", "primary_id": "101244801"}])
+    httpx_mock.add_response(
+        url=f"{base}/lookup/id", method="POST", json={_TOMATO_ID: _TOMATO_LOOKUP}
+    )
+    async with httpx.AsyncClient() as client:
+        bare = await ensembl_plants.lookup_locus(client, "Solyc04g011850.1", organism="tomato")
+        assert bare["id"] == _TOMATO_ID
+        for spelling in (bare["id"], "GENE-Solyc04g011850.1"):
+            assert await ensembl_plants.lookup_locus(client, spelling, organism="tomato") == bare
+        # Our own answer fed back to the next tool.
+        refs = await ensembl_plants.lookup_xrefs(client, bare["id"], organism="tomato")
+        env = await batch.batch_ensembl_plants_lookup_locus(
+            client, ["Solyc04g011850.1", _TOMATO_ID], organism="tomato"
+        )
+    assert refs["by_db"] == {"EntrezGene": ["101244801"]}
+    assert env["errors"] == {}
+    assert env["results"] == {"Solyc04g011850.1": bare, _TOMATO_ID: bare}
+    post = httpx_mock.get_request(url=f"{base}/lookup/id", method="POST")
+    assert post is not None and b'"ids": ["gene-Solyc04g011850.1"]' in post.read()
+    # One wire id: every lookup after the first came from the cache.
+    assert len(httpx_mock.get_requests(url=lookup)) == 1
+    # An organism with no prefix sends every id as given.
+    assert ensembl_plants.wire_id("AT1G01010", "arabidopsis") == "AT1G01010"
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_tomato_lookup_answers_its_own_id() -> None:
+    """Real execution: the id Ensembl returns for a tomato gene, fed back,
+    resolves to the same gene in lookup and xrefs."""
+    async with httpx.AsyncClient() as client:
+        bare = await ensembl_plants.lookup_locus(client, "Solyc04g011850.1", organism="tomato")
+        again = await ensembl_plants.lookup_locus(client, bare["id"], organism="tomato")
+        refs = await ensembl_plants.lookup_xrefs(client, bare["id"], organism="tomato")
+    assert bare["id"] == again["id"] == _TOMATO_ID
+    assert refs["count"] > 0
