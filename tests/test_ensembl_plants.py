@@ -510,6 +510,76 @@ async def test_region_query_returns_overlapping_genes(httpx_mock: HTTPXMock) -> 
     assert result["features"][0]["external_name"] == "ARV1"
 
 
+# A tomato gene row as Ensembl sends it (live, 2026-09-29: none of the 13 genes
+# in CM001064.4:100000-200000 carries external_name). The row is copied into
+# the answer, so a key the record lacks stays absent.
+_TOMATO_GENE = {
+    "source": "Community",
+    "start": 119339,
+    "end": 122563,
+    "id": "gene-Solyc01g005120.3",
+    "strand": -1,
+    "feature_type": "gene",
+    "gene_id": "gene-Solyc01g005120.3",
+    "biotype": "protein_coding",
+    "logic_name": "gff3_genes",
+    "assembly_name": "SL4.0",
+    "canonical_transcript": "mRNA-Solyc01g005120.3.1.",
+    "seq_region_name": "CM001064.4",
+    "description": None,
+}
+# An Arabidopsis CDS row as sent (live, 2026-09-29): exon and cds rows of every
+# organism probed carry no biotype, external_name or description.
+_ARABIDOPSIS_CDS = {
+    "protein_id": "AT1G01020.1",
+    "source": "araport11",
+    "end": 8666,
+    "start": 8571,
+    "seq_region_name": "1",
+    "id": "AT1G01020.1",
+    "feature_type": "cds",
+    "assembly_name": "TAIR10",
+    "version": None,
+    "Parent": "AT1G01020.1",
+    "strand": -1,
+    "phase": 0,
+}
+
+
+@pytest.mark.asyncio
+async def test_region_query_passes_rows_missing_declared_fields_through(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """A gene with no symbol and a CDS with no biotype are answered as Ensembl
+    sent them, not refused by the output contract; the Arabidopsis gene with
+    a symbol keeps it."""
+    httpx_mock.add_response(
+        url=re.compile(
+            r"^https://rest\.ensembl\.org/overlap/region/"
+            r"solanum_lycopersicum_gca000188115v5cm/CM001064\.4:100000-200000\?feature=gene$"
+        ),
+        json=[_TOMATO_GENE],
+    )
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/overlap/region/arabidopsis_thaliana/1:3000-10000?feature=cds",
+        json=[_ARABIDOPSIS_CDS],
+    )
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/overlap/region/arabidopsis_thaliana/1:3000-10000?feature=gene",
+        json=[{"id": "AT1G01020", "feature_type": "gene", "external_name": "ARV1"}],
+    )
+    async with httpx.AsyncClient() as client:
+        tomato = await ensembl_plants.region_query(
+            client, "CM001064.4", 100000, 200000, organism="solanum_lycopersicum"
+        )
+        cds = await ensembl_plants.region_query(client, "1", 3000, 10000, feature="cds")
+        arabidopsis = await ensembl_plants.region_query(client, "1", 3000, 10000)
+    assert tomato["features"] == [_TOMATO_GENE]
+    assert "external_name" not in tomato["features"][0]
+    assert cds["features"] == [_ARABIDOPSIS_CDS]
+    assert arabidopsis["features"][0]["external_name"] == "ARV1"
+
+
 @pytest.mark.asyncio
 async def test_region_query_empty_region_returns_zero(httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
@@ -604,6 +674,18 @@ async def test_live_region_query_arabidopsis_chr1_finds_arv1() -> None:
         result = await ensembl_plants.region_query(client, "1", 3000, 10000, feature="gene")
     ids = {f.get("id") for f in result["features"]}
     assert "AT1G01020" in ids, f"expected AT1G01020 in region, got {ids}"
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_region_query_cds_rows_without_biotype_are_answered() -> None:
+    """Real /overlap/region CDS call: the rows carry no biotype or
+    external_name, and the output contract (conftest) accepts them."""
+    async with httpx.AsyncClient() as client:
+        result = await ensembl_plants.region_query(client, "1", 3000, 10000, feature="cds")
+    assert result["count"] > 0, result
+    assert all(f["feature_type"] == "cds" for f in result["features"])
+    assert not any("biotype" in f for f in result["features"])
 
 
 # ---------- issue #137: one projection, and no empty-version dot ----------

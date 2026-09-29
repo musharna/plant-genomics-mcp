@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **The output-contract check accepts `ensembl_region_query` rows as Ensembl
+  sends them.** The rows are Ensembl's records copied as sent, but the check
+  exempted only the three fields the Arabidopsis gene fixture lacked, so
+  every other declared field a live row leaves out read as a broken answer:
+  tomato and most rice genes carry no `external_name`, and exon and CDS rows
+  of every organism probed carry no `biotype`, `external_name` or
+  `description` (live, 2026-09-29). The live tomato test failed on it. The
+  exemption is now every `RegionFeature` field. Tool answers are unchanged;
+  the published schema already made these fields optional.
+
 - **An unknown locus is a `NotFoundError` from BAR and 1001 Genomes, and a
   JSON API's unreadable 200 is an `UpstreamUnavailableError`.** BAR answers
   a miss with its `{"wasSuccessful": false, "error": ...}` envelope, on a 200
