@@ -146,13 +146,20 @@ async def test_an_inconsistent_answer_is_refused(
 
 @pytest.mark.asyncio
 async def test_a_region_without_length_is_refused(httpx_mock: HTTPXMock) -> None:
+    """Positive control, same request and cache: the well-formed answer that
+    follows the two refused ones is served, so neither was stored."""
+    url = _assembly_url("oryza_sativa")
     answer = _answer(RICE, RICE_KARYOTYPE)
     answer["top_level_region"].append({"name": "3", "coord_system": "chromosome"})
-    httpx_mock.add_response(url=_assembly_url("oryza_sativa"), json=answer, is_reusable=True)
+    httpx_mock.add_response(url=url, json=answer)
+    httpx_mock.add_response(url=url, json=answer)
+    httpx_mock.add_response(url=url, json=_answer(RICE, RICE_KARYOTYPE))
     async with httpx.AsyncClient() as client:
         with pytest.raises(UpstreamUnavailableError, match="without name or length"):
             await ensembl_plants.assembly(client, "oryza_sativa")
-    assert len(httpx_mock.get_requests()) == 2
+        good = await ensembl_plants.assembly(client, "oryza_sativa")
+    assert good["total"] == len(RICE)
+    assert len(httpx_mock.get_requests()) == 3
 
 
 TOMATO = "solanum_lycopersicum_gca000188115v5cm"
