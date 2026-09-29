@@ -37,6 +37,8 @@ partial pathway metadata is more useful than nothing.
 from __future__ import annotations
 
 import asyncio
+import re
+from collections.abc import Callable
 from typing import Any
 
 import httpx
@@ -110,7 +112,38 @@ async def _resolve_locus_to_entrez_id(
     return entrez_ids[0]
 
 
-async def _get(client: httpx.AsyncClient, path: str) -> str:
+def _text(value: object) -> str:
+    if not isinstance(value, str):
+        raise _http.UnreadableBody(f"{type(value).__name__}, not text")
+    return value
+
+
+# One /link/pathway line: ``<org>:<gene>\tpath:<org>NNNNN``. The body is empty
+# for a gene with no pathways and for an unknown one alike (live, 2026-09-28).
+_LINK_LINE = re.compile(r"\A[a-z]+:[^\t]+\tpath:[a-z]+[0-9]+\Z")
+# A /list record opens ``<org>:<gene>\t<names>``; an unknown gene is a 404.
+_LIST_LINE = re.compile(r"\A[a-z]+:[^\t]+\t")
+
+
+def _link_shape(value: object) -> str:
+    """Every line a /link pathway pair. Any other body is not an answer: ``{}``
+    was read as "no pathways", and /list's ``{}`` as a known gene."""
+    text = _text(value)
+    for line in text.splitlines():
+        if line.strip() and not _LINK_LINE.match(line.strip()):
+            raise _http.UnreadableBody(f"not a /link pathway line: {line[:80]!r}")
+    return text
+
+
+def _list_shape(value: object) -> str:
+    """An empty body (the 404) or a /list record."""
+    text = _text(value)
+    if text.strip() and not _LIST_LINE.match(text.lstrip()):
+        raise _http.UnreadableBody(f"not a /list record: {text[:80]!r}")
+    return text
+
+
+async def _get(client: httpx.AsyncClient, path: str, shape: Callable[[object], str] = _text) -> str:
     """GET a KEGG endpoint with retry. Returns response body as text.
 
     KEGG returns text/plain (TSV-like for /link, multi-record for /get).
@@ -126,6 +159,7 @@ async def _get(client: httpx.AsyncClient, path: str) -> str:
         max_retries=MAX_RETRIES,
         parse=lambda r: r if isinstance(r, str) else r.text,
         not_found_returns="",
+        shape=shape,
     )
 
 
@@ -222,14 +256,14 @@ async def lookup_pathways(
             # contract instead of relying on call-order luck.
             raise type(e)(f"KEGG bridge (Ensembl Plants /xrefs): {e}") from e
         gene_id = f"{org_code}:{entrez_gene_id}"
-    body = await _get(client, f"/link/pathway/{gene_id}")
+    body = await _get(client, f"/link/pathway/{gene_id}", _link_shape)
     pathway_ids = _parse_link_pathway(body, gene_id) if body.strip() else []
     if not pathway_ids:
         # Issue #140: /link/pathway answers the same empty 200 for a gene with
         # no pathways and for a gene KEGG has never heard of (live, 2026-09-22).
         # /list tells them apart: a record for a known gene, 404 for an unknown
         # one. A known gene with no pathways is an answer, not an error.
-        record = await _get(client, f"/list/{gene_id}")
+        record = await _get(client, f"/list/{gene_id}", _list_shape)
         if not record.strip():
             raise NotFoundError(
                 f"KEGG: no gene record for {locus} (queried as {gene_id}); /list/{gene_id} is empty"

@@ -156,6 +156,21 @@
   stored, and a second one is `UpstreamUnavailableError`. `{}` is now among
   the bodies every tool is driven with.
 
+- **Fixed: a body missing what every answer states is no longer read as an
+  answer or as "not found".** Driven with `{}`, 17 of the 38 single-backend
+  tools answered it or raised `NotFoundError`. UniProt's search read it as
+  zero hits (the six tools that start from a locus's UniProt accession),
+  PANTHER as an unmapped gene, OrthoDB as no ortholog group, Phytozome as a
+  missing locus, and 1001 Genomes, BAR, ATTED, JASPAR and KEGG as a record
+  with nothing in it. Each backend now requires what its live answers
+  carry, hit or no hit (probed 2026-09-28): UniProt a `results` list, PANTHER
+  `mapped_genes` or `unmapped_list`, OrthoDB `status: "ok"` (with its
+  `data` for a group), Phytozome its header line, 1001 Genomes `regions` and
+  `data`, BAR a boolean `wasSuccessful` with its data or its error, ATTED a
+  `result_set` or an `error`, JASPAR `matrix_id` or `results`, KEGG lines
+  of the form it answers. A body without it is an error that is not stored.
+  Live answers, including every "no record" form, are read as before.
+
 ## v1.28.0 — 2026-09-27
 
 **56 tools / 23 backends** — no new tool. A minor release rather than a patch: `aragwas_associations` answers 25 rows by default and gains `limit`, and `gene_report` leaves abstracts and GO `withFrom` out of its sections (**Behaviour change** for both), so neither answers over Claude Code's 25,000-token default cap by itself.

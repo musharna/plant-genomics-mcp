@@ -25,7 +25,10 @@ from typing import Any
 import httpx
 
 from plant_genomics_mcp import _http, cache, organisms, validators
-from plant_genomics_mcp.errors import PlantGenomicsError
+from plant_genomics_mcp.errors import (
+    PlantGenomicsError,
+    UpstreamUnavailableError,
+)
 
 BASE_URL = "https://pantherdb.org"
 DEFAULT_TIMEOUT = 30.0
@@ -164,6 +167,17 @@ async def lookup_locus(
         if not isinstance(body, dict):
             raise PlantGenomicsError(
                 f"PANTHER geneinfo returned unexpected payload: {type(body).__name__}"
+            )
+        # Every answer names the gene in ``search.mapped_genes`` or
+        # ``search.unmapped_list`` (live, 2026-09-28); ``{}`` names neither and
+        # was read as unmapped: ``found: false``.
+        search = body.get("search")
+        if not isinstance(search, dict) or not (
+            "mapped_genes" in search or "unmapped_list" in search
+        ):
+            raise UpstreamUnavailableError(
+                f"PANTHER geneinfo answered without mapped_genes or unmapped_list "
+                f"({str(body)[:120]}); this is not an unmapped gene"
             )
         _CACHE.set(key, body)
         cached = body

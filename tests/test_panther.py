@@ -110,7 +110,16 @@ async def test_lookup_minimal_gene_no_annotations(httpx_mock: HTTPXMock) -> None
 @pytest.mark.asyncio
 async def test_lookup_unmapped_is_found_false(httpx_mock: HTTPXMock) -> None:
     """A gene PANTHER can't map (no mapped_genes.gene) → found=False."""
-    httpx_mock.add_response(url=_URL, json={"search": {"product": {}}})
+    httpx_mock.add_response(
+        url=_URL,
+        json={
+            "search": {
+                "product": {"source": "PANTHERDB", "version": 19},
+                "unmapped_list": {"unmapped": "AT1G01060"},
+                "search_type": "gene info",
+            }
+        },
+    )
     async with httpx.AsyncClient() as client:
         r = await panther.lookup_locus(client, "AT1G01060", "arabidopsis")
     assert r["found"] is False

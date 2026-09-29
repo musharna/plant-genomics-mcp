@@ -12,6 +12,7 @@ codec refuses a cursor minted for another tool or query.
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
 from typing import Any
 
 import httpx
@@ -65,13 +66,18 @@ async def _walk(fetch: Any) -> list[dict[str, Any]]:
 async def test_orthodb_pages_through_the_whole_group(monkeypatch: pytest.MonkeyPatch) -> None:
     genes = [{"gene_id": {"id": f"g{i}", "param": "x"}, "description": "d"} for i in range(5)]
 
-    async def fake(client: Any, path: str, params: dict[str, Any]) -> dict[str, Any]:
+    async def fake(
+        client: Any, path: str, params: dict[str, Any], shape: Callable[[object], Any]
+    ) -> dict[str, Any]:
         answers: dict[str, dict[str, Any]] = {
-            "/v12/search": {"data": ["G1"]},
-            "/v12/group": {"data": {"id": "G1"}},
-            "/v12/orthologs": {"data": [{"organism": {"name": "o"}, "genes": genes}]},
+            "/v12/search": {"status": "ok", "data": ["G1"]},
+            "/v12/group": {"status": "ok", "data": {"id": "G1"}},
+            "/v12/orthologs": {
+                "status": "ok",
+                "data": [{"organism": {"name": "o"}, "genes": genes}],
+            },
         }
-        return answers[path]
+        return shape(answers[path])
 
     monkeypatch.setattr(orthodb, "_get", fake)
     async with httpx.AsyncClient() as c:
@@ -113,8 +119,9 @@ async def test_onekg_pages_through_the_effects(monkeypatch: pytest.MonkeyPatch) 
     monkeypatch.setattr(onekg, "MAX_EFFECTS", 2)
     rows = [[f"chr1:{i}"] for i in range(5)]
 
-    async def fake(client: Any, url: str) -> dict[str, Any]:
-        return {"regions": [{"reg_str": "1:1-9"}]} if "gi2coords" in url else {"data": rows}
+    async def fake(client: Any, url: str, shape: Callable[[object], Any]) -> dict[str, Any]:
+        body = {"regions": [{"reg_str": "1:1-9"}]} if "gi2coords" in url else {"data": rows}
+        return shape(body)
 
     monkeypatch.setattr(onekg, "_get", fake)
     async with httpx.AsyncClient() as c:

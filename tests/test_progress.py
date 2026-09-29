@@ -169,7 +169,7 @@ async def test_uniprot_502_then_200_emits_retry_notification(httpx_mock: HTTPXMo
 async def test_phytozome_post_emits_submit_and_complete(httpx_mock: HTTPXMock) -> None:
     """BioMart POST should bracket the wire call with submit + complete pings."""
     body = (
-        "organism_name\tgene_name1\tchr_name1\tgene_chrom_start\tgene_chrom_end\tgene_chrom_strand\tgene_description\n"
+        "Organism Name\tGene Name\tChromosome Name\tGene Start (bp)\tGene End (bp)\tStrand\tDescription\n"
         "Athaliana\tAT1G01010\t1\t3631\t5899\t1\tNAC domain protein\n"
     )
     httpx_mock.add_response(url=phytozome.BASE_URL, text=body)

@@ -17,6 +17,7 @@ Three-hop flow (each response cached independently), pinned to one release:
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from typing import Any
 
 import httpx
@@ -51,7 +52,31 @@ MAX_MEMBERS = 100
 _CACHE = cache.TTLCache()
 
 
-async def _get(client: httpx.AsyncClient, path: str, params: dict[str, Any]) -> dict[str, Any]:
+def _ok(data: type | None = None) -> Callable[[object], dict[str, Any]]:
+    """An OrthoDB answer says ``status: "ok"``, and ``data`` of ``data`` when given.
+
+    Every live answer does (search, group, orthologs; 2026-09-28), and a search
+    that matches nothing is ``status: ok`` with ``data: null``. ``{}`` was read
+    as that no-match (``found: false``) and as a group with no members.
+    """
+
+    def shape(value: object) -> dict[str, Any]:
+        body = _http.expect_object(value)
+        if body.get("status") != "ok" or (
+            data is not None and not isinstance(body.get("data"), data)
+        ):
+            raise _http.UnreadableBody(f"not an ok answer with its data: {str(body)[:120]}")
+        return body
+
+    return shape
+
+
+async def _get(
+    client: httpx.AsyncClient,
+    path: str,
+    params: dict[str, Any],
+    shape: Callable[[object], dict[str, Any]],
+) -> dict[str, Any]:
     """GET an OrthoDB endpoint (own cache), returning the parsed dict."""
     return await _http.cached_get(
         client,
@@ -64,7 +89,7 @@ async def _get(client: httpx.AsyncClient, path: str, params: dict[str, Any]) -> 
         max_retries=MAX_RETRIES,
         retry_403_pattern=REFUSED_403_RE,
         limit=_LIMIT,
-        shape=_http.expect_object,
+        shape=shape,
     )
 
 
@@ -198,17 +223,16 @@ async def lookup_locus(
     }
     offset = int(_http.decode_cursor("orthodb_orthologs", query, cursor).get("offset", 0))
     search = await _get(
-        client, f"/{ORTHODB_RELEASE}/search", {"query": locus, "level": LEVEL, "limit": 1}
+        client, f"/{ORTHODB_RELEASE}/search", {"query": locus, "level": LEVEL, "limit": 1}, _ok()
     )
     ids = search.get("data")
     if not isinstance(ids, list) or not ids:
         return _empty(locus, canonical)
     gid = ids[0]
 
-    group = await _get(client, f"/{ORTHODB_RELEASE}/group", {"id": gid})
-    ortho = await _get(client, f"/{ORTHODB_RELEASE}/orthologs", {"id": gid})
-    clusters = ortho.get("data")
-    clusters = clusters if isinstance(clusters, list) else []
+    group = await _get(client, f"/{ORTHODB_RELEASE}/group", {"id": gid}, _ok(dict))
+    ortho = await _get(client, f"/{ORTHODB_RELEASE}/orthologs", {"id": gid}, _ok(list))
+    clusters = ortho["data"]
     if target is None:
         members, member_total = _members(clusters, cap, offset)
         return {

@@ -31,6 +31,7 @@ from plant_genomics_mcp.errors import (
     InvalidArguments,
     NotFoundError,
     PlantGenomicsError,
+    UpstreamUnavailableError,
 )
 
 BASE_URL = "https://rest.uniprot.org"
@@ -120,7 +121,16 @@ async def _search(
         raise PlantGenomicsError(
             f"UniProt search returned unexpected payload: {type(data).__name__}"
         )
-    results = list(data.get("results", []))
+    # No hits is ``{"results": []}`` (live, 2026-09-28). A body without the
+    # list is not zero hits: read as one, ``{}`` became "UniProt has no entry"
+    # behind seven tools, and was stored.
+    rows = data.get("results")
+    if not isinstance(rows, list):
+        raise UpstreamUnavailableError(
+            f"UniProt search answered without a results list ({str(data)[:120]}); "
+            "this is not zero hits"
+        )
+    results = list(rows)
     # Carry the release UniProt reported on the response that produced these
     # rows INSIDE the cached value, so a warm hit reports the release it was
     # actually fetched under instead of silently reporting none. Stored on the
