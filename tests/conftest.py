@@ -15,7 +15,8 @@ explicitly probe in test_cache.py).
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+import os
+from collections.abc import Callable, Iterator
 from pathlib import Path
 
 import pytest
@@ -92,6 +93,21 @@ def _answers_match_their_tool_schema(monkeypatch: pytest.MonkeyPatch) -> Iterato
     new = output_contract.violations[start:]
     del output_contract.violations[start:]
     assert not new, "tool answers break their published schema:\n" + "\n".join(new)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _record_the_live_gate(record_testsuite_property: Callable[[str, object], None]) -> None:
+    """Write the live gate as this pytest process saw it into the JUnit report.
+
+    The nightly live run (scripts/classify_live_failures.py) fails a report
+    whose gate is not "1". It read the gate from skip reasons before, which
+    only worked while every live test's reason named the variable; two
+    Gramene tests' reason is just "live". Without --junitxml this records
+    nothing.
+    """
+    record_testsuite_property(
+        "PLANT_GENOMICS_MCP_LIVE", os.environ.get("PLANT_GENOMICS_MCP_LIVE", "")
+    )
 
 
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
