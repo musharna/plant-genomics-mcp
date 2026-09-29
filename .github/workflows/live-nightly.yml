@@ -48,10 +48,14 @@ jobs:
         # verify_genes's probed-outage skip reaches the summary through its
         # skip reason (the classifier lists skips), so its report file is not set.
         # The exit status is the classifier's input, so this step records it
-        # instead of failing on it.
+        # instead of failing on it. verbosity_assertions=2: under -q pytest
+        # elides the middle of a long assertion repr, and the classifier reads
+        # the message; a synthesis envelope's failed step, which names
+        # [UpstreamUnavailableError], was cut out and an Ensembl outage read as
+        # a regression (run 36544299260).
         run: |
           set +e
-          pytest -q -rfE -p no:cacheprovider --timeout=240 -o faulthandler_timeout=300 \
+          pytest -q -rfE -p no:cacheprovider --timeout=240 -o faulthandler_timeout=300 -o verbosity_assertions=2 \
             --junitxml="$RUNNER_TEMP/live.xml" tests/
           echo "exit=$?" >> "$GITHUB_OUTPUT"
       - name: Classify failures
