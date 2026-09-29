@@ -11,9 +11,10 @@
   upstream-side (Ensembl 500, Europe PMC 503, a PlantCyc challenge page,
   NCBI BLAST past the cap), so `scripts/classify_live_failures.py` classes
   each failure from the JUnit report and fails the run only on a
-  regression; upstream-side failures are listed in the job summary. A run
-  that did not complete, or never set the live gate, fails on its own.
-  Not a required check.
+  regression; upstream-side failures, and skips by reason, are listed in the
+  job summary. A run that did not complete fails on its own, as does one in
+  which pytest did not see the live gate set (`tests/conftest.py` records the
+  value in the JUnit report). Not a required check.
 
 - **The output-contract check accepts `ensembl_region_query` rows as Ensembl
   sends them.** The rows are Ensembl's records copied as sent, but the check

@@ -45,7 +45,8 @@ jobs:
         env:
           PLANT_GENOMICS_MCP_LIVE: "1"
           PLANT_GENOMICS_MCP_STDIO_SMOKE: "1"
-          LIVE_SMOKE_OUTAGE_REPORT: ${{ runner.temp }}/live-smoke-outage.txt
+        # verify_genes's probed-outage skip reaches the summary through its
+        # skip reason (the classifier lists skips), so its report file is not set.
         # The exit status is the classifier's input, so this step records it
         # instead of failing on it.
         run: |

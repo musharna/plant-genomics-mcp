@@ -23,9 +23,15 @@ the one check that needs to tell the two apart.
 
 The run itself is checked before any class is trusted: a pytest exit other
 than 0 or 1 (interrupted, internal error, no tests), a missing or empty
-report, a report that disagrees with pytest's exit status, or any test
-skipped for want of ``PLANT_GENOMICS_MCP_LIVE`` (the gate was not set, so
-nothing live ran) is a failure of its own.
+report, a report that disagrees with pytest's exit status, or a report whose
+``PLANT_GENOMICS_MCP_LIVE`` property is not "1" is a failure of its own.
+tests/conftest.py records that property as the pytest process saw the
+variable. It was read from skip reasons first, which holds only while every
+live test's reason names the variable; two Gramene tests' reason is "live".
+
+Skips are listed by reason, so a test that skipped itself (verify_genes does,
+when a direct probe finds its backend down) is in the summary, not missing
+from it.
 
 Usage: ``classify_live_failures.py REPORT.xml PYTEST_EXIT [SUMMARY.md]``;
 the summary (markdown) is appended to, as ``$GITHUB_STEP_SUMMARY`` expects.
@@ -35,7 +41,8 @@ Exit 0 when no regression, 1 when there is one or the run is unusable.
 from __future__ import annotations
 
 import sys
-from dataclasses import dataclass
+from collections import Counter
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from defusedxml import ElementTree
@@ -63,24 +70,32 @@ def classify(message: str) -> str:
     return "regression"
 
 
-def read_report(path: Path) -> tuple[list[Failure], int, list[str]]:
-    """The failures, the number of test cases, and the tests the live gate skipped."""
+@dataclass
+class Report:
+    cases: int = 0
+    failures: list[Failure] = field(default_factory=list)
+    skips: Counter[str] = field(default_factory=Counter)  # reason -> tests
+    gate: str | None = None  # the PLANT_GENOMICS_MCP_LIVE property; None when absent
+
+
+def read_report(path: Path) -> Report:
     root = ElementTree.parse(path).getroot()
-    failures: list[Failure] = []
-    gated: list[str] = []
-    cases = 0
+    report = Report()
+    for prop in root.iter("property"):
+        if prop.get("name") == LIVE_GATE:
+            report.gate = prop.get("value", "")
     for case in root.iter("testcase"):
-        cases += 1
+        report.cases += 1
         test = f"{case.get('classname', '')}::{case.get('name', '')}"
         for kind in ("failure", "error"):
             node = case.find(kind)
             if node is not None:
                 message = node.get("message") or (node.text or "")
-                failures.append(Failure(test, kind, message))
+                report.failures.append(Failure(test, kind, message))
         skipped = case.find("skipped")
-        if skipped is not None and LIVE_GATE in (skipped.get("message") or ""):
-            gated.append(test)
-    return failures, cases, gated
+        if skipped is not None:
+            report.skips[skipped.get("message") or ""] += 1
+    return report
 
 
 def _cell(text: str, limit: int = 200) -> str:
@@ -90,14 +105,15 @@ def _cell(text: str, limit: int = 200) -> str:
     return line.replace("|", "\\|")
 
 
-def summarize(failures: list[Failure], cases: int) -> str:
+def summarize(report: Report) -> str:
+    failures = report.failures
     regressions = [f for f in failures if f.cls == "regression"]
     upstream = [f for f in failures if f.cls == "upstream"]
     out = [
         "### Live tests",
         "",
-        f"{cases} test cases; {len(regressions)} regression(s), "
-        f"{len(upstream)} upstream-side failure(s).",
+        f"{report.cases} test cases; {len(regressions)} regression(s), "
+        f"{len(upstream)} upstream-side failure(s), {sum(report.skips.values())} skipped.",
         "",
     ]
     if failures:
@@ -112,6 +128,11 @@ def summarize(failures: list[Failure], cases: int) -> str:
             "after night is worth a look."
         )
         out.append("")
+    if report.skips:
+        out += ["| skipped | reason |", "|---|---|"]
+        for reason, n in report.skips.most_common():
+            out.append(f"| {n} | {_cell(reason)} |")
+        out.append("")
     return "\n".join(out)
 
 
@@ -125,27 +146,30 @@ def main(argv: list[str]) -> int:
     summary = Path(argv[3]) if len(argv) == 4 else None
 
     problems: list[str] = []
-    failures: list[Failure] = []
-    cases = 0
+    result = Report()
     if pytest_exit not in (0, 1):
         problems.append(f"pytest exited {pytest_exit}: the run did not complete")
     if not report.is_file():
         problems.append(f"no JUnit report at {report}")
     else:
-        failures, cases, gated = read_report(report)
-        if cases == 0:
+        result = read_report(report)
+        if result.cases == 0:
             problems.append("the JUnit report holds no test cases")
-        if gated:
+        if result.gate is None:
+            problems.append(f"the report does not record {LIVE_GATE} (tests/conftest.py writes it)")
+        elif result.gate != "1":
             problems.append(
-                f"{len(gated)} test(s) skipped for want of {LIVE_GATE}, e.g. {gated[0]}: "
-                "the live gate was not set"
+                f"{LIVE_GATE} was {result.gate!r} in the run: the live gate was not set"
             )
-        if pytest_exit == 0 and failures:
-            problems.append(f"pytest exited 0 but the report lists {len(failures)} failure(s)")
-        if pytest_exit == 1 and not failures:
+        if pytest_exit == 0 and result.failures:
+            problems.append(
+                f"pytest exited 0 but the report lists {len(result.failures)} failure(s)"
+            )
+        if pytest_exit == 1 and not result.failures:
             problems.append("pytest exited 1 but the report lists no failure")
 
-    text = summarize(failures, cases)
+    failures = result.failures
+    text = summarize(result)
     if problems:
         text = "### Live run unusable\n\n" + "".join(f"- {p}\n" for p in problems) + "\n" + text
     print(text)

@@ -36,19 +36,34 @@ PHYTOZOME_404 = (
 )
 WRONG_LENGTH = "assert 430 == 429"
 GATE_SKIP = "set PLANT_GENOMICS_MCP_LIVE=1 to hit rest.ensembl.org"
+GRAMENE_SKIP = "live"  # tests/test_gramene.py's reason: it does not name the variable
+# The skip verify_genes takes when a direct probe finds its backend down
+# (tests/_live_outage.py builds it as "upstream outage on N calls: ...").
+OUTAGE_SKIP = "upstream outage on 3 calls: PANTHER geneinfo HTTP 503"
 
 
 def _report(
-    tmp_path: Path, cases: Sequence[tuple[str, str | None, str]], name: str = "r.xml"
+    tmp_path: Path,
+    cases: Sequence[tuple[str, str | None, str]],
+    name: str = "r.xml",
+    gate: str | None = "1",
 ) -> Path:
-    """A JUnit file: each case is (test name, outcome element or None, message)."""
+    """A JUnit file as pytest writes it: each case is (test name, outcome
+    element or None, message); ``gate`` is the property tests/conftest.py
+    records, None for a report without it."""
     rows = []
     for test, outcome, message in cases:
         inner = f"<{outcome} message={quoteattr(message)}/>" if outcome else ""
         rows.append(f'<testcase classname="tests.test_live" name="{test}">{inner}</testcase>')
+    props = (
+        ""
+        if gate is None
+        else f'<properties><property name="PLANT_GENOMICS_MCP_LIVE" value={quoteattr(gate)} />'
+        "</properties>"
+    )
     path = tmp_path / name
     path.write_text(
-        f'<?xml version="1.0"?><testsuites><testsuite name="pytest">{"".join(rows)}'
+        f'<?xml version="1.0"?><testsuites><testsuite name="pytest">{props}{"".join(rows)}'
         "</testsuite></testsuites>",
         encoding="utf-8",
     )
@@ -84,7 +99,7 @@ def test_a_regression_fails_the_run_and_upstream_failures_alone_do_not(tmp_path:
     summary = tmp_path / "summary.md"
     red = _run(_report(tmp_path, [("test_ok", None, ""), *UPSTREAM, *REGRESSIONS]), 1, summary)
     assert red.returncode == 1, red.stdout + red.stderr
-    assert "8 test cases; 3 regression(s), 4 upstream-side failure(s)." in red.stdout
+    assert "8 test cases; 3 regression(s), 4 upstream-side failure(s), 0 skipped." in red.stdout
     lines = [ln for ln in red.stdout.splitlines() if ln.startswith("| ") and "`" in ln]
     assert [ln.split(" | ")[0] for ln in lines] == ["| regression"] * 3 + ["| upstream"] * 4
     assert "`tests.test_live::test_phytozome`" in lines[0]
@@ -93,7 +108,7 @@ def test_a_regression_fails_the_run_and_upstream_failures_alone_do_not(tmp_path:
 
     green = _run(_report(tmp_path, [("test_ok", None, ""), *UPSTREAM], "g.xml"), 1)
     assert green.returncode == 0, green.stdout + green.stderr
-    assert "0 regression(s), 4 upstream-side failure(s)." in green.stdout
+    assert "0 regression(s), 4 upstream-side failure(s), 0 skipped." in green.stdout
     assert "`tests.test_live::test_blast`" in green.stdout
 
 
@@ -110,9 +125,14 @@ def test_an_unusable_run_fails_whatever_its_failures(tmp_path: Path) -> None:
         "no report": (tmp_path / "missing.xml", 0, "no JUnit report"),
         "empty": (_report(tmp_path, [], "empty.xml"), 0, "holds no test cases"),
         "gate unset": (
-            _report(tmp_path, [*passed, ("test_live", "skipped", GATE_SKIP)], "gate.xml"),
+            _report(tmp_path, passed, "gate.xml", gate=""),
             0,
-            "the live gate was not set",
+            "PLANT_GENOMICS_MCP_LIVE was '' in the run: the live gate was not set",
+        ),
+        "gate unrecorded": (
+            _report(tmp_path, passed, "nogate.xml", gate=None),
+            0,
+            "the report does not record PLANT_GENOMICS_MCP_LIVE",
         ),
         "0 with failures": (
             _report(tmp_path, [*passed, UPSTREAM[0]], "zero.xml"),
@@ -127,16 +147,35 @@ def test_an_unusable_run_fails_whatever_its_failures(tmp_path: Path) -> None:
         assert "### Live run unusable" in out.stdout and why in out.stdout, (label, out.stdout)
 
 
-def test_a_skip_for_another_reason_is_not_the_live_gate(tmp_path: Path) -> None:
-    """Only a skip naming PLANT_GENOMICS_MCP_LIVE says the gate was unset;
-    the stdio smoke test's own gate does not. Positive control: the live
-    gate's skip, in the same report, is caught."""
-    smoke = (
-        "test_smoke",
-        "skipped",
-        "set PLANT_GENOMICS_MCP_STDIO_SMOKE=1 to run the stdio smoke test",
-    )
-    assert _run(_report(tmp_path, [("test_ok", None, ""), smoke], "s.xml"), 0).returncode == 0
-    both = _report(tmp_path, [smoke, ("test_live", "skipped", GATE_SKIP)], "b.xml")
-    out = _run(both, 0)
-    assert out.returncode == 1 and "1 test(s) skipped for want of" in out.stdout, out.stdout
+def test_the_gate_is_the_recorded_value_not_the_skip_wording(tmp_path: Path) -> None:
+    """Gramene's live tests skip with the reason "live", which names no
+    variable: a run without the gate that skipped only those is refused on
+    the recorded value. Positive control: with the gate recorded as "1", a
+    skip whose reason names the variable does not make the run unusable."""
+    gramene_only = [("test_ok", None, ""), ("test_gramene", "skipped", GRAMENE_SKIP)]
+    out = _run(_report(tmp_path, gramene_only, "g.xml", gate=""), 0)
+    assert out.returncode == 1 and "the live gate was not set" in out.stdout, out.stdout
+
+    named = [("test_ok", None, ""), ("test_live", "skipped", GATE_SKIP)]
+    ok = _run(_report(tmp_path, named, "n.xml", gate="1"), 0)
+    assert ok.returncode == 0, ok.stdout
+
+
+def test_every_skip_is_listed_by_reason(tmp_path: Path) -> None:
+    """A test that skipped itself on a probed outage is in the summary with
+    its reason, counted, and does not fail the run; a passing run with no
+    skips has no skip table."""
+    cases = [
+        ("test_ok", None, ""),
+        ("test_verify_genes", "skipped", OUTAGE_SKIP),
+        ("test_smoke_a", "skipped", "set PLANT_GENOMICS_MCP_STDIO_SMOKE=1 to run"),
+        ("test_smoke_b", "skipped", "set PLANT_GENOMICS_MCP_STDIO_SMOKE=1 to run"),
+    ]
+    out = _run(_report(tmp_path, cases, "sk.xml"), 0)
+    assert out.returncode == 0, out.stdout
+    assert "4 test cases; 0 regression(s), 0 upstream-side failure(s), 3 skipped." in out.stdout
+    assert f"| 1 | {OUTAGE_SKIP} |" in out.stdout
+    assert "| 2 | set PLANT_GENOMICS_MCP_STDIO_SMOKE=1 to run |" in out.stdout
+
+    none = _run(_report(tmp_path, [("test_ok", None, "")], "ok.xml"), 0)
+    assert none.returncode == 0 and "| skipped | reason |" not in none.stdout, none.stdout
