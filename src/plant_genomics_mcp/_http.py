@@ -577,6 +577,27 @@ def object_rows(value: object) -> list[dict[str, Any]]:
     return value
 
 
+def expect_page(count: str, rows: str) -> Callable[[object], dict[str, Any]]:
+    """A shape: a page stating an integer ``count`` and a list of objects under ``rows``.
+
+    For a paged upstream (AraGWAS, InterPro). Checking the count alone let a
+    page whose rows were missing read as zero rows, and a row that was not an
+    object was skipped by the reader, so the answer held fewer rows than the
+    upstream sent with nothing to say so (#96). Every live row is an object.
+    """
+    has_count = expect_count(count)
+
+    def shape(value: object) -> dict[str, Any]:
+        body = has_count(value)
+        try:
+            object_rows(body.get(rows))
+        except UnreadableBody as e:
+            raise UnreadableBody(f"{rows!r}: {e.args[0]}") from None
+        return body
+
+    return shape
+
+
 _T = TypeVar("_T")
 _P = TypeVar("_P")
 

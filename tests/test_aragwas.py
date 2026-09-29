@@ -647,3 +647,43 @@ async def test_live_rows_fill_every_field_upstream_always_sends() -> None:
             for key in path:
                 value = value[key]
             assert value not in (None, {}), (path, row)
+
+
+# A page whose rows are not all objects, or that has no row list (#96): the
+# reader skipped such a row, so the answer held fewer associations than the
+# page sent, and a page without ``results`` read as none.
+_BAD_PAGES = {
+    "a row that is not an object": (
+        {"count": 2, "links": {"next": None}, "results": [_LIVE_ROW, 7]},
+        "'results': row 1 is int, not an object",
+    ),
+    "no row list": (
+        {"count": 2, "links": {"next": None}},
+        "'results': NoneType, not a list",
+    ),
+}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("case", sorted(_BAD_PAGES))
+async def test_a_page_with_unreadable_rows_is_refused_not_shortened(
+    httpx_mock: HTTPXMock, case: str
+) -> None:
+    """Refused after one more ask and never stored. Positive control, same
+    cache: the verbatim live row is then answered."""
+    bad, problem = _BAD_PAGES[case]
+    httpx_mock.add_response(url=_FIRST, json=bad)
+    httpx_mock.add_response(url=_FIRST, json=bad)
+    httpx_mock.add_response(
+        url=_FIRST, json={"count": 1, "links": {"next": None}, "results": [_LIVE_ROW]}
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError) as err:
+            await aragwas.lookup_locus(client, "AT1G01060")
+        assert str(err.value) == (
+            "[UpstreamUnavailableError] AraGWAS associations answered 200 twice without "
+            f"a readable result ({problem}); this is not a count of zero"
+        )
+        r = await aragwas.lookup_locus(client, "AT1G01060")
+    assert r["associations"] == [_LIVE_ROW_PROJECTED]
+    assert len(httpx_mock.get_requests()) == 3

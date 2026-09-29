@@ -11,6 +11,7 @@ Two tiers (mirrors the alphafold / quickgo pattern):
 from __future__ import annotations
 
 import os
+from typing import Any
 
 import httpx
 import pytest
@@ -375,3 +376,72 @@ async def test_an_invalid_locus_is_refused_in_interpro_s_name(
             await interpro.lookup_locus(client, "AT1G01010/x")
         # Positive control: a valid locus goes through.
         assert (await interpro.lookup_locus(client, "AT4G09760"))["found"] is True
+
+
+# Q9SZ92's cd05157 row, verbatim (live, 2026-09-28).
+_LIVE_ROW: dict[str, Any] = {
+    "metadata": {
+        "accession": "cd05157",
+        "name": "Euykaryotic Ethanolamine kinase",
+        "source_database": "cdd",
+        "type": "domain",
+        "integrated": None,
+        "member_databases": None,
+        "go_terms": None,
+    },
+    "proteins": [
+        {
+            "accession": "q9sz92",
+            "protein_length": 346,
+            "source_database": "reviewed",
+            "organism": "3702",
+            "in_alphafold": True,
+            "entry_protein_locations": [
+                {
+                    "fragments": [{"start": 38, "end": 336, "dc-status": "CONTINUOUS"}],
+                    "representative": False,
+                    "model": "cd05157",
+                    "score": 0,
+                }
+            ],
+        }
+    ],
+}
+
+# A page whose rows are not all objects, or that has no row list (#96): the
+# reader skipped such a row, so the answer held fewer domains than the page
+# sent, and a page without ``results`` read as a protein with none.
+_BAD_PAGES = {
+    "a row that is not an object": (
+        {"count": 2, "next": None, "previous": None, "results": [_LIVE_ROW, "x"]},
+        "'results': row 1 is str, not an object",
+    ),
+    "no row list": ({"count": 2, "next": None}, "'results': NoneType, not a list"),
+}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("case", sorted(_BAD_PAGES))
+async def test_a_page_with_unreadable_rows_is_refused_not_shortened(
+    httpx_mock: HTTPXMock, case: str
+) -> None:
+    """Refused after one more ask and never stored. Positive control, same
+    cache: the verbatim live row is then answered."""
+    bad, problem = _BAD_PAGES[case]
+    httpx_mock.add_response(url=_URL, json=bad)
+    httpx_mock.add_response(url=_URL, json=bad)
+    httpx_mock.add_response(
+        url=_URL, json={"count": 1, "next": None, "previous": None, "results": [_LIVE_ROW]}
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError) as err:
+            await interpro.lookup_by_uniprot(client, "Q9SZ92")
+        assert str(err.value) == (
+            "[UpstreamUnavailableError] InterPro entry/protein answered 200 twice without "
+            f"a readable result ({problem}); this is not a count of zero"
+        )
+        r = await interpro.lookup_by_uniprot(client, "Q9SZ92")
+    assert [(d["accession"], d["locations"]) for d in r["domains"]] == [
+        ("cd05157", [{"start": 38, "end": 336}])
+    ]
+    assert len(httpx_mock.get_requests()) == 3

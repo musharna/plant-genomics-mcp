@@ -51,11 +51,10 @@ def _body(name: str, n: int) -> dict[str, Any]:
     """A JSON body the backend's ``_get`` reads as an answer, distinct per ``n``.
 
     Europe PMC's, InterPro's and AraGWAS's ``_get`` hold the #141 shape
-    themselves: an answer states its count (and, for Europe PMC, its result
-    list).
+    themselves: an answer states its count and a list of object rows.
     """
     if name == "europe_pmc":
-        return {"n": n, "hitCount": n, "resultList": {"result": [n]}}
+        return {"n": n, "hitCount": n, "resultList": {"result": [{"n": n}]}}
     if name in ("interpro", "aragwas"):
         return {"n": n, "count": n, "results": []}
     return {"n": n, "data": [n]}
