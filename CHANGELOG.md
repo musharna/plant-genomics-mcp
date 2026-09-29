@@ -7,7 +7,10 @@
   `NotFoundError`, so while every BioMart path answered Apache's own 404 page
   (2026-09-29, site root 200), `phytozome_lookup_locus` told callers
   that AT1G01010 does not exist. Every 404 is now retried and raised as
-  `UpstreamUnavailableError` quoting the page. The outage itself is JGI's.
+  `UpstreamUnavailableError` quoting the page. A wrong URL of ours answers 404
+  too, so on an outage the live tests ask BioMart directly, at a URL written
+  in the test: down there too is a skip listed by the nightly, up is a
+  failure the nightly classes a regression. The outage itself is JGI's.
 
 - **Every live test runs nightly.** Per PR, `live-smoke` runs only the ARF
   `verify_genes` pair; the other 105 of the 107 live tests ran in no CI
