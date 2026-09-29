@@ -41,6 +41,7 @@ from typing import Any
 import jsonschema
 
 from plant_genomics_mcp import server
+from plant_genomics_mcp.models import RegionFeature
 
 violations: list[str] = []
 validated_calls: Counter[str] = Counter()
@@ -85,10 +86,14 @@ PASSTHROUGH: dict[str, tuple[tuple[str, ...], str, tuple[str, ...]]] = {
             "version",
         ),
     ),
+    # Every feature row is Ensembl's record as sent, so every declared field is
+    # copied, and which a row carries varies by organism (live 2026-09-29: no
+    # tomato gene in CM001064.4:100000-200000 has external_name). The list the
+    # Arabidopsis fixture's gaps gave (three keys) failed the live tomato call.
     "ensembl_region_query": (
         ("ensembl_plants.region_query",),
         "$.features[].",
-        ("assembly_name", "description", "source"),
+        tuple(RegionFeature.model_fields),
     ),
 }
 
