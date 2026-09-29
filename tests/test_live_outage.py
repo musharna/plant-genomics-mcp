@@ -110,7 +110,10 @@ def test_an_outage_beside_any_other_failure_stays_a_failure(tmp_path):
 # InterPro's overloaded database, on a 404 and on a 200 (live, 2026-09-28).
 _OVERLOADED = b'{"Error":1040}'
 _ANSWERS = {
-    "/up": (200, b""),
+    "/up": (200, b"{}"),
+    # PANTHER's empty 200 (live, 2026-09-28), and any other non-JSON.
+    "/empty-200": (200, b""),
+    "/text-200": (200, b"<p>busy</p>"),
     "/down": (503, b""),
     "/gone": (404, b""),
     "/overloaded": (404, _OVERLOADED),
@@ -166,3 +169,7 @@ def test_probe_reads_up_and_down_and_refuses_anything_else(local_http):
     # database, read as a broken probe on a 404 and as up on a 200.
     assert probe(f"{local_http}/overloaded") == 'HTTP 404 {"Error":1040}'
     assert probe(f"{local_http}/overloaded-200") == 'HTTP 200 {"Error":1040}'
+    # A 200 that is not JSON: every probed URL is a JSON API, so it is down,
+    # not up (the empty 200 read as up, and the run as a regression).
+    assert probe(f"{local_http}/empty-200") == "HTTP 200 non-JSON ''"
+    assert probe(f"{local_http}/text-200") == "HTTP 200 non-JSON '<p>busy</p>'"

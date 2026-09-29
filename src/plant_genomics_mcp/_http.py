@@ -491,7 +491,13 @@ async def request_with_retry(
 
 
 def json_body(resp: httpx.Response, service: str) -> object:
-    """``resp`` parsed as JSON; a body that is not JSON is a typed error.
+    """``resp`` parsed as JSON; a body that is not JSON is an upstream fault.
+
+    Every caller asked a JSON API, so a 200 it cannot parse is the service
+    failing to deliver, not the caller's mistake: :class:`UpstreamUnavailableError`
+    (a :class:`PlantGenomicsError`). PANTHER sent non-JSON 200s in two live
+    runs (2026-09-27, and -28 with an empty body on every call); as a plain
+    ``PlantGenomicsError`` that read as a regression, not an outage.
 
     Typed ``object``, not ``Any``: a 200 can carry any JSON value, and a
     caller that reads it as a dict without checking leaks ``AttributeError``
@@ -501,7 +507,7 @@ def json_body(resp: httpx.Response, service: str) -> object:
     try:
         return resp.json()
     except ValueError as e:
-        raise PlantGenomicsError(f"{service} returned non-JSON: {resp.text[:200]}") from e
+        raise UpstreamUnavailableError(f"{service} returned non-JSON: {resp.text[:200]}") from e
 
 
 class UnreadableBody(PlantGenomicsError):

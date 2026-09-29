@@ -1251,13 +1251,20 @@ async def test_non_json_body_error_names_the_service(httpx_mock: HTTPXMock) -> N
     from plant_genomics_mcp import cache
 
     body = "<" + "n" * 300
-    with pytest.raises(PlantGenomicsError) as direct:
+    with pytest.raises(UpstreamUnavailableError) as direct:
         _http.json_body(httpx.Response(200, text=body), "svc")
-    assert str(direct.value) == f"svc returned non-JSON: {body[:200]}"
+    assert str(direct.value) == f"[UpstreamUnavailableError] svc returned non-JSON: {body[:200]}"
+    # PANTHER's form (live, 2026-09-28, every call of a run): an empty 200.
+    with pytest.raises(
+        UpstreamUnavailableError,
+        match=r"^\[UpstreamUnavailableError\] PANTHER returned non-JSON: $",
+    ):
+        _http.json_body(httpx.Response(200, text=""), "PANTHER")
+    assert _http.json_body(httpx.Response(200, text="{}"), "PANTHER") == {}
     url = "https://example.test/not-json"
     httpx_mock.add_response(url=url, text=body)
     async with httpx.AsyncClient() as client:
-        with pytest.raises(PlantGenomicsError) as via_cache:
+        with pytest.raises(UpstreamUnavailableError) as via_cache:
             await _http.cached_get(client, cache.TTLCache(), url, service="svc")
     assert str(via_cache.value) == str(direct.value)
     assert _http.json_body(httpx.Response(200, json=[1]), "svc") == [1]

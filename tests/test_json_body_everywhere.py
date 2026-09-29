@@ -22,7 +22,7 @@ import httpx
 import pytest
 
 from plant_genomics_mcp import _http
-from plant_genomics_mcp.errors import PlantGenomicsError
+from plant_genomics_mcp.errors import UpstreamUnavailableError
 
 _SRC = pathlib.Path(__file__).resolve().parent.parent / "src" / "plant_genomics_mcp"
 
@@ -158,10 +158,14 @@ async def test_a_body_that_is_not_json_names_the_service(
 
     monkeypatch.setattr(_http, "request_with_retry", upstream)
     async with httpx.AsyncClient() as c:
-        with pytest.raises(PlantGenomicsError) as err:
+        # A JSON API's unparseable 200 is the upstream failing, not the caller:
+        # a plain PlantGenomicsError read as a regression in the live check.
+        with pytest.raises(UpstreamUnavailableError) as err:
             await call(mod, c)
         assert not isinstance(err.value, ValueError)
-        assert str(err.value) == f"{services[0]} returned non-JSON: <not json>"
+        assert str(err.value) == (
+            f"[UpstreamUnavailableError] {services[0]} returned non-JSON: <not json>"
+        )
         # Positive control, same request: the failure was not stored, the
         # request goes upstream again, and a JSON body is answered.
         assert await call(mod, c) is not None
