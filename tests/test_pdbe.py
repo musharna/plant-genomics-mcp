@@ -10,6 +10,7 @@ Two tiers (mirrors the alphafold / interpro pattern):
 from __future__ import annotations
 
 import os
+from typing import Any
 
 import httpx
 import pytest
@@ -259,7 +260,7 @@ async def test_payload_without_the_accession_key_is_found_false(httpx_mock: HTTP
 # tool's dispatch target), and asserted a few keys: an answer naming the wrong
 # accession, a shared cache key and the request itself went unchecked.
 
-_FOUND = {
+_FOUND: dict[str, Any] = {
     "locus": "AT4G09760",
     "accession": "Q9SZ92",
     "found": True,
@@ -401,3 +402,40 @@ async def test_a_refusal_names_the_pdbe_request(httpx_mock: HTTPXMock) -> None:
             await pdbe.lookup_by_uniprot(client, "Q9SZ92")
         # Positive control: the refusal was not stored; the next answer is read.
         assert (await pdbe.lookup_by_uniprot(client, "Q9SZ92"))["found"] is True
+
+
+# Two rows of live P00875 (2026-09-28): chains A and C of one entry, 8ruc.
+# best_structures lists a row per chain (P00875: 64 rows, 12 entries), so
+# structure_count counts chains and entry_count distinct entries (#123).
+_8RUC_A = {**_ENTRY, "chain_id": "A"}
+_8RUC_C = {**_ENTRY, "chain_id": "C"}
+
+
+@pytest.mark.asyncio
+async def test_two_chains_of_one_entry_are_two_structures_and_one_entry(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Review of #198: every other fixture had one chain per entry, so the two
+    counts were equal throughout and a swap or a lost dedup passed."""
+    monkeypatch.setattr(uniprot, "lookup_locus", _fake_uniprot("Q9SZ92"))
+    httpx_mock.add_response(url=_URL, json={"Q9SZ92": [_8RUC_A, _8RUC_C]})
+    async with httpx.AsyncClient() as client:
+        r = await pdbe.lookup_locus(client, "AT4G09760")
+    assert r == {
+        **_FOUND,
+        "structure_count": 2,
+        "entry_count": 1,
+        "structures": [
+            {**_FOUND["structures"][0], "chain_id": "A"},
+            {**_FOUND["structures"][0], "chain_id": "C"},
+        ],
+    }
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_entries_are_counted_apart_from_chains() -> None:
+    """P00875 answered 64 chain rows over 12 entries on 2026-09-28."""
+    async with httpx.AsyncClient() as client:
+        r = await pdbe.lookup_by_uniprot(client, "P00875")
+    assert 0 < r["entry_count"] < r["structure_count"], r

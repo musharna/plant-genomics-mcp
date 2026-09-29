@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+from typing import Any
 
 import httpx
 import pytest
@@ -363,7 +364,7 @@ async def test_eight_parallel_lookups_stay_under_orthodb_rate_limit(
 
 # /v12/group?id=444580at33090 as OrthoDB sent it on 2026-09-28: the projected
 # fields, plus two it does not read. Its id and public_id are equal live.
-_LIVE_GROUP = {
+_LIVE_GROUP: dict[str, Any] = {
     "status": "ok",
     "data": {
         "id": "444580at33090",
@@ -420,3 +421,17 @@ async def test_live_every_group_field_is_filled() -> None:
         r = await orthodb.lookup_locus(client, "AT1G01060", "arabidopsis", limit=1)
     assert r["found"] is True
     assert None not in r["group"].values(), r["group"]
+
+
+@pytest.mark.asyncio
+async def test_id_and_public_id_are_read_from_their_own_fields(httpx_mock: HTTPXMock) -> None:
+    """Review of #198: live, id and public_id are equal (no group probed on
+    2026-09-28 differed), so _LIVE_GROUP cannot show the two reads swapped.
+    Here public_id is altered from the live value so a swap shows."""
+    group = {**_LIVE_GROUP, "data": {**_LIVE_GROUP["data"], "public_id": "444580at33090-public"}}
+    httpx_mock.add_response(url=_SEARCH_URL, json={"status": "ok", "count": "1", "data": [_GID]})
+    httpx_mock.add_response(url=_GROUP_URL, json=group)
+    httpx_mock.add_response(url=_ORTHO_URL, json=_ORTHO)
+    async with httpx.AsyncClient() as client:
+        r = await orthodb.lookup_locus(client, "AT1G01060", "arabidopsis")
+    assert (r["group"]["id"], r["group"]["public_id"]) == ("444580at33090", "444580at33090-public")
