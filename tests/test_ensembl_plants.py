@@ -757,16 +757,62 @@ def test_protein_probes_cover_every_organism() -> None:
     assert set(_PROTEIN_PROBES) == set(organisms.ORGANISMS)
 
 
+# What the sequence shapes say when they refuse a body; a refusal of a real
+# protein is ours, not an outage, so it must not reach the nightly as one.
+_OUR_REFUSALS = re.compile(r"stop symbol at residue|not a sequence")
+
+
+async def _protein_or_our_failure(
+    client: httpx.AsyncClient, gene: str, organism: str
+) -> dict[str, object]:
+    """The protein; an outage as it came; a refusal by our own shapes as a
+    failure with no upstream tag, so the nightly classes it a regression."""
+    try:
+        return await ensembl_plants.get_sequence(client, gene, organism=organism)
+    except UpstreamUnavailableError as exc:
+        if _OUR_REFUSALS.search(str(exc)) is None:
+            raise
+        raise AssertionError(f"a real {organism} protein was refused: {gene}") from exc
+
+
+@pytest.mark.asyncio
+async def test_our_refusal_of_a_real_protein_is_not_an_outage(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async def _no_sleep(_seconds: float) -> None:
+        pass
+
+    monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
+    httpx_mock.add_response(
+        url=_AT_LOOKUP.format("AT1G01010"), json=_gene("AT1G01010", "AT1G01010.1")
+    )
+    for _ in range(2):
+        httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, json=_protein(_REAL + "*"))
+    for _ in range(3):
+        httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, status_code=500)
+    httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, json=_protein(_REAL))
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(AssertionError, match="protein was refused") as ours:
+            await _protein_or_our_failure(client, "AT1G01010", "arabidopsis_thaliana")
+        # Positive controls: an outage stays one, and an answer is passed on.
+        with pytest.raises(UpstreamUnavailableError, match="HTTP 500"):
+            await _protein_or_our_failure(client, "AT1G01010", "arabidopsis_thaliana")
+        result = await _protein_or_our_failure(client, "AT1G01010", "arabidopsis_thaliana")
+    assert result["sequence"] == _REAL
+    assert "[UpstreamUnavailableError]" not in str(ours.value)
+
+
 @live_only
 @pytest.mark.asyncio
-async def test_live_every_organisms_protein_holds_no_stop() -> None:
+@pytest.mark.parametrize(("organism", "gene"), list(_PROTEIN_PROBES.items()))
+async def test_live_every_organisms_protein_holds_no_stop(organism: str, gene: str) -> None:
     """Positive control for the stop-symbol refusal: a real protein of every
-    organism is still the answer."""
+    organism is still the answer. One case per organism, so an Ensembl 500 on
+    one is that organism's outage, not all twelve's."""
     async with httpx.AsyncClient() as client:
-        for organism, gene in _PROTEIN_PROBES.items():
-            result = await ensembl_plants.get_sequence(client, gene, organism=organism)
-            assert result["length"] > 0, (organism, gene)
-            assert "*" not in result["sequence"], (organism, gene)
+        result = await _protein_or_our_failure(client, gene, organism)
+    assert isinstance(result["sequence"], str) and result["sequence"]
+    assert "*" not in result["sequence"]
 
 
 @live_only
