@@ -14,6 +14,7 @@ from plant_genomics_mcp.errors import (
     OrganismNotFound,
     OrganismNotSupported,
     PlantGenomicsError,
+    UpstreamUnavailableError,
 )
 
 
@@ -502,12 +503,15 @@ async def test_aiv_interactions_400_envelope_is_not_found(httpx_mock: HTTPXMock,
 
 
 @pytest.mark.asyncio
-async def test_a_400_without_bars_envelope_stays_an_error(httpx_mock: HTTPXMock) -> None:
-    """Only BAR's own failure envelope is a miss: a 400 that does not carry it
-    (a proxy's page, an envelope that succeeded) is still a broken request.
-    Positive control, same path: BAR's answer is answered."""
+async def test_only_bars_own_miss_is_a_miss(httpx_mock: HTTPXMock) -> None:
+    """A failure is "no such gene" only when BAR says so: a 400 without BAR's
+    miss (a proxy's page, an envelope that succeeded, the envelope with
+    another error) is still a broken request (#199 review), and the envelope
+    with another error on a 200 is asked for again and never stored.
+    Positive control, same path and cache: BAR's answer is answered."""
     url = "https://bar.utoronto.ca/api/interactions/get_paper_by_agi/AT1G01010"
-    for body in (b"<html>400 Bad Request</html>", b'{"wasSuccessful": true, "data": []}'):
+    other = b'{"wasSuccessful": false, "error": "Service temporarily unavailable"}'
+    for body in (b"<html>400 Bad Request</html>", b'{"wasSuccessful": true, "data": []}', other):
         httpx_mock.add_response(url=url, status_code=400, content=body)
         async with httpx.AsyncClient() as client:
             with pytest.raises(PlantGenomicsError) as err:
@@ -516,6 +520,11 @@ async def test_a_400_without_bars_envelope_stays_an_error(httpx_mock: HTTPXMock)
         assert str(err.value) == (
             f"BAR /interactions/get_paper_by_agi/AT1G01010 → HTTP 400: {body.decode()}"
         )
+    httpx_mock.add_response(url=url, content=other)
+    httpx_mock.add_response(url=url, content=other)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError, match="Service temporarily unavailable"):
+            await bar.aiv_interactions(client, "AT1G01010")
     httpx_mock.add_response(url=url, json=_AIV_ARABIDOPSIS_OK)
     async with httpx.AsyncClient() as client:
         assert (await bar.aiv_interactions(client, "AT1G01010"))["count"] == 2

@@ -12,7 +12,11 @@
   1001 Genomes answers an unknown transcript with
   `400 {"errors":[{"code":202,"message":"Gene identifier not found: ..."}]}`,
   which is now a miss in `arabidopsis_natural_variation`. Any other 400 from
-  either stays a `PlantGenomicsError`. A 200 whose body is not JSON was a
+  either stays a `PlantGenomicsError`. BAR's envelope is a miss only with
+  one of its five miss messages, at any status; with any other error it was
+  also read as "not found", and on a 200 stored for the hour, so it is now
+  asked for again, never stored, and an `UpstreamUnavailableError` if it
+  repeats. A 200 whose body is not JSON was a
   plain `PlantGenomicsError`; PANTHER sent non-JSON 200s in two live runs
   (2026-09-27, and -28 with an empty body on every call), and the live check
   read that as a regression. It is now an `UpstreamUnavailableError` (still a

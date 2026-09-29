@@ -88,9 +88,21 @@ async def _get(
 #   /interactions/get_paper_by_agi/AT1G99999   → 400 {"wasSuccessful": false, "error": "Invalid AGI"}
 #   /interactions/rice/LOC_Os01g99999          → 400 {..false,"error":"There are no data found for the given gene"}
 # The same statement on a 200 was a NotFoundError and on a 400 a plain
-# PlantGenomicsError, so "no such gene" read as a broken request. A 400 is
-# a miss only when it carries this envelope; any other 400 stays an error.
-_NO_RECORD_400_RE = re.compile(r'\A\s*\{\s*"wasSuccessful"\s*:\s*false\s*,\s*"error"\s*:\s*"')
+# PlantGenomicsError, so "no such gene" read as a broken request. A failure
+# is a miss by what it says, at any status: the envelope alone also carries
+# failures that are not "no such gene" (#199 review).
+_MISSES = (
+    "Invalid AGI",
+    "Invalid gene id",
+    "Invalid species or gene ID",
+    "There are no data found for the given gene",
+    "Nothing found",
+)
+_NO_RECORD_400_RE = re.compile(
+    r'\A\s*\{\s*"wasSuccessful"\s*:\s*false\s*,\s*"error"\s*:\s*"(?:'
+    + "|".join(re.escape(m) for m in _MISSES)
+    + r')"\s*\}\s*\Z'
+)
 
 # Positional indices into thalemine's results[0] row. Order is fixed by the
 # InterMine `views` list (column ordering survives schema versions). Live
@@ -119,17 +131,19 @@ def _envelope(payload: str, kind: type) -> Callable[[object], dict[str, Any]]:
     """A BAR answer states ``wasSuccessful``: on success its ``payload`` of
     ``kind``, on failure an ``error`` string (live, every endpoint here,
     2026-09-28). ``{}`` states neither, and was read as a failure whose error
-    was None: "not found"."""
+    was None: "not found". A failure is an answer only when its error is one
+    of BAR's misses; any other was read as "not found" and stored for the
+    TTL, so it is asked for again and never stored."""
 
     def shape(value: object) -> dict[str, Any]:
         env = _http.expect_object(value)
         ok = env.get("wasSuccessful")
         if (ok is True and isinstance(env.get(payload), kind)) or (
-            ok is False and isinstance(env.get("error"), str)
+            ok is False and env.get("error") in _MISSES
         ):
             return env
         raise _http.UnreadableBody(
-            f"no wasSuccessful with {payload!r} or 'error' in {str(env)[:120]}"
+            f"no wasSuccessful with {payload!r} or a miss 'error' in {str(env)[:120]}"
         )
 
     return shape
