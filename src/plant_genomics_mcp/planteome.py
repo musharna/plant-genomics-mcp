@@ -51,7 +51,10 @@ def _select_shape(raw: object) -> dict[str, Any]:
         raise _http.UnreadableBody(
             f"response.docs is not a list: {type(response.get('docs')).__name__}"
         )
-    return response
+    # The count too, before the store: read afterwards, a body without one
+    # was stored first and failed the call for the whole TTL. Every live
+    # answer states it, zero included (2026-09-28).
+    return _http.expect_count("numFound")(response)
 
 
 async def _get(

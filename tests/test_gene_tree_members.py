@@ -17,7 +17,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import ensembl_plants
-from plant_genomics_mcp.errors import NotFoundError
+from plant_genomics_mcp.errors import NotFoundError, UpstreamUnavailableError
 
 TREE_ID = "EPlGT00940000167082"
 TREE_URL = re.compile(r"^https://rest\.ensembl\.org/genetree/id/EPlGT00940000167082\?.*")
@@ -168,3 +168,23 @@ async def test_live_arf_gene_tree_holds_its_arabidopsis_member():
             client, TREE_ID, target_organism="arabidopsis_thaliana"
         )
     assert "AT1G19850" in [m["locus"] for m in result["members"]], result["members"]
+
+
+@pytest.mark.asyncio
+async def test_a_leaf_without_its_gene_or_taxon_is_refused_before_the_store(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """Read after the store, one bad leaf failed every call for the TTL
+    without asking again. Now it is asked once more and never stored;
+    positive control, same cache: the whole tree that follows is served."""
+    bad = _tree()
+    del bad["tree"]["children"][-1]["taxonomy"]
+    httpx_mock.add_response(url=TREE_URL, json=bad)
+    httpx_mock.add_response(url=TREE_URL, json=bad)
+    httpx_mock.add_response(url=TREE_URL, json=_tree())
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError, match="leaf without gene id or taxonomy"):
+            await ensembl_plants.gene_tree_members(client, TREE_ID)
+        good = await ensembl_plants.gene_tree_members(client, TREE_ID)
+    assert good["total"] == 5
+    assert len(httpx_mock.get_requests()) == 3

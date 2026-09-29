@@ -53,9 +53,15 @@ _ANN_FIELDS = (
 
 
 def _search_shape(raw: object) -> dict[str, Any]:
-    """An /annotation/search body whose ``results``, if present, is a list."""
-    body = _http.expect_object(raw)
-    results = body.get("results") or []
+    """An /annotation/search body stating ``numberOfHits`` with a ``results`` list.
+
+    Both checked before the store: a count read afterwards was read from a
+    stored body, so one without it failed the call for the whole TTL, and a
+    missing ``results`` read as no annotations. Every live answer carries
+    both, zero included (2026-09-28).
+    """
+    body = _http.expect_count("numberOfHits")(raw)
+    results = body.get("results")
     if not isinstance(results, list):
         raise _http.UnreadableBody(f"results is not a list: {type(results).__name__}")
     return body
@@ -141,7 +147,7 @@ async def lookup_by_uniprot(
     if page > 1:
         params["page"] = page
     raw = await _get(client, "/annotation/search", params=params, shape=_search_shape)
-    results = raw.get("results") or []
+    results = raw["results"]
     annotations = [_normalize(r) for r in results if isinstance(r, dict)]
     if not include_with_from:
         # _normalize built new dicts: the cached upstream rows keep theirs.

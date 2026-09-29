@@ -14,6 +14,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import quickgo
+from plant_genomics_mcp.errors import UpstreamUnavailableError
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
@@ -269,3 +270,30 @@ async def test_with_from_can_be_left_out_and_the_payload_says_so(httpx_mock: HTT
     assert full["with_from_included"] is True
     assert [a["withFrom"] for a in full["annotations"]] == [partner]
     assert lean["annotations"][0]["goId"] == full["annotations"][0]["goId"] == "GO:0005515"
+
+
+@pytest.mark.parametrize(
+    ("bad", "problem"),
+    [
+        pytest.param({"results": []}, "no integer 'numberOfHits'", id="no count"),
+        pytest.param({"numberOfHits": 2}, "results is not a list", id="no results"),
+    ],
+)
+@pytest.mark.asyncio
+async def test_a_body_without_its_count_or_rows_is_refused_before_the_store(
+    httpx_mock: HTTPXMock, bad: dict, problem: str
+) -> None:
+    """The count was read after the store, so a body without one failed every
+    call for the TTL without asking again, and a body without ``results``
+    read as no annotations. Every live answer carries both, zero included
+    (2026-09-28). Positive control, same cache: the answer that follows."""
+    rows = [_ann("GO:0006355", "biological_process")]
+    httpx_mock.add_response(url=_SEARCH_URL, json=bad)
+    httpx_mock.add_response(url=_SEARCH_URL, json=bad)
+    httpx_mock.add_response(url=_SEARCH_URL, json={"numberOfHits": 1, "results": rows})
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError, match=problem):
+            await quickgo.lookup_by_uniprot(client, "Q0WV96")
+        good = await quickgo.lookup_by_uniprot(client, "Q0WV96")
+    assert (good["numberOfHits"], good["returned"]) == (1, 1)
+    assert len(httpx_mock.get_requests()) == 3
