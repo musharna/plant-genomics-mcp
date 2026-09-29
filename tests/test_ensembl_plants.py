@@ -16,7 +16,7 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from plant_genomics_mcp import _http, ensembl_plants  # noqa: F401
+from plant_genomics_mcp import _http, ensembl_plants, organisms  # noqa: F401
 from plant_genomics_mcp.errors import UpstreamUnavailableError
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
@@ -359,28 +359,31 @@ async def test_get_sequence_default_type_is_protein(httpx_mock: HTTPXMock) -> No
 _AT1G01010_PROTEIN_URL = (
     "https://rest.ensembl.org/sequence/id/AT1G01010.1?species=arabidopsis_thaliana&type=protein"
 )
-# AT1G01010.1's live CDS (1290 nt, 2026-09-29) translated one frame off: as
-# long as the real protein and strewn with stops, like the wrong-frame protein
-# /sequence served for another gene during that night's Ensembl incident.
+# The first 60 residues of AT1G01010.1's live CDS (1290 nt, 2026-09-29)
+# translated one frame off; in full that is 429 aa, as long as the real protein,
+# with 14 stops, like the wrong-frame protein /sequence served for another gene
+# during that night's Ensembl incident.
 _WRONG_FRAME = "WRIKLGLGSVRTTRSSLVTISVTKSKETLAATLK*PSARSTSVATILGTCASSQSTNREM"
 # The real protein's opening, and the same with a stop on the end: its CDS is
 # 430 codons with the stop, and /sequence answered 430 aa that night.
 _REAL = "MEDQVGFGFRPNDEELVGHYL"
 
 
-def _protein(seq: str) -> dict[str, object]:
+def _protein(seq: object) -> dict[str, object]:
     return {"id": "AT1G01010.1", "query": "AT1G01010.1", "molecule": "protein", "seq": seq}
 
 
 @pytest.mark.asyncio
 async def test_a_protein_with_a_stop_symbol_is_not_an_answer(httpx_mock: HTTPXMock) -> None:
-    """No Ensembl Plants protein holds a ``*`` (0 of 694,518, all 12
+    """No Ensembl Plants protein holds a ``*`` (0 of 694,618, all 12
     organisms); get_sequence passed a wrong-frame one on as the answer."""
     httpx_mock.add_response(
         url=_AT_LOOKUP.format("AT1G01010"), json=_gene("AT1G01010", "AT1G01010.1")
     )
-    for bad in (_WRONG_FRAME, _WRONG_FRAME, _REAL + "*", _REAL + "*"):
-        httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, json=_protein(bad))
+    # The second pair names no molecule: the check follows the type asked for.
+    unnamed = {"id": "AT1G01010.1", "seq": _REAL + "*"}
+    for bad in (_protein(_WRONG_FRAME), _protein(_WRONG_FRAME), unnamed, unnamed):
+        httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, json=bad)
     httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, json=_protein(_REAL))
     async with httpx.AsyncClient() as client:
         with pytest.raises(UpstreamUnavailableError, match=r"stop symbol at residue 35 of 60"):
@@ -392,6 +395,32 @@ async def test_a_protein_with_a_stop_symbol_is_not_an_answer(httpx_mock: HTTPXMo
         result = await ensembl_plants.get_sequence(client, "AT1G01010")
     assert (result["sequence"], result["length"]) == (_REAL, len(_REAL))
     assert len(httpx_mock.get_requests(url=_AT1G01010_PROTEIN_URL)) == 5
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("seq_type", ["protein", "cds"])
+async def test_an_empty_or_non_string_seq_is_not_an_answer(
+    httpx_mock: HTTPXMock, seq_type: str
+) -> None:
+    """``{"seq": ""}`` was relayed as a 0-length answer, and a null or a list
+    passed the shape as well."""
+    url = _AT1G01010_PROTEIN_URL.replace("type=protein", f"type={seq_type}")
+    httpx_mock.add_response(
+        url=_AT_LOOKUP.format("AT1G01010"), json=_gene("AT1G01010", "AT1G01010.1")
+    )
+    for bad in ("", None, ["M"]):
+        for _ in range(2):
+            httpx_mock.add_response(url=url, json=_protein(bad))
+    good = _REAL if seq_type == "protein" else "ATGGAGGATCAAGTTGGG"
+    httpx_mock.add_response(url=url, json=_protein(good))
+    async with httpx.AsyncClient() as client:
+        for bad in ("", None, ["M"]):
+            with pytest.raises(UpstreamUnavailableError, match=re.escape(f"seq is {bad!r}")):
+                await ensembl_plants.get_sequence(client, "AT1G01010", seq_type=seq_type)
+        # Positive control, same cache: a sequence is the answer.
+        result = await ensembl_plants.get_sequence(client, "AT1G01010", seq_type=seq_type)
+    assert (result["sequence"], result["length"]) == (good, len(good))
+    assert len(httpx_mock.get_requests(url=url)) == 7
 
 
 @pytest.mark.asyncio
@@ -703,6 +732,41 @@ async def test_live_get_sequence_multi_transcript_gene_protein() -> None:
         result = await ensembl_plants.get_sequence(client, "AT2G33860", seq_type="protein")
     assert result["molecule"] == "protein"
     assert result["sequence"].startswith("MGGLIDLNV")
+
+
+# One gene per organism, from the first record of its Ensembl Plants pep.all
+# FASTA (2026-09-29); rice's first record, a plastid gene, is swapped for a
+# nuclear one, and tomato is given without the ``gene-`` prefix it is filed under.
+_PROTEIN_PROBES: dict[str, str] = {
+    "arabidopsis_thaliana": "AT5G16970",
+    "oryza_sativa": "Os01g0100100",
+    "zea_mays": "Zm00001eb096110",
+    "triticum_aestivum": "TraesCS4A02G403700",
+    "solanum_lycopersicum": "Solyc04g011850.1",
+    "glycine_max": "GLYMA_01G141900",
+    "sorghum_bicolor": "SORBI_3K044417",
+    "hordeum_vulgare": "HORVU.MOREX.r3.7HG0737000",
+    "vitis_vinifera": "Vitis15g00095",
+    "populus_trichocarpa": "Potri.005G200100.v4.1",
+    "medicago_truncatula": "gene36912",
+    "brachypodium_distachyon": "BRADI_41430s00200v3",
+}
+
+
+def test_protein_probes_cover_every_organism() -> None:
+    assert set(_PROTEIN_PROBES) == set(organisms.ORGANISMS)
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_every_organisms_protein_holds_no_stop() -> None:
+    """Positive control for the stop-symbol refusal: a real protein of every
+    organism is still the answer."""
+    async with httpx.AsyncClient() as client:
+        for organism, gene in _PROTEIN_PROBES.items():
+            result = await ensembl_plants.get_sequence(client, gene, organism=organism)
+            assert result["length"] > 0, (organism, gene)
+            assert "*" not in result["sequence"], (organism, gene)
 
 
 @live_only

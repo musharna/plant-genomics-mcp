@@ -226,11 +226,14 @@ def _sequence_shape(raw: object) -> dict[str, Any]:
     body = _http.expect_object(raw)
     if "seq" not in body:
         raise _http.UnreadableBody(f"no seq in {str(body)[:120]}")
+    # An empty, null or non-string seq was relayed as a 0-length answer.
+    if not isinstance(body["seq"], str) or not body["seq"]:
+        raise _http.UnreadableBody(f"seq is {body['seq']!r}, not a sequence")
     return body
 
 
 def _protein_shape(raw: object) -> dict[str, Any]:
-    """A protein holds no stop symbol: 0 of 694,518 proteins in the current
+    """A protein holds no stop symbol: 0 of 694,618 proteins in the current
     Ensembl Plants pep.all FASTA of all 12 organisms have a ``*`` anywhere
     (2026-09-29). During an Ensembl incident that night, /sequence served
     AT1G01010 at 430 aa (its CDS is 430 codons with the stop; the protein
@@ -238,11 +241,11 @@ def _protein_shape(raw: object) -> dict[str, Any]:
     on as the answer. Checked on the type asked for, not on the body's own
     ``molecule``."""
     body = _sequence_shape(raw)
-    seq = body["seq"]
-    if isinstance(seq, str) and "*" in seq:
+    seq: str = body["seq"]
+    if "*" in seq:
         raise _http.UnreadableBody(
             f"protein {body.get('id')!r} has a stop symbol at residue "
-            f"{seq.index('*') + 1} of {len(seq)}: not a translation Ensembl serves"
+            f"{seq.index('*') + 1} of {len(seq)}; no Ensembl Plants protein holds one"
         )
     return body
 
