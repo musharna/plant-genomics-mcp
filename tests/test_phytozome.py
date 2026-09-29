@@ -208,7 +208,9 @@ async def test_lookup_unsupported_organism_raises_not_supported(
 # URL as upstream-side. So on an outage the live tests ask BioMart directly, at
 # _BIOMART_URL and with this query, both written here rather than imported (an
 # imported constant would share the regression it is meant to rule out). The
-# query is the tool's, for AT1G01010 in Arabidopsis (organism 167).
+# query is the tool's, for AT1G01010 in Arabidopsis (organism 167). This rules
+# out a URL changed in src alone (the mocked tests, which serve _BIOMART_URL,
+# fail on that too); a move that both follow to a wrong place reads as down.
 _PROBE_QUERY = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Query>
 <Query virtualSchemaName="zome_mart" header="1" uniqueRows="0" count="" datasetConfigVersion="0.7">
@@ -250,18 +252,23 @@ async def _lookup_or_skip_outage(
 ) -> dict[str, Any]:
     """The tool's answer; a skip when it reports BioMart down and BioMart is
     down when asked directly; a failure, classed a regression, when BioMart
-    answers directly."""
+    answers directly and the tool, asked again, still reports it down."""
     try:
         return await phytozome.lookup_locus(client, locus, organism=organism)
-    except UpstreamUnavailableError as exc:
+    except UpstreamUnavailableError:
         why = probe()
-        if why is None:
-            # No upstream tag in this message: the nightly classes by it.
-            raise AssertionError(
-                f"the tool reports Phytozome BioMart down for {locus}, but BioMart "
-                f"answers at {_BIOMART_URL} directly: the tool's own call is broken"
-            ) from exc
+    if why is not None:
         pytest.skip(f"Phytozome BioMart down when probed directly ({why})")
+    try:
+        # BioMart answers: ask once more, so a 503 burst or a timeout that
+        # ended before the probe is not read as a regression.
+        return await phytozome.lookup_locus(client, locus, organism=organism)
+    except UpstreamUnavailableError as exc:
+        # No upstream tag in this message: the nightly classes by it.
+        raise AssertionError(
+            f"the tool reports Phytozome BioMart down for {locus}, but BioMart "
+            f"answers at {_BIOMART_URL} directly: the tool's own call is broken"
+        ) from exc
 
 
 # A page some proxy or maintenance mode could serve on a 200 in BioMart's place.
@@ -299,7 +306,7 @@ async def test_a_wrong_url_is_a_regression_not_an_outage(
     monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
     moved = "https://phytozome-next.jgi.doe.gov/biomart/martservice-moved"
     monkeypatch.setattr(phytozome, "BASE_URL", moved)
-    for _ in range(6):
+    for _ in range(9):  # 3 attempts per call: first call, the call after the probe, the skip
         httpx_mock.add_response(url=moved, method="POST", status_code=404, text=_APACHE_404)
     async with httpx.AsyncClient() as client:
         try:
@@ -310,10 +317,12 @@ async def test_a_wrong_url_is_a_regression_not_an_outage(
         # Positive control, same 404s: with BioMart down directly too, a skip.
         with pytest.raises(pytest.skip.Exception, match=r"down when probed directly \(HTTP 404\)"):
             await _lookup_or_skip_outage(client, "AT1G01010", probe=lambda: "HTTP 404")
-        # And an answer is passed through.
+        # And an outage that ends before the probe is an answer, not a regression.
         monkeypatch.setattr(phytozome, "BASE_URL", _BIOMART_URL)
+        for _ in range(3):
+            httpx_mock.add_response(url=_BIOMART_URL, method="POST", status_code=503)
         httpx_mock.add_response(url=_BIOMART_URL, method="POST", text=_AT1G01010_TSV)
-        row = await _lookup_or_skip_outage(client, "AT1G01010", probe=lambda: "unused")
+        row = await _lookup_or_skip_outage(client, "AT1G01010", probe=lambda: None)
     assert row["gene_name"] == "AT1G01010"
     # The nightly's classifier reads the failure message pytest reports.
     assert _classify(f"AssertionError: {broken.value}", monkeypatch) == "regression"
