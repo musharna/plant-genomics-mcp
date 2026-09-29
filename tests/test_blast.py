@@ -13,12 +13,14 @@ from __future__ import annotations
 
 import asyncio
 import os
+from urllib.parse import parse_qs
 
 import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import blast, progress
+from plant_genomics_mcp.errors import PlantGenomicsError
 
 # Capture the unpatched real sleep BEFORE the autouse _no_sleep fixture
 # can replace ``asyncio.sleep`` — the semaphore concurrency test needs
@@ -476,8 +478,132 @@ async def test_live_blastp_small_query_returns_hits() -> None:
             max_wait=720.0,
         )
     assert result["status"] == "READY"
-    assert result["hitCount"] >= 1
+    # HITLIST_SIZE reached NCBI: it asked for 5 hits and sent no more.
+    assert 1 <= result["hitCount"] <= 5
     # Top hit should be a NAC-family protein.
     top = result["hits"][0]
     assert top["accession"]
     assert top["description"]
+
+
+# ---------- the Put form, read back (#96 mutation survivors) ----------
+# NCBI's URL API takes the search as form fields on a POST (CMD=Put, PROGRAM,
+# DATABASE, QUERY, HITLIST_SIZE, EXPECT, FORMAT_TYPE, MEGABLAST=on for
+# megablast). No test read the form, so a renamed or re-cased field survived.
+
+_EMAIL = "tests@example.org"
+
+
+def _form(request: httpx.Request) -> dict[str, str]:
+    parsed = parse_qs(request.content.decode(), keep_blank_values=True)
+    assert all(len(v) == 1 for v in parsed.values()), parsed
+    return {k: v[0] for k, v in parsed.items()}
+
+
+def _put_form(**search: str) -> dict[str, str]:
+    return {
+        "CMD": "Put",
+        "FORMAT_TYPE": "Text",
+        **search,
+        "tool": blast.TOOL_ID,
+        "email": _EMAIL,
+    }
+
+
+@pytest.mark.asyncio
+async def test_the_put_form_carries_the_search_as_asked(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_NCBI_EMAIL", _EMAIL)
+    httpx_mock.add_response(
+        method="POST", url=blast.BASE_URL, text=_put_response("RID1", 7), is_reusable=True
+    )
+    searches = [
+        ("blastn", True, {"MEGABLAST": "on"}),
+        # MEGABLAST only for blastn, and only when asked.
+        ("blastn", False, {}),
+        ("blastp", True, {}),
+    ]
+    async with httpx.AsyncClient() as client:
+        for program, megablast, extra in searches:
+            rid_rtoe = await blast.submit(
+                client,
+                "ACGTACGT",
+                program,
+                "core_nt",
+                hitlist_size=5,
+                expect=0.001,
+                megablast=megablast,
+            )
+            assert rid_rtoe == ("RID1", 7)
+            request = httpx_mock.get_requests()[-1]
+            assert _form(request) == _put_form(
+                PROGRAM=program,
+                DATABASE="core_nt",
+                QUERY="ACGTACGT",
+                HITLIST_SIZE="5",
+                EXPECT="0.001",
+                **extra,
+            ), (program, megablast)
+            assert request.method == "POST"
+            assert request.extensions["timeout"]["read"] == blast.DEFAULT_TIMEOUT
+
+
+@pytest.mark.asyncio
+async def test_blast_sequence_defaults_reach_the_put_form(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("PLANT_GENOMICS_MCP_NCBI_EMAIL", _EMAIL)
+    httpx_mock.add_response(method="POST", url=blast.BASE_URL, text=_put_response("RID2", 0))
+    httpx_mock.add_response(method="GET", text=_searchinfo_response("READY"))
+    httpx_mock.add_response(method="GET", text=RESULT_REPORT)
+    async with httpx.AsyncClient() as client:
+        result = await blast.blast_sequence(client, "MNSAKQ", max_wait=300.0)
+    assert result["rid"] == "RID2"
+    (put,) = httpx_mock.get_requests(method="POST")
+    assert _form(put) == _put_form(
+        PROGRAM="blastp",
+        DATABASE="swissprot",
+        QUERY="MNSAKQ",
+        HITLIST_SIZE="10",
+        EXPECT="10.0",
+    )
+
+
+@pytest.mark.asyncio
+async def test_a_refused_put_is_named_and_the_submission_is_reported(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    httpx_mock.add_response(method="POST", url=blast.BASE_URL, status_code=400, text="bad")
+    httpx_mock.add_response(method="POST", url=blast.BASE_URL, text=_put_response("RID3", 12))
+    sent: list[str | None] = []
+
+    async def _send(_p: float, _t: float | None, message: str | None) -> None:
+        sent.append(message)
+
+    token = progress.set_reporter(progress.Reporter(_send))
+    try:
+        async with httpx.AsyncClient() as client:
+            with pytest.raises(PlantGenomicsError, match=r"^BLAST Put → HTTP 400"):
+                await blast.submit(
+                    client,
+                    "MNSAKQ",
+                    "blastp",
+                    "swissprot",
+                    hitlist_size=10,
+                    expect=10.0,
+                    megablast=False,
+                )
+            # Positive control: the next Put is read and reported.
+            assert await blast.submit(
+                client,
+                "MNSAKQ",
+                "blastp",
+                "swissprot",
+                hitlist_size=10,
+                expect=10.0,
+                megablast=False,
+            ) == ("RID3", 12)
+    finally:
+        progress.reset_reporter(token)
+    assert sent[-1] == "BLAST submitted — RID=RID3, RTOE=12s (program=blastp, db=swissprot)"
