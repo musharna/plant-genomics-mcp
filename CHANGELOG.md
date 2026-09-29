@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- **A protein with a stop symbol is not an answer.** During an Ensembl
+  incident on 2026-09-29, `get_sequence` passed on what `/sequence` served:
+  AT1G01010 at 430 aa (the protein is 429; its CDS is 430 codons with the
+  stop) and, for another gene, a wrong-frame protein strewn with `*`. No
+  Ensembl Plants protein holds a `*`: 0 of 694,618 in the current protein
+  FASTA of all 12 organisms. A requested protein with one is now asked for
+  once more, never stored, and raised as `UpstreamUnavailableError`. A
+  wrong-frame protein is as long as the real one, so its length would not
+  have told it apart; a wrong residue without a stop is still not caught.
+  An empty, null or non-string `seq`, of any type, is refused the same way
+  rather than relayed as a 0-length answer.
+
 - **A Phytozome 404 is an outage, not a missing gene.** BioMart answers a
   locus it lacks with 200 and its header line alone, but a 404 was mapped to
   `NotFoundError`, so while every BioMart path answered Apache's own 404 page

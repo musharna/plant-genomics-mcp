@@ -16,7 +16,8 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from plant_genomics_mcp import _http, ensembl_plants  # noqa: F401
+from plant_genomics_mcp import _http, ensembl_plants, organisms  # noqa: F401
+from plant_genomics_mcp.errors import UpstreamUnavailableError
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
@@ -355,6 +356,73 @@ async def test_get_sequence_default_type_is_protein(httpx_mock: HTTPXMock) -> No
     assert result["ensembl_id"] == "AT1G01010.1"
 
 
+_AT1G01010_PROTEIN_URL = (
+    "https://rest.ensembl.org/sequence/id/AT1G01010.1?species=arabidopsis_thaliana&type=protein"
+)
+# The first 60 residues of AT1G01010.1's live CDS (1290 nt, 2026-09-29)
+# translated one frame off; in full that is 429 aa, as long as the real protein,
+# with 14 stops, like the wrong-frame protein /sequence served for another gene
+# during that night's Ensembl incident.
+_WRONG_FRAME = "WRIKLGLGSVRTTRSSLVTISVTKSKETLAATLK*PSARSTSVATILGTCASSQSTNREM"
+# The real protein's opening, and the same with a stop on the end: its CDS is
+# 430 codons with the stop, and /sequence answered 430 aa that night.
+_REAL = "MEDQVGFGFRPNDEELVGHYL"
+
+
+def _protein(seq: object) -> dict[str, object]:
+    return {"id": "AT1G01010.1", "query": "AT1G01010.1", "molecule": "protein", "seq": seq}
+
+
+@pytest.mark.asyncio
+async def test_a_protein_with_a_stop_symbol_is_not_an_answer(httpx_mock: HTTPXMock) -> None:
+    """No Ensembl Plants protein holds a ``*`` (0 of 694,618, all 12
+    organisms); get_sequence passed a wrong-frame one on as the answer."""
+    httpx_mock.add_response(
+        url=_AT_LOOKUP.format("AT1G01010"), json=_gene("AT1G01010", "AT1G01010.1")
+    )
+    # The second pair names no molecule: the check follows the type asked for.
+    unnamed = {"id": "AT1G01010.1", "seq": _REAL + "*"}
+    for bad in (_protein(_WRONG_FRAME), _protein(_WRONG_FRAME), unnamed, unnamed):
+        httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, json=bad)
+    httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, json=_protein(_REAL))
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError, match=r"stop symbol at residue 35 of 60"):
+            await ensembl_plants.get_sequence(client, "AT1G01010")
+        with pytest.raises(UpstreamUnavailableError, match=r"stop symbol at residue 22 of 22"):
+            await ensembl_plants.get_sequence(client, "AT1G01010")
+        # Positive control, same cache: nothing bad was stored, and a protein
+        # without a stop is the answer.
+        result = await ensembl_plants.get_sequence(client, "AT1G01010")
+    assert (result["sequence"], result["length"]) == (_REAL, len(_REAL))
+    assert len(httpx_mock.get_requests(url=_AT1G01010_PROTEIN_URL)) == 5
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("seq_type", ["protein", "cds"])
+async def test_an_empty_or_non_string_seq_is_not_an_answer(
+    httpx_mock: HTTPXMock, seq_type: str
+) -> None:
+    """``{"seq": ""}`` was relayed as a 0-length answer, and a null or a list
+    passed the shape as well."""
+    url = _AT1G01010_PROTEIN_URL.replace("type=protein", f"type={seq_type}")
+    httpx_mock.add_response(
+        url=_AT_LOOKUP.format("AT1G01010"), json=_gene("AT1G01010", "AT1G01010.1")
+    )
+    for bad in ("", None, ["M"]):
+        for _ in range(2):
+            httpx_mock.add_response(url=url, json=_protein(bad))
+    good = _REAL if seq_type == "protein" else "ATGGAGGATCAAGTTGGG"
+    httpx_mock.add_response(url=url, json=_protein(good))
+    async with httpx.AsyncClient() as client:
+        for bad in ("", None, ["M"]):
+            with pytest.raises(UpstreamUnavailableError, match=re.escape(f"seq is {bad!r}")):
+                await ensembl_plants.get_sequence(client, "AT1G01010", seq_type=seq_type)
+        # Positive control, same cache: a sequence is the answer.
+        result = await ensembl_plants.get_sequence(client, "AT1G01010", seq_type=seq_type)
+    assert (result["sequence"], result["length"]) == (good, len(good))
+    assert len(httpx_mock.get_requests(url=url)) == 7
+
+
 @pytest.mark.asyncio
 @pytest.mark.httpx_mock(assert_all_responses_were_requested=False)
 @pytest.mark.parametrize("seq_type", ["protein", "cds", "cdna"])
@@ -664,6 +732,138 @@ async def test_live_get_sequence_multi_transcript_gene_protein() -> None:
         result = await ensembl_plants.get_sequence(client, "AT2G33860", seq_type="protein")
     assert result["molecule"] == "protein"
     assert result["sequence"].startswith("MGGLIDLNV")
+
+
+# One gene per organism, from the first record of its Ensembl Plants release 63
+# pep.all FASTA (2026-09-29); rice's first record, a plastid gene, and
+# sorghum's, on an unplaced scaffold, are swapped for chromosome genes, and
+# tomato is given without the ``gene-`` prefix it is filed under.
+_PROTEIN_PROBES: dict[str, str] = {
+    "arabidopsis_thaliana": "AT5G16970",
+    "oryza_sativa": "Os01g0100100",
+    "zea_mays": "Zm00001eb096110",
+    "triticum_aestivum": "TraesCS4A02G403700",
+    "solanum_lycopersicum": "Solyc04g011850.1",
+    "glycine_max": "GLYMA_01G141900",
+    "sorghum_bicolor": "SORBI_3001G000100",
+    "hordeum_vulgare": "HORVU.MOREX.r3.7HG0737000",
+    "vitis_vinifera": "Vitis15g00095",
+    "populus_trichocarpa": "Potri.005G200100.v4.1",
+    "medicago_truncatula": "gene36912",
+    "brachypodium_distachyon": "BRADI_41430s00200v3",
+}
+
+
+def test_protein_probes_cover_every_organism() -> None:
+    assert set(_PROTEIN_PROBES) == set(organisms.ORGANISMS)
+
+
+# Reads a CDS as the protein it encodes, to tell a stop-symbol refusal that is
+# ours from one that is Ensembl's (see _protein_or_our_failure). The CDS comes
+# from the same service and transcript model as the protein, so a corruption
+# that shifts both alike reads as ours.
+_BASES = "TCAG"
+_AMINO = "FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG"
+# The standard genetic code, in TCAG order.
+_CODON = {
+    a + b + c: _AMINO[16 * i + 4 * j + k]
+    for i, a in enumerate(_BASES)
+    for j, b in enumerate(_BASES)
+    for k, c in enumerate(_BASES)
+}
+
+
+def _translate(cds: str) -> str:
+    return "".join(_CODON.get(cds[i : i + 3], "X") for i in range(0, len(cds) - 2, 3))
+
+
+async def _protein_or_our_failure(
+    client: httpx.AsyncClient, gene: str, organism: str
+) -> dict[str, object]:
+    """The protein, or an outage as it came. A stop-symbol refusal is ours
+    only if the protein really holds a stop: then its CDS, read in frame 0,
+    encodes one before its end, and the failure carries no upstream tag, so
+    the nightly classes it a regression. A CDS without one means Ensembl
+    served a protein its own CDS does not encode (the 2026-09-29 incident):
+    the outage is raised as it came."""
+    try:
+        return await ensembl_plants.get_sequence(client, gene, organism=organism)
+    except UpstreamUnavailableError as exc:
+        if ensembl_plants.STOP_SYMBOL_REFUSAL not in str(exc):
+            raise
+        cds = await ensembl_plants.get_sequence(client, gene, organism=organism, seq_type="cds")
+        if "*" not in _translate(cds["sequence"]).rstrip("*"):
+            raise exc
+        raise AssertionError(
+            f"{organism} {gene}: its CDS encodes a stop, and its protein was refused for one"
+        ) from exc
+
+
+def test_the_translation_reads_the_live_cds() -> None:
+    """The codon table against AT1G01010.1's live protein (2026-09-29): its
+    CDS in frame 0 is that protein plus the stop."""
+    assert _translate("ATGGAGGATCAAGTTGGGTGA") == "MEDQVG*"
+    assert _translate("ATGTAAGGG") == "M*G"
+
+
+@pytest.mark.asyncio
+async def test_a_refusal_is_ours_only_when_the_cds_encodes_the_stop(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async def _no_sleep(_seconds: float) -> None:
+        pass
+
+    monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
+    cds_url = _AT1G01010_PROTEIN_URL.replace("type=protein", "type=cds")
+
+    def lookup() -> None:
+        httpx_mock.add_response(
+            url=_AT_LOOKUP.format("AT1G01010"), json=_gene("AT1G01010", "AT1G01010.1")
+        )
+
+    args = ("AT1G01010", "arabidopsis_thaliana")
+    async with httpx.AsyncClient() as client:
+        # Its CDS encodes a stop inside: our rule refused a real protein.
+        lookup()
+        for _ in range(2):
+            httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, json=_protein(_REAL + "*"))
+        httpx_mock.add_response(url=cds_url, json=_protein("ATGTAAGGG"))
+        with pytest.raises(AssertionError, match="its CDS encodes a stop") as ours:
+            await _protein_or_our_failure(client, *args)
+        assert "[UpstreamUnavailableError]" not in str(ours.value)
+        # Its CDS encodes none: Ensembl served a protein it does not encode.
+        ensembl_plants._CACHE.clear()
+        lookup()
+        for _ in range(2):
+            httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, json=_protein(_REAL + "*"))
+        httpx_mock.add_response(url=cds_url, json=_protein("ATGGAGGATCAAGTTGGGTGA"))
+        with pytest.raises(UpstreamUnavailableError, match=ensembl_plants.STOP_SYMBOL_REFUSAL):
+            await _protein_or_our_failure(client, *args)
+        # Positive controls: an outage stays one, and an answer is passed on.
+        for _ in range(3):
+            httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, status_code=500)
+        with pytest.raises(UpstreamUnavailableError, match="HTTP 500"):
+            await _protein_or_our_failure(client, *args)
+        httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, json=_protein(_REAL))
+        result = await _protein_or_our_failure(client, *args)
+    assert result["sequence"] == _REAL
+
+
+@live_only
+@pytest.mark.asyncio
+@pytest.mark.parametrize(("organism", "gene"), list(_PROTEIN_PROBES.items()))
+async def test_live_every_organisms_protein_holds_no_stop(organism: str, gene: str) -> None:
+    """Positive control for the stop-symbol refusal: a real protein of every
+    organism is still the answer, and its CDS read in frame 0 is that protein,
+    so the reading _protein_or_our_failure relies on holds on real data. One
+    case per organism, so an Ensembl 500 on one is that organism's outage, not
+    all twelve's."""
+    async with httpx.AsyncClient() as client:
+        result = await _protein_or_our_failure(client, gene, organism)
+        cds = await ensembl_plants.get_sequence(client, gene, organism=organism, seq_type="cds")
+    assert isinstance(result["sequence"], str) and result["sequence"]
+    assert "*" not in result["sequence"]
+    assert _translate(cds["sequence"]).rstrip("*") == result["sequence"]
 
 
 @live_only
