@@ -758,8 +758,10 @@ def test_protein_probes_cover_every_organism() -> None:
     assert set(_PROTEIN_PROBES) == set(organisms.ORGANISMS)
 
 
-# What the sequence shapes say when they refuse a body; a refusal of a real
-# protein is ours, not an outage, so it must not reach the nightly as one.
+# Reads a CDS as the protein it encodes, to tell a stop-symbol refusal that is
+# ours from one that is Ensembl's (see _protein_or_our_failure). The CDS comes
+# from the same service and transcript model as the protein, so a corruption
+# that shifts both alike reads as ours.
 _BASES = "TCAG"
 _AMINO = "FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG"
 # The standard genetic code, in TCAG order.
@@ -852,12 +854,16 @@ async def test_a_refusal_is_ours_only_when_the_cds_encodes_the_stop(
 @pytest.mark.parametrize(("organism", "gene"), list(_PROTEIN_PROBES.items()))
 async def test_live_every_organisms_protein_holds_no_stop(organism: str, gene: str) -> None:
     """Positive control for the stop-symbol refusal: a real protein of every
-    organism is still the answer. One case per organism, so an Ensembl 500 on
-    one is that organism's outage, not all twelve's."""
+    organism is still the answer, and its CDS read in frame 0 is that protein,
+    so the reading _protein_or_our_failure relies on holds on real data. One
+    case per organism, so an Ensembl 500 on one is that organism's outage, not
+    all twelve's."""
     async with httpx.AsyncClient() as client:
         result = await _protein_or_our_failure(client, gene, organism)
+        cds = await ensembl_plants.get_sequence(client, gene, organism=organism, seq_type="cds")
     assert isinstance(result["sequence"], str) and result["sequence"]
     assert "*" not in result["sequence"]
+    assert _translate(cds["sequence"]).rstrip("*") == result["sequence"]
 
 
 @live_only
