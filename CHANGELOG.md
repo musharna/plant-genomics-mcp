@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **A tomato gene id in Ensembl's own spelling is found.** Ensembl names
+  SL4.0 tomato genes `gene-Solyc…`, and `ensembl_plants_lookup_locus`
+  returns that as `id`, but every Ensembl tool prefixed `gene-` again, so
+  that id fed back came out a false `NotFoundError` from lookup, xrefs,
+  sequence, paralogs and the batch lookup. An id already carrying the
+  prefix, in any case, is now sent once prefixed; the bare `Solyc…` locus
+  works as before.
+
 - **A protein with a stop symbol is not an answer.** During an Ensembl
   incident on 2026-09-29, `get_sequence` passed on what `/sequence` served:
   AT1G01010 at 430 aa (the protein is 429; its CDS is 430 codons with the

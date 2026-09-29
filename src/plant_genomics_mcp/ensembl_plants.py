@@ -130,9 +130,19 @@ def wire_id(locus: str, organism: str | int) -> str:
     user locus goes through this, the batch POST included: the batch used to
     send the bare locus, so every tomato batch lookup was NotFound while the
     single lookup answered (audit 2026-09-22 H2).
+
+    A locus already in Ensembl's spelling (``gene-Solyc04g011850.1``, the
+    ``id`` this module's own lookup returns) is the same gene: it was prefixed
+    again, and ``/lookup/id/gene-gene-...`` answered 400, a false NotFound.
+    Ensembl matches the prefix in any case (``GENE-`` resolves, live
+    2026-09-29), so it is compared caseless and sent in the registry's case,
+    one wire id and one cache entry per gene.
     """
     locus = validators.assert_valid_locus(locus, backend="Ensembl Plants")
-    return organisms.ensembl_id_prefix_for(organism) + locus
+    prefix = organisms.ensembl_id_prefix_for(organism)
+    if locus[: len(prefix)].casefold() == prefix.casefold():
+        locus = locus[len(prefix) :]
+    return prefix + locus
 
 
 async def lookup_locus(
