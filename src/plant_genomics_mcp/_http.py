@@ -491,7 +491,13 @@ async def request_with_retry(
 
 
 def json_body(resp: httpx.Response, service: str) -> object:
-    """``resp`` parsed as JSON; a body that is not JSON is a typed error.
+    """``resp`` parsed as JSON; a body that is not JSON is an upstream fault.
+
+    Every caller asked a JSON API, so a 200 it cannot parse is the service
+    failing to deliver, not the caller's mistake: :class:`UpstreamUnavailableError`
+    (a :class:`PlantGenomicsError`). PANTHER sent non-JSON 200s in two live
+    runs (2026-09-27, and -28 with an empty body on every call); as a plain
+    ``PlantGenomicsError`` that read as a regression, not an outage.
 
     Typed ``object``, not ``Any``: a 200 can carry any JSON value, and a
     caller that reads it as a dict without checking leaks ``AttributeError``
@@ -501,7 +507,7 @@ def json_body(resp: httpx.Response, service: str) -> object:
     try:
         return resp.json()
     except ValueError as e:
-        raise PlantGenomicsError(f"{service} returned non-JSON: {resp.text[:200]}") from e
+        raise UpstreamUnavailableError(f"{service} returned non-JSON: {resp.text[:200]}") from e
 
 
 class UnreadableBody(PlantGenomicsError):
@@ -575,6 +581,27 @@ def object_rows(value: object) -> list[dict[str, Any]]:
         if not isinstance(row, dict):
             raise UnreadableBody(f"row {i} is {type(row).__name__}, not an object")
     return value
+
+
+def expect_page(count: str, rows: str) -> Callable[[object], dict[str, Any]]:
+    """A shape: a page stating an integer ``count`` and a list of objects under ``rows``.
+
+    For a paged upstream (AraGWAS, InterPro). Checking the count alone let a
+    page whose rows were missing read as zero rows, and a row that was not an
+    object was skipped by the reader, so the answer held fewer rows than the
+    upstream sent with nothing to say so (#96). Every live row is an object.
+    """
+    has_count = expect_count(count)
+
+    def shape(value: object) -> dict[str, Any]:
+        body = has_count(value)
+        try:
+            object_rows(body.get(rows))
+        except UnreadableBody as e:
+            raise UnreadableBody(f"{rows!r}: {e.args[0]}") from None
+        return body
+
+    return shape
 
 
 _T = TypeVar("_T")

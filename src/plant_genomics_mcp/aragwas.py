@@ -63,9 +63,9 @@ async def _get(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
         headers={"Accept": "application/json"},
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
-        # The count is checked before the store: read afterwards, a page
-        # without one was stored first and failed the call for the whole TTL.
-        shape=_http.expect_count("count"),
+        # Checked before the store: read afterwards, a page without its count
+        # was stored first and failed the call for the whole TTL.
+        shape=_http.expect_page("count", "results"),
     )
 
 
@@ -178,9 +178,7 @@ async def lookup_locus(
     while url and pages < MAX_PAGES and len(associations) < cap:
         page = await _get(client, url)
         total = _http.stated_count(page, "count", service="AraGWAS associations")
-        for assoc in page.get("results") or []:
-            if isinstance(assoc, dict):
-                associations.append(_project(assoc, locus))
+        associations.extend(_project(assoc, locus) for assoc in page["results"])
         links = page.get("links") or {}
         # Only follow a same-host next link — the URL comes from the upstream
         # body, so an off-host value would be an SSRF vector (audit L5).

@@ -18,6 +18,7 @@ from plant_genomics_mcp import onekg
 from plant_genomics_mcp.errors import (
     NotFoundError,
     OrganismNotSupported,
+    PlantGenomicsError,
     UpstreamUnavailableError,
 )
 
@@ -144,6 +145,43 @@ async def test_lookup_bad_agi_raises_before_network() -> None:
     async with httpx.AsyncClient() as client:
         with pytest.raises(NotFoundError, match="AGI"):
             await onekg.lookup_locus(client, "AT1G0106", "arabidopsis")
+
+
+# The coords hop's answer to an unknown transcript, verbatim (live, 2026-09-28).
+_UNKNOWN_400 = b'{"errors":[{"code":202,"message":"Gene identifier not found: AT1G99999.1"}]}'
+
+
+@pytest.mark.asyncio
+async def test_an_unknown_transcript_is_not_found(httpx_mock: HTTPXMock) -> None:
+    """1001 Genomes says "no such gene" on a 400, which read as a broken
+    request. Only its not-found message is a miss: another 400 stays an error.
+    Positive control, same test: a known gene is answered."""
+    unknown = f"{onekg.BASE_URL}/api/v2/gi2coords/TAIR10/AT1G99999.1"
+    httpx_mock.add_response(url=unknown, status_code=400, content=_UNKNOWN_400)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError) as miss:
+            await onekg.lookup_locus(client, "AT1G99999", "arabidopsis")
+    assert str(miss.value) == (
+        f"[NotFoundError] 1001 Genomes → HTTP 400 (not found): {_UNKNOWN_400.decode()}"
+    )
+    other = b'{"errors":[{"code":100,"message":"Bad request"}]}'
+    httpx_mock.add_response(url=_COORDS_URL, status_code=400, content=other)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(PlantGenomicsError) as broken:
+            await onekg.lookup_locus(client, "AT1G01060", "arabidopsis")
+    assert type(broken.value) is PlantGenomicsError
+    httpx_mock.add_response(url=_COORDS_URL, json=_COORDS)
+    httpx_mock.add_response(url=_EFF_URL, json={"data": [_ROW]})
+    async with httpx.AsyncClient() as client:
+        assert (await onekg.lookup_locus(client, "AT1G01060", "arabidopsis"))["found"] is True
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_an_unknown_transcript_is_not_found() -> None:
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="Gene identifier not found: AT1G99999.1"):
+            await onekg.lookup_locus(client, "AT1G99999", "arabidopsis")
 
 
 @live_only

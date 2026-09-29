@@ -69,7 +69,7 @@ async def _get(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
         no_content_ok=True,
         retry_404_pattern=FAULT_404_RE,
         parse=_stamped,
-        shape=_http.expect_count("count"),
+        shape=_http.expect_page("count", "results"),
     )
 
 
@@ -132,9 +132,7 @@ async def lookup_by_uniprot(client: httpx.AsyncClient, accession: str) -> dict[s
         if version is None:
             version = page.get("_upstream_version")
         total = _http.stated_count(page, "count", service="InterPro entry/protein")
-        for result in page.get("results") or []:
-            if isinstance(result, dict):
-                domains.append(_project(result))
+        domains.extend(_project(result) for result in page["results"])
         url = page.get("next")
         pages += 1
     by_type = Counter(d["type"] for d in domains if d["type"])

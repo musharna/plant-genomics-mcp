@@ -67,6 +67,12 @@ def _search_shape(raw: object) -> dict[str, Any]:
     result_list = raw.get("resultList")
     if not isinstance(result_list, dict) or not isinstance(result_list.get("result"), list):
         raise _http.UnreadableBody(f"no resultList.result list in {str(raw)[:120]}")
+    # A row that is not an object was skipped, so the page held fewer hits
+    # than it stated with nothing to say so (#96); every live row is one.
+    try:
+        _http.object_rows(result_list["result"])
+    except _http.UnreadableBody as e:
+        raise _http.UnreadableBody(f"resultList.result: {e.args[0]}") from None
     return raw
 
 
@@ -210,7 +216,7 @@ async def lookup_locus(
     # defaulted missing count is exactly how #141's false zeros were made.
     raw = await _get(client, "/search", params=params)
     results = raw["resultList"]["result"]
-    hits = [_normalize(r, include_abstract) for r in results if isinstance(r, dict)]
+    hits = [_normalize(r, include_abstract) for r in results]
     return {
         "locus": locus,
         "organism": record.canonical,

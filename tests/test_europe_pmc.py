@@ -15,6 +15,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import europe_pmc
+from plant_genomics_mcp.errors import UpstreamUnavailableError
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
@@ -397,3 +398,48 @@ def test_normalize_gives_one_type_per_kind_of_value() -> None:
         europe_pmc._normalize(_one_result(isOpenAccess="maybe"))
     with pytest.raises(PlantGenomicsError, match="pubYear.*'20x4'"):
         europe_pmc._normalize(_one_result(pubYear="20x4"))
+
+
+# The fields _normalize reads from one AT1G01060 hit, values verbatim (live,
+# resultType=core, 2026-09-28); the rest of the 4.6 kB record is left out.
+_LIVE_HIT = {
+    "id": "38318967",
+    "source": "MED",
+    "pmid": "38318967",
+    "pmcid": "PMC11062464",
+    "doi": "10.1093/plcell/koae037",
+    "title": "During long days, HY5a keeps dormancy away.",
+    "authorString": "Flynn N.",
+    "journalInfo": {"journal": {"title": "The Plant cell"}},
+    "pubYear": "2024",
+    "firstPublicationDate": "2024-05-01",
+    "citedByCount": 1,
+    "isOpenAccess": "Y",
+    "hasPDF": "Y",
+}
+
+
+@pytest.mark.asyncio
+async def test_a_hit_that_is_not_an_object_is_refused_not_skipped(httpx_mock: HTTPXMock) -> None:
+    """The reader skipped such a row, so the page held fewer hits than it
+    stated with nothing to say so (#96). Refused after one more ask and never
+    stored; positive control, same cache: the live hit is then answered."""
+    bad = {"hitCount": 2, "resultList": {"result": [_LIVE_HIT, None]}}
+    httpx_mock.add_response(url=_AT1G01010_URL, json=bad)
+    httpx_mock.add_response(url=_AT1G01010_URL, json=bad)
+    httpx_mock.add_response(
+        url=_AT1G01010_URL, json={"hitCount": 1, "resultList": {"result": [_LIVE_HIT]}}
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError) as err:
+            await europe_pmc.lookup_locus(client, "AT1G01010")
+        assert str(err.value) == (
+            "[UpstreamUnavailableError] Europe PMC /search answered 200 twice without a "
+            "readable result (resultList.result: row 1 is NoneType, not an object); "
+            "this is not a count of zero"
+        )
+        r = await europe_pmc.lookup_locus(client, "AT1G01010")
+    assert [(h["pmid"], h["title"], h["journalTitle"], h["pubYear"]) for h in r["hits"]] == [
+        ("38318967", "During long days, HY5a keeps dormancy away.", "The Plant cell", 2024)
+    ]
+    assert len(httpx_mock.get_requests()) == 3

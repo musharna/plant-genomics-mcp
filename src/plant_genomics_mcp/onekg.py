@@ -19,6 +19,7 @@ Two hops:
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from typing import Any
 
@@ -58,6 +59,13 @@ _EFFECT_COLUMNS = (
 
 _CACHE = cache.TTLCache()
 
+# An unknown transcript, on the coords hop (live, 2026-09-28):
+#   400 {"errors":[{"code":202,"message":"Gene identifier not found: AT1G99999.1"}]}
+# read as a plain PlantGenomicsError, "the request is broken". The effects
+# hop answers the same transcript with a bare HTML 500, so coords is asked
+# first and its answer decides.
+_NOT_FOUND_400_RE = re.compile(r'"message"\s*:\s*"Gene identifier not found')
+
 
 async def _get(
     client: httpx.AsyncClient, url: str, shape: Callable[[object], dict[str, Any]]
@@ -72,6 +80,7 @@ async def _get(
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
         shape=shape,
+        not_found_400_pattern=_NOT_FOUND_400_RE,
     )
 
 

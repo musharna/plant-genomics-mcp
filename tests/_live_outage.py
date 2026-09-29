@@ -58,9 +58,10 @@ class ProbeBroken(AssertionError):
 
 
 def probe(url: str, timeout_s: float = 30.0) -> str | None:
-    """None when the backend answers 200; why it is down on a 5xx, a timeout,
-    no connection, or a body naming the service's own error at any status.
-    Anything else raises `ProbeBroken`."""
+    """None when the backend answers 200 with JSON; why it is down on a 5xx,
+    a timeout, no connection, a 200 whose body is not JSON (PANTHER's empty
+    200s, 2026-09-28, read as up), or a body naming the service's own
+    error at any status. Anything else raises `ProbeBroken`."""
     try:
         resp = httpx.get(url, timeout=timeout_s)
     except httpx.TransportError as e:
@@ -68,6 +69,10 @@ def probe(url: str, timeout_s: float = 30.0) -> str | None:
     if ERROR_BODY.search(resp.text):
         return f"HTTP {resp.status_code} {' '.join(resp.text.split())[:100]}"
     if resp.status_code == 200:
+        try:
+            resp.json()
+        except ValueError:
+            return f"HTTP 200 non-JSON {' '.join(resp.text.split())[:100]!r}"
         return None
     if resp.status_code >= 500:
         return f"HTTP {resp.status_code}"

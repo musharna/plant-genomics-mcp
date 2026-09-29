@@ -14,6 +14,7 @@ from plant_genomics_mcp.errors import (
     OrganismNotFound,
     OrganismNotSupported,
     PlantGenomicsError,
+    UpstreamUnavailableError,
 )
 
 
@@ -119,14 +120,14 @@ async def test_gene_summary_rejects_trailing_newline() -> None:
 
 
 @pytest.mark.asyncio
-async def test_gene_summary_http_400_propagates(httpx_mock: HTTPXMock) -> None:
-    # Non-Arabidopsis loci 400 with wasSuccessful=false (live shape 2026-05-23
-    # for LOC_Os01g01080). _get raises PlantGenomicsError on 400 before we
-    # even see the envelope; asyncio.gather surfaces the thalemine error.
+async def test_gene_summary_http_400_envelope_is_not_found(httpx_mock: HTTPXMock) -> None:
+    # A non-Arabidopsis locus: thalemine answers 400 with BAR's failure
+    # envelope (verbatim live, 2026-09-28). It said "no such gene" on a 400,
+    # and read as a broken request while the same envelope on a 200 was a miss.
     httpx_mock.add_response(
         url="https://bar.utoronto.ca/api/thalemine/gene_information/LOC_Os01g01080",
         status_code=400,
-        json={"wasSuccessful": False, "error": "Invalid gene id"},
+        content=b'{"wasSuccessful": false, "error": "Invalid gene id"}',
     )
     httpx_mock.add_response(
         url="https://bar.utoronto.ca/api/gaia/aliases/LOC_Os01g01080",
@@ -143,8 +144,12 @@ async def test_gene_summary_http_400_propagates(httpx_mock: HTTPXMock) -> None:
         },
     )
     async with httpx.AsyncClient() as client:
-        with pytest.raises(PlantGenomicsError, match="HTTP 400"):
+        with pytest.raises(NotFoundError) as err:
             await bar.gene_summary(client, "LOC_Os01g01080")
+    assert str(err.value) == (
+        "[NotFoundError] BAR /thalemine/gene_information/LOC_Os01g01080 → HTTP 400 (not found): "
+        '{"wasSuccessful": false, "error": "Invalid gene id"}'
+    )
 
 
 @pytest.mark.asyncio
@@ -327,8 +332,7 @@ async def test_live_bar_efp_expression_at1g01010() -> None:
 
 # Live shape captured 2026-05-23 against /interactions/get_paper_by_agi/.
 # Arabidopsis AIV returns curated GRN paper refs. Failures come back at HTTP
-# 400 (not 200 wasSuccessful=false) — so the unknown/invalid paths exercise
-# the underlying _get error surface, not a body-level branch.
+# 400 with the wasSuccessful=false envelope (see _AIV_MISSES).
 _AIV_ARABIDOPSIS_OK = {
     "wasSuccessful": True,
     "data": [
@@ -461,47 +465,85 @@ async def test_aiv_interactions_invalid_locus_format() -> None:
             await bar.aiv_interactions(client, "AT1G01010<script>")
 
 
+# Verbatim live answers to an unknown or wrong-format locus (2026-09-28):
+# BAR's failure envelope on a 400. Each was a plain PlantGenomicsError, "the
+# request is broken", where the same envelope on a 200 was a NotFoundError.
+_AIV_MISSES = {
+    "arabidopsis unknown": (
+        "/interactions/get_paper_by_agi/AT1G99999",
+        "AT1G99999",
+        "arabidopsis_thaliana",
+        b'{"wasSuccessful": false, "error": "Invalid AGI"}',
+    ),
+    "rice unknown": (
+        "/interactions/rice/LOC_Os01g99999",
+        "LOC_Os01g99999",
+        "oryza_sativa",
+        b'{"wasSuccessful": false, "error": "There are no data found for the given gene"}',
+    ),
+    # Rice takes MSU LOC_Os* ids only; RAP-DB is refused the same way.
+    "rice RAP-DB format": (
+        "/interactions/rice/Os01g0100100",
+        "Os01g0100100",
+        "oryza_sativa",
+        b'{"wasSuccessful": false, "error": "Invalid species or gene ID"}',
+    ),
+}
+
+
 @pytest.mark.asyncio
-async def test_aiv_interactions_arabidopsis_unknown_400(httpx_mock: HTTPXMock) -> None:
-    # BAR returns HTTP 400 (not 200 wasSuccessful=false) for unknown AGI.
-    # _get propagates this as PlantGenomicsError with the body included.
-    httpx_mock.add_response(
-        url="https://bar.utoronto.ca/api/interactions/get_paper_by_agi/AT1G99999",
-        status_code=400,
-        json={"wasSuccessful": False, "error": "Invalid AGI"},
-    )
+@pytest.mark.parametrize("case", sorted(_AIV_MISSES))
+async def test_aiv_interactions_400_envelope_is_not_found(httpx_mock: HTTPXMock, case: str) -> None:
+    path, locus, organism, body = _AIV_MISSES[case]
+    httpx_mock.add_response(url=f"https://bar.utoronto.ca/api{path}", status_code=400, content=body)
     async with httpx.AsyncClient() as client:
-        with pytest.raises(PlantGenomicsError, match="HTTP 400"):
+        with pytest.raises(NotFoundError) as err:
+            await bar.aiv_interactions(client, locus, organism=organism)
+    assert str(err.value) == f"[NotFoundError] BAR {path} → HTTP 400 (not found): {body.decode()}"
+
+
+@pytest.mark.asyncio
+async def test_only_bars_own_miss_is_a_miss(httpx_mock: HTTPXMock) -> None:
+    """A failure is "no such gene" only when BAR says so: a 400 without BAR's
+    miss (a proxy's page, an envelope that succeeded, the envelope with
+    another error) is still a broken request (#199 review), and the envelope
+    with another error on a 200 is asked for again and never stored.
+    Positive control, same path and cache: BAR's answer is answered."""
+    url = "https://bar.utoronto.ca/api/interactions/get_paper_by_agi/AT1G01010"
+    other = b'{"wasSuccessful": false, "error": "Service temporarily unavailable"}'
+    for body in (b"<html>400 Bad Request</html>", b'{"wasSuccessful": true, "data": []}', other):
+        httpx_mock.add_response(url=url, status_code=400, content=body)
+        async with httpx.AsyncClient() as client:
+            with pytest.raises(PlantGenomicsError) as err:
+                await bar.aiv_interactions(client, "AT1G01010")
+        assert type(err.value) is PlantGenomicsError
+        assert str(err.value) == (
+            f"BAR /interactions/get_paper_by_agi/AT1G01010 → HTTP 400: {body.decode()}"
+        )
+    httpx_mock.add_response(url=url, content=other)
+    httpx_mock.add_response(url=url, content=other)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError, match="Service temporarily unavailable"):
+            await bar.aiv_interactions(client, "AT1G01010")
+    httpx_mock.add_response(url=url, json=_AIV_ARABIDOPSIS_OK)
+    async with httpx.AsyncClient() as client:
+        assert (await bar.aiv_interactions(client, "AT1G01010"))["count"] == 2
+
+
+@pytest.mark.skipif(
+    not os.environ.get("PLANT_GENOMICS_MCP_LIVE"),
+    reason="set PLANT_GENOMICS_MCP_LIVE=1 to hit bar.utoronto.ca/api",
+)
+@pytest.mark.asyncio
+async def test_live_an_unknown_locus_is_not_found_and_a_known_one_answers() -> None:
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="Invalid AGI"):
             await bar.aiv_interactions(client, "AT1G99999")
-
-
-@pytest.mark.asyncio
-async def test_aiv_interactions_rice_unknown_400(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(
-        url="https://bar.utoronto.ca/api/interactions/rice/LOC_Os01g99999",
-        status_code=400,
-        json={
-            "wasSuccessful": False,
-            "error": "There are no data found for the given gene",
-        },
-    )
-    async with httpx.AsyncClient() as client:
-        with pytest.raises(PlantGenomicsError, match="HTTP 400"):
-            await bar.aiv_interactions(client, "LOC_Os01g99999", organism="oryza_sativa")
-
-
-@pytest.mark.asyncio
-async def test_aiv_interactions_rice_rapdb_format_400(httpx_mock: HTTPXMock) -> None:
-    # BAR rice endpoint rejects RAP-DB format (Os01g0100100) — only MSU
-    # (LOC_Os01g01080) works. Surfaces as PlantGenomicsError HTTP 400.
-    httpx_mock.add_response(
-        url="https://bar.utoronto.ca/api/interactions/rice/Os01g0100100",
-        status_code=400,
-        json={"wasSuccessful": False, "error": "Invalid species or gene ID"},
-    )
-    async with httpx.AsyncClient() as client:
-        with pytest.raises(PlantGenomicsError, match="HTTP 400"):
-            await bar.aiv_interactions(client, "Os01g0100100", organism="oryza_sativa")
+        with pytest.raises(NotFoundError, match="no data found"):
+            await bar.aiv_interactions(client, "LOC_Os01g99999", organism="rice")
+        with pytest.raises(NotFoundError, match="Invalid gene id"):
+            await bar.gene_summary(client, "LOC_Os01g01080")
+        assert (await bar.aiv_interactions(client, "LOC_Os01g01080", organism="rice"))["count"]
 
 
 @pytest.mark.asyncio
