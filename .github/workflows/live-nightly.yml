@@ -1,0 +1,66 @@
+name: live-nightly
+
+# Every live test, once a day. Per PR, live-smoke runs only the ARF
+# verify_genes pair; the other 105 live tests ran in no job, so a live-only
+# break went unseen (the tomato region test, #202; Phytozome's BioMart
+# answering 404, 2026-09-29). A full pass took 25 min that night and 12 of
+# its 16 failures were upstream-side, so the run is classed rather than
+# gated: scripts/classify_live_failures.py fails it only on a regression and
+# lists upstream-side failures in the job summary. Not a required check.
+
+on:
+  schedule:
+    - cron: "41 9 * * *" # 09:41 UTC = 05:41 EDT, after nightly-guardrails
+  workflow_dispatch:
+  # A change to this job or its classifier runs it once on the PR.
+  pull_request:
+    paths:
+      - .github/workflows/live-nightly.yml
+      - scripts/classify_live_failures.py
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-nightly-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    # ~2 min mocked + ~25 min live (2026-09-29), each test capped at 240 s.
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Python 3.12
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e '.[dev]' 'pytest-timeout==2.4.0'
+      - name: Live tests
+        id: pytest
+        env:
+          PLANT_GENOMICS_MCP_LIVE: "1"
+          PLANT_GENOMICS_MCP_STDIO_SMOKE: "1"
+          LIVE_SMOKE_OUTAGE_REPORT: ${{ runner.temp }}/live-smoke-outage.txt
+        # The exit status is the classifier's input, so this step records it
+        # instead of failing on it.
+        run: |
+          set +e
+          pytest -q -rfE -p no:cacheprovider --timeout=240 -o faulthandler_timeout=300 \
+            --junitxml="$RUNNER_TEMP/live.xml" tests/
+          echo "exit=$?" >> "$GITHUB_OUTPUT"
+      - name: Classify failures
+        env:
+          PYTEST_EXIT: ${{ steps.pytest.outputs.exit }}
+        run: python scripts/classify_live_failures.py "$RUNNER_TEMP/live.xml" "$PYTEST_EXIT" "$GITHUB_STEP_SUMMARY"
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: live-junit
+          path: ${{ runner.temp }}/live.xml
+          if-no-files-found: warn

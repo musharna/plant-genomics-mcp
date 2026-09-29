@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- **Every live test runs nightly.** Per PR, `live-smoke` runs only the ARF
+  `verify_genes` pair; the other 105 of the 107 live tests ran in no CI
+  job, so a live-only break went unseen until someone ran them by hand. The
+  new `live-nightly` workflow runs the whole suite with the live gate set,
+  once a day and on a PR that changes it, with a 240 s cap per test. A full
+  pass took 25 min on 2026-09-29, and 12 of its 16 failures were
+  upstream-side (Ensembl 500, Europe PMC 503, a PlantCyc challenge page,
+  NCBI BLAST past the cap), so `scripts/classify_live_failures.py` classes
+  each failure from the JUnit report and fails the run only on a
+  regression; upstream-side failures are listed in the job summary. A run
+  that did not complete, or never set the live gate, fails on its own.
+  Not a required check.
+
 - **The output-contract check accepts `ensembl_region_query` rows as Ensembl
   sends them.** The rows are Ensembl's records copied as sent, but the check
   exempted only the three fields the Arabidopsis gene fixture lacked, so
