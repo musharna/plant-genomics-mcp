@@ -232,6 +232,11 @@ def _sequence_shape(raw: object) -> dict[str, Any]:
     return body
 
 
+# What a protein refused for a stop symbol is told; tests read it to tell this
+# refusal from an outage, so it is one string, not a copy.
+STOP_SYMBOL_REFUSAL = "has a stop symbol at residue"
+
+
 def _protein_shape(raw: object) -> dict[str, Any]:
     """A protein holds no stop symbol: 0 of 694,618 proteins in the current
     Ensembl Plants pep.all FASTA of all 12 organisms have a ``*`` anywhere
@@ -244,7 +249,7 @@ def _protein_shape(raw: object) -> dict[str, Any]:
     seq: str = body["seq"]
     if "*" in seq:
         raise _http.UnreadableBody(
-            f"protein {body.get('id')!r} has a stop symbol at residue "
+            f"protein {body.get('id')!r} {STOP_SYMBOL_REFUSAL} "
             f"{seq.index('*') + 1} of {len(seq)}; no Ensembl Plants protein holds one"
         )
     return body

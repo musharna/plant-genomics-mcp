@@ -734,9 +734,10 @@ async def test_live_get_sequence_multi_transcript_gene_protein() -> None:
     assert result["sequence"].startswith("MGGLIDLNV")
 
 
-# One gene per organism, from the first record of its Ensembl Plants pep.all
-# FASTA (2026-09-29); rice's first record, a plastid gene, is swapped for a
-# nuclear one, and tomato is given without the ``gene-`` prefix it is filed under.
+# One gene per organism, from the first record of its Ensembl Plants release 63
+# pep.all FASTA (2026-09-29); rice's first record, a plastid gene, and
+# sorghum's, on an unplaced scaffold, are swapped for chromosome genes, and
+# tomato is given without the ``gene-`` prefix it is filed under.
 _PROTEIN_PROBES: dict[str, str] = {
     "arabidopsis_thaliana": "AT5G16970",
     "oryza_sativa": "Os01g0100100",
@@ -744,7 +745,7 @@ _PROTEIN_PROBES: dict[str, str] = {
     "triticum_aestivum": "TraesCS4A02G403700",
     "solanum_lycopersicum": "Solyc04g011850.1",
     "glycine_max": "GLYMA_01G141900",
-    "sorghum_bicolor": "SORBI_3K044417",
+    "sorghum_bicolor": "SORBI_3001G000100",
     "hordeum_vulgare": "HORVU.MOREX.r3.7HG0737000",
     "vitis_vinifera": "Vitis15g00095",
     "populus_trichocarpa": "Potri.005G200100.v4.1",
@@ -759,47 +760,91 @@ def test_protein_probes_cover_every_organism() -> None:
 
 # What the sequence shapes say when they refuse a body; a refusal of a real
 # protein is ours, not an outage, so it must not reach the nightly as one.
-_OUR_REFUSALS = re.compile(r"stop symbol at residue|not a sequence")
+_BASES = "TCAG"
+_AMINO = "FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG"
+# The standard genetic code, in TCAG order.
+_CODON = {
+    a + b + c: _AMINO[16 * i + 4 * j + k]
+    for i, a in enumerate(_BASES)
+    for j, b in enumerate(_BASES)
+    for k, c in enumerate(_BASES)
+}
+
+
+def _translate(cds: str) -> str:
+    return "".join(_CODON.get(cds[i : i + 3], "X") for i in range(0, len(cds) - 2, 3))
 
 
 async def _protein_or_our_failure(
     client: httpx.AsyncClient, gene: str, organism: str
 ) -> dict[str, object]:
-    """The protein; an outage as it came; a refusal by our own shapes as a
-    failure with no upstream tag, so the nightly classes it a regression."""
+    """The protein, or an outage as it came. A stop-symbol refusal is ours
+    only if the protein really holds a stop: then its CDS, read in frame 0,
+    encodes one before its end, and the failure carries no upstream tag, so
+    the nightly classes it a regression. A CDS without one means Ensembl
+    served a protein its own CDS does not encode (the 2026-09-29 incident):
+    the outage is raised as it came."""
     try:
         return await ensembl_plants.get_sequence(client, gene, organism=organism)
     except UpstreamUnavailableError as exc:
-        if _OUR_REFUSALS.search(str(exc)) is None:
+        if ensembl_plants.STOP_SYMBOL_REFUSAL not in str(exc):
             raise
-        raise AssertionError(f"a real {organism} protein was refused: {gene}") from exc
+        cds = await ensembl_plants.get_sequence(client, gene, organism=organism, seq_type="cds")
+        if "*" not in _translate(cds["sequence"]).rstrip("*"):
+            raise exc
+        raise AssertionError(
+            f"{organism} {gene}: its CDS encodes a stop, and its protein was refused for one"
+        ) from exc
+
+
+def test_the_translation_reads_the_live_cds() -> None:
+    """The codon table against AT1G01010.1's live protein (2026-09-29): its
+    CDS in frame 0 is that protein plus the stop."""
+    assert _translate("ATGGAGGATCAAGTTGGGTGA") == "MEDQVG*"
+    assert _translate("ATGTAAGGG") == "M*G"
 
 
 @pytest.mark.asyncio
-async def test_our_refusal_of_a_real_protein_is_not_an_outage(
+async def test_a_refusal_is_ours_only_when_the_cds_encodes_the_stop(
     httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     async def _no_sleep(_seconds: float) -> None:
         pass
 
     monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
-    httpx_mock.add_response(
-        url=_AT_LOOKUP.format("AT1G01010"), json=_gene("AT1G01010", "AT1G01010.1")
-    )
-    for _ in range(2):
-        httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, json=_protein(_REAL + "*"))
-    for _ in range(3):
-        httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, status_code=500)
-    httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, json=_protein(_REAL))
+    cds_url = _AT1G01010_PROTEIN_URL.replace("type=protein", "type=cds")
+
+    def lookup() -> None:
+        httpx_mock.add_response(
+            url=_AT_LOOKUP.format("AT1G01010"), json=_gene("AT1G01010", "AT1G01010.1")
+        )
+
+    args = ("AT1G01010", "arabidopsis_thaliana")
     async with httpx.AsyncClient() as client:
-        with pytest.raises(AssertionError, match="protein was refused") as ours:
-            await _protein_or_our_failure(client, "AT1G01010", "arabidopsis_thaliana")
+        # Its CDS encodes a stop inside: our rule refused a real protein.
+        lookup()
+        for _ in range(2):
+            httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, json=_protein(_REAL + "*"))
+        httpx_mock.add_response(url=cds_url, json=_protein("ATGTAAGGG"))
+        with pytest.raises(AssertionError, match="its CDS encodes a stop") as ours:
+            await _protein_or_our_failure(client, *args)
+        assert "[UpstreamUnavailableError]" not in str(ours.value)
+        # Its CDS encodes none: Ensembl served a protein it does not encode.
+        ensembl_plants._CACHE.clear()
+        lookup()
+        for _ in range(2):
+            httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, json=_protein(_REAL + "*"))
+        httpx_mock.add_response(url=cds_url, json=_protein("ATGGAGGATCAAGTTGGGTGA"))
+        with pytest.raises(UpstreamUnavailableError, match=ensembl_plants.STOP_SYMBOL_REFUSAL):
+            await _protein_or_our_failure(client, *args)
         # Positive controls: an outage stays one, and an answer is passed on.
+        for _ in range(3):
+            httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, status_code=500)
         with pytest.raises(UpstreamUnavailableError, match="HTTP 500"):
-            await _protein_or_our_failure(client, "AT1G01010", "arabidopsis_thaliana")
-        result = await _protein_or_our_failure(client, "AT1G01010", "arabidopsis_thaliana")
+            await _protein_or_our_failure(client, *args)
+        httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, json=_protein(_REAL))
+        result = await _protein_or_our_failure(client, *args)
     assert result["sequence"] == _REAL
-    assert "[UpstreamUnavailableError]" not in str(ours.value)
 
 
 @live_only
