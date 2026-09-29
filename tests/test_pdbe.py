@@ -93,14 +93,9 @@ async def test_lookup_by_uniprot_truncates(
     httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(pdbe, "MAX_STRUCTURES", 1)
-    httpx_mock.add_response(
-        url=_URL, json={"Q9SZ92": [_ENTRY, {**_ENTRY, "pdb_id": "1rcx"}, "junk-non-dict"]}
-    )
+    httpx_mock.add_response(url=_URL, json={"Q9SZ92": [_ENTRY, {**_ENTRY, "pdb_id": "1rcx"}]})
     async with httpx.AsyncClient() as client:
         r = await pdbe.lookup_by_uniprot(client, "Q9SZ92")
-    # Changed 2026-07-22 (audit L1): the count is now of *structures*, so the
-    # junk row is excluded. It previously reported the raw upstream length (3),
-    # which overstated what the caller actually received.
     assert r["structure_count"] == 2
     assert r["truncated"] is True
     assert len(r["structures"]) == 1
@@ -203,46 +198,34 @@ async def test_404_is_cached_so_a_repeat_lookup_stays_off_the_wire(
     assert len(httpx_mock.get_requests()) == 1
 
 
+# Rows that are not all objects (#96). The reader skipped them: a list of
+# only such rows answered "no structures", and any other undercounted.
+_BAD_ROWS = {
+    "beside real rows": ([_ENTRY, "junk", {**_ENTRY, "pdb_id": "1rcx"}], "row 1 is str"),
+    "only such rows": (["junk", 7], "row 0 is str"),
+}
+
+
 @pytest.mark.asyncio
-async def test_non_dict_rows_are_excluded_from_the_count_not_just_the_output(
-    httpx_mock: HTTPXMock,
+@pytest.mark.parametrize("case", sorted(_BAD_ROWS))
+async def test_a_row_that_is_not_an_object_is_refused_and_not_stored(
+    httpx_mock: HTTPXMock, case: str
 ) -> None:
-    """``structure_count`` must match what's returned, even on a junk row.
-
-    Counting before filtering used to report 3 structures while returning 2.
-    """
-    httpx_mock.add_response(
-        url=_URL, json={"Q9SZ92": [_ENTRY, "junk", {**_ENTRY, "pdb_id": "1rcx"}]}
-    )
+    """Checked before the store. Positive control, same cache: a readable
+    answer is then asked for and served."""
+    rows, problem = _BAD_ROWS[case]
+    httpx_mock.add_response(url=_URL, json={"Q9SZ92": rows})
+    httpx_mock.add_response(url=_URL, json={"Q9SZ92": [_ENTRY]})
     async with httpx.AsyncClient() as client:
+        with pytest.raises(PlantGenomicsError) as err:
+            await pdbe.lookup_by_uniprot(client, "Q9SZ92")
+        assert str(err.value) == (
+            "PDBe /pdbe/api/mappings/best_structures/Q9SZ92 returned unexpected "
+            f"payload: {problem}, not an object"
+        )
         r = await pdbe.lookup_by_uniprot(client, "Q9SZ92")
-    assert r["structure_count"] == 2
-    assert len(r["structures"]) == 2
-    assert r["truncated"] is False
-
-
-@pytest.mark.asyncio
-async def test_a_list_of_only_junk_rows_is_found_false(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(url=_URL, json={"Q9SZ92": ["junk", 7]})
-    async with httpx.AsyncClient() as client:
-        r = await pdbe.lookup_by_uniprot(client, "Q9SZ92")
-    assert r["found"] is False
-    assert r["structure_count"] == 0
-
-
-@pytest.mark.asyncio
-async def test_truncation_is_computed_after_filtering(
-    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Two real rows + one junk row at cap=2 is NOT truncated."""
-    monkeypatch.setattr(pdbe, "MAX_STRUCTURES", 2)
-    httpx_mock.add_response(
-        url=_URL, json={"Q9SZ92": [_ENTRY, "junk", {**_ENTRY, "pdb_id": "1rcx"}]}
-    )
-    async with httpx.AsyncClient() as client:
-        r = await pdbe.lookup_by_uniprot(client, "Q9SZ92")
-    assert r["structure_count"] == 2
-    assert r["truncated"] is False
+    assert (r["found"], r["structure_count"]) == (True, 1)
+    assert len(httpx_mock.get_requests()) == 2
 
 
 @pytest.mark.asyncio

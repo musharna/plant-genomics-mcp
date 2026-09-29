@@ -100,15 +100,24 @@ async def lookup_by_uniprot(client: httpx.AsyncClient, accession: str) -> dict[s
             raise PlantGenomicsError(
                 f"PDBe {path} returned unexpected payload: {type(body).__name__}"
             )
+        # A row that is not an object was skipped, so a list of only such
+        # rows answered "no structures" and any other undercounted (#96);
+        # every live row is one.
+        rows = body.get(accession)
+        if isinstance(rows, list):
+            try:
+                _http.object_rows(rows)
+            except _http.UnreadableBody as e:
+                raise PlantGenomicsError(
+                    f"PDBe {path} returned unexpected payload: {e.args[0]}"
+                ) from None
         _CACHE.set(key, body)
         cached = body
     entries = cached.get(accession)
     if not isinstance(entries, list):
         return _empty(accession)
-    # Filter BEFORE counting: a non-dict row is not a structure, so letting it
-    # into ``total`` would report more structures than are actually returned
-    # and could flip ``truncated`` on a list that was never truncated.
-    valid = [s for s in entries if isinstance(s, dict)]
+    # Every row is an object: checked before the store.
+    valid: list[dict[str, Any]] = entries
     if not valid:
         return _empty(accession)
     total = len(valid)

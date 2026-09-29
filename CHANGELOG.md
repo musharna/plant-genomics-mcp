@@ -22,6 +22,15 @@
   read that as a regression. It is now an `UpstreamUnavailableError` (still a
   `PlantGenomicsError`), and the check's direct probe counts a 200 that is
   not JSON as down, where an empty 200 read as up.
+- **AraGWAS, InterPro, Europe PMC and PDBe no longer drop rows they cannot
+  read.** Each reader skipped a row that was not a JSON object, so an answer
+  held fewer associations, domains, papers or structures than the upstream
+  sent with nothing to say so, and PDBe answered "no structures" when every
+  row was unreadable; an AraGWAS or InterPro page without its `results` list
+  read as zero rows. Such a page is now refused before it is stored: asked
+  for once more and then an `UpstreamUnavailableError` (PDBe, which caches
+  by hand, raises its existing "unexpected payload" error). Every live row
+  of the four is an object (probed 2026-09-28).
 
 - **`examples/arf_family/` re-run at `1.28.0` (`12a5ec6`).** Same 64 calls
   over the same 114 genes, against the release; every call's ok, error and
