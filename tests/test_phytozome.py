@@ -323,9 +323,17 @@ async def test_a_wrong_url_is_a_regression_not_an_outage(
             httpx_mock.add_response(url=_BIOMART_URL, method="POST", status_code=503)
         httpx_mock.add_response(url=_BIOMART_URL, method="POST", text=_AT1G01010_TSV)
         row = await _lookup_or_skip_outage(client, "AT1G01010", probe=lambda: None)
+        # And an answer on the first call (the cache the call above filled) is
+        # passed through as it is, without a probe.
+        first = await _lookup_or_skip_outage(client, "AT1G01010", probe=_never_probed)
     assert row["gene_name"] == "AT1G01010"
+    assert first == row
     # The nightly's classifier reads the failure message pytest reports.
     assert _classify(f"AssertionError: {broken.value}", monkeypatch) == "regression"
+
+
+def _never_probed() -> str | None:
+    pytest.fail("BioMart was probed after the tool answered")
 
 
 def _classify(message: str, monkeypatch: pytest.MonkeyPatch) -> str:
