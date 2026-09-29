@@ -26,6 +26,7 @@ the /interactions/rice/ lane.
 from __future__ import annotations
 
 import asyncio
+import re
 from collections.abc import Callable
 from typing import Any, TypeVar
 
@@ -74,15 +75,34 @@ async def _get(
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
         shape=shape,
+        not_found_400_pattern=_NO_RECORD_400_RE,
     )
 
 
-# BAR uses a body-level success envelope, not HTTP status. Both endpoints
-# return HTTP 200 even for missing loci; the `wasSuccessful` flag carries
-# the real outcome. Failure modes seen live 2026-05-23:
-#   /thalemine/gene_information/AT1G99999  → 200 {"wasSuccessful":true,"results":[]}
+# BAR states its outcome in a body envelope, and the HTTP status that carries
+# a failure varies by endpoint, and has changed. Live 2026-09-28:
+#   /thalemine/gene_information/AT1G99999      → 200 {"wasSuccessful":true,"results":[]}
 #   /thalemine/gene_information/LOC_Os01g01080 → 400 {"wasSuccessful":false,"error":"Invalid gene id"}
-#   /gaia/aliases/AT1G99999                → 200 {"wasSuccessful":false,"error":"Nothing found"}
+#   /gaia/aliases/AT1G99999                    → 404 {"wasSuccessful":false,"error":"Nothing found"} (200 on 2026-05-23)
+#   /microarray_gene_expression/world_efp/arabidopsis/AT1G99999 → 200 {..false,"error":"There are no data found for the given gene"}
+#   /interactions/get_paper_by_agi/AT1G99999   → 400 {"wasSuccessful": false, "error": "Invalid AGI"}
+#   /interactions/rice/LOC_Os01g99999          → 400 {..false,"error":"There are no data found for the given gene"}
+# The same statement on a 200 was a NotFoundError and on a 400 a plain
+# PlantGenomicsError, so "no such gene" read as a broken request. A failure
+# is a miss by what it says, at any status: the envelope alone also carries
+# failures that are not "no such gene" (#199 review).
+_MISSES = (
+    "Invalid AGI",
+    "Invalid gene id",
+    "Invalid species or gene ID",
+    "There are no data found for the given gene",
+    "Nothing found",
+)
+_NO_RECORD_400_RE = re.compile(
+    r'\A\s*\{\s*"wasSuccessful"\s*:\s*false\s*,\s*"error"\s*:\s*"(?:'
+    + "|".join(re.escape(m) for m in _MISSES)
+    + r')"\s*\}\s*\Z'
+)
 
 # Positional indices into thalemine's results[0] row. Order is fixed by the
 # InterMine `views` list (column ordering survives schema versions). Live
@@ -111,17 +131,19 @@ def _envelope(payload: str, kind: type) -> Callable[[object], dict[str, Any]]:
     """A BAR answer states ``wasSuccessful``: on success its ``payload`` of
     ``kind``, on failure an ``error`` string (live, every endpoint here,
     2026-09-28). ``{}`` states neither, and was read as a failure whose error
-    was None: "not found"."""
+    was None: "not found". A failure is an answer only when its error is one
+    of BAR's misses; any other was read as "not found" and stored for the
+    TTL, so it is asked for again and never stored."""
 
     def shape(value: object) -> dict[str, Any]:
         env = _http.expect_object(value)
         ok = env.get("wasSuccessful")
         if (ok is True and isinstance(env.get(payload), kind)) or (
-            ok is False and isinstance(env.get("error"), str)
+            ok is False and env.get("error") in _MISSES
         ):
             return env
         raise _http.UnreadableBody(
-            f"no wasSuccessful with {payload!r} or 'error' in {str(env)[:120]}"
+            f"no wasSuccessful with {payload!r} or a miss 'error' in {str(env)[:120]}"
         )
 
     return shape
@@ -308,10 +330,10 @@ async def efp_expression(
 #     curated GRN paper refs (pmid, title, image, comments, tags)
 #   - rice         /interactions/rice/{locus}              →  kind="ppi_predictions"
 #     predicted PPIs (protein_2 = partner, pcc = co-expression Pearson r)
-# Both fail at HTTP 400 (not 200+wasSuccessful=false) for unknown / wrong-format
-# loci, so error paths surface through _get as PlantGenomicsError rather than
-# NotFoundError. Rice strictly requires the MSU LOC_Os* format; RAP-DB
-# (Os01g0100100) is rejected upstream with "Invalid species or gene ID".
+# Both fail at HTTP 400 with the wasSuccessful=false envelope for unknown /
+# wrong-format loci, which _get reads as NotFoundError. Rice strictly requires
+# the MSU LOC_Os* format; RAP-DB (Os01g0100100) is rejected upstream with
+# "Invalid species or gene ID".
 _AIV_SUPPORTED_ORGANISMS = ("arabidopsis_thaliana", "oryza_sativa")
 
 
@@ -392,10 +414,10 @@ async def aiv_interactions(
     Other plant organisms in the registry have no AIV lane and raise
     OrganismNotSupported. Unknown organism strings raise OrganismNotFound.
 
-    BAR AIV returns HTTP 400 (not 200+wasSuccessful=false) for unknown loci
-    and wrong-format inputs, so those failures surface as PlantGenomicsError
-    from ``_get``, with the upstream "Invalid AGI" / "no data" / "Invalid
-    species or gene ID" message preserved in the exception text.
+    BAR AIV answers unknown loci and wrong-format inputs with HTTP 400 and
+    its wasSuccessful=false envelope; those raise NotFoundError from ``_get``
+    with the upstream "Invalid AGI" / "no data" / "Invalid species or gene ID"
+    message preserved in the exception text.
 
     Rice requires the MSU ``LOC_Os*`` format; RAP-DB (``Os*g*``) is rejected
     upstream — match locus format to organism before calling.
