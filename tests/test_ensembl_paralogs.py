@@ -24,7 +24,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import ensembl_plants
-from plant_genomics_mcp.errors import NotFoundError, PlantGenomicsError
+from plant_genomics_mcp.errors import NotFoundError, UpstreamUnavailableError
 
 
 def _homology_url(species: str, gene: str) -> re.Pattern[str]:
@@ -213,28 +213,34 @@ async def test_tomato_ids_lose_the_wire_prefix(httpx_mock: HTTPXMock) -> None:
 @pytest.mark.asyncio
 async def test_a_paralog_in_another_species_is_refused(httpx_mock: HTTPXMock) -> None:
     """A paralogue is same-species by Ensembl's definition; a row naming another
-    species means the answer is not what this tool describes. The same-species
-    row beside it is the positive control."""
-    httpx_mock.add_response(
-        url=_homology_url("arabidopsis_thaliana", "AT2G28350"),
-        json=_answer(
-            "AT2G28350",
-            [
-                _paralog("AT1G19850", "other_paralog", "Viridiplantae", 36.7),
-                _paralog(
-                    "Os04g0664400",
-                    "other_paralog",
-                    "Viridiplantae",
-                    30.0,
-                    species="oryza_sativa",
-                    taxon_id=39947,
-                ),
-            ],
-        ),
+    species means the answer is not what this tool describes. Refused before
+    the store, so asked once more and never served from the cache; the
+    same-species answer that follows on the same cache is the positive
+    control."""
+    bad = _answer(
+        "AT2G28350",
+        [
+            _paralog("AT1G19850", "other_paralog", "Viridiplantae", 36.7),
+            _paralog(
+                "Os04g0664400",
+                "other_paralog",
+                "Viridiplantae",
+                30.0,
+                species="oryza_sativa",
+                taxon_id=39947,
+            ),
+        ],
     )
+    url = _homology_url("arabidopsis_thaliana", "AT2G28350")
+    httpx_mock.add_response(url=url, json=bad)
+    httpx_mock.add_response(url=url, json=bad)
+    httpx_mock.add_response(url=url, json=_answer("AT2G28350", bad["data"][0]["homologies"][:1]))
     async with httpx.AsyncClient() as client:
-        with pytest.raises(PlantGenomicsError, match="oryza_sativa"):
+        with pytest.raises(UpstreamUnavailableError, match="names species 'oryza_sativa'"):
             await ensembl_plants.paralogs(client, "AT2G28350")
+        good = await ensembl_plants.paralogs(client, "AT2G28350")
+    assert (good["found"], good["total"]) == (True, 1)
+    assert len(httpx_mock.get_requests()) == 3
 
 
 LIVE = pytest.mark.skipif(

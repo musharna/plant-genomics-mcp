@@ -31,6 +31,17 @@
   for once more and then an `UpstreamUnavailableError` (PDBe, which caches
   by hand, raises its existing "unexpected payload" error). Every live row
   of the four is an object (probed 2026-09-28).
+- **Five tools check an answer before caching it, not after.**
+  `ensembl_plants_assembly`, `ensembl_plants_paralogs`, `gene_tree_members`,
+  `locus_plant_ontology` and `locus_go_annotations` read their rows or count
+  after the answer was stored. A region without a length, a repeated name, a
+  paralogue in another species, a leaf without its gene or taxon, or a
+  missing `numFound` / `numberOfHits` then failed every call for the cache
+  lifetime without asking the upstream again. Each is now read in the
+  answer's shape: asked for once more, never stored, and an
+  `UpstreamUnavailableError` if it repeats. QuickGO also requires its
+  `results` list, which it always sends (live, 2026-09-28); a body without
+  one read as no annotations.
 
 - **`examples/arf_family/` re-run at `1.28.0` (`12a5ec6`).** Same 64 calls
   over the same 114 genes, against the release; every call's ok, error and

@@ -283,3 +283,22 @@ async def test_live_every_field_normalize_reads_is_sent() -> None:
     assert result["returned"] > 0
     nulls = {k for a in result["annotations"] for k, v in a.items() if v is None}
     assert nulls == set(), nulls
+
+
+@pytest.mark.asyncio
+async def test_a_body_without_its_count_is_refused_before_the_store(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """``numFound`` was read after the store, so a body without it failed every
+    call for the TTL without asking again. Every live answer states it, zero
+    included (2026-09-28). Positive control, same cache: the answer after."""
+    bad: dict[str, dict[str, list[dict]]] = {"response": {"docs": []}}
+    httpx_mock.add_response(json=bad)
+    httpx_mock.add_response(json=bad)
+    httpx_mock.add_response(json=_payload([], num_found=0))
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError, match="no integer 'numFound'"):
+            await planteome.lookup_locus(client, "AT1G01010")
+        good = await planteome.lookup_locus(client, "AT1G01010")
+    assert good["total"] == 0
+    assert len(httpx_mock.get_requests()) == 3

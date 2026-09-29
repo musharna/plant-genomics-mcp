@@ -327,10 +327,14 @@ GENE_TREE_MEMBERS_MAX_LIMIT = 1000
 def _gene_tree_leaves(tree: dict[str, Any]) -> list[dict[str, Any]]:
     """Every leaf of a genetree node, at any depth (iterative: trees run deep)."""
     leaves: list[dict[str, Any]] = []
-    stack = [tree]
+    stack: list[object] = [tree]
     while stack:
         node = stack.pop()
+        if not isinstance(node, dict):
+            raise _http.UnreadableBody(f"tree node is {type(node).__name__}, not an object")
         children = node.get("children")
+        if children is not None and not isinstance(children, list):
+            raise _http.UnreadableBody(f"children is {type(children).__name__}, not a list")
         if children:
             stack.extend(children)
         else:
@@ -338,15 +342,15 @@ def _gene_tree_leaves(tree: dict[str, Any]) -> list[dict[str, Any]]:
     return leaves
 
 
-def _gene_tree_member(leaf: dict[str, Any], gene_tree_id: str) -> dict[str, Any]:
+def _gene_tree_member(leaf: dict[str, Any]) -> dict[str, Any]:
     try:
         gene = leaf["id"]["accession"]
         taxid = leaf["taxonomy"]["id"]
         species = leaf["taxonomy"]["scientific_name"]
     except (KeyError, TypeError) as exc:
-        raise PlantGenomicsError(
-            f"Ensembl genetree {gene_tree_id}: leaf without gene id or taxonomy ({exc!r}): {leaf!r}"
-        ) from exc
+        raise _http.UnreadableBody(
+            f"leaf without gene id or taxonomy ({exc!r}): {leaf!r:.200}"
+        ) from None
     record = organisms.by_compara_taxid(taxid)
     prefix = (record.ensembl_id_prefix or "") if record else ""
     proteins = (leaf.get("sequence") or {}).get("id") or []
@@ -359,11 +363,13 @@ def _gene_tree_member(leaf: dict[str, Any], gene_tree_id: str) -> dict[str, Any]
     }
 
 
-def _gene_tree_shape(raw: object) -> dict[str, Any]:
+def _gene_tree_shape(raw: object) -> list[dict[str, Any]]:
+    """A /genetree body read to its members, before the store: a leaf read
+    afterwards failed from the cache for the whole TTL without asking again."""
     body = _http.expect_object(raw)
     if not isinstance(body.get("tree"), dict):
         raise _http.UnreadableBody(f"no tree object in {str(body)[:120]}")
-    return body
+    return [_gene_tree_member(leaf) for leaf in _gene_tree_leaves(body["tree"])]
 
 
 async def gene_tree_members(
@@ -384,18 +390,17 @@ async def gene_tree_members(
     if not 1 <= limit <= GENE_TREE_MEMBERS_MAX_LIMIT:
         raise ValueError(f"limit must be in 1..{GENE_TREE_MEMBERS_MAX_LIMIT}, got {limit}")
     wanted = organisms.resolve(target_organism) if target_organism is not None else None
-    raw = await _get(
+    stored = await _get(
         client,
         f"/genetree/id/{gene_tree_id}",
         params={"compara": "plants", "aligned": 0, "sequence": "none"},
         not_found_400_pattern=_GENE_TREE_NOT_FOUND_RE,
         shape=_gene_tree_shape,
     )
-    tree = raw["tree"]
-    members = [_gene_tree_member(leaf, gene_tree_id) for leaf in _gene_tree_leaves(tree)]
-    if wanted is not None:
-        members = [m for m in members if m["organism"] == wanted.canonical]
-    members.sort(key=lambda m: (m["species"], m["locus"]))
+    members = sorted(
+        (m for m in stored if wanted is None or m["organism"] == wanted.canonical),
+        key=lambda m: (m["species"], m["locus"]),
+    )
     return {
         "gene_tree_id": gene_tree_id,
         "target_organism": wanted.canonical if wanted else None,
@@ -411,23 +416,22 @@ PARALOGS_DEFAULT_LIMIT = 100
 PARALOGS_MAX_LIMIT = 1000
 
 
-def _paralog(row: dict[str, Any], slug: str, prefix: str, locus: str) -> dict[str, Any]:
+def _paralog(row: object, slug: str, prefix: str) -> dict[str, Any]:
+    if not isinstance(row, dict):
+        raise _http.UnreadableBody(f"row is {type(row).__name__}, not an object")
     try:
         target = row["target"]
         gene = target["id"]
         species = target["species"]
         kind = row["type"]
     except (KeyError, TypeError) as exc:
-        raise PlantGenomicsError(
-            f"Ensembl paralogues of {locus}: row without target id, species or type "
-            f"({exc!r}): {row!r}"
-        ) from exc
+        raise _http.UnreadableBody(
+            f"row without target id, species or type ({exc!r}): {row!r:.200}"
+        ) from None
     # A paralogue is same-species by Ensembl's definition; another species here
     # means the answer is not the one this tool describes.
     if species != slug:
-        raise PlantGenomicsError(
-            f"Ensembl paralogues of {locus} in {slug}: row names species {species!r} ({gene})"
-        )
+        raise _http.UnreadableBody(f"row names species {species!r} ({gene}), not {slug}")
     return {
         "locus": gene.removeprefix(prefix) if prefix else gene,
         "type": kind,
@@ -438,14 +442,23 @@ def _paralog(row: dict[str, Any], slug: str, prefix: str, locus: str) -> dict[st
     }
 
 
-def _paralogues_shape(raw: object) -> dict[str, Any]:
-    body = _http.expect_object(raw)
-    data = body.get("data")
-    if not isinstance(data, list):
-        raise _http.UnreadableBody(f"no data list in {str(body)[:120]}")
-    if data and not (isinstance(data[0], dict) and isinstance(data[0].get("homologies"), list)):
-        raise _http.UnreadableBody(f"no homologies list in {data[0]!r:.120}")
-    return body
+def _paralogues_shape(slug: str, prefix: str) -> Callable[[object], dict[str, Any]]:
+    """A /homology body read to its paralogues, before the store: a row read
+    afterwards failed from the cache for the whole TTL without asking again.
+    ``found`` is False for Compara's ``{"data": []}``."""
+
+    def shape(raw: object) -> dict[str, Any]:
+        body = _http.expect_object(raw)
+        data = body.get("data")
+        if not isinstance(data, list):
+            raise _http.UnreadableBody(f"no data list in {str(body)[:120]}")
+        if not data:
+            return {"found": False, "rows": []}
+        if not (isinstance(data[0], dict) and isinstance(data[0].get("homologies"), list)):
+            raise _http.UnreadableBody(f"no homologies list in {data[0]!r:.120}")
+        return {"found": True, "rows": [_paralog(r, slug, prefix) for r in data[0]["homologies"]]}
+
+    return shape
 
 
 async def paralogs(
@@ -473,22 +486,17 @@ async def paralogs(
     locus = validators.assert_valid_locus(locus, backend="Ensembl Plants")
     slug = organisms.ensembl_slug_for(organism)
     prefix = organisms.ensembl_id_prefix_for(organism)
-    raw = await _get(
+    stored = await _get(
         client,
         f"/homology/id/{slug}/{wire_id(locus, organism)}",
         params={"compara": "plants", "type": "paralogues", "sequence": "none"},
-        shape=_paralogues_shape,
+        shape=_paralogues_shape(slug, prefix),
     )
-    data = raw["data"]
-    if not data:
+    found = stored["found"]
+    if not found:
         # Raises NotFoundError for an id Ensembl does not know.
         await lookup_locus(client, locus, organism=organism)
-        rows: list[dict[str, Any]] = []
-        found = False
-    else:
-        rows = [_paralog(row, slug, prefix, locus) for row in data[0]["homologies"]]
-        found = True
-    rows.sort(key=lambda p: (-(p["perc_id"] or 0.0), p["locus"]))
+    rows = sorted(stored["rows"], key=lambda p: (-(p["perc_id"] or 0.0), p["locus"]))
     counts: dict[str, int] = {}
     for row in rows:
         counts[row["type"]] = counts.get(row["type"], 0) + 1
@@ -509,23 +517,23 @@ ASSEMBLY_DEFAULT_LIMIT = 100
 ASSEMBLY_MAX_LIMIT = 2000
 
 
-def _region(row: Any, slug: str) -> tuple[str, int, str | None]:
+def _region(row: Any) -> tuple[str, int, str | None]:
     try:
         name = row["name"]
         length = row["length"]
     except (KeyError, TypeError) as exc:
-        raise PlantGenomicsError(
-            f"Ensembl /info/assembly/{slug}: top-level region without name or length "
-            f"({exc!r}): {row!r}"
-        ) from exc
+        raise _http.UnreadableBody(
+            f"top-level region without name or length ({exc!r}): {row!r:.200}"
+        ) from None
     if not isinstance(name, str) or not isinstance(length, int) or length < 1:
-        raise PlantGenomicsError(
-            f"Ensembl /info/assembly/{slug}: region with unusable name or length: {row!r}"
-        )
+        raise _http.UnreadableBody(f"region with unusable name or length: {row!r:.200}")
     return name, length, row.get("coord_system")
 
 
 def _assembly_shape(raw: object) -> dict[str, Any]:
+    """An /info/assembly body read to its regions, before the store: a region
+    read afterwards failed from the cache for the whole TTL without asking
+    again. Names are unique, and every karyotype name is a top-level region."""
     body = _http.expect_object(raw)
     top_level = body.get("top_level_region")
     if not isinstance(top_level, list) or not top_level:
@@ -533,7 +541,17 @@ def _assembly_shape(raw: object) -> dict[str, Any]:
     karyotype = body.get("karyotype") or []
     if not isinstance(karyotype, list) or not all(isinstance(n, str) for n in karyotype):
         raise _http.UnreadableBody(f"karyotype is not a list of names: {karyotype!r:.120}")
-    return body
+    regions = [_region(row) for row in top_level]
+    names = [name for name, _, _ in regions]
+    if len(set(names)) != len(names):
+        dupes = sorted({name for name in names if names.count(name) > 1})
+        raise _http.UnreadableBody(f"repeated region names {dupes}")
+    missing = [name for name in karyotype if name not in set(names)]
+    if missing:
+        raise _http.UnreadableBody(
+            f"karyotype names regions absent from the top-level list: {missing}"
+        )
+    return {**body, "karyotype": karyotype, "top_level_region": regions}
 
 
 async def assembly(
@@ -556,21 +574,12 @@ async def assembly(
         raise ValueError(f"limit must be in 1..{ASSEMBLY_MAX_LIMIT}, got {limit}")
     slug = organisms.ensembl_slug_for(organism)
     raw = await _get(client, f"/info/assembly/{slug}", shape=_assembly_shape)
-    regions = [_region(row, slug) for row in raw["top_level_region"]]
-    names = [name for name, _, _ in regions]
-    if len(set(names)) != len(names):
-        dupes = sorted({name for name in names if names.count(name) > 1})
-        raise PlantGenomicsError(f"Ensembl /info/assembly/{slug}: repeated region names {dupes}")
-    karyotype: list[str] = raw.get("karyotype") or []
-    known = set(names)
-    missing = [name for name in karyotype if name not in known]
-    if missing:
-        raise PlantGenomicsError(
-            f"Ensembl /info/assembly/{slug}: karyotype names regions absent from the "
-            f"top-level list: {missing}"
-        )
+    karyotype: list[str] = raw["karyotype"]
     order = {name: i for i, name in enumerate(karyotype)}
-    regions.sort(key=lambda r: (0, order[r[0]], 0, "") if r[0] in order else (1, 0, -r[1], r[0]))
+    regions = sorted(
+        raw["top_level_region"],
+        key=lambda r: (0, order[r[0]], 0, "") if r[0] in order else (1, 0, -r[1], r[0]),
+    )
     rows = [
         {"name": name, "length": length, "coord_system": coord, "in_karyotype": name in order}
         for name, length, coord in regions

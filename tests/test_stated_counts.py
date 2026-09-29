@@ -68,8 +68,14 @@ async def test_a_body_without_its_count_raises_and_one_with_it_answers(
     served: list[dict[str, Any]] = []
 
     async def _fake_get(*args: Any, shape: Any = None, **kwargs: Any) -> Any:
-        # A backend that states the body's shape gets it applied, as cached_get does.
-        return shape(served[-1]) if shape else served[-1]
+        # A backend that states the body's shape gets it applied, and a refused
+        # body raised, as cached_get does (the count is checked in the shape).
+        if not shape:
+            return served[-1]
+        try:
+            return shape(served[-1])
+        except _http.UnreadableBody as e:
+            raise UpstreamUnavailableError(f"refused twice ({e.args[0]})") from None
 
     monkeypatch.setattr(module, "_get", _fake_get)
     async with httpx.AsyncClient() as client:
