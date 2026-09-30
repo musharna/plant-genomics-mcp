@@ -230,7 +230,10 @@ async def test_live_an_unknown_frame_is_a_404_not_an_empty_frame() -> None:
     would read as a frame with no reactions or pathways. Local hosts get
     Incapsula's challenge (an upstream failure here); the GitHub runner is
     answered, and there the unknown frame was a 404 (live-nightly run
-    36658257123, 2026-09-30). Any other answer is the failure message."""
+    36658257123, 2026-09-30). Any other answer is the failure message: a
+    typed error of any class, not only an outage (a 403 is a bare
+    PlantGenomicsError and escaped the test untold, #212 review), or a
+    200 document."""
     async with httpx.AsyncClient() as client:
         frame = await plantcyc._resolve_gene_frame(client, "ARA", "AT3G51240")
         assert frame is not None
@@ -238,8 +241,8 @@ async def test_live_an_unknown_frame_is_a_404_not_an_empty_frame() -> None:
         assert real.find(".//Gene") is not None
         try:
             root = await plantcyc._getxml(client, "ARA", "NO-SUCH-FRAME-1")
-        except UpstreamUnavailableError as exc:
-            outcome = str(exc)
+        except PlantGenomicsError as exc:
+            outcome = f"{type(exc).__name__}: {exc}"
         else:
             outcome = "answered 200: " + ET.tostring(root, encoding="unicode")[:300]
     assert "HTTP 404" in outcome, outcome
