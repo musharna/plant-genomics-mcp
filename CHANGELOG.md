@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **`uniprot_entry_members` says "not found" for an entry that does not
+  exist.** UniProt's search answers a never-issued InterPro, Pfam or PANTHER
+  accession with no hits, the same page as a real family with no members in
+  the organism, so the tool answered "0 members" for both. An empty page now
+  asks InterPro whether the entry exists: if not, it is `NotFoundError`; if
+  so, "0 members" stands.
+
 - **A deleted, merged or demerged UniProt accession is "not found", with
   UniProt's reason.** UniProt answers such an accession with a 200 whose
   entry is `Inactive` and carries no protein, so `resolve_locus_to_uniprot`

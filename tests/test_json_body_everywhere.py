@@ -133,7 +133,8 @@ _CASES: dict[str, tuple[str, _Call, Any]] = {
     "uniprot-entry-members": (
         "uniprot",
         lambda m, c: m.entry_members(c, "PF00069", "arabidopsis_thaliana"),
-        {"results": []},
+        # One member: an empty page also asks InterPro whether the entry exists.
+        {"results": [{"primaryAccession": "P00001"}]},
     ),
 }
 
@@ -156,7 +157,7 @@ async def test_a_body_that_is_not_json_names_the_service(
         return httpx.Response(
             200,
             content=bodies.pop(0),
-            headers={"x-total-results": "0"},
+            headers={"x-total-results": "1"},
             request=httpx.Request(method, url),
         )
 

@@ -26,6 +26,7 @@ from pytest_httpx import HTTPXMock
 from plant_genomics_mcp import uniprot
 from plant_genomics_mcp.errors import (
     InvalidArguments,
+    NotFoundError,
     PlantGenomicsError,
     UpstreamUnavailableError,
 )
@@ -113,6 +114,80 @@ async def test_a_member_row_that_is_not_an_object_is_refused_and_not_stored(
     assert (r["total"], r["returned"], r["truncated"]) == (1, 1, False)
     assert r["members"][0]["accession"] == "P00001"
     assert len(httpx_mock.get_requests()) == 2
+
+
+_ENTRY_API = "https://www.ebi.ac.uk/interpro/api/entry/{}/{}/"
+# InterPro's answer for a Pfam entry that exists (live 2026-09-30, trimmed).
+_PF00069 = {
+    "metadata": {
+        "accession": "PF00069",
+        "source_database": "pfam",
+        "name": {"name": "Protein kinase domain", "short": "Pkinase"},
+    }
+}
+
+
+@pytest.mark.asyncio
+async def test_an_entry_that_does_not_exist_is_not_found_not_zero_members(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """UniProt's xref search answers a never-issued entry with no hits, the
+    same page as a real family with no members in the organism; InterPro's
+    entry API tells them apart (live 2026-09-30: PF99999 204, PF00069 200)."""
+    httpx_mock.add_response(url=SEARCH, json={"results": []}, headers={"x-total-results": "0"})
+    httpx_mock.add_response(url=_ENTRY_API.format("pfam", "PF99999"), status_code=204)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError) as err:
+            await uniprot.entry_members(client, "PF99999", "arabidopsis_thaliana")
+    assert str(err.value) == "[NotFoundError] InterPro has no pfam entry 'PF99999'"
+    assert len(httpx_mock.get_requests()) == 2
+
+
+@pytest.mark.asyncio
+async def test_a_real_entry_with_no_members_in_the_organism_answers_zero(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """Positive control of the test above, and the consult is stored: a
+    repeat asks nothing."""
+    httpx_mock.add_response(url=SEARCH, json={"results": []}, headers={"x-total-results": "0"})
+    httpx_mock.add_response(url=_ENTRY_API.format("pfam", "PF00069"), json=_PF00069)
+    async with httpx.AsyncClient() as client:
+        for _ in range(2):
+            r = await uniprot.entry_members(client, "PF00069", "arabidopsis_thaliana")
+            assert (r["total"], r["returned"], r["members"]) == (0, 0, [])
+    assert len(httpx_mock.get_requests()) == 2
+
+
+@pytest.mark.asyncio
+async def test_an_entry_answer_naming_another_accession_is_refused(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """An answer that does not name the entry asked about says nothing about it."""
+    httpx_mock.add_response(url=SEARCH, json={"results": []}, headers={"x-total-results": "0"})
+    httpx_mock.add_response(
+        url=_ENTRY_API.format("pfam", "PF00069"), json={"metadata": {"accession": "PF00070"}}
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(PlantGenomicsError) as err:
+            await uniprot.entry_members(client, "PF00069", "arabidopsis_thaliana")
+    assert not isinstance(err.value, NotFoundError)
+    assert "does not name 'PF00069'" in str(err.value)
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_a_never_issued_entry_is_not_found_and_a_memberless_one_is_zero() -> None:
+    """PF99999 was never issued; IPR000001 (Kringle) exists with no
+    Arabidopsis member. Positive control: the protein kinase domain has many."""
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="InterPro has no pfam entry 'PF99999'"):
+            await uniprot.entry_members(client, "PF99999", "arabidopsis_thaliana")
+        empty = await uniprot.entry_members(client, "IPR000001", "arabidopsis_thaliana")
+        kinases = await uniprot.entry_members(
+            client, "PF00069", "arabidopsis_thaliana", page_size=1
+        )
+    assert (empty["total"], empty["returned"]) == (0, 0)
+    assert kinases["total"] > 100, kinases["total"]
 
 
 @pytest.mark.asyncio
@@ -244,10 +319,12 @@ async def test_a_cursor_continues_only_the_query_it_came_from(
 
 @pytest.mark.asyncio
 async def test_an_entry_with_no_members_here_is_an_answer_of_zero(httpx_mock: HTTPXMock) -> None:
-    """The null arm: no members in this organism is a finding, not an error."""
+    """The null arm: no members in this organism is a finding, not an error,
+    once InterPro confirms the entry exists (else it is not found)."""
     httpx_mock.add_response(url=SEARCH, json={"results": []}, headers={"x-total-results": "0"})
+    httpx_mock.add_response(url=_ENTRY_API.format("pfam", "PF00069"), json=_PF00069)
     async with httpx.AsyncClient() as client:
-        r = await uniprot.entry_members(client, "PF06507", "triticum_aestivum")
+        r = await uniprot.entry_members(client, "PF00069", "triticum_aestivum")
     assert (r["total"], r["returned"], r["members"], r["next_cursor"]) == (0, 0, [], None)
 
 
@@ -261,7 +338,9 @@ async def test_an_answer_without_its_total_is_an_upstream_fault(httpx_mock: HTTP
 
 @pytest.mark.asyncio
 async def test_only_entry_accessions_it_can_query_are_accepted(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(url=SEARCH, json={"results": []}, headers={"x-total-results": "0"})
+    httpx_mock.add_response(
+        url=SEARCH, json={"results": [OLN_ONLY]}, headers={"x-total-results": "1"}
+    )
     async with httpx.AsyncClient() as client:
         # Positive control: a well-formed accession reaches UniProt.
         await uniprot.entry_members(client, "IPR010525", "arabidopsis_thaliana")
@@ -482,7 +561,10 @@ async def test_live_hits_are_answered_whole_and_the_request_is_read_back(
 @pytest.mark.asyncio
 async def test_the_page_size_is_clamped_to_uniprots_range(httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
-        url=SEARCH, json={"results": []}, headers={"x-total-results": "0"}, is_reusable=True
+        url=SEARCH,
+        json={"results": [OLN_ONLY]},
+        headers={"x-total-results": "1"},
+        is_reusable=True,
     )
     async with httpx.AsyncClient() as client:
         for asked in (0, 1, 7, 500, 501):
