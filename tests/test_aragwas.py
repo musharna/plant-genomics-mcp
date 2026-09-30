@@ -328,17 +328,24 @@ async def test_only_the_gene_itself_in_the_search_counts(httpx_mock: HTTPXMock) 
 
 
 @pytest.mark.asyncio
-async def test_when_the_search_fails_too_the_outage_stands(httpx_mock: HTTPXMock) -> None:
+@pytest.mark.parametrize("search_status", [500, 429, 403, 404])
+async def test_when_the_search_fails_too_the_outage_stands(
+    httpx_mock: HTTPXMock, search_status: int
+) -> None:
     """A search that cannot answer says nothing about the gene: the
-    associations failure is raised, not a guess."""
+    associations failure is raised, not a guess, and not the search's own
+    error either (a 429 there read as "back off" for an outage; PR #220
+    review). Each status is one the retry layer raises a different class for."""
     httpx_mock.add_response(url=_UNKNOWN, is_reusable=True, status_code=500, text=_SERVER_ERROR)
     httpx_mock.add_response(
-        url=f"{_SUGGEST}AT1G99990", is_reusable=True, status_code=500, text=_SERVER_ERROR
+        url=f"{_SUGGEST}AT1G99990", is_reusable=True, status_code=search_status, text="no"
     )
     async with httpx.AsyncClient() as client:
-        with pytest.raises(UpstreamUnavailableError, match="AraGWAS associations") as err:
+        with pytest.raises(PlantGenomicsError) as err:
             await aragwas.lookup_locus(client, "AT1G99990")
-    assert not isinstance(err.value, NotFoundError)
+    assert type(err.value) is UpstreamUnavailableError
+    assert "AraGWAS associations" in str(err.value)
+    assert err.value.status == 500
 
 
 @live_only

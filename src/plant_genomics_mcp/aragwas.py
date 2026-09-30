@@ -24,7 +24,12 @@ from typing import Any
 import httpx
 
 from plant_genomics_mcp import _http, cache, organisms, validators
-from plant_genomics_mcp.errors import NotFoundError, OrganismNotSupported, UpstreamUnavailableError
+from plant_genomics_mcp.errors import (
+    NotFoundError,
+    OrganismNotSupported,
+    PlantGenomicsError,
+    UpstreamUnavailableError,
+)
 
 BASE_URL = "https://aragwas.1001genomes.org"
 DEFAULT_TIMEOUT = 30.0
@@ -89,7 +94,9 @@ async def _has_gene(client: httpx.AsyncClient, locus: str) -> bool | None:
             max_retries=MAX_RETRIES,
             shape=_http.object_rows,
         )
-    except UpstreamUnavailableError:
+    except PlantGenomicsError:
+        # Any failure: a 429 or 403 here raised its own class and replaced
+        # the outage it was asked about (PR #220 review).
         return None
     return any(row.get("id") == locus for row in rows)
 
