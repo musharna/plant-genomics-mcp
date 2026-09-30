@@ -122,6 +122,37 @@ async def test_lookup_by_uniprot_malformed_raises(httpx_mock: HTTPXMock) -> None
             await alphafold.lookup_by_uniprot(client, "Q9SZ92")
 
 
+# Rows that are not all objects (#96). The list check passed them, the body
+# was stored, and every call for the TTL leaked ``AttributeError: 'int' object
+# has no attribute 'get'`` from the projection without asking again.
+_BAD_ROWS = {
+    "only such a row": ([1], "row 0 is int"),
+    "beside a real row": ([_PREDICTION[0], "junk"], "row 1 is str"),
+}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("case", sorted(_BAD_ROWS))
+async def test_a_row_that_is_not_an_object_is_refused_and_not_stored(
+    httpx_mock: HTTPXMock, case: str
+) -> None:
+    """Checked before the store. Positive control, same cache: a readable
+    answer is then asked for and served."""
+    rows, problem = _BAD_ROWS[case]
+    httpx_mock.add_response(url=_PRED_URL, json=rows)
+    httpx_mock.add_response(url=_PRED_URL, json=_PREDICTION)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(PlantGenomicsError) as err:
+            await alphafold.lookup_by_uniprot(client, "Q9SZ92")
+        assert str(err.value) == (
+            "AlphaFold /api/prediction/Q9SZ92 returned unexpected payload: "
+            f"{problem}, not an object"
+        )
+        r = await alphafold.lookup_by_uniprot(client, "Q9SZ92")
+    assert (r["found"], r["model_entity_id"]) == (True, "AF-Q9SZ92-F1")
+    assert len(httpx_mock.get_requests()) == 2
+
+
 @pytest.mark.asyncio
 async def test_lookup_by_uniprot_no_residue_range(httpx_mock: HTTPXMock) -> None:
     """An entry without sequenceStart yields residue_range=None (L11)."""

@@ -204,6 +204,9 @@ def _normalize(hit: dict[str, Any], locus_query: str) -> dict[str, Any]:
     }
 
 
+_ENTRY = _http.expect_fields(primaryAccession=str)
+
+
 async def _fetch_by_accession(
     client: httpx.AsyncClient,
     accession: str,
@@ -234,11 +237,14 @@ async def _fetch_by_accession(
         )
     except NotFoundError:
         raise NotFoundError(f"UniProt has no entry for accession={bare!r}") from None
-    data = _http.json_body(resp, "UniProt accession fetch")
-    if not isinstance(data, dict):
+    # An entry names its accession. ``{}`` passed a dict check, was stored,
+    # and answered ``primaryAccession: ''`` for the whole TTL (#96).
+    try:
+        data = _ENTRY(_http.json_body(resp, "UniProt accession fetch"))
+    except _http.UnreadableBody as e:
         raise PlantGenomicsError(
-            f"UniProt accession fetch returned unexpected payload: {type(data).__name__}"
-        )
+            f"UniProt accession fetch returned unexpected payload: {e.args[0]}"
+        ) from None
     data["_upstream_version"] = _http.upstream_version(resp)
     _CACHE.set(key, data)
     return data
@@ -256,27 +262,43 @@ async def fetch_sequence(
     NotFoundError on 404.
     """
     bare = accession.split(".", 1)[0]
-    url = f"{BASE_URL}/uniprotkb/{bare}.fasta"
-    key = cache.make_key("GET", BASE_URL, f"/uniprotkb/{bare}.fasta", {})
-    cached = _CACHE.get(key)
-    if cached is not None:
-        return str(cached)
     try:
-        resp = await _http.request_with_retry(
+        return await _http.cached_get(
             client,
-            "GET",
-            url,
+            _CACHE,
+            f"{BASE_URL}/uniprotkb/{bare}.fasta",
             service="UniProt FASTA",
+            parse=lambda resp: resp.text,
+            shape=_fasta_residues,
             timeout=DEFAULT_TIMEOUT,
             max_retries=MAX_RETRIES,
             not_found_404_pattern=NO_ENTRY_404_RE,
         )
     except NotFoundError:
         raise NotFoundError(f"UniProt has no FASTA for accession={bare!r}") from None
-    lines = resp.text.splitlines()
-    seq = "".join(line.strip() for line in lines if not line.startswith(">"))
-    _CACHE.set(key, seq)
-    return seq
+
+
+def _fasta_residues(value: object) -> str:
+    """The residues of a one-record FASTA body, else :class:`_http.UnreadableBody`.
+
+    The body was stored and returned with only its header lines dropped, so
+    a 200 of ``{}`` or ``""`` was the sequence the synthesis tools sent to
+    BLAST for the whole TTL (#96). A record is a ``>`` header and residue
+    lines of letters only. No bytes at all is UniProt's answer for an
+    inactive entry (live 2026-09-30: Q9XXX9, deleted, ``200
+    text/plain;format=fasta`` and 0 bytes, where its ``.json`` states
+    ``entryType: Inactive``), so it is "no sequence", not a bad body.
+    """
+    text = str(value)
+    if not text.strip():
+        raise NotFoundError("inactive entry: UniProt sent no FASTA record")
+    lines = text.splitlines()
+    if not lines or not lines[0].startswith(">"):
+        raise _http.UnreadableBody(f"no FASTA header in {text[:80]!r}")
+    residues = "".join(line.strip() for line in lines[1:])
+    if not (residues.isascii() and residues.isalpha()):
+        raise _http.UnreadableBody(f"no residues after {lines[0][:80]!r}")
+    return residues
 
 
 async def lookup_locus(
