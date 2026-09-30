@@ -276,6 +276,19 @@ async def fetch_sequence(
         )
     except NotFoundError:
         raise NotFoundError(f"UniProt has no FASTA for accession={bare!r}") from None
+    except UpstreamUnavailableError as unreadable:
+        # UniProt answers a deleted entry's FASTA with 200 and no bytes (live
+        # 2026-09-30: Q9XXX9), which the body cannot tell from a transient
+        # empty answer (#215 review); the entry itself states which.
+        try:
+            entry = await _fetch_by_accession(client, bare)
+        except PlantGenomicsError:
+            raise unreadable from None
+        if entry.get("entryType") != "Inactive":
+            raise unreadable from None
+        raise NotFoundError(
+            f"UniProt has no FASTA for accession={bare!r}: the entry is inactive"
+        ) from None
 
 
 def _fasta_residues(value: object) -> str:
@@ -284,14 +297,11 @@ def _fasta_residues(value: object) -> str:
     The body was stored and returned with only its header lines dropped, so
     a 200 of ``{}`` or ``""`` was the sequence the synthesis tools sent to
     BLAST for the whole TTL (#96). A record is a ``>`` header and residue
-    lines of letters only. No bytes at all is UniProt's answer for an
-    inactive entry (live 2026-09-30: Q9XXX9, deleted, ``200
-    text/plain;format=fasta`` and 0 bytes, where its ``.json`` states
-    ``entryType: Inactive``), so it is "no sequence", not a bad body.
+    lines of letters only. No bytes at all is unreadable here too, though it
+    is also UniProt's answer for a deleted entry: :func:`fetch_sequence`
+    asks the entry which it was.
     """
     text = str(value)
-    if not text.strip():
-        raise NotFoundError("inactive entry: UniProt sent no FASTA record")
     lines = text.splitlines()
     if not lines or not lines[0].startswith(">"):
         raise _http.UnreadableBody(f"no FASTA header in {text[:80]!r}")
