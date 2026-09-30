@@ -135,7 +135,16 @@ async def _search(
             f"UniProt search answered without a results list ({str(data)[:120]}); "
             "this is not zero hits"
         )
-    results = list(rows)
+    # A row that is not an object was stored with the page: row 0 leaked a
+    # raw TypeError below, a later one an AttributeError in whichever reader
+    # reached it, for the whole TTL (#96). Every live row is one.
+    try:
+        results = _http.object_rows(rows)
+    except _http.UnreadableBody as e:
+        raise PlantGenomicsError(
+            f"UniProt search returned unexpected payload: {e.args[0]}"
+        ) from None
+    results = list(results)
     # Carry the release UniProt reported on the response that produced these
     # rows INSIDE the cached value, so a warm hit reports the release it was
     # actually fetched under instead of silently reporting none. Stored on the
@@ -571,6 +580,14 @@ async def entry_members(
             raise PlantGenomicsError(
                 f"UniProt search results is not a list: {type(results).__name__}"
             )
+        # A row that is not an object was skipped after the store, so a page of
+        # them answered "returned: 0" of UniProt's total as complete (#96).
+        try:
+            _http.object_rows(results)
+        except _http.UnreadableBody as e:
+            raise PlantGenomicsError(
+                f"UniProt search (entry members) returned unexpected payload: {e.args[0]}"
+            ) from None
         page = {
             "total": total,
             "results": results,
@@ -578,7 +595,8 @@ async def entry_members(
             "upstream_version": _http.upstream_version(resp),
         }
         _CACHE.set(key, page)
-    members = [_member(hit) for hit in page["results"] if isinstance(hit, dict)]
+    # Every row is an object: checked before the store.
+    members = [_member(hit) for hit in page["results"]]
     next_cursor = (
         _http.encode_cursor("entry_members", bound, {"cursor": page["next_cursor"]})
         if page["next_cursor"] is not None

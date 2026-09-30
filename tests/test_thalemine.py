@@ -416,12 +416,33 @@ async def test_missing_results_list_raises(
         await thalemine.lookup_gene_rifs(client, LOCUS)
 
 
-async def test_non_list_rows_are_filtered_out(
-    client: httpx.AsyncClient, httpx_mock: HTTPXMock
+# Pages with a row that is not a list (#96). The reader dropped such rows
+# before the store: a page of only such rows was stored as no rows and read
+# as "ThaleMine has no gene", and any other page answered short, both for the
+# whole TTL. Every live row is a positional list.
+_BAD_PAGES: dict[str, tuple[list[Any], str]] = {
+    "only such a row": ([1], "row 0 is int"),
+    "beside real rows": ([*INT_ROWS[:1], "junk", *INT_ROWS[1:]], "row 1 is str"),
+    "an object among them": ([*INT_ROWS, {"a": 1}], "row 4 is dict"),
+}
+
+
+@pytest.mark.parametrize("case", sorted(_BAD_PAGES))
+async def test_a_row_that_is_not_a_list_is_refused_and_not_stored(
+    client: httpx.AsyncClient, httpx_mock: HTTPXMock, case: str
 ) -> None:
-    httpx_mock.add_response(json={"results": ["junk", {"a": 1}, *RIF_ROWS]})
-    out = await thalemine.lookup_gene_rifs(client, LOCUS)
-    assert out["rif_count"] == 2
+    """Checked before the store. Positive control, same cache: a readable
+    page is then asked for and answered whole."""
+    rows, problem = _BAD_PAGES[case]
+    httpx_mock.add_response(json=_payload(rows))
+    httpx_mock.add_response(json=_payload(INT_ROWS))
+    with pytest.raises(PlantGenomicsError) as err:
+        await thalemine.lookup_interactions(client, LOCUS)
+    assert not isinstance(err.value, NotFoundError)
+    assert str(err.value) == (f"ThaleMine query returned unexpected payload: {problem}, not a list")
+    out = await thalemine.lookup_interactions(client, LOCUS)
+    assert (out["found"], out["partner_count"], out["evidence_count"]) == (True, 2, 4)
+    assert len(httpx_mock.get_requests()) == 2
 
 
 async def test_upstream_500_surfaces_as_upstream_unavailable(
