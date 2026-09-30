@@ -9,7 +9,9 @@
   on 2026-09-30 Planteome answered a GitHub runner with Apache's 403 page
   while answering this host, and those were all three of the night's
   regressions. It is still not retried; an unmapped 400 stays
-  `PlantGenomicsError`, since it says our request was wrong.
+  `PlantGenomicsError`, since it says our request was wrong. The KEGG bridge
+  keeps `status` when it wraps an Ensembl outage; it rebuilt the error from
+  its message and dropped it.
 
 - **`aragwas_associations` says "not found" for a gene AraGWAS does not
   have, not "upstream unavailable".** AraGWAS answers an unknown gene with an
