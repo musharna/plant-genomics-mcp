@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- **A 403 that is not a rate refusal is `UpstreamUnavailableError`
+  (`status=403`), not an untagged error.** This server sends no credentials,
+  so such a 403 is the upstream refusing to serve it (a firewall, an IP block,
+  gated access). Untagged, it read as a regression to the nightly live run:
+  on 2026-09-30 Planteome answered a GitHub runner with Apache's 403 page
+  while answering this host, and those were all three of the night's
+  regressions. It is still not retried; an unmapped 400 stays
+  `PlantGenomicsError`, since it says our request was wrong. The KEGG bridge
+  keeps `status` when it wraps an Ensembl outage; it rebuilt the error from
+  its message and dropped it.
+
 - **`aragwas_associations` says "not found" for a gene AraGWAS does not
   have, not "upstream unavailable".** AraGWAS answers an unknown gene with an
   HTTP 500 on every per-gene endpoint, so a never-issued AGI such as AT1G99990

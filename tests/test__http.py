@@ -9,6 +9,7 @@ tests that exercise it via each backend's wrapper.
 from __future__ import annotations
 
 import asyncio
+import os
 import re
 from typing import Any
 
@@ -911,6 +912,67 @@ async def test_exhausted_403_refusals_say_what_the_upstream_said(
                 service="example",
                 retry_403_pattern=_REFUSAL,
             )
+
+
+# Planteome's answer to a GitHub runner in the nightly of 2026-09-30, verbatim
+# from its JUnit report: Apache's stock page, with no rate marker to retry on.
+_FORBIDDEN_PAGE = (
+    '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">\n<html><head>\n'
+    "<title>403 Forbidden</title>\n</head><body>\n<h1>Forbidden</h1>\n"
+    "<p>You don't have permission to access this resource.</p>\n</body></html>"
+)
+
+
+@pytest.mark.asyncio
+async def test_a_terminal_403_is_an_outage_and_a_bad_request_is_not(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """This server sends no credentials, so a 403 it cannot retry is the
+    upstream refusing to serve it (a firewall, an IP block, gated access): an
+    outage to the caller, tagged so the nightly and a client can route on it.
+    Control: an unmapped 400 is our request's fault and stays the untagged base
+    class. One request each; neither is retried."""
+    httpx_mock.add_response(url="https://example.test/f", status_code=403, text=_FORBIDDEN_PAGE)
+    httpx_mock.add_response(url="https://example.test/bad", status_code=400, text="Bad Request")
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError) as refused:
+            await _http.request_with_retry(
+                client, "GET", "https://example.test/f", service="example"
+            )
+        with pytest.raises(PlantGenomicsError) as bad:
+            await _http.request_with_retry(
+                client, "GET", "https://example.test/bad", service="example"
+            )
+    assert refused.value.status == 403
+    assert str(refused.value) == (
+        f"[UpstreamUnavailableError] example → HTTP 403: {_FORBIDDEN_PAGE[:200]}"
+    )
+    assert type(bad.value) is PlantGenomicsError
+    assert str(bad.value) == "example → HTTP 400: Bad Request"
+
+
+@pytest.mark.skipif(
+    os.environ.get("PLANT_GENOMICS_MCP_LIVE") != "1",
+    reason="set PLANT_GENOMICS_MCP_LIVE=1 to run",
+)
+@pytest.mark.asyncio
+async def test_live_a_gated_upstreams_403_is_an_outage() -> None:
+    """TAIR gates its API for every caller (see tair.py; every endpoint probed
+    answered 403 on 2026-09-30). Positive control, same client: an InterPro
+    entry answers."""
+    async with httpx.AsyncClient(timeout=30) as client:
+        ok = await _http.request_with_retry(
+            client,
+            "GET",
+            "https://www.ebi.ac.uk/interpro/api/entry/interpro/IPR000001/",
+            service="InterPro entry",
+        )
+        assert ok.json()["metadata"]["accession"] == "IPR000001"
+        with pytest.raises(UpstreamUnavailableError) as refused:
+            await _http.request_with_retry(
+                client, "GET", "https://www.arabidopsis.org/api/search/gene", service="TAIR"
+            )
+    assert refused.value.status == 403, str(refused.value)
 
 
 # UniProt's answers, verbatim from live 404s (2026-09-29): an unknown accession,

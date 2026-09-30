@@ -264,8 +264,8 @@ async def _entry_record(
             f"UniProt accession fetch returned unexpected payload: {e.args[0]}"
         ) from None
     data["_upstream_version"] = _http.upstream_version(resp)
-    # An inactive record is stored too: it is UniProt's own answer, as
-    # lasting as a 404, so a repeat is not asked again.
+    # An inactive record is stored too: it is UniProt's own lasting answer,
+    # so a repeat is not asked again. (A 404 above is raised, not stored.)
     _CACHE.set(key, data)
     return data
 

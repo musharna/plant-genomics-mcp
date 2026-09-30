@@ -19,7 +19,12 @@ from collections.abc import Sequence
 from pathlib import Path
 from xml.sax.saxutils import quoteattr
 
+import httpx
 import pytest
+from pytest_httpx import HTTPXMock
+
+from plant_genomics_mcp import _http
+from plant_genomics_mcp.errors import PlantGenomicsError
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "classify_live_failures.py"
@@ -42,6 +47,15 @@ PHYTOZOME_404 = (
     '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN"> <html><head> <title>404 Not Found</title>'
 )
 WRONG_LENGTH = "assert 430 == 429"
+# The nightly of 2026-09-30, verbatim from its JUnit report: Planteome refused a
+# GitHub runner (the same code answered this host that day), and the untagged
+# base class made it one of that night's three "regressions".
+PLANTEOME_403 = (
+    "plant_genomics_mcp.errors.PlantGenomicsError: Planteome /select → HTTP 403: "
+    '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">\n<html><head>\n'
+    "<title>403 Forbidden</title>\n</head><body>\n<h1>Forbidden</h1>\n"
+    "<p>You don't have permission to access this resource.</p>\n</body></html>"
+)
 GATE_SKIP = "set PLANT_GENOMICS_MCP_LIVE=1 to hit rest.ensembl.org"
 GRAMENE_SKIP = "live"  # tests/test_gramene.py's reason: it does not name the variable
 # The skip verify_genes takes when a direct probe finds its backend down
@@ -263,3 +277,39 @@ def test_the_workflow_keeps_a_long_repr_whole_for_the_classifier(
     assert run.returncode == 1, run.stdout + run.stderr
     classes = {f.test.split("::")[1]: f.cls for f in classifier.read_report(report).failures}
     assert classes == {"test_synth": "upstream", "test_plain": "regression"}, classes
+
+
+async def _junit_message(httpx_mock: HTTPXMock, status: int, body: str) -> str:
+    """The JUnit message pytest writes for what ``_http`` raises on this answer."""
+    url = f"https://example.test/{status}"
+    httpx_mock.add_response(url=url, status_code=status, text=body)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(PlantGenomicsError) as raised:
+            await _http.request_with_retry(client, "GET", url, service="Planteome /select")
+    err = raised.value
+    return f"{type(err).__module__}.{type(err).__qualname__}: {err}"
+
+
+async def test_a_refusal_is_upstream_side_and_a_bad_request_is_a_regression(
+    tmp_path: Path, httpx_mock: HTTPXMock
+) -> None:
+    """The night's Planteome 403, raised by the real ``_http`` from the page it
+    answered, run through the script: upstream-side. Control, same run: a 400
+    ``_http`` does not map, which our own request causes, is a regression."""
+    body = PLANTEOME_403.split("HTTP 403: ", 1)[1]
+    refused = await _junit_message(httpx_mock, 403, body)
+    assert refused == PLANTEOME_403.replace(
+        "PlantGenomicsError: ", "UpstreamUnavailableError: [UpstreamUnavailableError] ", 1
+    )
+    bad = await _junit_message(httpx_mock, 400, "Bad Request")
+    run = _run(
+        _report(tmp_path, [("test_planteome", "failure", refused), ("test_bad", "failure", bad)]),
+        1,
+    )
+    assert run.returncode == 1, run.stdout + run.stderr
+    assert "2 test cases; 1 regression(s), 1 upstream-side failure(s), 0 skipped." in run.stdout
+    rows = {ln.split(" | ")[1]: ln.split(" | ")[0] for ln in run.stdout.splitlines() if "`" in ln}
+    assert rows == {
+        "`tests.test_live::test_bad`": "| regression",
+        "`tests.test_live::test_planteome`": "| upstream",
+    }, run.stdout
