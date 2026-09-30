@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **A deleted, merged or demerged UniProt accession is "not found", with
+  UniProt's reason.** UniProt answers such an accession with a 200 whose
+  entry is `Inactive` and carries no protein, so `resolve_locus_to_uniprot`
+  answered it as found with no name, gene or organism. It now raises
+  `NotFoundError` naming the reason (for example `DELETED: Not part of a
+  reference proteome`, or the accessions a merged entry went into). An
+  accession that was never issued is still a 404.
+
 - **UniProt search, UniProt entry members and ThaleMine refuse a page with an
   unreadable row instead of storing it.** A UniProt search row that was not
   an object leaked a raw `TypeError` (first row) or `AttributeError` (a later

@@ -220,7 +220,16 @@ async def _fetch_by_accession(
     client: httpx.AsyncClient,
     accession: str,
 ) -> dict[str, Any]:
-    """Fetch a UniProtKB entry directly by accession.
+    """The active UniProtKB entry for ``accession``; an inactive one is
+    :class:`NotFoundError` with UniProt's reason (see :func:`_active`)."""
+    return _active(await _entry_record(client, accession), accession.split(".", 1)[0])
+
+
+async def _entry_record(
+    client: httpx.AsyncClient,
+    accession: str,
+) -> dict[str, Any]:
+    """Fetch a UniProtKB record directly by accession, active or not.
 
     Strips any trailing ``.N`` version suffix (UniProt's per-accession
     endpoint expects the bare accession, but BLAST text reports emit
@@ -255,8 +264,41 @@ async def _fetch_by_accession(
             f"UniProt accession fetch returned unexpected payload: {e.args[0]}"
         ) from None
     data["_upstream_version"] = _http.upstream_version(resp)
+    # An inactive record is stored too: it is UniProt's own answer, as
+    # lasting as a 404, so a repeat is not asked again.
     _CACHE.set(key, data)
     return data
+
+
+def _active(entry: dict[str, Any], accession: str) -> dict[str, Any]:
+    """``entry``, unless UniProt says it is inactive: then :class:`NotFoundError`.
+
+    A deleted, merged or demerged accession answers 200 with
+    ``entryType: Inactive`` and no protein (live 2026-09-30: Q9XXX9,
+    DELETED), where one never issued is a 404. It passed as an entry, and
+    ``resolve_locus_to_uniprot`` answered it with no name, gene or organism.
+    The reason fields are UniProt's ``EntryInactiveReason`` schema.
+    """
+    if entry.get("entryType") != "Inactive":
+        return entry
+    raise NotFoundError(
+        f"UniProt has no entry for accession={accession!r}: {_inactive_reason(entry)}"
+    )
+
+
+def _inactive_reason(entry: dict[str, Any]) -> str:
+    why = entry.get("inactiveReason")
+    why = why if isinstance(why, dict) else {}
+    kind = why.get("inactiveReasonType")
+    if not isinstance(kind, str) or not kind:
+        return "the entry is inactive (no reason given)"
+    targets = why.get("mergeDemergeTos")
+    if isinstance(targets, list) and targets:
+        return f"the entry is inactive ({kind} into {', '.join(map(str, targets))})"
+    detail = why.get("deletedReason")
+    return (
+        f"the entry is inactive ({kind}: {detail})" if detail else f"the entry is inactive ({kind})"
+    )
 
 
 async def fetch_sequence(
@@ -290,13 +332,13 @@ async def fetch_sequence(
         # 2026-09-30: Q9XXX9), which the body cannot tell from a transient
         # empty answer (#215 review); the entry itself states which.
         try:
-            entry = await _fetch_by_accession(client, bare)
+            entry = await _entry_record(client, bare)
         except PlantGenomicsError:
             raise unreadable from None
         if entry.get("entryType") != "Inactive":
             raise unreadable from None
         raise NotFoundError(
-            f"UniProt has no FASTA for accession={bare!r}: the entry is inactive"
+            f"UniProt has no FASTA for accession={bare!r}: {_inactive_reason(entry)}"
         ) from None
 
 
