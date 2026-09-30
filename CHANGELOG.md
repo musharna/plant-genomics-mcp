@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **UniProt search, UniProt entry members and ThaleMine refuse a page with an
+  unreadable row instead of storing it.** A UniProt search row that was not
+  an object leaked a raw `TypeError` (first row) or `AttributeError` (a later
+  row, in whichever reader reached it). `uniprot_entry_members` skipped such
+  rows and answered none of UniProt's stated total as a complete page.
+  ThaleMine dropped rows that were not lists, so a page of them was stored
+  and read as "no such gene". Each page is now checked before it is stored,
+  and a bad page is asked for again on the next call.
+
 - **Three backends that keep their own cache no longer store a body they
   cannot read.** UniProt's FASTA fetch returned any 200 as the sequence with
   its header lines dropped, so `{}` or an empty body was stored and sent to
