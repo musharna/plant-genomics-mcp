@@ -15,7 +15,12 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import uniprot
-from plant_genomics_mcp.errors import InvalidArguments, NotFoundError
+from plant_genomics_mcp.errors import (
+    InvalidArguments,
+    NotFoundError,
+    PlantGenomicsError,
+    UpstreamUnavailableError,
+)
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
@@ -303,6 +308,140 @@ async def test_fetch_sequence_caches_result(httpx_mock):
         a = await uniprot.fetch_sequence(client, "Q0WV96")
         b = await uniprot.fetch_sequence(client, "Q0WV96")
     assert a == b == "MEDQ"
+
+
+# Bodies of the accession endpoint that name no entry (#96). The dict check
+# passed ``{}``, it was stored, and the tool answered ``primaryAccession: ''``
+# for the whole TTL without asking again.
+_NOT_AN_ENTRY: dict[str, tuple[object, str]] = {
+    "empty object": ({}, "no str 'primaryAccession' in {}"),
+    "array": ([], "list, not an object"),
+}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("case", sorted(_NOT_AN_ENTRY))
+async def test_an_accession_answer_naming_no_entry_is_refused_and_not_stored(
+    httpx_mock: HTTPXMock, case: str
+) -> None:
+    """Checked before the store. Positive control, same cache: a real entry
+    is then asked for and answered."""
+    body, problem = _NOT_AN_ENTRY[case]
+    url = "https://rest.uniprot.org/uniprotkb/Q0WV96.json"
+    httpx_mock.add_response(url=url, json=body)
+    httpx_mock.add_response(url=url, json=_one_hit()["results"][0])
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(PlantGenomicsError) as err:
+            await uniprot.lookup_locus(client, "Q0WV96")
+        assert not isinstance(err.value, NotFoundError)
+        assert str(err.value) == f"UniProt accession fetch returned unexpected payload: {problem}"
+        result = await uniprot.lookup_locus(client, "Q0WV96")
+    assert (result["primaryAccession"], result["uniProtkbId"]) == ("Q0WV96", "NAC1_ARATH")
+    assert len(httpx_mock.get_requests()) == 2
+
+
+# Bodies of the FASTA endpoint that are not a FASTA record. Each was returned
+# as the sequence (``"{}"``, ``""``, ``"[1]"``), stored, and handed to BLAST
+# by the synthesis tools for the whole TTL without asking again.
+_NOT_FASTA = {
+    "json object": "{}",
+    "json row": "[1]",
+    "header only": ">sp|Q0WV96|NAC1_ARATH NAC domain-containing protein 1\n",
+}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("case", sorted(_NOT_FASTA))
+async def test_a_body_that_is_not_fasta_is_asked_again_and_not_stored(
+    httpx_mock: HTTPXMock, case: str
+) -> None:
+    """Asked once more, then the entry is asked whether it is inactive, then
+    a typed upstream error, never a sequence. Positive control, same cache: a
+    real record is then asked for and read."""
+    url = "https://rest.uniprot.org/uniprotkb/Q0WV96.fasta"
+    httpx_mock.add_response(url=url, text=_NOT_FASTA[case])
+    httpx_mock.add_response(url=url, text=_NOT_FASTA[case])
+    httpx_mock.add_response(url=_ENTRY_URL.format("Q0WV96"), json=_one_hit()["results"][0])
+    httpx_mock.add_response(url=url, text=">sp|Q0WV96|NAC1_ARATH\nMEDQ\nVGF\n")
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError) as err:
+            await uniprot.fetch_sequence(client, "Q0WV96")
+        assert "UniProt FASTA answered 200 twice without a readable result" in str(err.value)
+        assert await uniprot.fetch_sequence(client, "Q0WV96") == "MEDQVGF"
+    assert len(httpx_mock.get_requests()) == 4
+
+
+_FASTA_URL = "https://rest.uniprot.org/uniprotkb/{}.fasta"
+_ENTRY_URL = "https://rest.uniprot.org/uniprotkb/{}.json"
+# UniProt's .json for a deleted entry (live 2026-09-30, Q9XXX9, verbatim).
+_INACTIVE = {
+    "entryType": "Inactive",
+    "primaryAccession": "Q9XXX9",
+    "uniProtkbId": "Q9XXX9_PLAFA",
+    "annotationScore": 0.0,
+    "inactiveReason": {
+        "inactiveReasonType": "DELETED",
+        "deletedReason": "Not part of a reference proteome",
+    },
+    "extraAttributes": {"uniParcId": "UPI000007B4F7"},
+}
+
+
+@pytest.mark.asyncio
+async def test_an_empty_fasta_body_is_asked_again(httpx_mock: HTTPXMock) -> None:
+    """A body alone cannot tell a deleted entry from a transient empty
+    answer (#215 review), so an empty body is asked for again like any other
+    unreadable one, and a record that follows is the answer."""
+    url = _FASTA_URL.format("Q0WV96")
+    httpx_mock.add_response(url=url, text="")
+    httpx_mock.add_response(url=url, text=">sp|Q0WV96|X\nMEDQ\n")
+    async with httpx.AsyncClient() as client:
+        assert await uniprot.fetch_sequence(client, "Q0WV96") == "MEDQ"
+    assert len(httpx_mock.get_requests()) == 2
+
+
+@pytest.mark.asyncio
+async def test_a_fasta_that_stays_empty_is_not_found_when_the_entry_says_inactive(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """UniProt's FASTA for a deleted entry is a 200 with no bytes (live, see
+    below); the entry's own ``entryType`` is what says it has no sequence."""
+    httpx_mock.add_response(url=_FASTA_URL.format("Q9XXX9"), text="", is_reusable=True)
+    httpx_mock.add_response(url=_ENTRY_URL.format("Q9XXX9"), json=_INACTIVE)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError) as err:
+            await uniprot.fetch_sequence(client, "Q9XXX9")
+    assert str(err.value) == (
+        "[NotFoundError] UniProt has no FASTA for accession='Q9XXX9': the entry is inactive"
+    )
+    assert len(httpx_mock.get_requests()) == 3
+
+
+@pytest.mark.asyncio
+async def test_a_fasta_that_stays_empty_for_an_active_entry_is_an_outage(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """Negative control of the test above: the same empty FASTA for an entry
+    that is active is the upstream failing, not "no sequence"."""
+    httpx_mock.add_response(url=_FASTA_URL.format("Q0WV96"), text="", is_reusable=True)
+    httpx_mock.add_response(url=_ENTRY_URL.format("Q0WV96"), json=_one_hit()["results"][0])
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError) as err:
+            await uniprot.fetch_sequence(client, "Q0WV96")
+    assert "UniProt FASTA answered 200 twice without a readable result" in str(err.value)
+    assert len(httpx_mock.get_requests()) == 3
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_a_deleted_entry_has_no_fasta_and_a_live_one_has_residues() -> None:
+    """Q9XXX9 is a deleted entry (``entryType: Inactive``, 2026-09-30); its
+    FASTA is a 200 with no bytes. Positive control: AT1G01010's protein."""
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="no FASTA for accession='Q9XXX9'"):
+            await uniprot.fetch_sequence(client, "Q9XXX9")
+        seq = await uniprot.fetch_sequence(client, "Q0WV96")
+    assert seq.startswith("MEDQVGFGFRPNDEELVGHY") and seq.isalpha(), seq[:40]
 
 
 @live_only

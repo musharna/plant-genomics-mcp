@@ -125,7 +125,11 @@ _CASES: dict[str, tuple[str, _Call, Any]] = {
     "pdbe": ("pdbe", lambda m, c: m.lookup_by_uniprot(c, "Q9SZ92"), {}),
     "thalemine": ("thalemine", lambda m, c: m._rows(c, "<query/>"), {"results": []}),
     "uniprot-search": ("uniprot", lambda m, c: m._search(c, "gene:X"), {"results": []}),
-    "uniprot-accession": ("uniprot", lambda m, c: m._fetch_by_accession(c, "Q9SZ92"), {}),
+    "uniprot-accession": (
+        "uniprot",
+        lambda m, c: m._fetch_by_accession(c, "Q9SZ92"),
+        {"primaryAccession": "Q9SZ92"},
+    ),
     "uniprot-entry-members": (
         "uniprot",
         lambda m, c: m.entry_members(c, "PF00069", "arabidopsis_thaliana"),

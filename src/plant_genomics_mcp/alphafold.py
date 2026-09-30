@@ -143,6 +143,15 @@ async def lookup_by_uniprot(client: httpx.AsyncClient, accession: str) -> dict[s
             raise PlantGenomicsError(
                 f"AlphaFold {path} returned unexpected payload: {type(body).__name__}"
             )
+        # A row that is not an object passed the list check, was stored, and
+        # leaked AttributeError from _project for the whole TTL (#96); every
+        # live row is one.
+        try:
+            _http.object_rows(body)
+        except _http.UnreadableBody as e:
+            raise PlantGenomicsError(
+                f"AlphaFold {path} returned unexpected payload: {e.args[0]}"
+            ) from None
         _CACHE.set(key, body)
         cached = body
     if not cached:

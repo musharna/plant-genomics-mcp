@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- **Three backends that keep their own cache no longer store a body they
+  cannot read.** UniProt's FASTA fetch returned any 200 as the sequence with
+  its header lines dropped, so `{}` or an empty body was stored and sent to
+  BLAST by `consensus_homologs` for the whole cache lifetime; it now goes
+  through the shared cache, which asks once more for a body that is not a
+  FASTA record and stores nothing. UniProt's accession lookup stored `{}`
+  and answered `primaryAccession: ''`; AlphaFold stored a list whose rows
+  were not objects and then failed every call with a raw `AttributeError`.
+  Both now refuse such a body before storing it. UniProt answers a deleted
+  entry's FASTA with an empty 200 (checked live); a FASTA that stays
+  unreadable is now "no sequence" only when the entry itself says it is
+  inactive, and otherwise an upstream failure.
+
 - **The check that a failed call is asked again now covers every tool.** It
   counted a failure only when the tool raised, and passed a call that made
   any request at all. So the eight batch tools, `gene_report` and
