@@ -23,7 +23,7 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from plant_genomics_mcp import ensembl_plants
+from plant_genomics_mcp import _http, ensembl_plants
 from plant_genomics_mcp.errors import NotFoundError, UpstreamUnavailableError
 
 
@@ -286,8 +286,12 @@ async def test_live_second_family_paralogs_are_family_members() -> None:
         loci = sorted(p["locus"] for p in out["paralogs"])
         assert len(loci) >= 20, loci
         query = " OR ".join(f"gene:{locus}" for locus in loci)
-        resp = await client.get(
+        # Through _http, so an outage is retried and tagged, not a regression.
+        resp = await _http.request_with_retry(
+            client,
+            "GET",
             "https://rest.uniprot.org/uniprotkb/search",
+            service="UniProt search (paralog domains)",
             params={
                 "query": f"({query}) AND organism_id:3702 AND reviewed:true",
                 "fields": "gene_oln,xref_interpro",
@@ -295,7 +299,6 @@ async def test_live_second_family_paralogs_are_family_members() -> None:
                 "size": 500,
             },
         )
-        resp.raise_for_status()
     with_domain = {
         locus
         for line in resp.text.splitlines()[1:]

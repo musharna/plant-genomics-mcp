@@ -22,7 +22,7 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from plant_genomics_mcp import thalemine
+from plant_genomics_mcp import _http, thalemine
 from plant_genomics_mcp.errors import (
     NotFoundError,
     OrganismNotFound,
@@ -511,21 +511,33 @@ async def test_live_allele_and_strain_classes_are_still_empty(
     failing, ThaleMine has loaded that data and an allele tool becomes buildable.
     """
     for cls in ("Allele", "Strain"):
-        resp = await client.get(
+        # Through _http, so an outage is retried and tagged, not a regression.
+        resp = await _http.request_with_retry(
+            client,
+            "GET",
             f"{thalemine.BASE_URL}{thalemine.QUERY_PATH}",
+            service=f"ThaleMine {cls} count",
             params={
                 "query": f'<query model="genomic" view="{cls}.primaryIdentifier"></query>',
                 "format": "count",
             },
             timeout=30.0,
         )
-        resp.raise_for_status()
         assert resp.text.strip() == "0", f"{cls} is now populated — revisit the design"
 
 
 @live
-async def test_live_report_url_resolves(client: httpx.AsyncClient) -> None:
-    resp = await client.get(thalemine._report_url("AT5G11260"), follow_redirects=True, timeout=30.0)
+async def test_live_report_url_resolves() -> None:
+    """The report page is HTML by design, and reached through a redirect."""
+    async with httpx.AsyncClient(follow_redirects=True) as client:
+        resp = await _http.request_with_retry(
+            client,
+            "GET",
+            thalemine._report_url("AT5G11260"),
+            service="ThaleMine report page",
+            timeout=30.0,
+            allow_html=True,
+        )
     assert resp.status_code == 200
 
 
