@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **The Ensembl lookup and xrefs answers are checked for every organism.**
+  The keys those answers may leave out, because they are copied from
+  Ensembl's record, were listed from one Arabidopsis and one rice gene. A live
+  test now runs both tools on one gene per organism, twelve in all, and fails
+  on any declared key a record lacks that the list does not name.
+
 - **An upstream outage in a live test is the upstream's, not a regression.**
   Seven live test calls used `client.get` directly, so an outage reached the
   nightly without the `[UpstreamUnavailableError]` tag it classifies on:
