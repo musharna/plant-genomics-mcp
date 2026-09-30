@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **`aragwas_associations` says "not found" for a gene AraGWAS does not
+  have, not "upstream unavailable".** AraGWAS answers an unknown gene with an
+  HTTP 500 on every per-gene endpoint, so a never-issued AGI such as AT1G99990
+  was reported as an outage after three retries. When the first page fails
+  with a 500, AraGWAS's gene search now decides: no gene with that exact id is
+  `NotFoundError`; a listed gene, or a search that fails too, keeps the
+  outage. `UpstreamUnavailableError` carries the HTTP `status` its retries
+  ended on.
+
 - **A deleted, merged or demerged UniProt accession is "not found", with
   UniProt's reason.** UniProt answers such an accession with a 200 whose
   entry is `Inactive` and carries no protein, so `resolve_locus_to_uniprot`
