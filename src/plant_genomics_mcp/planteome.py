@@ -9,21 +9,24 @@ species-agnostic ontology); Planteome serves the plant-specific ones.
 
 We query by locus across the searchable bioentity fields and filter by
 ``taxon`` (NCBI taxid), so a locus that exists in more than one species
-resolves to the requested organism. Organisms Planteome doesn't curate
-simply return zero annotations — coverage is strong for arabidopsis, rice,
-maize, grape, soybean, and tomato (probed 2026-07-19); thinner elsewhere.
+resolves to the requested organism. Planteome names genes by our locus ids
+for arabidopsis, rice, wheat and tomato only (``organisms.planteome_id_form``);
+the others it indexes under other ids and are refused, since asking by ours
+answered "0 annotations" for every gene.
 
 Solr endpoint: https://browser.planteome.org/solr/select (AmiGO2 GOlr).
 """
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from typing import Any, TypeVar
 
 import httpx
 
 from plant_genomics_mcp import _http, cache, organisms
+from plant_genomics_mcp.errors import NotFoundError
 
 BASE_URL = "https://browser.planteome.org/solr"
 SELECT_PATH = "/select"
@@ -36,6 +39,22 @@ MAX_LIMIT = 200  # Solr rows cap we impose; a single locus rarely exceeds this
 # curating source (rice/maize use bioentity_label; arabidopsis puts the AGI
 # locus in synonym), so we search across all three rather than exact-match one.
 _QUERY_FIELDS = "bioentity_label_searchable synonym bioentity_name_searchable"
+
+# Characters the Lucene query syntax reads as operators.
+_LUCENE_SPECIAL = re.compile(r'([+\-&|!(){}\[\]^"~*?:\\/\s])')
+
+
+def _query(gene: str) -> str:
+    """The gene over the query fields, or any transcript label ``<gene>.N``.
+
+    Wheat and most tomato genes are held only as transcripts
+    (TraesCS6D02G130400.2, Solyc01g005000.2.1) that the gene id does not
+    match as a word: live 2026-09-30, Solyc01g005000 0 annotations by the id
+    alone, 27 with its transcripts; AT5G16970 36 and 37.
+    """
+    escaped = _LUCENE_SPECIAL.sub(r"\\\1", gene)
+    return f'"{escaped}" OR bioentity_label:{escaped}.*'
+
 
 # Per-module response cache. See plant_genomics_mcp.cache for env knobs.
 _CACHE = cache.TTLCache()
@@ -141,8 +160,10 @@ async def lookup_locus(
     resolve to the requested organism. ``limit`` is clamped to [1, MAX_LIMIT].
 
     Returns a dict with raw ``annotations[]`` plus a ``by_ontology`` rollup
-    keyed on namespace (PO / TO / PECO / GO). Organisms Planteome does not
-    curate return an empty annotation list rather than an error.
+    keyed on namespace (PO / TO / PECO / GO). An organism Planteome does not
+    name by our ids is :class:`OrganismNotSupported`; a gene it has no record
+    of is :class:`NotFoundError`; a gene it has with no annotation answers
+    an empty list.
     """
     locus = locus.strip()
     if not locus:
@@ -150,22 +171,33 @@ async def lookup_locus(
     limit = max(1, min(limit, MAX_LIMIT))
 
     record = organisms.resolve(organism)
+    form = organisms.planteome_id_form_for(organism)
     taxid = organisms.ncbi_taxid_for(organism)
     taxon = f"NCBITaxon:{taxid}"
+    gene = re.sub(r"\.\d+$", "", locus) if form == "unversioned" else locus
 
-    params: dict[str, Any] = {
-        "q": locus,
-        "defType": "edismax",
-        "qf": _QUERY_FIELDS,
-        "fq": ['document_category:"annotation"', f'taxon:"{taxon}"'],
-        "rows": limit,
-        "wt": "json",
-    }
-    response = await _get(client, SELECT_PATH, params=params, shape=_select_shape)
+    def params(category: str, rows: int) -> dict[str, Any]:
+        return {
+            "q": _query(gene),
+            "defType": "edismax",
+            "qf": _QUERY_FIELDS,
+            "fq": [f'document_category:"{category}"', f'taxon:"{taxon}"'],
+            "rows": rows,
+            "wt": "json",
+        }
+
+    service = f"Planteome {SELECT_PATH}"
+    response = await _get(client, SELECT_PATH, params("annotation", limit), shape=_select_shape)
     docs = response["docs"]
 
     annotations = [_normalize(d) for d in docs if isinstance(d, dict)]
-    total = _http.stated_count(response, "numFound", service=f"Planteome {SELECT_PATH}")
+    total = _http.stated_count(response, "numFound", service=service)
+    if total == 0:
+        # No annotation: a gene Planteome holds without one, or none at all
+        # (live 2026-09-30: AT1G01010 is a bioentity, AT1G99990 is not).
+        known = await _get(client, SELECT_PATH, params("bioentity", 0), shape=_select_shape)
+        if _http.stated_count(known, "numFound", service=service) == 0:
+            raise NotFoundError(f"Planteome has no gene {locus!r} for {record.canonical}")
     return {
         "locus": locus,
         "organism": record.canonical,

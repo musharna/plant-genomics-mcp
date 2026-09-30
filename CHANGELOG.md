@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- **`locus_plant_ontology` no longer answers "0 annotations" for genes it
+  cannot see.** Planteome names genes by this server's locus ids for
+  Arabidopsis, rice, wheat and tomato only; the other eight organisms it holds
+  under other ids (maize v4, barley v2, grape `VIT_`, sorghum `Sobic`, protein
+  accessions), so every gene there answered an empty list. Those organisms are
+  now `OrganismNotSupported`. Wheat and tomato genes are also matched through
+  Planteome's transcript labels (`TraesCS6D02G130400.2`, `Solyc01g005000.2.1`),
+  which the gene id alone did not reach (tomato: 0 → 27 annotations for
+  Solyc01g005000); tomato's SL4.0 version is dropped before asking. A gene
+  Planteome has no record of is `NotFoundError`, not an empty list.
+
 - **`uniprot_entry_members` says "not found" for an entry that does not
   exist.** UniProt's search answers a never-issued InterPro, Pfam or PANTHER
   accession with no hits, the same page as a real family with no members in
