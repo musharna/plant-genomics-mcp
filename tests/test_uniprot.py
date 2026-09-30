@@ -249,7 +249,11 @@ async def test_lookup_locus_with_accession_404_raises_not_found(
     httpx_mock.add_response(
         url="https://rest.uniprot.org/uniprotkb/Q9XXX9.json",
         status_code=404,
-        text="not found",
+        # UniProt's answer for an unknown accession (live, 2026-09-29).
+        json={
+            "url": "http://rest.uniprot.org/uniprotkb/Q9XXX9",
+            "messages": ["Resource not found"],
+        },
     )
     async with httpx.AsyncClient() as client:
         with pytest.raises(NotFoundError, match="no entry for accession='Q9XXX9'"):
@@ -280,7 +284,7 @@ async def test_fetch_sequence_404_raises_not_found(httpx_mock):
     httpx_mock.add_response(
         url="https://rest.uniprot.org/uniprotkb/NOSUCH.fasta",
         status_code=404,
-        text="",
+        text="Error messages\nResource not found\n",  # live, 2026-09-29
     )
     async with httpx.AsyncClient() as client:
         with pytest.raises(uniprot.NotFoundError):

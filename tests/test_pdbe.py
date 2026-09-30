@@ -37,6 +37,9 @@ _ENTRY = {
 }
 _URL = f"{pdbe.BASE_URL}/pdbe/api/mappings/best_structures/Q9SZ92"
 
+# PDBe's answer for an accession with no structure (live 404, 2026-09-29).
+_NO_DATA = {"message": "Requested endpoint does not contain any data"}
+
 
 def _fake_uniprot(acc: str | None):
     async def _lookup(client, locus, organism="arabidopsis"):  # noqa: ANN001, ARG001
@@ -71,7 +74,7 @@ async def test_lookup_by_uniprot_full(httpx_mock: HTTPXMock) -> None:
 @pytest.mark.asyncio
 async def test_lookup_by_uniprot_no_structure_404_is_graceful(httpx_mock: HTTPXMock) -> None:
     """404 = no deposited structure (the common plant case) → found=False."""
-    httpx_mock.add_response(url=_URL, status_code=404, text="Not Found")
+    httpx_mock.add_response(url=_URL, status_code=404, json=_NO_DATA)
     async with httpx.AsyncClient() as client:
         r = await pdbe.lookup_by_uniprot(client, "Q9SZ92")
     assert r["found"] is False
@@ -189,7 +192,7 @@ async def test_404_is_cached_so_a_repeat_lookup_stays_off_the_wire(
     request count is asserted too, so the mechanism — not just the result — is
     pinned.
     """
-    httpx_mock.add_response(url=_URL, status_code=404, text="Not Found")
+    httpx_mock.add_response(url=_URL, status_code=404, json=_NO_DATA)
     async with httpx.AsyncClient() as client:
         first = await pdbe.lookup_by_uniprot(client, "Q9SZ92")
         second = await pdbe.lookup_by_uniprot(client, "Q9SZ92")
@@ -312,7 +315,7 @@ async def test_the_tool_answers_structures_whole(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "response",
-    [{"status_code": 404, "text": "Not Found"}, {"json": {"Q9SZ92": []}}],
+    [{"status_code": 404, "json": _NO_DATA}, {"json": {"Q9SZ92": []}}],
     ids=["404", "empty-mapping"],
 )
 async def test_the_tool_answers_no_structure_whole(

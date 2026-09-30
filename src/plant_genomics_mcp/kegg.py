@@ -122,6 +122,9 @@ def _text(value: object) -> str:
 # for a gene with no pathways and for an unknown one alike (live, 2026-09-28).
 _LINK_LINE = re.compile(r"\A[a-z]+:[^\t]+\tpath:[a-z]+[0-9]+\Z")
 # A /list record opens ``<org>:<gene>\t<names>``; an unknown gene is a 404.
+# KEGG's miss 404 has an empty body; a missing route is 404 with Apache's HTML
+# page (live, 2026-09-29), an outage, not "no record".
+NO_RECORD_404_RE = re.compile(r"\A\s*\Z")
 _LIST_LINE = re.compile(r"\A[a-z]+:[^\t]+\t")
 
 
@@ -159,6 +162,7 @@ async def _get(client: httpx.AsyncClient, path: str, shape: Callable[[object], s
         max_retries=MAX_RETRIES,
         parse=lambda r: r if isinstance(r, str) else r.text,
         not_found_returns="",
+        not_found_404_pattern=NO_RECORD_404_RE,
         shape=shape,
     )
 

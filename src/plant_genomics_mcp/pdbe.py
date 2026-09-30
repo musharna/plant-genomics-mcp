@@ -18,6 +18,7 @@ Endpoint: https://www.ebi.ac.uk/pdbe/api/mappings/best_structures/{accession}
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import httpx
@@ -35,6 +36,10 @@ MAX_RETRIES = 3
 MAX_STRUCTURES = 25
 
 _CACHE = cache.TTLCache()
+
+# An accession with no structure is 404 naming no data; a missing route is 404
+# ``{"detail":"Not Found"}`` (live, 2026-09-29), an outage, not "no structure".
+NO_STRUCTURE_404_RE = re.compile(r"Requested endpoint does not contain any data")
 
 
 def _empty(accession: str) -> dict[str, Any]:
@@ -87,6 +92,7 @@ async def lookup_by_uniprot(client: httpx.AsyncClient, accession: str) -> dict[s
             timeout=DEFAULT_TIMEOUT,
             max_retries=MAX_RETRIES,
             not_found_returns=None,
+            not_found_404_pattern=NO_STRUCTURE_404_RE,
         )
         if resp is None:  # 404 — no deposited structure
             # The overwhelmingly common answer for a plant protein, so caching

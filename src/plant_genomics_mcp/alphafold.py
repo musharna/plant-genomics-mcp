@@ -15,6 +15,7 @@ Endpoint: https://alphafold.ebi.ac.uk/api/prediction/{accession} (JSON array).
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import httpx
@@ -28,6 +29,10 @@ MAX_RETRIES = 3
 
 # Per-module response cache. See plant_genomics_mcp.cache for env knobs.
 _CACHE = cache.TTLCache()
+
+# An accession with no model is 404 ``{}``; a missing route is 404
+# ``{"detail":"Not Found"}`` (live, 2026-09-29), an outage, not "no model".
+NO_MODEL_404_RE = re.compile(r"\A\s*\{\s*\}\s*\Z")
 
 # Issue #135: the pLDDT span behind each band AlphaFold DB reports a fraction
 # for, [lower, upper] on the 0-100 scale. EMBL-EBI's AlphaFold course:
@@ -126,6 +131,7 @@ async def lookup_by_uniprot(client: httpx.AsyncClient, accession: str) -> dict[s
             timeout=DEFAULT_TIMEOUT,
             max_retries=MAX_RETRIES,
             not_found_returns=None,
+            not_found_404_pattern=NO_MODEL_404_RE,
         )
         if resp is None:  # 404 sentinel — no deposited model
             _CACHE.set(key, cache.NEGATIVE)

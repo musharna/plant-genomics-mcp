@@ -18,7 +18,6 @@ Endpoint: https://www.ebi.ac.uk/interpro/api/entry/all/protein/uniprot/{acc}/
 
 from __future__ import annotations
 
-import re
 from collections import Counter
 from typing import Any
 
@@ -37,10 +36,9 @@ MAX_PAGES = 5
 
 _CACHE = cache.TTLCache()
 
-# InterPro's own error object. An absent protein is a 204 (``_page``); a 404
-# carrying ``{"Error": ...}`` is the service failing, e.g. ``{"Error":1040}``,
-# MySQL "too many connections" (live 2026-09-28, on 404s and 200s alike).
-FAULT_404_RE = re.compile(r'\A\s*\{\s*"Error"\s*:')
+# An absent protein is a 204 (``_page``), never a 404, so no miss pattern is
+# passed: a 404 such as ``{"Error":1040}``, MySQL "too many connections" (live
+# 2026-09-28), is retried and raised as the outage it is.
 
 
 def _page(resp: httpx.Response) -> object:
@@ -67,7 +65,6 @@ async def _get(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
         no_content_ok=True,
-        retry_404_pattern=FAULT_404_RE,
         parse=_stamped,
         shape=_http.expect_page("count", "results"),
     )

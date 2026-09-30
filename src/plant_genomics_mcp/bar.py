@@ -76,6 +76,9 @@ async def _get(
         max_retries=MAX_RETRIES,
         shape=shape,
         not_found_400_pattern=_NO_RECORD_400_RE,
+        # /gaia answers a miss 404 in the same envelope; a missing route is 404
+        # with an HTML page (live, 2026-09-29), an outage.
+        not_found_404_pattern=_NO_RECORD_400_RE,
     )
 
 

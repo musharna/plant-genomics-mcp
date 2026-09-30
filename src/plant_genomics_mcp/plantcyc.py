@@ -54,16 +54,17 @@ _CONCURRENCY = 6
 _CACHE = cache.TTLCache()
 
 
-async def _getxml(client: httpx.AsyncClient, orgid: str, frame: str) -> ET.Element | None:
-    """Fetch and parse one ptools-XML frame; return its root, or None on 404.
+async def _getxml(client: httpx.AsyncClient, orgid: str, frame: str) -> ET.Element:
+    """Fetch and parse one ptools-XML frame; return its root.
 
-    404 means "no such frame in this PGDB" — a normal outcome (the locus is
-    not a metabolic gene), surfaced as None rather than an exception.
+    Every frame asked for here is one PlantCyc itself just named (the xmlquery
+    answer or a parent frame), so a 404 is the service failing, not a miss:
+    it is retried and raised as an outage. It used to read as "not a
+    metabolic gene" and silently drop reactions and pathways; no live miss
+    body was ever recorded (Incapsula blocked the probe, 2026-09-29).
     """
     key = cache.make_key("GET", BASE_URL, "/getxml", {"frame": f"{orgid}:{frame}"})
     cached = _CACHE.get(key)
-    if cached is cache.NEGATIVE:  # cached 404 — checked before the miss test
-        return None
     if cached is not None:
         return _parse(cached, f"getxml {orgid}:{frame}")
     # getxml expects the raw ``?ORG:FRAME`` query, not a urlencoded key=value.
@@ -76,13 +77,7 @@ async def _getxml(client: httpx.AsyncClient, orgid: str, frame: str) -> ET.Eleme
         headers={"Accept": "application/xml"},
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
-        not_found_returns=None,
     )
-    if resp is None:  # 404 sentinel
-        # "Not a metabolic gene" is a normal, frequent answer here, and
-        # ``lookup_locus`` fans out over several frames — so cache it.
-        _CACHE.set(key, cache.NEGATIVE)
-        return None
     text = resp.text
     # Parsed before it is stored: a body stored first was served back as the
     # same failure for the whole TTL without asking again (#96).
@@ -141,11 +136,11 @@ async def _resolve_gene_frame(client: httpx.AsyncClient, orgid: str, locus: str)
 
 async def _gather_getxml(
     client: httpx.AsyncClient, orgid: str, frames: list[str]
-) -> list[ET.Element | None]:
+) -> list[ET.Element]:
     """Fetch many frames with bounded concurrency (politeness to PMN)."""
     sem = asyncio.Semaphore(_CONCURRENCY)
 
-    async def one(frame: str) -> ET.Element | None:
+    async def one(frame: str) -> ET.Element:
         async with sem:
             return await _getxml(client, orgid, frame)
 
@@ -197,8 +192,6 @@ async def lookup_locus(
 
     # Hop 1 — gene frame → common name + product monomer(s).
     groot = await _getxml(client, orgid, gene_frame)
-    if groot is None:
-        return _empty(locus, record.canonical, orgid, gene_frame)
     gene = groot.find(".//Gene")
     gene_common = gene.findtext("common-name") if gene is not None else None
     monomers: list[str] = [
@@ -208,8 +201,6 @@ async def lookup_locus(
     # Hop 2 — monomer(s) → catalyzed reactions.
     reactions: dict[str, str | None] = {}
     for mroot in await _gather_getxml(client, orgid, monomers):
-        if mroot is None:
-            continue
         for rxn in mroot.findall(".//catalyzes/Enzymatic-Reaction/reaction/Reaction"):
             fid = rxn.get("frameid")
             if fid:
@@ -221,8 +212,6 @@ async def lookup_locus(
     for rid, rroot in zip(
         reaction_ids, await _gather_getxml(client, orgid, reaction_ids), strict=True
     ):
-        if rroot is None:
-            continue
         rnode = rroot.find(".//Reaction")
         if rnode is not None:
             reactions[rid] = rnode.findtext("common-name")
@@ -236,8 +225,6 @@ async def lookup_locus(
     for pid, proot in zip(
         pathway_ids, await _gather_getxml(client, orgid, pathway_ids), strict=True
     ):
-        if proot is None:
-            continue
         pnode = proot.find(".//Pathway")
         if pnode is not None:
             pathways[pid] = pnode.findtext("common-name")

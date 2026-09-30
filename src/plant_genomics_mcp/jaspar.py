@@ -43,6 +43,7 @@ Endpoints (free, no key):
 from __future__ import annotations
 
 import asyncio
+import re
 from collections.abc import Callable
 from typing import Any, TypeVar
 
@@ -53,6 +54,9 @@ from plant_genomics_mcp.errors import NotFoundError, PlantGenomicsError
 
 BASE_URL = "https://jaspar.elixir.no"
 API_PREFIX = "/api/v1"
+# An unknown matrix is 404 ``{"detail":"Not found."}``; a missing route is 404
+# with an HTML page (live, 2026-09-29), an outage, not "no such matrix".
+NO_MATRIX_404_RE = re.compile(r'"detail"\s*:\s*"Not found\."')
 DEFAULT_TIMEOUT = 30.0
 MAX_RETRIES = 3
 
@@ -194,6 +198,7 @@ async def _get_json(
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
         not_found_returns=None,
+        not_found_404_pattern=NO_MATRIX_404_RE,
     )
     if resp is None:
         _CACHE.set(key, cache.NEGATIVE)
