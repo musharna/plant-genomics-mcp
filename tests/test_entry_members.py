@@ -24,7 +24,11 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import uniprot
-from plant_genomics_mcp.errors import InvalidArguments, UpstreamUnavailableError
+from plant_genomics_mcp.errors import (
+    InvalidArguments,
+    PlantGenomicsError,
+    UpstreamUnavailableError,
+)
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
@@ -75,6 +79,40 @@ RICE = _hit(
     ["Os04g0664400", "LOC_Os04g56850"],
 )
 OLN_ONLY = _hit("P00001", "X1", [], ["At5g00001"])
+
+
+# Pages with a row that is not an object (#96). The reader skipped such rows
+# after the store, so a page of them answered ``returned: 0`` of UniProt's own
+# total with ``truncated: false``, a complete answer, for the whole TTL.
+_BAD_MEMBER_PAGES = {
+    "only such a row": ([1], "row 0 is int"),
+    "beside a real row": ([OLN_ONLY, "junk"], "row 1 is str"),
+}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("case", sorted(_BAD_MEMBER_PAGES))
+async def test_a_member_row_that_is_not_an_object_is_refused_and_not_stored(
+    httpx_mock: HTTPXMock, case: str
+) -> None:
+    """Checked before the store. Positive control, same cache: a readable
+    page is then asked for and every member it states is answered."""
+    rows, problem = _BAD_MEMBER_PAGES[case]
+    total = {"x-total-results": str(len(rows))}
+    httpx_mock.add_response(url=SEARCH, json={"results": rows}, headers=total)
+    httpx_mock.add_response(
+        url=SEARCH, json={"results": [OLN_ONLY]}, headers={"x-total-results": "1"}
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(PlantGenomicsError) as err:
+            await uniprot.entry_members(client, "IPR010525", "arabidopsis_thaliana")
+        assert str(err.value) == (
+            f"UniProt search (entry members) returned unexpected payload: {problem}, not an object"
+        )
+        r = await uniprot.entry_members(client, "IPR010525", "arabidopsis_thaliana")
+    assert (r["total"], r["returned"], r["truncated"]) == (1, 1, False)
+    assert r["members"][0]["accession"] == "P00001"
+    assert len(httpx_mock.get_requests()) == 2
 
 
 @pytest.mark.asyncio

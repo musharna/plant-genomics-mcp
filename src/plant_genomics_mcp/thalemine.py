@@ -165,9 +165,17 @@ async def _rows(client: httpx.AsyncClient, xml: str) -> list[list[Any]]:
     results = data.get("results")
     if not isinstance(results, list):
         raise PlantGenomicsError("ThaleMine query returned no 'results' list")
-    rows = [r for r in results if isinstance(r, list)]
-    _CACHE.set(key, rows)
-    return rows
+    # A row that is not a positional list was dropped before the store, so a
+    # page of them was stored as no rows and read as "no such gene", and any
+    # other page answered short (#96). Every live row is a list.
+    for i, row in enumerate(results):
+        if not isinstance(row, list):
+            raise PlantGenomicsError(
+                f"ThaleMine query returned unexpected payload: "
+                f"row {i} is {type(row).__name__}, not a list"
+            )
+    _CACHE.set(key, results)
+    return results
 
 
 def _split(rows: list[list[Any]], locus: str, width: int) -> tuple[str | None, list[list[Any]]]:

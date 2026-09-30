@@ -444,6 +444,36 @@ async def test_live_a_deleted_entry_has_no_fasta_and_a_live_one_has_residues() -
     assert seq.startswith("MEDQVGFGFRPNDEELVGHY") and seq.isalpha(), seq[:40]
 
 
+# Search pages with a row that is not an object (#96). Row 0 leaked a raw
+# ``TypeError: 'int' object does not support item assignment``; a later one
+# was stored and handed to every reader of the page.
+_BAD_SEARCH_PAGES = {
+    "row 0": ([1], "row 0 is int"),
+    "a later row": ([_one_hit()["results"][0], 7], "row 1 is int"),
+}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("case", sorted(_BAD_SEARCH_PAGES))
+async def test_a_search_row_that_is_not_an_object_is_refused_and_not_stored(
+    httpx_mock: HTTPXMock, case: str
+) -> None:
+    """Checked before the store, through the tool's own call. Positive
+    control, same cache: a readable page is then asked for and answered."""
+    rows, problem = _BAD_SEARCH_PAGES[case]
+    httpx_mock.add_response(json={"results": rows})
+    httpx_mock.add_response(json=_one_hit())
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(PlantGenomicsError) as err:
+            await uniprot.lookup_locus(client, "AT1G01010")
+        assert str(err.value) == (
+            f"UniProt search returned unexpected payload: {problem}, not an object"
+        )
+        result = await uniprot.lookup_locus(client, "AT1G01010")
+    assert (result["primaryAccession"], result["uniProtkbId"]) == ("Q0WV96", "NAC1_ARATH")
+    assert len(httpx_mock.get_requests()) == 2
+
+
 @live_only
 @pytest.mark.asyncio
 async def test_live_lookup_at1g01010() -> None:
