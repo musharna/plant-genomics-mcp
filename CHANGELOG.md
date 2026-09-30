@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **A tomato transcript or protein id in Ensembl's spelling is found.**
+  Ensembl names SL4.0 tomato features by type: genes `gene-Solyc…`,
+  transcripts `mRNA-Solyc….1.1`, proteins `CDS-Solyc….1.1`. The `gene-`
+  prefix was put in front of every id, so the canonical transcript
+  `ensembl_plants_lookup_locus` returns, and the protein id `get_sequence`
+  returns, went out as `gene-mRNA-…` and `gene-CDS-…` and were "not found".
+  They are now sent as given. A bare `Solyc….1.1` is still not an id
+  Ensembl knows.
+
 - **The Ensembl lookup and xrefs answers are checked for every organism.**
   The keys those answers may leave out, because they are copied from
   Ensembl's record, were listed from one Arabidopsis and one rice gene. A live

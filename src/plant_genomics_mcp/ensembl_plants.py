@@ -137,11 +137,16 @@ def wire_id(locus: str, organism: str | int) -> str:
     Ensembl matches the prefix in any case (``GENE-`` resolves, live
     2026-09-29), so it is compared caseless and sent in the registry's case,
     one wire id and one cache entry per gene.
+
+    The prefix is the gene's: a transcript or translation id in Ensembl's
+    spelling (``mRNA-Solyc04g011850.1.1``, the ``canonical_transcript`` the
+    lookup returns) carries its own and is sent as it is, in the same case.
     """
     locus = validators.assert_valid_locus(locus, backend="Ensembl Plants")
     prefix = organisms.ensembl_id_prefix_for(organism)
-    if locus[: len(prefix)].casefold() == prefix.casefold():
-        locus = locus[len(prefix) :]
+    for own in (prefix, *organisms.ensembl_feature_prefixes_for(organism)):
+        if own and locus[: len(own)].casefold() == own.casefold():
+            return own + locus[len(own) :]
     return prefix + locus
 
 
