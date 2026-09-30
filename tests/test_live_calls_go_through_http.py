@@ -17,7 +17,9 @@ from pathlib import Path
 _TESTS = Path(__file__).parent
 _VERBS = {"get", "post", "put", "patch", "delete", "head", "request", "stream", "send"}
 
-# Raw on purpose, each for a stated reason.
+# Raw on purpose, each for a stated reason. Keyed on the path under tests/, not
+# the file name: the scan recurses, and a same-named file elsewhere must not
+# inherit an exemption (#208 review).
 _ALLOWED = {
     # Talks to this server on 127.0.0.1, not an upstream.
     ("test_http_transport.py", "*"),
@@ -88,13 +90,25 @@ def test_the_scan_sees_each_raw_form_and_not_a_routed_call() -> None:
     assert _raw_calls(routed) == []
 
 
+def _allowed(rel: str, func: str) -> bool:
+    return (rel, "*") in _ALLOWED or (rel, func) in _ALLOWED
+
+
+def test_an_exemption_names_one_file_not_every_file_of_that_name() -> None:
+    assert _allowed("test_http_transport.py", "anything")
+    assert _allowed("_live_outage.py", "probe")
+    assert not _allowed("live/test_http_transport.py", "anything")
+    assert not _allowed("live/_live_outage.py", "probe")
+    assert not _allowed("_live_outage.py", "outage")
+
+
 def test_no_test_reaches_an_upstream_around_http() -> None:
     offenders = []
     for path in sorted(_TESTS.rglob("*.py")):
+        rel = path.relative_to(_TESTS).as_posix()
         for func, line in _raw_calls(path.read_text(encoding="utf-8")):
-            if (path.name, "*") in _ALLOWED or (path.name, func) in _ALLOWED:
-                continue
-            offenders.append(f"{path.name}:{line} in {func}")
+            if not _allowed(rel, func):
+                offenders.append(f"{rel}:{line} in {func}")
     assert not offenders, (
         "raw HTTP call in a test: route it through _http.request_with_retry so an "
         f"outage is tagged for the nightly, or add a stated reason to _ALLOWED: {offenders}"
