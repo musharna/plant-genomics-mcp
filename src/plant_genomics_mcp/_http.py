@@ -240,6 +240,7 @@ async def request_with_retry(
     not_found_400_pattern: re.Pattern[str] | None = None,
     allow_html: bool = False,
     no_content_ok: bool = False,
+    see_other_ok: bool = False,
     retry_403_pattern: re.Pattern[str] | None = None,
     not_found_404_pattern: re.Pattern[str] | None = None,
     limit: UpstreamLimit | None = None,
@@ -287,6 +288,12 @@ async def request_with_retry(
     for an upstream whose 204 is an answer: InterPro serves 204 with an empty
     body for a protein with no entries (live, 2026-09-22). Elsewhere it stays
     an error, since a caller that parses the body has nothing to parse.
+
+    A 303 See Other is returned (not raised) only with ``see_other_ok=True``,
+    for an upstream whose 303 carries its answer: UniProt answers a merged
+    accession with a 303 to the entry it merged into, and the inactive record
+    as the body (live, 2026-09-30: Q15086 to P04637). Redirects are not
+    followed, so elsewhere a 303 stays an error.
 
     ``retry_403_pattern=<compiled regex>`` covers upstreams that refuse an
     excess request rate with 403 plus a body marker rather than 429: OrthoDB
@@ -413,6 +420,8 @@ async def request_with_retry(
             break
 
         if resp.status_code == 204 and no_content_ok:
+            return resp
+        if resp.status_code == 303 and see_other_ok:
             return resp
 
         faulted = resp.status_code == 404

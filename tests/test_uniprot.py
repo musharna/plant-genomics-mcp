@@ -269,18 +269,19 @@ async def test_lookup_locus_with_accession_404_raises_not_found(
 
 # An inactive entry is a 200 that names the accession, so it passed as an
 # entry and resolve_locus_to_uniprot answered it with no name, gene or
-# organism. MERGED is built from UniProt's schema (EntryInactiveReason:
-# inactiveReasonType DELETED/MERGED/DEMERGED, mergeDemergeTos), not seen live.
+# organism. Each reason is UniProt's live answer (2026-09-30). The merged case
+# was built from the schema's ``mergeDemergeTos``; live, the key is
+# ``mergeDemergeTo`` and a merged entry is a 303 (tested below).
 _GONE = {
     "deleted (live)": (
         "Q9XXX9",
         None,
         "the entry is inactive (DELETED: Not part of a reference proteome)",
     ),
-    "merged (schema)": (
-        "P0XXX1",
-        {"inactiveReasonType": "MERGED", "mergeDemergeTos": ["Q0WV96"]},
-        "the entry is inactive (MERGED into Q0WV96)",
+    "demerged (live)": (
+        "P01028",
+        {"inactiveReasonType": "DEMERGED", "mergeDemergeTo": ["P0C0L4", "P0C0L5"]},
+        "the entry is inactive (DEMERGED into P0C0L4, P0C0L5)",
     ),
     "no reason given": ("P0XXX2", {}, "the entry is inactive (no reason given)"),
 }
@@ -495,6 +496,91 @@ async def test_live_a_deleted_entry_has_no_fasta_and_a_live_one_has_residues() -
             await uniprot.fetch_sequence(client, "Q9XXX9")
         seq = await uniprot.fetch_sequence(client, "Q0WV96")
     assert seq.startswith("MEDQVGFGFRPNDEELVGHY") and seq.isalpha(), seq[:40]
+
+
+# UniProt's answers for a merged accession (live 2026-09-30, verbatim): Q15086
+# was merged into P04637. The entry is a 303 to the one it merged into, with
+# the inactive record as its body; the FASTA is a 303 with no body. Unfollowed,
+# both reached callers as an untagged "HTTP 303" error.
+_MERGED = {
+    "entryType": "Inactive",
+    "primaryAccession": "Q15086",
+    "uniProtkbId": "Q15086",
+    "annotationScore": 0.0,
+    "inactiveReason": {"inactiveReasonType": "MERGED", "mergeDemergeTo": ["P04637"]},
+    "extraAttributes": {"uniParcId": "UPI000006CFA4"},
+}
+
+
+@pytest.mark.asyncio
+async def test_a_merged_entry_is_not_found_and_names_the_entry_it_merged_into(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """Stored like any inactive record: asked once. Positive control: an
+    active entry beside it answers."""
+    httpx_mock.add_response(
+        url=_ENTRY_URL.format("Q15086"),
+        status_code=303,
+        headers={"Location": "/uniprotkb/P04637?from=Q15086"},
+        json=_MERGED,
+    )
+    httpx_mock.add_response(url=_ENTRY_URL.format("Q0WV96"), json=_one_hit()["results"][0])
+    async with httpx.AsyncClient() as client:
+        for _ in range(2):
+            with pytest.raises(NotFoundError) as err:
+                await uniprot.lookup_locus(client, "Q15086")
+            assert str(err.value) == (
+                "[NotFoundError] UniProt has no entry for accession='Q15086': "
+                "the entry is inactive (MERGED into P04637)"
+            )
+        active = await uniprot.lookup_locus(client, "Q0WV96")
+    assert active["primaryAccession"] == "Q0WV96"
+    assert len(httpx_mock.get_requests()) == 2
+
+
+@pytest.mark.asyncio
+async def test_a_merged_entry_has_no_fasta_and_names_the_entry_it_merged_into(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """The FASTA's 303 has no body, so it takes the path of a deleted entry's
+    empty 200: asked again, then the entry says why."""
+    httpx_mock.add_response(
+        url=_FASTA_URL.format("Q15086"),
+        status_code=303,
+        headers={"Location": "/uniprotkb/P04637.fasta?from=Q15086"},
+        text="",
+        is_reusable=True,
+    )
+    httpx_mock.add_response(
+        url=_ENTRY_URL.format("Q15086"),
+        status_code=303,
+        headers={"Location": "/uniprotkb/P04637?from=Q15086"},
+        json=_MERGED,
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError) as err:
+            await uniprot.fetch_sequence(client, "Q15086")
+    assert str(err.value) == (
+        "[NotFoundError] UniProt has no FASTA for accession='Q15086': "
+        "the entry is inactive (MERGED into P04637)"
+    )
+    assert len(httpx_mock.get_requests()) == 3
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_merged_and_demerged_entries_name_where_they_went() -> None:
+    """Q15086 was merged into P04637 and P01028 demerged into P0C0L4 and
+    P0C0L5 (2026-09-30). Positive control: P04637 itself answers."""
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match=r"\(MERGED into P04637\)$"):
+            await uniprot.lookup_locus(client, "Q15086")
+        with pytest.raises(NotFoundError, match=r"\(MERGED into P04637\)$"):
+            await uniprot.fetch_sequence(client, "Q15086")
+        with pytest.raises(NotFoundError, match=r"\(DEMERGED into P0C0L4, P0C0L5\)$"):
+            await uniprot.lookup_locus(client, "P01028")
+        active = await uniprot.lookup_locus(client, "P04637")
+    assert active["primaryAccession"] == "P04637"
 
 
 # Search pages with a row that is not an object (#96). Row 0 leaked a raw

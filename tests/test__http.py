@@ -975,6 +975,29 @@ async def test_live_a_gated_upstreams_403_is_an_outage() -> None:
     assert refused.value.status == 403, str(refused.value)
 
 
+@pytest.mark.asyncio
+async def test_a_303_is_an_answer_only_where_the_caller_says_so(httpx_mock: HTTPXMock) -> None:
+    """UniProt answers a merged accession with a 303 whose body is the answer.
+    It is returned only with ``see_other_ok``; elsewhere an unfollowed
+    redirect stays an error, not a body a caller would parse."""
+    for _ in range(2):
+        httpx_mock.add_response(
+            url="https://example.test/moved",
+            status_code=303,
+            headers={"Location": "/elsewhere"},
+            json={"entryType": "Inactive"},
+        )
+    async with httpx.AsyncClient() as client:
+        resp = await _http.request_with_retry(
+            client, "GET", "https://example.test/moved", service="example", see_other_ok=True
+        )
+        assert (resp.status_code, resp.json()) == (303, {"entryType": "Inactive"})
+        with pytest.raises(PlantGenomicsError, match="HTTP 303"):
+            await _http.request_with_retry(
+                client, "GET", "https://example.test/moved", service="example"
+            )
+
+
 # UniProt's answers, verbatim from live 404s (2026-09-29): an unknown accession,
 # and a missing route. Every upstream probed answers both with 404.
 _MISS_BODY = (
