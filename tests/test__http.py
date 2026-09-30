@@ -1031,6 +1031,37 @@ async def test_an_unreadable_body_twice_names_each_status_it_came_with(
     )
 
 
+@pytest.mark.asyncio
+async def test_a_no_record_sentinel_twice_is_named_as_the_404_it_stands_for(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """``not_found_returns`` hands ``parse`` the sentinel, not a response, so
+    its status is the 404 whose body matched (KEGG passes ``""``)."""
+    from plant_genomics_mcp import cache
+
+    for _ in range(2):
+        httpx_mock.add_response(url="https://example.test/n", status_code=404, text="no record")
+
+    def _never(value: object) -> str:
+        raise _http.UnreadableBody(f"got {value!r}")
+
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError) as err:
+            await _http.cached_get(
+                client,
+                cache.TTLCache(),
+                "https://example.test/n",
+                service="svc",
+                parse=lambda r: r if isinstance(r, str) else r.text,
+                shape=_never,
+                not_found_returns="",
+                not_found_404_pattern=re.compile("no record"),
+            )
+    assert str(err.value).startswith("[UpstreamUnavailableError] svc answered 404 twice"), str(
+        err.value
+    )
+
+
 # UniProt's answers, verbatim from live 404s (2026-09-29): an unknown accession,
 # and a missing route. Every upstream probed answers both with 404.
 _MISS_BODY = (

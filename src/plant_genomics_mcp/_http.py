@@ -721,7 +721,8 @@ async def cached_get(
         resp = await request_with_retry(
             client, "GET", url, service=service, params=params, headers=headers, **retry
         )
-        statuses.append(resp.status_code)
+        # A not_found_returns sentinel stands for a 404 whose body matched.
+        statuses.append(resp.status_code if isinstance(resp, httpx.Response) else 404)
         value = parse(resp) if parse else json_body(resp, service)
         if shape:
             try:
