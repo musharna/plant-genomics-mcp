@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **PlantCyc's answer to an unknown frame is checked live.** A `getxml` 404
+  fails the call as an outage, which is safe only if PlantCyc answers a frame
+  it does not have with a 404 rather than an empty 200 document. Local hosts
+  cannot see PlantCyc behind its bot challenge; from the GitHub runner the
+  answer is a 404. A live test now holds it.
+
 - **Every test of a refused body also asks again and gets the answer.** Twelve
   tests of a 200 body the tools refuse (AraGWAS, Ensembl lookup, sequence,
   xrefs, region and variation, InterPro, 1001 Genomes, OrthoDB, Planteome)

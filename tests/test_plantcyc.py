@@ -14,6 +14,7 @@ real calls.
 from __future__ import annotations
 
 import os
+from xml.etree import ElementTree as ET
 
 import httpx
 import pytest
@@ -218,6 +219,33 @@ async def test_live_rice_cross_species_resolves() -> None:
         result = await plantcyc.lookup_locus(client, "Os11g0530600", "rice")
     assert result["orgid"] == "ORYZA"
     assert result["found"] is True
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_an_unknown_frame_is_a_404_not_an_empty_frame() -> None:
+    """PlantCyc's answer to a frame it does not have. _getxml reads a 404 as
+    an outage because every frame it asks for PlantCyc itself named; that is
+    safe only if an unknown frame is a 404, not a 200 document the traversal
+    would read as a frame with no reactions or pathways. Local hosts get
+    Incapsula's challenge (an upstream failure here); the GitHub runner is
+    answered, and there the unknown frame was a 404 (live-nightly run
+    36658257123, 2026-09-30). Any other answer is the failure message: a
+    typed error of any class, not only an outage (a 403 is a bare
+    PlantGenomicsError and escaped the test untold, #212 review), or a
+    200 document."""
+    async with httpx.AsyncClient() as client:
+        frame = await plantcyc._resolve_gene_frame(client, "ARA", "AT3G51240")
+        assert frame is not None
+        real = await plantcyc._getxml(client, "ARA", frame)
+        assert real.find(".//Gene") is not None
+        try:
+            root = await plantcyc._getxml(client, "ARA", "NO-SUCH-FRAME-1")
+        except PlantGenomicsError as exc:
+            outcome = f"{type(exc).__name__}: {exc}"
+        else:
+            outcome = "answered 200: " + ET.tostring(root, encoding="unicode")[:300]
+    assert "HTTP 404" in outcome, outcome
 
 
 # ---------- negative caching (audit 2026-07-22, M2) ----------
