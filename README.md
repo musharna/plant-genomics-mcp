@@ -17,7 +17,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21636352.svg)](https://doi.org/10.5281/zenodo.21636352)
 
 <p align="center">
-  <img src="examples/assets/cc-demo.gif" alt="Claude Code answering a plant-genomics question live — calling plant-genomics-mcp across Ensembl Plants, UniProt, and Europe PMC and synthesizing the AT1G01010 / NAC1_ARATH gene profile in a single turn" width="780">
+  <img src="examples/assets/cc-answer.png" alt="Claude Code with plant-genomics-mcp answering a prompt about Arabidopsis NAC001 (AT1G01010): the Ensembl Plants record (chr1:3,631-5,899, protein-coding) and UniProtKB entry Q0WV96 (NAC1_ARATH, 429 aa). Real output, trimmed" width="780">
 </p>
 
 ## 📦 Install
@@ -165,7 +165,7 @@ Cross-species — pass `organism=`:
 
 A recorded Claude Code session (2026-05-24) with a narrower prompt — the
 Ensembl record, UniProtKB entry and top three Europe PMC papers for
-AT1G01010 — answered it in one turn ([animated demo](examples/assets/cc-demo.gif)):
+AT1G01010 — answered it in one turn:
 
 <p align="center">
   <img src="examples/assets/cc-demo.png" alt="Claude Code (Opus 4.7) calling plant-genomics-mcp 3 times to return the AT1G01010 / NAC1_ARATH record with Ensembl, UniProt Q0WV96, and the top-3 Europe PMC papers" width="820">
