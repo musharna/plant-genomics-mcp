@@ -313,7 +313,7 @@ async def test_fetch_sequence_caches_result(httpx_mock):
 # Bodies of the accession endpoint that name no entry (#96). The dict check
 # passed ``{}``, it was stored, and the tool answered ``primaryAccession: ''``
 # for the whole TTL without asking again.
-_NOT_AN_ENTRY = {
+_NOT_AN_ENTRY: dict[str, tuple[object, str]] = {
     "empty object": ({}, "no str 'primaryAccession' in {}"),
     "array": ([], "list, not an object"),
 }
