@@ -459,6 +459,45 @@ _ENTRY_XREF_DB: tuple[tuple[re.Pattern[str], str], ...] = (
 )
 ENTRY_MEMBERS_DEFAULT_PAGE = 100
 ENTRY_MEMBERS_MAX_PAGE = 500  # UniProt's documented /search page ceiling
+INTERPRO_ENTRY_API = "https://www.ebi.ac.uk/interpro/api/entry"
+
+
+async def _assert_entry_exists(client: httpx.AsyncClient, db: str, entry: str) -> None:
+    """:class:`NotFoundError` unless InterPro has ``entry`` in ``db``.
+
+    UniProt's xref search answers an entry that was never issued with no
+    hits, the same page as a real family without members in the organism, so
+    ``entry_members`` answered "0 members" for either. InterPro's entry API
+    tells them apart: 200 naming the accession, or 204 (live 2026-09-30:
+    PF00069 200, PF99999 204, IPR999999 204, PTHR99999 204). Asked only when
+    the page is empty; an entry found is stored.
+    """
+    url = f"{INTERPRO_ENTRY_API}/{db}/{entry}/"
+    key = cache.make_key("GET", url, "", None)
+    if _CACHE.get(key) is not None:
+        return
+    resp = await _http.request_with_retry(
+        client,
+        "GET",
+        url,
+        service="InterPro entry",
+        headers={"Accept": "application/json"},
+        timeout=DEFAULT_TIMEOUT,
+        max_retries=MAX_RETRIES,
+        no_content_ok=True,
+    )
+    if resp.status_code == 204:
+        raise NotFoundError(f"InterPro has no {db} entry {entry!r}")
+    body = _http.json_body(resp, "InterPro entry")
+    meta = body.get("metadata") if isinstance(body, dict) else None
+    named = meta.get("accession") if isinstance(meta, dict) else None
+    if not isinstance(named, str) or named.upper() != entry.upper():
+        raise PlantGenomicsError(
+            f"InterPro entry answer does not name {entry!r}: {str(body)[:120]}"
+        )
+    _CACHE.set(key, True)
+
+
 _MEMBER_FIELDS = (
     "accession,reviewed,gene_primary,gene_oln,protein_name,"
     "xref_ensemblplants,xref_araport,xref_tair"
@@ -637,6 +676,8 @@ async def entry_members(
             "upstream_version": _http.upstream_version(resp),
         }
         _CACHE.set(key, page)
+    if page["total"] == 0:
+        await _assert_entry_exists(client, db, entry)
     # Every row is an object: checked before the store.
     members = [_member(hit) for hit in page["results"]]
     next_cursor = (

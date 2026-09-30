@@ -77,6 +77,16 @@ class OrganismRecord:
     # with, when it differs from ``ncbi_taxid``. ``None`` = the same. Barley's
     # leaves carry the subspecies 112509, not 4513 (live genetree
     # EPlGT00940000167082, probed 2026-09-25). Used by ``gene_tree_members``.
+    planteome_id_form: str | None = None
+    # How Planteome names this organism's genes, when it names them by our
+    # locus ids: ``"gene"`` (the id, or a transcript label ``<id>.N``) or
+    # ``"unversioned"`` (the same, with our trailing ``.N`` version dropped).
+    # ``None`` = Planteome indexes the organism under other ids, so asking by
+    # ours answered "0 annotations" for every gene. Live 2026-09-30, bioentities
+    # labelled in our namespace / all: arabidopsis 70,943/90,568, rice
+    # 53,172/53,793, wheat 91,061/123,924 (transcripts), tomato 22,982/27,357
+    # (ITAG2 transcripts, e.g. Solyc04g011850.1.1); every other organism 0
+    # (maize v4 ids, barley v2, grape VIT_, sorghum Sobic, protein accessions).
     aliases: tuple[str, ...] = field(default_factory=tuple)
 
 
@@ -95,6 +105,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         gprofiler_id="athaliana",
         plantcyc_orgid="ARA",
         panther_taxid=3702,
+        planteome_id_form="gene",
         aliases=("a. thaliana", "at", "arabidopsis"),
     ),
     "oryza_sativa": OrganismRecord(
@@ -111,6 +122,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         gprofiler_id="osativa",
         plantcyc_orgid="ORYZA",
         panther_taxid=39947,
+        planteome_id_form="gene",
         aliases=("o. sativa",),
     ),
     "zea_mays": OrganismRecord(
@@ -149,6 +161,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         gprofiler_id="talancer",  # g:Profiler indexes the Lancer cultivar (taxid 4565002); species taxid 4565 is not a g:Profiler org
         plantcyc_orgid=None,  # wheatCyc PGDB exists but orgid unresolved (probed 2026-07-19); re-probe from org-summary
         panther_taxid=4565,
+        planteome_id_form="gene",
         aliases=("t. aestivum",),
     ),
     "solanum_lycopersicum": OrganismRecord(
@@ -182,6 +195,7 @@ ORGANISMS: dict[str, OrganismRecord] = {
         gprofiler_id="slycopersicum",
         plantcyc_orgid="TOMATO",
         panther_taxid=4081,
+        planteome_id_form="unversioned",
         aliases=("s. lycopersicum",),
     ),
     "glycine_max": OrganismRecord(
@@ -485,6 +499,17 @@ def plantcyc_orgid_for(query: str | int) -> str:
             supported=_supported_for("plantcyc_orgid"),
         )
     return record.plantcyc_orgid
+
+
+def planteome_id_form_for(query: str | int) -> str:
+    record = resolve(query)
+    if record.planteome_id_form is None:
+        raise OrganismNotSupported(
+            backend="planteome",
+            organism=record.canonical,
+            supported=_supported_for("planteome_id_form"),
+        )
+    return record.planteome_id_form
 
 
 def compara_taxid_for(query: str | int) -> int:

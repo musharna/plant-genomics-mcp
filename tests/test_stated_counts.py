@@ -30,7 +30,8 @@ CASES = [
     pytest.param(
         planteome,
         lambda c: planteome.lookup_locus(c, "AT1G01010"),
-        {"response": {"numFound": 0, "docs": []}},
+        # One annotation: an empty page also asks whether the gene exists.
+        {"response": {"numFound": 1, "docs": [{"annotation_class": "PO:0000293"}]}},
         ("response", "numFound"),
         id="planteome",
     ),
