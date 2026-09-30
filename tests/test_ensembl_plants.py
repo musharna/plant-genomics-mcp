@@ -1059,3 +1059,56 @@ async def test_live_tomato_lookup_answers_its_own_id() -> None:
         refs = await ensembl_plants.lookup_xrefs(client, bare["id"], organism="tomato")
     assert bare["id"] == again["id"] == _TOMATO_ID
     assert refs["count"] > 0
+
+
+_TOMATO_TRANSCRIPT = "mRNA-Solyc04g011850.1.1"
+
+
+@pytest.mark.asyncio
+async def test_a_tomato_transcript_in_ensembls_spelling_is_sent_as_it_is(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """``gene-`` is the gene's prefix: the canonical transcript lookup_locus
+    returns was sent as ``gene-mRNA-...``, which Ensembl does not know (live,
+    2026-09-30), so a tomato transcript's sequence was "not found". It goes
+    out as given, in the registry's case; a gene still gets ``gene-``."""
+    base = "https://rest.ensembl.org"
+    httpx_mock.add_response(
+        url=f"{base}/lookup/id/{_TOMATO_TRANSCRIPT}?{_TOMATO_Q}&expand=0",
+        json={
+            "id": _TOMATO_TRANSCRIPT,
+            "species": "solanum_lycopersicum_gca000188115v5cm",
+            "object_type": "Transcript",
+            "Parent": _TOMATO_ID,
+            "version": None,
+        },
+    )
+    httpx_mock.add_response(
+        url=f"{base}/sequence/id/{_TOMATO_TRANSCRIPT}?{_TOMATO_Q}&type=protein",
+        json={"id": "CDS-Solyc04g011850.1.1", "molecule": "protein", "seq": "MAS"},
+    )
+    async with httpx.AsyncClient() as client:
+        seq = await ensembl_plants.get_sequence(client, "MRNA-Solyc04g011850.1.1", "tomato")
+    assert seq["ensembl_id"] == "CDS-Solyc04g011850.1.1"
+    assert seq["sequence"] == "MAS"
+    assert ensembl_plants.wire_id("cds-Solyc04g011850.1.1", "tomato") == "CDS-Solyc04g011850.1.1"
+    # Positive control: a gene, bare or in Ensembl's spelling, is the gene id.
+    for gene in ("Solyc04g011850.1", _TOMATO_ID):
+        assert ensembl_plants.wire_id(gene, "tomato") == _TOMATO_ID
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_tomato_transcript_and_protein_ids_answer() -> None:
+    """Real execution: the transcript id lookup_locus returns and the protein
+    id get_sequence returns, fed back, reach the same protein."""
+    async with httpx.AsyncClient() as client:
+        gene = await ensembl_plants.lookup_locus(client, "Solyc04g011850.1", organism="tomato")
+        by_gene = await ensembl_plants.get_sequence(client, gene["id"], "tomato")
+        by_transcript = await ensembl_plants.get_sequence(
+            client, gene["canonical_transcript"], "tomato"
+        )
+        by_protein = await ensembl_plants.get_sequence(client, by_gene["ensembl_id"], "tomato")
+    assert gene["canonical_transcript"] == _TOMATO_TRANSCRIPT
+    assert by_gene["ensembl_id"] == "CDS-Solyc04g011850.1.1"
+    assert by_gene["sequence"] == by_transcript["sequence"] == by_protein["sequence"]

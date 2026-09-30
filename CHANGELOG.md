@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **A tomato transcript or protein id in Ensembl's spelling is found.**
+  Ensembl names SL4.0 tomato features by type: genes `gene-Solyc…`,
+  transcripts `mRNA-Solyc….1.1`, proteins `CDS-Solyc….1.1`. The `gene-`
+  prefix was put in front of every id, so the canonical transcript
+  `ensembl_plants_lookup_locus` returns, and the protein id `get_sequence`
+  returns, went out as `gene-mRNA-…` and `gene-CDS-…` and were "not found".
+  They are now sent as given. A bare `Solyc….1.1` is still not an id
+  Ensembl knows.
+
 - **An upstream outage in a live test is the upstream's, not a regression.**
   Seven live test calls used `client.get` directly, so an outage reached the
   nightly without the `[UpstreamUnavailableError]` tag it classifies on:
