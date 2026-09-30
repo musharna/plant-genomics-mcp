@@ -179,16 +179,16 @@ def test_a_locus_cannot_widen_the_query() -> None:
 
 @pytest.mark.asyncio
 async def test_a_tomato_locus_is_asked_without_its_version(httpx_mock: HTTPXMock) -> None:
-    """Planteome holds tomato genes as ITAG2 transcripts (Solyc09g008170.1.1)
+    """Planteome holds tomato genes as ITAG2 transcripts (Solyc01g005000.2.1)
     and SGN genes with the unversioned id as a synonym; our SL4.0 version is
-    not theirs (live: Solyc09g008170 5 annotations, Solyc09g008170.1 none).
+    not theirs (live: Solyc01g005000 27 annotations, Solyc01g005000.3 none).
     The answer names the locus as asked."""
     httpx_mock.add_response(json=_payload([_doc("PO:0009005", "root")]))
     async with httpx.AsyncClient() as client:
-        result = await planteome.lookup_locus(client, "Solyc09g008170.1", "tomato")
+        result = await planteome.lookup_locus(client, "Solyc01g005000.3", "tomato")
     q = httpx_mock.get_requests()[0].url.params["q"]
-    assert q == '"Solyc09g008170" OR bioentity_label:Solyc09g008170.*'
-    assert result["locus"] == "Solyc09g008170.1"
+    assert q == '"Solyc01g005000" OR bioentity_label:Solyc01g005000.*'
+    assert result["locus"] == "Solyc01g005000.3"
     assert result["returned"] == 1
 
 
