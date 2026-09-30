@@ -252,13 +252,19 @@ async def lookup_pathways(
     else:
         try:
             entrez_gene_id = await _resolve_locus_to_entrez_id(client, locus, organism=organism)
-        except (NotFoundError, RateLimitError, UpstreamUnavailableError) as e:
+        except (NotFoundError, RateLimitError) as e:
             # Narrowed from PlantGenomicsError so `type(e)(msg) from e` stays safe:
             # OrganismNotSupported / OrganismNotFound use keyword-only __init__ and
             # would TypeError on a positional re-raise. Those two are pre-empted by
             # kegg_org_code_for() above, but the narrow `except` documents the
             # contract instead of relying on call-order luck.
             raise type(e)(f"KEGG bridge (Ensembl Plants /xrefs): {e}") from e
+        except UpstreamUnavailableError as e:
+            # Its status (a 403 refusal, 500s past the retries) is not in the
+            # message, so a rebuild from the message alone dropped it.
+            raise UpstreamUnavailableError(
+                f"KEGG bridge (Ensembl Plants /xrefs): {e}", status=e.status
+            ) from e
         gene_id = f"{org_code}:{entrez_gene_id}"
     body = await _get(client, f"/link/pathway/{gene_id}", _link_shape)
     pathway_ids = _parse_link_pathway(body, gene_id) if body.strip() else []

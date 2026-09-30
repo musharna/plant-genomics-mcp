@@ -13,8 +13,12 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from plant_genomics_mcp import kegg
-from plant_genomics_mcp.errors import NotFoundError, OrganismNotSupported
+from plant_genomics_mcp import _http, kegg
+from plant_genomics_mcp.errors import (
+    NotFoundError,
+    OrganismNotSupported,
+    UpstreamUnavailableError,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -867,3 +871,32 @@ async def test_a_gene_kegg_knows_with_no_pathways_is_ok_and_an_unknown_one_is_no
             await kegg.lookup_pathways(client, "ATMG00940", organism="arabidopsis_thaliana")
     assert known["pathways"] == [] and known["errors"] == []
     assert known["kegg_gene_id"] == "ath:AT1G01010"
+
+
+async def _no_sleep(_seconds: float) -> None:
+    """Skip real backoff delays."""
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status", [403, 500])
+async def test_the_bridge_keeps_the_status_of_an_ensembl_outage(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch, status: int
+) -> None:
+    """The bridge names itself in the message and keeps the status the Ensembl
+    outage ended on: a refusal (403) or 500s past the retries. Rebuilt from the
+    message alone it said "HTTP 403" with ``status`` None, and a caller that
+    routes on ``status`` (as AraGWAS's does on 500) would misread it."""
+    monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
+    httpx_mock.add_response(
+        url="https://rest.ensembl.org/xrefs/id/Os01g0100100?species=oryza_sativa",
+        status_code=status,
+        text="Forbidden" if status == 403 else "Internal Server Error",
+        is_reusable=True,
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError) as outage:
+            await kegg.lookup_pathways(client, "Os01g0100100", organism="oryza_sativa")
+    assert outage.value.status == status
+    assert str(outage.value).startswith(
+        "[UpstreamUnavailableError] KEGG bridge (Ensembl Plants /xrefs): "
+    ), str(outage.value)
