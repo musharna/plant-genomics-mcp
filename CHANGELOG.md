@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **The check that a failed call is asked again now covers every tool.** It
+  counted a failure only when the tool raised, and passed a call that made
+  any request at all. So the eight batch tools, `gene_report` and
+  `analyze_locus_synth`, which report a failed call inside their answer, and
+  `kegg_pathways`, whose stored first answer led on to a fresh second
+  request, passed it even with a bad body stored for the whole cache
+  lifetime. It now also reads failures the answer reports, and requires the
+  repeated call to ask every URL the failed one asked.
+
 - **PlantCyc's answer to an unknown frame is checked live.** A `getxml` 404
   fails the call as an outage, which is safe only if PlantCyc answers a frame
   it does not have with a 404 rather than an empty 200 document. Local hosts
