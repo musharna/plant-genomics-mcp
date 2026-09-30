@@ -636,8 +636,9 @@ TOOLS: list[types.Tool] = [
             "organism's NCBI taxon. Returns annotations[] (term_id / term_name / "
             "ontology / aspect / evidence / reference) + a by_ontology rollup "
             "({PO: [{term_id, term_name}, ...], TO: [...], PECO: [...]}) deduped "
-            "on term_id. Coverage is strong for arabidopsis, rice, maize, grape, "
-            "soybean, tomato; other organisms return an empty list, not an error. "
+            "on term_id. Planteome names genes by these locus ids for "
+            "arabidopsis, rice, wheat and tomato only; other organisms are "
+            "refused, and a gene Planteome has no record of is not found. "
             "Defaults to arabidopsis_thaliana; pass organism= for other species."
         ),
         input_schema={
