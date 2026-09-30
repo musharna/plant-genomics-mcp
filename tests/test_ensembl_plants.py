@@ -192,11 +192,18 @@ async def test_lookup_xrefs_groups_duplicate_dbname_into_list(httpx_mock: HTTPXM
 
 @pytest.mark.asyncio
 async def test_lookup_xrefs_raises_on_non_list_payload(httpx_mock: HTTPXMock) -> None:
-    """Ensembl /xrefs/id is documented as returning an array; raise loud if not."""
+    """Ensembl /xrefs/id is documented as returning an array; raise loud if not.
+    Positive control, same request and cache: the well-formed answer that
+    follows the two refused ones is served, so neither was stored."""
+    url = "https://rest.ensembl.org/xrefs/id/AT1G01010?species=arabidopsis_thaliana"
+    httpx_mock.add_response(url=url, json={"error": "unexpected object shape"})
+    httpx_mock.add_response(url=url, json={"error": "unexpected object shape"})
     httpx_mock.add_response(
-        url="https://rest.ensembl.org/xrefs/id/AT1G01010?species=arabidopsis_thaliana",
-        json={"error": "unexpected object shape"},
-        is_reusable=True,
+        url=url,
+        json=[
+            {"dbname": "GO", "primary_id": "GO:0003700"},
+            {"dbname": "GO", "primary_id": "GO:0006355"},
+        ],
     )
     async with httpx.AsyncClient() as client:
         with pytest.raises(
@@ -204,7 +211,10 @@ async def test_lookup_xrefs_raises_on_non_list_payload(httpx_mock: HTTPXMock) ->
             match=r"answered 200 twice without a readable result \(dict, not a list\)",
         ):
             await ensembl_plants.lookup_xrefs(client, "AT1G01010")
-    assert len(httpx_mock.get_requests(url=re.compile(".*/xrefs/id/"))) == 2
+        assert len(httpx_mock.get_requests(url=re.compile(".*/xrefs/id/"))) == 2
+        result = await ensembl_plants.lookup_xrefs(client, "AT1G01010")
+    assert result["by_db"]["GO"] == ["GO:0003700", "GO:0006355"]
+    assert len(httpx_mock.get_requests(url=re.compile(".*/xrefs/id/"))) == 3
 
 
 # ---------- live integration (real-execution check) ----------
@@ -534,23 +544,27 @@ async def test_get_sequence_rejects_invalid_seq_type() -> None:
 
 @pytest.mark.asyncio
 async def test_get_sequence_raises_on_unexpected_payload(httpx_mock: HTTPXMock) -> None:
+    """Positive control, same request and cache: the well-formed answer that
+    follows the two refused ones is served, so neither was stored."""
     from plant_genomics_mcp.errors import UpstreamUnavailableError
 
     httpx_mock.add_response(
         url=_AT_LOOKUP.format("AT1G01010"), json=_gene("AT1G01010", "AT1G01010.1")
     )
-    httpx_mock.add_response(
-        url="https://rest.ensembl.org/sequence/id/AT1G01010.1?species=arabidopsis_thaliana&type=protein",
-        json=[{"seq": "X"}],  # Ensembl should hand back a dict, not a list.
-        is_reusable=True,
-    )
+    # Ensembl should hand back a dict, not a list.
+    httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, json=[{"seq": "X"}])
+    httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, json=[{"seq": "X"}])
+    httpx_mock.add_response(url=_AT1G01010_PROTEIN_URL, json=_protein(_REAL))
     async with httpx.AsyncClient() as client:
         with pytest.raises(
             UpstreamUnavailableError,
             match=r"answered 200 twice without a readable result \(list, not an object\)",
         ):
             await ensembl_plants.get_sequence(client, "AT1G01010")
-    assert len(httpx_mock.get_requests(url=re.compile(".*/sequence/id/"))) == 2
+        assert len(httpx_mock.get_requests(url=re.compile(".*/sequence/id/"))) == 2
+        result = await ensembl_plants.get_sequence(client, "AT1G01010")
+    assert result["sequence"] == _REAL
+    assert len(httpx_mock.get_requests(url=re.compile(".*/sequence/id/"))) == 3
 
 
 @pytest.mark.asyncio
@@ -710,12 +724,16 @@ async def test_region_query_rejects_end_before_start() -> None:
 
 @pytest.mark.asyncio
 async def test_region_query_raises_on_non_list_payload(httpx_mock: HTTPXMock) -> None:
+    """Positive control, same request and cache: the well-formed answer that
+    follows the two refused ones is served, so neither was stored."""
     from plant_genomics_mcp.errors import UpstreamUnavailableError
 
+    url = "https://rest.ensembl.org/overlap/region/arabidopsis_thaliana/1:3000-10000?feature=gene"
+    # Ensembl overlap returns an array on success.
+    httpx_mock.add_response(url=url, json={"error": "something"})
+    httpx_mock.add_response(url=url, json={"error": "something"})
     httpx_mock.add_response(
-        url="https://rest.ensembl.org/overlap/region/arabidopsis_thaliana/1:3000-10000?feature=gene",
-        json={"error": "something"},  # Ensembl overlap returns an array on success.
-        is_reusable=True,
+        url=url, json=[{"id": "AT1G01020", "feature_type": "gene", "external_name": "ARV1"}]
     )
     async with httpx.AsyncClient() as client:
         with pytest.raises(
@@ -723,7 +741,10 @@ async def test_region_query_raises_on_non_list_payload(httpx_mock: HTTPXMock) ->
             match=r"answered 200 twice without a readable result \(dict, not a list\)",
         ):
             await ensembl_plants.region_query(client, "1", 3000, 10000)
-    assert len(httpx_mock.get_requests(url=re.compile(".*/overlap/region/"))) == 2
+        assert len(httpx_mock.get_requests(url=re.compile(".*/overlap/region/"))) == 2
+        result = await ensembl_plants.region_query(client, "1", 3000, 10000)
+    assert result["features"][0]["external_name"] == "ARV1"
+    assert len(httpx_mock.get_requests(url=re.compile(".*/overlap/region/"))) == 3
 
 
 @live_only

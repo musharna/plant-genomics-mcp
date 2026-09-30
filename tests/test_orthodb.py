@@ -135,15 +135,24 @@ async def test_lookup_truncates(httpx_mock: HTTPXMock, monkeypatch: pytest.Monke
 
 @pytest.mark.asyncio
 async def test_lookup_malformed_raises(httpx_mock: HTTPXMock) -> None:
-    """A 200 whose body is not a JSON object → typed PlantGenomicsError."""
-    httpx_mock.add_response(url=_SEARCH_URL, json=["unexpected", "list"], is_reusable=True)
+    """A 200 whose body is not a JSON object → typed PlantGenomicsError.
+    Positive control, same request and cache: the well-formed answer that
+    follows the two refused ones is served, so neither was stored."""
+    httpx_mock.add_response(url=_SEARCH_URL, json=["unexpected", "list"])
+    httpx_mock.add_response(url=_SEARCH_URL, json=["unexpected", "list"])
+    httpx_mock.add_response(url=_SEARCH_URL, json={"status": "ok", "count": "1", "data": [_GID]})
+    httpx_mock.add_response(url=_GROUP_URL, json=_GROUP)
+    httpx_mock.add_response(url=_ORTHO_URL, json=_ORTHO)
     async with httpx.AsyncClient() as client:
         with pytest.raises(
             UpstreamUnavailableError,
             match=r"answered 200 twice without a readable result \(list, not an object\)",
         ):
             await orthodb.lookup_locus(client, "AT1G01060", "arabidopsis")
-    assert len(httpx_mock.get_requests(url=_SEARCH_URL)) == 2
+        assert len(httpx_mock.get_requests(url=_SEARCH_URL)) == 2
+        r = await orthodb.lookup_locus(client, "AT1G01060", "arabidopsis")
+    assert r["group"]["name"] == "LHY protein"
+    assert len(httpx_mock.get_requests(url=_SEARCH_URL)) == 3
 
 
 @pytest.mark.asyncio

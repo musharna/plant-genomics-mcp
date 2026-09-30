@@ -177,14 +177,21 @@ async def test_lookup_by_uniprot_page_cap_truncates(
 
 @pytest.mark.asyncio
 async def test_lookup_by_uniprot_malformed_raises(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(url=_URL, json=["not", "a", "dict"], is_reusable=True)
+    """Positive control, same request and cache: the well-formed answer that
+    follows the two refused ones is served, so neither was stored."""
+    httpx_mock.add_response(url=_URL, json=["not", "a", "dict"])
+    httpx_mock.add_response(url=_URL, json=["not", "a", "dict"])
+    httpx_mock.add_response(url=_URL, json=_PAGE)
     async with httpx.AsyncClient() as client:
         with pytest.raises(
             UpstreamUnavailableError,
             match=r"answered 200 twice without a readable result \(list, not an object\)",
         ):
             await interpro.lookup_by_uniprot(client, "Q9SZ92")
-    assert len(httpx_mock.get_requests(url=_URL)) == 2
+        assert len(httpx_mock.get_requests(url=_URL)) == 2
+        r = await interpro.lookup_by_uniprot(client, "Q9SZ92")
+    assert r["domains"][0]["accession"] == "PF01633"
+    assert len(httpx_mock.get_requests(url=_URL)) == 3
 
 
 # InterPro's answer when its database is overloaded (MySQL 1040, "too many

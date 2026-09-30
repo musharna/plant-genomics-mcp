@@ -213,14 +213,23 @@ async def test_lookup_annotation_fallback_and_empty(httpx_mock: HTTPXMock) -> No
 
 @pytest.mark.asyncio
 async def test_lookup_malformed_raises(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(url=_FIRST, json=["unexpected", "list"], is_reusable=True)
+    """Positive control, same request and cache: the well-formed answer that
+    follows the two refused ones is served, so neither was stored."""
+    httpx_mock.add_response(url=_FIRST, json=["unexpected", "list"])
+    httpx_mock.add_response(url=_FIRST, json=["unexpected", "list"])
+    httpx_mock.add_response(
+        url=_FIRST, json={"count": 1, "links": {"next": None}, "results": [_ASSOC]}
+    )
     async with httpx.AsyncClient() as client:
         with pytest.raises(
             UpstreamUnavailableError,
             match=r"answered 200 twice without a readable result \(list, not an object\)",
         ):
             await aragwas.lookup_locus(client, "AT1G01060", "arabidopsis")
-    assert len(httpx_mock.get_requests(url=_FIRST)) == 2
+        assert len(httpx_mock.get_requests(url=_FIRST)) == 2
+        r = await aragwas.lookup_locus(client, "AT1G01060", "arabidopsis")
+    assert r["associations"][0]["score"] == 30.386
+    assert len(httpx_mock.get_requests(url=_FIRST)) == 3
 
 
 @pytest.mark.asyncio

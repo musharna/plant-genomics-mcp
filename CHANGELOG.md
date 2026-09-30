@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Every test of a refused body also asks again and gets the answer.** Twelve
+  tests of a 200 body the tools refuse (AraGWAS, Ensembl lookup, sequence,
+  xrefs, region and variation, InterPro, 1001 Genomes, OrthoDB, Planteome)
+  stopped at the error, so they passed with the refused body stored and
+  served back for the whole cache lifetime. Each now serves the bad body
+  twice, then a good one, and checks the next call returns it.
+
 - **A tomato transcript or protein id in Ensembl's spelling is found.**
   Ensembl names SL4.0 tomato features by type: genes `gene-Solyc…`,
   transcripts `mRNA-Solyc….1.1`, proteins `CDS-Solyc….1.1`. The `gene-`
