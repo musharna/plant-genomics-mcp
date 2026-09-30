@@ -227,9 +227,10 @@ async def test_live_an_unknown_frame_is_a_404_not_an_empty_frame() -> None:
     """PlantCyc's answer to a frame it does not have. _getxml reads a 404 as
     an outage because every frame it asks for PlantCyc itself named; that is
     safe only if an unknown frame is a 404, not a 200 document the traversal
-    would read as a frame with no reactions or pathways. Unprobed from a
-    local host (Incapsula's challenge, 2026-09-29), so the answer, whatever
-    it is, is the failure message."""
+    would read as a frame with no reactions or pathways. Local hosts get
+    Incapsula's challenge (an upstream failure here); the GitHub runner is
+    answered, and there the unknown frame was a 404 (live-nightly run
+    36658257123, 2026-09-30). Any other answer is the failure message."""
     async with httpx.AsyncClient() as client:
         frame = await plantcyc._resolve_gene_frame(client, "ARA", "AT3G51240")
         assert frame is not None

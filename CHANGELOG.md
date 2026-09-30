@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **PlantCyc's answer to an unknown frame is checked live.** A `getxml` 404
+  fails the call as an outage, which is safe only if PlantCyc answers a frame
+  it does not have with a 404 rather than an empty 200 document. Local hosts
+  cannot see PlantCyc behind its bot challenge; from the GitHub runner the
+  answer is a 404. A live test now holds it.
+
 - **An upstream outage in a live test is the upstream's, not a regression.**
   Seven live test calls used `client.get` directly, so an outage reached the
   nightly without the `[UpstreamUnavailableError]` tag it classifies on:

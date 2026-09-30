@@ -60,8 +60,10 @@ async def _getxml(client: httpx.AsyncClient, orgid: str, frame: str) -> ET.Eleme
     Every frame asked for here is one PlantCyc itself just named (the xmlquery
     answer or a parent frame), so a 404 is the service failing, not a miss:
     it is retried and raised as an outage. It used to read as "not a
-    metabolic gene" and silently drop reactions and pathways; no live miss
-    body was ever recorded (Incapsula blocked the probe, 2026-09-29).
+    metabolic gene" and silently drop reactions and pathways. PlantCyc answers
+    a frame it does not have with a 404, not an empty 200 document (GitHub
+    runner, 2026-09-30; local hosts get Incapsula's challenge), so a real frame
+    cannot be hidden this way; see test_live_an_unknown_frame_is_a_404_not_an_empty_frame.
     """
     key = cache.make_key("GET", BASE_URL, "/getxml", {"frame": f"{orgid}:{frame}"})
     cached = _CACHE.get(key)
