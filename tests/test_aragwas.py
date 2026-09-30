@@ -274,6 +274,84 @@ async def test_a_lowercase_agi_is_asked_for_in_its_canonical_spelling(
     assert r["association_count"] == 1
 
 
+_UNKNOWN = f"{aragwas.BASE_URL}/api/genes/AT1G99990/associations/?limit=25"
+_SUGGEST = f"{aragwas.BASE_URL}/api/genes/autocomplete/?term="
+# AraGWAS's answer for a gene it does not have, on every per-gene endpoint
+# (live 2026-09-30, AT1G99990: associations and /api/genes/{AGI}/ alike).
+_SERVER_ERROR = "<h1>Server Error (500)</h1>"
+# Its gene search's answer for AT1G01060, verbatim (live 2026-09-30).
+_SUGGESTION = {
+    "id": "AT1G01060",
+    "name": "AT1G01060",
+    "strand": "-",
+    "chr": "chr1",
+    "type": "gene",
+    "positions": {"gte": 33365, "lte": 37871},
+}
+
+
+@pytest.mark.asyncio
+async def test_an_unknown_gene_is_not_found_not_an_outage(httpx_mock: HTTPXMock) -> None:
+    """AraGWAS answers a gene it does not have with a 500, which read as an
+    outage. Its gene search tells the two apart (live: AT1G01010 listed,
+    AT1G99990 answered [])."""
+    httpx_mock.add_response(url=_UNKNOWN, is_reusable=True, status_code=500, text=_SERVER_ERROR)
+    httpx_mock.add_response(url=f"{_SUGGEST}AT1G99990", json=[])
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError) as err:
+            await aragwas.lookup_locus(client, "AT1G99990")
+    assert str(err.value) == "[NotFoundError] AraGWAS has no gene 'AT1G99990'"
+    assert isinstance(err.value.__cause__, UpstreamUnavailableError)
+
+
+@pytest.mark.asyncio
+async def test_a_gene_aragwas_has_that_fails_is_still_an_outage(httpx_mock: HTTPXMock) -> None:
+    """Positive control of the test above: the same 500 for a gene the search
+    lists is the upstream failing, raised as it was."""
+    httpx_mock.add_response(url=_FIRST, is_reusable=True, status_code=500, text=_SERVER_ERROR)
+    httpx_mock.add_response(url=f"{_SUGGEST}AT1G01060", json=[_SUGGESTION])
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError, match="AraGWAS associations") as err:
+            await aragwas.lookup_locus(client, "AT1G01060")
+    assert not isinstance(err.value, NotFoundError)
+
+
+@pytest.mark.asyncio
+async def test_only_the_gene_itself_in_the_search_counts(httpx_mock: HTTPXMock) -> None:
+    """The search matches by prefix (live: 'AT1G0101' lists AT1G01010), so a
+    listed gene is the one asked about only when its id is."""
+    httpx_mock.add_response(url=_UNKNOWN, is_reusable=True, status_code=500, text=_SERVER_ERROR)
+    httpx_mock.add_response(url=f"{_SUGGEST}AT1G99990", json=[{**_SUGGESTION, "id": "AT1G99991"}])
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError):
+            await aragwas.lookup_locus(client, "AT1G99990")
+
+
+@pytest.mark.asyncio
+async def test_when_the_search_fails_too_the_outage_stands(httpx_mock: HTTPXMock) -> None:
+    """A search that cannot answer says nothing about the gene: the
+    associations failure is raised, not a guess."""
+    httpx_mock.add_response(url=_UNKNOWN, is_reusable=True, status_code=500, text=_SERVER_ERROR)
+    httpx_mock.add_response(
+        url=f"{_SUGGEST}AT1G99990", is_reusable=True, status_code=500, text=_SERVER_ERROR
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError, match="AraGWAS associations") as err:
+            await aragwas.lookup_locus(client, "AT1G99990")
+    assert not isinstance(err.value, NotFoundError)
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_an_unknown_gene_is_not_found() -> None:
+    """AT1G99990 was never issued. Positive control: AT1G01060 answers."""
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match="AraGWAS has no gene 'AT1G99990'"):
+            await aragwas.lookup_locus(client, "AT1G99990")
+        r = await aragwas.lookup_locus(client, "AT1G01060")
+    assert r["association_count"] > 0
+
+
 @live_only
 @pytest.mark.asyncio
 async def test_live_arabidopsis_associations() -> None:
