@@ -882,6 +882,24 @@ async def test_live_every_organisms_protein_holds_no_stop(organism: str, gene: s
 
 @live_only
 @pytest.mark.asyncio
+@pytest.mark.parametrize(("organism", "gene"), list(_PROTEIN_PROBES.items()))
+async def test_live_every_organisms_lookup_and_xrefs_keep_the_contract(
+    organism: str, gene: str
+) -> None:
+    """The PASSTHROUGH lists in tests/_output_contract.py against each
+    organism's real record: the contract wrapper checks both answers, so a
+    declared key one organism's record lacks and no list exempts fails here,
+    as that organism's case. Live 2026-09-29: ten organisms' genes carry no
+    description or display_name, maize's no description."""
+    async with httpx.AsyncClient() as client:
+        locus = await ensembl_plants.lookup_locus(client, gene, organism=organism)
+        xrefs = await ensembl_plants.lookup_xrefs(client, gene, organism=organism)
+    assert locus["id"].endswith(gene)
+    assert xrefs["count"] > 0 and xrefs["xrefs"]
+
+
+@live_only
+@pytest.mark.asyncio
 async def test_live_region_query_arabidopsis_chr1_finds_arv1() -> None:
     """Real /overlap/region call — AT1G01020 (ARV1) overlaps 1:3000-10000."""
     async with httpx.AsyncClient() as client:
