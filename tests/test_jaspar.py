@@ -140,7 +140,9 @@ def test_project_sparse_record() -> None:
 
 @pytest.mark.asyncio
 async def test_fetch_matrix_404_returns_none(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(url=_detail_url("MA9999.9"), status_code=404, text="Not Found")
+    httpx_mock.add_response(
+        url=_detail_url("MA9999.9"), status_code=404, json={"detail": "Not found."}
+    )
     async with httpx.AsyncClient() as client:
         assert await jaspar.fetch_matrix(client, "MA9999.9") is None
 
@@ -184,7 +186,9 @@ async def test_lookup_matrix_invalid_id_raises_before_network() -> None:
 
 @pytest.mark.asyncio
 async def test_lookup_matrix_unknown_versioned_id_raises(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(url=_detail_url("MA9999.9"), status_code=404, text="Not Found")
+    httpx_mock.add_response(
+        url=_detail_url("MA9999.9"), status_code=404, json={"detail": "Not found."}
+    )
     async with httpx.AsyncClient() as client:
         with pytest.raises(NotFoundError, match="no matrix with id"):
             await jaspar.lookup_matrix(client, "MA9999.9")
@@ -411,7 +415,9 @@ async def test_lookup_locus_skips_vanished_detail(
     """A candidate whose detail 404s is dropped rather than failing the call."""
     monkeypatch.setattr(uniprot, "lookup_locus", _fake_uniprot("Q9M7Q5"))
     httpx_mock.add_response(url=_search_url("ABF1"), json={"results": [{"matrix_id": "MA0570.9"}]})
-    httpx_mock.add_response(url=_detail_url("MA0570.9"), status_code=404, text="Not Found")
+    httpx_mock.add_response(
+        url=_detail_url("MA0570.9"), status_code=404, json={"detail": "Not found."}
+    )
     async with httpx.AsyncClient() as client:
         r = await jaspar.lookup_locus(client, "AT1G49720")
     assert r["found"] is False
@@ -501,7 +507,9 @@ async def test_404_is_cached_so_a_repeat_fetch_stays_off_the_wire(
     httpx_mock: HTTPXMock,
 ) -> None:
     """One mock, two calls: a second request would fail as unexpected."""
-    httpx_mock.add_response(url=_detail_url("MA9999.9"), status_code=404, text="Not Found")
+    httpx_mock.add_response(
+        url=_detail_url("MA9999.9"), status_code=404, json={"detail": "Not found."}
+    )
     async with httpx.AsyncClient() as client:
         assert await jaspar.fetch_matrix(client, "MA9999.9") is None
         assert await jaspar.fetch_matrix(client, "MA9999.9") is None

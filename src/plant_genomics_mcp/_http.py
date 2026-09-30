@@ -241,16 +241,33 @@ async def request_with_retry(
     allow_html: bool = False,
     no_content_ok: bool = False,
     retry_403_pattern: re.Pattern[str] | None = None,
-    retry_404_pattern: re.Pattern[str] | None = None,
+    not_found_404_pattern: re.Pattern[str] | None = None,
     limit: UpstreamLimit | None = None,
 ) -> httpx.Response | Any:
     """Issue ``method url`` with the shared retry + classification policy.
 
     Returns the raw ``httpx.Response`` on 2xx so callers retain control of
     JSON vs text parsing and per-backend caching. Raises a typed subclass
-    of ``PlantGenomicsError`` on terminal failure. Pass
-    ``not_found_returns=<sentinel>`` to suppress ``NotFoundError`` on 404
-    and return the sentinel instead (KEGG's "no record" idiom).
+    of ``PlantGenomicsError`` on terminal failure.
+
+    A 404 is the service's failure unless the caller shows otherwise: it is
+    retried on the 5xx backoff and, once the budget is spent, raised as
+    ``UpstreamUnavailableError`` quoting the body. It used to be
+    ``NotFoundError`` by default, and 23 calls whose identifier travels in the
+    query or body (UniProt search, QuickGO, BLAST, the Ensembl batch POST ...)
+    told a caller their gene does not exist whenever the route itself was
+    missing: a wrong or retired URL, or Phytozome's BioMart answering Apache's
+    404 page for every path (2026-09-29).
+
+    ``not_found_404_pattern=<compiled regex>`` is for an upstream that answers
+    an unknown identifier in the path with 404 and a miss body of its own.
+    Only a 404 whose body matches is ``NotFoundError`` (or the
+    ``not_found_returns`` sentinel, KEGG's "no record" idiom). The pattern is
+    the upstream's live miss body, not the status: every one probed also
+    answers 404 for a missing route, with a different body (UniProt's miss
+    names "Resource not found", its missing route is an nginx page; live
+    2026-09-29). ``not_found_returns`` without the pattern is refused, since
+    no 404 could reach it.
 
     ``not_found_400_pattern=<compiled regex>`` covers upstreams that signal an
     unknown identifier with 400 plus a body marker rather than 404 — Ensembl
@@ -278,18 +295,11 @@ async def request_with_retry(
     ``RateLimitError`` quoting the page. Opt-in and body-matched, like
     ``not_found_400_pattern``: any other 403 stays terminal.
 
-    ``retry_404_pattern=<compiled regex>`` covers upstreams that report their
-    own failure with 404 plus a body marker. InterPro answers an absent
-    protein with 204, but an overloaded database with ``404 {"Error":1040}``
-    (MySQL "too many connections", live 2026-09-28): read as ``NotFoundError``
-    it told a caller the protein has no InterPro record. A matching 404 is
-    retried on the 5xx backoff and, once the budget is spent, raises
-    ``UpstreamUnavailableError`` quoting the body; any other 404 stays
-    ``NotFoundError``.
-
     ``limit=<UpstreamLimit>`` caps this upstream's requests in flight; see
     :class:`UpstreamLimit`.
     """
+    if not_found_returns is not _RAISE and not_found_404_pattern is None:
+        raise ValueError(f"{service}: not_found_returns needs not_found_404_pattern")
     delay = 1.0
     last_refusal: str | None = None
     last_fault: str | None = None
@@ -400,15 +410,13 @@ async def request_with_retry(
         if resp.status_code == 204 and no_content_ok:
             return resp
 
-        faulted = (
-            resp.status_code == 404
-            and retry_404_pattern is not None
-            and retry_404_pattern.search(resp.text) is not None
-        )
+        faulted = resp.status_code == 404
         if faulted:
+            if not_found_404_pattern is not None and not_found_404_pattern.search(resp.text):
+                if not_found_returns is not _RAISE:
+                    return not_found_returns
+                raise NotFoundError(f"{service} → HTTP 404 (not found): {resp.text[:200]}")
             last_fault = " ".join(resp.text.split())[:200]
-        elif resp.status_code == 404 and not_found_returns is not _RAISE:
-            return not_found_returns
 
         refused = (
             resp.status_code == 403
@@ -437,8 +445,6 @@ async def request_with_retry(
             # that we tried, not that this single response failed.
             break
 
-        if resp.status_code == 404:
-            raise NotFoundError(f"{service} → HTTP 404: {resp.text[:200]}")
         # Some upstreams signal an unknown identifier with 400 + a body marker
         # instead of 404. Ensembl is one: an unknown gene id returns
         # `400 {"error":"ID 'AT1G01010' not found"}`. Without this, callers

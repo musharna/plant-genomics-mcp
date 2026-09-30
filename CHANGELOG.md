@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- **A 404 is an outage, not a missing gene, unless the upstream says so.**
+  Every 404 was `NotFoundError`, so 23 calls whose identifier travels in the
+  query or body told the caller their gene or protein does not exist whenever
+  the route itself was missing. They include UniProt search (behind seven
+  tools), QuickGO, Planteome, Europe PMC, OrthoDB, ATTED-II, Gramene,
+  PANTHER, ThaleMine, g:Profiler, BLAST, the Ensembl batch lookup and the
+  release probes. A 404 is now retried and raised as `UpstreamUnavailableError`
+  quoting the page. The seven upstreams that do answer an unknown identifier
+  with 404 (AlphaFold, PDBe, KEGG, JASPAR, UniProt accession fetch, STRING,
+  BAR's aliases) are read as a miss only when the body is that upstream's own
+  miss answer, each checked live against the same upstream's missing-route
+  page. PlantCyc `getxml` frames are named by PlantCyc itself, so a 404 there
+  now fails the call as an outage instead of silently dropping a reaction or
+  pathway.
+
 - **A tomato gene id in Ensembl's own spelling is found.** Ensembl names
   SL4.0 tomato genes `gene-Solyc…`, and `ensembl_plants_lookup_locus`
   returns that as `id`, but every Ensembl tool prefixed `gene-` again, so

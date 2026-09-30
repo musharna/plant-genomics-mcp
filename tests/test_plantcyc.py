@@ -20,7 +20,11 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import organisms, plantcyc
-from plant_genomics_mcp.errors import OrganismNotSupported, PlantGenomicsError
+from plant_genomics_mcp.errors import (
+    OrganismNotSupported,
+    PlantGenomicsError,
+    UpstreamUnavailableError,
+)
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
@@ -220,47 +224,35 @@ async def test_live_rice_cross_species_resolves() -> None:
 
 
 @pytest.mark.asyncio
-async def test_404_frame_is_cached_so_a_repeat_fetch_stays_off_the_wire(
-    httpx_mock: HTTPXMock,
+async def test_a_404_on_a_frame_plantcyc_named_is_an_outage(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A missing frame is a normal, frequent answer — it must not re-hit PMN.
+    """Every getxml frame is one PlantCyc itself just named, so its 404 is the
+    service failing. It was cached as "not a metabolic gene" and the frame's
+    reactions and pathways silently dropped; now it is retried, raised as an
+    outage and not stored, and the next real answer is read."""
+    from plant_genomics_mcp import _http
 
-    The router here is deliberately reusable (a second request would succeed
-    rather than fail the test), so this counts handler invocations instead:
-    two ``_getxml`` calls for the same absent frame must reach upstream once.
-    """
+    async def _no_sleep(_s: float) -> None:
+        return None
+
+    monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
     calls: list[str] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
         calls.append(request.url.query.decode())
-        return httpx.Response(404, text="<html>not found</html>")
-
-    httpx_mock.add_callback(handler, is_reusable=True)
-    async with httpx.AsyncClient() as client:
-        assert await plantcyc._getxml(client, "ARA", "NO-SUCH-FRAME") is None
-        assert await plantcyc._getxml(client, "ARA", "NO-SUCH-FRAME") is None
-    assert len(calls) == 1
-
-
-@pytest.mark.asyncio
-async def test_a_cached_404_does_not_mask_a_different_frame(
-    httpx_mock: HTTPXMock,
-) -> None:
-    """The negative is keyed per frame, not shared across them."""
-    calls: list[str] = []
-
-    def handler(request: httpx.Request) -> httpx.Response:
-        query = request.url.query.decode()
-        calls.append(query)
-        if query.endswith("MISSING"):
+        if len(calls) <= 3:
             return httpx.Response(404, text="<html>not found</html>")
         return httpx.Response(200, text=_GENE)
 
     httpx_mock.add_callback(handler, is_reusable=True)
     async with httpx.AsyncClient() as client:
-        assert await plantcyc._getxml(client, "ARA", "MISSING") is None
-        assert await plantcyc._getxml(client, "ARA", "AT3G51240") is not None
-    assert len(calls) == 2
+        with pytest.raises(UpstreamUnavailableError, match=r"exhausted 3 retries \(HTTP 404: "):
+            await plantcyc._getxml(client, "ARA", "AT3G51240")
+        # Positive control: nothing was stored, so the next answer is read.
+        root = await plantcyc._getxml(client, "ARA", "AT3G51240")
+    assert root.find(".//Gene") is not None
+    assert calls == ["ARA:AT3G51240"] * 4
 
 
 # ---------- audit 2026-09-22 L11: a count from a capped walk is not a total ----------

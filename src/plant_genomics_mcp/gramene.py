@@ -140,8 +140,9 @@ async def fetch_homolog_enrichment_batch(
 
     For each locus in ``loci``, returns a dict
     ``{"uniprot_acc": <SWISSPROT or SPTREMBL or None>, "system_name": <organism slug or None>}``.
-    Loci absent from Gramene's response (404 or filtered upstream) also map
-    to ``{"uniprot_acc": None, "system_name": None}`` — the output dict is
+    Loci absent from Gramene's 200 response also map to
+    ``{"uniprot_acc": None, "system_name": None}`` (a 404 is the service
+    failing, raised as ``UpstreamUnavailableError``) — the output dict is
     total over the input list so the caller's join doesn't need to handle
     KeyError.
 

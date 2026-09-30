@@ -160,10 +160,10 @@ async def test_analyze_locus_synth_all_backends_succeed_returns_full_envelope(ht
 
 @pytest.mark.asyncio
 async def test_analyze_locus_synth_phase1_failure_skips_phase2(httpx_mock):
-    # Ensembl 404 — phase-1 root resolution failure
+    # Ensembl's miss (a 400, live) — phase-1 root resolution failure
     httpx_mock.add_response(
         url="https://rest.ensembl.org/lookup/id/AT9G99999?species=arabidopsis_thaliana&expand=0",
-        status_code=404,
+        status_code=400,
         json={"error": "ID 'AT9G99999' not found"},
     )
     # UniProt also fires in parallel during phase 1 (sequenced there so the
@@ -1655,11 +1655,12 @@ async def test_gene_report_ensembl_outage_still_renders_dossier(httpx_mock, monk
 
 @pytest.mark.asyncio
 async def test_gene_report_no_resolver_finds_locus_root_fails(httpx_mock):
-    # Neither Ensembl (404) nor UniProt (no hits) resolves the locus, so there
-    # is nothing to anchor a dossier on → whole dossier root-fails.
+    # Neither Ensembl (its 400 miss) nor UniProt (no hits) resolves the locus, so
+    # there is nothing to anchor a dossier on → whole dossier root-fails.
     httpx_mock.add_response(
         url="https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0",
-        status_code=404,
+        status_code=400,
+        json={"error": "ID 'AT1G01010' not found"},
     )
     # UniProt runs concurrently in phase 1; give it a response so only the
     # root (ensembl) drives the failure path. Empty results → lookup_locus

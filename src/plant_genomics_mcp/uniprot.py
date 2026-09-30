@@ -38,6 +38,11 @@ BASE_URL = "https://rest.uniprot.org"
 DEFAULT_TIMEOUT = 30.0
 MAX_RETRIES = 3
 
+# An unknown accession is 404 naming "Resource not found", in JSON and FASTA
+# alike; a missing route is 404 with an nginx page (live, 2026-09-29), an
+# outage, not "no entry".
+NO_ENTRY_404_RE = re.compile(r"Resource not found")
+
 # UniProtKB accession syntax — https://www.uniprot.org/help/accession_numbers
 # Either the 6-char legacy form (e.g. P12345, Q9LIV2) or the 10-char form
 # (e.g. A0A1B2C3D4). We allow an optional trailing `.N` version suffix
@@ -225,6 +230,7 @@ async def _fetch_by_accession(
             headers={"Accept": "application/json"},
             timeout=DEFAULT_TIMEOUT,
             max_retries=MAX_RETRIES,
+            not_found_404_pattern=NO_ENTRY_404_RE,
         )
     except NotFoundError:
         raise NotFoundError(f"UniProt has no entry for accession={bare!r}") from None
@@ -263,6 +269,7 @@ async def fetch_sequence(
             service="UniProt FASTA",
             timeout=DEFAULT_TIMEOUT,
             max_retries=MAX_RETRIES,
+            not_found_404_pattern=NO_ENTRY_404_RE,
         )
     except NotFoundError:
         raise NotFoundError(f"UniProt has no FASTA for accession={bare!r}") from None

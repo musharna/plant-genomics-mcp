@@ -42,6 +42,9 @@ MAX_LIMIT = 500
 CALLER_IDENTITY = "plant-genomics-mcp"
 
 _CACHE = cache.TTLCache(default_ttl=CACHE_TTL_SECONDS)
+# An unknown identifier is 404 ``[{"Error" : "not found", ...}]``; a missing
+# route is 404 with an HTML page (live, 2026-09-29), an outage, not "no protein".
+NO_PROTEIN_404_RE = re.compile(r'"Error"\s*:\s*"not found"')
 _T = TypeVar("_T")
 
 # Community locus spellings STRING's alias table does not carry, and the
@@ -112,6 +115,7 @@ async def _get(
         timeout=DEFAULT_TIMEOUT,
         max_retries=MAX_RETRIES,
         shape=shape,
+        not_found_404_pattern=NO_PROTEIN_404_RE,
     )
 
 

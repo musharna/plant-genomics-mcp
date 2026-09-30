@@ -17,7 +17,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import _http, ensembl_plants, organisms  # noqa: F401
-from plant_genomics_mcp.errors import UpstreamUnavailableError
+from plant_genomics_mcp.errors import NotFoundError, UpstreamUnavailableError
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
@@ -110,15 +110,29 @@ async def test_retry_after_capped_at_60s(
 
 
 @pytest.mark.asyncio
-async def test_lookup_locus_raises_on_404(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(
-        url="https://rest.ensembl.org/lookup/id/NOTREAL?species=arabidopsis_thaliana&expand=0",
-        status_code=404,
-        text="not found",
-    )
+async def test_a_404_is_ensembl_failing_and_its_400_is_the_miss(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Ensembl answers an unknown id with 400 and a missing route with 404
+    (both live, 2026-09-29). The 404 was a NotFoundError: "no such gene"
+    whenever Ensembl served its "page not found" for a real one."""
+
+    async def _no_sleep(_s: float) -> None:
+        return None
+
+    monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
+    route = "https://rest.ensembl.org/lookup/id/AT1G01010?species=arabidopsis_thaliana&expand=0"
+    page = {"error": "page not found. Please check your uri and refer to our documentation"}
+    httpx_mock.add_response(url=route, status_code=404, json=page, is_reusable=True)
+    miss = "https://rest.ensembl.org/lookup/id/AT9G99999?species=arabidopsis_thaliana&expand=0"
+    httpx_mock.add_response(url=miss, status_code=400, json={"error": "ID 'AT9G99999' not found"})
     async with httpx.AsyncClient() as client:
-        with pytest.raises(ensembl_plants.PlantGenomicsError, match="HTTP 404"):
-            await ensembl_plants.lookup_locus(client, "NOTREAL")
+        with pytest.raises(UpstreamUnavailableError, match=r"exhausted 3 retries \(HTTP 404: "):
+            await ensembl_plants.lookup_locus(client, "AT1G01010")
+        # Positive control: Ensembl's own miss is still NotFoundError.
+        with pytest.raises(NotFoundError, match="ID 'AT9G99999' not found"):
+            await ensembl_plants.lookup_locus(client, "AT9G99999")
+    assert len(httpx_mock.get_requests(url=route)) == 3
 
 
 # ---------- xrefs unit tests ----------

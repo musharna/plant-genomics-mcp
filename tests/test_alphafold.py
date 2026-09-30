@@ -95,7 +95,7 @@ async def test_lookup_by_uniprot_full(httpx_mock: HTTPXMock) -> None:
 @pytest.mark.asyncio
 async def test_lookup_by_uniprot_no_model_is_graceful(httpx_mock: HTTPXMock) -> None:
     """404 = no predicted model for this (valid) accession → found=False."""
-    httpx_mock.add_response(url=_PRED_URL, status_code=404, text="Not found")
+    httpx_mock.add_response(url=_PRED_URL, status_code=404, json={})
     async with httpx.AsyncClient() as client:
         r = await alphafold.lookup_by_uniprot(client, "Q9SZ92")
     assert r["found"] is False
@@ -182,7 +182,7 @@ async def test_404_is_cached_so_a_repeat_lookup_stays_off_the_wire(
     httpx_mock: HTTPXMock,
 ) -> None:
     """One mock, two calls: a second request would fail as unexpected."""
-    httpx_mock.add_response(url=_PRED_URL, status_code=404, text="Not found")
+    httpx_mock.add_response(url=_PRED_URL, status_code=404, json={})
     async with httpx.AsyncClient() as client:
         first = await alphafold.lookup_by_uniprot(client, "Q9SZ92")
         second = await alphafold.lookup_by_uniprot(client, "Q9SZ92")
@@ -198,7 +198,7 @@ async def test_404_is_cached_so_a_repeat_lookup_stays_off_the_wire(
 async def test_every_reported_band_carries_its_plddt_range(httpx_mock: HTTPXMock) -> None:
     """Four fractions named very_low..very_high shipped with no cutoffs (#135)."""
     httpx_mock.add_response(url=_PRED_URL, json=_PREDICTION)
-    httpx_mock.add_response(url=_PRED_URL, status_code=404, text="Not found")
+    httpx_mock.add_response(url=_PRED_URL, status_code=404, json={})
     async with httpx.AsyncClient() as client:
         found = await alphafold.lookup_by_uniprot(client, "Q9SZ92")
         alphafold._CACHE.clear()
