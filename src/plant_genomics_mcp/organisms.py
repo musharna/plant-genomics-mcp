@@ -45,6 +45,12 @@ class OrganismRecord:
     # Needed for assemblies imported from an NCBI GFF, whose Ensembl stable
     # IDs carry a ``gene-`` prefix (e.g. tomato SL4.0 → ``gene-Solyc...``).
     # ``None``/"" means pass the locus through unchanged.
+    ensembl_feature_prefixes: tuple[str, ...] = ()
+    # The same import's prefixes for its other features: an id that carries
+    # one is already Ensembl's own transcript or translation id and is sent as
+    # it is. The import names every feature by its GFF type, so ``gene-`` is
+    # the gene's alone; a transcript given with it was sent as ``gene-mRNA-...``
+    # and answered "not found".
     gprofiler_id: str | None = None
     # g:Profiler organism ID (e.g. "athaliana") used by ``gprofiler.py`` for
     # GO/KEGG over-representation. NOT derivable from the NCBI taxid: g:Profiler
@@ -159,6 +165,10 @@ ORGANISMS: dict[str, OrganismRecord] = {
         # 2026-06-22).
         ensembl_slug="solanum_lycopersicum_gca000188115v5cm",
         ensembl_id_prefix="gene-",
+        # Live 2026-09-30: both biotypes Ensembl lists for SL4.0
+        # (protein_coding, pseudogene) name transcripts ``mRNA-`` and
+        # translations ``CDS-``; 198 genes of CM001064.4:1-1500000 had no other.
+        ensembl_feature_prefixes=("mRNA-", "CDS-"),
         phytozome_int=691,
         string_taxid=4081,
         europe_pmc_slug="tomato",
@@ -414,6 +424,12 @@ def ensembl_id_prefix_for(query: str | int) -> str:
     ``OrganismRecord.ensembl_id_prefix`` for why a prefix is ever needed.
     """
     return resolve(query).ensembl_id_prefix or ""
+
+
+def ensembl_feature_prefixes_for(query: str | int) -> tuple[str, ...]:
+    """Return the stable-id prefixes of this organism's non-gene Ensembl
+    features. See ``OrganismRecord.ensembl_feature_prefixes``."""
+    return resolve(query).ensembl_feature_prefixes
 
 
 def phytozome_int_for(query: str | int) -> int:
