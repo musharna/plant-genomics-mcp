@@ -15,8 +15,8 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from plant_genomics_mcp import releases, server, string_db
-from plant_genomics_mcp.errors import InvalidArguments, PlantGenomicsError
+from plant_genomics_mcp import _http, releases, server, string_db
+from plant_genomics_mcp.errors import InvalidArguments, NotFoundError, PlantGenomicsError
 from plant_genomics_mcp.models import upstream_version_field
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
@@ -227,6 +227,17 @@ def test_every_always_null_upstream_version_names_its_upstream_release() -> None
 
 # --- live -------------------------------------------------------------------
 
+# PDBe's answer at a path it does not serve (live 404, 2026-09-29): the claim
+# holds while it answers this; any other failure is retried and an outage.
+_PDBE_NO_ROUTE = re.compile(r'\A\s*\{\s*"detail"\s*:\s*"Not Found"\s*\}\s*\Z')
+
+
+async def _get(client: httpx.AsyncClient, url: str, **kwargs: object) -> httpx.Response:
+    resp = await _http.request_with_retry(client, "GET", url, service=url, **kwargs)
+    assert isinstance(resp, httpx.Response)
+    return resp
+
+
 _SHAPES = {
     "ensembl_plants": r"\d+",
     "string": r"\d+\.\d+",
@@ -251,15 +262,24 @@ async def test_live_the_no_release_claims_still_hold() -> None:
     """The endpoints the PDBe/AraGWAS reasons name still state nothing.
 
     Positive control first, through the same client: Ensembl's release endpoint
-    answers, so a 404 below is PDBe's, not a broken probe.
+    answers, so a 404 below is PDBe's, not a broken probe. Every call goes
+    through ``_http``, so an outage is retried and tagged for the nightly;
+    raw calls read Ensembl's 500 as ``assert 500 == 200``, a regression.
     """
     async with httpx.AsyncClient(timeout=30) as client:
-        control = await client.get(ENSEMBL, headers={"Accept": "application/json"})
-        assert control.status_code == 200 and "version" in control.json()
+        control = _http.json_body(
+            await _get(client, ENSEMBL, headers={"Accept": "application/json"}), "Ensembl"
+        )
+        assert isinstance(control, dict) and "version" in control, control
         for path in ("/pdbe/api/status", "/pdbe/api/pdb/release", "/pdbe/api/v2/status"):
-            resp = await client.get(f"https://www.ebi.ac.uk{path}")
-            assert resp.status_code == 404, (path, resp.status_code)
-        root = (await client.get("https://aragwas.1001genomes.org/api/")).json()
+            with pytest.raises(NotFoundError):
+                await _get(
+                    client, f"https://www.ebi.ac.uk{path}", not_found_404_pattern=_PDBE_NO_ROUTE
+                )
+        root = _http.json_body(
+            await _get(client, "https://aragwas.1001genomes.org/api/"), "AraGWAS"
+        )
+        assert isinstance(root, dict), root
         assert "genes" in root and not [k for k in root if re.search("version|release", k)], root
 
 
@@ -272,6 +292,9 @@ async def test_live_string_answers_stay_null_while_its_release_is_one_call_away(
     async with httpx.AsyncClient() as client:
         answer = await string_db.lookup_partners(client, "AT1G01060", limit=1)
         release = await releases.upstream_release(client, "string")
-        bogus = await client.get("https://version-99-0.string-db.org/api/json/version")
+        bogus = _http.json_body(
+            await _get(client, "https://version-99-0.string-db.org/api/json/version"), "STRING"
+        )
     assert answer["upstream_version"] is None, answer
-    assert release["release"] == bogus.json()[0]["string_version"], (release, bogus.text)
+    assert isinstance(bogus, list), bogus
+    assert release["release"] == bogus[0]["string_version"], (release, bogus)
