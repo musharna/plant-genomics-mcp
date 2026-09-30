@@ -975,6 +975,93 @@ async def test_live_a_gated_upstreams_403_is_an_outage() -> None:
     assert refused.value.status == 403, str(refused.value)
 
 
+@pytest.mark.asyncio
+async def test_a_303_is_an_answer_only_where_the_caller_says_so(httpx_mock: HTTPXMock) -> None:
+    """UniProt answers a merged accession with a 303 whose body is the answer.
+    It is returned only with ``see_other_ok``; elsewhere an unfollowed
+    redirect stays an error, not a body a caller would parse."""
+    for _ in range(2):
+        httpx_mock.add_response(
+            url="https://example.test/moved",
+            status_code=303,
+            headers={"Location": "/elsewhere"},
+            json={"entryType": "Inactive"},
+        )
+    async with httpx.AsyncClient() as client:
+        resp = await _http.request_with_retry(
+            client, "GET", "https://example.test/moved", service="example", see_other_ok=True
+        )
+        assert (resp.status_code, resp.json()) == (303, {"entryType": "Inactive"})
+        with pytest.raises(PlantGenomicsError, match="HTTP 303"):
+            await _http.request_with_retry(
+                client, "GET", "https://example.test/moved", service="example"
+            )
+
+
+@pytest.mark.asyncio
+async def test_an_unreadable_body_twice_names_each_status_it_came_with(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """With ``see_other_ok`` a 303 reaches the shape check as well as a 200, so
+    the message names what was answered rather than assuming 200."""
+    from plant_genomics_mcp import cache
+
+    httpx_mock.add_response(url="https://example.test/s", text="")
+    httpx_mock.add_response(url="https://example.test/s", status_code=303, text="")
+
+    def _text(value: object) -> str:
+        if not value:
+            raise _http.UnreadableBody("empty")
+        return str(value)
+
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError) as err:
+            await _http.cached_get(
+                client,
+                cache.TTLCache(),
+                "https://example.test/s",
+                service="svc",
+                parse=lambda resp: resp.text,
+                shape=_text,
+                see_other_ok=True,
+            )
+    assert str(err.value) == (
+        "[UpstreamUnavailableError] svc answered 200, then 303 without a readable "
+        "result (empty); this is not a count of zero"
+    )
+
+
+@pytest.mark.asyncio
+async def test_a_no_record_sentinel_twice_is_named_as_the_404_it_stands_for(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """``not_found_returns`` hands ``parse`` the sentinel, not a response, so
+    its status is the 404 whose body matched (KEGG passes ``""``)."""
+    from plant_genomics_mcp import cache
+
+    for _ in range(2):
+        httpx_mock.add_response(url="https://example.test/n", status_code=404, text="no record")
+
+    def _never(value: object) -> str:
+        raise _http.UnreadableBody(f"got {value!r}")
+
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError) as err:
+            await _http.cached_get(
+                client,
+                cache.TTLCache(),
+                "https://example.test/n",
+                service="svc",
+                parse=lambda r: r if isinstance(r, str) else r.text,
+                shape=_never,
+                not_found_returns="",
+                not_found_404_pattern=re.compile("no record"),
+            )
+    assert str(err.value).startswith("[UpstreamUnavailableError] svc answered 404 twice"), str(
+        err.value
+    )
+
+
 # UniProt's answers, verbatim from live 404s (2026-09-29): an unknown accession,
 # and a missing route. Every upstream probed answers both with 404.
 _MISS_BODY = (

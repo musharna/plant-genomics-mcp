@@ -252,6 +252,8 @@ async def _entry_record(
             timeout=DEFAULT_TIMEOUT,
             max_retries=MAX_RETRIES,
             not_found_404_pattern=NO_ENTRY_404_RE,
+            # A merged entry is a 303 whose body is its inactive record.
+            see_other_ok=True,
         )
     except NotFoundError:
         raise NotFoundError(f"UniProt has no entry for accession={bare!r}") from None
@@ -292,7 +294,8 @@ def _inactive_reason(entry: dict[str, Any]) -> str:
     kind = why.get("inactiveReasonType")
     if not isinstance(kind, str) or not kind:
         return "the entry is inactive (no reason given)"
-    targets = why.get("mergeDemergeTos")
+    # Live key (2026-09-30); the schema's plural "mergeDemergeTos" is not sent.
+    targets = why.get("mergeDemergeTo")
     if isinstance(targets, list) and targets:
         return f"the entry is inactive ({kind} into {', '.join(map(str, targets))})"
     detail = why.get("deletedReason")
@@ -324,6 +327,9 @@ async def fetch_sequence(
             timeout=DEFAULT_TIMEOUT,
             max_retries=MAX_RETRIES,
             not_found_404_pattern=NO_ENTRY_404_RE,
+            # A merged entry's FASTA is a 303 with no body: like a deleted
+            # entry's empty 200, the entry says why (below).
+            see_other_ok=True,
         )
     except NotFoundError:
         raise NotFoundError(f"UniProt has no FASTA for accession={bare!r}") from None

@@ -240,6 +240,7 @@ async def request_with_retry(
     not_found_400_pattern: re.Pattern[str] | None = None,
     allow_html: bool = False,
     no_content_ok: bool = False,
+    see_other_ok: bool = False,
     retry_403_pattern: re.Pattern[str] | None = None,
     not_found_404_pattern: re.Pattern[str] | None = None,
     limit: UpstreamLimit | None = None,
@@ -287,6 +288,12 @@ async def request_with_retry(
     for an upstream whose 204 is an answer: InterPro serves 204 with an empty
     body for a protein with no entries (live, 2026-09-22). Elsewhere it stays
     an error, since a caller that parses the body has nothing to parse.
+
+    A 303 See Other is returned (not raised) only with ``see_other_ok=True``,
+    for an upstream whose 303 carries its answer: UniProt answers a merged
+    accession with a 303 to the entry it merged into, and the inactive record
+    as the body (live, 2026-09-30: Q15086 to P04637). Redirects are not
+    followed, so elsewhere a 303 stays an error.
 
     ``retry_403_pattern=<compiled regex>`` covers upstreams that refuse an
     excess request rate with 403 plus a body marker rather than 429: OrthoDB
@@ -413,6 +420,8 @@ async def request_with_retry(
             break
 
         if resp.status_code == 204 and no_content_ok:
+            return resp
+        if resp.status_code == 303 and see_other_ok:
             return resp
 
         faulted = resp.status_code == 404
@@ -707,10 +716,13 @@ async def cached_get(
     if hit is not None:
         return hit
     problem = ""
+    statuses: list[int] = []
     for _attempt in range(2 if shape else 1):
         resp = await request_with_retry(
             client, "GET", url, service=service, params=params, headers=headers, **retry
         )
+        # A not_found_returns sentinel stands for a 404 whose body matched.
+        statuses.append(resp.status_code if isinstance(resp, httpx.Response) else 404)
         value = parse(resp) if parse else json_body(resp, service)
         if shape:
             try:
@@ -720,7 +732,10 @@ async def cached_get(
                 continue
         store.set(key, value)
         return value
+    # Not always 200: a caller's opt-in lets a 204 or a 303 reach the shape too.
+    first, then = statuses
+    answered = f"{first} twice" if first == then else f"{first}, then {then}"
     raise UpstreamUnavailableError(
-        f"{service} answered 200 twice without a readable result ({problem}); "
+        f"{service} answered {answered} without a readable result ({problem}); "
         "this is not a count of zero"
     )

@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **A merged UniProt accession is "not found" and names the entry it merged
+  into; a demerged one names where it went.** UniProt answers a merged
+  accession with a 303 to its successor, the inactive record as the body (its
+  FASTA: a 303 with no body), so `resolve_locus_to_uniprot` and
+  `fetch_sequence` raised an untagged "HTTP 303" error. The reason also read a
+  key UniProt does not send, so a demerged entry lost its successors. Q15086
+  is now `NotFoundError` "(MERGED into P04637)", P01028 "(DEMERGED into
+  P0C0L4, P0C0L5)". `request_with_retry` takes `see_other_ok`, like
+  `no_content_ok`, for an upstream whose 303 carries its answer.
+
 - **A 403 that is not a rate refusal is `UpstreamUnavailableError`
   (`status=403`), not an untagged error.** This server sends no credentials,
   so such a 403 is the upstream refusing to serve it (a firewall, an IP block,
