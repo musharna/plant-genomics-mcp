@@ -14,7 +14,7 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from plant_genomics_mcp import uniprot
+from plant_genomics_mcp import _http, uniprot
 from plant_genomics_mcp.errors import (
     InvalidArguments,
     NotFoundError,
@@ -23,6 +23,12 @@ from plant_genomics_mcp.errors import (
 )
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
+
+
+async def _no_sleep(_seconds: float) -> None:
+    """Skip real backoff delays."""
+
+
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
 
 
@@ -565,6 +571,30 @@ async def test_a_merged_entry_has_no_fasta_and_names_the_entry_it_merged_into(
         "the entry is inactive (MERGED into P04637)"
     )
     assert len(httpx_mock.get_requests()) == 3
+
+
+@pytest.mark.asyncio
+async def test_a_merged_fasta_whose_entry_cannot_be_read_says_what_it_answered(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """When the entry cannot say why (here: 500s past the retries), the FASTA's
+    own failure stands, and it names the status it got: 303, not 200 (#223
+    review)."""
+    monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
+    httpx_mock.add_response(
+        url=_FASTA_URL.format("Q15086"),
+        status_code=303,
+        headers={"Location": "/uniprotkb/P04637.fasta?from=Q15086"},
+        text="",
+        is_reusable=True,
+    )
+    httpx_mock.add_response(url=_ENTRY_URL.format("Q15086"), status_code=500, is_reusable=True)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError) as err:
+            await uniprot.fetch_sequence(client, "Q15086")
+    assert str(err.value).startswith(
+        "[UpstreamUnavailableError] UniProt FASTA answered 303 twice without a readable result"
+    ), str(err.value)
 
 
 @live_only

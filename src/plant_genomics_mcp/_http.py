@@ -716,10 +716,12 @@ async def cached_get(
     if hit is not None:
         return hit
     problem = ""
+    statuses: list[int] = []
     for _attempt in range(2 if shape else 1):
         resp = await request_with_retry(
             client, "GET", url, service=service, params=params, headers=headers, **retry
         )
+        statuses.append(resp.status_code)
         value = parse(resp) if parse else json_body(resp, service)
         if shape:
             try:
@@ -729,7 +731,10 @@ async def cached_get(
                 continue
         store.set(key, value)
         return value
+    # Not always 200: a caller's opt-in lets a 204 or a 303 reach the shape too.
+    first, then = statuses
+    answered = f"{first} twice" if first == then else f"{first}, then {then}"
     raise UpstreamUnavailableError(
-        f"{service} answered 200 twice without a readable result ({problem}); "
+        f"{service} answered {answered} without a readable result ({problem}); "
         "this is not a count of zero"
     )
