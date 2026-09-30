@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **An upstream outage in a live test is the upstream's, not a regression.**
+  Seven live test calls used `client.get` directly, so an outage reached the
+  nightly without the `[UpstreamUnavailableError]` tag it classifies on:
+  Ensembl's 500 failed the no-release check as `assert 500 == 200`, and a
+  STRING hiccup as `JSONDecodeError`, both reported as our regressions. They
+  now go through `_http.request_with_retry`, which retries and tags an outage.
+  A new test scans every test module for a raw HTTP call; the two outage
+  probes that must read a raw answer are named with their reason.
+
 - **A 404 is an outage, not a missing gene, unless the upstream says so.**
   Every 404 was `NotFoundError`, so 23 calls whose identifier travels in the
   query or body told the caller their gene or protein does not exist whenever
