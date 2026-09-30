@@ -8,8 +8,9 @@ predicted molecular effect, and the phenotype/study it came from.
 
 Arabidopsis-only by construction — the panel is *A. thaliana* accessions — so
 any other organism raises ``OrganismNotSupported``. A valid AGI locus with no
-associations returns ``found=True`` with an empty list; an unknown locus makes
-the upstream 500, surfaced as ``UpstreamUnavailableError`` (fail loud).
+associations returns ``found=True`` with an empty list. An unknown locus makes
+the upstream 500, like an outage; AraGWAS's gene search tells them apart, so
+it is ``NotFoundError`` and an outage stays ``UpstreamUnavailableError``.
 
 Endpoint (paginated via ``links.next``):
     https://aragwas.1001genomes.org/api/genes/{AGI}/associations/
@@ -23,7 +24,12 @@ from typing import Any
 import httpx
 
 from plant_genomics_mcp import _http, cache, organisms, validators
-from plant_genomics_mcp.errors import OrganismNotSupported
+from plant_genomics_mcp.errors import (
+    NotFoundError,
+    OrganismNotSupported,
+    PlantGenomicsError,
+    UpstreamUnavailableError,
+)
 
 BASE_URL = "https://aragwas.1001genomes.org"
 DEFAULT_TIMEOUT = 30.0
@@ -67,6 +73,32 @@ async def _get(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
         # was stored first and failed the call for the whole TTL.
         shape=_http.expect_page("count", "results"),
     )
+
+
+async def _has_gene(client: httpx.AsyncClient, locus: str) -> bool | None:
+    """Whether AraGWAS's gene search lists ``locus``; ``None`` if it cannot say.
+
+    Every per-gene endpoint answers a gene AraGWAS does not have with a 500
+    (live 2026-09-30, AT1G99990), so a failed lookup is either. The search
+    answers 200 either way: the gene, or ``[]``. It matches by prefix
+    ('AT1G0101' lists AT1G01010), so only the gene's own id counts.
+    """
+    try:
+        rows = await _http.cached_get(
+            client,
+            _CACHE,
+            f"{BASE_URL}/api/genes/autocomplete/?term={locus}",
+            service="AraGWAS gene search",
+            headers={"Accept": "application/json"},
+            timeout=DEFAULT_TIMEOUT,
+            max_retries=MAX_RETRIES,
+            shape=_http.object_rows,
+        )
+    except PlantGenomicsError:
+        # Any failure: a 429 or 403 here raised its own class and replaced
+        # the outage it was asked about (PR #220 review).
+        return None
+    return any(row.get("id") == locus for row in rows)
 
 
 def _annotation_for(snp: dict[str, Any], locus: str) -> dict[str, Any]:
@@ -176,7 +208,13 @@ async def lookup_locus(
     total = 0
     pages = 0
     while url and pages < MAX_PAGES and len(associations) < cap:
-        page = await _get(client, url)
+        try:
+            page = await _get(client, url)
+        except UpstreamUnavailableError as outage:
+            # A 500 on the first page: the gene is unknown, or AraGWAS is down.
+            if pages == 0 and outage.status == 500 and await _has_gene(client, locus) is False:
+                raise NotFoundError(f"AraGWAS has no gene {locus!r}") from outage
+            raise
         total = _http.stated_count(page, "count", service="AraGWAS associations")
         associations.extend(_project(assoc, locus) for assoc in page["results"])
         links = page.get("links") or {}

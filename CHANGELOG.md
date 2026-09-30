@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **`aragwas_associations` says "not found" for a gene AraGWAS does not
+  have, not "upstream unavailable".** AraGWAS answers an unknown gene with an
+  HTTP 500 on every per-gene endpoint, so a never-issued AGI such as AT1G99990
+  was reported as an outage after three retries. When the first page fails
+  with a 500, AraGWAS's gene search now decides: no gene with that exact id is
+  `NotFoundError`; a listed gene, or a search that fails too, keeps the
+  outage. `UpstreamUnavailableError` carries the HTTP `status` its retries
+  ended on.
+
 - **`locus_plant_ontology` no longer answers "0 annotations" for genes it
   cannot see.** Planteome names genes by this server's locus ids for
   Arabidopsis, rice, wheat and tomato only; the other eight organisms it holds

@@ -492,7 +492,8 @@ async def request_with_retry(
             "maintenance page)"
         )
     raise UpstreamUnavailableError(
-        f"{service} exhausted {max_retries} retries (last HTTP {last_status})"
+        f"{service} exhausted {max_retries} retries (last HTTP {last_status})",
+        status=last_status,
     )
 
 

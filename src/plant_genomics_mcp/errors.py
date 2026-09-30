@@ -57,7 +57,15 @@ class UpstreamUnavailableError(PlantGenomicsError):
 
     LLM clients should treat this as a service outage and consider
     falling back to a peer backend (e.g. Phytozome when Ensembl is down).
+
+    ``status`` is the HTTP status every retry ended on, when there was one;
+    some upstreams answer a record they do not have with a 500 (AraGWAS), and
+    their client can then ask whether the record exists.
     """
+
+    def __init__(self, message: str, *, status: int | None = None) -> None:
+        super().__init__(message)
+        self.status = status
 
 
 class InvalidArguments(PlantGenomicsError):
