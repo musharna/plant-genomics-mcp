@@ -293,7 +293,12 @@ async def request_with_retry(
     serves an HTML page naming "too high request rate" (#153). A matching 403
     is retried on the 429 backoff and, once the budget is spent, raises
     ``RateLimitError`` quoting the page. Opt-in and body-matched, like
-    ``not_found_400_pattern``: any other 403 stays terminal.
+    ``not_found_400_pattern``: any other 403 is not retried, and raises
+    ``UpstreamUnavailableError`` with ``status=403``. This server sends no
+    credentials, so a 403 is the upstream refusing to serve it (a firewall,
+    an IP block, gated access), an outage to the caller; the other statuses
+    left unmapped (a 400 no pattern marks) say our request was wrong and stay
+    the untagged ``PlantGenomicsError``.
 
     ``limit=<UpstreamLimit>`` caps this upstream's requests in flight; see
     :class:`UpstreamLimit`.
@@ -465,6 +470,14 @@ async def request_with_retry(
         # 429 and 5xx never get here: they are _RETRYABLE_STATUSES, so they
         # retry or break to the "exhausted" raises below (#96: the raises for
         # them that stood here were unreachable, and their mutants survived).
+        # A 403 left here is a refusal no request of ours can get past, not a
+        # fault in it: Planteome refused a GitHub runner in the 2026-09-30
+        # nightly while answering this host, and untagged it read as a
+        # regression there.
+        if resp.status_code == 403:
+            raise UpstreamUnavailableError(
+                f"{service} → HTTP 403: {resp.text[:200]}", status=403
+            )
         raise PlantGenomicsError(f"{service} → HTTP {resp.status_code}: {resp.text[:200]}")
 
     if last_exc is not None:
