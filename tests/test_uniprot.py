@@ -250,19 +250,71 @@ async def test_lookup_locus_with_accession_input_uses_direct_fetch(
 async def test_lookup_locus_with_accession_404_raises_not_found(
     httpx_mock: HTTPXMock,
 ) -> None:
-    """Q9XXX9 is accession-shaped (last char must be a digit) but synthetic."""
+    """P0XXX0 is accession-shaped but was never issued: a 404 on the live
+    service (2026-09-30). Q9XXX9, which this test used as "synthetic", is a
+    real deleted entry, answered 200 (see the tests of inactive entries)."""
     httpx_mock.add_response(
-        url="https://rest.uniprot.org/uniprotkb/Q9XXX9.json",
+        url="https://rest.uniprot.org/uniprotkb/P0XXX0.json",
         status_code=404,
-        # UniProt's answer for an unknown accession (live, 2026-09-29).
+        # UniProt's answer for an accession never issued (live, 2026-09-30).
         json={
-            "url": "http://rest.uniprot.org/uniprotkb/Q9XXX9",
+            "url": "http://rest.uniprot.org/uniprotkb/P0XXX0",
             "messages": ["Resource not found"],
         },
     )
     async with httpx.AsyncClient() as client:
-        with pytest.raises(NotFoundError, match="no entry for accession='Q9XXX9'"):
-            await uniprot.lookup_locus(client, "Q9XXX9")
+        with pytest.raises(NotFoundError, match="no entry for accession='P0XXX0'"):
+            await uniprot.lookup_locus(client, "P0XXX0")
+
+
+# An inactive entry is a 200 that names the accession, so it passed as an
+# entry and resolve_locus_to_uniprot answered it with no name, gene or
+# organism. MERGED is built from UniProt's schema (EntryInactiveReason:
+# inactiveReasonType DELETED/MERGED/DEMERGED, mergeDemergeTos), not seen live.
+_GONE = {
+    "deleted (live)": (
+        "Q9XXX9",
+        None,
+        "the entry is inactive (DELETED: Not part of a reference proteome)",
+    ),
+    "merged (schema)": (
+        "P0XXX1",
+        {"inactiveReasonType": "MERGED", "mergeDemergeTos": ["Q0WV96"]},
+        "the entry is inactive (MERGED into Q0WV96)",
+    ),
+    "no reason given": ("P0XXX2", {}, "the entry is inactive (no reason given)"),
+}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("case", sorted(_GONE))
+async def test_an_inactive_entry_is_not_found_with_uniprots_reason(
+    httpx_mock: HTTPXMock, case: str
+) -> None:
+    """UniProt's own answer, so it is stored like any "no record": asked
+    once. Positive control: an active entry beside it answers."""
+    acc, reason, said = _GONE[case]
+    body = (
+        _INACTIVE
+        if reason is None
+        else {
+            "entryType": "Inactive",
+            "primaryAccession": acc,
+            "inactiveReason": reason,
+        }
+    )
+    httpx_mock.add_response(url=_ENTRY_URL.format(acc), json=body)
+    httpx_mock.add_response(url=_ENTRY_URL.format("Q0WV96"), json=_one_hit()["results"][0])
+    async with httpx.AsyncClient() as client:
+        for _ in range(2):
+            with pytest.raises(NotFoundError) as err:
+                await uniprot.lookup_locus(client, acc)
+            assert str(err.value) == (
+                f"[NotFoundError] UniProt has no entry for accession={acc!r}: {said}"
+            )
+        active = await uniprot.lookup_locus(client, "Q0WV96")
+    assert active["primaryAccession"] == "Q0WV96"
+    assert len(httpx_mock.get_requests()) == 2
 
 
 # ---------- live integration (real-execution check) ----------
@@ -412,7 +464,8 @@ async def test_a_fasta_that_stays_empty_is_not_found_when_the_entry_says_inactiv
         with pytest.raises(NotFoundError) as err:
             await uniprot.fetch_sequence(client, "Q9XXX9")
     assert str(err.value) == (
-        "[NotFoundError] UniProt has no FASTA for accession='Q9XXX9': the entry is inactive"
+        "[NotFoundError] UniProt has no FASTA for accession='Q9XXX9': "
+        "the entry is inactive (DELETED: Not part of a reference proteome)"
     )
     assert len(httpx_mock.get_requests()) == 3
 
@@ -472,6 +525,20 @@ async def test_a_search_row_that_is_not_an_object_is_refused_and_not_stored(
         result = await uniprot.lookup_locus(client, "AT1G01010")
     assert (result["primaryAccession"], result["uniProtkbId"]) == ("Q0WV96", "NAC1_ARATH")
     assert len(httpx_mock.get_requests()) == 2
+
+
+@live_only
+@pytest.mark.asyncio
+async def test_live_a_deleted_accession_is_not_found_and_a_never_issued_one_too() -> None:
+    """Q9XXX9 is deleted (200, ``entryType: Inactive``); P0XXX0 was never
+    issued (404). Positive control: AT1G01010's protein by accession."""
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(NotFoundError, match=r"Q9XXX9'.*inactive \(DELETED: "):
+            await uniprot.lookup_locus(client, "Q9XXX9")
+        with pytest.raises(NotFoundError, match="no entry for accession='P0XXX0'$"):
+            await uniprot.lookup_locus(client, "P0XXX0")
+        result = await uniprot.lookup_locus(client, "Q0WV96")
+    assert (result["primaryAccession"], result["uniProtkbId"]) == ("Q0WV96", "NAC1_ARATH")
 
 
 @live_only
