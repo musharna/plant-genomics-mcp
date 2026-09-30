@@ -475,9 +475,7 @@ async def request_with_retry(
         # nightly while answering this host, and untagged it read as a
         # regression there.
         if resp.status_code == 403:
-            raise UpstreamUnavailableError(
-                f"{service} → HTTP 403: {resp.text[:200]}", status=403
-            )
+            raise UpstreamUnavailableError(f"{service} → HTTP 403: {resp.text[:200]}", status=403)
         raise PlantGenomicsError(f"{service} → HTTP {resp.status_code}: {resp.text[:200]}")
 
     if last_exc is not None:
