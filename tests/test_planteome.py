@@ -161,40 +161,59 @@ async def test_lookup_locus_rejects_empty_locus() -> None:
 
 @pytest.mark.asyncio
 async def test_lookup_locus_non_dict_payload_raises(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(json=["not", "a", "dict"], is_reusable=True)
+    """Positive control, same request and cache: the well-formed answer that
+    follows the two refused ones is served, so neither was stored."""
+    httpx_mock.add_response(json=["not", "a", "dict"])
+    httpx_mock.add_response(json=["not", "a", "dict"])
+    httpx_mock.add_response(json=_payload([_doc("PO:0000293", "guard cell")]))
     async with httpx.AsyncClient() as client:
         with pytest.raises(
             UpstreamUnavailableError,
             match=r"answered 200 twice without a readable result \(list, not an object\)",
         ):
             await planteome.lookup_locus(client, "AT1G01010")
-    assert len(httpx_mock.get_requests()) == 2
+        assert len(httpx_mock.get_requests()) == 2
+        result = await planteome.lookup_locus(client, "AT1G01010")
+    assert result["annotations"][0]["term_id"] == "PO:0000293"
+    assert len(httpx_mock.get_requests()) == 3
 
 
 @pytest.mark.asyncio
 async def test_lookup_locus_missing_response_raises(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(json={"responseHeader": {"status": 0}}, is_reusable=True)
+    """Positive control, same request and cache: the well-formed answer that
+    follows the two refused ones is served, so neither was stored."""
+    httpx_mock.add_response(json={"responseHeader": {"status": 0}})
+    httpx_mock.add_response(json={"responseHeader": {"status": 0}})
+    httpx_mock.add_response(json=_payload([_doc("PO:0000293", "guard cell")]))
     async with httpx.AsyncClient() as client:
         with pytest.raises(
             UpstreamUnavailableError,
             match=r"answered 200 twice without a readable result \(no 'response' object: got NoneType\)",
         ):
             await planteome.lookup_locus(client, "AT1G01010")
-    assert len(httpx_mock.get_requests()) == 2
+        assert len(httpx_mock.get_requests()) == 2
+        result = await planteome.lookup_locus(client, "AT1G01010")
+    assert result["annotations"][0]["term_id"] == "PO:0000293"
+    assert len(httpx_mock.get_requests()) == 3
 
 
 @pytest.mark.asyncio
 async def test_lookup_locus_docs_not_list_raises(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(
-        json={"response": {"numFound": 1, "docs": {"oops": 1}}}, is_reusable=True
-    )
+    """Positive control, same request and cache: the well-formed answer that
+    follows the two refused ones is served, so neither was stored."""
+    httpx_mock.add_response(json={"response": {"numFound": 1, "docs": {"oops": 1}}})
+    httpx_mock.add_response(json={"response": {"numFound": 1, "docs": {"oops": 1}}})
+    httpx_mock.add_response(json=_payload([_doc("PO:0000293", "guard cell")]))
     async with httpx.AsyncClient() as client:
         with pytest.raises(
             UpstreamUnavailableError,
             match=r"answered 200 twice without a readable result \(response.docs is not a list: dict\)",
         ):
             await planteome.lookup_locus(client, "AT1G01010")
-    assert len(httpx_mock.get_requests()) == 2
+        assert len(httpx_mock.get_requests()) == 2
+        result = await planteome.lookup_locus(client, "AT1G01010")
+    assert result["annotations"][0]["term_id"] == "PO:0000293"
+    assert len(httpx_mock.get_requests()) == 3
 
 
 # ---------- live integration (real-execution check) ----------

@@ -141,15 +141,22 @@ async def test_locus_variants_no_coords_raises(monkeypatch: pytest.MonkeyPatch) 
 async def test_locus_variants_malformed_raises(
     httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    """Positive control, same request and cache: the well-formed answer that
+    follows the two refused ones is served, so neither was stored."""
     monkeypatch.setattr(ensembl_plants, "lookup_locus", _fake_lookup(_GENE))
-    httpx_mock.add_response(url=_OVERLAP_URL, json={"unexpected": "object"}, is_reusable=True)
+    httpx_mock.add_response(url=_OVERLAP_URL, json={"unexpected": "object"})
+    httpx_mock.add_response(url=_OVERLAP_URL, json={"unexpected": "object"})
+    httpx_mock.add_response(url=_OVERLAP_URL, json=[_VARIANT])
     async with httpx.AsyncClient() as client:
         with pytest.raises(
             UpstreamUnavailableError,
             match=r"answered 200 twice without a readable result \(dict, not a list\)",
         ):
             await ensembl_variation.locus_variants(client, "AT1G01010", "arabidopsis")
-    assert len(httpx_mock.get_requests(url=_OVERLAP_URL)) == 2
+        assert len(httpx_mock.get_requests(url=_OVERLAP_URL)) == 2
+        r = await ensembl_variation.locus_variants(client, "AT1G01010", "arabidopsis")
+    assert r["variants"][0]["id"] == "vcZ240GYV"
+    assert len(httpx_mock.get_requests(url=_OVERLAP_URL)) == 3
 
 
 @pytest.mark.asyncio
@@ -191,14 +198,21 @@ async def test_vep_annotate_empty_is_not_found(httpx_mock: HTTPXMock) -> None:
 
 @pytest.mark.asyncio
 async def test_vep_annotate_malformed_raises(httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(url=_VEP_URL, json={"unexpected": "object"}, is_reusable=True)
+    """Positive control, same request and cache: the well-formed answer that
+    follows the two refused ones is served, so neither was stored."""
+    httpx_mock.add_response(url=_VEP_URL, json={"unexpected": "object"})
+    httpx_mock.add_response(url=_VEP_URL, json={"unexpected": "object"})
+    httpx_mock.add_response(url=_VEP_URL, json=_VEP)
     async with httpx.AsyncClient() as client:
         with pytest.raises(
             UpstreamUnavailableError,
             match=r"answered 200 twice without a readable result \(dict, not a list\)",
         ):
             await ensembl_variation.vep_annotate(client, "1:300-300:1", "C", "arabidopsis")
-    assert len(httpx_mock.get_requests(url=_VEP_URL)) == 2
+        assert len(httpx_mock.get_requests(url=_VEP_URL)) == 2
+        r = await ensembl_variation.vep_annotate(client, "1:300-300:1", "C", "arabidopsis")
+    assert r["most_severe_consequence"] == "missense_variant"
+    assert len(httpx_mock.get_requests(url=_VEP_URL)) == 3
 
 
 @pytest.mark.asyncio

@@ -50,9 +50,12 @@ _WITH_FILTER = "written only when the call filters by organism"
 
 # Answers built by copying an upstream record: this code never writes these
 # keys, so it cannot rename one, and which of them the record carries varies
-# (live 2026-09-27: Ensembl's Os01g0100100 has no description or
-# display_name). Presence would test the fixture, not the code.
-# test_output_contract checks that the named producers write none of the keys.
+# (live 2026-09-29, one gene per organism: ten have no description or
+# display_name, maize's has no description; every xref row carried all seven
+# keys). Presence would test the fixture, not the code.
+# test_output_contract checks that the named producers write none of the keys;
+# test_live_every_organisms_lookup_and_xrefs_keep_the_contract checks the
+# lists against each organism's real record.
 PASSTHROUGH: dict[str, tuple[tuple[str, ...], str, tuple[str, ...]]] = {
     "ensembl_plants_lookup_locus": (
         ("ensembl_plants.lookup_locus", "ensembl_plants.project_lookup"),
