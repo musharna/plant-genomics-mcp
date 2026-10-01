@@ -2004,7 +2004,7 @@ TOOLS: list[types.Tool] = [
                     "type": "number",
                     "description": (
                         "Max seconds to wait for the search to finish before "
-                        "raising NotFoundError with the RID preserved "
+                        "raising UpstreamUnavailableError with the RID preserved "
                         "(default 600)."
                     ),
                     "default": blast.DEFAULT_MAX_WAIT,

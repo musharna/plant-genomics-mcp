@@ -639,3 +639,18 @@ def test_the_live_search_has_a_budget_beyond_the_nightly_cap() -> None:
     ]
     assert marks, "the live BLAST test has no timeout of its own"
     assert marks[0].args[0] > LIVE_BLAST_MAX_WAIT > int(cap.group(1))
+
+
+def test_every_text_a_client_reads_names_the_outage_for_a_slow_search() -> None:
+    """The tool's description, each of its parameters and the BLAST prompt are
+    what a client reads before calling: none may still promise NotFoundError
+    for a search past max_wait (#224 review: the max_wait parameter did)."""
+    from plant_genomics_mcp import prompts, server
+
+    tool = next(t for t in server.TOOLS if t.name == "blast_sequence")
+    params = {k: v.get("description", "") for k, v in tool.input_schema["properties"].items()}
+    prompt = prompts._render_find_homologs("MEDQ", "blastp")
+    for where, text in [("tool", tool.description or ""), ("prompt", prompt), *params.items()]:
+        assert "NotFoundError" not in text, where
+    for text in (tool.description or "", params["max_wait"], prompt):
+        assert "UpstreamUnavailableError" in text, text
