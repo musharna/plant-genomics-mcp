@@ -1948,8 +1948,8 @@ TOOLS: list[types.Tool] = [
             "blastx / tblastn / tblastx. Database defaults to swissprot for "
             "protein programs, core_nt for nucleotide. Emits "
             "notifications/progress on each poll. Long searches (>10 min) "
-            "raise [NotFoundError] with the RID preserved so the client can "
-            "re-poll. Set PLANT_GENOMICS_MCP_NCBI_EMAIL to identify the "
+            "raise [UpstreamUnavailableError] with the RID preserved so the "
+            "client can re-poll. Set PLANT_GENOMICS_MCP_NCBI_EMAIL to identify the "
             "request per NCBI etiquette."
         ),
         input_schema={
@@ -2004,7 +2004,7 @@ TOOLS: list[types.Tool] = [
                     "type": "number",
                     "description": (
                         "Max seconds to wait for the search to finish before "
-                        "raising NotFoundError with the RID preserved "
+                        "raising UpstreamUnavailableError with the RID preserved "
                         "(default 600)."
                     ),
                     "default": blast.DEFAULT_MAX_WAIT,

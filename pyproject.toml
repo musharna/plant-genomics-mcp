@@ -68,6 +68,9 @@ packages = ["src/plant_genomics_mcp"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+markers = [
+    "timeout(seconds): per-test cap, read by pytest-timeout (installed in the nightly live run)",
+]
 
 [tool.coverage.report]
 # Coverage floor (audit P8). Measured TOTAL was 94% after the v1.6.0 dispatch/
