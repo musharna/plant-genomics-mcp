@@ -224,9 +224,56 @@ jobs:
                regex backtracking, resource leaks, concurrency.
             5. Security: injection, path traversal, secrets, unsafe deserialisation.
             Ignore style. If nothing meets the bar, say so in one line.
-            If a sticky review comment from you already exists on this PR, review
-            only the commits since it and post a short delta, not a full re-review.
-            Post the review as a PR comment via gh.
+            If a review comment from you already exists on this PR (see
+            `gh pr view <n> --comments`), review only the commits since it and
+            post a short delta, not a full re-review.
+            This is a static review: you cannot run code, tests or tools here.
+            Read files with the Read tool. The shell runs only `gh pr diff`,
+            `gh pr view` and `gh pr comment`, each on its own: no pipes,
+            redirects, `&&` or `$(...)`. Anything else is denied and costs a turn.
+            Post the review: write it with the Write tool to /tmp/review.md, then
+            `gh pr comment <n> --body-file /tmp/review.md`. The file's first line
+            must be exactly:
+            <!-- guardrails-review ${{ github.run_id }}-${{ github.run_attempt }} -->
+            (the next step looks for it; without it the job fails).
+          # Measured 2026-09-30 on 10 fleet PRs: 6-18 denied calls per review
+          # (gh api for the prior review, attempts to run uvx/selftests, `>` and
+          # `&&` around gh, sed instead of Read), and tmodloader#89 posted nothing
+          # with the check green. Code execution stays denied on purpose: this job
+          # holds the OAuth token and the PR's code is untrusted.
+          # Edit(//tmp/review.md): the one file it writes, not all of /tmp. Edit,
+          # not Write(...): see no-pathscoped-write-rule.
           claude_args: |
-            --allowed-tools "Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Read,Grep,Glob"
+            --allowed-tools "Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Read,Grep,Glob,Edit(//tmp/review.md)"
             --max-turns 80
+      - name: Review was actually posted BY THIS RUN (the comment is the deliverable)
+        # The action is green whenever the model stops cleanly, posted or not
+        # (tmodloader#89, 2026-09-30). Accept only a claude[bot] comment carrying
+        # this run attempt's marker: any claude[bot] comment in a time window
+        # would also accept another workflow's (e.g. an @claude responder).
+        # One stated exception: claude-code-action will not run on a PR that
+        # edits the workflow file it runs from (breedsim#61, phylokit#54,
+        # figcite#28/#29: 0 turns, no comment). There the review cannot happen,
+        # so say so as a warning instead of failing every template resync.
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          MARK: "<!-- guardrails-review ${{ github.run_id }}-${{ github.run_attempt }} -->"
+        run: |
+          n=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate \
+            | jq -s --arg m "$MARK" \
+              '[.[][] | select(.user.login == "claude[bot]") | select(.body | contains($m))] | length')
+          if [ "$n" != 0 ]; then
+            echo "review comment from this run present on PR #$PR"; exit 0
+          fi
+          # No marker. Only the self-edit case turns that into a warning.
+          self=${GITHUB_WORKFLOW_REF#"$GITHUB_REPOSITORY"/}
+          self=${self%%@*}
+          case "$self" in .github/workflows/*.y*ml) ;; *) echo "::error::could not read this workflow's path (got '$self' from '$GITHUB_WORKFLOW_REF')"; exit 1 ;; esac
+          # captured, not piped: under pipefail `gh | grep -q` can read as no match
+          files=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate -q '.[].filename')
+          if grep -qxF "$self" <<<"$files"; then
+            echo "::warning::no review posted: this PR edits $self, and claude-code-action does not run on a PR that edits its own workflow"
+            exit 0
+          fi
+          echo "::error::no claude[bot] comment on PR #$PR carries '$MARK': the review step posted nothing"; exit 1

@@ -101,10 +101,14 @@ repos:
         # (it governs the Write tool too); a path-scoped Write(...) rule matches
         # nothing, and a single leading slash is relative to the project. Every
         # fuzz test file was denied, fleet-wide, since the step was written.
+        # Read(...) is in scope on evidence, not by analogy: probed 2026-09-30
+        # (claude -p 2.1.286, file outside the project) Read(/tmp/x/**) was
+        # denied like no rule at all; Read(//tmp/x/**) and bare Read read it.
         # Anchored INSIDE the --allowed-tools list (quoted: up to the closing
-        # quote; unquoted: up to the first space), so a comment explaining the
-        # rule is not a hit. Bare `Write` (no path) is fine.
-        entry: '--allowed-?[Tt]ools[ =]+(["''][^"'']*|[^"''\s]*)(\bWrite\(|\b(Edit|Read)\(/[^/])'
+        # quote; unquoted: up to a `#` comment, since `Read, Write(x)` with
+        # spaces is still one list), so a comment explaining the rule is not a
+        # hit. Bare `Write` (no path) is fine.
+        entry: '--allowed-?[Tt]ools[ =]+(["''][^"'']*|[^"''#]*)(\bWrite\(|\b(Edit|Read)\(/[^/])'
 
       - id: no-dev-paths
         name: "absolute developer-machine paths in tracked files (real machine names only; placeholder homes pass)"
