@@ -77,6 +77,35 @@ repos:
         # same line: `/* uppercase-ok: page title, no unit text */`.
         entry: '(^\s*|[;{]\s*)text-transform\s*:\s*uppercase(?!.*uppercase-ok:\s*[^\s*/])'
 
+      - id: no-sleep-then-interact
+        name: "a fixed sleep, then a click/focus/hover/tap/key press: wait for the state instead"
+        language: pygrep
+        files: '\.(m?js|cjs|m?ts|jsx|tsx)$'
+        args: [--multiline]
+        # wildeye 2026-09-27/28: four browser-test misses were a fixed sleep lost
+        # to a transition or a pending timer, and 16 "sleep 12 s, press Escape"
+        # boot steps had nothing left to act on. An awaited sleep (sleep/delay/
+        # wait/pause(N), new Promise(r => setTimeout(r, N)), x.waitForTimeout(N))
+        # whose NEXT line interacts is flagged. A duration that is the point is
+        # allowed with a reason on the sleep's line: `// qa-wait-ok: <why>`.
+        # Adjacent lines only (pygrep has no parser); wildeye's
+        # scripts/lint-qa-waits.mjs is the statement-level version.
+        entry: '^[ \t]*await[ \t]+(?:(?:sleep|delay|wait|pause)\([^()\n]*\)|new[ \t]+Promise\([^\n]*setTimeout[^\n]*|[\w.$]+\.waitForTimeout\([^()\n]*\))(?![^\n]*qa-wait-ok:[ \t]*\S)[^\n]*\n[^\n]*\.(?:click|focus|hover|tap|press|type)\('
+
+      - id: no-pathscoped-write-rule
+        name: "Claude --allowed-tools: Write(path) matches nothing (use Edit(path)); Edit(/x) is project-relative (real root is //x)"
+        language: pygrep
+        files: '^(\.github/workflows|templates/workflows)/.*\.ya?ml$'
+        # 2026-09-30: the nightly fuzz step allowed Write(fuzz_scratch/**) and
+        # triage Write(/tmp/*). Path-scoped file-write rules are spelled Edit(...)
+        # (it governs the Write tool too); a path-scoped Write(...) rule matches
+        # nothing, and a single leading slash is relative to the project. Every
+        # fuzz test file was denied, fleet-wide, since the step was written.
+        # Anchored INSIDE the --allowed-tools list (quoted: up to the closing
+        # quote; unquoted: up to the first space), so a comment explaining the
+        # rule is not a hit. Bare `Write` (no path) is fine.
+        entry: '--allowed-?[Tt]ools[ =]+(["''][^"'']*|[^"''\s]*)(\bWrite\(|\b(Edit|Read)\(/[^/])'
+
       - id: no-dev-paths
         name: "absolute developer-machine paths in tracked files (real machine names only; placeholder homes pass)"
         language: pygrep
