@@ -43,6 +43,10 @@ Each rule is an incident, not a preference:
 - `# nosec` names the test id AND a traced reason.
 - No nested lazy quantifiers; no `nohup ... &`; no `text-transform: uppercase`
   over unit strings; no absolute developer-machine paths.
+- No fixed sleep before a click, focus, hover or key press in a browser test: wait for
+  the state the sleep stood in for.
+- A Claude `--allowed-tools` file rule with a path is `Edit(path)`, never
+  `Write(path)` (matches nothing); an absolute path takes two slashes (`//tmp/**`).
 
 Never narrow, skip or `--no-verify` a hook to get a commit through. If a hook
 is wrong, fix the hook in `repo-template` and resync.

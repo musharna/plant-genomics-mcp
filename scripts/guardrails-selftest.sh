@@ -13,6 +13,7 @@ mkdir -p "$tmp/r/scripts"
 cp scripts/guardrails-hooks.py "$tmp/r/scripts/"
 check() { # hook, filename, content, expect(pass|fail)
 	local hook=$1 f=$2 content=$3 expect=$4 got
+	mkdir -p "$(dirname "$tmp/r/$f")"
 	printf '%s\n' "$content" >"$tmp/r/$f"
 	(cd "$tmp/r" && git add -A && uvx pre-commit run "$hook" --files "$f" >/dev/null 2>&1) && got=pass || got=fail
 	if [[ $got == "$expect" ]]; then
@@ -56,6 +57,25 @@ check no-uppercase-transform i2.css '/* No text-transform: uppercase - it maps Â
 check no-uppercase-transform i3.css $'.legend {\n  text-transform: uppercase;\n}' fail
 check no-uppercase-transform i4.css 'h1 { text-transform: uppercase; /* uppercase-ok: page title, no unit text */ }' pass
 check no-uppercase-transform i5.css 'h1 { text-transform: uppercase; /* uppercase-ok: */ }' fail
+check no-sleep-then-interact s.mjs $'await sleep(240);\nawait page.click("#a");' fail
+check no-sleep-then-interact s2.ts $'  await new Promise((r) => setTimeout(r, 500));\n  await page.keyboard.press("Escape");' fail
+check no-sleep-then-interact s3.js $'await page.waitForTimeout(300);\nawait page.evaluate(() => document.querySelector("#a").click());' fail
+check no-sleep-then-interact s4.mjs $'await sleep(500); // qa-wait-ok:\nawait page.click("#a");' fail
+check no-sleep-then-interact t.mjs $'await page.waitForFunction(() => ready());\nawait page.click("#a");' pass
+check no-sleep-then-interact t2.mjs $'await sleep(500); // qa-wait-ok: the 420 ms mouse-away close must fire first\nawait page.click("#a");' pass
+check no-sleep-then-interact t3.mjs $'await sleep(500);\nconst box = await page.evaluate(() => measure());' pass
+check no-sleep-then-interact t4.mjs $'// await sleep(500);\nawait page.click("#a");' pass
+wf=.github/workflows
+check no-pathscoped-write-rule $wf/w1.yml '            --allowed-tools "Read,Write(fuzz_scratch/**),Grep"' fail
+check no-pathscoped-write-rule $wf/w2.yml '            --allowed-tools "Bash(gh issue view:*),Edit(/tmp/*),Glob"' fail
+check no-pathscoped-write-rule templates/workflows/w3.yml '  --allowedTools "Read(/etc/*)"' fail
+check no-pathscoped-write-rule $wf/w4.yml '            --allowed-tools Read,Write(fuzz_scratch/**),Grep' fail
+check no-pathscoped-write-rule $wf/w5.yml '            --allowedTools=Edit(/tmp/*)' fail
+check no-pathscoped-write-rule $wf/x5.yml '            --allowed-tools Read,Edit(fuzz_scratch/**),Grep # not Write(x)' pass
+check no-pathscoped-write-rule $wf/x1.yml '            --allowed-tools "Read,Edit(fuzz_scratch/**),Grep"' pass
+check no-pathscoped-write-rule $wf/x2.yml '            --allowed-tools "Bash(gh issue comment:*),Edit(//tmp/**),Glob"' pass
+check no-pathscoped-write-rule $wf/x3.yml '            --allowed-tools "Read,Write,Grep"' pass
+check no-pathscoped-write-rule $wf/x4.yml '          # a path-scoped Write(...) rule matches nothing; Write(/tmp/*) was denied' pass
 devroot="/mnt/c/Us" # joined at runtime so this file never contains the literal path it plants
 devfix=$(printf 'p = "%sers/a2b32/Zotero/x.pdf"' "$devroot")
 check no-dev-paths j.py "$devfix" fail
