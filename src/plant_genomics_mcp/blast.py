@@ -346,8 +346,10 @@ async def blast_sequence(
     Raises:
       PlantGenomicsError on unknown program.
       UpstreamUnavailableError on HTTP failure or BLAST Status=FAILED.
-      NotFoundError if the search times out (RID is still WAITING after
-        max_wait); the RID is included so the caller can re-poll later.
+      UpstreamUnavailableError if the search is still WAITING after max_wait:
+        NCBI has it queued, so nothing is missing; the RID is included so the
+        caller can re-poll later. NotFoundError is for an RID NCBI no longer
+        knows (Status=UNKNOWN).
     """
     program = _supported_program(program)
     db = database or _PROGRAM_DEFAULTS[program]
@@ -394,7 +396,9 @@ async def blast_sequence(
             await asyncio.sleep(interval)
             elapsed += interval
         else:
-            raise NotFoundError(
+            # Still queued, not missing: NotFoundError told a caller the search
+            # did not exist (live 2026-09-30: an RID WAITING past 720 s).
+            raise UpstreamUnavailableError(
                 f"BLAST RID={rid} still {status} after max_wait={max_wait:.0f}s — "
                 "re-poll later via fetch_result()"
             )

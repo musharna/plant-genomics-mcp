@@ -13,6 +13,8 @@ from __future__ import annotations
 
 import asyncio
 import os
+import re
+from pathlib import Path
 from urllib.parse import parse_qs
 
 import httpx
@@ -236,10 +238,13 @@ async def test_blast_sequence_status_unknown_raises_not_found(
 
 
 @pytest.mark.asyncio
-async def test_blast_sequence_timeout_raises_not_found_with_rid_preserved(
+async def test_a_search_still_waiting_at_max_wait_is_an_outage_naming_its_rid(
     httpx_mock: HTTPXMock,
 ) -> None:
-    """If max_wait is exceeded while WAITING, raise NotFoundError + include RID."""
+    """NCBI still has the search queued, so nothing is missing: it is not
+    ``NotFoundError``, which a caller treats as final, but an outage naming the
+    RID to re-poll (live 2026-09-30: RID BV98SFXM016 was still WAITING after
+    720 s and again a minute later). An expired RID stays not found, below."""
     httpx_mock.add_response(
         method="POST",
         url=blast.BASE_URL,
@@ -252,7 +257,11 @@ async def test_blast_sequence_timeout_raises_not_found_with_rid_preserved(
         is_reusable=True,
     )
     async with httpx.AsyncClient() as client:
-        with pytest.raises(blast.NotFoundError, match="RIDLATE"):
+        with pytest.raises(
+            blast.UpstreamUnavailableError,
+            match=r"^\[UpstreamUnavailableError\] BLAST RID=RIDLATE still WAITING after "
+            r"max_wait=120s",
+        ):
             await blast.blast_sequence(
                 client,
                 "MNSAKQ",
@@ -456,7 +465,15 @@ async def test_blast_semaphore_caps_concurrent_at_two(
 # ---------- live integration (real-execution check) ----------
 
 
+# The live search may wait this long for NCBI's queue. The nightly caps every
+# test at --timeout=240, which killed this one first whenever the queue took
+# longer, so its hitCount check never ran there (2026-09-30); its own timeout
+# marker (read by pytest-timeout, installed in the nightly) covers the wait.
+LIVE_BLAST_MAX_WAIT = 720.0
+
+
 @live_only
+@pytest.mark.timeout(LIVE_BLAST_MAX_WAIT + 120)
 @pytest.mark.asyncio
 async def test_live_blastp_small_query_returns_hits() -> None:
     """Real call to NCBI BLAST — short Arabidopsis NAC1 peptide vs Swiss-Prot.
@@ -475,7 +492,7 @@ async def test_live_blastp_small_query_returns_hits() -> None:
             database="swissprot",
             hitlist_size=5,
             poll_interval=60.0,
-            max_wait=720.0,
+            max_wait=LIVE_BLAST_MAX_WAIT,
         )
     assert result["status"] == "READY"
     # HITLIST_SIZE reached NCBI: it asked for 5 hits and sent no more.
@@ -607,3 +624,18 @@ async def test_a_refused_put_is_named_and_the_submission_is_reported(
     finally:
         progress.reset_reporter(token)
     assert sent[-1] == "BLAST submitted — RID=RID3, RTOE=12s (program=blastp, db=swissprot)"
+
+
+def test_the_live_search_has_a_budget_beyond_the_nightly_cap() -> None:
+    """The nightly's per-test cap is shorter than the search's own wait, so the
+    live test must carry a timeout of its own that covers the wait."""
+    workflow = Path(__file__).resolve().parents[1] / ".github" / "workflows" / "live-nightly.yml"
+    cap = re.search(r"--timeout=(\d+)", workflow.read_text(encoding="utf-8"))
+    assert cap is not None, "the nightly no longer sets --timeout"
+    marks = [
+        m
+        for m in getattr(test_live_blastp_small_query_returns_hits, "pytestmark", [])
+        if m.name == "timeout"
+    ]
+    assert marks, "the live BLAST test has no timeout of its own"
+    assert marks[0].args[0] > LIVE_BLAST_MAX_WAIT > int(cap.group(1))
