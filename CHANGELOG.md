@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **`blast_sequence` reports a search still queued at `max_wait` as
+  `UpstreamUnavailableError` with its RID, not `NotFoundError`.** NCBI still
+  has the search, so nothing is missing; `NotFoundError` told a client the
+  record did not exist (live 2026-09-30: an RID still WAITING after 720 s). An
+  RID NCBI no longer knows (Status=UNKNOWN) is still `NotFoundError`. The tool
+  description and the BLAST prompt say so. The live BLAST test now has its own
+  timeout covering its 720 s wait, so the nightly's 240 s per-test cap no
+  longer kills it before its hit-count check.
+
 - **A merged UniProt accession is "not found" and names the entry it merged
   into; a demerged one names where it went.** UniProt answers a merged
   accession with a 303 to its successor, the inactive record as the body (its
