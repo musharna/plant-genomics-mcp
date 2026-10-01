@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v1.29.0 — 2026-09-30
+
+**56 tools / 23 backends** — no new tool. A minor release rather than a patch, because several failures now arrive as a different class (**Behaviour change**): a 404 is an outage unless the upstream's own miss body says the record does not exist; a 403 that is not a rate refusal, and a BLAST search still queued at `max_wait`, are `UpstreamUnavailableError`; a deleted, merged or demerged UniProt accession, a never-issued InterPro, Pfam or PANTHER entry, and a gene AraGWAS does not have are `NotFoundError` saying why; and `locus_plant_ontology` refuses the eight organisms Planteome names by ids this server does not use (`OrganismNotSupported`) instead of answering "0 annotations". The rest are fixes and tests: a body of the wrong shape is a typed error and is never cached, and every live test runs nightly.
 
 - **`blast_sequence` reports a search still queued at `max_wait` as
   `UpstreamUnavailableError` with its RID, not `NotFoundError`.** NCBI still
