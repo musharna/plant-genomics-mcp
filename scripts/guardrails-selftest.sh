@@ -71,11 +71,12 @@ check no-pathscoped-write-rule $wf/w2.yml '            --allowed-tools "Bash(gh 
 check no-pathscoped-write-rule templates/workflows/w3.yml '  --allowedTools "Read(/etc/*)"' fail
 check no-pathscoped-write-rule $wf/w4.yml '            --allowed-tools Read,Write(fuzz_scratch/**),Grep' fail
 check no-pathscoped-write-rule $wf/w5.yml '            --allowedTools=Edit(/tmp/*)' fail
+check no-pathscoped-write-rule $wf/w6.yml '            --allowed-tools Read, Write(fuzz_scratch/**), Grep' fail
 check no-pathscoped-write-rule $wf/x5.yml '            --allowed-tools Read,Edit(fuzz_scratch/**),Grep # not Write(x)' pass
 check no-pathscoped-write-rule $wf/x1.yml '            --allowed-tools "Read,Edit(fuzz_scratch/**),Grep"' pass
 check no-pathscoped-write-rule $wf/x2.yml '            --allowed-tools "Bash(gh issue comment:*),Edit(//tmp/**),Glob"' pass
 check no-pathscoped-write-rule $wf/x3.yml '            --allowed-tools "Read,Write,Grep"' pass
-check no-pathscoped-write-rule $wf/x4.yml '          # a path-scoped Write(...) rule matches nothing; Write(/tmp/*) was denied' pass
+check no-pathscoped-write-rule $wf/x4.yml '            --allowed-tools "Read(//tmp/**),Grep"' pass
 devroot="/mnt/c/Us" # joined at runtime so this file never contains the literal path it plants
 devfix=$(printf 'p = "%sers/a2b32/Zotero/x.pdf"' "$devroot")
 check no-dev-paths j.py "$devfix" fail
