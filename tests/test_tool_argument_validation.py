@@ -320,3 +320,89 @@ async def test_an_empty_batch_is_refused_as_an_argument(monkeypatch: pytest.Monk
     ok = await _call("batch_kegg_pathways", {"loci": ["AT1G01010"]})
     assert ok.is_error is not True, _text(ok)
     assert calls == [["AT1G01010"]]
+
+
+# ---------- issue #229: a deeply nested value is refused, not a RecursionError ----------
+
+
+def _nested(levels: int) -> Any:
+    """A JSON value with exactly ``levels`` container levels (0 = a scalar)."""
+    value: Any = 1
+    for _ in range(levels):
+        value = {"x": value}
+    return value
+
+
+def _described_depth(schema: dict[str, Any]) -> int:
+    """How many container levels deep a value this schema accepts can be."""
+    depths = [0]
+    for sub in schema.get("properties", {}).values():
+        depths.append(1 + _described_depth(sub))
+    if isinstance(schema.get("items"), dict):
+        depths.append(1 + _described_depth(schema["items"]))
+    for key in ("anyOf", "oneOf", "allOf"):
+        depths.extend(_described_depth(sub) for sub in schema.get(key, []))
+    return max(depths)
+
+
+@pytest.mark.parametrize("levels", [server._MAX_ARGUMENT_DEPTH + 1, 20000])
+@pytest.mark.asyncio
+async def test_a_deeply_nested_argument_is_refused_as_an_argument(
+    levels: int, recorded_backend: list[tuple[str, dict[str, Any]]]
+) -> None:
+    """Issue #229: jsonschema builds its message with ``repr(instance)``, which
+    recurses once per level, so a deep value escaped ``_validate_arguments`` as
+    a bare ``RecursionError`` and reached the client as the unlabelled text
+    ``maximum recursion depth exceeded``. The fuzz saw it from ~9975 levels
+    inside pytest, i.e. the old failure point moved with the caller's stack.
+    """
+    deep = {"locus": "AT1G01010", "organism": _nested(levels)}
+    with pytest.raises(server.InvalidArguments) as refused:
+        server._validate_arguments(TOOL, deep)
+    assert "organism" in str(refused.value), refused.value
+
+    err = await _call(TOOL, deep)
+    assert err.is_error is True
+    text = _text(err)
+    assert text.startswith("[InvalidArguments] "), text
+    assert TOOL in text and "organism" in text, text
+    assert "recursion" not in text, text
+    # The refusal names the bound; it does not echo the value back.
+    assert len(text) < 200, text
+    assert recorded_backend == []
+
+    # Positive control, same test: the legitimate call is untouched.
+    res = await _call(TOOL, {"locus": "AT1G01010", "organism": "oryza_sativa"})
+    assert not res.is_error, _text(res)
+    assert recorded_backend == [("AT1G01010", {"organism": "oryza_sativa"})]
+
+
+def test_a_value_at_the_depth_cap_still_gets_the_schema_error() -> None:
+    """The bound is exactly ``_MAX_ARGUMENT_DEPTH``: one level less is judged
+    by the schema as before (here a type error), not by the depth check."""
+    at_cap = {"locus": "AT1G01010", "organism": _nested(server._MAX_ARGUMENT_DEPTH)}
+    with pytest.raises(server.InvalidArguments) as refused:
+        server._validate_arguments(TOOL, at_cap)
+    assert "is not of type" in str(refused.value), refused.value
+
+    server._validate_arguments(
+        "batch_locus_call",
+        {
+            "tool": TOOL,
+            "loci": ["AT1G01010"],
+            "args": {"organism": "oryza_sativa"},
+        },
+    )
+
+
+def test_the_depth_cap_sits_above_every_argument_a_schema_describes() -> None:
+    """The cap must never refuse a legitimate call. ``batch_locus_call.args`` is
+    free-form at its own level but is re-validated against the inner tool's
+    schema, so it is as deep as one level plus the deepest inner tool."""
+    inner = max(
+        _described_depth(schema)
+        for name, schema in server._TOOL_SCHEMAS.items()
+        if name != "batch_locus_call"
+    )
+    deepest = max(inner, 1 + inner)
+    assert 0 < deepest < server._MAX_ARGUMENT_DEPTH, deepest
