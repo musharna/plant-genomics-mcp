@@ -5,7 +5,7 @@
     {
       "locus_id": "AT1G01010",
       "organism": "arabidopsis_thaliana",
-      "rationale": "Arabidopsis canonical reference; covers BAR/TAIR/ATTED Arabidopsis-only tools + KEGG ath: native path + Europe PMC; densest annotation coverage. KEGG happens to be unannotated for this specific locus \u2192 expects_exception NotFoundError (same shape as v1.5 barley/poplar/brachypodium).",
+      "rationale": "Arabidopsis canonical reference; covers BAR/TAIR/ATTED Arabidopsis-only tools + KEGG ath: native path + Europe PMC; densest annotation coverage. KEGG has a gene record for this locus but no pathway membership \u2192 ok with pathways=[] (#140; same shape as v1.5 barley/poplar/brachypodium).",
       "tools": {
         "organisms.resolve": {
           "stable_facts": {
@@ -82,7 +82,12 @@
           }
         },
         "kegg.lookup_pathways": {
-          "expects_exception": "NotFoundError"
+          "stable_facts": {
+            "kegg_gene_id": "ath:AT1G01010",
+            "organism": "arabidopsis_thaliana",
+            "pathways.len": 0
+          },
+          "variable_facts": {}
         },
         "atted.lookup_coexpression": {
           "stable_facts": {},
@@ -185,7 +190,12 @@
           }
         },
         "kegg.lookup_pathways": {
-          "expects_exception": "NotFoundError"
+          "stable_facts": {
+            "kegg_gene_id": "osa:4326813",
+            "organism": "oryza_sativa",
+            "pathways.len": 0
+          },
+          "variable_facts": {}
         },
         "phytozome.lookup_locus": {
           "expects_exception": "NotFoundError"
@@ -292,7 +302,12 @@
           }
         },
         "kegg.lookup_pathways": {
-          "expects_exception": "NotFoundError"
+          "stable_facts": {
+            "kegg_gene_id": "zma:103644366",
+            "organism": "zea_mays",
+            "pathways.len": 0
+          },
+          "variable_facts": {}
         },
         "phytozome.lookup_locus": {
           "stable_facts": {},
@@ -313,7 +328,12 @@
           "variable_facts": {}
         },
         "kegg.lookup_pathways": {
-          "expects_exception": "NotFoundError"
+          "stable_facts": {
+            "kegg_gene_id": "gmx:100810680",
+            "organism": "glycine_max",
+            "pathways.len": 0
+          },
+          "variable_facts": {}
         },
         "phytozome.lookup_locus": {
           "expects_exception": "NotFoundError"
@@ -384,7 +404,7 @@
     {
       "locus_id": "HORVU.MOREX.r3.1HG0000090",
       "organism": "hordeum_vulgare",
-      "rationale": "Barley v1.5 ship-locus. Bridge fires, KEGG returns 0 pathways \u2192 NotFoundError raised.",
+      "rationale": "Barley v1.5 ship-locus. Bridge fires, KEGG has the gene record but 0 pathways \u2192 ok with pathways=[] (#140).",
       "tools": {
         "organisms.resolve": {
           "stable_facts": {
@@ -424,14 +444,19 @@
           }
         },
         "kegg.lookup_pathways": {
-          "expects_exception": "NotFoundError"
+          "stable_facts": {
+            "kegg_gene_id": "hvg:123427420",
+            "organism": "hordeum_vulgare",
+            "pathways.len": 0
+          },
+          "variable_facts": {}
         }
       }
     },
     {
       "locus_id": "Potri.001G006600.v4.1",
       "organism": "populus_trichocarpa",
-      "rationale": "Poplar v1.5 ship-locus. Same expected-exception shape as barley.",
+      "rationale": "Poplar v1.5 ship-locus. Same known-gene, no-pathway shape as barley.",
       "tools": {
         "organisms.resolve": {
           "stable_facts": {
@@ -471,14 +496,19 @@
           }
         },
         "kegg.lookup_pathways": {
-          "expects_exception": "NotFoundError"
+          "stable_facts": {
+            "kegg_gene_id": "pop:7483252",
+            "organism": "populus_trichocarpa",
+            "pathways.len": 0
+          },
+          "variable_facts": {}
         }
       }
     },
     {
       "locus_id": "BRADI_1g00485v3",
       "organism": "brachypodium_distachyon",
-      "rationale": "Brachypodium v1.5 ship-locus. Same expected-exception shape as barley.",
+      "rationale": "Brachypodium v1.5 ship-locus. Same known-gene, no-pathway shape as barley.",
       "tools": {
         "organisms.resolve": {
           "stable_facts": {
@@ -518,7 +548,12 @@
           }
         },
         "kegg.lookup_pathways": {
-          "expects_exception": "NotFoundError"
+          "stable_facts": {
+            "kegg_gene_id": "bdi:100837010",
+            "organism": "brachypodium_distachyon",
+            "pathways.len": 0
+          },
+          "variable_facts": {}
         }
       }
     },
