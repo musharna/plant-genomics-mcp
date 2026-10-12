@@ -2522,6 +2522,32 @@ _TOOL_VALIDATORS: dict[str, Draft202012Validator] = {
     name: Draft202012Validator(schema) for name, schema in _TOOL_SCHEMAS.items()
 }
 
+# Issue #229: jsonschema builds each error message with repr(instance), and
+# repr recurses once per nesting level, so a deep enough argument raised
+# RecursionError out of the validator instead of InvalidArguments — at a depth
+# that moved with the caller's stack. No schema here describes an argument
+# more than a few levels deep (tests/test_tool_argument_validation.py pins the
+# cap above all of them), so depth is bounded before jsonschema sees the
+# value. The walk is iterative: a recursive check would fail the same way.
+_MAX_ARGUMENT_DEPTH = 32
+
+
+def _exceeds_depth(value: Any) -> bool:
+    """True if ``value`` has more than ``_MAX_ARGUMENT_DEPTH`` container levels."""
+    stack: list[tuple[Any, int]] = [(value, 0)]
+    while stack:
+        node, depth = stack.pop()
+        if isinstance(node, dict):
+            children: Any = node.values()
+        elif isinstance(node, list):
+            children = node
+        else:
+            continue
+        if depth >= _MAX_ARGUMENT_DEPTH:
+            return True
+        stack.extend((child, depth + 1) for child in children)
+    return False
+
 
 def _validate_arguments(name: str, arguments: dict[str, Any]) -> None:
     """Refuse a tool call whose arguments violate the tool's declared schema.
@@ -2537,6 +2563,11 @@ def _validate_arguments(name: str, arguments: dict[str, Any]) -> None:
     validator = _TOOL_VALIDATORS.get(name)
     if validator is None:
         return
+    for key, value in arguments.items():
+        if _exceeds_depth(value):
+            raise InvalidArguments(
+                f"{name}: {key}: nested deeper than {_MAX_ARGUMENT_DEPTH} levels"
+            )
     error = best_match(validator.iter_errors(arguments))
     if error is None:
         return
