@@ -2,7 +2,15 @@
 
 ## v1.29.1 — 2026-10-15
 
-**56 tools / 23 backends** — no new tool. A patch release with one fix.
+**56 tools / 23 backends** — no new tool. A patch release: one fix and one
+security update.
+
+- **The locked MCP Python SDK is 2.2.0 (was 2.0.0).** 2.0.0–2.1.x let
+  sessions accumulate without bound in the StreamableHTTP transport
+  (GHSA-84m7-p3x7-pcfv, medium). The HTTP server here runs stateless by
+  default (`PLANT_GENOMICS_MCP_HTTP_STATELESS`), but the Docker images are
+  built from the lock, so they now carry the fixed SDK. A pip install already
+  resolved the newest 2.x.
 
 - **A deeply nested tool argument is refused as `InvalidArguments`, not a
   bare `RecursionError`.** jsonschema builds each error message with
