@@ -16,7 +16,7 @@ synthesis tools that compose the live backends:
   - ``go_enrichment``                     — g:Profiler GO+KEGG over-representation over a gene LIST (live)
   - ``blast_sequence``                    — NCBI BLAST URLAPI (live, async Put/Get polling)
   - ``gramene_homologs``                  — Gramene v69 homology (live, ortholog/paralog + gene_tree_id)
-  - ``gene_tree_members``                 — every gene in a gene_tree_id, optionally one organism's (live, Ensembl Compara)
+  - ``gene_tree_members``                 — every gene in a locus's (or a gene_tree_id's) tree, optionally one organism's (live, Ensembl Compara)
   - ``ensembl_plants_paralogs``           — a locus's paralogues, incl. the ancient ones Gramene drops (live, Ensembl Compara)
   - ``ensembl_plants_assembly``           — an organism's assembly: seq-region names + lengths (live, Ensembl /info/assembly)
   - ``upstream_release``                  — the release a backend's own endpoint calls current, for backends whose answers state none (live)
@@ -742,7 +742,8 @@ TOOLS: list[types.Tool] = [
             "(polyploid subgenome copies) come back only under 'all', and "
             "excluded_categories counts every category the filter left out. "
             "Returns target_locus + homology category (type) + shared gene_tree_id "
-            "per hit. Rows carry no taxon unless with_organism=true (adds "
+            "per hit (Gramene's tree id; for the tree's members pass the locus to "
+            "gene_tree_members). Rows carry no taxon unless with_organism=true (adds "
             "'organism' per row) or target_organism is given, which filters to "
             "one organism before the cap and adds 'organism' per row. "
             "Paralogs here are within_species_paralog only: Gramene drops "
@@ -1484,15 +1485,19 @@ TOOLS: list[types.Tool] = [
         name="gene_tree_members",
         title="Gene Tree Members",
         description=(
-            "List the member genes of an Ensembl Compara (plants) gene tree — "
-            "the gene_tree_id that gramene_homologs returns on every homolog "
-            "(rest.ensembl.org /genetree; free, no key). Each member gives the "
+            "List the member genes of an Ensembl Compara (plants) gene tree "
+            "(rest.ensembl.org /genetree; free, no key). Name the tree by locus= "
+            "(any member gene, with organism=) and Ensembl finds the tree that "
+            "gene is in now, or by gene_tree_id=; exactly one. A gramene_homologs "
+            "gene_tree_id comes from an older Compara release and may not exist "
+            "here, so prefer locus=. Each member gives the "
             "locus (the id the locus-keyed tools accept), protein_id, species "
             "and taxid, and organism (the canonical slug, or null for a species "
             "outside this server's 12). target_organism= keeps one organism's "
             "members; "
             "omit it for every species. total counts members before limit; "
-            "truncated=true when limit cut some off. An unknown tree id is a "
+            "truncated=true when limit cut some off. gene_tree_id in the answer "
+            "is the tree served. An unknown tree id, or a locus in no tree, is a "
             "not-found error."
         ),
         input_schema={
@@ -1501,7 +1506,16 @@ TOOLS: list[types.Tool] = [
                 "gene_tree_id": {
                     "type": "string",
                     "pattern": "^EPlGT\\d{14}$",
-                    "description": "e.g. EPlGT00940000167082 (from gramene_homologs)",
+                    "description": "e.g. EPlGT00940000167082. Omit when passing locus.",
+                },
+                "locus": {
+                    "type": "string",
+                    "description": "Any member gene, e.g. AT1G01010; Ensembl finds its current tree. Omit when passing gene_tree_id.",
+                },
+                "organism": {
+                    "type": ["string", "integer"],
+                    "default": "arabidopsis_thaliana",
+                    "description": "The organism of locus — canonical slug, scientific or common name, or NCBI taxid.",
                 },
                 "target_organism": {
                     "type": ["string", "integer"],
@@ -1514,7 +1528,10 @@ TOOLS: list[types.Tool] = [
                     "default": 100,
                 },
             },
-            "required": ["gene_tree_id"],
+            # Exactly one of gene_tree_id or locus, enforced by the backend: a
+            # top-level oneOf/anyOf gets the whole tool list refused with a 400
+            # by the Anthropic Messages API, not just this tool.
+            "required": [],
             "additionalProperties": False,
         },
         output_schema=GeneTreeMembers.model_json_schema(),
@@ -2849,7 +2866,9 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
             case "gene_tree_members":
                 return await ensembl_plants.gene_tree_members(
                     client,
-                    args["gene_tree_id"],
+                    args.get("gene_tree_id"),
+                    locus=args.get("locus"),
+                    organism=args.get("organism", "arabidopsis_thaliana"),
                     target_organism=args.get("target_organism"),
                     limit=args.get("limit", ensembl_plants.GENE_TREE_MEMBERS_DEFAULT_LIMIT),
                 )

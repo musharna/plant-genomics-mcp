@@ -125,14 +125,14 @@ DISPATCH_SPECS: list[Spec] = [
     Spec(
         "entry_members", uniprot, "entry_members", {"entry": "IPR010525"}, "IPR010525", _DEFAULT_ORG
     ),
-    # target_organism is a filter with no default; organism= is never forwarded
+    # target_organism is a filter with no default; organism= is locus='s organism
     Spec(
         "gene_tree_members",
         ensembl_plants,
         "gene_tree_members",
         {"gene_tree_id": "EPlGT00940000167082"},
         "EPlGT00940000167082",
-        None,
+        _DEFAULT_ORG,
     ),
     Spec("ensembl_plants_paralogs", ensembl_plants, "paralogs", {"locus": L}, L, _DEFAULT_ORG),
     # The organism is this tool's identifier (required): it reaches the backend positionally.

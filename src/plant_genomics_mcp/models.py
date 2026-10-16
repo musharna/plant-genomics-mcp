@@ -1111,7 +1111,18 @@ class GeneTreeMembers(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    gene_tree_id: str = Field(description="The tree asked about, e.g. EPlGT00940000167082")
+    gene_tree_id: str = Field(
+        description=(
+            "The tree answered, e.g. EPlGT00940000167082: the id asked for, or "
+            "the tree Ensembl holds the locus in now"
+        )
+    )
+    locus: str | None = Field(
+        default=None, description="The member locus asked by; null when asked by gene_tree_id"
+    )
+    organism: str | None = Field(
+        default=None, description="The organism of locus; null when asked by gene_tree_id"
+    )
     target_organism: str | None = Field(description="The organism filter; null = every species")
     total: int = total_field("members after the organism filter")
     returned: int = Field(description=RETURNED_DESCRIPTION)
@@ -1370,7 +1381,11 @@ class GrameneHomolog(BaseModel):
     )
     gene_tree_id: str | None = Field(
         default=None,
-        description="Gramene gene-tree ID (shared across all homologs in the record)",
+        description=(
+            "Gramene gene-tree ID (shared across all homologs in the record). "
+            "Gramene's release, not rest.ensembl.org's: a tree rebuilt since has "
+            "another id there, so gene_tree_members takes locus= instead"
+        ),
     )
     organism: str | None = Field(
         default=None,
