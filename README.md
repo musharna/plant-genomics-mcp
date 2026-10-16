@@ -17,7 +17,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21636352.svg)](https://doi.org/10.5281/zenodo.21636352)
 
 <p align="center">
-  <img src="examples/assets/cc-answer.png" alt="Claude Code with plant-genomics-mcp answering a prompt about Arabidopsis NAC001 (AT1G01010): the Ensembl Plants record (chr1:3,631-5,899, protein-coding) and UniProtKB entry Q0WV96 (NAC1_ARATH, 429 aa). Real output, trimmed" width="780">
+  <img src="examples/assets/cc-answer.png" alt="Claude Code (Opus 5.5) with plant-genomics-mcp 1.29.1 answering a prompt about Arabidopsis NAC001 (AT1G01010): the Ensembl Plants record (Chr 1:3,631-5,899, protein_coding) and UniProtKB entry Q0WV96 (NAC1_ARATH, reviewed, 429 aa). Real output, trimmed" width="780">
 </p>
 
 ## 📦 Install
@@ -163,12 +163,13 @@ Cross-species — pass `organism=`:
 { "locus": "Os01g0100100", "organism": "oryza_sativa" }
 ```
 
-A recorded Claude Code session (2026-05-24) with a narrower prompt — the
-Ensembl record, UniProtKB entry and top three Europe PMC papers for
-AT1G01010 — answered it in one turn:
+Asked for NAC001's orthologs in rice and maize, a second recorded run
+(2026-10-16; prompts, commands and full text of both in
+[`examples/assets/cards/RUN.md`](examples/assets/cards/RUN.md)) checked three
+sources and said which one does not back the rice match:
 
 <p align="center">
-  <img src="examples/assets/cc-demo.png" alt="Claude Code (Opus 4.7) calling plant-genomics-mcp 3 times to return the AT1G01010 / NAC1_ARATH record with Ensembl, UniProt Q0WV96, and the top-3 Europe PMC papers" width="820">
+  <img src="examples/assets/cc-orthologs.png" alt="Claude Code (Opus 5.5) after 6 plant-genomics-mcp calls: AT1G01010's rice ortholog is Os07g0683200 (Gramene v69 ortholog_one2many, the only rice member of Ensembl gene tree EPlGT01160000455820); no maize ortholog in either; OrthoDB's NAC group has no rice or maize member, so it does not back the rice match" width="780">
 </p>
 
 Full per-tool walkthroughs (with real upstream-API transcripts) live in
