@@ -17,7 +17,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21636352.svg)](https://doi.org/10.5281/zenodo.21636352)
 
 <p align="center">
-  <img src="examples/assets/cc-answer.png" alt="Claude Code with plant-genomics-mcp answering a prompt about Arabidopsis NAC001 (AT1G01010): the Ensembl Plants record (chr1:3,631-5,899, protein-coding) and UniProtKB entry Q0WV96 (NAC1_ARATH, 429 aa). Real output, trimmed" width="780">
+  <img src="examples/assets/cc-answer.png" alt="Claude Code (Opus 5.5) with plant-genomics-mcp 1.29.1 answering a prompt about Arabidopsis NAC001 (AT1G01010): the Ensembl Plants record (Chr 1:3,631-5,899, protein_coding) and UniProtKB entry Q0WV96 (NAC1_ARATH, reviewed, 429 aa). Real output, trimmed" width="780">
 </p>
 
 ## 📦 Install
@@ -163,12 +163,13 @@ Cross-species — pass `organism=`:
 { "locus": "Os01g0100100", "organism": "oryza_sativa" }
 ```
 
-A recorded Claude Code session (2026-05-24) with a narrower prompt — the
-Ensembl record, UniProtKB entry and top three Europe PMC papers for
-AT1G01010 — answered it in one turn:
+The same recorded answer (2026-10-16; prompt, command and full text in
+[`examples/assets/cards/RUN.md`](examples/assets/cards/RUN.md)) also ranked
+the Europe PMC papers that mention AT1G01010, paging through all 40 hits,
+and said plainly that none is mainly about the gene:
 
 <p align="center">
-  <img src="examples/assets/cc-demo.png" alt="Claude Code (Opus 4.7) calling plant-genomics-mcp 3 times to return the AT1G01010 / NAC1_ARATH record with Ensembl, UniProt Q0WV96, and the top-3 Europe PMC papers" width="820">
+  <img src="examples/assets/cc-literature.png" alt="Claude Code (Opus 5.5) after 4 plant-genomics-mcp calls: the three most-cited of the 40 Europe PMC papers mentioning AT1G01010 (Weeda 2014, Hass 2004, Vrbsky 2010, by Europe PMC citation count), with the note that none is mainly about NAC001" width="780">
 </p>
 
 Full per-tool walkthroughs (with real upstream-API transcripts) live in
