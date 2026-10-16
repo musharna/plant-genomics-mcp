@@ -163,13 +163,13 @@ Cross-species — pass `organism=`:
 { "locus": "Os01g0100100", "organism": "oryza_sativa" }
 ```
 
-The same recorded answer (2026-10-16; prompt, command and full text in
-[`examples/assets/cards/RUN.md`](examples/assets/cards/RUN.md)) also ranked
-the Europe PMC papers that mention AT1G01010, paging through all 40 hits,
-and said plainly that none is mainly about the gene:
+Asked for NAC001's orthologs in rice and maize, a second recorded run
+(2026-10-16; prompts, commands and full text of both in
+[`examples/assets/cards/RUN.md`](examples/assets/cards/RUN.md)) checked three
+sources and said which one does not back the rice match:
 
 <p align="center">
-  <img src="examples/assets/cc-literature.png" alt="Claude Code (Opus 5.5) after 4 plant-genomics-mcp calls: the three most-cited of the 40 Europe PMC papers mentioning AT1G01010 (Weeda 2014, Hass 2004, Vrbsky 2010, by Europe PMC citation count), with the note that none is mainly about NAC001" width="780">
+  <img src="examples/assets/cc-orthologs.png" alt="Claude Code (Opus 5.5) after 6 plant-genomics-mcp calls: AT1G01010's rice ortholog is Os07g0683200 (Gramene v69 ortholog_one2many, the only rice member of Ensembl gene tree EPlGT01160000455820); no maize ortholog in either; OrthoDB's NAC group has no rice or maize member, so it does not back the rice match" width="780">
 </p>
 
 Full per-tool walkthroughs (with real upstream-API transcripts) live in

@@ -16,7 +16,7 @@ from playwright.sync_api import sync_playwright
 signal.signal(signal.SIGALRM, lambda *_: sys.exit("aborting: walltime guard"))
 signal.alarm(120)
 HERE = Path(__file__).resolve().parent
-CARDS = {"answer.html": "cc-answer.png", "literature.html": "cc-literature.png"}
+CARDS = {"answer.html": "cc-answer.png", "orthologs.html": "cc-orthologs.png"}
 
 
 # The fonts each part must be drawn in. The cards name installed fonts, not

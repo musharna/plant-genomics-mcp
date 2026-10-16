@@ -1,0 +1,31 @@
+<!doctype html><meta charset=utf-8>
+<style>
+html,body{margin:0;width:1600px;height:900px;background:#FBFBF8;font-family:Lato,sans-serif}
+.wrap{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:0 56px}
+.term{background:#15181D;border-radius:18px;padding:22px 34px 34px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+pre{margin:10px 0 0;font:28px/1.5 "JetBrainsMono Nerd Font Mono","DejaVu Sans Mono",monospace;color:#D7DAE0;white-space:pre}
+.p{color:#7EE787}.dim{color:#8B949E}.hl{color:#FFA657}.b{color:#F0F3F6;font-weight:bold}
+.cap{margin-top:26px;font-size:28px;color:#5B6370}
+</style>
+<div class=wrap>
+<div class=term>
+<pre><span class=p>❯</span> <span class=dim>Use the plant-genomics-mcp server. Find the orthologs of Arabidopsis
+  NAC001 (AT1G01010) in rice and maize. …</span>
+<span class=dim>  6 calls: gramene_homologs ×2 · orthodb_orthologs ×2
+           gene_tree_members ×2 (locus=AT1G01010)</span>
+
+<span class=hl>Rice: one ortholog, Os07g0683200.</span> Gramene (v69) classes it as
+ortholog_one2many, and the current Ensembl Compara gene tree
+(EPlGT01160000455820) has it as the only rice member.
+
+<span class=hl>Maize: none found.</span> Neither Gramene nor the current Ensembl gene
+tree lists a maize member for AT1G01010.
+
+<span class=hl>What OrthoDB adds:</span> OrthoDB (v12) puts NAC001 in the group "NAC
+domain-containing protein" (261582at33090) … That group has no rice or
+maize members. So the rice match rests on Gramene and Ensembl, which
+use the same Compara pipeline, and OrthoDB does not back it up.
+
+… Maize clearly has NAC genes, but none falls in NAC001's tree. …</pre></div>
+<div class=cap>Claude Code 2.1.302 · Opus 5.5 · plant-genomics-mcp 1.29.2 · real output, trimmed (cards/RUN.md)</div>
+</div>
