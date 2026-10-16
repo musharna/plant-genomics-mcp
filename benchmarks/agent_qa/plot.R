@@ -11,6 +11,9 @@
 # Every number on the figures is computed here from the log; nothing is typed
 # in by hand. Green, red and grey mean right, wrong and declined in every
 # figure; setups are told apart by their axis labels, not by colour.
+# A server run that never called the server (valid = FALSE, see run.py)
+# measured the model alone; it stays in the bars and is counted in the
+# `invalid` column and the first figure's subtitle.
 
 library(ggplot2)
 library(jsonlite)
@@ -22,6 +25,7 @@ source("examples/arf_family/theme_pgmcp.R")
 
 r <- jsonlite::stream_in(file(results_path), verbose = FALSE)
 stopifnot(all(r$verdict %in% names(pal_verdict)))
+stopifnot(is.logical(r$valid), !anyNA(r$valid))
 
 arm_labels <- c(
   bare = "Claude alone",
@@ -53,6 +57,7 @@ tally <- function(x) {
     right = sum(x$verdict == "right"), wrong = sum(x$verdict == "wrong"),
     declined = sum(x$verdict == "declined"), no_answer = sum(x$verdict == "no_answer"),
     wrong_id = sum(x$wrong_id),
+    invalid = sum(!x$valid), right_valid = sum(x$verdict == "right" & x$valid),
     # Repeats of one question are not independent: also count questions.
     questions_right_every_run = sum(tapply(x$verdict == "right", x$qid, all))
   )
@@ -88,6 +93,11 @@ write.table(rbind(per_arm, per_cat), file.path(outdir, "summary.tsv"),
 )
 
 setup_note <- sprintf("Claude Opus 5.5 in Claude Code, %d questions × %d runs.", n_q, n_rep)
+n_invalid <- sum(!r$valid & r$arm == "mcp")
+invalid_note <- sprintf(
+  "%d of %d plant-genomics-mcp runs never called the server (answered from memory); they are counted here.",
+  n_invalid, sum(r$arm == "mcp")
+)
 key_note <- paste0(
   "Answers checked against Ensembl Plants and UniProt, the databases the server reads;\n",
   "an answer taken from another annotation counts as wrong."
@@ -125,11 +135,11 @@ p1 <- ggplot(counts, aes(x = share, y = arm_label, fill = verdict)) +
   labs(
     x = sprintf("Share of %d answers per setup", n_ans), y = NULL,
     title = "Plant gene lookups: right, wrong or declined",
-    subtitle = paste0(setup_note, "\n", key_note)
+    subtitle = paste0(setup_note, "\n", key_note, "\n", invalid_note)
   ) +
   theme_pgmcp(base_size = 13) +
   theme(panel.grid.major.y = element_blank(), plot.margin = margin(8, 24, 8, 8))
-ggsave(file.path(outdir, "agent_qa.png"), p1, width = 11, height = 4.2, dpi = 200, bg = "white")
+ggsave(file.path(outdir, "agent_qa.png"), p1, width = 11, height = 4.6, dpi = 200, bg = "white")
 
 # Figure 2: cost and seconds per answer, one point per run, box over them.
 long <- rbind(

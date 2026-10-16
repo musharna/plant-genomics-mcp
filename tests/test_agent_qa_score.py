@@ -15,6 +15,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "benchmarks" / "agent_qa"))
 
 from build_questions import chromosome_from_title, chromosome_names  # noqa: E402
+from run import is_valid, parse_transcript  # noqa: E402
 from score import extract, score  # noqa: E402
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE")
@@ -139,3 +140,41 @@ def test_a_genbank_chromosome_resolves_through_the_real_ncbi_esummary() -> None:
     assert chromosome_names("CM001064.4", []) == ["CM001064.4", "1"]
     assert chromosome_names("CP126666.1", []) == ["CP126666.1", "19"]
     assert chromosome_names("5H", [f"{n}H" for n in range(1, 8)]) == ["5H", "5"]
+
+
+def _transcript(status: str, calls: list[str]) -> str:
+    """Stream-json lines shaped as claude -p 2.1.302 writes them (init event,
+    assistant tool_use blocks, result), trimmed to the fields read."""
+    import json
+
+    events: list[dict[str, object]] = [
+        {
+            "type": "system",
+            "subtype": "init",
+            "model": "claude-opus-5-5",
+            "tools": ["mcp__plant-genomics__get_sequence"],
+            "mcp_servers": [{"name": "plant-genomics", "status": status}],
+        }
+    ]
+    events += [
+        {"type": "assistant", "message": {"content": [{"type": "tool_use", "name": c}]}}
+        for c in calls
+    ]
+    events.append({"type": "result", "result": "ANSWER: AT3G23430", "total_cost_usd": 0.02})
+    return "\n".join(json.dumps(e) for e in events)
+
+
+def test_a_server_run_is_valid_only_if_the_connected_server_was_called() -> None:
+    called = parse_transcript(
+        _transcript("connected", ["mcp__plant-genomics__resolve_locus_to_uniprot"])
+    )
+    assert called["tool_calls"] == ["mcp__plant-genomics__resolve_locus_to_uniprot"]
+    assert is_valid("mcp", called["mcp_servers"], called["tool_calls"])
+    # q30 runs 1 and 3: connected, answered from memory, no call.
+    memory = parse_transcript(_transcript("connected", []))
+    assert memory["reply"] == "ANSWER: AT3G23430"
+    assert not is_valid("mcp", memory["mcp_servers"], memory["tool_calls"])
+    failed = parse_transcript(_transcript("failed", ["mcp__plant-genomics__get_sequence"]))
+    assert not is_valid("mcp", failed["mcp_servers"], failed["tool_calls"])
+    # A setup with no server to call has nothing to fail.
+    assert is_valid("bare", [], []) and is_valid("web", [], ["WebFetch"])

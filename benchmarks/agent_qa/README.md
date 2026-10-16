@@ -6,7 +6,8 @@ Claude Code under three setups:
 
 - **Claude alone**: no tools.
 - **Claude + web search**: WebSearch and WebFetch only.
-- **Claude + plant-genomics-mcp**: this server (1.29.2 from PyPI) only.
+- **Claude + plant-genomics-mcp**: this server (1.29.2 from PyPI, its
+  dependencies frozen at 2026-10-17T00:00Z by `uvx --exclude-newer`) only.
 
 Run on 2026-10-16 with Claude Code 2.1.302.
 
@@ -18,7 +19,14 @@ Run on 2026-10-16 with Claude Code 2.1.302.
 | Claude + web search | 151 | 4 | 1 | 48 of 52 | $0.015 ($0.058) | 13.4 (40.0) | 705 s |
 | Claude + plant-genomics-mcp | 156 | 0 | 0 | 52 of 52 | $0.023 ($0.026) | 10.1 (14.5) | 86 s |
 
-Out of 156 answers per setup. The three runs of a question are not
+Out of 156 answers per setup. **2 of the 156 server answers did not use the
+server**: in runs 1 and 3 of q30 ("the locus ID of PHO1") the server connected
+but Claude answered AT3G23430 from memory without calling it, and said so. Both
+were right, so they are counted as right above, but they measured Claude
+alone. Counting only runs that called the server, it answered 154 of 154 right;
+q30 was right through the server in 1 of its 3 runs. `results.jsonl` marks
+such runs `"valid": false`, and `summary.tsv` counts them (`invalid`,
+`right_valid`). The three runs of a question are not
 independent, so the questions column is the fairer count. The numbers come
 from [`summary.tsv`](summary.tsv), which `plot.R` writes from
 [`results.jsonl`](results.jsonl).
@@ -43,7 +51,8 @@ from [`summary.tsv`](summary.tsv), which `plot.R` writes from
     same gene ID sits about 100 Mb away.
 
   It also declined one protein-length question.
-- **With the server, every answer was right.** The typical answer took a
+- **With the server, every answer was right** (154 that used it, and 2 that
+  answered from memory without calling it). The typical answer took a
   little less time than with web search (median 10.1 s against 13.4 s) but
   cost more ($0.023 against $0.015). The server's 56 tool descriptions are
   sent with every request. Web runs had a long tail, which the server's did
@@ -102,6 +111,10 @@ Matching rules by kind:
 - **IDs** are compared without case, version suffixes or transcript suffixes.
 - **Protein lengths** must match exactly.
 
+A server run is `valid` only if the server connected (the init event) and
+Claude called at least one `mcp__` tool; other setups are always valid. An
+invalid run keeps its verdict, so the tables show it, and is counted apart.
+
 A wrong answer shaped like a real ID is also flagged `wrong_id`. The flag
 checks the shape only, not whether the ID exists.
 Tests: `tests/test_agent_qa_score.py`.
@@ -112,6 +125,7 @@ Tests: `tests/test_agent_qa_score.py`.
 uv run python benchmarks/agent_qa/build_questions.py        # re-fetch the key (writes questions.json)
 uv run python benchmarks/agent_qa/run.py --reps 3 --workers 5   # 468 claude -p runs; resumable
 uv run python benchmarks/agent_qa/run.py --rescore          # re-score stored replies after a key fix
+uv run python benchmarks/agent_qa/run.py --backfill-valid runs  # recompute "valid" from transcripts
 Rscript benchmarks/agent_qa/plot.R                          # summary.tsv + figures
 ```
 
