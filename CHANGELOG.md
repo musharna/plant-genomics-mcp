@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+- **`gene_tree_members` takes `locus=` (with `organism=`), and Ensembl finds
+  the tree that gene is in now.** The tool was described as taking the
+  `gene_tree_id` that `gramene_homologs` returns, but Gramene v69 is built on
+  an older Compara than rest.ensembl.org serves (Ensembl 116 / EG 63,
+  2026-10-16), and a tree rebuilt since has a new stable id: AT1G01010's
+  Gramene tree EPlGT01130000406172 was a not-found there, its current tree is
+  EPlGT01160000455820. Unchanged trees keep their id, so the hand-off worked
+  for some genes and not others. `gene_tree_id=` still works; pass exactly one
+  of the two (`InvalidArguments` otherwise). A tree id Ensembl does not know
+  is still `NotFoundError`, and the message now says the id may come from an
+  older release and to pass `locus=`. The answer's `gene_tree_id` is the tree
+  served, and it carries `locus` and `organism` when asked by locus. Neither
+  tool description promises the id hand-off any more. Found re-recording the
+  README's ortholog demo (#234).
+
 ## v1.29.1 — 2026-10-15
 
 **56 tools / 23 backends** — no new tool. A patch release: one fix and one

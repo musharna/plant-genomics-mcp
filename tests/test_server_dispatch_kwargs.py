@@ -32,6 +32,9 @@ _CONSUMED: dict[str, set[str]] = {
     # The inner tool is called once per locus with `args` spread; its routing
     # is asserted by the batch_locus_call spec in test_server_dispatch.py.
     "batch_locus_call": {"tool", "loci", "args"},
+    # Optional only because locus= is the other way in; it is the tree's
+    # identifier and goes positionally, asserted by its spec there too.
+    "gene_tree_members": {"gene_tree_id"},
 }
 _RENAMED: dict[str, dict[str, str]] = {}
 # Arms that forward ``limit=None`` on purpose and let the backend resolve it:
