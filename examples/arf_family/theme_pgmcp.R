@@ -58,3 +58,19 @@ pgmcp_point_outline <- "white"
 
 # Colour for the oversize-threshold reference line.
 pgmcp_refline_colour <- "grey40"
+
+# Agent benchmark verdicts (benchmarks/agent_qa/score.py). right/wrong reuse
+# the ok/error pair above; declined is the neutral grey; no_answer (no
+# ANSWER line at all) gets the orange so a format failure is never read as
+# either of its neighbours.
+pal_verdict <- c(
+  right = "#2E7D5B",
+  wrong = "#C0392B",
+  declined = "#BDBDBD",
+  no_answer = "#E69F00"
+)
+
+# Agent benchmark time/cost points: one neutral colour for every setup. The
+# setups are named on the axis; a colour per setup would reuse green and grey,
+# which mean right and declined in the verdict figures beside it.
+pgmcp_bench_point_fill <- "grey35"

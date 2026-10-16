@@ -68,6 +68,12 @@ that backend's own identifier.
 
 A worked 64-call run over 114 genes in three organisms, with the 51 gaps it logged (39 since closed), is in [`examples/arf_family/PAGE.md`](examples/arf_family/PAGE.md).
 
+## 📊 Does it help?
+
+We asked 52 plant gene-lookup questions (location, protein length, name → locus, UniProt accession, ortholog; 12 genomes) three times each to Claude Opus 5.5 in Claude Code. Alone, Claude declined most of them. With web search it got 48 of the 52 right in every run, mostly by calling the Ensembl and UniProt REST APIs itself. With this server it got all 52 right in every run, and its slowest answer took 86 s, against 705 s with web search. The answer key comes from the databases the server reads, so this measures whether lookups are done correctly. Cost, timings and caveats: [`benchmarks/agent_qa/`](benchmarks/agent_qa/README.md).
+
+<p align="center"><img src="benchmarks/agent_qa/agent_qa.png" alt="Bar chart of 156 answers per setup. Claude alone: 36 right, 3 wrong, 117 declined. Claude with web search: 151 right, 4 wrong, 1 declined. Claude with plant-genomics-mcp: 156 right" width="780"></p>
+
 ## 🛠️ Tools
 
 **56 tools across 23 backends** — Ensembl Plants, Phytozome BioMart,
