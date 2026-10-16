@@ -145,6 +145,7 @@ async def test_timed_step_table():
         "error",
         "[_Weird] bad projection",
     )
+    assert isinstance(odd.elapsed_s, float) and 0.0 <= odd.elapsed_s < 60.0
 
     # BaseException that is not an Exception still propagates.
     with pytest.raises(asyncio.CancelledError):

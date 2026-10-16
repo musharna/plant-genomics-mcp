@@ -10,11 +10,15 @@ every copy:
 1. the same request twice reaches upstream once and returns the same value;
 2. a request differing only in params, or only in path (or URL), is a
    different key and reaches upstream again;
-3. a failed request is not cached: the next identical call goes upstream.
+3. a failed request is not cached: the next identical call goes upstream;
+4. what ``_get`` hands the retry helper lands: upstream is asked for JSON
+   with a finite timeout, and an outage names the backend.
 
-Upstream is ``_http.request_with_retry`` replaced by a recorder; every
+For 1-3 upstream is ``_http.request_with_retry`` replaced by a recorder; every
 backend calls it through the ``_http`` module, so this is the one seam all 14
-share. Real HTTP for each backend is covered by its own live tests.
+share. The recorder takes the rest of the arguments as ``**kw`` and drops
+them, so 4 runs the real helper over a mock transport instead. Real HTTP for
+each backend is covered by its own live tests.
 """
 
 from __future__ import annotations
@@ -173,4 +177,77 @@ async def test_a_body_that_is_not_json_is_a_typed_error_and_not_cached(
         answer.pop("_upstream_version", None)  # InterPro stamps its release
         assert answer == good
     assert bodies == []
+    mod._CACHE.clear()
+
+
+# How each backend's outage message begins: the name a reader of the error
+# recognises, not the path or URL that follows it.
+LABELS = {
+    "atted": "ATTED-II",
+    "bar": "BAR",
+    "ensembl_plants": "Ensembl Plants",
+    "ensembl_variation": "Ensembl variation",
+    "europe_pmc": "Europe PMC",
+    "gramene": "Gramene",
+    "orthodb": "OrthoDB",
+    "planteome": "Planteome",
+    "quickgo": "QuickGO",
+    "string_db": "STRING",
+    "aragwas": "AraGWAS",
+    "interpro": "InterPro",
+    "onekg": "1001 Genomes",
+    "kegg": "KEGG",
+}
+
+
+def _args(name: str, leaf: str) -> tuple[Any, ...]:
+    """``_get`` args for a request whose path is ``leaf``."""
+    if name in BACKENDS_URL:
+        mod = importlib.import_module(f"plant_genomics_mcp.{name}")
+        return (f"{str(mod.BASE_URL).rstrip('/')}/{leaf}/?q=1",)
+    if name in BACKENDS_PATH:
+        return (f"/{leaf}/1",)
+    return (f"/{leaf}", {"q": "1"})
+
+
+async def _no_sleep(_seconds: float) -> None:
+    return None
+
+
+@pytest.mark.parametrize("name", ALL)
+@pytest.mark.asyncio
+async def test_upstream_is_asked_for_json_with_a_timeout_and_an_outage_names_the_backend(
+    name: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Nulling the Accept header, the timeout or the service name in a
+    backend's ``_get`` each survived the nightly mutation run (#96,
+    2026-10-12): the recorder above never looked at them."""
+    assert set(LABELS) == set(ALL)
+    mod = importlib.import_module(f"plant_genomics_mcp.{name}")
+    mod._CACHE.clear()
+    monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
+    seen: list[httpx.Request] = []
+
+    def upstream(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        if "/down" in request.url.path:
+            return httpx.Response(503, text="down")
+        if name in BACKENDS_PATH:
+            return httpx.Response(200, text="body 1")
+        return httpx.Response(200, json=_body(name, 1))
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(upstream)) as c:
+        # Positive control: the same wiring answers when upstream does.
+        assert await _get(mod, c, *_args(name, "ok"))
+        with pytest.raises(UpstreamUnavailableError) as err:
+            await _get(mod, c, *_args(name, "down"))
+    asked = seen[0]
+    # KEGG's flat-file API answers text; every other backend parses JSON.
+    if name not in BACKENDS_PATH:
+        assert asked.headers["accept"] == "application/json"
+    # httpx reads timeout=None as no limit: a stalled upstream would hold the
+    # tool call open for as long as the connection stays up.
+    assert asked.extensions["timeout"] == httpx.Timeout(mod.DEFAULT_TIMEOUT).as_dict()
+    assert err.value.args[0].startswith(f"{LABELS[name]} "), err.value.args[0]
+    assert len(seen) == 1 + mod.MAX_RETRIES
     mod._CACHE.clear()

@@ -82,6 +82,7 @@ async def test_lookup_full(httpx_mock: HTTPXMock) -> None:
         r = await panther.lookup_locus(client, "AT1G01060", "arabidopsis")
     assert r["locus"] == "AT1G01060"
     assert r["found"] is True
+    assert r["accession"] == "ARABIDOPSIS|TAIR=AT1G01060|UniProtKB=Q6R0H1"
     assert r["family_id"] == "PTHR12802"
     assert r["family_name"] == "MYB-RELATED TRANSCRIPTION FACTOR"
     assert r["subfamily_id"] == "PTHR12802:SF176"
