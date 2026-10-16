@@ -42,8 +42,14 @@ def settle(page, src: Path) -> None:
     cdp.detach()
 
 
-FITS = """(()=>{const e=document.querySelector('pre'), w=document.querySelector('.wrap');
-  return e.scrollWidth<=e.clientWidth && w.scrollHeight<=w.clientHeight})()"""
+# Fits = no line overflows its box, and the card plus caption leave MARGIN px
+# of canvas above and below. Without the margin a card whose height binds
+# before its width grew its font until it touched the canvas edges (5 px).
+MARGIN = 48
+FITS = f"""(()=>{{const e=document.querySelector('pre'),
+  t=document.querySelector('.term').getBoundingClientRect(),
+  c=document.querySelector('.cap').getBoundingClientRect();
+  return e.scrollWidth<=e.clientWidth && t.top>={MARGIN} && innerHeight-c.bottom>={MARGIN}}})()"""
 
 with sync_playwright() as p:
     browser = p.chromium.launch(args=["--disable-gpu", "--use-angle=swiftshader"])
