@@ -35,8 +35,14 @@ README = Path(__file__).resolve().parents[1] / "README.md"
 # precede it (a link line glued to the previous paragraph renders as part
 # of that paragraph). +1 (#124): the tool-matrix row for `entry_members`;
 # a new tool's row is the one addition the matrix exists to carry. +1
-# (#130): the row for `gene_tree_members`, on the same terms.
-BUDGET = 344
+# (#130): the row for `gene_tree_members`, on the same terms. +2 (agent
+# benchmark): its section is 6 lines (heading, one paragraph, one figure line,
+# each with its blank line), 4 of them inside the headroom main had left at
+# 340 lines. That section is the measured answer to "does it help?"; the
+# detail lives in benchmarks/agent_qa/README.md. +1 (#234, merged first):
+# its orthologs paragraph is one line longer than the one it replaced, which
+# took one line of the headroom the +2 above counted on.
+BUDGET = 347
 
 TITLE_LINE = "# 🌱 plant-genomics-mcp"
 
