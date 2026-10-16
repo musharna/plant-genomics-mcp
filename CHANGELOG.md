@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v1.29.2 — 2026-10-16
+
+**56 tools / 23 backends** — no new tool. A patch release: one fix.
 
 - **`gene_tree_members` takes `locus=` (with `organism=`), and Ensembl finds
   the tree that gene is in now.** The tool was described as taking the
