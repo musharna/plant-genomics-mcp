@@ -86,6 +86,10 @@ def _fake_uniprot(acc: str | None, genes: list[str] | None = None, taxon: int | 
         ({"A": [1], "C": [1], "G": [1], "T": [1]}, "N"),
         # Zero-count column → N rather than a division error.
         ({"A": [0], "C": [0], "G": [0], "T": [0]}, "N"),
+        # A one-site matrix: a column totalling 1 is a read base, not an empty column.
+        ({"A": [1], "C": [0], "G": [0], "T": [0]}, "A"),
+        # A zero column mid-matrix is N in its place; the columns after it still read.
+        ({"A": [5, 0, 5], "C": [0, 0, 0], "G": [0, 0, 0], "T": [0, 0, 5]}, "ANW"),
     ],
 )
 def test_consensus_shapes(pfm: dict, expected: str) -> None:

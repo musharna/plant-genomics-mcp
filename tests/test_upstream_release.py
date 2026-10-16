@@ -16,7 +16,12 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import _http, releases, server, string_db
-from plant_genomics_mcp.errors import InvalidArguments, NotFoundError, PlantGenomicsError
+from plant_genomics_mcp.errors import (
+    InvalidArguments,
+    NotFoundError,
+    PlantGenomicsError,
+    UpstreamUnavailableError,
+)
 from plant_genomics_mcp.models import upstream_version_field
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
@@ -298,3 +303,35 @@ async def test_live_string_answers_stay_null_while_its_release_is_one_call_away(
     assert answer["upstream_version"] is None, answer
     assert isinstance(bogus, list), bogus
     assert release["release"] == bogus[0]["string_version"], (release, bogus)
+
+
+@pytest.mark.asyncio
+async def test_a_release_read_has_a_timeout_and_an_outage_names_the_endpoint(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Nulling the timeout or the service in ``releases._get`` survived the
+    nightly mutation run (#96, 2026-10-12): every test here mocks the answer
+    and none read the request or an outage."""
+
+    async def no_sleep(_seconds: float) -> None:
+        return None
+
+    monkeypatch.setattr(_http.asyncio, "sleep", no_sleep)
+    seen: list[httpx.Request] = []
+
+    def upstream(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        if request.url.path == "/down":
+            return httpx.Response(503, text="down")
+        return httpx.Response(200, text="kegg Release 116.0")
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(upstream)) as c:
+        # Positive control: the same call answers when upstream does.
+        ok = await releases._get(c, "https://example.org/ok", "KEGG /info/kegg")
+        assert ok.text == "kegg Release 116.0"
+        with pytest.raises(UpstreamUnavailableError) as err:
+            await releases._get(c, "https://example.org/down", "KEGG /info/kegg")
+    # httpx reads timeout=None as no limit.
+    assert seen[0].extensions["timeout"] == httpx.Timeout(releases.DEFAULT_TIMEOUT).as_dict()
+    assert err.value.args[0].startswith("KEGG /info/kegg "), err.value.args[0]
+    assert len(seen) == 1 + releases.MAX_RETRIES

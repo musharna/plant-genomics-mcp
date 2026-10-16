@@ -12,8 +12,10 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from pydantic import BaseModel
+
 from plant_genomics_mcp import server
-from plant_genomics_mcp.models import LINK_NOTE
+from plant_genomics_mcp.models import LINK_NOTE, link_field
 
 URL_NAME = re.compile(r"(^|_)(url|logo)$")
 
@@ -86,3 +88,16 @@ def test_a_description_that_offers_a_link_says_no_tool_fetches_it() -> None:
 
     silent = sorted(name for name in offering if DESCRIPTION_NOTE not in descriptions[name])
     assert not silent, silent
+
+
+def test_a_link_field_is_optional_unless_declared_required() -> None:
+    """Most links can be absent (no PAE image, no logo for a matrix), so
+    ``link_field`` leaves them out of ``required`` by default: a required link
+    would make the outputSchema check refuse every answer that lacks one."""
+
+    class Answer(BaseModel):
+        web_url: str | None = link_field("entry page")
+        cif_url: str = link_field("model download", optional=False)
+
+    assert Answer.model_json_schema()["required"] == ["cif_url"]
+    assert Answer(cif_url="https://example.org/m.cif").web_url is None
