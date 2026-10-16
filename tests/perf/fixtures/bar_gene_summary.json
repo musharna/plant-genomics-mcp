@@ -1,0 +1,88 @@
+{
+ "tool": "bar_gene_summary",
+ "args": {
+  "locus": "AT1G19850"
+ },
+ "responses": {
+  "GET https://bar.utoronto.ca/api/gaia/aliases/AT1G19850 -": [
+   {
+    "status": 200,
+    "headers": [
+     [
+      "server",
+      "Apache"
+     ],
+     [
+      "x-frame-options",
+      "DENY"
+     ],
+     [
+      "cache-control",
+      "no-store, no-cache, max-age=0, must-revalidate, proxy-revalidate"
+     ],
+     [
+      "connection",
+      "Upgrade"
+     ],
+     [
+      "access-control-allow-origin",
+      "*"
+     ],
+     [
+      "content-security-policy",
+      "frame-ancestors 'self'; upgrade-insecure-requests;"
+     ],
+     [
+      "content-type",
+      "application/json"
+     ],
+     [
+      "strict-transport-security",
+      "max-age=63072000"
+     ]
+    ],
+    "body": "{\"wasSuccessful\": true, \"data\": [{\"species\": \"Arabidopsis_thaliana\", \"locus\": \"At1g19850\", \"geneid\": \"838573\", \"aliases\": [\"AUXIN RESPONSE FACTOR 5\", \"ARF5\", \"F6F9.10\", \"F6F9_10\", \"IAA24\", \"MONOPTEROS\", \"TRANSCRIPTION FACTOR IAA24\", \"indole-3-acetic acid inducible 24\", \"NM_101840\", \"NM_001332415\", \"A0A1P8AQ60\", \"A0A1P8AQ60_ARATH\", \"E1A6L1\", \"E1A6L1_ARATH\", \"E1A6K8\", \"E1A6K8_ARATH\", \"D3K043\", \"D3K043_ARATH\", \"D3K046\", \"D3K046_ARATH\", \"D3K045\", \"D3K045_ARATH\", \"E1A6K4\", \"E1A6K4_ARATH\", \"D3K044\", \"D3K044_ARATH\", \"D3K047\", \"D3K047_ARATH\", \"E1A6K1\", \"E1A6K1_ARATH\", \"E1A6J9\", \"E1A6J9_ARATH\", \"E1A6K2\", \"E1A6K2_ARATH\", \"E1A6K9\", \"E1A6K9_ARATH\", \"P93024\", \"ARFE_ARATH\", \"locus:2035454\", \"gene:2035453\"]}]}\n"
+   }
+  ],
+  "GET https://bar.utoronto.ca/api/thalemine/gene_information/AT1G19850 -": [
+   {
+    "status": 200,
+    "headers": [
+     [
+      "server",
+      "Apache"
+     ],
+     [
+      "x-frame-options",
+      "DENY"
+     ],
+     [
+      "cache-control",
+      "no-store, no-cache, max-age=0, must-revalidate, proxy-revalidate"
+     ],
+     [
+      "connection",
+      "Upgrade"
+     ],
+     [
+      "access-control-allow-origin",
+      "*"
+     ],
+     [
+      "content-security-policy",
+      "frame-ancestors 'self'; upgrade-insecure-requests;"
+     ],
+     [
+      "content-type",
+      "application/json"
+     ],
+     [
+      "strict-transport-security",
+      "max-age=63072000"
+     ]
+    ],
+    "body": "{\"modelName\": \"genomic\", \"columnHeaders\": [\"Gene > DB identifier\", \"Gene > Name\", \"Gene > Secondary Identifier\", \"Gene > Brief Description\", \"Gene > Symbol\", \"Gene > TAIR Aliases\", \"Gene > TAIR Computational Description\", \"Gene > TAIR Curator Summary\", \"Gene > TAIR Short Description\"], \"rootClass\": \"Gene\", \"start\": 0, \"views\": [\"Gene.primaryIdentifier\", \"Gene.name\", \"Gene.secondaryIdentifier\", \"Gene.briefDescription\", \"Gene.symbol\", \"Gene.tairAliases\", \"Gene.tairComputationalDescription\", \"Gene.tairCuratorSummary\", \"Gene.tairShortDescription\"], \"results\": [[\"AT1G19850\", \"MONOPTEROS\", \"locus:2035454\", \"Transcriptional factor B3 family protein / auxin-responsive factor AUX/IAA-like protein\", \"MP\", \"ARF5, IAA24, MP\", \"Transcriptional factor B3 family protein / auxin-responsive factor AUX/IAA-like protein;(source:Araport11)\", \"Encodes a transcription factor (IAA24) mediating embryo axis formation and vascular development. Similar to AUXIN RESPONSIVE FACTOR 1 (ARF1) shown to bind to auxin responsive elements (AREs), and to the maize transcriptional activator VIVIPAROUS 1( VP1). In situ hybridization shows expression in provascular tissue of embryos, the emerging shoot primordia, then is restricted to provascular tissue, and in the root central vascular cylinder.\", \"Transcriptional factor B3 family protein / auxin-responsive factor AUX/IAA-related\"]], \"executionTime\": \"2026.10.16 19:39::32\", \"wasSuccessful\": true, \"error\": null, \"statusCode\": 200}\n"
+   }
+  ]
+ }
+}
