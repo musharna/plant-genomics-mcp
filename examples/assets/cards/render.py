@@ -19,12 +19,27 @@ HERE = Path(__file__).resolve().parent
 CARDS = {"answer.html": "cc-answer.png", "literature.html": "cc-literature.png"}
 
 
+# The fonts each part must be drawn in. The cards name installed fonts, not
+# @font-face ones, so document.fonts never sees them: a missing font is a silent
+# fallback (DejaVu Sans Mono, Liberation Sans), and FITS would fit its metrics.
+# Chromium reports the font it actually drew each node with; that is checked.
+FONTS = {"pre": "JetBrainsMono", ".cap": "Lato"}
+
+
 def settle(page, src: Path) -> None:
-    """Load ``src`` and wait until its fonts are in: FITS measures text, and
-    a fallback font's metrics would fit a different size."""
+    """Load ``src`` and refuse it unless every part is drawn in its own font."""
     page.goto(src.as_uri(), wait_until="load")
-    status = page.evaluate("document.fonts.ready.then(() => document.fonts.status)")
-    assert status == "loaded", (src.name, status)
+    cdp = page.context.new_cdp_session(page)
+    cdp.send("DOM.enable")
+    cdp.send("CSS.enable")
+    root = cdp.send("DOM.getDocument")["root"]["nodeId"]
+    for selector, family in FONTS.items():
+        node = cdp.send("DOM.querySelector", {"nodeId": root, "selector": selector})["nodeId"]
+        used = cdp.send("CSS.getPlatformFontsForNode", {"nodeId": node})["fonts"]
+        drawn = max(used, key=lambda f: f["glyphCount"])["familyName"]
+        if not drawn.startswith(family):
+            sys.exit(f"{src.name}: {selector} drawn in {drawn!r}, not {family} (install it)")
+    cdp.detach()
 
 
 FITS = """(()=>{const e=document.querySelector('pre'), w=document.querySelector('.wrap');
