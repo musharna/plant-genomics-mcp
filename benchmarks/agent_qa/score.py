@@ -55,6 +55,12 @@ def _gene_id(value: str) -> str:
     return v
 
 
+def _accession(value: str) -> str:
+    """A UniProt accession with case and an isoform suffix removed: Q0WV96-2
+    is an isoform of Q0WV96."""
+    return re.sub(r"-\d+$", "", value.strip().upper())
+
+
 def _chromosome(token: str) -> str:
     t = token.strip().upper()
     t = re.sub(r"^(CHROMOSOME|CHR)\s*", "", t)
@@ -91,14 +97,17 @@ def score(question: dict[str, Any], reply: str) -> dict[str, Any]:
     elif category == "symbol_to_locus":
         right = _gene_id(value) in {_gene_id(t) for t in truth["loci"]}
     elif category == "uniprot_accession":
-        right = re.sub(r"-\d+$", "", value.strip().upper()) == truth["accession"].upper()
+        right = _accession(value) == truth["accession"].upper()
     elif category == "ortholog":
         right = _gene_id(value) == _gene_id(truth["gene"])
     else:
         raise ValueError(f"unknown category {category!r}")
+    # The shape check reads the same normal form the right/wrong check did,
+    # so a suffix that check strips cannot hide a well-formed id from it.
+    normal = _accession(value) if category == "uniprot_accession" else _gene_id(value)
     wrong_id = (
         not right
         and category in ("symbol_to_locus", "uniprot_accession", "ortholog")
-        and bool(_ID_SHAPES.match(_gene_id(value)))
+        and bool(_ID_SHAPES.match(normal))
     )
     return {"verdict": "right" if right else "wrong", "value": value, "wrong_id": wrong_id}

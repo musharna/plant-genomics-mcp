@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import random
+import re
 import signal
 import sys
 import time
@@ -116,9 +117,17 @@ def chromosome_names(seq_region: str, karyotype: list[str]) -> list[str]:
     )
     r.raise_for_status()
     title = next(v for k, v in r.json()["result"].items() if k != "uids")["title"]
-    words = title.replace(",", " ").split()
-    number = words[words.index("chromosome") + 1]
-    return [seq_region, number]
+    return [seq_region, chromosome_from_title(title)]
+
+
+def chromosome_from_title(title: str) -> str:
+    """The chromosome number in an NCBI nuccore title, e.g. "Solanum
+    lycopersicum cultivar Heinz 1706 chromosome 1, whole genome shotgun
+    sequence" -> "1". A title without one (a scaffold) is an error, not a guess."""
+    m = re.search(r"\bchromosome ([0-9A-Za-z]+)\b", title)
+    if m is None:
+        raise ValueError(f"no chromosome number in NCBI title {title!r}")
+    return m.group(1)
 
 
 def canonical_protein_length(gene_id: str, slug: str) -> int:

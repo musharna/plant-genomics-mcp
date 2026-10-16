@@ -6,14 +6,18 @@ question, so a scorer that called everything right (or wrong) fails here.
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "benchmarks" / "agent_qa"))
 
-from build_questions import chromosome_names  # noqa: E402
+from build_questions import chromosome_from_title, chromosome_names  # noqa: E402
 from score import extract, score  # noqa: E402
 
+LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE")
 LOCATION = {
     "category": "location",
     "truth": {
@@ -98,7 +102,40 @@ def test_ids_compare_without_case_version_or_transcript_suffix() -> None:
 def test_a_wrong_well_formed_id_is_flagged_and_a_wrong_phrase_is_not() -> None:
     assert score(SYMBOL, "ANSWER: AT1G01010")["wrong_id"] is True
     assert score(ACCESSION, "ANSWER: P12345")["wrong_id"] is True
+    # Review #237: the isoform suffix the right/wrong check strips hid the shape.
+    assert score(ACCESSION, "ANSWER: P12345-2")["wrong_id"] is True
+    assert score(ACCESSION, "ANSWER: Q0WV96-2")["wrong_id"] is False  # right, so not a wrong id
     assert score(ORTHOLOG, "ANSWER: Solyc02g000010.1")["wrong_id"] is True
     assert score(SYMBOL, "ANSWER: probably an ARF gene")["wrong_id"] is False
     assert score(SYMBOL, "ANSWER: AT1G19850")["wrong_id"] is False  # right, so not a wrong id
     assert score(LENGTH, "ANSWER: 430")["wrong_id"] is False  # not an id category
+
+
+def test_a_genbank_chromosome_gets_its_number_from_ncbis_title() -> None:
+    """Titles copied verbatim from NCBI esummary (2026-10-16) for the three
+    accession-named chromosomes in questions.json. Review #237: this branch
+    had no test, and LOCATION above hardcodes what it was believed to return."""
+    assert (
+        chromosome_from_title(
+            "Solanum lycopersicum cultivar Heinz 1706 chromosome 1, whole genome shotgun sequence"
+        )
+        == "1"
+    )
+    assert (
+        chromosome_from_title(
+            "Medicago truncatula cultivar Jemalong A17 chromosome 8, whole genome shotgun sequence"
+        )
+        == "8"
+    )
+    assert chromosome_from_title("Vitis vinifera cultivar Pinot Noir 40024 chromosome 19") == "19"
+    with pytest.raises(ValueError, match="no chromosome number in NCBI title"):
+        chromosome_from_title("Solanum lycopersicum cultivar Heinz 1706 unplaced genomic scaffold")
+
+
+@pytest.mark.skipif(LIVE != "1", reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
+def test_a_genbank_chromosome_resolves_through_the_real_ncbi_esummary() -> None:
+    """The real call behind LOCATION's ["CM001064.4", "1"] (tomato chromosome
+    1), and a karyotype-named chromosome beside it that makes no call."""
+    assert chromosome_names("CM001064.4", []) == ["CM001064.4", "1"]
+    assert chromosome_names("CP126666.1", []) == ["CP126666.1", "19"]
+    assert chromosome_names("5H", [f"{n}H" for n in range(1, 8)]) == ["5H", "5"]
