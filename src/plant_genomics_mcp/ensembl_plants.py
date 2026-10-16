@@ -20,6 +20,7 @@ import httpx
 
 from plant_genomics_mcp import _http, cache, organisms, validators
 from plant_genomics_mcp.errors import (
+    InvalidArguments,
     NotFoundError,
     PlantGenomicsError,
     RateLimitError,
@@ -360,8 +361,25 @@ async def region_query(
 
 GENE_TREE_ID_RE = re.compile(r"^EPlGT\d{14}$")
 # An unknown tree is `400 {"error":"No GeneTree found for ID ..."}` (live,
-# 2026-09-25): no "not found" in it, so the module pattern misses it.
-_GENE_TREE_NOT_FOUND_RE = re.compile(r"No GeneTree found|\bnot found\b", re.IGNORECASE)
+# 2026-09-25): no "not found" in it, so the module pattern misses it. By
+# member (live, 2026-10-16) an unknown id is "Unable to find given object: X",
+# a gene outside every tree "No GeneTree found for Gene ID X", and a
+# non-coding gene (AT1G01046, miRNA) "Could not fetch a Gene object for ID X".
+_GENE_TREE_NOT_FOUND_RE = re.compile(
+    r"No GeneTree found|Unable to find given object|Could not fetch a Gene object"
+    r"|\bnot found\b",
+    re.IGNORECASE,
+)
+# Gramene v69 is built on an older Compara than rest.ensembl.org serves
+# (Ensembl 116 / EG 63, 2026-10-16). A tree rebuilt since has a new stable id:
+# AT1G01010's Gramene tree EPlGT01130000406172 is 400 here, its current tree
+# EPlGT01160000455820; unchanged trees (EPlGT00940000167082) keep theirs.
+_STALE_TREE_HINT = (
+    "gramene_homologs tree ids come from Gramene, built on an older Ensembl "
+    "Compara release than rest.ensembl.org serves; a tree rebuilt since has a "
+    "new id. Pass locus= (any member gene) instead and Ensembl looks up the "
+    "tree that gene is in now."
+)
 GENE_TREE_MEMBERS_DEFAULT_LIMIT = 100
 GENE_TREE_MEMBERS_MAX_LIMIT = 1000
 
@@ -405,46 +423,80 @@ def _gene_tree_member(leaf: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _gene_tree_shape(raw: object) -> list[dict[str, Any]]:
-    """A /genetree body read to its members, before the store: a leaf read
-    afterwards failed from the cache for the whole TTL without asking again."""
+def _gene_tree_shape(raw: object) -> dict[str, Any]:
+    """A /genetree body read to its id and members, before the store: a leaf
+    read afterwards failed from the cache for the whole TTL without asking
+    again. The id is the answer to a by-locus call, so it must be one."""
     body = _http.expect_object(raw)
     if not isinstance(body.get("tree"), dict):
         raise _http.UnreadableBody(f"no tree object in {str(body)[:120]}")
-    return [_gene_tree_member(leaf) for leaf in _gene_tree_leaves(body["tree"])]
+    tree_id = body.get("id")
+    if not isinstance(tree_id, str) or not GENE_TREE_ID_RE.match(tree_id):
+        raise _http.UnreadableBody(f"tree id {tree_id!r} is not EPlGT + 14 digits")
+    return {
+        "id": tree_id,
+        "members": [_gene_tree_member(leaf) for leaf in _gene_tree_leaves(body["tree"])],
+    }
 
 
 async def gene_tree_members(
     client: httpx.AsyncClient,
-    gene_tree_id: str,
+    gene_tree_id: str | None = None,
     target_organism: str | int | None = None,
     limit: int = GENE_TREE_MEMBERS_DEFAULT_LIMIT,
+    *,
+    locus: str | None = None,
+    organism: str | int = organisms.DEFAULT_ORGANISM,
 ) -> dict[str, Any]:
     """The member genes of an Ensembl Compara (plants) gene tree (issue #130).
 
-    ``gene_tree_id`` is the ``EPlGT...`` id ``gramene_homologs`` returns.
+    Name the tree by exactly one of ``gene_tree_id`` (``EPlGT...``) or
+    ``locus`` (with its ``organism``): by locus, Ensembl looks up the tree that
+    gene is in now. A ``gramene_homologs`` tree id can be stale here — see
+    ``_STALE_TREE_HINT`` — so the not-found error for an id says so.
     ``target_organism=None`` lists every species in the tree; otherwise only the
     leaves Compara tags with that organism's taxid. Members are sorted by
     species then locus; ``total`` counts them before ``limit`` cuts.
     """
-    if not isinstance(gene_tree_id, str) or not GENE_TREE_ID_RE.match(gene_tree_id):
+    if (gene_tree_id is None) == (locus is None):
+        raise InvalidArguments("gene_tree_members: pass exactly one of gene_tree_id or locus")
+    if gene_tree_id is not None and (
+        not isinstance(gene_tree_id, str) or not GENE_TREE_ID_RE.match(gene_tree_id)
+    ):
         raise NotFoundError(f"invalid gene_tree_id {gene_tree_id!r}: expected EPlGT + 14 digits")
     if not 1 <= limit <= GENE_TREE_MEMBERS_MAX_LIMIT:
         raise ValueError(f"limit must be in 1..{GENE_TREE_MEMBERS_MAX_LIMIT}, got {limit}")
     wanted = organisms.resolve(target_organism) if target_organism is not None else None
-    stored = await _get(
-        client,
-        f"/genetree/id/{gene_tree_id}",
-        params={"compara": "plants", "aligned": 0, "sequence": "none"},
-        not_found_400_pattern=_GENE_TREE_NOT_FOUND_RE,
-        shape=_gene_tree_shape,
-    )
+    params = {"compara": "plants", "aligned": 0, "sequence": "none"}
+    if locus is not None:
+        locus = validators.assert_valid_locus(locus, backend="Ensembl Plants")
+        slug = organisms.ensembl_slug_for(organism)
+        stored = await _get(
+            client,
+            f"/genetree/member/id/{slug}/{wire_id(locus, organism)}",
+            params=params,
+            not_found_400_pattern=_GENE_TREE_NOT_FOUND_RE,
+            shape=_gene_tree_shape,
+        )
+    else:
+        try:
+            stored = await _get(
+                client,
+                f"/genetree/id/{gene_tree_id}",
+                params=params,
+                not_found_400_pattern=_GENE_TREE_NOT_FOUND_RE,
+                shape=_gene_tree_shape,
+            )
+        except NotFoundError as exc:
+            raise NotFoundError(f"{exc.args[0]} — {_STALE_TREE_HINT}") from exc
     members = sorted(
-        (m for m in stored if wanted is None or m["organism"] == wanted.canonical),
+        (m for m in stored["members"] if wanted is None or m["organism"] == wanted.canonical),
         key=lambda m: (m["species"], m["locus"]),
     )
     return {
-        "gene_tree_id": gene_tree_id,
+        "gene_tree_id": stored["id"],
+        "locus": locus,
+        "organism": organisms.resolve(organism).canonical if locus is not None else None,
         "target_organism": wanted.canonical if wanted else None,
         "total": len(members),
         "returned": min(len(members), limit),

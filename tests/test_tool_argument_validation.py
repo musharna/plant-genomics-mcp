@@ -161,7 +161,50 @@ def test_every_advertised_tool_has_an_enforceable_schema() -> None:
         schema = tool.input_schema
         Draft202012Validator.check_schema(schema)
         assert schema.get("additionalProperties") is False, tool.name
-        assert schema.get("required"), tool.name
+        # The Anthropic Messages API refuses a top-level combinator with a 400
+        # that fails every request carrying the tool list, not just this tool.
+        assert not {"oneOf", "anyOf", "allOf"} & set(schema), tool.name
+        if tool.name in _EITHER_OF:
+            assert schema["required"] == [], tool.name
+            assert _EITHER_OF[tool.name] <= set(schema["properties"]), tool.name
+        else:
+            assert schema.get("required"), tool.name
+
+
+# Tools named by either of two arguments. JSON Schema can only say "exactly
+# one" with a top-level oneOf (refused above), so the backend says it, before
+# any request: see the test below.
+_EITHER_OF: dict[str, set[str]] = {"gene_tree_members": {"gene_tree_id", "locus"}}
+
+
+@pytest.mark.parametrize(
+    "arguments", [{}, {"gene_tree_id": "EPlGT00940000167082", "locus": "AT1G01010"}]
+)
+@pytest.mark.asyncio
+async def test_an_either_of_tool_refuses_neither_and_both_before_any_request(
+    arguments: dict[str, Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """``required: []`` lets these past the schema check, so the refusal is
+    the backend's: typed, naming both arguments, and before the wire.
+    Positive control, same test: one of them alone is served."""
+    sent: list[str] = []
+
+    async def fake_get(client: Any, path: str, *a: Any, **kw: Any) -> dict[str, Any]:
+        sent.append(path)
+        return {"id": "EPlGT01160000455820", "members": []}
+
+    monkeypatch.setattr(ensembl_plants, "_get", fake_get)
+    err = await _call("gene_tree_members", arguments)
+
+    assert err.is_error is True
+    text = _text(err)
+    assert text.startswith("[InvalidArguments] "), text
+    assert "gene_tree_id" in text and "locus" in text, text
+    assert sent == []
+
+    res = await _call("gene_tree_members", {"locus": "AT1G01010"})
+    assert not res.is_error, _text(res)
+    assert sent == ["/genetree/member/id/arabidopsis_thaliana/AT1G01010"]
 
 
 @pytest.mark.parametrize("tool", server.TOOLS, ids=lambda t: str(t.name))

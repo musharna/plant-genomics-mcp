@@ -286,6 +286,8 @@ async def test_tool_schemas_use_organism_param(server_params: StdioServerParamet
         "ensembl_plants_assembly",
         "ensembl_plants_lookup_locus",
         "ensembl_plants_paralogs",
+        # organism= is the locus='s; gene_tree_id= ignores it (#235).
+        "gene_tree_members",
         "get_gene_xrefs",
         "phytozome_lookup_locus",
         "resolve_locus_to_uniprot",
