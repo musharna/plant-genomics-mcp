@@ -1,5 +1,31 @@
 # Changelog
 
+## v1.29.1 — 2026-10-15
+
+**56 tools / 23 backends** — no new tool. A patch release: one fix and one
+security update.
+
+- **The locked MCP Python SDK is 2.2.0 (was 2.0.0).** 2.0.0–2.1.x let
+  sessions accumulate without bound in the StreamableHTTP transport
+  (GHSA-84m7-p3x7-pcfv, medium). The HTTP server here runs stateless by
+  default (`PLANT_GENOMICS_MCP_HTTP_STATELESS`), but the Docker images are
+  built from the lock, so they now carry the fixed SDK. A pip install already
+  resolved the newest 2.x.
+
+- **A deeply nested tool argument is refused as `InvalidArguments`, not a
+  bare `RecursionError`.** jsonschema builds each error message with
+  `repr(instance)`, which recurses once per nesting level, so an argument
+  nested deep enough escaped validation as `RecursionError`, at a depth that
+  moved with the caller's stack (#229, found by the nightly fuzz run).
+  Arguments are now bounded at 32 container levels by an iterative walk
+  before validation; the refusal names the field and the bound instead of
+  echoing the value. The deepest argument any tool schema describes is 3
+  levels (`batch_locus_call.args`).
+
+Also: the weekly benchmark's KEGG baseline expects v1.29.0's ok answer for a
+known gene with no pathways, and the nightly mutation run checks mutants again
+(a source-text test had stopped it at 0 checked since 2026-09-29).
+
 ## v1.29.0 — 2026-09-30
 
 **56 tools / 23 backends** — no new tool. A minor release rather than a patch, because several failures now arrive as a different class (**Behaviour change**): a 404 is an outage unless the upstream's own miss body says the record does not exist; a 403 that is not a rate refusal, and a BLAST search still queued at `max_wait`, are `UpstreamUnavailableError`; a deleted, merged or demerged UniProt accession, a never-issued InterPro, Pfam or PANTHER entry, and a gene AraGWAS does not have are `NotFoundError` saying why; and `locus_plant_ontology` refuses the eight organisms Planteome names by ids this server does not use (`OrganismNotSupported`) instead of answering "0 annotations". The rest are fixes and tests: a body of the wrong shape is a typed error and is never cached, and every live test runs nightly.
