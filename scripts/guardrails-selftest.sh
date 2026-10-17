@@ -65,6 +65,16 @@ check no-sleep-then-interact t.mjs $'await page.waitForFunction(() => ready());\
 check no-sleep-then-interact t2.mjs $'await sleep(500); // qa-wait-ok: the 420 ms mouse-away close must fire first\nawait page.click("#a");' pass
 check no-sleep-then-interact t3.mjs $'await sleep(500);\nconst box = await page.evaluate(() => measure());' pass
 check no-sleep-then-interact t4.mjs $'// await sleep(500);\nawait page.click("#a");' pass
+check no-fixed-wait-py w.py $'page.wait_for_timeout(800)\nbox = page.evaluate("measure()")' fail
+check no-fixed-wait-py w2.py $'    await page.wait_for_timeout(300)\n    await page.click("#a")' fail
+check no-fixed-wait-py w3.py $'time.sleep(0.5)\npage.keyboard.press("Escape")' fail
+check no-fixed-wait-py w4.py $'    await asyncio.sleep(1)\n    await page.locator("#a").fill("x")' fail
+check no-fixed-wait-py w5.py $'page.wait_for_timeout(500)  # qa-wait-ok:' fail
+check no-fixed-wait-py x.py $'page.wait_for_function("ready()")\npage.click("#a")' pass
+check no-fixed-wait-py x2.py $'page.wait_for_timeout(500)  # qa-wait-ok: the 420 ms close animation is what is tested' pass
+check no-fixed-wait-py x3.py $'time.sleep(2 ** attempt)\nresp = client.get(url)' pass
+check no-fixed-wait-py x4.py $'# page.wait_for_timeout(800)\npage.click("#a")' pass
+check no-fixed-wait-py x5.py $'time.sleep(0.5)  # qa-wait-ok: the debounce window is the behaviour tested\npage.click("#a")' pass
 wf=.github/workflows
 check no-pathscoped-write-rule $wf/w1.yml '            --allowed-tools "Read,Write(fuzz_scratch/**),Grep"' fail
 check no-pathscoped-write-rule $wf/w2.yml '            --allowed-tools "Bash(gh issue view:*),Edit(/tmp/*),Glob"' fail
@@ -82,4 +92,20 @@ devfix=$(printf 'p = "%sers/a2b32/Zotero/x.pdf"' "$devroot")
 check no-dev-paths j.py "$devfix" fail
 homefix=$(printf 'p = "/home%s"' "/someone/data.csv") # placeholder home must PASS
 check no-dev-paths k.py "$homefix" pass
+mkdir -p "$tmp/r/.github/workflows"
+check no-unpinned-action .github/workflows/u1.yml '      - uses: actions/checkout@v7' fail
+check no-unpinned-action .github/workflows/u2.yml '        uses: actions/setup-node@v7.1.0 # v7.1.0' fail
+check no-unpinned-action .github/workflows/u3.yml '      - uses: actions/checkout@3d3c42e # short SHA' fail
+check no-unpinned-action .github/workflows/u4.yaml '    uses: "owner/repo/.github/workflows/build.yml@main"' fail
+check no-unpinned-action .github/workflows/v1.yml '      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1' pass
+check no-unpinned-action .github/workflows/v2.yml '      - uses: ./.github/actions/setup' pass
+check no-unpinned-action .github/workflows/v3.yml '      # was uses: actions/checkout@v7' pass
+check no-unpinned-action u5.md '      - uses: actions/checkout@v7' pass # outside workflows: prose may quote a tag
+check no-unpinned-action .github/workflows/u6.yml '      - uses: docker://alpine:3.20' fail
+check no-unpinned-action .github/workflows/u7.yml '      - uses: docker://ghcr.io/o/img@sha256:abc123' fail
+check no-unpinned-action .github/workflows/v4.yml '      - uses: docker://alpine@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' pass
+mkdir -p "$tmp/r/.github/actions/setup"
+check no-unpinned-action .github/actions/setup/action.yml '      - uses: actions/setup-node@v7' fail # composite action
+check no-unpinned-action action.yaml '    - uses: actions/checkout@v7' fail # root composite action
+check no-unpinned-action .github/actions/setup/action.yml '      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0' pass
 exit $fail
