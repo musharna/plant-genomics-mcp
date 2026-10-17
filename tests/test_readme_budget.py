@@ -4,7 +4,7 @@ The failure mode this guards is not a bug in the server: it is that every
 addition to `examples/` arrives with a paragraph of README to explain it,
 and a reader who opens the repo for the first time pays for all of them.
 `BUDGET` is the line count of `README.md` after it was cut to the essentials
-(347 → 255 lines). Growing the README past it is a deliberate act that has
+(347 → 252 lines). Growing the README past it is a deliberate act that has
 to edit this number.
 
 Two controls, because a budget test is easy to write so that it cannot
@@ -31,7 +31,8 @@ README = Path(__file__).resolve().parents[1] / "README.md"
 # `wc -l README.md` after the concision pass, which moved the walkthrough
 # table and Quickstart JSON into examples/ and stated each count once. Earlier
 # raises (ARF link, tool-matrix rows, the benchmark section) are in git log.
-BUDGET = 255
+# 252 once the screenshots went to one line each, with the chart on top.
+BUDGET = 252
 
 TITLE_LINE = "# 🌱 plant-genomics-mcp"
 
