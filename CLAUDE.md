@@ -44,9 +44,11 @@ Each rule is an incident, not a preference:
 - No nested lazy quantifiers; no `nohup ... &`; no `text-transform: uppercase`
   over unit strings; no absolute developer-machine paths.
 - No fixed sleep before a click, focus, hover or key press in a browser test: wait for
-  the state the sleep stood in for.
+  the state the sleep stood in for. In Python, Playwright's `wait_for_timeout` is
+  never the wait, before an interaction or a measurement.
 - A Claude `--allowed-tools` file rule with a path is `Edit(path)`, never
   `Write(path)` (matches nothing); an absolute path takes two slashes (`//tmp/**`).
+- A workflow `uses:` pins a full commit SHA with the version as a comment, never a tag.
 
 Never narrow, skip or `--no-verify` a hook to get a commit through. If a hook
 is wrong, fix the hook in `repo-template` and resync.

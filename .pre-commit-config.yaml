@@ -92,6 +92,22 @@ repos:
         # scripts/lint-qa-waits.mjs is the statement-level version.
         entry: '^[ \t]*await[ \t]+(?:(?:sleep|delay|wait|pause)\([^()\n]*\)|new[ \t]+Promise\([^\n]*setTimeout[^\n]*|[\w.$]+\.waitForTimeout\([^()\n]*\))(?![^\n]*qa-wait-ok:[ \t]*\S)[^\n]*\n[^\n]*\.(?:click|focus|hover|tap|press|type)\('
 
+      - id: no-fixed-wait-py
+        name: "Python: Playwright wait_for_timeout, or a sleep then a click/key press: wait for the state instead"
+        language: pygrep
+        files: '\.py$'
+        args: [--multiline]
+        # plant-genomics-mcp #234 (2026-10-16): a README card renderer ported in
+        # from another project slept `page.wait_for_timeout(800)` and then
+        # measured layout; review caught it, not this file, because the JS hook
+        # above reads no .py and only flags a sleep before an interaction.
+        # Playwright documents wait_for_timeout as for debugging only, so in
+        # Python it is flagged wherever it is called; time.sleep / asyncio.sleep
+        # are flagged only when the NEXT line interacts (a backoff before an
+        # HTTP retry is not a browser wait). Same escape as the JS hook, on the
+        # sleep's line: `# qa-wait-ok: <why>`.
+        entry: '^[ \t]*(?:await[ \t]+)?(?:[\w.]+\.wait_for_timeout\([^()\n]*\)(?![^\n]*qa-wait-ok:[ \t]*\S)|(?:(?:time|asyncio)\.)?sleep\([^()\n]*\)(?![^\n]*qa-wait-ok:[ \t]*\S)[^\n]*\n[^\n]*\.(?:click|dblclick|focus|hover|tap|press|press_sequentially|type|fill)\()'
+
       - id: no-pathscoped-write-rule
         name: "Claude --allowed-tools: Write(path) matches nothing (use Edit(path)); Edit(/x) is project-relative (real root is //x)"
         language: pygrep
@@ -118,6 +134,16 @@ repos:
         # Bracketed last char so this file never contains the literal it hunts
         # (a gate whose scope includes its own definition flags itself).
         entry: '/home[/]mjarnol[d]|/mnt/c[/]Users/a2b3[2]|C:\\Users\\a2b3[2]'
+
+      # A tag (@v7) can be moved to different code after review; a commit SHA cannot. wildeye #79 added
+      # setup-node@v7 in a new workflow and ci.yml carried two more (2026-10-11): review caught one of three.
+      - id: no-unpinned-action
+        # Workflows and composite actions (action.yml). Local ./ actions are exempt; a docker:// image needs its
+        # @sha256: digest (a tag like :3.20 moves the same way). PR review found both gaps in the first version.
+        name: "GitHub Actions pinned (uses: owner/repo@<40-hex SHA> # vX.Y.Z, docker://image@sha256:<64 hex>)"
+        language: pygrep
+        files: '^((\.github/workflows|templates/workflows)/.*\.ya?ml|(.*/)?action\.ya?ml)$'
+        entry: '^\s*(-\s+)?uses:\s*["'']?(?:(?!\./|docker://)[^\s"''@]+@(?![0-9a-f]{40}(["''\s]|$))|docker://(?![^\s"'']*@sha256:[0-9a-f]{64}(["''\s]|$)))'
 
       # The same rule set CI runs (guardrails.yml security job: bandit -ll =
       # medium and up), on the files being committed. Until 2026-09-18 bandit
