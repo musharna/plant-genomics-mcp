@@ -3,6 +3,7 @@
     python -m tests.perf.ratchet                    # check (CI): exit 1 on any difference
     python -m tests.perf.ratchet --update           # write a lower or equal baseline
     python -m tests.perf.ratchet --update --allow-increase   # accept a rise, as a reviewed diff
+    python -m tests.perf.ratchet --update --allow-output-change   # accept a new answer
     python -m tests.perf.ratchet --record           # re-record fixtures from the live upstreams
 
 The gate counts work, never milliseconds (see harness.py for what is
@@ -10,7 +11,9 @@ counted). Every number is identical on every run and every Python version
 in the CI matrix, so the ceiling is the baseline itself, with no headroom:
 one extra call on a hot path fails. A drop fails too, until ``--update``
 writes it, so a gain lands in the PR that earned it and cannot be given
-back unnoticed. A rise needs ``--allow-increase``.
+back unnoticed. A rise needs ``--allow-increase``. A workload whose answer
+changed (output hash) is no longer measuring what its baseline measured, so
+``--update`` refuses it too unless ``--allow-output-change`` says it was meant.
 
 Each workload runs in a fresh interpreter (``python -m tests.perf.harness``).
 """
@@ -83,6 +86,9 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     ap.add_argument("--update", action="store_true", help="write the measured counts")
     ap.add_argument("--allow-increase", action="store_true", help="let --update raise a count")
+    ap.add_argument(
+        "--allow-output-change", action="store_true", help="let --update take a changed answer"
+    )
     ap.add_argument("--record", action="store_true", help="re-record fixtures (live network)")
     ap.add_argument("--only", default="", help="comma-separated workload names")
     a = ap.parse_args(argv)
@@ -95,13 +101,17 @@ def main(argv: list[str] | None = None) -> int:
     if not a.only:
         for stale in sorted(set(rows) - set(WORKLOADS)):
             print(f"{stale}: in the baseline but no longer a workload")
-    failed = rose_any = False
+    failed = rose_any = output_changed = False
     measured: dict[str, Any] = {}
     for name in names:
         got = measure(name, record=a.record)
         measured[name] = got
         lines, rose = compare(rows.get(name), got)
         rose_any |= rose
+        base = rows.get(name)
+        output_changed |= base is not None and (
+            got["output_sha256"] != base["output_sha256"] or got["tool"] != base["tool"]
+        )
         http = sum(got["http"].values())
         status = "ok" if not lines else ("ROSE" if rose else "CHANGED")
         print(f"{name:22} {status:7} calls={got['calls_total']:5} http={http:3} {got['tool']}")
@@ -111,6 +121,9 @@ def main(argv: list[str] | None = None) -> int:
     if a.update:
         if rose_any and not a.allow_increase:
             print("\nrefused: a count rose; rerun with --update --allow-increase to accept it")
+            return 1
+        if output_changed and not a.allow_output_change:
+            print("\nrefused: an answer changed; rerun with --allow-output-change if it was meant")
             return 1
         new_rows = {**rows, **measured} if a.only else measured
         BASELINE.write_text(

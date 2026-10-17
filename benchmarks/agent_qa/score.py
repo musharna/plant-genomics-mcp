@@ -75,6 +75,35 @@ def _location(value: str) -> tuple[str, int] | None:
     return _chromosome(m.group(1)), int(m.group(2).replace(",", ""))
 
 
+def _location_right(value: str, truth: dict[str, Any]) -> bool:
+    got = _location(value)
+    names = {_chromosome(c) for c in truth["chromosome"]}
+    return (
+        got is not None
+        and got[0] in names
+        and min(abs(got[1] - truth["start"]), abs(got[1] - truth["end"])) <= 1
+    )
+
+
+def score_ncbi(question: dict[str, Any], reply: str) -> str | None:
+    """A location reply's verdict against NCBI's gene model instead of
+    Ensembl's (``truth_ncbi``, see ncbi_locations.py), by the same rule.
+
+    The questions name the assembly but not the annotation, so NCBI's
+    coordinates for the same gene are a defensible reading. None where the
+    question is not a location or NCBI has no record of the gene.
+    """
+    truth = question.get("truth_ncbi")
+    if question["category"] != "location" or truth is None:
+        return None
+    value = extract(reply)
+    if value is None:
+        return "no_answer"
+    if value.upper() in _UNKNOWN:
+        return "declined"
+    return "right" if _location_right(value, truth) else "wrong"
+
+
 def score(question: dict[str, Any], reply: str) -> dict[str, Any]:
     value = extract(reply)
     if value is None:
@@ -84,13 +113,7 @@ def score(question: dict[str, Any], reply: str) -> dict[str, Any]:
     truth = question["truth"]
     category = question["category"]
     if category == "location":
-        got = _location(value)
-        names = {_chromosome(c) for c in truth["chromosome"]}
-        right = (
-            got is not None
-            and got[0] in names
-            and min(abs(got[1] - truth["start"]), abs(got[1] - truth["end"])) <= 1
-        )
+        right = _location_right(value, truth)
     elif category == "protein_length":
         m = re.match(r"^\s*([\d,]+)", value)
         right = m is not None and int(m.group(1).replace(",", "")) == truth["length"]

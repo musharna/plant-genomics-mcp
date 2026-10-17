@@ -6,17 +6,21 @@ question, so a scorer that called everything right (or wrong) fails here.
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "benchmarks" / "agent_qa"))
+AGENT_QA = Path(__file__).resolve().parent.parent / "benchmarks" / "agent_qa"
+sys.path.insert(0, str(AGENT_QA))
 
+from baselines import baseline_rows, oracle, shifted  # noqa: E402
 from build_questions import chromosome_from_title, chromosome_names  # noqa: E402
-from run import is_valid, parse_transcript  # noqa: E402
-from score import extract, score  # noqa: E402
+from ncbi_locations import forms, pick  # noqa: E402
+from run import leak_hits, parse_transcript, validity  # noqa: E402
+from score import extract, score, score_ncbi  # noqa: E402
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE")
 LOCATION = {
@@ -142,39 +146,109 @@ def test_a_genbank_chromosome_resolves_through_the_real_ncbi_esummary() -> None:
     assert chromosome_names("5H", [f"{n}H" for n in range(1, 8)]) == ["5H", "5"]
 
 
-def _transcript(status: str, calls: list[str]) -> str:
+def _transcript(
+    tools: list[str], calls: list[str], status: str = "connected", output: str = "ok"
+) -> str:
     """Stream-json lines shaped as claude -p 2.1.302 writes them (init event,
-    assistant tool_use blocks, result), trimmed to the fields read."""
-    import json
-
+    assistant tool_use blocks, user tool_result blocks, result), trimmed to the
+    fields read."""
     events: list[dict[str, object]] = [
         {
             "type": "system",
             "subtype": "init",
             "model": "claude-opus-5-5",
-            "tools": ["mcp__plant-genomics__get_sequence"],
-            "mcp_servers": [{"name": "plant-genomics", "status": status}],
+            "tools": tools,
+            "mcp_servers": [{"name": "plant-genomics", "status": status}] if tools[:1] and
+            tools[0].startswith("mcp__") else [],
         }
-    ]
-    events += [
-        {"type": "assistant", "message": {"content": [{"type": "tool_use", "name": c}]}}
-        for c in calls
-    ]
+    ]  # fmt: skip
+    for c in calls:
+        events.append(
+            {"type": "assistant", "message": {"content": [
+                {"type": "tool_use", "name": c, "input": {"url": "https://rest.ensembl.org/x"}}
+            ]}}
+        )  # fmt: skip
+        events.append(
+            {"type": "user", "message": {"content": [{"type": "tool_result", "content": output}]}}
+        )
     events.append({"type": "result", "result": "ANSWER: AT3G23430", "total_cost_usd": 0.02})
     return "\n".join(json.dumps(e) for e in events)
 
 
-def test_a_server_run_is_valid_only_if_the_connected_server_was_called() -> None:
-    called = parse_transcript(
-        _transcript("connected", ["mcp__plant-genomics__resolve_locus_to_uniprot"])
+MCP = ["mcp__plant-genomics__get_sequence", "mcp__plant-genomics__resolve_locus_to_uniprot"]
+WEB = ["WebFetch", "WebSearch"]
+
+
+def test_one_validity_rule_for_every_arm() -> None:
+    def v(arm: str, transcript: str, exit_code: object = 0) -> tuple[bool, str | None]:
+        return validity(arm, exit_code, parse_transcript(transcript))
+
+    called = parse_transcript(_transcript(MCP, [MCP[1]]))
+    assert called["tool_calls"] == [MCP[1]] and called["reply"] == "ANSWER: AT3G23430"
+    assert v("mcp", _transcript(MCP, [MCP[1]])) == (True, None)
+    assert v("web", _transcript(WEB, ["WebFetch"])) == (True, None)
+    assert v("bare", _transcript([], [])) == (True, None)
+    # q30 runs 1 and 3 (mcp), and 14 web runs: given the tools, answered from memory.
+    assert v("mcp", _transcript(MCP, [])) == (False, "no tool call")
+    assert v("web", _transcript(WEB, [])) == (False, "no tool call")
+    assert v("mcp", _transcript(MCP, [MCP[0]], status="failed")) == (False, "server not connected")
+    assert v("web", _transcript(["WebFetch", "Bash"], ["WebFetch"])) == (
+        False,
+        "tools not as intended",
     )
-    assert called["tool_calls"] == ["mcp__plant-genomics__resolve_locus_to_uniprot"]
-    assert is_valid("mcp", called["mcp_servers"], called["tool_calls"])
-    # q30 runs 1 and 3: connected, answered from memory, no call.
-    memory = parse_transcript(_transcript("connected", []))
-    assert memory["reply"] == "ANSWER: AT3G23430"
-    assert not is_valid("mcp", memory["mcp_servers"], memory["tool_calls"])
-    failed = parse_transcript(_transcript("failed", ["mcp__plant-genomics__get_sequence"]))
-    assert not is_valid("mcp", failed["mcp_servers"], failed["tool_calls"])
-    # A setup with no server to call has nothing to fail.
-    assert is_valid("bare", [], []) and is_valid("web", [], ["WebFetch"])
+    assert v("bare", _transcript(["WebFetch"], [])) == (False, "tools not as intended")
+    assert v("web", _transcript(WEB, ["WebFetch"]), exit_code="timeout") == (False, "exit timeout")
+
+
+def test_a_transcript_that_touched_the_key_is_invalid() -> None:
+    raw = "https://raw.githubusercontent.com/musharna/plant-genomics-mcp/main/benchmarks/agent_qa/questions.json"
+    hit = parse_transcript(_transcript(WEB, ["WebFetch"], output=f"fetched {raw}"))
+    assert leak_hits(hit["_tool_io"]) == [
+        "githubusercontent.com/musharna/plant-genomics-mcp/main/benchmarks",
+        "questions.json",
+    ]
+    assert validity("web", 0, hit)[0] is False
+    # Positive control: Ensembl output, and Claude Code's own save path for a
+    # large WebFetch body under the run's empty working directory, are clean.
+    saved = "[Binary content also saved to /x/-tmp-agentqa-web-044il2z6/tool-results/a.bin]"
+    clean = parse_transcript(_transcript(WEB, ["WebFetch"], output=saved))
+    assert leak_hits(clean["_tool_io"]) == [] and validity("web", 0, clean) == (True, None)
+
+
+def test_the_key_scores_its_own_answers_right_and_shifted_answers_wrong() -> None:
+    """Positive control for the scorer: the committed key, answered by itself."""
+    questions = json.loads((AGENT_QA / "questions.json").read_text())["questions"]
+    assert oracle(questions) == ["right"] * len(questions)
+    assert shifted(questions) == ["wrong"] * len(questions)
+
+
+def test_committed_baselines_match_the_scorer_and_key() -> None:
+    questions = json.loads((AGENT_QA / "questions.json").read_text())["questions"]
+    committed = [json.loads(ln) for ln in (AGENT_QA / "baselines.jsonl").read_text().splitlines()]
+    assert committed == baseline_rows(questions)
+    # A guess earns at most the 1-in-n hit of a constant id: one per id kind.
+    assert sum(r["verdict"] == "right" for r in committed) == 3
+
+
+def test_ncbi_verdict_uses_ncbis_model_and_is_none_without_one() -> None:
+    q = {
+        **LOCATION,
+        "truth_ncbi": {"chromosome": ["1", "NC_015438.3"], "start": 1_000_100, "end": 1_004_000},
+    }
+    assert score_ncbi(q, "ANSWER: 1:1000100") == "right"
+    assert _v(q, "ANSWER: 1:1000100") == "wrong"  # the Ensembl start is 1_000_000
+    assert score_ncbi(q, "ANSWER: 1:1000000") == "wrong"
+    assert score_ncbi(q, "ANSWER: UNKNOWN") == "declined"
+    assert score_ncbi({**LOCATION, "truth_ncbi": None}, "ANSWER: 1:1000100") is None
+    assert score_ncbi({**LENGTH, "truth_ncbi": None}, "ANSWER: 429") is None
+
+
+def test_ncbi_gene_is_the_one_named_by_the_id_or_the_only_hit() -> None:
+    named = {"uid": "1", "name": "LOC1", "otheraliases": "SORBI_3001G379200, X"}
+    other = {"uid": "2", "name": "LOC2", "otheraliases": ""}
+    assert pick("SORBI_3001G379200", [other, named]) == (named, "name or alias")
+    assert pick("Vitis19g01691", [other]) == (other, "only search hit")
+    assert pick("AT5G43460", [other, {**other, "uid": "3"}])[0] is None
+    assert forms("Potri.005G155000.v4.1") == ["Potri.005G155000.v4.1", "Potri.005G155000"]
+    assert forms("Solyc10g038020.2") == ["Solyc10g038020.2", "Solyc10g038020"]
+    assert forms("AT5G43460") == ["AT5G43460"]

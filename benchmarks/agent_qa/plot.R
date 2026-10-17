@@ -3,7 +3,9 @@
 #   Rscript benchmarks/agent_qa/plot.R [results.jsonl] [outdir]
 #
 # Writes summary.tsv (verdicts, cost and time per setup; verdicts per setup x
-# kind of question) and three figures:
+# kind of question; the no-model baselines from baselines.jsonl), stats.tsv
+# (bootstrap intervals over questions, and paired per-question tests), and
+# three figures:
 #   agent_qa.png             right / wrong / declined per setup (the README one)
 #   agent_qa_cost_time.png   cost and seconds per answer, every run
 #   agent_qa_by_category.png right / wrong / declined per setup x kind of question
@@ -11,7 +13,7 @@
 # Every number on the figures is computed here from the log; nothing is typed
 # in by hand. Green, red and grey mean right, wrong and declined in every
 # figure; setups are told apart by their axis labels, not by colour.
-# A server run that never called the server (valid = FALSE, see run.py)
+# A tool run that never called its tools (valid = FALSE, see run.py)
 # measured the model alone; it stays in the bars and is counted in the
 # `invalid` column and the first figure's subtitle.
 
@@ -26,6 +28,13 @@ source("examples/arf_family/theme_pgmcp.R")
 r <- jsonlite::stream_in(file(results_path), verbose = FALSE)
 stopifnot(all(r$verdict %in% names(pal_verdict)))
 stopifnot(is.logical(r$valid), !anyNA(r$valid))
+b <- jsonlite::stream_in(file(file.path(dirname(results_path), "baselines.jsonl")), verbose = FALSE)
+b$valid <- TRUE
+baseline_labels <- c(
+  constant = "Baseline: one constant answer per kind",
+  id_chromosome = "Baseline: chromosome read from the gene ID"
+)
+stopifnot(all(b$arm %in% names(baseline_labels)), all(b$verdict %in% names(pal_verdict)))
 
 arm_labels <- c(
   bare = "Claude alone",
@@ -58,6 +67,12 @@ tally <- function(x) {
     declined = sum(x$verdict == "declined"), no_answer = sum(x$verdict == "no_answer"),
     wrong_id = sum(x$wrong_id),
     invalid = sum(!x$valid), right_valid = sum(x$verdict == "right" & x$valid),
+    # Location answers scored against NCBI's gene model instead (the 6 location
+    # questions NCBI has the gene for), and right under either model.
+    location_right_ncbi = sum(x$verdict_ncbi %in% "right"),
+    location_right_either = sum(
+      x$category == "location" & (x$verdict == "right" | x$verdict_ncbi %in% "right")
+    ),
     # Repeats of one question are not independent: also count questions.
     questions_right_every_run = sum(tapply(x$verdict == "right", x$qid, all))
   )
@@ -85,22 +100,115 @@ per_cat <- do.call(rbind, lapply(names(arm_labels), function(a) {
     )
   }))
 }))
+# Negative controls: answers needing no lookup, scored by the same scorer.
+per_baseline <- do.call(rbind, lapply(names(baseline_labels), function(a) {
+  x <- b[b$arm == a, ]
+  cbind(
+    level = "baseline", arm = a, category = if (all(x$category == "location")) "location" else "all",
+    tally(x),
+    cost_usd_mean = NA, cost_usd_median = NA, cost_usd_total = NA,
+    seconds_mean = NA, seconds_median = NA, seconds_max = NA, tool_calls_mean = NA
+  )
+}))
 # na = "NA", not "": the per-category rows end in empty cost/time fields, and
 # a line ending in tabs is trailing whitespace the pre-commit hook strips,
 # which would drop those columns.
-write.table(rbind(per_arm, per_cat), file.path(outdir, "summary.tsv"),
+write.table(rbind(per_arm, per_cat, per_baseline), file.path(outdir, "summary.tsv"),
   sep = "\t", quote = FALSE, row.names = FALSE, na = "NA"
 )
 
-setup_note <- sprintf("Claude Opus 5.5 in Claude Code, %d questions × %d runs.", n_q, n_rep)
-n_invalid <- sum(!r$valid & r$arm == "mcp")
-invalid_note <- sprintf(
-  "%d of %d plant-genomics-mcp runs never called the server (answered from memory); they are counted here.",
-  n_invalid, sum(r$arm == "mcp")
+# Statistics. The unit is the question: its 3 runs are not independent, so
+# intervals resample questions (with all their runs), and paired tests
+# compare per-question outcomes.
+set.seed(20261016)
+n_boot <- 2000
+qids <- sort(unique(r$qid))
+boots <- replicate(n_boot, sample(qids, length(qids), replace = TRUE), simplify = FALSE)
+values <- data.frame(
+  accuracy = as.numeric(r$verdict == "right"), cost_usd_median = r$cost_usd,
+  seconds_median = r$seconds, tool_calls_mean = lengths(r$tool_calls)
 )
+metrics <- list(accuracy = mean, cost_usd_median = median, seconds_median = median, tool_calls_mean = mean)
+# Row numbers of each setup's runs, per question.
+rows_by_q <- lapply(setNames(names(arm_labels), names(arm_labels)), function(a) {
+  split(which(r$arm == a), r$qid[r$arm == a])
+})
+interval <- function(v) unname(quantile(v, c(0.025, 0.975)))
+boot_rows <- list()
+for (m in names(metrics)) {
+  g <- metrics[[m]]
+  v <- values[[m]]
+  f <- function(a, ids = qids) g(v[unlist(rows_by_q[[a]][ids], use.names = FALSE)])
+  for (a in names(arm_labels)) {
+    est <- f(a)
+    ci <- interval(vapply(boots, function(ids) f(a, ids), 0))
+    boot_rows[[length(boot_rows) + 1]] <- data.frame(
+      test = "bootstrap_95ci", metric = m, arm = a, versus = NA,
+      estimate = est, lo = ci[1], hi = ci[2]
+    )
+  }
+  # The difference, resampling the same questions for both setups.
+  for (pair in list(c("mcp", "web"), c("mcp", "bare"))) {
+    est <- f(pair[1]) - f(pair[2])
+    ci <- interval(vapply(boots, function(ids) f(pair[1], ids) - f(pair[2], ids), 0))
+    boot_rows[[length(boot_rows) + 1]] <- data.frame(
+      test = "bootstrap_95ci_difference", metric = m, arm = pair[1], versus = pair[2],
+      estimate = est, lo = ci[1], hi = ci[2]
+    )
+  }
+}
+boot_tab <- do.call(rbind, boot_rows)
+# Paired exact McNemar (a sign test on the discordant questions): is the
+# question right in every run, for setup a against setup b? "valid only"
+# drops invalid runs first, and questions left with none.
+right_every <- function(x) tapply(x$verdict == "right", x$qid, all)
+mcnemar <- function(a, bb, only_valid) {
+  pick <- function(arm) {
+    x <- r[r$arm == arm & (!only_valid | r$valid), ]
+    right_every(x)
+  }
+  ya <- pick(a)
+  yb <- pick(bb)
+  common <- intersect(names(ya), names(yb))
+  ya <- ya[common]
+  yb <- yb[common]
+  n10 <- sum(ya & !yb)
+  n01 <- sum(!ya & yb)
+  p <- if (n10 + n01 > 0) binom.test(n10, n10 + n01)$p.value else 1
+  data.frame(
+    test = if (only_valid) "mcnemar_exact_valid_runs" else "mcnemar_exact",
+    metric = "questions_right_every_run", arm = a, versus = bb,
+    estimate = sum(ya) - sum(yb), lo = NA, hi = NA,
+    questions = length(common), a_only = n10, versus_only = n01,
+    both = sum(ya & yb), neither = sum(!ya & !yb), p_value = signif(p, 3)
+  )
+}
+paired <- do.call(rbind, lapply(c(FALSE, TRUE), function(v) {
+  rbind(mcnemar("mcp", "web", v), mcnemar("mcp", "bare", v), mcnemar("web", "bare", v))
+}))
+boot_tab$questions <- length(qids)
+boot_tab[c("a_only", "versus_only", "both", "neither", "p_value")] <- NA
+num <- c("estimate", "lo", "hi")
+stats_tab <- rbind(boot_tab, paired)
+stats_tab[num] <- lapply(stats_tab[num], function(v) signif(v, 4))
+write.table(stats_tab, file.path(outdir, "stats.tsv"),
+  sep = "\t", quote = FALSE, row.names = FALSE, na = "NA"
+)
+print(stats_tab)
+
+setup_note <- sprintf("Claude Opus 5.5 in Claude Code, %d questions × %d runs.", n_q, n_rep)
+invalid_note <- sprintf(
+  "Counted here, though they made no tool call: %d web-search and %d plant-genomics-mcp runs (answered from memory).",
+  sum(!r$valid & r$arm == "web"), sum(!r$valid & r$arm == "mcp")
+)
+loc_either <- function(a) {
+  x <- r[r$arm == a & r$category == "location", ]
+  sprintf("%d of %d", sum(x$verdict == "right" | x$verdict_ncbi %in% "right"), nrow(x))
+}
 key_note <- paste0(
   "Answers checked against Ensembl Plants and UniProt, the databases the server reads;\n",
-  "an answer taken from another annotation counts as wrong."
+  "an answer from another annotation counts as wrong. Accepting NCBI's gene model too, location answers right: ",
+  "web search ", loc_either("web"), ", server ", loc_either("mcp"), "."
 )
 # Count labels: white on green and red, dark on the light grey of declined.
 verdict_text <- c(`TRUE` = "grey15", `FALSE` = "white")
@@ -112,10 +220,24 @@ legend_counts <- function(v) {
   }, ""))
 }
 
-# Figure 1: one bar per setup, segments = verdict share, labelled with counts.
-counts <- as.data.frame(table(arm_label = r$arm_label, verdict = r$verdict))
+# Figure 1: one bar per setup, segments = verdict share, labelled with counts;
+# above them, the two no-model baselines (negative controls).
+fig1 <- rbind(
+  data.frame(bar = sprintf("%s (%d)", arm_labels[r$arm], n_ans), verdict = r$verdict),
+  data.frame(
+    bar = sprintf("%s (%d)", baseline_labels[b$arm], as.numeric(table(b$arm)[b$arm])),
+    verdict = b$verdict
+  )
+)
+bar_levels <- c(
+  sprintf("%s (%d)", rev(arm_labels), n_ans),
+  sprintf("%s (%d)", rev(baseline_labels), as.numeric(table(b$arm)[rev(names(baseline_labels))]))
+)
+fig1$arm_label <- factor(fig1$bar, levels = bar_levels)
+fig1$verdict <- factor(fig1$verdict, levels = names(pal_verdict))
+counts <- as.data.frame(table(arm_label = fig1$arm_label, verdict = fig1$verdict))
 counts <- counts[counts$Freq > 0, ]
-counts$share <- counts$Freq / n_ans
+counts$share <- counts$Freq / ave(counts$Freq, counts$arm_label, FUN = sum)
 p1 <- ggplot(counts, aes(x = share, y = arm_label, fill = verdict)) +
   geom_col(width = 0.62, position = position_stack(reverse = TRUE)) +
   geom_text(
@@ -133,13 +255,13 @@ p1 <- ggplot(counts, aes(x = share, y = arm_label, fill = verdict)) +
   guides(fill = guide_legend(title.position = "top", title.hjust = 0.5)) +
   scale_x_continuous(labels = scales::percent, expand = c(0, 0)) +
   labs(
-    x = sprintf("Share of %d answers per setup", n_ans), y = NULL,
+    x = "Share of answers (count in brackets)", y = NULL,
     title = "Plant gene lookups: right, wrong or declined",
     subtitle = paste0(setup_note, "\n", key_note, "\n", invalid_note)
   ) +
   theme_pgmcp(base_size = 13) +
   theme(panel.grid.major.y = element_blank(), plot.margin = margin(8, 24, 8, 8))
-ggsave(file.path(outdir, "agent_qa.png"), p1, width = 11, height = 4.6, dpi = 200, bg = "white")
+ggsave(file.path(outdir, "agent_qa.png"), p1, width = 11.5, height = 5.4, dpi = 200, bg = "white")
 
 # Figure 2: cost and seconds per answer, one point per run, box over them.
 long <- rbind(

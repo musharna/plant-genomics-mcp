@@ -87,3 +87,20 @@ def test_update_lowers_without_a_flag(tmp_path: Path, monkeypatch: pytest.Monkey
     assert ratchet.main(["--only", "lookup_locus"]) == 1
     assert ratchet.main(["--only", "lookup_locus", "--update"]) == 0
     assert json.loads(baseline.read_text())["workloads"]["lookup_locus"] == lower
+
+
+def test_update_refuses_a_changed_answer_unless_allowed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    baseline = tmp_path / "baseline.json"
+    baseline.write_text(json.dumps({"workloads": {"lookup_locus": BASE}}))
+    # Same counts, another answer: the workload no longer runs what it did.
+    other = _row({"src/x.py:f": 3, "src/x.py:g": 1}, {"rest.ensembl.org": 2}, sha="b" * 64)
+    monkeypatch.setattr(ratchet, "BASELINE", baseline)
+    monkeypatch.setattr(ratchet, "REPO", tmp_path)
+    monkeypatch.setattr(ratchet, "measure", lambda name, record=False: other)
+    assert ratchet.main(["--only", "lookup_locus", "--update"]) == 1
+    assert ratchet.main(["--only", "lookup_locus", "--update", "--allow-increase"]) == 1
+    assert json.loads(baseline.read_text())["workloads"]["lookup_locus"] == BASE
+    assert ratchet.main(["--only", "lookup_locus", "--update", "--allow-output-change"]) == 0
+    assert json.loads(baseline.read_text())["workloads"]["lookup_locus"] == other
