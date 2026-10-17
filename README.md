@@ -12,9 +12,7 @@
 [![Glama](https://glama.ai/mcp/servers/musharna/plant-genomics-mcp/badges/score.svg)](https://glama.ai/mcp/servers/musharna/plant-genomics-mcp)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21636352.svg)](https://doi.org/10.5281/zenodo.21636352)
 
-<p align="center">
-  <img src="examples/assets/cc-answer.png" alt="Claude Code (Opus 5.5) with plant-genomics-mcp 1.29.1 answering a prompt about Arabidopsis NAC001 (AT1G01010): the Ensembl Plants record (Chr 1:3,631-5,899, protein_coding) and UniProtKB entry Q0WV96 (NAC1_ARATH, reviewed, 429 aa). Real output, trimmed" width="780">
-</p>
+<p align="center"><img src="benchmarks/agent_qa/agent_qa.png" alt="Bar chart of 156 answers per setup. Claude alone: 36 right, 3 wrong, 117 declined. Claude with web search: 151 right, 4 wrong, 1 declined. Claude with plant-genomics-mcp: 156 right" width="780"><br><sub>Method, timings and caveats: <a href="#-does-it-help">Does it help?</a></sub></p>
 
 ## 📦 Install
 
@@ -56,13 +54,14 @@ Ask in plain language; you don't name the tools or chain them:
 The client picks which tools to call. For another species, name it or pass
 `organism=` (e.g. rice `Os01g0100100`, `oryza_sativa`).
 
-Asked for NAC001's orthologs in rice and maize, a second recorded run (prompts
-and full text in [`examples/assets/cards/RUN.md`](examples/assets/cards/RUN.md))
-checked three sources and said which one does not back the rice match:
+Below are two recorded runs with narrower prompts: NAC001's Ensembl record and
+UniProt entry, then its rice and maize orthologs, where Claude checked three
+sources and said which one does not back the rice match. Both prompts and full
+answers, including the first run's papers: [`examples/assets/cards/RUN.md`](examples/assets/cards/RUN.md).
 
-<p align="center">
-  <img src="examples/assets/cc-orthologs.png" alt="Claude Code (Opus 5.5) after 6 plant-genomics-mcp calls: AT1G01010's rice ortholog is Os07g0683200 (Gramene v69 ortholog_one2many, the only rice member of Ensembl gene tree EPlGT01160000455820); no maize ortholog in either; OrthoDB's NAC group has no rice or maize member, so it does not back the rice match" width="780">
-</p>
+<p align="center"><img src="examples/assets/cc-answer.png" alt="Claude Code (Opus 5.5) with plant-genomics-mcp 1.29.1 answering a prompt about Arabidopsis NAC001 (AT1G01010): the Ensembl Plants record (Chr 1:3,631-5,899, protein_coding) and UniProtKB entry Q0WV96 (NAC1_ARATH, reviewed, 429 aa). Real output, trimmed" width="780"></p>
+
+<p align="center"><img src="examples/assets/cc-orthologs.png" alt="Claude Code (Opus 5.5) after 6 plant-genomics-mcp calls: AT1G01010's rice ortholog is Os07g0683200 (Gramene v69 ortholog_one2many, the only rice member of Ensembl gene tree EPlGT01160000455820); no maize ortholog in either; OrthoDB's NAC group has no rice or maize member, so it does not back the rice match" width="780"></p>
 
 A worked 64-call run over 114 genes in three organisms, with the 51 gaps it
 logged (39 since closed), is in [`examples/arf_family/PAGE.md`](examples/arf_family/PAGE.md).
@@ -72,9 +71,7 @@ dossier [`gene_report_AT1G01010.md`](examples/gene_report_AT1G01010.md), are in
 
 ## 📊 Does it help?
 
-We asked Claude Opus 5.5, in Claude Code, 52 plant gene-lookup questions (location, protein length, name → locus, UniProt accession, ortholog; 12 genomes), three times each. Alone, it declined most of them. With web search it got 48 of the 52 right in every run, mostly by calling the Ensembl and UniProt REST APIs itself. With this server it got all 52 right in every run, and its slowest answer took 86 s, against 705 s with web search. The answer key comes from the databases the server reads, so this measures whether lookups are done correctly. Cost, timings and caveats: [`benchmarks/agent_qa/`](benchmarks/agent_qa/README.md).
-
-<p align="center"><img src="benchmarks/agent_qa/agent_qa.png" alt="Bar chart of 156 answers per setup. Claude alone: 36 right, 3 wrong, 117 declined. Claude with web search: 151 right, 4 wrong, 1 declined. Claude with plant-genomics-mcp: 156 right" width="780"></p>
+We asked Claude Opus 5.5, in Claude Code, 52 plant gene-lookup questions (location, protein length, name → locus, UniProt accession, ortholog; 12 genomes), three times each. Alone, it declined most of them. With web search it got 48 of the 52 right in every run, mostly by calling the Ensembl and UniProt REST APIs itself. With this server it got all 52 right in every run, and its slowest answer took 86 s, against 705 s with web search. The answer key comes from the databases the server reads, so this measures whether lookups are done correctly. [The chart at the top](#-plant-genomics-mcp) shows every answer. Cost, timings and caveats: [`benchmarks/agent_qa/`](benchmarks/agent_qa/README.md).
 
 ## 🛠️ Tools
 
