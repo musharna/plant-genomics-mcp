@@ -13,16 +13,18 @@ so `except ET.ParseError` lets the attack path escape unwrapped. The handler
 must also name ValueError, DefusedXmlException, or Exception.
 
 fixed-wait (`--fixed-wait`, hook no-fixed-wait-py): any `x.wait_for_timeout(...)`
-call, and a `sleep` / `time.sleep` / `asyncio.sleep` statement whose next
-statement clicks or types. Excused by a `# qa-wait-ok: <why>` comment on any
-line the call spans. This was a pygrep hook until 2026-10-17: a call the
-formatter wrapped over three lines slipped past it, and --multiline reported
-only the first hit in a file.
+call, and a `sleep` / `time.sleep` / `asyncio.sleep` statement when what runs
+next clicks or types. "Next" is the statement that runs after the sleep, out of
+its block if the sleep ends one (try -> else -> finally, loop -> else), and of
+that statement only what runs first: its header and the first statement of each
+block it can enter. A def runs only its decorators and defaults; a class body
+runs now. Excused by a `# qa-wait-ok: <why>` comment on any line the call spans.
+This was a pygrep hook until 2026-10-17: a call the formatter wrapped over three
+lines slipped past it, and --multiline reported only the first hit in a file.
 """
 
 import ast
 import io
-import itertools
 import re
 import sys
 import tokenize
@@ -44,7 +46,10 @@ INTERACT = frozenset(
     }
 )
 QA_WAIT_OK = re.compile(r"qa-wait-ok:[ \t]*\S")
-SCOPES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef)
+DEFS = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)
+TRY = tuple(getattr(ast, n) for n in ("Try", "TryStar") if hasattr(ast, n))
+LOOPS = (ast.For, ast.AsyncFor, ast.While)
+BLOCK = (ast.stmt, ast.excepthandler, ast.match_case)
 EXCUSE = "(or '# qa-wait-ok: <why>' on the call)"
 MSG_WAIT_FOR_TIMEOUT = "wait_for_timeout is a fixed sleep: wait for the state " + EXCUSE
 MSG_SLEEP_THEN_ACT = "a sleep, then a click or key press: wait for the state " + EXCUSE
@@ -139,8 +144,30 @@ def _stmt_call(stmt):
     return value if isinstance(value, ast.Call) else None
 
 
+def _runs_first(node):
+    """What `node` runs first: a def its decorators and defaults (its body runs
+    later); a try its body; any other node its expressions and the first
+    statement of each block it can enter."""
+    if isinstance(node, DEFS):
+        a = node.args
+        deco = getattr(node, "decorator_list", [])
+        return [*deco, *a.defaults, *(d for d in a.kw_defaults if d)]
+    out = []
+    for field, value in ast.iter_fields(node):
+        if isinstance(value, ast.AST):
+            out.append(value)
+        elif not isinstance(value, list):
+            continue  # a name, constant or flag: nothing runs
+        elif value and isinstance(value[0], ast.stmt):
+            if field == "body" or not isinstance(node, TRY):
+                out.append(value[0])
+        elif field != "handlers":
+            out.extend(v for v in value if isinstance(v, ast.AST))
+    return out
+
+
 def _interacts(stmt):
-    """Does the statement click/type? Nested defs and lambdas run later, so not them."""
+    """Does what `stmt` runs first click or type?"""
     stack = [stmt]
     while stack:
         node = stack.pop()
@@ -150,16 +177,48 @@ def _interacts(stmt):
             and node.func.attr in INTERACT
         ):
             return True
-        stack.extend(c for c in ast.iter_child_nodes(node) if not isinstance(c, SCOPES))
+        stack.extend(_runs_first(node))
     return False
 
 
-def _bodies(tree):
-    for node in ast.walk(tree):
-        for field in ("body", "orelse", "finalbody"):
-            block = getattr(node, field, None)
-            if isinstance(block, list) and block and isinstance(block[0], ast.stmt):
-                yield block
+def _positions(tree):
+    """Each statement, handler and match case -> (parent, field, index)."""
+    where = {}
+    for parent in ast.walk(tree):
+        for field, value in ast.iter_fields(parent):
+            if isinstance(value, list):
+                for i, child in enumerate(value):
+                    if isinstance(child, BLOCK):
+                        where[child] = (parent, field, i)
+    return where
+
+
+def _then(parent, field):
+    """Blocks of `parent` that run when its `field` block ends normally."""
+    if isinstance(parent, LOOPS) and field == "body":
+        return ("orelse",)
+    if isinstance(parent, TRY):
+        then = {"body": ("orelse", "finalbody"), "orelse": ("finalbody",)}
+        return then.get(field, ("finalbody",) if field == "handlers" else ())
+    return ()
+
+
+def _successor(stmt, where):
+    """The statement that runs after `stmt` ends normally; None at the end of a
+    function or the module (the caller resumes, unseen)."""
+    node = stmt
+    while node in where:
+        parent, field, i = where[node]
+        block = getattr(parent, field)
+        if isinstance(node, ast.stmt) and i + 1 < len(block):
+            return block[i + 1]
+        if isinstance(parent, DEFS):
+            return None
+        for f in _then(parent, field):
+            if getattr(parent, f):
+                return getattr(parent, f)[0]
+        node = parent
+    return None
 
 
 def fixed_wait(tree, src):
@@ -172,11 +231,14 @@ def fixed_wait(tree, src):
             and not _excused(node, ok)
         ):
             yield node.lineno, MSG_WAIT_FOR_TIMEOUT
-    for block in _bodies(tree):
-        for stmt, nxt in itertools.pairwise(block):
-            call = _stmt_call(stmt)
-            if call and _is_sleep(call) and not _excused(stmt, ok) and _interacts(nxt):
-                yield stmt.lineno, MSG_SLEEP_THEN_ACT
+    where = _positions(tree)
+    for stmt in where:
+        call = _stmt_call(stmt)
+        if not (call and _is_sleep(call)) or _excused(stmt, ok):
+            continue
+        nxt = _successor(stmt, where)
+        if nxt is not None and _interacts(nxt):
+            yield stmt.lineno, MSG_SLEEP_THEN_ACT
 
 
 CHECKS = (bare_replace, defused_parseerror)
