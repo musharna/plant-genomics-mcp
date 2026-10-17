@@ -129,7 +129,9 @@ p1 <- ggplot(counts, aes(x = share, y = arm_label, fill = verdict)) +
   ) +
   theme_pgmcp(base_size = 13) +
   theme(panel.grid.major.y = element_blank(), plot.margin = margin(8, 24, 8, 8))
-ggsave(file.path(outdir, "agent_qa.png"), p1, width = 11, height = 4.2, dpi = 200, bg = "white")
+# The README shows this at 780 px. Drawn 11 in wide it was scaled to a third and
+# its row labels read at ~9 px; at 8 in the same text is 1.4x larger on the page.
+ggsave(file.path(outdir, "agent_qa.png"), p1, width = 8, height = 4.4, dpi = 200, bg = "white")
 
 # Figure 2: cost and seconds per answer, one point per run, box over them.
 long <- rbind(
