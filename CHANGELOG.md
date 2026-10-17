@@ -1,5 +1,26 @@
 # Changelog
 
+## v1.29.3 — 2026-10-16
+
+**56 tools / 23 backends** — no new tool and no code change. A docs release,
+so the README on PyPI matches the repo's.
+
+- **An agent benchmark: does Claude answer plant gene lookups better with the
+  server?** `benchmarks/agent_qa/` asks Claude Opus 5.5 52 questions (location,
+  protein length, name → locus, UniProt accession, ortholog; 12 genomes) three
+  times each, alone, with web search and with this server (1.29.2). Right
+  answers: 36, 151 and 156 of 156; all 52 questions right in every run only
+  with the server, whose slowest answer took 86 s against 705 s with web
+  search. The answer key is fetched straight from Ensembl, UniProt and NCBI,
+  the databases the server reads, so it measures whether lookups are done
+  correctly, not whether the databases are right. Re-running costs about $15
+  (#237).
+- **The README's screenshots are re-recorded** with Opus 5.5: the NAC001 record
+  (on 1.29.1) and an orthologs run (on 1.29.2) that says which source does not
+  back the rice match. Both are rendered from `examples/assets/cards/` (#234).
+- **The README is cut from 347 to 255 lines**: each count is stated once,
+  Quickstart is folded into "Try it", and configuration is one section (#238).
+
 ## v1.29.2 — 2026-10-16
 
 **56 tools / 23 backends** — no new tool. A patch release: one fix.
