@@ -97,6 +97,12 @@ check no-fixed-wait-py w19.py $'for u in us:\n    time.sleep(1)\nelse:\n    page
 check no-fixed-wait-py w20.py $'try:\n    f()\nexcept E:\n    pass\nelse:\n    time.sleep(1)\nfinally:\n    page.click("#a")' fail
 check no-fixed-wait-py w21.py $'try:\n    time.sleep(1)\nfinally:\n    page.click("#a")' fail
 check no-fixed-wait-py w22.py $'time.sleep(1)\nrecord(page.click("#a"), 2)' fail
+# A sleep ending a loop body also runs before the loop's next pass, at every depth.
+check no-fixed-wait-py w23.py $'for u in us:\n    page.click("#a")\n    time.sleep(1)' fail
+check no-fixed-wait-py w24.py $'while True:\n    page.keyboard.press("PageDown")\n    time.sleep(0.5)' fail
+check no-fixed-wait-py w25.py $'for a in xs:\n    page.click(a)\n    for b in ys:\n        f(b)\n        time.sleep(1)' fail
+# An empty iterable runs a for loop's else first.
+check no-fixed-wait-py w26.py $'time.sleep(1)\nfor u in us:\n    log(u)\nelse:\n    page.click("#a")' fail
 check no-fixed-wait-py y.py $'time.sleep(1)\ndef helper(page):\n    page.click("#a")' pass
 check no-fixed-wait-py y2.py $'time.sleep(1)\ncb = lambda: page.click("#a")' pass
 check no-fixed-wait-py y3.py $'if x:\n    time.sleep(1)\nelse:\n    page.click("#a")' pass
@@ -105,6 +111,8 @@ check no-fixed-wait-py y5.py $'def f():\n    time.sleep(1)\npage.click("#a")' pa
 check no-fixed-wait-py y6.py $'time.sleep(1)\nfor u in urls:\n    page.goto(u)\n    page.click("#a")' pass
 check no-fixed-wait-py y7.py $'time.sleep(1)\ntry:\n    f()\nexcept E:\n    page.click("#a")\nfinally:\n    page.click("#b")' pass
 check no-fixed-wait-py y8.py $'time.sleep(1)\npage.mouse.wheel(0, 120)' pass
+check no-fixed-wait-py y9.py $'for u in us:\n    page.goto(u)\n    page.click("#a")\n    time.sleep(1)' pass
+check no-fixed-wait-py y10.py $'for u in us:\n    page.click("#a")\n    time.sleep(1)  # qa-wait-ok: the API allows one request a second' pass
 check no-fixed-wait-py x.py $'page.wait_for_function("ready()")\npage.click("#a")' pass
 check no-fixed-wait-py x2.py $'page.wait_for_timeout(500)  # qa-wait-ok: the 420 ms close animation is what is tested' pass
 check no-fixed-wait-py x3.py $'time.sleep(2 ** attempt)\nresp = client.get(url)' pass
