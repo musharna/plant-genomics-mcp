@@ -11,21 +11,50 @@ defused-parseerror: a module that imports defusedxml but still catches only
 reference) with DefusedXmlException, a ValueError subclass, NOT ParseError,
 so `except ET.ParseError` lets the attack path escape unwrapped. The handler
 must also name ValueError, DefusedXmlException, or Exception.
+
+fixed-wait (`--fixed-wait`, hook no-fixed-wait-py): any `x.wait_for_timeout(...)`
+call, and a `sleep` / `time.sleep` / `asyncio.sleep` statement whose next
+statement clicks or types. Excused by a `# qa-wait-ok: <why>` comment on any
+line the call spans. This was a pygrep hook until 2026-10-17: a call the
+formatter wrapped over three lines slipped past it, and --multiline reported
+only the first hit in a file.
 """
 
 import ast
+import io
+import itertools
+import re
 import sys
+import tokenize
 from pathlib import Path
 
 N_REPLACE_ARGS = 2  # str.replace(old, new); renames never pass two literals
 COVERS_DEFUSED = {"ValueError", "DefusedXmlException", "Exception", "BaseException"}
+INTERACT = frozenset(
+    {
+        "click",
+        "dblclick",
+        "focus",
+        "hover",
+        "tap",
+        "press",
+        "press_sequentially",
+        "type",
+        "fill",
+    }
+)
+QA_WAIT_OK = re.compile(r"qa-wait-ok:[ \t]*\S")
+SCOPES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef)
+EXCUSE = "(or '# qa-wait-ok: <why>' on the call)"
+MSG_WAIT_FOR_TIMEOUT = "wait_for_timeout is a fixed sleep: wait for the state " + EXCUSE
+MSG_SLEEP_THEN_ACT = "a sleep, then a click or key press: wait for the state " + EXCUSE
 
 
 def _is_str_literal(node):
     return isinstance(node, ast.Constant) and isinstance(node.value, str)
 
 
-def bare_replace(tree):
+def bare_replace(tree, _src):
     for node in ast.walk(tree):
         if not isinstance(node, ast.Expr) or not isinstance(node.value, ast.Call):
             continue
@@ -62,7 +91,7 @@ def _exc_names(handler_type):
     return out
 
 
-def defused_parseerror(tree):
+def defused_parseerror(tree, _src):
     if not _imports_defusedxml(tree):
         return
     for node in ast.walk(tree):
@@ -77,23 +106,101 @@ def defused_parseerror(tree):
             yield node.lineno, msg
 
 
+def _excused_lines(src):
+    """Lines with a real `# qa-wait-ok: <why>` comment; a string does not count."""
+    lines = set()
+    for tok in tokenize.generate_tokens(io.StringIO(src).readline):
+        if tok.type == tokenize.COMMENT and QA_WAIT_OK.search(tok.string):
+            lines.add(tok.start[0])
+    return lines
+
+
+def _excused(node, ok_lines):
+    return any(n in ok_lines for n in range(node.lineno, node.end_lineno + 1))
+
+
+def _is_sleep(call):
+    f = call.func
+    if isinstance(f, ast.Name):
+        return f.id == "sleep"
+    return (
+        isinstance(f, ast.Attribute)
+        and f.attr == "sleep"
+        and isinstance(f.value, ast.Name)
+        and f.value.id in {"time", "asyncio"}
+    )
+
+
+def _stmt_call(stmt):
+    """The call a bare expression statement makes, `await` unwrapped; else None."""
+    if not isinstance(stmt, ast.Expr):
+        return None
+    value = stmt.value.value if isinstance(stmt.value, ast.Await) else stmt.value
+    return value if isinstance(value, ast.Call) else None
+
+
+def _interacts(stmt):
+    """Does the statement click/type? Nested defs and lambdas run later, so not them."""
+    stack = [stmt]
+    while stack:
+        node = stack.pop()
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr in INTERACT
+        ):
+            return True
+        stack.extend(c for c in ast.iter_child_nodes(node) if not isinstance(c, SCOPES))
+    return False
+
+
+def _bodies(tree):
+    for node in ast.walk(tree):
+        for field in ("body", "orelse", "finalbody"):
+            block = getattr(node, field, None)
+            if isinstance(block, list) and block and isinstance(block[0], ast.stmt):
+                yield block
+
+
+def fixed_wait(tree, src):
+    ok = _excused_lines(src)
+    for node in ast.walk(tree):
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "wait_for_timeout"
+            and not _excused(node, ok)
+        ):
+            yield node.lineno, MSG_WAIT_FOR_TIMEOUT
+    for block in _bodies(tree):
+        for stmt, nxt in itertools.pairwise(block):
+            call = _stmt_call(stmt)
+            if call and _is_sleep(call) and not _excused(stmt, ok) and _interacts(nxt):
+                yield stmt.lineno, MSG_SLEEP_THEN_ACT
+
+
 CHECKS = (bare_replace, defused_parseerror)
+FIXED_WAIT_CHECKS = (fixed_wait,)
 
 
-def check_files(paths):
+def check_files(paths, checks=CHECKS):
     rc = 0
     for p in paths:
+        src = Path(p).read_text(encoding="utf-8")
         try:
-            tree = ast.parse(Path(p).read_text(encoding="utf-8"), filename=p)
+            tree = ast.parse(src, filename=p)
         except SyntaxError as e:  # let ruff report syntax; do not mask it as a rule hit
             print(f"{p}: skipped (SyntaxError: {e.msg})", file=sys.stderr)
             continue
-        for check in CHECKS:
-            for line, msg in check(tree):
-                print(f"{p}:{line}: {msg}")
-                rc = 1
+        hits = sorted(hit for check in checks for hit in check(tree, src))
+        for line, msg in hits:
+            print(f"{p}:{line}: {msg}")
+            rc = 1
     return rc
 
 
 if __name__ == "__main__":
-    sys.exit(check_files(sys.argv[1:]))
+    args = sys.argv[1:]
+    if args[:1] == ["--fixed-wait"]:
+        sys.exit(check_files(args[1:], FIXED_WAIT_CHECKS))
+    sys.exit(check_files(args))

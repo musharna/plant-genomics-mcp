@@ -66,15 +66,26 @@ check no-sleep-then-interact t2.mjs $'await sleep(500); // qa-wait-ok: the 420 m
 check no-sleep-then-interact t3.mjs $'await sleep(500);\nconst box = await page.evaluate(() => measure());' pass
 check no-sleep-then-interact t4.mjs $'// await sleep(500);\nawait page.click("#a");' pass
 check no-fixed-wait-py w.py $'page.wait_for_timeout(800)\nbox = page.evaluate("measure()")' fail
-check no-fixed-wait-py w2.py $'    await page.wait_for_timeout(300)\n    await page.click("#a")' fail
+check no-fixed-wait-py w2.py $'async def f(page):\n    await page.wait_for_timeout(300)\n    await page.click("#a")' fail
 check no-fixed-wait-py w3.py $'time.sleep(0.5)\npage.keyboard.press("Escape")' fail
-check no-fixed-wait-py w4.py $'    await asyncio.sleep(1)\n    await page.locator("#a").fill("x")' fail
+check no-fixed-wait-py w4.py $'async def f(page):\n    await asyncio.sleep(1)\n    await page.locator("#a").fill("x")' fail
 check no-fixed-wait-py w5.py $'page.wait_for_timeout(500)  # qa-wait-ok:' fail
+check no-fixed-wait-py w6.py $'page.wait_for_timeout(\n    150\n)' fail # wrapped by the formatter
+check no-fixed-wait-py w7.py $'box = page.wait_for_timeout(5) or page.evaluate("m()")' fail
+check no-fixed-wait-py w8.py $'page.wait_for_timeout(5); note = "# qa-wait-ok: a string, not a comment"' fail
+check no-fixed-wait-py w9.py $'time.sleep(1)\npage.click(\n    "#a"\n)' fail
+check no-fixed-wait-py w10.py $'try:\n    pass\nfinally:\n    time.sleep(1)\n    page.click("#a")' fail
 check no-fixed-wait-py x.py $'page.wait_for_function("ready()")\npage.click("#a")' pass
 check no-fixed-wait-py x2.py $'page.wait_for_timeout(500)  # qa-wait-ok: the 420 ms close animation is what is tested' pass
 check no-fixed-wait-py x3.py $'time.sleep(2 ** attempt)\nresp = client.get(url)' pass
 check no-fixed-wait-py x4.py $'# page.wait_for_timeout(800)\npage.click("#a")' pass
 check no-fixed-wait-py x5.py $'time.sleep(0.5)  # qa-wait-ok: the debounce window is the behaviour tested\npage.click("#a")' pass
+check no-fixed-wait-py x6.py $'page.wait_for_timeout(\n    150\n)  # qa-wait-ok: paces wheel notches; the state wait follows' pass
+# Every hit is reported, not only the first (pygrep --multiline stops at one per file).
+printf '%s\n' 'page.wait_for_timeout(1)' 'x = 1' 'page.wait_for_timeout(2)' 'page.wait_for_timeout(3)' >"$tmp/r/m.py"
+hits=$(cd "$tmp/r" && git add -A && uvx pre-commit run no-fixed-wait-py --files m.py 2>&1 | grep -cE '^m\.py:[0-9]+:' || true)
+if [[ $hits == 3 ]]; then echo "ok   no-fixed-wait-py [3 of 3 reported] m.py"; else echo "FAIL no-fixed-wait-py reported $hits of 3 hits in m.py"; fail=1; fi
+rm -f "$tmp/r/m.py"
 wf=.github/workflows
 check no-pathscoped-write-rule $wf/w1.yml '            --allowed-tools "Read,Write(fuzz_scratch/**),Grep"' fail
 check no-pathscoped-write-rule $wf/w2.yml '            --allowed-tools "Bash(gh issue view:*),Edit(/tmp/*),Glob"' fail
