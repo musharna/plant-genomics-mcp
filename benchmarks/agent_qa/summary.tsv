@@ -1,19 +1,21 @@
-level	arm	category	right	wrong	declined	no_answer	wrong_id	questions_right_every_run	cost_usd_mean	cost_usd_median	cost_usd_total	seconds_mean	seconds_median	seconds_max	tool_calls_mean
-arm	bare	all	36	3	117	0	3	12	0.0111	0.0109	1.73	5.8	5.5	13	0
-arm	web	all	151	4	1	0	0	48	0.058	0.0152	9.05	40	13.4	705.1	3.95
-arm	mcp	all	156	0	0	0	0	52	0.026	0.0227	4.06	14.5	10.1	86	1.25
-arm_x_category	bare	location	0	0	36	0	0	0	NA	NA	NA	NA	NA	NA	NA
-arm_x_category	bare	protein_length	3	0	33	0	0	1	NA	NA	NA	NA	NA	NA	NA
-arm_x_category	bare	symbol_to_locus	24	0	6	0	0	8	NA	NA	NA	NA	NA	NA	NA
-arm_x_category	bare	uniprot_accession	9	3	18	0	3	3	NA	NA	NA	NA	NA	NA	NA
-arm_x_category	bare	ortholog	0	0	24	0	0	0	NA	NA	NA	NA	NA	NA	NA
-arm_x_category	web	location	32	4	0	0	0	9	NA	NA	NA	NA	NA	NA	NA
-arm_x_category	web	protein_length	35	0	1	0	0	11	NA	NA	NA	NA	NA	NA	NA
-arm_x_category	web	symbol_to_locus	30	0	0	0	0	10	NA	NA	NA	NA	NA	NA	NA
-arm_x_category	web	uniprot_accession	30	0	0	0	0	10	NA	NA	NA	NA	NA	NA	NA
-arm_x_category	web	ortholog	24	0	0	0	0	8	NA	NA	NA	NA	NA	NA	NA
-arm_x_category	mcp	location	36	0	0	0	0	12	NA	NA	NA	NA	NA	NA	NA
-arm_x_category	mcp	protein_length	36	0	0	0	0	12	NA	NA	NA	NA	NA	NA	NA
-arm_x_category	mcp	symbol_to_locus	30	0	0	0	0	10	NA	NA	NA	NA	NA	NA	NA
-arm_x_category	mcp	uniprot_accession	30	0	0	0	0	10	NA	NA	NA	NA	NA	NA	NA
-arm_x_category	mcp	ortholog	24	0	0	0	0	8	NA	NA	NA	NA	NA	NA	NA
+level	arm	category	right	wrong	declined	no_answer	wrong_id	invalid	right_valid	location_right_ncbi	location_right_either	questions_right_every_run	cost_usd_mean	cost_usd_median	cost_usd_total	seconds_mean	seconds_median	seconds_max	tool_calls_mean
+arm	bare	all	36	3	117	0	3	0	36	0	0	12	0.0111	0.0109	1.73	5.8	5.5	13	0
+arm	web	all	151	4	1	0	0	14	137	6	35	48	0.058	0.0152	9.05	40	13.4	705.1	3.95
+arm	mcp	all	156	0	0	0	0	2	154	3	36	52	0.026	0.0227	4.06	14.5	10.1	86	1.25
+arm_x_category	bare	location	0	0	36	0	0	0	0	0	0	0	NA	NA	NA	NA	NA	NA	NA
+arm_x_category	bare	protein_length	3	0	33	0	0	0	3	0	0	1	NA	NA	NA	NA	NA	NA	NA
+arm_x_category	bare	symbol_to_locus	24	0	6	0	0	0	24	0	0	8	NA	NA	NA	NA	NA	NA	NA
+arm_x_category	bare	uniprot_accession	9	3	18	0	3	0	9	0	0	3	NA	NA	NA	NA	NA	NA	NA
+arm_x_category	bare	ortholog	0	0	24	0	0	0	0	0	0	0	NA	NA	NA	NA	NA	NA	NA
+arm_x_category	web	location	32	4	0	0	0	0	32	6	35	9	NA	NA	NA	NA	NA	NA	NA
+arm_x_category	web	protein_length	35	0	1	0	0	0	35	0	0	11	NA	NA	NA	NA	NA	NA	NA
+arm_x_category	web	symbol_to_locus	30	0	0	0	0	14	16	0	0	10	NA	NA	NA	NA	NA	NA	NA
+arm_x_category	web	uniprot_accession	30	0	0	0	0	0	30	0	0	10	NA	NA	NA	NA	NA	NA	NA
+arm_x_category	web	ortholog	24	0	0	0	0	0	24	0	0	8	NA	NA	NA	NA	NA	NA	NA
+arm_x_category	mcp	location	36	0	0	0	0	0	36	3	36	12	NA	NA	NA	NA	NA	NA	NA
+arm_x_category	mcp	protein_length	36	0	0	0	0	0	36	0	0	12	NA	NA	NA	NA	NA	NA	NA
+arm_x_category	mcp	symbol_to_locus	30	0	0	0	0	2	28	0	0	10	NA	NA	NA	NA	NA	NA	NA
+arm_x_category	mcp	uniprot_accession	30	0	0	0	0	0	30	0	0	10	NA	NA	NA	NA	NA	NA	NA
+arm_x_category	mcp	ortholog	24	0	0	0	0	0	24	0	0	8	NA	NA	NA	NA	NA	NA	NA
+baseline	constant	all	3	49	0	0	25	0	3	0	0	3	NA	NA	NA	NA	NA	NA	NA
+baseline	id_chromosome	location	0	10	2	0	0	0	0	0	0	0	NA	NA	NA	NA	NA	NA	NA

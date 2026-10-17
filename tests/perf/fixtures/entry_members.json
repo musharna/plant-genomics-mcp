@@ -1,0 +1,85 @@
+{
+ "tool": "entry_members",
+ "args": {
+  "entry": "IPR010525",
+  "page_size": 20
+ },
+ "responses": {
+  "GET https://rest.uniprot.org/uniprotkb/search?query=xref%3Ainterpro-IPR010525+AND+organism_id%3A3702+AND+reviewed%3Atrue&format=json&fields=accession%2Creviewed%2Cgene_primary%2Cgene_oln%2Cprotein_name%2Cxref_ensemblplants%2Cxref_araport%2Cxref_tair&size=20 -": [
+   {
+    "status": 200,
+    "headers": [
+     [
+      "vary",
+      "accept,accept-encoding,x-uniprot-release,x-api-deployment-date, User-Agent, Accept-Encoding"
+     ],
+     [
+      "cache-control",
+      "public, max-age=43200"
+     ],
+     [
+      "x-cache",
+      "miss cached"
+     ],
+     [
+      "content-type",
+      "application/json"
+     ],
+     [
+      "access-control-allow-credentials",
+      "true"
+     ],
+     [
+      "access-control-expose-headers",
+      "Link, X-Total-Results, X-UniProt-Release, X-UniProt-Release-Date, X-API-Deployment-Date"
+     ],
+     [
+      "x-api-deployment-date",
+      "07-October-2026"
+     ],
+     [
+      "strict-transport-security",
+      "max-age=31536000; includeSubDomains; preload"
+     ],
+     [
+      "access-control-max-age",
+      "1728000"
+     ],
+     [
+      "x-uniprot-release",
+      "2026_03"
+     ],
+     [
+      "link",
+      "<https://rest.uniprot.org/uniprotkb/search?format=json&fields=accession,reviewed,gene_primary,gene_oln,protein_name,xref_ensemblplants,xref_araport,xref_tair&query=xref%3Ainterpro-IPR010525%20AND%20organism_id%3A3702%20AND%20reviewed%3Atrue&cursor=1mk4t2ehlvwtxuekze37gqcgvoc9jkf4tws5&size=20>; rel=\"next\""
+     ],
+     [
+      "x-total-results",
+      "23"
+     ],
+     [
+      "access-control-allow-origin",
+      "*"
+     ],
+     [
+      "connection",
+      "keep-alive"
+     ],
+     [
+      "access-control-allow-methods",
+      "GET, PUT, POST, DELETE, PATCH, OPTIONS"
+     ],
+     [
+      "access-control-allow-headers",
+      "DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+     ],
+     [
+      "x-uniprot-release-date",
+      "02-September-2026"
+     ]
+    ],
+    "body": "{\"results\":[{\"entryType\":\"UniProtKB reviewed (Swiss-Prot)\",\"primaryAccession\":\"Q84WU6\",\"proteinDescription\":{\"recommendedName\":{\"fullName\":{\"value\":\"Auxin response factor 17\"}}},\"genes\":[{\"geneName\":{\"value\":\"ARF17\"},\"orderedLocusNames\":[{\"value\":\"At1g77850\"}]}],\"uniProtKBCrossReferences\":[{\"database\":\"Araport\",\"id\":\"AT1G77850\",\"properties\":[{\"key\":\"Description\",\"value\":\"-\"}]},{\"database\":\"TAIR\",\"id\":\"AT1G77850\",\"properties\":[{\"key\":\"GeneName\",\"value\":\"ARF17\"}]}],\"extraAttributes\":{\"uniParcId\":\"UPI000000BDA0\"}},\n{\"entryType\":\"UniProtKB reviewed (Swiss-Prot)\",\"primaryAccession\":\"Q8L7G0\",\"proteinDescription\":{\"recommendedName\":{\"fullName\":{\"evidences\":[{\"evidenceCode\":\"ECO:0000303\",\"source\":\"PubMed\",\"id\":\"9188533\"}],\"value\":\"Auxin response factor 1\"}}},\"genes\":[{\"geneName\":{\"evidences\":[{\"evidenceCode\":\"ECO:0000303\",\"source\":\"PubMed\",\"id\":\"9188533\"}],\"value\":\"ARF1\"},\"orderedLocusNames\":[{\"evidences\":[{\"evidenceCode\":\"ECO:0000312\",\"source\":\"Araport\",\"id\":\"AT1G59750\"}],\"value\":\"At1g59750\"}]}],\"uniProtKBCrossReferences\":[{\"database\":\"Araport\",\"id\":\"AT1G59750\",\"properties\":[{\"key\":\"Description\",\"value\":\"-\"}]},{\"database\":\"TAIR\",\"id\":\"AT1G59750\",\"properties\":[{\"key\":\"GeneName\",\"value\":\"ARF1\"}]}],\"extraAttributes\":{\"uniParcId\":\"UPI000000BD9F\"}},\n{\"entryType\":\"UniProtKB reviewed (Swiss-Prot)\",\"primaryAccession\":\"Q9FGV1\",\"proteinDescription\":{\"recommendedName\":{\"fullName\":{\"value\":\"Auxin response factor 8\"}},\"alternativeNames\":[{\"fullName\":{\"value\":\"Protein FRUIT WITHOUT FERTILIZATION\"}}]},\"genes\":[{\"geneName\":{\"value\":\"ARF8\"},\"orderedLocusNames\":[{\"value\":\"At5g37020\"}]}],\"uniProtKBCrossReferences\":[{\"database\":\"Araport\",\"id\":\"AT5G37020\",\"properties\":[{\"key\":\"Description\",\"value\":\"-\"}]},{\"database\":\"TAIR\",\"id\":\"AT5G37020\",\"properties\":[{\"key\":\"GeneName\",\"value\":\"ARF8\"}]}],\"extraAttributes\":{\"uniParcId\":\"UPI000009F68A\"}},\n{\"entryType\":\"UniProtKB reviewed (Swiss-Prot)\",\"primaryAccession\":\"O23661\",\"proteinDescription\":{\"recommendedName\":{\"fullName\":{\"value\":\"Auxin response factor 3\"}},\"alternativeNames\":[{\"fullName\":{\"value\":\"Protein ETTIN\"}}]},\"genes\":[{\"geneName\":{\"value\":\"ARF3\"},\"orderedLocusNames\":[{\"value\":\"At2g33860\"}]}],\"uniProtKBCrossReferences\":[{\"database\":\"Araport\",\"id\":\"AT2G33860\",\"properties\":[{\"key\":\"Description\",\"value\":\"-\"}]},{\"database\":\"TAIR\",\"id\":\"AT2G33860\",\"properties\":[{\"key\":\"GeneName\",\"value\":\"ETT\"}]}],\"extraAttributes\":{\"uniParcId\":\"UPI00000AADC5\"}},\n{\"entryType\":\"UniProtKB reviewed (Swiss-Prot)\",\"primaryAccession\":\"P93024\",\"proteinDescription\":{\"recommendedName\":{\"fullName\":{\"value\":\"Auxin response factor 5\"}},\"alternativeNames\":[{\"fullName\":{\"value\":\"Auxin-responsive protein IAA24\"}},{\"fullName\":{\"value\":\"Transcription factor MONOPTEROS\"}}]},\"genes\":[{\"geneName\":{\"value\":\"ARF5\"},\"orderedLocusNames\":[{\"value\":\"At1g19850\"}]}],\"uniProtKBCrossReferences\":[{\"database\":\"Araport\",\"id\":\"AT1G19850\",\"properties\":[{\"key\":\"Description\",\"value\":\"-\"}]},{\"database\":\"TAIR\",\"id\":\"AT1G19850\",\"properties\":[{\"key\":\"GeneName\",\"value\":\"MP\"}]}],\"extraAttributes\":{\"uniParcId\":\"UPI0000001B13\"}},\n{\"entryType\":\"UniProtKB reviewed (Swiss-Prot)\",\"primaryAccession\":\"Q94JM3\",\"proteinDescription\":{\"recommendedName\":{\"fullName\":{\"value\":\"Auxin response factor 2\"}},\"alternativeNames\":[{\"fullName\":{\"value\":\"ARF1-binding protein\"},\"shortNames\":[{\"value\":\"ARF1-BP\"}]},{\"fullName\":{\"value\":\"Protein MEGAINTEGUMENTA\"}}]},\"genes\":[{\"geneName\":{\"value\":\"ARF2\"},\"orderedLocusNames\":[{\"value\":\"At5g62000\"}]}],\"uniProtKBCrossReferences\":[{\"database\":\"Araport\",\"id\":\"AT5G62000\",\"properties\":[{\"key\":\"Description\",\"value\":\"-\"}]},{\"database\":\"TAIR\",\"id\":\"AT5G62000\",\"properties\":[{\"key\":\"GeneName\",\"value\":\"ARF2\"}]}],\"extraAttributes\":{\"uniParcId\":\"UPI00000AC25B\"}},\n{\"entryType\":\"UniProtKB reviewed (Swiss-Prot)\",\"primaryAccession\":\"Q93YR9\",\"proteinDescription\":{\"recommendedName\":{\"fullName\":{\"value\":\"Auxin response factor 16\"}}},\"genes\":[{\"geneName\":{\"value\":\"ARF16\"},\"orderedLocusNames\":[{\"value\":\"At4g30080\"}]}],\"uniProtKBCrossReferences\":[{\"database\":\"Araport\",\"id\":\"AT4G30080\",\"properties\":[{\"key\":\"Description\",\"value\":\"-\"}]},{\"database\":\"TAIR\",\"id\":\"AT4G30080\",\"properties\":[{\"key\":\"GeneName\",\"value\":\"ARF16\"}]}],\"extraAttributes\":{\"uniParcId\":\"UPI00000A1455\"}},\n{\"entryType\":\"UniProtKB reviewed (Swiss-Prot)\",\"primaryAccession\":\"Q9C5W9\",\"proteinDescription\":{\"recommendedName\":{\"fullName\":{\"value\":\"Auxin response factor 18\"}}},\"genes\":[{\"geneName\":{\"value\":\"ARF18\"},\"orderedLocusNames\":[{\"value\":\"At3g61830\"}]}],\"uniProtKBCrossReferences\":[{\"database\":\"Araport\",\"id\":\"AT3G61830\",\"properties\":[{\"key\":\"Description\",\"value\":\"-\"}]},{\"database\":\"TAIR\",\"id\":\"AT3G61830\",\"properties\":[{\"key\":\"GeneName\",\"value\":\"ARF18\"}]}],\"extraAttributes\":{\"uniParcId\":\"UPI000009DA36\"}},\n{\"entryType\":\"UniProtKB reviewed (Swiss-Prot)\",\"primaryAccession\":\"Q9XED8\",\"proteinDescription\":{\"recommendedName\":{\"fullName\":{\"value\":\"Auxin response factor 9\"}}},\"genes\":[{\"geneName\":{\"value\":\"ARF9\"},\"orderedLocusNames\":[{\"value\":\"At4g23980\"}]}],\"uniProtKBCrossReferences\":[{\"database\":\"Araport\",\"id\":\"AT4G23980\",\"properties\":[{\"key\":\"Description\",\"value\":\"-\"}]},{\"database\":\"TAIR\",\"id\":\"AT4G23980\",\"properties\":[{\"key\":\"GeneName\",\"value\":\"ARF9\"}]}],\"extraAttributes\":{\"uniParcId\":\"UPI00000A74B4\"}},\n{\"entryType\":\"UniProtKB reviewed (Swiss-Prot)\",\"primaryAccession\":\"Q9ZTX8\",\"proteinDescription\":{\"recommendedName\":{\"fullName\":{\"value\":\"Auxin response factor 6\"}}},\"genes\":[{\"geneName\":{\"value\":\"ARF6\"},\"orderedLocusNames\":[{\"value\":\"At1g30330\"}]}],\"uniProtKBCrossReferences\":[{\"database\":\"Araport\",\"id\":\"AT1G30330\",\"properties\":[{\"key\":\"Description\",\"value\":\"-\"}]},{\"database\":\"TAIR\",\"id\":\"AT1G30330\",\"properties\":[{\"key\":\"GeneName\",\"value\":\"ARF6\"}]}],\"extraAttributes\":{\"uniParcId\":\"UPI000049F94C\"}},\n{\"entryType\":\"UniProtKB reviewed (Swiss-Prot)\",\"primaryAccession\":\"P93022\",\"proteinDescription\":{\"recommendedName\":{\"fullName\":{\"evidences\":[{\"evidenceCode\":\"ECO:0000303\",\"source\":\"PubMed\",\"id\":\"10318972\"},{\"evidenceCode\":\"ECO:0000303\",\"source\":\"PubMed\",\"id\":\"10476078\"},{\"evidenceCode\":\"ECO:0000303\",\"source\":\"PubMed\",\"id\":\"15659631\"}],\"value\":\"Auxin response factor 7\"}},\"alternativeNames\":[{\"fullName\":{\"evidences\":[{\"evidenceCode\":\"ECO:0000303\",\"source\":\"PubMed\",\"id\":\"9342315\"}],\"value\":\"Auxin-responsive protein IAA21/IAA23/IAA25\"}},{\"fullName\":{\"value\":\"Protein BIPOSTO\"}},{\"fullName\":{\"evidences\":[{\"evidenceCode\":\"ECO:0000303\",\"source\":\"PubMed\",\"id\":\"14729917\"}],\"value\":\"Protein MASSUGU 1\"}},{\"fullName\":{\"evidences\":[{\"evidenceCode\":\"ECO:0000303\",\"source\":\"PubMed\",\"id\":\"10810148\"},{\"evidenceCode\":\"ECO:0000303\",\"source\":\"PubMed\",\"id\":\"15659631\"}],\"value\":\"Protein NON-PHOTOTROPIC HYPOCOTYL 4\"}},{\"fullName\":{\"evidences\":[{\"evidenceCode\":\"ECO:0000303\",\"source\":\"PubMed\",\"id\":\"14729917\"},{\"evidenceCode\":\"ECO:0000303\",\"source\":\"PubMed\",\"id\":\"16461383\"}],\"value\":\"Protein TRANSPORT INHIBITOR RESPONSE 5\"}}]},\"genes\":[{\"geneName\":{\"evidences\":[{\"evidenceCode\":\"ECO:0000303\",\"source\":\"PubMed\",\"id\":\"10318972\"},{\"evidenceCode\":\"ECO:0000303\",\"source\":\"PubMed\",\"id\":\"10476078\"},{\"evidenceCode\":\"ECO:0000303\",\"source\":\"PubMed\",\"id\":\"15659631\"}],\"value\":\"ARF7\"},\"orderedLocusNames\":[{\"evidences\":[{\"evidenceCode\":\"ECO:0000312\",\"source\":\"Araport\",\"id\":\"AT5G20730\"}],\"value\":\"At5g20730\"}]}],\"uniProtKBCrossReferences\":[{\"database\":\"Araport\",\"id\":\"AT5G20730\",\"properties\":[{\"key\":\"Description\",\"value\":\"-\"}]},{\"database\":\"TAIR\",\"id\":\"AT5G20730\",\"properties\":[{\"key\":\"GeneName\",\"value\":\"NPH4\"}]}],\"extraAttributes\":{\"uniParcId\":\"UPI0000196E20\"}},\n{\"entryType\":\"UniProtKB reviewed (Swiss-Prot)\",\"primaryAccession\":\"Q8RYC8\",\"proteinDescription\":{\"recommendedName\":{\"fullName\":{\"evidences\":[{\"evidenceCode\":\"ECO:0000303\",\"source\":\"PubMed\",\"id\":\"15659631\"}],\"value\":\"Auxin response factor 19\"}},\"alternativeNames\":[{\"fullName\":{\"evidences\":[{\"evidenceCode\":\"ECO:0000303\",\"source\":\"PubMed\",\"id\":\"9342315\"}],\"value\":\"Auxin-responsive protein IAA22\"}}]},\"genes\":[{\"geneName\":{\"evidences\":[{\"evidenceCode\":\"ECO:0000303\",\"source\":\"PubMed\",\"id\":\"15659631\"}],\"value\":\"ARF19\"},\"orderedLocusNames\":[{\"evidences\":[{\"evidenceCode\":\"ECO:0000312\",\"source\":\"Araport\",\"id\":\"AT1G19220\"}],\"value\":\"At1g19220\"}]}],\"uniProtKBCrossReferences\":[{\"database\":\"Araport\",\"id\":\"AT1G19220\",\"properties\":[{\"key\":\"Description\",\"value\":\"-\"}]},{\"database\":\"TAIR\",\"id\":\"AT1G19220\",\"properties\":[{\"key\":\"GeneName\",\"value\":\"ARF19\"}]}],\"extraAttributes\":{\"uniParcId\":\"UPI0000162E07\"}},\n{\"entryType\":\"UniProtKB reviewed (Swiss-Prot)\",\"primaryAccession\":\"Q9SKN5\",\"proteinDescription\":{\"recommendedName\":{\"fullName\":{\"value\":\"Auxin response factor 10\"}}},\"genes\":[{\"geneName\":{\"value\":\"ARF10\"},\"orderedLocusNames\":[{\"value\":\"At2g28350\"}]}],\"uniProtKBCrossReferences\":[{\"database\":\"Araport\",\"id\":\"AT2G28350\",\"properties\":[{\"key\":\"Description\",\"value\":\"-\"}]},{\"database\":\"TAIR\",\"id\":\"AT2G28350\",\"properties\":[{\"key\":\"GeneName\",\"value\":\"ARF10\"}]}],\"extraAttributes\":{\"uniParcId\":\"UPI00000AA51B\"}},\n{\"entryType\":\"UniProtKB reviewed (Swiss-Prot)\",\"primaryAccession\":\"Q9ZPY6\",\"proteinDescription\":{\"recommendedName\":{\"fullName\":{\"value\":\"Auxin response factor 11\"}}},\"genes\":[{\"geneName\":{\"value\":\"ARF11\"},\"orderedLocusNames\":[{\"value\":\"At2g46530\"}]}],\"uniProtKBCrossReferences\":[{\"database\":\"Araport\",\"id\":\"AT2G46530\",\"properties\":[{\"key\":\"Description\",\"value\":\"-\"}]},{\"database\":\"TAIR\",\"id\":\"AT2G46530\",\"properties\":[{\"key\":\"GeneName\",\"value\":\"ARF11\"}]}],\"extraAttributes\":{\"uniParcId\":\"UPI00000A3A2A\"}},\n{\"entryType\":\"UniProtKB reviewed (Swiss-Prot)\",\"primaryAccession\":\"Q9ZTX9\",\"proteinDescription\":{\"recommendedName\":{\"fullName\":{\"value\":\"Auxin response factor 4\"}}},\"genes\":[{\"geneName\":{\"value\":\"ARF4\"},\"orderedLocusNames\":[{\"value\":\"At5g60450\"}]}],\"uniProtKBCrossReferences\":[{\"database\":\"Araport\",\"id\":\"AT5G60450\",\"properties\":[{\"key\":\"Description\",\"value\":\"-\"}]},{\"database\":\"TAIR\",\"id\":\"AT5G60450\",\"properties\":[{\"key\":\"GeneName\",\"value\":\"ARF4\"}]}],\"extraAttributes\":{\"uniParcId\":\"UPI00000A4C13\"}},\n{\"entryType\":\"UniProtKB reviewed (Swiss-Prot)\",\"primaryAccession\":\"Q9C8N7\",\"proteinDescription\":{\"recommendedName\":{\"fullName\":{\"value\":\"Auxin response factor 22\"}}},\"genes\":[{\"geneName\":{\"value\":\"ARF22\"},\"orderedLocusNames\":[{\"value\":\"At1g34390\"}]}],\"uniProtKBCrossReferences\":[{\"database\":\"Araport\",\"id\":\"AT1G34390\",\"properties\":[{\"key\":\"Description\",\"value\":\"-\"}]},{\"database\":\"TAIR\",\"id\":\"AT1G34390\",\"properties\":[{\"key\":\"GeneName\",\"value\":\"ARF22\"}]}],\"extraAttributes\":{\"uniParcId\":\"UPI00003588E5\"}},\n{\"entryType\":\"UniProtKB reviewed (Swiss-Prot)\",\"primaryAccession\":\"Q9XID4\",\"proteinDescription\":{\"recommendedName\":{\"fullName\":{\"value\":\"Auxin response factor 12\"}}},\"genes\":[{\"geneName\":{\"value\":\"ARF12\"},\"orderedLocusNames\":[{\"value\":\"At1g34310\"}]}],\"uniProtKBCrossReferences\":[{\"database\":\"Araport\",\"id\":\"AT1G34310\",\"properties\":[{\"key\":\"Description\",\"value\":\"-\"}]},{\"database\":\"TAIR\",\"id\":\"AT1G34310\",\"properties\":[{\"key\":\"GeneName\",\"value\":\"ARF12\"}]}],\"extraAttributes\":{\"uniParcId\":\"UPI000034F446\"}},\n{\"entryType\":\"UniProtKB reviewed (Swiss-Prot)\",\"primaryAccession\":\"Q9LQE8\",\"proteinDescription\":{\"recommendedName\":{\"fullName\":{\"value\":\"Putative auxin response factor 14\"}}},\"genes\":[{\"geneName\":{\"value\":\"ARF14\"},\"orderedLocusNames\":[{\"value\":\"At1g35540\"}]}],\"uniProtKBCrossReferences\":[{\"database\":\"Araport\",\"id\":\"AT1G35540\",\"properties\":[{\"key\":\"Description\",\"value\":\"-\"}]},{\"database\":\"TAIR\",\"id\":\"AT1G35540\",\"properties\":[{\"key\":\"GeneName\",\"value\":\"ARF14\"}]}],\"extraAttributes\":{\"uniParcId\":\"UPI0000162FA9\"}},\n{\"entryType\":\"UniProtKB reviewed (Swiss-Prot)\",\"primaryAccession\":\"Q9C8N9\",\"proteinDescription\":{\"recommendedName\":{\"fullName\":{\"value\":\"Putative auxin response factor 21\"}}},\"genes\":[{\"geneName\":{\"value\":\"ARF21\"},\"orderedLocusNames\":[{\"value\":\"At1g34410\"}]}],\"uniProtKBCrossReferences\":[{\"database\":\"Araport\",\"id\":\"AT1G34410\",\"properties\":[{\"key\":\"Description\",\"value\":\"-\"}]},{\"database\":\"TAIR\",\"id\":\"AT1G34410\",\"properties\":[{\"key\":\"GeneName\",\"value\":\"ARF21\"}]}],\"extraAttributes\":{\"uniParcId\":\"UPI000034F449\"}},\n{\"entryType\":\"UniProtKB reviewed (Swiss-Prot)\",\"primaryAccession\":\"Q9C7I9\",\"proteinDescription\":{\"recommendedName\":{\"fullName\":{\"value\":\"Auxin response factor 20\"}}},\"genes\":[{\"geneName\":{\"value\":\"ARF20\"},\"orderedLocusNames\":[{\"value\":\"At1g35240\"}]}],\"uniProtKBCrossReferences\":[{\"database\":\"Araport\",\"id\":\"AT1G35240\",\"properties\":[{\"key\":\"Description\",\"value\":\"-\"}]},{\"database\":\"TAIR\",\"id\":\"AT1G35240\",\"properties\":[{\"key\":\"GeneName\",\"value\":\"ARF20\"}]}],\"extraAttributes\":{\"uniParcId\":\"UPI000049F94E\"}}]}"
+   }
+  ]
+ }
+}

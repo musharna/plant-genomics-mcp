@@ -1,0 +1,56 @@
+{
+ "tool": "batch_ensembl_plants_lookup_locus",
+ "args": {
+  "loci": [
+   "AT1G19850",
+   "AT5G43460",
+   "AT3G23430"
+  ]
+ },
+ "responses": {
+  "POST https://rest.ensembl.org/lookup/id 889ba1c1167b382b": [
+   {
+    "status": 200,
+    "headers": [
+     [
+      "vary",
+      "Content-Type"
+     ],
+     [
+      "vary",
+      "Origin"
+     ],
+     [
+      "content-type",
+      "application/json"
+     ],
+     [
+      "strict-transport-security",
+      "max-age=31536000; includeSubDomains; preload"
+     ],
+     [
+      "x-ratelimit-limit",
+      "55000"
+     ],
+     [
+      "x-ratelimit-reset",
+      "1206"
+     ],
+     [
+      "x-runtime",
+      "0.181641"
+     ],
+     [
+      "x-ratelimit-period",
+      "3600"
+     ],
+     [
+      "x-ratelimit-remaining",
+      "54993"
+     ]
+    ],
+    "body": "{\"AT1G19850\":{\"assembly_name\":\"TAIR10\",\"canonical_transcript\":\"AT1G19850.1.\",\"source\":\"araport11\",\"strand\":1,\"id\":\"AT1G19850\",\"seq_region_name\":\"1\",\"object_type\":\"Gene\",\"species\":\"arabidopsis_thaliana\",\"biotype\":\"protein_coding\",\"description\":\"Transcriptional factor B3 family protein / auxin-responsive factor AUX/IAA-like protein [Source:NCBI gene (formerly Entrezgene);Acc:838573]\",\"end\":6891404,\"db_type\":\"core\",\"logic_name\":\"araport11\",\"display_name\":\"MP\",\"start\":6886669},\"AT5G43460\":{\"description\":\"HR-like lesion-inducing protein-like protein [Source:NCBI gene (formerly Entrezgene);Acc:834366]\",\"biotype\":\"protein_coding\",\"db_type\":\"core\",\"end\":17462516,\"display_name\":\"AT5G43460\",\"logic_name\":\"araport11\",\"start\":17459873,\"object_type\":\"Gene\",\"seq_region_name\":\"5\",\"species\":\"arabidopsis_thaliana\",\"canonical_transcript\":\"AT5G43460.1.\",\"source\":\"araport11\",\"strand\":1,\"id\":\"AT5G43460\",\"assembly_name\":\"TAIR10\"},\"AT3G23430\":{\"id\":\"AT3G23430\",\"strand\":-1,\"source\":\"araport11\",\"canonical_transcript\":\"AT3G23430.1.\",\"assembly_name\":\"TAIR10\",\"start\":8387398,\"logic_name\":\"araport11\",\"display_name\":\"PHO1\",\"end\":8393467,\"db_type\":\"core\",\"biotype\":\"protein_coding\",\"description\":\"phosphate 1 [Source:NCBI gene (formerly Entrezgene);Acc:821924]\",\"species\":\"arabidopsis_thaliana\",\"object_type\":\"Gene\",\"seq_region_name\":\"3\"}}"
+   }
+  ]
+ }
+}
