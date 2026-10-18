@@ -4,7 +4,8 @@ The failure mode this guards is not a bug in the server: it is that every
 addition to `examples/` arrives with a paragraph of README to explain it,
 and a reader who opens the repo for the first time pays for all of them.
 `BUDGET` is the line count of `README.md` after it was cut to the essentials
-(347 → 252 lines). Growing the README past it is a deliberate act that has
+(347 → 252 lines, then 154 once the reference tables moved to
+docs/reference.md). Growing the README past it is a deliberate act that has
 to edit this number.
 
 Two controls, because a budget test is easy to write so that it cannot
@@ -32,9 +33,11 @@ README = Path(__file__).resolve().parents[1] / "README.md"
 # table and Quickstart JSON into examples/ and stated each count once. Earlier
 # raises (ARF link, tool-matrix rows, the benchmark section) are in git log.
 # 252 once the screenshots went to one line each, with the chart on top.
-BUDGET = 252
+# 154 after the 2026-10-18 polish moved the full tool matrix, resources,
+# env vars and error model to docs/reference.md.
+BUDGET = 154
 
-TITLE_LINE = "# 🌱 plant-genomics-mcp"
+TITLE_LINE = "# plant-genomics-mcp"
 
 
 def test_readme_does_not_grow() -> None:
@@ -57,4 +60,4 @@ def test_the_budget_test_measures_the_real_readme() -> None:
     assert README.is_file(), f"{README} does not exist"
     lines = README.read_text(encoding="utf-8").splitlines()
     assert lines[0] == TITLE_LINE, f"first line is {lines[0]!r}, not this repo's README"
-    assert len(lines) > 200, f"only {len(lines)} lines — README is not the real one"
+    assert len(lines) > 100, f"only {len(lines)} lines — README is not the real one"
