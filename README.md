@@ -23,14 +23,13 @@ measurably more accurate, but it needs fewer tool calls and less time.
 
 Claude Opus 5.5, in Claude Code, answered 52 plant gene-lookup questions from 12
 genomes three times each: 151 of 156 right with web search and 156 of 156 with
-the server. On accuracy the two are not separated (4 questions against 0,
-McNemar p = 0.125).
+the server, which is not separated (4 questions against 0, McNemar p = 0.125).
 The server needed 2.7 fewer tool calls per answer (95% CI 0.6 to 5.8) and was
 3.3 s faster at the median (0.3 to 7.0); cost is not separated. The answer key
 comes from the databases the server reads, so this tests whether lookups are
 done correctly, not whether those databases are right.
 
-Method, controls and limitations: [`benchmarks/agent_qa/`](benchmarks/agent_qa/README.md).
+Method, controls and limitations: [benchmarks/agent_qa](benchmarks/agent_qa/README.md).
 
 ## Install
 
