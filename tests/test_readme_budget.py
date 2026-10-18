@@ -35,8 +35,8 @@ README = Path(__file__).resolve().parents[1] / "README.md"
 # 252 once the screenshots went to one line each, with the chart on top.
 # 154 after the 2026-10-18 polish moved the full tool matrix, resources,
 # env vars and error model to docs/reference.md; 141 once the backend list,
-# tool breakdown and registry section left it (round 2).
-BUDGET = 141
+# tool breakdown and registry section left it (round 2), 140 in round 3.
+BUDGET = 140
 
 TITLE_LINE = "# plant-genomics-mcp"
 
