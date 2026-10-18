@@ -17,7 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 README = ROOT / "README.md"
 BENCH = ROOT / "benchmarks" / "agent_qa"
-HEADING = "## 📊 Does it help?"
+HEADING = "## Does it help?"
 
 
 def _section() -> str:

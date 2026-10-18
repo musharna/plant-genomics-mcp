@@ -15,7 +15,7 @@
 # figure; setups are told apart by their axis labels, not by colour.
 # A tool run that never called its tools (valid = FALSE, see run.py)
 # measured the model alone; it stays in the bars and is counted in the
-# `invalid` column and the first figure's subtitle.
+# `invalid` column (README, Controls).
 
 library(ggplot2)
 library(jsonlite)
@@ -197,19 +197,6 @@ write.table(stats_tab, file.path(outdir, "stats.tsv"),
 print(stats_tab)
 
 setup_note <- sprintf("Claude Opus 5.5 in Claude Code, %d questions × %d runs.", n_q, n_rep)
-invalid_note <- sprintf(
-  "Counted here, though they made no tool call: %d web-search and %d plant-genomics-mcp runs (answered from memory).",
-  sum(!r$valid & r$arm == "web"), sum(!r$valid & r$arm == "mcp")
-)
-loc_either <- function(a) {
-  x <- r[r$arm == a & r$category == "location", ]
-  sprintf("%d of %d", sum(x$verdict == "right" | x$verdict_ncbi %in% "right"), nrow(x))
-}
-key_note <- paste0(
-  "Answers checked against Ensembl Plants and UniProt, the databases the server reads; ",
-  "an answer from another annotation counts as wrong. Accepting NCBI's gene model too, location answers right: ",
-  "web search ", loc_either("web"), ", server ", loc_either("mcp"), "."
-)
 # Count labels: white on green and red, dark on the light grey of declined.
 verdict_text <- c(`TRUE` = "grey15", `FALSE` = "white")
 legend_counts <- function(v) {
@@ -257,8 +244,9 @@ p1 <- ggplot(counts, aes(x = share, y = arm_label, fill = verdict)) +
   labs(
     x = "Share of answers (count in brackets)", y = NULL,
     title = "Plant gene lookups: right, wrong or declined",
-    # Wrapped to the 8 in width the README needs (see ggsave below).
-    subtitle = paste(strwrap(c(setup_note, key_note, invalid_note), 78), collapse = "\n")
+    # One line. The answer key, the NCBI scoring (summary.tsv
+    # location_right_either) and the invalid runs are stated in README.md.
+    subtitle = setup_note
   ) +
   theme_pgmcp(base_size = 13) +
   theme(
@@ -267,8 +255,9 @@ p1 <- ggplot(counts, aes(x = share, y = arm_label, fill = verdict)) +
   )
 # The README shows this at 780 px. Drawn 11 in wide it was scaled to a third and
 # its row labels read at ~9 px; at 8 in the same text is 1.4x larger on the page.
-# Height carries the baseline rows.
-ggsave(file.path(outdir, "agent_qa.png"), p1, width = 8, height = 6.6, dpi = 200, bg = "white")
+# Height carries the baseline rows; it shrank from 6.6 in when the subtitle
+# went from five lines to one.
+ggsave(file.path(outdir, "agent_qa.png"), p1, width = 8, height = 5.4, dpi = 200, bg = "white")
 
 # Figure 2: cost and seconds per answer, one point per run, box over them.
 long <- rbind(
