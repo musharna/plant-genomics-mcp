@@ -5,6 +5,14 @@ error model for [plant-genomics-mcp](../README.md).
 
 ## Tools
 
+The 23 backends: Ensembl Plants, Phytozome BioMart, UniProtKB, Europe PMC,
+QuickGO, Planteome, PlantCyc/PMN, g:Profiler, AlphaFold DB, PDBe, InterPro,
+JASPAR, PANTHER, OrthoDB, AraGWAS, 1001 Genomes, NCBI BLAST, Gramene, KEGG,
+STRING-DB, ATTED-II, ThaleMine and BAR. The 56 tools are 29 single-locus + 1
+motif lookup + 1 region query + 1 assembly listing + 1 release report + 1
+variant annotator + 1 gene-set enrichment + 1 BLAST search + 2 member lists +
+13 parallel-batch + 5 cross-source synthesis.
+
 Most take a locus (e.g. `AT1G01010`) and an optional `organism=`: a slug,
 scientific or common name, or NCBI taxid (the 12-plant coverage matrix is the
 `pgmcp://organisms/coverage` resource). Every tool is marked read-only and

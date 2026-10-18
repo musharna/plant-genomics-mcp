@@ -1,22 +1,23 @@
 # plant-genomics-mcp
 
-An MCP server for plant gene lookup. It lets Claude, or any MCP client, query 23
-free public databases about a locus, from Ensembl Plants and UniProt to KEGG,
-STRING and AlphaFold, with curated coverage of 12 plants.
+plant-genomics-mcp is an MCP server that lets AI agents look up plant genes in 23
+free public databases, from Ensembl Plants and UniProt to KEGG, STRING and
+AlphaFold, with curated coverage of 12 plants.
 
-[![CI](https://github.com/musharna/plant-genomics-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/musharna/plant-genomics-mcp/actions/workflows/test.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/musharna/plant-genomics-mcp/test.yml?branch=main&label=CI)](https://github.com/musharna/plant-genomics-mcp/actions/workflows/test.yml)
 [![PyPI](https://img.shields.io/pypi/v/plant-genomics-mcp)](https://pypi.org/project/plant-genomics-mcp/)
-![Python](https://img.shields.io/badge/python-3.11%2B-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+[![Python](https://img.shields.io/pypi/pyversions/plant-genomics-mcp)](https://pypi.org/project/plant-genomics-mcp/)
+[![License](https://img.shields.io/pypi/l/plant-genomics-mcp)](https://github.com/musharna/plant-genomics-mcp/blob/main/LICENSE)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21636352.svg)](https://doi.org/10.5281/zenodo.21636352)
 [![Glama](https://glama.ai/mcp/servers/musharna/plant-genomics-mcp/badges/score.svg)](https://glama.ai/mcp/servers/musharna/plant-genomics-mcp)
+<!-- mcp-name: io.github.musharna/plant-genomics-mcp -->
 
 <p align="center"><img src="https://raw.githubusercontent.com/musharna/plant-genomics-mcp/main/examples/assets/cc-answer.png" alt="Claude Code (Opus 5.5) with plant-genomics-mcp 1.29.1 answering a prompt about Arabidopsis NAC001 (AT1G01010): the Ensembl Plants record (Chr 1:3,631-5,899, protein_coding) and UniProtKB entry Q0WV96 (NAC1_ARATH, reviewed, 429 aa). Real output, trimmed" width="780"></p>
 
 ## Does it help?
 
-Yes. Alone, Claude declined most of our plant gene lookups; with this server it
-got every one right, using fewer tool calls and less time than with web search.
+Yes, over Claude alone, which declined most lookups. Against web search it is not
+measurably more accurate, but it needs fewer tool calls and less time.
 
 <p align="center"><img src="https://raw.githubusercontent.com/musharna/plant-genomics-mcp/main/benchmarks/agent_qa/agent_qa.png" alt="Stacked bar chart of right, wrong and declined answers, 156 per setup. Claude alone: 36 right, 3 wrong, 117 declined. Claude with web search: 151 right, 4 wrong, 1 declined. Claude with plant-genomics-mcp: 156 right. Two no-model baselines: one constant answer per kind of question, 3 of 52 right; chromosome read from the gene ID, 0 of 12 right" width="780"></p>
 
@@ -84,13 +85,7 @@ Per-tool walkthroughs, including the one-call gene dossier
 
 ## Tools
 
-**56 tools across 23 backends**: Ensembl Plants, Phytozome BioMart, UniProtKB,
-Europe PMC, QuickGO, Planteome, PlantCyc/PMN, g:Profiler, AlphaFold DB, PDBe,
-InterPro, JASPAR, PANTHER, OrthoDB, AraGWAS, 1001 Genomes, NCBI BLAST, Gramene,
-KEGG, STRING-DB, ATTED-II, ThaleMine and BAR. That is 29 single-locus + 1 motif
-lookup + 1 region query + 1 assembly listing + 1 release report + 1 variant
-annotator + 1 gene-set enrichment + 1 BLAST search + 2 member lists + 13
-parallel-batch + 5 cross-source synthesis.
+**56 tools across 23 backends**:
 
 | Area | Tools |
 | --- | --- |
@@ -108,8 +103,9 @@ parallel-batch + 5 cross-source synthesis.
 | Batch and synthesis | `batch_*` (12), `batch_locus_call`, `*_synth` (3), `consensus_homologs`, `gene_report` |
 
 Most take a locus (e.g. `AT1G01010`) and an optional `organism=`. Every tool is
-marked read-only. What each tool does, the MCP resources and prompts, all
-environment variables and the error model: [`docs/reference.md`](docs/reference.md).
+marked read-only. What each tool does, the list of backends, the MCP resources
+and prompts, all environment variables and the error model:
+[`docs/reference.md`](docs/reference.md).
 
 ## Configuration
 
@@ -137,15 +133,6 @@ stdio smoke on Python 3.11–3.14 with the network blocked. A weekly job checks
 27 loci against a frozen snapshot and pages on drift
 ([`docs/benchmarking.md`](docs/benchmarking.md)). Setup: [CONTRIBUTING.md](CONTRIBUTING.md#dev-setup).
 Release notes: [`CHANGELOG.md`](CHANGELOG.md).
-
-## MCP registry
-
-Listed in the [official MCP registry](https://registry.modelcontextprotocol.io);
-`mcp-publisher` verifies ownership from this line:
-
-```
-mcp-name: io.github.musharna/plant-genomics-mcp
-```
 
 ## License
 

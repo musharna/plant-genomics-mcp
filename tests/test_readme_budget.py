@@ -4,7 +4,7 @@ The failure mode this guards is not a bug in the server: it is that every
 addition to `examples/` arrives with a paragraph of README to explain it,
 and a reader who opens the repo for the first time pays for all of them.
 `BUDGET` is the line count of `README.md` after it was cut to the essentials
-(347 → 252 lines, then 154 once the reference tables moved to
+(347 → 252 lines, then 141 once the reference tables moved to
 docs/reference.md). Growing the README past it is a deliberate act that has
 to edit this number.
 
@@ -34,8 +34,9 @@ README = Path(__file__).resolve().parents[1] / "README.md"
 # raises (ARF link, tool-matrix rows, the benchmark section) are in git log.
 # 252 once the screenshots went to one line each, with the chart on top.
 # 154 after the 2026-10-18 polish moved the full tool matrix, resources,
-# env vars and error model to docs/reference.md.
-BUDGET = 154
+# env vars and error model to docs/reference.md; 141 once the backend list,
+# tool breakdown and registry section left it (round 2).
+BUDGET = 141
 
 TITLE_LINE = "# plant-genomics-mcp"
 
