@@ -1,12 +1,8 @@
 # 🌱 plant-genomics-mcp
 
-> **56 tools** for plant-genomics locus lookup over the Model Context Protocol —
-> 29 single-locus + 1 motif lookup + 1 region query + 1 assembly listing + 1 release report + 1 variant annotator + 1 gene-set enrichment + 1 BLAST search + 2 member lists (family entry, gene tree) + 13 parallel-batch + 5 cross-source synthesis variants.
-> 23 free, public sources: Ensembl Plants, Phytozome BioMart, UniProtKB,
-> Europe PMC, QuickGO, Planteome, PlantCyc/PMN, g:Profiler, AlphaFold DB, PDBe,
-> InterPro, JASPAR, PANTHER, OrthoDB, AraGWAS, 1001 Genomes, NCBI BLAST,
-> Gramene, KEGG, STRING-DB, ATTED-II, ThaleMine, and BAR (Bio-Analytic Resource for
-> Plant Biology).
+> Plant gene lookup over the Model Context Protocol. Give Claude, or any MCP
+> client, a locus and it can query 23 free, public databases, from Ensembl Plants
+> and UniProt to KEGG, STRING and AlphaFold, with curated coverage of 12 plants.
 
 [![PyPI](https://img.shields.io/pypi/v/plant-genomics-mcp)](https://pypi.org/project/plant-genomics-mcp/)
 [![CI](https://github.com/musharna/plant-genomics-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/musharna/plant-genomics-mcp/actions/workflows/test.yml)
@@ -16,9 +12,7 @@
 [![Glama](https://glama.ai/mcp/servers/musharna/plant-genomics-mcp/badges/score.svg)](https://glama.ai/mcp/servers/musharna/plant-genomics-mcp)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21636352.svg)](https://doi.org/10.5281/zenodo.21636352)
 
-<p align="center">
-  <img src="examples/assets/cc-answer.png" alt="Claude Code (Opus 5.5) with plant-genomics-mcp 1.29.1 answering a prompt about Arabidopsis NAC001 (AT1G01010): the Ensembl Plants record (Chr 1:3,631-5,899, protein_coding) and UniProtKB entry Q0WV96 (NAC1_ARATH, reviewed, 429 aa). Real output, trimmed" width="780">
-</p>
+<p align="center"><img src="benchmarks/agent_qa/agent_qa.png" alt="Bar chart of 156 answers per setup. Claude alone: 36 right, 3 wrong, 117 declined. Claude with web search: 151 right, 4 wrong, 1 declined. Claude with plant-genomics-mcp: 156 right" width="780"><br><sub>Method, timings and caveats: <a href="#-does-it-help">Does it help?</a></sub></p>
 
 ## 📦 Install
 
@@ -51,43 +45,48 @@ claude mcp add plant-genomics --scope local -- "$(pwd)/.venv/bin/plant-genomics-
 
 ## 💬 Try it
 
-Once connected, ask Claude a plain-language question — you don't have to
-name any tool or remember the chain:
+Ask in plain language; you don't name the tools or chain them:
 
 > **"Tell me everything about the Arabidopsis gene AT1G01010 — its
 > function, GO terms, KEGG pathways, protein-interaction partners, and
 > recent papers."**
 
-The server supplies the tools (here: Ensembl Plants, UniProt, QuickGO, KEGG,
-STRING-DB and Europe PMC lookups); which ones get called, in what order and in
-how many turns is up to the client. In the recording at the top of this page
-(a narrower prompt), Claude Code picked the calls itself and returned one
-combined answer. Swap in any locus and pass `organism=` for cross-species —
-e.g. rice `Os01g0100100` (`oryza_sativa`) — and each tool maps the organism to
-that backend's own identifier.
+The client picks which tools to call. For another species, name it or pass
+`organism=` (e.g. rice `Os01g0100100`, `oryza_sativa`).
 
-A worked 64-call run over 114 genes in three organisms, with the 51 gaps it logged (39 since closed), is in [`examples/arf_family/PAGE.md`](examples/arf_family/PAGE.md).
+Below are two recorded runs with narrower prompts: NAC001's Ensembl record and
+UniProt entry, then its rice and maize orthologs, where Claude checked three
+sources and said which one does not back the rice match. Both prompts and full
+answers, including the first run's papers: [`examples/assets/cards/RUN.md`](examples/assets/cards/RUN.md).
+
+<p align="center"><img src="examples/assets/cc-answer.png" alt="Claude Code (Opus 5.5) with plant-genomics-mcp 1.29.1 answering a prompt about Arabidopsis NAC001 (AT1G01010): the Ensembl Plants record (Chr 1:3,631-5,899, protein_coding) and UniProtKB entry Q0WV96 (NAC1_ARATH, reviewed, 429 aa). Real output, trimmed" width="780"></p>
+
+<p align="center"><img src="examples/assets/cc-orthologs.png" alt="Claude Code (Opus 5.5) after 6 plant-genomics-mcp calls: AT1G01010's rice ortholog is Os07g0683200 (Gramene v69 ortholog_one2many, the only rice member of Ensembl gene tree EPlGT01160000455820); no maize ortholog in either; OrthoDB's NAC group has no rice or maize member, so it does not back the rice match" width="780"></p>
+
+A worked 64-call run over 114 genes in three organisms, with the 51 gaps it
+logged (39 since closed), is in [`examples/arf_family/PAGE.md`](examples/arf_family/PAGE.md).
+Per-tool walkthroughs with real upstream transcripts, including the one-call gene
+dossier [`gene_report_AT1G01010.md`](examples/gene_report_AT1G01010.md), are in
+[`examples/`](examples/).
 
 ## 📊 Does it help?
 
-We asked 52 plant gene-lookup questions (location, protein length, name → locus, UniProt accession, ortholog; 12 genomes) three times each to Claude Opus 5.5 in Claude Code. Alone, Claude declined most of them. With web search it got 48 of the 52 right in every run, mostly by calling the Ensembl and UniProt REST APIs itself. With this server it got all 52 right in every run, and its slowest answer took 86 s, against 705 s with web search. The answer key comes from the databases the server reads, so this measures whether lookups are done correctly. Cost, timings and caveats: [`benchmarks/agent_qa/`](benchmarks/agent_qa/README.md).
-
-<p align="center"><img src="benchmarks/agent_qa/agent_qa.png" alt="Bar chart of 156 answers per setup. Claude alone: 36 right, 3 wrong, 117 declined. Claude with web search: 151 right, 4 wrong, 1 declined. Claude with plant-genomics-mcp: 156 right" width="780"></p>
+We asked Claude Opus 5.5, in Claude Code, 52 plant gene-lookup questions (location, protein length, name → locus, UniProt accession, ortholog; 12 genomes), three times each. Alone, it declined most of them. With web search it got 48 of the 52 right in every run, mostly by calling the Ensembl and UniProt REST APIs itself. With this server it got all 52 right in every run, and its slowest answer took 86 s, against 705 s with web search. The answer key comes from the databases the server reads, so this measures whether lookups are done correctly. [The chart at the top](#-plant-genomics-mcp) shows every answer. Cost, timings and caveats: [`benchmarks/agent_qa/`](benchmarks/agent_qa/README.md).
 
 ## 🛠️ Tools
 
-**56 tools across 23 backends** — Ensembl Plants, Phytozome BioMart,
-UniProtKB, Europe PMC, QuickGO, Planteome, PlantCyc/PMN, g:Profiler,
-AlphaFold DB, PDBe, InterPro, JASPAR, PANTHER, OrthoDB, AraGWAS, 1001 Genomes, NCBI BLAST,
-Gramene, KEGG, STRING-DB, ATTED-II, ThaleMine, BAR.
-29 single-locus + 1 motif lookup + 1 region query + 1 assembly listing + 1 release report + 1 variant annotator + 1 gene-set
-enrichment + 1 BLAST search + 2 member lists + 13 parallel-batch + 5 cross-source synthesis. Most take a
-TAIR-style locus (e.g. `AT1G01010`) plus
-optional `organism=` (slug / scientific name / common name / NCBI taxid
-— 12-plant curated coverage matrix at the `pgmcp://organisms/coverage`
-MCP resource). All publish JSON `outputSchema`, EDAM ontology tags, and
-behaviour annotations — every tool is `readOnlyHint` + `openWorldHint`, so
-hosts can surface them without a destructive-action confirmation prompt.
+**56 tools across 23 backends**: Ensembl Plants, Phytozome BioMart, UniProtKB,
+Europe PMC, QuickGO, Planteome, PlantCyc/PMN, g:Profiler, AlphaFold DB, PDBe,
+InterPro, JASPAR, PANTHER, OrthoDB, AraGWAS, 1001 Genomes, NCBI BLAST, Gramene,
+KEGG, STRING-DB, ATTED-II, ThaleMine and BAR. That is 29 single-locus + 1 motif
+lookup + 1 region query + 1 assembly listing + 1 release report + 1 variant
+annotator + 1 gene-set enrichment + 1 BLAST search + 2 member lists + 13
+parallel-batch + 5 cross-source synthesis.
+
+Most take a locus (e.g. `AT1G01010`) and an optional `organism=`: a slug,
+scientific or common name, or NCBI taxid (the 12-plant coverage matrix is the
+`pgmcp://organisms/coverage` resource). Every tool is marked read-only and
+publishes a JSON `outputSchema`.
 
 <details>
 <summary>Full tool matrix</summary>
@@ -139,57 +138,6 @@ hosts can surface them without a destructive-action confirmation prompt.
 
 </details>
 
-## ⚡ Quickstart
-
-After install, the simplest call returns the Ensembl Plants record for
-NAC001 — the canonical worked example used throughout `examples/`:
-
-```jsonc
-// arguments
-{ "locus": "AT1G01010" }
-
-// result (truncated)
-{
-  "id": "AT1G01010",
-  "organism": "arabidopsis_thaliana",
-  "display_name": "NAC001",
-  "biotype": "protein_coding",
-  "seq_region_name": "1",
-  "start": 3631,
-  "end": 5899,
-  "strand": 1,
-  "assembly_name": "TAIR10",
-  "description": "NAC domain containing protein 1 ..."
-}
-```
-
-Cross-species — pass `organism=`:
-
-```jsonc
-{ "locus": "Os01g0100100", "organism": "oryza_sativa" }
-```
-
-Asked for NAC001's orthologs in rice and maize, a second recorded run
-(2026-10-16; prompts, commands and full text of both in
-[`examples/assets/cards/RUN.md`](examples/assets/cards/RUN.md)) checked three
-sources and said which one does not back the rice match:
-
-<p align="center">
-  <img src="examples/assets/cc-orthologs.png" alt="Claude Code (Opus 5.5) after 6 plant-genomics-mcp calls: AT1G01010's rice ortholog is Os07g0683200 (Gramene v69 ortholog_one2many, the only rice member of Ensembl gene tree EPlGT01160000455820); no maize ortholog in either; OrthoDB's NAC group has no rice or maize member, so it does not back the rice match" width="780">
-</p>
-
-Full per-tool walkthroughs (with real upstream-API transcripts) live in
-[`examples/`](examples/):
-
-| Walkthrough                                                                               | Coverage                                                                                |
-| ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| [`gene_report_AT1G01010.md`](examples/gene_report_AT1G01010.md)                           | One-shot Markdown gene dossier — 7 backends composed, with graceful KEGG degradation.   |
-| [`analyze_locus_AT1G01010.md`](examples/analyze_locus_AT1G01010.md)                       | Ensembl → xrefs → UniProt → Europe PMC → QuickGO chain (5 tools).                       |
-| [`find_homologs_AT1G01010_NAC_domain.md`](examples/find_homologs_AT1G01010_NAC_domain.md) | BLAST + per-hit UniProt enrichment.                                                     |
-| [`biological_context_AT1G01010.md`](examples/biological_context_AT1G01010.md)             | Gramene + KEGG + UniProt + STRING + ATTED-II (5 tools).                                 |
-| [`v0.8_synthesis_walkthrough.md`](examples/v0.8_synthesis_walkthrough.md)                 | The four v0.8 synthesis tools (`*_synth` + `consensus_homologs`) on one locus. Captured 2026-05-22 at v0.8. |
-| [`cross_organism_walkthrough.md`](examples/cross_organism_walkthrough.md)                 | v0.9 multi-organism resolver against rice + maize — per-backend routing. Captured 2026-05-24 against PyPI v1.0.4. |
-
 ## 📚 Resources & prompts
 
 <details>
@@ -216,26 +164,12 @@ Clients discover them via `resources/list` and `prompts/list`.
 
 </details>
 
-## 🔌 Transports
+## 🔌 Transports and configuration
 
-| Transport       | How to launch                                                       |
-| --------------- | ------------------------------------------------------------------- |
-| stdio (default) | `plant-genomics-mcp` (after install) or via Docker above            |
-| streamable-HTTP | `plant-genomics-mcp-http` — POST JSON-RPC at `http://host:port/mcp` |
-
-The HTTP transport is stateless and emits JSON responses by default —
-the right shape for registry indexers and remote hosting.
-
-### Self-hosting
-
-There is no public hosted endpoint. To use the HTTP transport, run it
-yourself: it is the same binary, gated by your own bearer token
-(`PLANT_GENOMICS_MCP_HTTP_TOKEN`), with NCBI BLAST requests sent under your
-own contact email.
-
-## ⚙️ Configuration
-
-Stdio needs no configuration. The two env vars that matter:
+stdio (`plant-genomics-mcp`, the default) needs no configuration.
+`plant-genomics-mcp-http` serves stateless streamable HTTP at
+`http://host:port/mcp`. There is no public endpoint: you run it yourself, behind
+your own token.
 
 | Variable                        | When                | Effect                                                                                                                |
 | ------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------- |
@@ -257,10 +191,9 @@ Stdio needs no configuration. The two env vars that matter:
 | `PLANT_GENOMICS_MCP_CACHE_SIZE`        | `256`             | Max entries per backend before LRU eviction.                       |
 | `PLANT_GENOMICS_MCP_CACHE_DISABLED`    | unset             | Any non-empty value makes every cache a no-op.                     |
 
-The cache is process-local — restart the server to drop all entries.
-Long-running calls (retry storms, multi-second Phytozome BioMart POSTs)
-emit MCP `notifications/progress` over the active session; clients opt
-in via `progressToken` in the request `_meta`.
+The cache is per process; restart the server to clear it. Long calls (BLAST,
+Phytozome BioMart) send MCP progress notifications when the request carries a
+`progressToken`.
 
 </details>
 
@@ -280,11 +213,9 @@ clients can route on failure kind without parsing the message:
 | `[UpstreamUnavailableError]` | 5xx past retry budget — service outage, try a peer backend         |
 | `[PlantGenomicsError]`       | Other (BioMart `Query ERROR:` body, unexpected column count, etc.) |
 
-Batch tools return `{tool, count, results, errors}` where
-`results[locus]` is the same shape as the single-locus tool and
-`errors[locus]` is the same `[ClassName] message` string. Ensembl's
-batch uses the native `POST /lookup/id` endpoint (one HTTP round-trip);
-everything else fans out via `asyncio.gather`.
+Batch tools return `{tool, count, results, errors}`: each `results[locus]` has
+the single-locus shape and each `errors[locus]` is the same `[ClassName] message`
+string.
 
 </details>
 
@@ -298,43 +229,17 @@ PLANT_GENOMICS_MCP_STDIO_SMOKE=1 .venv/bin/pytest -q      # adds stdio smoke
 .venv/bin/ruff check .
 ```
 
-With `uv`, pass `--extra dev` — a bare `uv sync` omits (and removes) the test
-dependencies. See [CONTRIBUTING.md](CONTRIBUTING.md#dev-setup).
-
-CI runs the unit suite + the stdio smoke on every push/PR (matrix:
-Python 3.11, 3.12, 3.13, 3.14 — the full `requires-python` range), with a
-dead proxy set so an ungated network call fails. A separate `live-smoke` job
-runs two live test files (`tests/test_verify_genes.py`,
-`tests/test_arf_mcp_client.py`, InterPro and PANTHER) on Python 3.12 on the
-same pushes and PRs; it reports a result but is not a required check, because its result depends on
-third-party services. The rest of the live suite (`PLANT_GENOMICS_MCP_LIVE=1`)
-is not run in CI.
-
-**Drift detection.** `scripts/benchmark_annotations.py` runs a curated corpus
-of 27 loci (spanning all 12 organisms) through 12 functions — the organism
-resolver plus 11 lookups across 9 of the 23 backends (ATTED-II, BAR, Ensembl
-Plants, Europe PMC, Gramene, KEGG, Phytozome, STRING-DB, UniProt) — and
-compares the results to a frozen snapshot of earlier results
-(`scripts/benchmark_annotations.expected.json`), emitting PASS / DRIFT / FAIL
-plus two cross-source consistency invariants. A change is detected relative to
-that snapshot, not checked against an independent truth. BLAST and the
-synthesis pipelines are registered in the script, but no corpus locus
-exercises them. A scheduled GitHub Actions workflow
-(`.github/workflows/benchmark.yml`) runs it weekly and pages when the same loci
-fail on a re-run. Operator guide: [`docs/benchmarking.md`](docs/benchmarking.md).
-
-```bash
-.venv/bin/python scripts/benchmark_annotations.py        # full live sweep
-```
-
-See [`CHANGELOG.md`](CHANGELOG.md) for release notes, including the
-v0.8 → v0.9 `species=`/`organism_id=` → `organism=` migration and the
-v1.0.1 HTTP-token enforcement change.
+A bare `uv sync` omits the test dependencies. CI runs the unit suite and the
+stdio smoke on Python 3.11–3.14 with the network blocked, plus a non-required
+`live-smoke` job against the real services. A weekly job checks 27 loci against
+a frozen snapshot and pages on drift ([`docs/benchmarking.md`](docs/benchmarking.md)).
+Setup: [CONTRIBUTING.md](CONTRIBUTING.md#dev-setup). Release notes:
+[`CHANGELOG.md`](CHANGELOG.md).
 
 ## MCP registry
 
-Listed in the [official MCP registry](https://registry.modelcontextprotocol.io)
-under the namespace below (ownership-verification token for `mcp-publisher`):
+Listed in the [official MCP registry](https://registry.modelcontextprotocol.io);
+`mcp-publisher` verifies ownership from this line:
 
 ```
 mcp-name: io.github.musharna/plant-genomics-mcp

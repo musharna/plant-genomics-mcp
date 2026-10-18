@@ -206,7 +206,7 @@ loc_either <- function(a) {
   sprintf("%d of %d", sum(x$verdict == "right" | x$verdict_ncbi %in% "right"), nrow(x))
 }
 key_note <- paste0(
-  "Answers checked against Ensembl Plants and UniProt, the databases the server reads;\n",
+  "Answers checked against Ensembl Plants and UniProt, the databases the server reads; ",
   "an answer from another annotation counts as wrong. Accepting NCBI's gene model too, location answers right: ",
   "web search ", loc_either("web"), ", server ", loc_either("mcp"), "."
 )
@@ -252,16 +252,23 @@ p1 <- ggplot(counts, aes(x = share, y = arm_label, fill = verdict)) +
     values = pal_verdict, labels = legend_counts, drop = TRUE,
     name = "Answers (alone / web search / plant-genomics-mcp):"
   ) +
-  guides(fill = guide_legend(title.position = "top", title.hjust = 0.5)) +
+  guides(fill = guide_legend(title.position = "top", title.hjust = 0.5, nrow = 2, byrow = TRUE)) +
   scale_x_continuous(labels = scales::percent, expand = c(0, 0)) +
   labs(
     x = "Share of answers (count in brackets)", y = NULL,
     title = "Plant gene lookups: right, wrong or declined",
-    subtitle = paste0(setup_note, "\n", key_note, "\n", invalid_note)
+    # Wrapped to the 8 in width the README needs (see ggsave below).
+    subtitle = paste(strwrap(c(setup_note, key_note, invalid_note), 78), collapse = "\n")
   ) +
   theme_pgmcp(base_size = 13) +
-  theme(panel.grid.major.y = element_blank(), plot.margin = margin(8, 24, 8, 8))
-ggsave(file.path(outdir, "agent_qa.png"), p1, width = 11.5, height = 5.4, dpi = 200, bg = "white")
+  theme(
+    panel.grid.major.y = element_blank(), plot.margin = margin(8, 24, 8, 8),
+    legend.location = "plot"  # centre under the whole figure, not the panel
+  )
+# The README shows this at 780 px. Drawn 11 in wide it was scaled to a third and
+# its row labels read at ~9 px; at 8 in the same text is 1.4x larger on the page.
+# Height carries the baseline rows.
+ggsave(file.path(outdir, "agent_qa.png"), p1, width = 8, height = 6.6, dpi = 200, bg = "white")
 
 # Figure 2: cost and seconds per answer, one point per run, box over them.
 long <- rbind(

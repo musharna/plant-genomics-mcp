@@ -3,11 +3,9 @@
 The failure mode this guards is not a bug in the server: it is that every
 addition to `examples/` arrives with a paragraph of README to explain it,
 and a reader who opens the repo for the first time pays for all of them.
-`BUDGET` is the line count of `README.md` on `origin/main` (340) plus the
-two lines the ARF dossier is allowed to add: the link line itself and the
-blank line that separates it from the paragraph above, without which
-Markdown glues the link onto that paragraph. Growing the README past it is
-a deliberate act that has to edit this number.
+`BUDGET` is the line count of `README.md` after it was cut to the essentials
+(347 → 252 lines). Growing the README past it is a deliberate act that has
+to edit this number.
 
 Two controls, because a budget test is easy to write so that it cannot
 fail:
@@ -30,19 +28,11 @@ from pathlib import Path
 
 README = Path(__file__).resolve().parents[1] / "README.md"
 
-# `git show origin/main:README.md | wc -l` = 340, + 2 for
-# examples/arf_family/PAGE.md: the link line and the blank line that must
-# precede it (a link line glued to the previous paragraph renders as part
-# of that paragraph). +1 (#124): the tool-matrix row for `entry_members`;
-# a new tool's row is the one addition the matrix exists to carry. +1
-# (#130): the row for `gene_tree_members`, on the same terms. +2 (agent
-# benchmark): its section is 6 lines (heading, one paragraph, one figure line,
-# each with its blank line), 4 of them inside the headroom main had left at
-# 340 lines. That section is the measured answer to "does it help?"; the
-# detail lives in benchmarks/agent_qa/README.md. +1 (#234, merged first):
-# its orthologs paragraph is one line longer than the one it replaced, which
-# took one line of the headroom the +2 above counted on.
-BUDGET = 347
+# `wc -l README.md` after the concision pass, which moved the walkthrough
+# table and Quickstart JSON into examples/ and stated each count once. Earlier
+# raises (ARF link, tool-matrix rows, the benchmark section) are in git log.
+# 252 once the screenshots went to one line each, with the chart on top.
+BUDGET = 252
 
 TITLE_LINE = "# 🌱 plant-genomics-mcp"
 
@@ -67,4 +57,4 @@ def test_the_budget_test_measures_the_real_readme() -> None:
     assert README.is_file(), f"{README} does not exist"
     lines = README.read_text(encoding="utf-8").splitlines()
     assert lines[0] == TITLE_LINE, f"first line is {lines[0]!r}, not this repo's README"
-    assert len(lines) > 300, f"only {len(lines)} lines — README is not the real one"
+    assert len(lines) > 200, f"only {len(lines)} lines — README is not the real one"
