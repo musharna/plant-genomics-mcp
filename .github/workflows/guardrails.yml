@@ -211,22 +211,8 @@ jobs:
       REVIEW_TOOLS: "Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Read,Grep,Glob,Edit(//tmp/review.md)"
       REVIEW_PROMPT: |
         Review PR #${{ github.event.pull_request.number }} in ${{ github.repository }}.
-        Report only findings you can point to a line for, most severe first.
-        Bar: this code was largely machine-written, so hold it to a HIGHER
-        bar than hand-written code. Check specifically for:
-        1. Tests that cannot fail: assertions that pass on the broken code,
-           negative checks with no positive control, fixtures that encode the
-           belief under test, wall-clock budgets used as correctness checks.
-        2. Guards whose predicate cannot observe what it must discriminate.
-        3. Silent no-ops: bare str.replace(), unasserted return values,
-           swallowed exceptions, fallbacks that hide failure.
-        4. Correctness: off-by-one, unit/scale errors, wrong-name-right-value,
-           regex backtracking, resource leaks, concurrency.
-        5. Security: injection, path traversal, secrets, unsafe deserialisation.
-        Ignore style. If nothing meets the bar, say so in one line.
-        If a review comment from you already exists on this PR (see
-        `gh pr view <n> --comments`), review only the commits since it and
-        post a short delta, not a full re-review.
+        The bar, the finding tags, the format and the round rules are in
+        REVIEW.md, appended below after this review's round number.
         This is a static review: you cannot run code, tests or tools here.
         Read files with the Read tool. The shell runs only `gh pr diff`,
         `gh pr view` and `gh pr comment`, each on its own: no pipes,
@@ -248,6 +234,32 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+      - name: Review round, and the bar from the base branch
+        # The bar is REVIEW.md as the BASE branch has it: a PR that edits
+        # REVIEW.md must not set the bar it is reviewed under. One stated
+        # exception: the PR that first adds REVIEW.md, where the base has none.
+        # The round is counted here, not by the model: one round = one comment
+        # carrying the guardrails-review marker. REVIEW.md says what changes when.
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          BASE: ${{ github.base_ref }}
+        run: |
+          git rev-parse -q --verify "origin/$BASE^{commit}" >/dev/null || { echo "::error::no origin/$BASE in the checkout, so the base branch's REVIEW.md cannot be read"; exit 1; }
+          if git cat-file -e "origin/$BASE:REVIEW.md" 2>/dev/null; then
+            bar=$(git show "origin/$BASE:REVIEW.md")
+          elif [ -f REVIEW.md ]; then
+            echo "::warning::origin/$BASE has no REVIEW.md: this PR adds it, so it is reviewed under its own copy"
+            bar=$(cat REVIEW.md)
+          else
+            echo "::error::no REVIEW.md on origin/$BASE or in this PR, so the review has no bar: resync from repo-template"; exit 1
+          fi
+          comments=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate)
+          prior=$(jq -s '[.[][] | select(.user.login == "claude[bot]" or .user.login == "github-actions[bot]") | select(.body | contains("<!-- guardrails-review "))] | length' <<<"$comments")
+          round=$((prior + 1))
+          d=REVIEW_EOF_$(openssl rand -hex 8)
+          printf 'REVIEW_CONTEXT<<%s\n\nThis is review round %s.\n\n%s\n%s\n' "$d" "$round" "$bar" "$d" >>"$GITHUB_ENV"
+          echo "review round $round"
       - id: review
         # A failure here is classified by the next step, never ignored.
         continue-on-error: true
@@ -255,7 +267,9 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           use_sticky_comment: true
-          prompt: ${{ env.REVIEW_PROMPT }}
+          prompt: |-
+            ${{ env.REVIEW_PROMPT }}
+            ${{ env.REVIEW_CONTEXT }}
           claude_args: |
             --allowed-tools "${{ env.REVIEW_TOOLS }}"
             --max-turns 80
@@ -300,7 +314,7 @@ jobs:
           [ -x "$claude" ] || { echo "::error::no Claude Code CLI at $claude (the action installs it)"; exit 1; }
           out=$RUNNER_TEMP/review-api.json
           rc=0
-          "$claude" -p "$REVIEW_PROMPT" --model claude-sonnet-5 --max-turns 80 \
+          "$claude" -p "$REVIEW_PROMPT$REVIEW_CONTEXT" --model claude-sonnet-5 --max-turns 80 \
             --allowed-tools "$REVIEW_TOOLS" --setting-sources user --strict-mcp-config \
             --output-format json >"$out" || rc=$?
           # The summary only; the transcript stays out of a public log.
