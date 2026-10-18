@@ -10,6 +10,11 @@ the same way. Verdicts:
 - ``no_answer``: no ``ANSWER:`` line at all (a format failure, kept apart so it
   is never silently counted as either of the others).
 
+The 2026-10-18 kinds (build_hard.py) reuse these rules: an ortholog's
+location is a location, an ortholog's protein length and an interval's gene
+count are exact integers, and every other answer is a gene id (an NCBI Gene
+ID too, compared as a string).
+
 A wrong answer in an identifier category (``symbol_to_locus``,
 ``uniprot_accession``, ``ortholog``) that is shaped like a real identifier is
 also flagged ``wrong_id``: a well-formed id that is not the answer. The flag
@@ -48,9 +53,11 @@ def extract(reply: str) -> str | None:
 
 def _gene_id(value: str) -> str:
     """An id with case, a version suffix and a transcript suffix removed:
-    AT1G01010.1, Zm00001eb056300_T001 and Solyc01g005610.3 name their genes."""
+    AT1G01010.1, Zm00001eb056300_T001, Solyc01g005610.3 and poplar's
+    Potri.008G159900.v4.1 name their genes."""
     v = value.strip().upper().removeprefix("GENE-")
     v = re.sub(r"_T\d{3}$", "", v)
+    v = re.sub(r"\.V\d+(?:\.\d+)?$", "", v)
     v = re.sub(r"\.\d+$", "", v)
     return v
 
@@ -65,6 +72,12 @@ def _chromosome(token: str) -> str:
     t = token.strip().upper()
     t = re.sub(r"^(CHROMOSOME|CHR)\s*", "", t)
     return t.lstrip("0") or "0"
+
+
+def _integer(value: str) -> int | None:
+    """The leading integer of a reply value (``412``, ``1,204 aa``), or None."""
+    m = re.match(r"^\s*(\d[\d,]*)", value)
+    return int(m.group(1).replace(",", "")) if m else None
 
 
 def _location(value: str) -> tuple[str, int] | None:
@@ -112,16 +125,17 @@ def score(question: dict[str, Any], reply: str) -> dict[str, Any]:
         return {"verdict": "declined", "value": value, "wrong_id": False}
     truth = question["truth"]
     category = question["category"]
-    if category == "location":
+    if category in ("location", "ortholog_location"):
         right = _location_right(value, truth)
-    elif category == "protein_length":
-        m = re.match(r"^\s*([\d,]+)", value)
-        right = m is not None and int(m.group(1).replace(",", "")) == truth["length"]
+    elif category in ("protein_length", "ortholog_protein_length"):
+        right = _integer(value) == truth["length"]
+    elif category == "interval_count":
+        right = _integer(value) == truth["count"]
     elif category == "symbol_to_locus":
         right = _gene_id(value) in {_gene_id(t) for t in truth["loci"]}
     elif category == "uniprot_accession":
         right = _accession(value) == truth["accession"].upper()
-    elif category == "ortholog":
+    elif category in ("ortholog", "symbol_ortholog", "position_to_gene", "id_mapping"):
         right = _gene_id(value) == _gene_id(truth["gene"])
     else:
         raise ValueError(f"unknown category {category!r}")
