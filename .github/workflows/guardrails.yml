@@ -186,13 +186,56 @@ jobs:
     # none, because the green check claims a review happened.
     # Dependabot-authored PRs never receive repository secrets (GitHub design),
     # so there the token is unreachable rather than unset: skip, don't fail.
-    if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
+    # Template resyncs (chore/guardrails-sync-* branches) are skipped too: the
+    # change was reviewed in the repo-template PR, and ten re-reviews per sync
+    # used up the subscription's weekly limit on 2026-10-17. Skipped shows as
+    # skipped, not green.
+    if: >-
+      github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
+      && !startsWith(github.head_ref, 'chore/guardrails-sync-')
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
       issues: write
       id-token: write
+    env:
+      # One prompt and one tool list for both paths (subscription, then API key).
+      # Measured 2026-09-30 on 10 fleet PRs: 6-18 denied calls per review
+      # (gh api for the prior review, attempts to run uvx/selftests, `>` and
+      # `&&` around gh, sed instead of Read), and tmodloader#89 posted nothing
+      # with the check green. Code execution stays denied on purpose: this job
+      # holds the tokens and the PR's code is untrusted.
+      # Edit(//tmp/review.md): the one file it writes, not all of /tmp. Edit,
+      # not Write(...): see no-pathscoped-write-rule.
+      REVIEW_TOOLS: "Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Read,Grep,Glob,Edit(//tmp/review.md)"
+      REVIEW_PROMPT: |
+        Review PR #${{ github.event.pull_request.number }} in ${{ github.repository }}.
+        Report only findings you can point to a line for, most severe first.
+        Bar: this code was largely machine-written, so hold it to a HIGHER
+        bar than hand-written code. Check specifically for:
+        1. Tests that cannot fail: assertions that pass on the broken code,
+           negative checks with no positive control, fixtures that encode the
+           belief under test, wall-clock budgets used as correctness checks.
+        2. Guards whose predicate cannot observe what it must discriminate.
+        3. Silent no-ops: bare str.replace(), unasserted return values,
+           swallowed exceptions, fallbacks that hide failure.
+        4. Correctness: off-by-one, unit/scale errors, wrong-name-right-value,
+           regex backtracking, resource leaks, concurrency.
+        5. Security: injection, path traversal, secrets, unsafe deserialisation.
+        Ignore style. If nothing meets the bar, say so in one line.
+        If a review comment from you already exists on this PR (see
+        `gh pr view <n> --comments`), review only the commits since it and
+        post a short delta, not a full re-review.
+        This is a static review: you cannot run code, tests or tools here.
+        Read files with the Read tool. The shell runs only `gh pr diff`,
+        `gh pr view` and `gh pr comment`, each on its own: no pipes,
+        redirects, `&&` or `$(...)`. Anything else is denied and costs a turn.
+        Post the review: write it with the Write tool to /tmp/review.md, then
+        `gh pr comment <n> --body-file /tmp/review.md`. The file's first line
+        must be exactly:
+        <!-- guardrails-review ${{ github.run_id }}-${{ github.run_attempt }} -->
+        (the next step looks for it; without it the job fails).
     steps:
       - name: CLAUDE_CODE_OAUTH_TOKEN is configured
         env:
@@ -205,52 +248,72 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-      - uses: anthropics/claude-code-action@4169884de317bc1b4cb1b47f4476d76fed92b384 # v1
+      - id: review
+        # A failure here is classified by the next step, never ignored.
+        continue-on-error: true
+        uses: anthropics/claude-code-action@4169884de317bc1b4cb1b47f4476d76fed92b384 # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           use_sticky_comment: true
-          prompt: |
-            Review PR #${{ github.event.pull_request.number }} in ${{ github.repository }}.
-            Report only findings you can point to a line for, most severe first.
-            Bar: this code was largely machine-written, so hold it to a HIGHER
-            bar than hand-written code. Check specifically for:
-            1. Tests that cannot fail: assertions that pass on the broken code,
-               negative checks with no positive control, fixtures that encode the
-               belief under test, wall-clock budgets used as correctness checks.
-            2. Guards whose predicate cannot observe what it must discriminate.
-            3. Silent no-ops: bare str.replace(), unasserted return values,
-               swallowed exceptions, fallbacks that hide failure.
-            4. Correctness: off-by-one, unit/scale errors, wrong-name-right-value,
-               regex backtracking, resource leaks, concurrency.
-            5. Security: injection, path traversal, secrets, unsafe deserialisation.
-            Ignore style. If nothing meets the bar, say so in one line.
-            If a review comment from you already exists on this PR (see
-            `gh pr view <n> --comments`), review only the commits since it and
-            post a short delta, not a full re-review.
-            This is a static review: you cannot run code, tests or tools here.
-            Read files with the Read tool. The shell runs only `gh pr diff`,
-            `gh pr view` and `gh pr comment`, each on its own: no pipes,
-            redirects, `&&` or `$(...)`. Anything else is denied and costs a turn.
-            Post the review: write it with the Write tool to /tmp/review.md, then
-            `gh pr comment <n> --body-file /tmp/review.md`. The file's first line
-            must be exactly:
-            <!-- guardrails-review ${{ github.run_id }}-${{ github.run_attempt }} -->
-            (the next step looks for it; without it the job fails).
-          # Measured 2026-09-30 on 10 fleet PRs: 6-18 denied calls per review
-          # (gh api for the prior review, attempts to run uvx/selftests, `>` and
-          # `&&` around gh, sed instead of Read), and tmodloader#89 posted nothing
-          # with the check green. Code execution stays denied on purpose: this job
-          # holds the OAuth token and the PR's code is untrusted.
-          # Edit(//tmp/review.md): the one file it writes, not all of /tmp. Edit,
-          # not Write(...): see no-pathscoped-write-rule.
+          prompt: ${{ env.REVIEW_PROMPT }}
           claude_args: |
-            --allowed-tools "Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Read,Grep,Glob,Edit(//tmp/review.md)"
+            --allowed-tools "${{ env.REVIEW_TOOLS }}"
             --max-turns 80
+      - name: Subscription out of usage? Then the API key reviews instead
+        # Only a usage limit falls back. On a limit the action's transcript has
+        # an assistant message with error "rate_limit" ("You've hit your weekly
+        # limit", 2026-10-17); the step's execution_file output is unset when it
+        # fails, so read the file at its fixed path. Any other failure is a real
+        # one and fails here, with the reason.
+        id: fallback
+        if: steps.review.outcome == 'failure'
+        env:
+          F: ${{ runner.temp }}/claude-execution-output.json
+          KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          why=$(jq -r '[.[] | select(.type == "result") | .result][0] // "no result"' "$F" 2>/dev/null || echo "no transcript at $F")
+          if ! jq -e 'any(.[]; .type == "assistant" and .error == "rate_limit")' "$F" >/dev/null 2>&1; then
+            echo "::error::the review step failed, and not on a usage limit: $why"; exit 1
+          fi
+          if [ -z "$KEY" ]; then
+            echo "::error::subscription usage limit ($why) and no ANTHROPIC_API_KEY secret to fall back on. Add it: gh secret set ANTHROPIC_API_KEY -R ${{ github.repository }}"; exit 1
+          fi
+          echo "::warning::subscription usage limit ($why): this review runs on the API key"
+          echo "run=1" >>"$GITHUB_OUTPUT"
+      - name: Review on the API key (Claude Code itself, not the action)
+        # Not the action: it labels its requests claude-code-github-action, and
+        # this account's API credits refuse that label ("Credit balance is too
+        # low"; the same key works from the CLI, 2026-10-18). The action already
+        # installed the CLI. The PR's files are untrusted: no project or local
+        # settings (hooks), no MCP servers, and the shell is the same three gh
+        # commands. Secrets reach only same-repo PRs (GitHub withholds them from
+        # forks), the exposure the action's OAuth token already has. Not
+        # CLAUDE_CODE_SUBPROCESS_ENV_SCRUB: it needs bubblewrap, which Ubuntu
+        # 24.04's userns restriction blocks, and Read could still see the key in
+        # /proc. Sonnet, as on the subscription: an API key defaults to Opus.
+        if: steps.fallback.outputs.run == '1'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          claude=$HOME/.local/bin/claude
+          [ -x "$claude" ] || { echo "::error::no Claude Code CLI at $claude (the action installs it)"; exit 1; }
+          out=$RUNNER_TEMP/review-api.json
+          rc=0
+          "$claude" -p "$REVIEW_PROMPT" --model claude-sonnet-5 --max-turns 80 \
+            --allowed-tools "$REVIEW_TOOLS" --setting-sources user --strict-mcp-config \
+            --output-format json >"$out" || rc=$?
+          # The summary only; the transcript stays out of a public log.
+          jq -c '{subtype, is_error, num_turns, total_cost_usd}' "$out" || { echo "::error::no JSON result (exit $rc)"; exit 1; }
+          if [ "$rc" != 0 ] || jq -e '.is_error' "$out" >/dev/null; then
+            echo "::error::the API-key review failed (exit $rc): $(jq -r '.result // ""' "$out" | head -c 200)"; exit 1
+          fi
       - name: Review was actually posted BY THIS RUN (the comment is the deliverable)
         # The action is green whenever the model stops cleanly, posted or not
-        # (tmodloader#89, 2026-09-30). Accept only a claude[bot] comment carrying
-        # this run attempt's marker: any claude[bot] comment in a time window
-        # would also accept another workflow's (e.g. an @claude responder).
+        # (tmodloader#89, 2026-09-30). Accept only a comment carrying this run
+        # attempt's marker, from claude[bot] (the action) or github-actions[bot]
+        # (the API-key path posts with the workflow token): any comment in a
+        # time window would also accept another workflow's (an @claude responder).
         # One stated exception: claude-code-action will not run on a PR that
         # edits the workflow file it runs from (breedsim#61, phylokit#54,
         # figcite#28/#29: 0 turns, no comment). There the review cannot happen,
@@ -262,7 +325,7 @@ jobs:
         run: |
           n=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate \
             | jq -s --arg m "$MARK" \
-              '[.[][] | select(.user.login == "claude[bot]") | select(.body | contains($m))] | length')
+              '[.[][] | select(.user.login == "claude[bot]" or .user.login == "github-actions[bot]") | select(.body | contains($m))] | length')
           if [ "$n" != 0 ]; then
             echo "review comment from this run present on PR #$PR"; exit 0
           fi
