@@ -17,17 +17,17 @@ AlphaFold, with curated coverage of 12 plants.
 ## Does it help?
 
 Yes, over Claude alone, which declined most lookups. Against web search it is not
-measurably more accurate, but it needs fewer tool calls and less time.
+measurably more accurate, on single lookups or on harder multi-step ones.
 
 <p align="center"><img src="https://raw.githubusercontent.com/musharna/plant-genomics-mcp/main/benchmarks/agent_qa/agent_qa.png" alt="Stacked bar chart of right, wrong and declined answers, 156 per setup. Claude alone: 36 right, 3 wrong, 117 declined. Claude with web search: 151 right, 4 wrong, 1 declined. Claude with plant-genomics-mcp: 156 right. Two no-model baselines: one constant answer per kind of question, 3 of 52 right; chromosome read from the gene ID, 0 of 12 right" width="780"></p>
 
-Claude Opus 5.5, in Claude Code, answered 52 plant gene-lookup questions from 12
-genomes three times each: 151 of 156 right with web search and 156 of 156 with
-the server, which is not separated (4 questions against 0, McNemar p = 0.125).
-The server needed 2.7 fewer tool calls per answer (95% CI 0.6 to 5.8) and was
-3.3 s faster at the median (0.3 to 7.0); cost is not separated. The answer key
-comes from the databases the server reads, so this tests whether lookups are
-done correctly, not whether those databases are right.
+Claude Opus 5.5, in Claude Code, answered 52 plant gene-lookup questions three
+times each: 151 of 156 right with web search, 156 of 156 with the server,
+not separated (4 questions against 0, McNemar p = 0.125). On 36 harder questions
+(orthologs then coordinates, ID mapping, genes in an interval; re-run 2026-10-18)
+both got all 108 right; the server was faster at the median (0.77×, 95% CI 0.64
+to 0.96) and dearer (1.72×, 1.46 to 2.24). The key comes from the databases the
+server reads, so this tests the lookups, not whether those databases are right.
 
 Method, controls and limitations: [benchmarks/agent_qa](benchmarks/agent_qa/README.md).
 

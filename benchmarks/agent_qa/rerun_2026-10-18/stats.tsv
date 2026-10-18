@@ -1,0 +1,8 @@
+metric	estimate	lo95	hi95	p	note
+win_rule_TIE	0	0	0	1	right in all 3 runs: mcp 36, web 36 of 36; only mcp 0, only web 0; non-inferior True
+mcp_vs_web_right_per_run_diff	0	0	0	NA	bootstrap over 36 questions, 10000 draws
+mcp_vs_web_cost_median_ratio	1.72114	1.45724	2.23644	NA	bootstrap over 36 questions, 10000 draws
+mcp_vs_web_seconds_median_ratio	0.766917	0.642697	0.957746	NA	bootstrap over 36 questions, 10000 draws
+mcp_vs_web_tool_calls_mean_diff	-0.0277778	-0.777778	0.657407	NA	bootstrap over 36 questions, 10000 draws
+mcp_vs_web_sign_test_cost_median	-26	NA	NA	1.29135e-05	per-question medians: mcp lower on 5, higher on 31
+mcp_vs_web_sign_test_seconds_median	14	NA	NA	0.0288167	per-question medians: mcp lower on 25, higher on 11

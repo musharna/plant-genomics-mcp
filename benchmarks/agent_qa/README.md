@@ -11,6 +11,10 @@ to 7.0). Median cost is not separated. The main limitation is that the answer
 key comes from the databases the server reads, so this measures whether a
 lookup is carried out correctly, not whether the databases are right.
 
+A pre-registered re-run on 2026-10-18 asked 36 harder, multi-step questions:
+both setups got all 108 answers right, a tie. The server was faster at the
+median and cost more ([Re-run 2026-10-18](#re-run-2026-10-18-server-1292-from-pypi)).
+
 ![Right, wrong or declined per setup, with two no-model baselines](agent_qa.png)
 
 ## Results
@@ -54,6 +58,76 @@ runs of one question are not independent. [`summary.tsv`](summary.tsv) and
 ![Cost and time per answer, every run](agent_qa_cost_time.png)
 
 ![Right, wrong or declined by kind of question](agent_qa_by_category.png)
+
+## Re-run 2026-10-18 (server 1.29.2 from PyPI)
+
+Pre-registered in [`PREREG_2026-10-18.md`](PREREG_2026-10-18.md) (committed
+de86d4f, before the sweep). Primary endpoint: questions right in all 3 runs,
+server against web search. No server code changed, so this tests the same
+1.29.2 release as above, not an unreleased commit.
+
+**Why harder questions, and why no server change.** On the 10-16 questions
+both setups were near the ceiling. [`diagnose.py`](diagnose.py) split every
+10-16 run's tokens and dollars (prices fitted to each model's cost, exact):
+the server sent no bare tool name that was refused (0 of 156), pasted no
+payloads (median tool input 54 characters) and returned short outputs (median
+385 characters). Its cost is its 56 tool definitions, about 27,300 tokens with
+every API call (first-call context 28,015 tokens against web search's 2,069),
+47% of its spend. Shortening them could change accuracy, the endpoint here,
+so it was left for a separate test.
+
+**Questions.** [`build_hard.py`](build_hard.py) drew 36 (seed 20261018) from
+Ensembl 116 / Ensembl Genomes 63, UniProt 2026_03 and NCBI Gene over plain
+HTTP, never importing the server, and froze them outside the repository
+(sha256 in the pre-registration). Each names the database its key holds.
+
+| Kind (6 each) | What it asks |
+|---|---|
+| ortholog_location | an Arabidopsis gene's one-to-one Ensembl Compara ortholog, then where it starts |
+| ortholog_protein_length | the same ortholog, then its canonical protein length |
+| symbol_ortholog | a gene name, to its locus, to its one-to-one ortholog |
+| id_mapping | rice RAP-DB → MSU (UniProt); Arabidopsis AGI → NCBI Gene ID |
+| position_to_gene | the only gene at a position of a named assembly |
+| interval_count | protein-coding genes overlapping a 150–400 kb interval |
+
+**Result: TIE.** Web search and the server were interleaved by question, 3
+reps, one worker (16:12–17:34 EDT).
+
+| Setup | Right | Wrong | Invalid | Questions right in all 3 | Cost / answer, median | Seconds / answer, median | Tool calls / answer, mean |
+|---|---|---|---|---|---|---|---|
+| Baseline: one constant answer per kind | 3 of 36 | 33 | – | 3 | – | – | – |
+| Claude + web search | 108 | 0 | 0 | 36 of 36 | $0.021 | 20.0 | 2.22 |
+| Claude + plant-genomics-mcp | 108 | 0 | 0 | 36 of 36 | $0.037 | 15.3 | 2.19 |
+
+- Win rule: non-inferior (36 ≥ 36 − 2) but not better (0 discordant
+  questions, McNemar p = 1; difference 0, 95% CI 0 to 0). Every kind was 6 of
+  6 for both.
+- The server's median answer cost 1.72× web search's (95% CI 1.46 to 2.24;
+  dearer on 31 of 36 questions, sign test p = 1.3e-5) and took 0.77× the time
+  (0.64 to 0.96; faster on 25 of 36, p = 0.029). Tool calls were even (−0.03
+  per answer, −0.78 to 0.66). Totals: $5.79 server, $2.93 web search.
+- Where the server's money went: its context was 28,050 tokens on the first
+  call against 2,104, and its outputs were longer (median 1,090 characters,
+  mean 4,887, against 431 and 899), most of them full Ensembl region rows. Web
+  search fetched the Ensembl, UniProt or NCBI REST APIs itself in 105 of 108
+  runs.
+- Mechanism: the server's runs called `gramene_homologs` in 54,
+  `ensembl_region_query` in 36, `resolve_locus_to_uniprot` in 27; no call was
+  refused, 12 of 237 calls returned an error the model recovered from
+  ([`rerun_2026-10-18/mechanism.tsv`](rerun_2026-10-18/mechanism.tsv)).
+  Every ortholog answer it read from Gramene matched the Ensembl Compara key.
+- Controls: oracle 36 of 36 right and 0 of 36 shifted before the sweep; 0
+  invalid runs; leak scan 0 hits in 216 transcripts; 0 usage pauses and 0
+  rate-limited runs. Two pilots (one 10-16 question, one new question, both
+  setups, all right) are kept apart and not counted.
+- Limitations: the harder set is still at the ceiling for both setups, so it
+  cannot show an accuracy difference either; web search could reach every
+  answer through the same public REST APIs.
+
+Tables: [`rerun_2026-10-18/`](rerun_2026-10-18/) (`summary.tsv`, `stats.tsv`,
+`by_kind.tsv`, `mechanism.tsv`), written by
+[`analyze_rerun.py`](analyze_rerun.py). The sweep cost $8.71, plus $0.37 of
+pilots.
 
 ## Controls
 
@@ -179,6 +253,14 @@ uv run python benchmarks/agent_qa/run.py --reps 3 --workers 5   # 468 claude -p 
 uv run python benchmarks/agent_qa/run.py --rescore     # re-score stored replies after a key fix
 uv run python benchmarks/agent_qa/run.py --audit --runs DIR   # validity + leak scan from transcripts
 Rscript benchmarks/agent_qa/plot.R                     # summary.tsv, stats.tsv, figures
+
+# 2026-10-18 re-run (R=~/plant-genomics-mcp-artifacts/agent_qa/rerun-2026-10-18)
+uv run python benchmarks/agent_qa/build_hard.py --out $R/questions.json
+uv run python benchmarks/agent_qa/run.py --key $R/questions.json --arms web,mcp --reps 3 \
+  --workers 1 --results $R/results.jsonl --runs $R/runs   # pauses on usage limits
+uv run python benchmarks/agent_qa/analyze_rerun.py --key $R/questions.json \
+  --results $R/results.jsonl --runs $R/runs --outdir benchmarks/agent_qa/rerun_2026-10-18
+uv run python benchmarks/agent_qa/diagnose.py --runs $R/runs   # where tokens and dollars go
 ```
 
 The full run cost about $15 in API usage. Raw transcripts go to
