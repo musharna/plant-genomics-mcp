@@ -71,7 +71,7 @@ dossier [`gene_report_AT1G01010.md`](examples/gene_report_AT1G01010.md), are in
 
 ## 📊 Does it help?
 
-We asked Claude Opus 5.5, in Claude Code, 52 plant gene-lookup questions (location, protein length, name → locus, UniProt accession, ortholog; 12 genomes), three times each. Alone, it declined most of them. With web search it got 48 of the 52 right in every run, mostly by calling the Ensembl and UniProt REST APIs itself. With this server it got all 52 right in every run, and its slowest answer took 86 s, against 705 s with web search. The answer key comes from the databases the server reads, so this measures whether lookups are done correctly. [The chart at the top](#-plant-genomics-mcp) shows every answer. Cost, timings and caveats: [`benchmarks/agent_qa/`](benchmarks/agent_qa/README.md).
+We asked Claude Opus 5.5, in Claude Code, 52 plant gene-lookup questions across 12 genomes, three times each. Alone, it declined most of them. With web search it got 151 of 156 answers right, mostly by calling the Ensembl and UniProt REST APIs itself; with this server, 156 of 156. That accuracy gap is not separated (4 questions against 0, exact McNemar p = 0.125). The server needed 2.7 fewer tool calls per answer (95% CI 0.6 to 5.8) and was 3.3 s faster at the median (0.3 to 7.0); cost is not separated. The key comes from the databases the server reads, so this measures whether lookups are done correctly. Details: [`benchmarks/agent_qa/`](benchmarks/agent_qa/README.md).
 
 ## 🛠️ Tools
 
