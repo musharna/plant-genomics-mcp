@@ -234,6 +234,11 @@ def build(rng: random.Random) -> list[dict[str, Any]]:
             ]
             if not sym or " " in sym or len(olns) != 1 or olns[0] in used:
                 continue
+            # Organelle genes (ATCG..., ATMG...) carry the same name in every
+            # plant: rice's psbH is Ensembl gene "gene-psbH", so the question
+            # would give its answer away (first build, 2026-10-18).
+            if olns[0].startswith(("ATCG", "ATMG")):
+                continue
             same = uniprot(f'organism_id:3702 AND reviewed:true AND gene_exact:"{sym}"')
             if len(same) != 1:
                 continue
