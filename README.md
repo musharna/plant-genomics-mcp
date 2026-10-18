@@ -125,18 +125,18 @@ there is no public endpoint, so you run it yourself, behind your own token.
 ## Development
 
 ```bash
-.venv/bin/pip install -e '.[dev]'                         # or: uv sync --extra dev (a bare uv sync omits test deps)
+.venv/bin/pip install -e '.[dev]'                         # or: uv sync --extra dev
 .venv/bin/pytest -q                                       # unit tests
 PLANT_GENOMICS_MCP_LIVE=1 .venv/bin/pytest -q             # adds live network probes
 PLANT_GENOMICS_MCP_STDIO_SMOKE=1 .venv/bin/pytest -q      # adds stdio smoke
 .venv/bin/ruff check .
 ```
 
-CI runs the unit suite and the stdio smoke on Python 3.11–3.14 with the network
-blocked. A weekly job checks 27 loci against a frozen snapshot and pages on
-drift ([`docs/benchmarking.md`](docs/benchmarking.md)). Setup:
-[CONTRIBUTING.md](CONTRIBUTING.md#dev-setup). Release notes:
-[`CHANGELOG.md`](CHANGELOG.md).
+A bare `uv sync` omits the test dependencies. CI runs the unit suite and the
+stdio smoke on Python 3.11–3.14 with the network blocked. A weekly job checks
+27 loci against a frozen snapshot and pages on drift
+([`docs/benchmarking.md`](docs/benchmarking.md)). Setup: [CONTRIBUTING.md](CONTRIBUTING.md#dev-setup).
+Release notes: [`CHANGELOG.md`](CHANGELOG.md).
 
 ## MCP registry
 
