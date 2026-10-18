@@ -1,0 +1,52 @@
+{
+ "tool": "ensembl_plants_lookup_locus",
+ "args": {
+  "locus": "AT5G43460"
+ },
+ "responses": {
+  "GET https://rest.ensembl.org/lookup/id/AT5G43460?species=arabidopsis_thaliana&expand=0 -": [
+   {
+    "status": 200,
+    "headers": [
+     [
+      "vary",
+      "Content-Type, Origin"
+     ],
+     [
+      "content-type",
+      "application/json"
+     ],
+     [
+      "strict-transport-security",
+      "max-age=31536000; includeSubDomains; preload"
+     ],
+     [
+      "x-ratelimit-limit",
+      "55000"
+     ],
+     [
+      "x-ratelimit-reset",
+      "1302"
+     ],
+     [
+      "x-runtime",
+      "1.937863"
+     ],
+     [
+      "accept-ranges",
+      "bytes"
+     ],
+     [
+      "x-ratelimit-period",
+      "3600"
+     ],
+     [
+      "x-ratelimit-remaining",
+      "54999"
+     ]
+    ],
+    "body": "{\"start\":17459873,\"db_type\":\"core\",\"source\":\"araport11\",\"canonical_transcript\":\"AT5G43460.1.\",\"species\":\"arabidopsis_thaliana\",\"end\":17462516,\"description\":\"HR-like lesion-inducing protein-like protein [Source:NCBI gene (formerly Entrezgene);Acc:834366]\",\"id\":\"AT5G43460\",\"display_name\":\"AT5G43460\",\"strand\":1,\"object_type\":\"Gene\",\"logic_name\":\"araport11\",\"biotype\":\"protein_coding\",\"assembly_name\":\"TAIR10\",\"seq_region_name\":\"5\"}"
+   }
+  ]
+ }
+}

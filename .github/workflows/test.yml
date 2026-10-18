@@ -55,6 +55,15 @@ jobs:
           HTTPS_PROXY: "http://127.0.0.1:9"
           NO_PROXY: "localhost,127.0.0.1"
         run: pytest -q -o faulthandler_timeout=300 --cov=src --cov-report=term --cov-report=xml
+      - name: Perf ratchet (work counts must equal tests/perf/baseline.json)
+        # Counts package function calls and mocked HTTP requests per tool
+        # workload, never time, so the baseline is the ceiling on every
+        # interpreter in the matrix. A drop fails too, until --update writes
+        # it; a rise needs --update --allow-increase. See tests/perf/ratchet.py.
+        env:
+          HTTP_PROXY: "http://127.0.0.1:9"
+          HTTPS_PROXY: "http://127.0.0.1:9"
+        run: python -m tests.perf.ratchet
 
   # Live InterPro/PANTHER checks of the ARF example. Not a required check:
   # its result depends on third-party services, so it reports on a PR

@@ -1,0 +1,52 @@
+{
+ "tool": "get_gene_xrefs",
+ "args": {
+  "locus": "AT3G23430"
+ },
+ "responses": {
+  "GET https://rest.ensembl.org/xrefs/id/AT3G23430?species=arabidopsis_thaliana -": [
+   {
+    "status": 200,
+    "headers": [
+     [
+      "vary",
+      "Content-Type, Origin"
+     ],
+     [
+      "content-type",
+      "application/json"
+     ],
+     [
+      "strict-transport-security",
+      "max-age=31536000; includeSubDomains; preload"
+     ],
+     [
+      "x-ratelimit-limit",
+      "55000"
+     ],
+     [
+      "x-ratelimit-reset",
+      "1256"
+     ],
+     [
+      "x-runtime",
+      "0.074275"
+     ],
+     [
+      "accept-ranges",
+      "bytes"
+     ],
+     [
+      "x-ratelimit-period",
+      "3600"
+     ],
+     [
+      "x-ratelimit-remaining",
+      "54996"
+     ]
+    ],
+    "body": "[{\"dbname\":\"NASC_GENE_ID\",\"db_display_name\":\"NASC Gene ID\",\"primary_id\":\"AT3G23430\",\"info_text\":\"\",\"display_id\":\"AT3G23430-TAIR-G\",\"version\":\"0\",\"description\":\"phosphate 1\",\"info_type\":\"DIRECT\",\"synonyms\":[]},{\"display_id\":\"AT3G23430\",\"info_text\":\"\",\"version\":\"0\",\"primary_id\":\"AT3G23430\",\"dbname\":\"TAIR_LOCUS\",\"db_display_name\":\"TAIR\",\"info_type\":\"DIRECT\",\"synonyms\":[],\"description\":\"phosphate 1\"},{\"info_type\":\"DIRECT\",\"synonyms\":[],\"description\":\"\",\"info_text\":\"\",\"display_id\":\"PHO1\",\"version\":\"0\",\"primary_id\":\"PHO1\",\"dbname\":\"TAIR_SYMBOL\",\"db_display_name\":\"TAIR Gene Name\"},{\"description\":null,\"synonyms\":[],\"info_type\":\"DIRECT\",\"db_display_name\":\"Expression Atlas\",\"dbname\":\"ArrayExpress\",\"primary_id\":\"AT3G23430\",\"version\":\"0\",\"info_text\":\"\",\"display_id\":\"AT3G23430\"},{\"description\":null,\"synonyms\":[],\"info_type\":\"DEPENDENT\",\"primary_id\":\"AT3G23430\",\"db_display_name\":\"KNETMINER_ARA\",\"dbname\":\"KNETMINER_ARA\",\"version\":\"0\",\"display_id\":\"AT3G23430\",\"info_text\":\"\"},{\"description\":\"phosphate 1\",\"info_type\":\"DEPENDENT\",\"synonyms\":[],\"primary_id\":\"821924\",\"dbname\":\"WikiGene\",\"db_display_name\":\"WikiGene\",\"info_text\":\"\",\"display_id\":\"PHO1\",\"version\":\"0\"},{\"version\":null,\"info_text\":\"\",\"display_id\":\"PHO1\",\"primary_id\":\"Q8S403\",\"db_display_name\":\"UniProtKB Gene Name\",\"dbname\":\"Uniprot_gn\",\"synonyms\":[],\"info_type\":\"DEPENDENT\",\"description\":null},{\"primary_id\":\"821924\",\"dbname\":\"EntrezGene\",\"db_display_name\":\"NCBI gene (formerly Entrezgene)\",\"display_id\":\"PHO1\",\"info_text\":\"\",\"version\":\"0\",\"description\":\"phosphate 1\",\"info_type\":\"DEPENDENT\",\"synonyms\":[\"ARABIDOPSIS PHOSPHATE 1\",\"ATPHO1\",\"phosphate 1\"]}]"
+   }
+  ]
+ }
+}

@@ -1,0 +1,53 @@
+{
+ "tool": "ensembl_plants_assembly",
+ "args": {
+  "organism": "arabidopsis_thaliana",
+  "limit": 10
+ },
+ "responses": {
+  "GET https://rest.ensembl.org/info/assembly/arabidopsis_thaliana -": [
+   {
+    "status": 200,
+    "headers": [
+     [
+      "vary",
+      "Content-Type, Origin"
+     ],
+     [
+      "content-type",
+      "application/json"
+     ],
+     [
+      "strict-transport-security",
+      "max-age=31536000; includeSubDomains; preload"
+     ],
+     [
+      "x-ratelimit-limit",
+      "55000"
+     ],
+     [
+      "x-ratelimit-reset",
+      "1243"
+     ],
+     [
+      "x-runtime",
+      "0.064974"
+     ],
+     [
+      "accept-ranges",
+      "bytes"
+     ],
+     [
+      "x-ratelimit-period",
+      "3600"
+     ],
+     [
+      "x-ratelimit-remaining",
+      "54995"
+     ]
+    ],
+    "body": "{\"default_coord_system_version\":\"TAIR10\",\"assembly_name\":\"TAIR10\",\"genebuild_initial_release_date\":\"2010-09\",\"coord_system_versions\":[\"TAIR10\",\"TAIR9\"],\"karyotype\":[\"1\",\"2\",\"3\",\"4\",\"5\",\"Mt\",\"Pt\"],\"genebuild_start_date\":\"2016-06-Araport11\",\"top_level_region\":[{\"name\":\"Mt\",\"coord_system\":\"chromosome\",\"length\":366924},{\"name\":\"Pt\",\"coord_system\":\"chromosome\",\"length\":154478},{\"coord_system\":\"chromosome\",\"name\":\"5\",\"length\":26975502},{\"length\":18585056,\"coord_system\":\"chromosome\",\"name\":\"4\"},{\"length\":23459830,\"coord_system\":\"chromosome\",\"name\":\"3\"},{\"coord_system\":\"chromosome\",\"name\":\"2\",\"length\":19698289},{\"coord_system\":\"chromosome\",\"name\":\"1\",\"length\":30427671}],\"genebuild_last_geneset_update\":\"2010-09\",\"assembly_accession\":\"GCA_000001735.1\",\"genebuild_method\":\"import\",\"assembly_date\":\"2008-04\",\"golden_path\":119667750}"
+   }
+  ]
+ }
+}

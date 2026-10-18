@@ -1,0 +1,53 @@
+{
+ "tool": "string_interactions",
+ "args": {
+  "locus": "AT1G19850",
+  "limit": 10
+ },
+ "responses": {
+  "GET https://string-db.org/api/json/interaction_partners?identifiers=AT1G19850&species=3702&limit=10&caller_identity=plant-genomics-mcp -": [
+   {
+    "status": 200,
+    "headers": [
+     [
+      "content-type",
+      "text/json; charset=utf-8"
+     ],
+     [
+      "connection",
+      "keep-alive"
+     ],
+     [
+      "server",
+      "cloudflare"
+     ],
+     [
+      "string-api-version",
+      "2"
+     ],
+     [
+      "cache-control",
+      "max-age=86400"
+     ],
+     [
+      "access-control-allow-origin",
+      "*"
+     ],
+     [
+      "cf-cache-status",
+      "DYNAMIC"
+     ],
+     [
+      "cf-ray",
+      "a4bae75e2a037cb0-IAD"
+     ],
+     [
+      "alt-svc",
+      "h3=\":443\"; ma=86400"
+     ]
+    ],
+    "body": "[{\"stringId_A\": \"3702.P93024\", \"stringId_B\": \"3702.O24409\", \"preferredName_A\": \"ARF5\", \"preferredName_B\": \"IAA19\", \"ncbiTaxonId\": 3702, \"score\": 0.999, \"nscore\": 0, \"fscore\": 0, \"pscore\": 0, \"ascore\": 0, \"escore\": 0.99, \"dscore\": 0.65, \"tscore\": 0.799}, {\"stringId_A\": \"3702.P93024\", \"stringId_B\": \"3702.P93830\", \"preferredName_A\": \"ARF5\", \"preferredName_B\": \"IAA17\", \"ncbiTaxonId\": 3702, \"score\": 0.999, \"nscore\": 0, \"fscore\": 0, \"pscore\": 0, \"ascore\": 0, \"escore\": 0.987, \"dscore\": 0.65, \"tscore\": 0.819}, {\"stringId_A\": \"3702.P93024\", \"stringId_B\": \"3702.Q38830\", \"preferredName_A\": \"ARF5\", \"preferredName_B\": \"IAA12\", \"ncbiTaxonId\": 3702, \"score\": 0.999, \"nscore\": 0, \"fscore\": 0, \"pscore\": 0, \"ascore\": 0, \"escore\": 0.999, \"dscore\": 0.65, \"tscore\": 0.896}, {\"stringId_A\": \"3702.P93024\", \"stringId_B\": \"3702.P49677\", \"preferredName_A\": \"ARF5\", \"preferredName_B\": \"IAA1\", \"ncbiTaxonId\": 3702, \"score\": 0.998, \"nscore\": 0, \"fscore\": 0, \"pscore\": 0, \"ascore\": 0, \"escore\": 0.984, \"dscore\": 0.65, \"tscore\": 0.774}, {\"stringId_A\": \"3702.P93024\", \"stringId_B\": \"3702.Q38832\", \"preferredName_A\": \"ARF5\", \"preferredName_B\": \"IAA14\", \"ncbiTaxonId\": 3702, \"score\": 0.996, \"nscore\": 0, \"fscore\": 0, \"pscore\": 0, \"ascore\": 0, \"escore\": 0.952, \"dscore\": 0.65, \"tscore\": 0.82}, {\"stringId_A\": \"3702.P93024\", \"stringId_B\": \"3702.Q38826\", \"preferredName_A\": \"ARF5\", \"preferredName_B\": \"IAA8\", \"ncbiTaxonId\": 3702, \"score\": 0.995, \"nscore\": 0, \"fscore\": 0, \"pscore\": 0, \"ascore\": 0.05, \"escore\": 0.952, \"dscore\": 0.65, \"tscore\": 0.74}, {\"stringId_A\": \"3702.P93024\", \"stringId_B\": \"3702.Q38822\", \"preferredName_A\": \"ARF5\", \"preferredName_B\": \"IAA3\", \"ncbiTaxonId\": 3702, \"score\": 0.991, \"nscore\": 0, \"fscore\": 0, \"pscore\": 0, \"ascore\": 0, \"escore\": 0.876, \"dscore\": 0.65, \"tscore\": 0.812}, {\"stringId_A\": \"3702.P93024\", \"stringId_B\": \"3702.Q38831\", \"preferredName_A\": \"ARF5\", \"preferredName_B\": \"IAA13\", \"ncbiTaxonId\": 3702, \"score\": 0.987, \"nscore\": 0, \"fscore\": 0, \"pscore\": 0, \"ascore\": 0, \"escore\": 0.952, \"dscore\": 0.65, \"tscore\": 0.327}, {\"stringId_A\": \"3702.P93024\", \"stringId_B\": \"3702.Q38824\", \"preferredName_A\": \"ARF5\", \"preferredName_B\": \"IAA6\", \"ncbiTaxonId\": 3702, \"score\": 0.985, \"nscore\": 0, \"fscore\": 0, \"pscore\": 0, \"ascore\": 0, \"escore\": 0.877, \"dscore\": 0.65, \"tscore\": 0.685}, {\"stringId_A\": \"3702.P93024\", \"stringId_B\": \"3702.Q38827\", \"preferredName_A\": \"ARF5\", \"preferredName_B\": \"IAA9\", \"ncbiTaxonId\": 3702, \"score\": 0.982, \"nscore\": 0, \"fscore\": 0, \"pscore\": 0, \"ascore\": 0.053, \"escore\": 0.762, \"dscore\": 0.65, \"tscore\": 0.799}]"
+   }
+  ]
+ }
+}
