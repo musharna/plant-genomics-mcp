@@ -37,6 +37,10 @@ The first line after the marker is the count: `2 Important, 1 Nit, 0
 Pre-existing.` If nothing meets the bar, that line is `Nothing meets the bar.`
 and the review ends there. Findings follow, most severe first.
 
+The `review-gate` job reads that line: any Important fails it and holds the
+merge. So from round 2 on, the count includes every Important still open from
+an earlier round, and `Nothing meets the bar.` means none is.
+
 ## Rounds
 
 The job tells you the round: one round is one review comment posted on this PR.
