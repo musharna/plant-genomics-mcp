@@ -13,6 +13,8 @@ State, in the PR description or the issue, before the first line of code:
   command exists yet, writing it is the first task.
 - **Constraints**: what must not change (public API, file formats, data on
   disk, runtime budget), and what is out of scope.
+- **Risk and revert**: what breaks if this is wrong, what would notice, and
+  what undoing it takes beyond `git revert` (a release, data, a migration).
 
 Ambiguity is a stop sign. Ask; do not pick the most likely reading.
 
@@ -63,6 +65,10 @@ the diff means the bar was missed. The fix is two commits, not one:
    dated, stating the class of miss and the mechanism that now catches it.
    If the class can be caught by a hook or a lint rule, add the hook to
    `repo-template` in the same PR. Prose that must hold every time is a hook.
+
+If the bug was visible in the diff of the PR that introduced it, it is also an
+eval case: add it to `eval/review/cases.json` in `repo-template` (its README
+says how). A change to the reviewer is kept only if it catches more of them.
 
 ## 5. Analysis code
 
