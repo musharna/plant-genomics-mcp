@@ -37,6 +37,7 @@ SEED = 20261018
 BOOT = 10_000
 NONINFERIOR_MARGIN = 2  # questions; the ledger's win rule
 ARMS = ("web", "mcp")
+MODEL_ARMS = ("bare", *ARMS)  # arms a model ran; bare only in the 2026-10-20 tier sweeps
 
 
 def binom_two_sided(k: int, n: int) -> float:
@@ -100,7 +101,8 @@ def secondary(rows: list[dict[str, Any]], qids: list[str]) -> list[dict[str, Any
     and per-question sign tests, on every run of each arm."""
     by = {a: defaultdict(list) for a in ARMS}
     for r in rows:
-        by[r["arm"]][r["qid"]].append(r)
+        if r["arm"] in by:
+            by[r["arm"]][r["qid"]].append(r)
 
     def m(arm: str, sample: list[str]) -> dict[str, float]:
         rs = [r for q in sample for r in by[arm][q]]
@@ -151,9 +153,10 @@ def secondary(rows: list[dict[str, Any]], qids: list[str]) -> list[dict[str, Any
 
 def summary(rows: list[dict[str, Any]], base: list[dict[str, Any]], qids: list[str], reps: int):
     out = []
-    for arm in [*ARMS, *dict.fromkeys(r["arm"] for r in base)]:
+    ran = [a for a in MODEL_ARMS if any(r["arm"] == a for r in rows)]
+    for arm in [*ran, *dict.fromkeys(r["arm"] for r in base)]:
         rs = [r for r in [*rows, *base] if r["arm"] == arm]
-        is_base = arm not in ARMS
+        is_base = arm not in MODEL_ARMS
         v = Counter(r["verdict"] for r in rs if is_base or r["valid"])
         ok = right_all(
             [{**r, "valid": True} for r in rs] if is_base else rs, qids, 1 if is_base else reps
@@ -179,7 +182,7 @@ def by_kind(rows: list[dict[str, Any]], key: list[dict[str, Any]], reps: int):
     for kind in dict.fromkeys(q["category"] for q in key):
         qids = [q["id"] for q in key if q["category"] == kind]
         row: dict[str, Any] = {"kind": kind, "questions": len(qids)}
-        for arm in ARMS:
+        for arm in [a for a in MODEL_ARMS if any(r["arm"] == a for r in rows)]:
             rs = [r for r in rows if r["arm"] == arm and r["qid"] in qids]
             row[f"{arm}_right"] = sum(r["valid"] and r["verdict"] == "right" for r in rs)
             row[f"{arm}_runs"] = len(rs)
@@ -195,9 +198,11 @@ def mechanism(runs: Path, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     calls: Counter[str] = Counter()
     errors: Counter[str] = Counter()
     refused = 0
+    zero = 0
     for r in rows:
         if r["arm"] != "mcp":
             continue
+        zero += not any(t.startswith("mcp__plant-genomics__") for t in r["tool_calls"])
         path = runs / "mcp" / f"{r['qid']}-{r['rep']}.jsonl"
         names: dict[str, str] = {}
         seen = set()
@@ -228,7 +233,15 @@ def mechanism(runs: Path, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     ]  # fmt: skip
     out.append({"tool": "(refused by client)", "runs_using": None, "calls": refused,
                 "error_results": None})  # fmt: skip
+    out.append({"tool": "(server runs with 0 server calls)", "runs_using": zero, "calls": 0,
+                "error_results": None})  # fmt: skip
     return out
+
+
+def relabel(rows: list[dict[str, Any]], arm: str, as_arm: str) -> list[dict[str, Any]]:
+    """``arm``'s rows renamed ``as_arm``, so win_rule's statistic compares any
+    two sets of rows (another arm, or another model's rows)."""
+    return [{**r, "arm": as_arm} for r in rows if r["arm"] == arm]
 
 
 def write_tsv(path: Path, rows: list[dict[str, Any]]) -> None:
@@ -251,13 +264,24 @@ def main() -> None:
     ap.add_argument("--runs", required=True)
     ap.add_argument("--outdir", required=True)
     ap.add_argument("--reps", type=int, default=3)
+    ap.add_argument(
+        "--reference-results",
+        help="another sweep's results.jsonl (e.g. the 2026-10-18 Opus rows) for the "
+        "non-concurrent substitute comparison: this sweep's mcp against its web",
+    )
+    ap.add_argument("--reference-label", default="reference")
     a = ap.parse_args()
     key = json.loads(Path(a.key).read_text())["questions"]
     by_id = {q["id"]: q for q in key}
     rows = [json.loads(ln) for ln in Path(a.results).read_text().splitlines()]
-    rows = [r for r in rows if r["arm"] in ARMS]
+    rows = [r for r in rows if r["arm"] in MODEL_ARMS]
     for r in rows:
         r.update(score(by_id[r["qid"]], r["reply"]))  # never a stale verdict
+    ref: list[dict[str, Any]] = []
+    if a.reference_results:
+        ref = [json.loads(ln) for ln in Path(a.reference_results).read_text().splitlines()]
+        for r in ref:
+            r.update(score(by_id[r["qid"]], r["reply"]))
     qids = [q["id"] for q in key]
     rule = win_rule(rows, qids, a.reps)
     base = [{**r, "rep": 1} for r in baseline_rows(key)]
@@ -267,14 +291,32 @@ def main() -> None:
          "note": f"right in all {a.reps} runs: mcp {rule['mcp_right_all']}, web "
          f"{rule['web_right_all']} of {rule['questions']}; only mcp {rule['only_mcp']}, only web "
          f"{rule['only_web']}; non-inferior {rule['noninferior']}"},
-        *secondary(rows, qids),
+        *secondary([r for r in rows if r["arm"] in ARMS], qids),
     ]  # fmt: skip
+    extra = []
+    if any(r["arm"] == "bare" for r in rows):
+        extra.append(("mcp_vs_bare", "bare floor, same model",
+                      [*relabel(rows, "mcp", "mcp"), *relabel(rows, "bare", "web")]))  # fmt: skip
+    if ref:
+        extra.append(("substitute_mcp_vs_reference_web",
+                      f"NON-CONCURRENT: this sweep's mcp against {a.reference_label} web",
+                      [*relabel(rows, "mcp", "mcp"), *relabel(ref, "web", "web")]))  # fmt: skip
+    for name, label, rs in extra:
+        x = win_rule(rs, qids, a.reps)
+        stats.append(
+            {"metric": name, "estimate": x["diff"], "lo95": x["diff_lo95"],
+             "hi95": x["diff_hi95"], "p": x["mcnemar_p"],
+             "note": f"{label}; right in all {a.reps} runs: mcp {x['mcp_right_all']}, other "
+             f"{x['web_right_all']} of {x['questions']}; only mcp {x['only_mcp']}, only other "
+             f"{x['only_web']}"}
+        )  # fmt: skip
     out = Path(a.outdir)
     out.mkdir(parents=True, exist_ok=True)
     write_tsv(out / "stats.tsv", stats)
     write_tsv(out / "summary.tsv", summary(rows, base, qids, a.reps))
     write_tsv(out / "by_kind.tsv", by_kind(rows, key, a.reps))
     write_tsv(out / "mechanism.tsv", mechanism(Path(a.runs), rows))
+    (out / "win_rule.json").write_text(json.dumps(rule, indent=1) + "\n")
     for name in ("summary", "by_kind", "stats", "mechanism"):
         print(f"== {name}\n" + (out / f"{name}.tsv").read_text())
     print("WIN RULE:", rule)

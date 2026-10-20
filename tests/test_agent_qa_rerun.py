@@ -168,3 +168,94 @@ def test_the_win_rule_needs_a_significant_lead_not_just_a_bigger_count() -> None
     rows = _rows("mcp", every, n) + _rows("web", every - set(qids[:12]), n)
     rows[0]["valid"] = False
     assert win_rule(rows, qids)["mcp_right_all"] == n - 1
+
+
+def test_another_model_writes_its_own_transcripts_and_versions_names_the_served_model(
+    tmp_path: Path,
+) -> None:
+    import run
+
+    try:
+        run.set_model(run.DEFAULT_MODEL)
+        assert run.RUNS == run.DEFAULT_RUNS
+        run.set_model("claude-haiku-5-5")
+        assert run.MODEL == "claude-haiku-5-5"
+        assert run.RUNS != run.DEFAULT_RUNS
+        own = run.DEFAULT_RUNS.with_name(f"{run.DEFAULT_RUNS.name}-claude-haiku-5-5")
+        assert own == run.RUNS
+    finally:
+        run.set_model(run.DEFAULT_MODEL)
+    results = tmp_path / "results.jsonl"
+    results.write_text(
+        "".join(json.dumps({"model": m}) + "\n" for m in ("claude-haiku-5-5", "claude-haiku-5-5",
+                                                           "claude-opus-5-5"))
+    )  # fmt: skip
+    vpath = tmp_path / "versions.json"
+    run.write_versions(vpath, {"model": "claude-haiku-5-5"}, results)
+    v = json.loads(vpath.read_text())
+    assert v["model"] == "claude-haiku-5-5"
+    assert v["models_served"] == {"claude-haiku-5-5": 2, "claude-opus-5-5": 1}
+
+
+def test_the_mechanism_counts_server_runs_that_never_called_the_server(tmp_path: Path) -> None:
+    from analyze_rerun import mechanism, relabel
+
+    (tmp_path / "mcp").mkdir()
+    call = {
+        "message": {
+            "content": [
+                {"type": "tool_use", "id": "t1", "name": "mcp__plant-genomics__gramene_homologs"}
+            ]
+        }
+    }
+    (tmp_path / "mcp" / "h1-1.jsonl").write_text(json.dumps(call) + "\n")
+    (tmp_path / "mcp" / "h2-1.jsonl").write_text("")
+    rows = [
+        {"arm": "mcp", "qid": "h1", "rep": 1,
+         "tool_calls": ["mcp__plant-genomics__gramene_homologs"]},
+        {"arm": "mcp", "qid": "h2", "rep": 1, "tool_calls": []},
+    ]  # fmt: skip
+    out = {r["tool"]: r for r in mechanism(tmp_path, rows)}
+    assert out["gramene_homologs"]["runs_using"] == 1
+    assert out["(server runs with 0 server calls)"]["runs_using"] == 1
+    # Relabelled rows feed win_rule's statistic: other arms' rows are dropped.
+    mixed = [{"arm": "bare", "qid": "h1"}, {"arm": "mcp", "qid": "h1"}]
+    assert relabel(mixed, "bare", "web") == [{"arm": "web", "qid": "h1"}]
+
+
+def test_the_tier_verdict_holm_adjusts_and_needs_a_lift_without_a_loss() -> None:
+    from tiers_verdict import holm, verdict
+
+    assert holm([0.01, 0.04]) == [0.02, 0.04]
+    assert holm([0.04, 0.01]) == [0.04, 0.02]
+
+    def rule(only_mcp: int, only_web: int, p: float, lo: float, hi: float) -> dict:
+        return {"mcnemar_p": p, "only_mcp": only_mcp, "only_web": only_web, "diff_lo95": lo,
+                "diff_hi95": hi, "mcp_right_all": 0, "web_right_all": 0, "diff": 0}  # fmt: skip
+
+    lift, null = rule(12, 0, 0.0005, 0.2, 0.5), rule(1, 1, 1.0, -0.1, 0.1)
+    assert verdict({"haiku": lift, "sonnet": null})["verdict"] == "WIN"
+    # Raw p 0.03 passes alone, but Holm doubles the smaller p: not a lift.
+    near = rule(6, 0, 0.03, 0.05, 0.3)
+    assert verdict({"haiku": near, "sonnet": rule(5, 0, 0.0625, 0.0, 0.3)})["verdict"] == "TIE"
+    loss = rule(0, 12, 0.0005, -0.5, -0.2)
+    assert verdict({"haiku": lift, "sonnet": loss})["verdict"] == "TIE"
+    assert verdict({"haiku": null, "sonnet": loss})["verdict"] == "LOSS"
+    assert verdict({"haiku": lift, "sonnet": None})["verdict"] == "PENDING"
+
+
+def test_stop_at_raises_the_seven_day_stop(tmp_path: Path) -> None:
+    import run
+
+    gate = Gate(tmp_path / "p.jsonl", sleep=lambda s: None, now=lambda: 0.0)
+    try:
+        run.set_stop_at(0.90)
+        gate.update(rate_limit(_rl(0.1, seven=0.85)), "ok at 0.85")
+        try:
+            gate.update(rate_limit(_rl(0.1, seven=0.90)), "sonnet h3 rep2")
+        except UsageStop as exc:
+            assert "sonnet h3 rep2" in str(exc)
+        else:
+            raise AssertionError("seven_day 0.90 did not stop the sweep at --stop-at 0.90")
+    finally:
+        run.set_stop_at(0.80)

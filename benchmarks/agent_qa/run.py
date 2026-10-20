@@ -54,6 +54,7 @@ import sys
 import tempfile
 import threading
 import time
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
@@ -93,9 +94,46 @@ SERVER = "plant-genomics-mcp==1.29.2"
 # resolved the same 33 packages as the sweep's start (19:45 UTC); 1.29.2 itself
 # was uploaded at 17:57 UTC, and a cutoff of 2026-10-15 cannot resolve it.
 EXCLUDE_NEWER = "2026-10-17T00:00:00Z"
+DEFAULT_MODEL, DEFAULT_RUNS = MODEL, RUNS
+
+
+def set_model(model: str) -> None:
+    """--model runs every arm on another model. Its transcripts go to their own
+    agent_qa_runs-<model>/ by default, so they never overwrite the default
+    model's."""
+    global MODEL, RUNS
+    MODEL = model
+    RUNS = (
+        DEFAULT_RUNS
+        if model == DEFAULT_MODEL
+        else DEFAULT_RUNS.with_name(f"{DEFAULT_RUNS.name}-{model}")
+    )
+
+
+def set_server(server: str, exclude_newer: str) -> None:
+    """--server and --exclude-newer pin another release; both go into every mcp
+    row and versions.json."""
+    global SERVER, EXCLUDE_NEWER
+    SERVER, EXCLUDE_NEWER = server, exclude_newer
+
+
 RUN_TIMEOUT_S = 900
 PAUSE_AT = 0.85  # five-hour utilization that pauses the sweep until its reset
 STOP_AT = 0.80  # seven-day utilization that stops it
+
+
+# Claude Code's MCP_TIMEOUT (ms): how long it waits for the server to start. None
+# leaves Claude Code's default. On a loaded host uvx took 17-27 s to start the
+# server and the 2026-10-20 pilot's server failed to connect in 2 of 2 runs.
+MCP_TIMEOUT_MS: int | None = None
+
+
+def set_stop_at(stop_at: float) -> None:
+    """--stop-at: the seven-day utilization that stops the sweep."""
+    global STOP_AT
+    STOP_AT = stop_at
+
+
 # Every arm gets this in place of Claude Code's own system prompt. That prompt
 # describes tools even when --tools "" removes them all, and in the pilot the
 # no-tools arm wrote fake <invoke name="Bash"> calls as text instead of
@@ -338,6 +376,8 @@ def run_one(
         # A TMPDIR of the run's own, so no two runs share scratch files.
         (tmp / "tmp").mkdir()
         env = {**os.environ, "TMPDIR": str(tmp / "tmp")}
+        if MCP_TIMEOUT_MS is not None:
+            env["MCP_TIMEOUT"] = str(MCP_TIMEOUT_MS)
         t0 = time.monotonic()
         try:
             proc = subprocess.run(
@@ -360,6 +400,8 @@ def run_one(
         "exit": rc,
         "seconds": seconds,
         "server": SERVER if arm == "mcp" else None,
+        "exclude_newer": EXCLUDE_NEWER if arm == "mcp" else None,
+        "model_requested": MODEL,
         **_row_fields(arm, rc, t),
         **score(q, t["reply"]),
         "verdict_ncbi": score_ncbi(q, t["reply"]),
@@ -447,6 +489,16 @@ def preflight(key: dict[str, Any], allow_release_drift: bool) -> None:
           f"Ensembl {live}/EG {live_eg}; UniProt {up}")  # fmt: skip
 
 
+def write_versions(vpath: Path, versions: dict[str, Any], results: Path) -> None:
+    """versions.json, plus the models the API actually served (each row's
+    init-event ``model``), so a requested alias that resolved to another
+    model shows."""
+    served: Counter[str] = Counter()
+    if results.exists():
+        served.update(str(json.loads(ln).get("model")) for ln in results.read_text().splitlines())
+    vpath.write_text(json.dumps({**versions, "models_served": dict(served)}, indent=1) + "\n")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--arms", default="bare,web,mcp")
@@ -459,7 +511,28 @@ def main() -> None:
         action="store_true",
         help="re-score every stored reply against the current questions.json, run nothing",
     )
-    ap.add_argument("--runs", default=str(RUNS), help="where raw transcripts go")
+    ap.add_argument(
+        "--runs", default=None, help=f"where raw transcripts go (default {RUNS}[-<model>])"
+    )
+    ap.add_argument(
+        "--stop-at",
+        type=float,
+        default=STOP_AT,
+        help=f"seven-day utilization that stops the sweep (default {STOP_AT})",
+    )
+    ap.add_argument(
+        "--mcp-timeout-ms",
+        type=int,
+        default=None,
+        help="MCP_TIMEOUT for claude: ms to wait for the server to start (default: Claude Code's)",
+    )
+    ap.add_argument("--model", default=MODEL, help=f"claude --model (default {MODEL})")
+    ap.add_argument("--server", default=SERVER, help=f"uvx server spec (default {SERVER})")
+    ap.add_argument(
+        "--exclude-newer",
+        default=EXCLUDE_NEWER,
+        help=f"uvx --exclude-newer for the server's environment (default {EXCLUDE_NEWER})",
+    )
     ap.add_argument(
         "--audit",
         action="store_true",
@@ -473,6 +546,12 @@ def main() -> None:
         help="move rows the API ended before an answer aside, so a resume re-runs each once",
     )
     a = ap.parse_args()
+    set_model(a.model)
+    set_stop_at(a.stop_at)
+    global MCP_TIMEOUT_MS
+    MCP_TIMEOUT_MS = a.mcp_timeout_ms
+    set_server(a.server, a.exclude_newer)
+    a.runs = a.runs or str(RUNS)
     key_text = Path(a.key).read_text()
     key = json.loads(key_text)
     questions = key["questions"]
@@ -509,14 +588,19 @@ def main() -> None:
         "model": MODEL,
         "server": SERVER,
         "exclude_newer": EXCLUDE_NEWER,
+        **({"mcp_timeout_ms": MCP_TIMEOUT_MS} if MCP_TIMEOUT_MS is not None else {}),
         "key": str(Path(a.key).resolve()),
         "key_sha256": hashlib.sha256(key_text.encode()).hexdigest(),
     }
     vpath = results.with_name("versions.json")
-    if vpath.exists() and json.loads(vpath.read_text()) != versions:
+    if (
+        vpath.exists()
+        and {k: v for k, v in json.loads(vpath.read_text()).items() if k != "models_served"}
+        != versions
+    ):
         raise SystemExit(f"{vpath} records other versions than this resume would use: "
                          f"{vpath.read_text()} vs {versions}")  # fmt: skip
-    vpath.write_text(json.dumps(versions, indent=1) + "\n")
+    write_versions(vpath, versions, results)
     gate = Gate(results.with_name("pauses.jsonl"))
     lock = threading.Lock()
     pool = ThreadPoolExecutor(max_workers=a.workers)
@@ -538,8 +622,10 @@ def main() -> None:
                 raise UsageStop(r["usage_stop"])
     except UsageStop as exc:
         pool.shutdown(wait=True, cancel_futures=True)
+        write_versions(vpath, versions, results)
         sys.exit(f"STOP: {exc}")
     pool.shutdown(wait=True)
+    write_versions(vpath, versions, results)
     sys.exit(0)
 
 
