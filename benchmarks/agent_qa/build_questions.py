@@ -48,9 +48,17 @@ client = httpx.Client(timeout=60, headers={"Accept": "application/json"})
 
 
 def get(url: str, **params: Any) -> Any:
-    """GET with a bounded retry on 429/5xx; anything else raises."""
+    """GET with a bounded retry on 429/5xx and on a timed-out read (Ensembl
+    stalled one for 60 s while the 2026-10-18 key was built); anything else
+    raises, and so does a fifth timeout."""
     for attempt in range(5):
-        r = client.get(url, params=params)
+        try:
+            r = client.get(url, params=params)
+        except httpx.TimeoutException:
+            if attempt == 4:
+                raise
+            time.sleep(2 * (attempt + 1))
+            continue
         if r.status_code == 429 or r.status_code >= 500:
             time.sleep(float(r.headers.get("Retry-After", 2 * (attempt + 1))))
             continue

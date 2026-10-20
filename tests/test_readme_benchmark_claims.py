@@ -56,3 +56,27 @@ def test_summary_states_the_paired_test_and_no_single_run_maximum() -> None:
     for value in maxima:
         whole = f"{float(value):g}".split(".")[0]
         assert f"{whole} s" not in section, (value, section)
+
+
+def test_rerun_sentence_matches_the_confirmatory_tables() -> None:
+    """The 2026-10-18 re-run's line in "Does it help?" is pinned to its own
+    stats.tsv and summary.tsv, so the README cannot keep a verdict, a count or
+    a ratio the confirmatory sweep did not produce."""
+    section = _section()
+    rerun = BENCH / "rerun_2026-10-18"
+    with (rerun / "stats.tsv").open(encoding="utf-8") as f:
+        stats = {r["metric"]: r for r in csv.DictReader(f, delimiter="\t")}
+    with (rerun / "summary.tsv").open(encoding="utf-8") as f:
+        summary = {r["arm"]: r for r in csv.DictReader(f, delimiter="\t")}
+    # Positive control: the tables were read and the section is the real one.
+    assert "re-run 2026-10-18" in section and {"web", "mcp"} <= set(summary)
+    verdict = [k for k in stats if k.startswith("win_rule_")]
+    assert verdict == ["win_rule_TIE"], verdict  # the README calls it even
+    right = {a: int(summary[a]["right"]) for a in ("web", "mcp")}
+    assert right["web"] == right["mcp"], right
+    assert f"both got all {right['mcp']} right" in section, section
+    for metric in ("mcp_vs_web_seconds_median_ratio", "mcp_vs_web_cost_median_ratio"):
+        r = stats[metric]
+        est, lo = float(r["estimate"]), float(r["lo95"])
+        claims = (f"{est:.2f}×, 95% CI {lo:.2f}", f"{est:.2f}×, {lo:.2f}")
+        assert any(c in section for c in claims), (metric, claims, section)

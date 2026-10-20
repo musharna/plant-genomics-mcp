@@ -9,16 +9,18 @@
   what a guess earns.
   - ``constant``: one answer per kind of question, the key's most common
     answer of that kind. For a location it is the most common chromosome
-    with the median start; for a protein length, the median length.
+    with the median start; for a protein length or a gene count, the median.
   - ``id_chromosome``: location questions only. It reads the chromosome
     from the gene ID where the ID encodes it (AT5G..., Os12g..., TraesCS6B...)
     and takes the median start of the key's genes.
 
     uv run python benchmarks/agent_qa/baselines.py   # writes baselines.jsonl
+    uv run python benchmarks/agent_qa/baselines.py --key KEY --out OUT   # another key
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import statistics
@@ -49,15 +51,17 @@ def answer(q: dict[str, Any]) -> str:
     """The key's answer for ``q`` in the form the prompt asks for."""
     t = q["truth"]
     match q["category"]:
-        case "location":
+        case "location" | "ortholog_location":
             return f"{t['chromosome'][0]}:{t['start']}"
-        case "protein_length":
+        case "protein_length" | "ortholog_protein_length":
             return str(t["length"])
+        case "interval_count":
+            return str(t["count"])
         case "symbol_to_locus":
             return str(t["loci"][0])
         case "uniprot_accession":
             return str(t["accession"])
-        case "ortholog":
+        case "ortholog" | "symbol_ortholog" | "position_to_gene" | "id_mapping":
             return str(t["gene"])
     raise ValueError(q["category"])
 
@@ -94,15 +98,19 @@ def baseline_rows(questions: list[dict[str, Any]]) -> list[dict[str, Any]]:
     for q in questions:
         by_kind.setdefault(q["category"], []).append(q)
     median_start = {
-        "location": int(statistics.median(q["truth"]["start"] for q in by_kind["location"]))
+        kind: int(statistics.median(q["truth"]["start"] for q in by_kind[kind]))
+        for kind in ("location", "ortholog_location")
+        if kind in by_kind
     }
     constant: dict[str, str] = {}
     for kind, qs in by_kind.items():
-        if kind == "location":
+        if kind in median_start:
             chrom = Counter(q["truth"]["chromosome"][0] for q in qs).most_common(1)[0][0]
-            constant[kind] = f"{chrom}:{median_start['location']}"
-        elif kind == "protein_length":
+            constant[kind] = f"{chrom}:{median_start[kind]}"
+        elif kind in ("protein_length", "ortholog_protein_length"):
             constant[kind] = str(int(statistics.median(q["truth"]["length"] for q in qs)))
+        elif kind == "interval_count":
+            constant[kind] = str(int(statistics.median(q["truth"]["count"] for q in qs)))
         else:
             counts = Counter(answer(q) for q in qs)
             top = max(counts.values())
@@ -130,9 +138,13 @@ def baseline_rows(questions: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def main() -> None:
-    questions = json.loads((HERE / "questions.json").read_text())["questions"]
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--key", default=str(HERE / "questions.json"))
+    ap.add_argument("--out", default=str(HERE / "baselines.jsonl"))
+    a = ap.parse_args()
+    questions = json.loads(Path(a.key).read_text())["questions"]
     rows = baseline_rows(questions)
-    (HERE / "baselines.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    Path(a.out).write_text("".join(json.dumps(r) + "\n" for r in rows))
     for arm in dict.fromkeys(r["arm"] for r in rows):
         mine = [r for r in rows if r["arm"] == arm]
         print(arm, Counter(r["verdict"] for r in mine), f"of {len(mine)}")
