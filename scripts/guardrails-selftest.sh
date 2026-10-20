@@ -17,7 +17,7 @@ check() { # hook, filename, content, expect(pass|fail)
 	printf '%s\n' "$content" >"$tmp/r/$f"
 	out=$(cd "$tmp/r" && git add -A && uvx pre-commit run "$hook" --files "$f" 2>&1) && got=pass || got=fail
 	# A crash exits 1 too: an AST hook's rejection must name the file and line.
-	case $hook in no-bare-replace | no-fixed-wait-py)
+	case $hook in no-bare-replace | no-fixed-wait-py | no-ignored-mutmut-pragma)
 		if [[ $got == fail ]] && ! grep -qE "^${f//./\\.}:[0-9]+: " <<<"$out"; then
 			got="a crash, not a hit ($(grep -m1 -E 'Error|Exception' <<<"$out" || true))"
 		fi
@@ -119,6 +119,13 @@ check no-fixed-wait-py x3.py $'time.sleep(2 ** attempt)\nresp = client.get(url)'
 check no-fixed-wait-py x4.py $'# page.wait_for_timeout(800)\npage.click("#a")' pass
 check no-fixed-wait-py x5.py $'time.sleep(0.5)  # qa-wait-ok: the debounce window is the behaviour tested\npage.click("#a")' pass
 check no-fixed-wait-py x6.py $'page.wait_for_timeout(\n    150\n)  # qa-wait-ok: paces wheel notches; the state wait follows' pass
+check no-ignored-mutmut-pragma p.py $'x = f(\n    a,  # pragma: no mutate\n)' fail
+check no-ignored-mutmut-pragma p2.py $'x = f(\n    a,\n)  # pragma: no mutate' fail
+check no-ignored-mutmut-pragma p3.py $'m = (\n    a\n    or b  # pragma: no mutate: "" reads alike\n)' fail
+check no-ignored-mutmut-pragma q.py 'x = f(a)  # pragma: no mutate' pass
+check no-ignored-mutmut-pragma q2.py $'for a, b in zip(x, y, strict=True):  # pragma: no mutate\n    pass' pass
+check no-ignored-mutmut-pragma q3.py $'# pragma: no mutate start\nx = f(\n    a,\n)\n# pragma: no mutate end' pass
+check no-ignored-mutmut-pragma q4.py 'note = "a,  # pragma: no mutate"' pass
 # Every hit is reported, not only the first (pygrep --multiline stops at one per file).
 printf '%s\n' 'page.wait_for_timeout(1)' 'x = 1' 'page.wait_for_timeout(2)' 'page.wait_for_timeout(3)' >"$tmp/r/m.py"
 hits=$(cd "$tmp/r" && git add -A && uvx pre-commit run no-fixed-wait-py --files m.py 2>&1 | grep -cE '^m\.py:[0-9]+:' || true)
