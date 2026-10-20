@@ -110,6 +110,19 @@ repos:
         # over three lines and the regex stopped seeing it, and pygrep
         # --multiline reports only the first hit in a file.
 
+      - id: no-ignored-mutmut-pragma
+        name: "mutmut: a trailing '# pragma: no mutate' inside brackets or after a multi-line statement is ignored"
+        language: system
+        types: [python]
+        entry: python3 scripts/guardrails-hooks.py --mutmut-pragma
+        # data-aggregator-mcp #342 (2026-10-19): two pragmas sat inside a call's
+        # arguments and an `or` chain. mutmut 3 reads a trailing pragma only on
+        # the line its statement starts on, at the statement's end, so both
+        # suppressed nothing, and the PR checked them with a harness that never
+        # reads pragmas. Checked against mutmut 3.7's own PragmaVisitor: 25 of
+        # 25 trailing pragmas across the fleet agree. Several lines take a
+        # `# pragma: no mutate start` / `end` pair on lines of their own.
+
       - id: no-pathscoped-write-rule
         name: "Claude --allowed-tools: Write(path) matches nothing (use Edit(path)); Edit(/x) is project-relative (real root is //x)"
         language: pygrep

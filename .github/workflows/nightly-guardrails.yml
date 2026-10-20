@@ -23,6 +23,8 @@ jobs:
       contents: read
       issues: write
       id-token: write
+    env:
+      MUTMUT: "3.7.0" # also the results-cache key: a new mutmut starts clean
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Opt-out with a written reason
@@ -52,10 +54,72 @@ jobs:
           read -ra extras <<<"$extras_s"
           uv sync "${extras[@]}" --dev
           if [ -f requirements-dev.txt ]; then uv pip install -r requirements-dev.txt; fi
-          uv pip install "mutmut==3.7.0" pytest
+          uv pip install "mutmut==$MUTMUT" pytest
       - name: Baseline suite is green (a red baseline makes every mutant "killed")
         if: steps.optout.outputs.skip != '1'
         run: uv run --with pytest pytest -q -x -p no:cacheprovider
+      - name: This ISO week (the results cache starts clean each week)
+        if: steps.optout.outputs.skip != '1'
+        id: week
+        run: echo "week=$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
+      - name: Restore this week's mutant results
+        # The 90-minute cap left the same tail unchecked every night, because
+        # each night started from nothing (data-aggregator-mcp 2026-10-16/17/19:
+        # 489, 520 and 1,298 mutants never checked). mutmut 3.7 keeps a result
+        # in mutants/<file>.meta and, on regenerating a file, keeps it only if
+        # its function's source hash is unchanged, so last night's results can
+        # resume. Only the .meta files are cached: the mutated sources are
+        # regenerated, and mutmut-stats.json is left out so the test-to-function
+        # map is recollected every night, as before. mutants/.carry-tests is the
+        # fingerprint of the tests those results were made with.
+        if: steps.optout.outputs.skip != '1'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            mutants/**/*.meta
+            mutants/.carry-tests
+          key: mutmut-${{ env.MUTMUT }}-${{ steps.week.outputs.week }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: mutmut-${{ env.MUTMUT }}-${{ steps.week.outputs.week }}-
+      - name: Carry results the code and tests still stand behind
+        # A kill stands until its function changes (mutmut resets it then) or
+        # the week ends. A survivor stands only while every test file is the
+        # one it survived: a test added or changed since may kill it, and
+        # mutmut's hash follows the source, not the tests. Survivors are the
+        # slowest mutants (no early failure), so rechecking them every night
+        # would spend the cap on them (taxon3d: 3,399 survivors on 2026-10-19).
+        # Timeouts, "no tests" and the rest are rechecked every run.
+        if: steps.optout.outputs.skip != '1'
+        id: carry
+        run: |
+          tests=$(git ls-files -s | awk -F'\t' '$2 ~ /(^|\/)(tests?\/|conftest\.py$)/' | sha256sum | cut -c1-64)
+          export TESTS="$tests"
+          uv run python - <<'PY'
+          import json, os, pathlib
+          from mutmut.__main__ import status_by_exit_code
+          fp = pathlib.Path("mutants/.carry-tests")
+          same_tests = fp.exists() and fp.read_text().strip() == os.environ["TESTS"]
+          keep = {"killed", "caught by type check"} | ({"survived"} if same_tests else set())
+          carried, reset = [], 0
+          for meta in sorted(pathlib.Path("mutants").rglob("*.meta")):
+              d = json.loads(meta.read_text())
+              for k, c in d["exit_code_by_key"].items():
+                  if c is None:
+                      continue
+                  if status_by_exit_code[c] in keep:
+                      carried.append(k)
+                  else:
+                      d["exit_code_by_key"][k] = None
+                      reset += 1
+              meta.write_text(json.dumps(d))
+          fp.parent.mkdir(exist_ok=True)
+          fp.write_text(os.environ["TESTS"] + "\n")
+          pathlib.Path(os.environ["RUNNER_TEMP"], "carried.txt").write_text("".join(k + "\n" for k in carried))
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"carried={len(carried)}\nreset={reset}\n")
+          print(f"carried {len(carried)} results from earlier runs this week "
+                f"({'tests unchanged: survivors too' if same_tests else 'tests changed or first run: kills only'}); "
+                f"{reset} others to recheck")
+          PY
       - name: Run mutants (wall-clock capped; results persist incrementally)
         if: steps.optout.outputs.skip != '1'
         # No .pyc: a same-size source swap can leave a stale bytecode file that
@@ -70,6 +134,16 @@ jobs:
           set -e
           echo "mutmut exit: $rc (124 = wall-clock cap, fine if mutants were checked)"
           echo "rc=$rc" >> "$GITHUB_OUTPUT"
+      - name: Save the results for the next run
+        # always(): the gate below goes red on purpose, and a partial run's
+        # results are still results (each is saved as its mutant finishes).
+        if: always() && steps.run.outcome == 'success'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            mutants/**/*.meta
+            mutants/.carry-tests
+          key: mutmut-${{ env.MUTMUT }}-${{ steps.week.outputs.week }}-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Survivors
         id: survivors
         if: steps.optout.outputs.skip != '1'
@@ -86,8 +160,11 @@ jobs:
         # "649 surviving mutants" as if that were the whole tree. An exit that is
         # neither 0 nor the cap's 124 is an ABORT: the counts are partial, the
         # issue says so, and the job goes red (below, after the issue is written).
+        # Carried kills count as checked, so "checked" alone can no longer see a
+        # run that checked nothing: `new` counts only the results this run made.
         env:
           RC: ${{ steps.run.outputs.rc }}
+          CARRIED: ${{ steps.carry.outputs.carried }}
         run: |
           uv run mutmut results > survivors.txt || true
           uv run mutmut results --all true > all-mutants.txt || true
@@ -95,6 +172,13 @@ jobs:
           killed=$(grep -c ": killed" all-mutants.txt || true)
           unchecked=$(grep -c ": not checked$" all-mutants.txt || true)
           checked=$(grep -vcE ": not checked$|^$" all-mutants.txt || true)
+          new=$(python3 - <<'PY'
+          import os
+          carried = set(open(os.path.join(os.environ["RUNNER_TEMP"], "carried.txt")).read().split())
+          rows = [l.strip().rsplit(": ", 1) for l in open("all-mutants.txt") if ": " in l]
+          print(sum(1 for name, status in rows if status != "not checked" and name not in carried))
+          PY
+          )
           aborted=0
           if [ "$RC" != "0" ] && [ "$RC" != "124" ]; then aborted=1; fi
           # Diffs for the triage step, dumped HERE: 2026-09-16 ldraw-mcp, the
@@ -112,9 +196,9 @@ jobs:
               print(f"### {n}\n{d.strip()}\n")
           PY
           {
-            echo "count=$n"; echo "unchecked=$unchecked"; echo "aborted=$aborted"; echo "checked=$checked"
+            echo "count=$n"; echo "unchecked=$unchecked"; echo "aborted=$aborted"; echo "checked=$checked"; echo "new=$new"
           } >> "$GITHUB_OUTPUT"
-          echo "## Mutants: $killed killed, $n survived, $checked checked, $unchecked unchecked (mutmut exit $RC, aborted=$aborted)" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Mutants: $killed killed, $n survived, $checked checked ($new this run, $CARRIED carried from earlier this week), $unchecked unchecked (mutmut exit $RC, aborted=$aborted)" >> "$GITHUB_STEP_SUMMARY"
           head -200 survivors.txt >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: steps.optout.outputs.skip != '1'
@@ -156,12 +240,17 @@ jobs:
         if: steps.optout.outputs.skip != '1'
         env:
           CHECKED: ${{ steps.survivors.outputs.checked }}
+          NEW: ${{ steps.survivors.outputs.new }}
           ABORTED: ${{ steps.survivors.outputs.aborted }}
           UNCHECKED: ${{ steps.survivors.outputs.unchecked }}
           RC: ${{ steps.run.outputs.rc }}
         run: |
           if [ "${CHECKED:-0}" -eq 0 ]; then
             echo "::error::mutmut checked 0 mutants. The suite is not green inside mutants/: fix [tool.mutmut] also_copy / source_paths in pyproject.toml or the test that assumes the checkout path. See the stats-collection failure above."
+            exit 1
+          fi
+          if [ "${NEW:-0}" -eq 0 ] && [ "${UNCHECKED:-0}" -gt 0 ]; then
+            echo "::error::mutmut checked no mutant this run while $UNCHECKED waited; the $CHECKED checked are carried from earlier runs. The suite is not green inside mutants/ (see above)."
             exit 1
           fi
           if [ "$ABORTED" = "1" ]; then

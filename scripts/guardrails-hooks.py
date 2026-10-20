@@ -22,6 +22,16 @@ and defaults; a class body runs now, so its first statement is what runs first.
 Excused by a `# qa-wait-ok: <why>` comment on any line the call spans.
 This was a pygrep hook until 2026-10-17: a call the formatter wrapped over three
 lines slipped past it, and --multiline reported only the first hit in a file.
+
+mutmut-pragma (`--mutmut-pragma`, hook no-ignored-mutmut-pragma): a trailing
+`# pragma: no mutate` that mutmut 3 does not read as covering its own line.
+mutmut reads a trailing pragma only on the line a statement starts on, and only
+when the comment ends that statement: inside brackets (an argument, an `or`
+chain the formatter wrapped) it is ignored, and after a statement spanning lines
+it covers the first line, not the one it sits on. data-aggregator-mcp #342
+(2026-10-19) added two inside brackets; both suppressed nothing and the nightly
+kept their mutants. Several lines take a `# pragma: no mutate start` / `end`
+pair, each on a line of its own (those are not trailing, so not checked here).
 """
 
 import ast
@@ -245,8 +255,34 @@ def fixed_wait(tree, src):
             yield stmt.lineno, MSG_SLEEP_THEN_ACT
 
 
+MUTMUT_PRAGMA = re.compile(r"#\s*pragma:.*no mutate")
+MSG_PRAGMA = (
+    "mutmut ignores a trailing '# pragma: no mutate' here (inside brackets, or after a"
+    " statement spanning lines): end a one-line statement with it, or wrap the lines"
+    " in '# pragma: no mutate start' / '# pragma: no mutate end'"
+)
+_STMT_BREAK = (tokenize.NEWLINE, tokenize.INDENT, tokenize.DEDENT)
+
+
+def mutmut_pragma(_tree, src):
+    start = None  # the line the statement being read started on
+    tokens = list(tokenize.generate_tokens(io.StringIO(src).readline))
+    for i, tok in enumerate(tokens):
+        if tok.type in _STMT_BREAK:
+            start = None
+        elif tok.type == tokenize.COMMENT:
+            trailing = tok.line[: tok.start[1]].strip() != ""
+            if trailing and MUTMUT_PRAGMA.search(tok.string):
+                ends_statement = tokens[i + 1].type == tokenize.NEWLINE
+                if not (ends_statement and start == tok.start[0]):
+                    yield tok.start[0], MSG_PRAGMA
+        elif tok.type not in (tokenize.NL, tokenize.ENCODING) and start is None:
+            start = tok.start[0]
+
+
 CHECKS = (bare_replace, defused_parseerror)
 FIXED_WAIT_CHECKS = (fixed_wait,)
+MUTMUT_PRAGMA_CHECKS = (mutmut_pragma,)
 
 
 def check_files(paths, checks=CHECKS):
@@ -269,4 +305,6 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     if args[:1] == ["--fixed-wait"]:
         sys.exit(check_files(args[1:], FIXED_WAIT_CHECKS))
+    if args[:1] == ["--mutmut-pragma"]:
+        sys.exit(check_files(args[1:], MUTMUT_PRAGMA_CHECKS))
     sys.exit(check_files(args))

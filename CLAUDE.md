@@ -51,6 +51,8 @@ Each rule is an incident, not a preference:
 - A Claude `--allowed-tools` file rule with a path is `Edit(path)`, never
   `Write(path)` (matches nothing); an absolute path takes two slashes (`//tmp/**`).
 - A workflow `uses:` pins a full commit SHA with the version as a comment, never a tag.
+- A trailing `# pragma: no mutate` ends a one-line statement; inside brackets or
+  after a multi-line statement mutmut ignores it. Wrap lines in `start` / `end`.
 
 Never narrow, skip or `--no-verify` a hook to get a commit through. If a hook
 is wrong, fix the hook in `repo-template` and resync.
