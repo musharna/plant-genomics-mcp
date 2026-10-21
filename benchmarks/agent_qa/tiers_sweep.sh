@@ -4,7 +4,7 @@
 # each tier, rows the API ended before an answer are moved aside and re-run once.
 # A usage stop (seven-day >= 0.90) ends the script with the rows kept.
 #
-#   flock <sweep.lock> env HEAVY_RUN_MEM=6G heavy-run bash benchmarks/agent_qa/tiers_sweep.sh [TIER...]
+#   flock <sweep lock> env HEAVY_RUN_MEM=6G heavy-run bash benchmarks/agent_qa/tiers_sweep.sh [TIER...]
 #
 # TIER is haiku or sonnet (default: both, Haiku first).
 set -euo pipefail
@@ -12,6 +12,11 @@ cd "$(dirname "$0")/../.."
 A="$HOME/plant-genomics-mcp-artifacts/agent_qa"
 K="$A/rerun-2026-10-18/questions.json"
 R="$A/tiers-2026-10-20"
+free_kb=$(df -Pk "$HOME" | awk 'NR == 2 {print $4}')
+if [ "$free_kb" -lt $((5 * 1024 * 1024)) ]; then
+        echo "STOP: only $((free_kb / 1024)) MB of disk free, under 5 GB" >&2
+        exit 3
+fi
 tiers=("$@")
 [ ${#tiers[@]} -eq 0 ] && tiers=(haiku sonnet)
 for tier in "${tiers[@]}"; do

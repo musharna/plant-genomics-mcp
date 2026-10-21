@@ -144,7 +144,8 @@ fix below. Kept apart in `tiers-2026-10-20/pilot-haiku*/`, not analysed.
   $0.0003). Both mcp runs were invalid: the server's status at init was
   `failed`, so the model had no tools. Started by hand, `uvx` took 18–27 s to
   answer `initialize` at a load average near 78 on 22 cores (other sessions'
-  work), against 2 s idle.
+  work). (Correction 23:55 EDT: an earlier version of this line added "against
+  2 s idle"; no idle start was measured.)
 - Fix: `--mcp-timeout-ms 180000` (Claude Code's `MCP_TIMEOUT`). Pilot 2, mcp
   only, same two questions: the server connected in both, 1 and 3 server
   calls, $0.003 and $0.007, 133 s and 190 s.
@@ -161,3 +162,14 @@ cancelled before it took the lock; no row of either tier existed. Design,
 endpoint, rule and the 0.90 stop are unchanged. If the stop or the queue
 means Sonnet does not run, the verdict stays pending and the Haiku result is
 reported with its raw p.
+
+## Amendment 2, 2026-10-20 23:55 EDT (before either sweep started)
+
+The coordinator moved this sweep to a second lock, `sweep2.lock`, because
+phylokit holds `sweep.lock` until about 04:00–05:00 EDT on CPU-bound tree
+inference, and the lock guards disk and memory (179 GB disk, 28 GB RAM free
+at 23:50 EDT). So the Haiku sweep runs concurrently with phylokit's sweep.
+The arms are interleaved by question, so host load falls on all three arms
+alike; it changes seconds per run, a secondary measure, and could slow the
+server's start, which `--mcp-timeout-ms 180000` covers. `tiers_sweep.sh`
+refuses to start with less than 5 GB of disk free. Nothing else changes.
