@@ -4,13 +4,18 @@
 # each tier, rows the API ended before an answer are moved aside and re-run once.
 # A usage stop (seven-day >= 0.90) ends the script with the rows kept.
 #
-#   flock <sweep.lock> env HEAVY_RUN_MEM=6G heavy-run bash benchmarks/agent_qa/tiers_sweep.sh
+#   flock <sweep.lock> env HEAVY_RUN_MEM=6G heavy-run bash benchmarks/agent_qa/tiers_sweep.sh [TIER...]
+#
+# TIER is haiku or sonnet (default: both, Haiku first).
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 A="$HOME/plant-genomics-mcp-artifacts/agent_qa"
 K="$A/rerun-2026-10-18/questions.json"
 R="$A/tiers-2026-10-20"
-for tier in haiku sonnet; do
+tiers=("$@")
+[ ${#tiers[@]} -eq 0 ] && tiers=(haiku sonnet)
+for tier in "${tiers[@]}"; do
+        case "$tier" in haiku | sonnet) ;; *) echo "unknown tier: $tier" >&2; exit 2 ;; esac
         model="claude-$tier-5-5"
         out="$R/$tier"
         mkdir -p "$out"

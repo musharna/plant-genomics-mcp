@@ -149,3 +149,15 @@ fix below. Kept apart in `tiers-2026-10-20/pilot-haiku*/`, not analysed.
   only, same two questions: the server connected in both, 1 and 3 server
   calls, $0.003 and $0.007, 133 s and 190 s.
 - Usage at pilot 2 (19:20 EDT): five-hour 0.01, seven-day 0.71.
+
+## Amendment, 2026-10-20 23:00 EDT (before either sweep started)
+
+The coordinator reordered the shared sweep queue at seven-day 0.84 (22:50
+EDT): every server's Haiku sweep runs before any server's Sonnet sweep. So
+`tiers_sweep.sh haiku` runs now, under its own hold of the lock, and
+`tiers_sweep.sh sonnet` runs later when the coordinator releases it, still
+this week and still before the analysis. The queued both-tier sweep was
+cancelled before it took the lock; no row of either tier existed. Design,
+endpoint, rule and the 0.90 stop are unchanged. If the stop or the queue
+means Sonnet does not run, the verdict stays pending and the Haiku result is
+reported with its raw p.
