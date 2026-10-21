@@ -173,3 +173,15 @@ The arms are interleaved by question, so host load falls on all three arms
 alike; it changes seconds per run, a secondary measure, and could slow the
 server's start, which `--mcp-timeout-ms 180000` covers. `tiers_sweep.sh`
 refuses to start with less than 5 GB of disk free. Nothing else changes.
+
+## Deviation, 2026-10-21 00:17 EDT: usage stop
+
+The Haiku sweep started 23:55 EDT (seven-day 0.88 on its first run) and
+stopped at the registered gate, seven-day 0.90, after 51 of 324 runs (rep 1,
+h01–h18: 18 bare, 17 web, 16 mcp). The rows are kept; `run.py --audit` finds
+0 invalid and 0 leak hits. Not analysed: the tier is incomplete. The sweep
+resumes after the weekly reset (Sun 10-25 12:00 EDT), on the coordinator's
+word, with the same command; `run.py` skips finished (arm, question, rep)
+triples. `versions.json` pins Claude Code 2.1.306: if it has updated by then,
+`run.py` refuses to resume, and the choice (run 2.1.306, or accept and record
+the new version) is made and written here before resuming.
