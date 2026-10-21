@@ -69,6 +69,14 @@ def win_rule(rows: list[dict[str, Any]], qids: list[str], reps: int = 3) -> dict
     - WIN = non-inferior and better; LOSS = not non-inferior, or web
       significantly better (p < 0.05, CI wholly below 0); otherwise TIE.
     """
+    for a in ARMS:
+        n = Counter(r["qid"] for r in rows if r["arm"] == a)
+        short = [q for q in qids if n[q] != reps]
+        if short:
+            # An arm with missing runs would count those questions as not right
+            # and hand the other arm a lead it never earned.
+            raise ValueError(f"{a}: {len(short)} of {len(qids)} questions lack exactly "
+                             f"{reps} runs (e.g. {short[0]}: {n[short[0]]})")  # fmt: skip
     ok = {a: right_all([r for r in rows if r["arm"] == a], qids, reps) for a in ARMS}
     n_web, n_mcp = sum(ok["web"].values()), sum(ok["mcp"].values())
     b = sum(ok["mcp"][q] and not ok["web"][q] for q in qids)

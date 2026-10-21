@@ -26,7 +26,7 @@ for tier in "${tiers[@]}"; do
         mkdir -p "$out"
         args=(--key "$K" --model "$model" --server plant-genomics-mcp==1.29.3
                 --exclude-newer 2026-10-17T01:00:00Z --mcp-timeout-ms 180000 --stop-at 0.90
-                --arms bare,web,mcp --reps 3 --workers 2
+                --arms "bare,web,mcp" --reps 3 --workers 2
                 --results "$out/results.jsonl" --runs "$out/runs")
         echo "== $tier start $(date -Is)"
         uv run python benchmarks/agent_qa/run.py "${args[@]}"

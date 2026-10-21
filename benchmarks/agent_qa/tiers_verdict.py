@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any
 
 ALPHA = 0.05
+TIERS = ("haiku", "sonnet")  # the pre-registered confirmatory tiers
 
 
 def holm(ps: list[float]) -> list[float]:
@@ -36,27 +37,31 @@ def holm(ps: list[float]) -> list[float]:
 
 
 def verdict(rules: dict[str, dict[str, Any] | None]) -> dict[str, Any]:
-    tiers = list(rules)
-    done = [t for t in tiers if rules[t] is not None]
+    """A tier of TIERS missing from ``rules`` is pending; any other name is an
+    error. Holm needs every tier's p, so until all are in no tier is judged."""
+    unknown = set(rules) - set(TIERS)
+    if unknown:
+        raise ValueError(f"not a pre-registered tier: {sorted(unknown)}")
+    tiers = list(TIERS)
+    done = [t for t in tiers if rules.get(t) is not None]
+    if len(done) < len(tiers):
+        return {"verdict": "PENDING",
+                "tiers": {t: {"status": "in", "p_raw": rules[t]["mcnemar_p"]} if t in done
+                          else {"status": "pending"} for t in tiers}}  # fmt: skip
     adj = dict(zip(done, holm([rules[t]["mcnemar_p"] for t in done]), strict=True))
     per: dict[str, Any] = {}
     for t in tiers:
         r = rules[t]
-        if r is None:
-            per[t] = {"status": "pending"}
-            continue
+        assert r is not None
         lift = adj[t] < ALPHA and r["only_mcp"] > r["only_web"] and r["diff_lo95"] > 0
         loss = adj[t] < ALPHA and r["only_web"] > r["only_mcp"] and r["diff_hi95"] < 0
         per[t] = {"p_raw": r["mcnemar_p"], "p_holm": adj[t], "lift": lift, "loss": loss,
                   "mcp_right_all": r["mcp_right_all"], "web_right_all": r["web_right_all"],
                   "only_mcp": r["only_mcp"], "only_web": r["only_web"], "diff": r["diff"],
                   "diff_lo95": r["diff_lo95"], "diff_hi95": r["diff_hi95"]}  # fmt: skip
-    if len(done) < len(tiers):
-        overall = "PENDING"
-    else:
-        lifts = any(per[t]["lift"] for t in tiers)
-        losses = any(per[t]["loss"] for t in tiers)
-        overall = "WIN" if lifts and not losses else "LOSS" if losses and not lifts else "TIE"
+    lifts = any(per[t]["lift"] for t in tiers)
+    losses = any(per[t]["loss"] for t in tiers)
+    overall = "WIN" if lifts and not losses else "LOSS" if losses and not lifts else "TIE"
     return {"verdict": overall, "tiers": per}
 
 

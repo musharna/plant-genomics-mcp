@@ -242,6 +242,30 @@ def test_the_tier_verdict_holm_adjusts_and_needs_a_lift_without_a_loss() -> None
     assert verdict({"haiku": lift, "sonnet": loss})["verdict"] == "TIE"
     assert verdict({"haiku": null, "sonnet": loss})["verdict"] == "LOSS"
     assert verdict({"haiku": lift, "sonnet": None})["verdict"] == "PENDING"
+    # A tier left off the command line is pending, not a one-tier verdict.
+    alone = verdict({"haiku": lift})
+    assert alone["verdict"] == "PENDING" and alone["tiers"]["sonnet"] == {"status": "pending"}
+    try:
+        verdict({"haiku": lift, "sonet": null})
+    except ValueError as exc:
+        assert "sonet" in str(exc)
+    else:
+        raise AssertionError("a misspelt tier was accepted")
+
+
+def test_the_win_rule_refuses_an_arm_with_missing_runs() -> None:
+    n = 36
+    qids = [f"q{i}" for i in range(n)]
+    every = set(qids)
+    full = _rows("mcp", every, n) + _rows("web", every - set(qids[:1]), n)
+    assert win_rule(full, qids)["verdict"] == "TIE"  # the complete sweep is judged
+    for rows, arm in ((_rows("mcp", every, n), "web"), (full[1:], "mcp")):
+        try:
+            win_rule(rows, qids)
+        except ValueError as exc:
+            assert str(exc).startswith(f"{arm}:")
+        else:
+            raise AssertionError(f"win_rule judged a sweep whose {arm} arm is incomplete")
 
 
 def test_stop_at_raises_the_seven_day_stop(tmp_path: Path) -> None:

@@ -14,7 +14,9 @@ model?
 
 - **Haiku 5.5** (`--model claude-haiku-5-5`), then
 - **Sonnet 5.5** (`--model claude-sonnet-5-5`), in this session, right after
-  the Haiku sweep, with the same design.
+  the Haiku sweep, with the same design. *(Timing superseded by the amendments
+  below: Sonnet runs when the coordinator releases it; the design is
+  unchanged.)*
 
 No Opus row is re-run or reused in the primary test.
 
@@ -132,7 +134,9 @@ uv run python benchmarks/agent_qa/tiers_verdict.py haiku=benchmarks/agent_qa/tie
 Every result is reported, whatever it is.
 
 Both tiers run from [`tiers_sweep.sh`](tiers_sweep.sh), Haiku first, under
-one hold of the sweep lock.
+one hold of the sweep lock. *(Superseded by the two amendments below: each
+tier runs as its own hold, Sonnet when the coordinator releases it, and Haiku
+on the second lock.)*
 
 ## Pilots (before this file)
 
