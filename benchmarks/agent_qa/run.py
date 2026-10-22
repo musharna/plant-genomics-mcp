@@ -295,14 +295,48 @@ class UsageStop(RuntimeError):
     pass
 
 
+PROBE_MODEL = "claude-haiku-5-5"
+
+
+def probe_usage() -> dict[str, Any] | None:
+    """A fresh reading of the account's windows: one tiny ``claude -p`` call,
+    its newest rate_limit_event (None if it wrote none)."""
+    with tempfile.TemporaryDirectory(prefix="agentqa-probe-") as d:
+        cmd = ["claude", "-p", "say ok", "--model", PROBE_MODEL, "--output-format",
+               "stream-json", "--verbose", "--setting-sources", ""]  # fmt: skip
+        proc = subprocess.run(cmd, cwd=d, capture_output=True, text=True, timeout=120)
+    return rate_limit(proc.stdout)
+
+
 class Gate:
     """Pauses the sweep when the account's five-hour window runs high, and
-    stops it when the seven-day window does. Every pause is recorded."""
+    stops it when the seven-day window does. Every pause is recorded.
 
-    def __init__(self, log: Path, sleep=time.sleep, now=time.time) -> None:
-        self.log, self.sleep, self.now = log, sleep, now
+    A run's seven-day reading at or above STOP_AT is checked with a fresh
+    probe (``probe``) before it stops anything: on 2026-10-21 one run read
+    0.98 while the account stood near 0.66. The sweep stops only if the probe
+    reads at or above STOP_AT too, or gives no reading; otherwise the reading
+    is logged and the sweep goes on."""
+
+    def __init__(self, log: Path, sleep=time.sleep, now=time.time, probe=probe_usage) -> None:
+        self.log, self.sleep, self.now, self.probe = log, sleep, now, probe
         self.until = 0.0
         self.lock = threading.Lock()
+        self.probe_lock = threading.Lock()
+
+    def _confirm_stop(self, rl: dict[str, Any], after: str) -> None:
+        with self.probe_lock:
+            fresh = self.probe()
+        seven = (fresh or {}).get("seven_day")
+        entry = {"ts": self.now(), "after": after, "kind": "seven_day_probe",
+                 "run_seven_day": rl.get("seven_day"), "probe": fresh}  # fmt: skip
+        with self.log.open("a") as fh:
+            fh.write(json.dumps(entry) + "\n")
+        if seven is None or seven >= STOP_AT:
+            raise UsageStop(f"seven_day utilization {rl['seven_day']} >= {STOP_AT} after {after}; "
+                            f"probe read {seven}")  # fmt: skip
+        print(f"PROBE: run read seven_day {rl['seven_day']} after {after}, probe {seven}; "
+              "continuing", flush=True)  # fmt: skip
 
     def wait(self) -> None:
         while True:
@@ -316,7 +350,7 @@ class Gate:
         if not rl:
             return
         if (rl.get("seven_day") or 0) >= STOP_AT:
-            raise UsageStop(f"seven_day utilization {rl['seven_day']} >= {STOP_AT} after {after}")
+            self._confirm_stop(rl, after)
         hot = rl.get("status") == "rejected" or (rl.get("five_hour") or 0) >= PAUSE_AT
         if not hot:
             return

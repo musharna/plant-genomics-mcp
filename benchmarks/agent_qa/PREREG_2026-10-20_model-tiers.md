@@ -231,3 +231,21 @@ passes `--accept-cli-change` only when `ACCEPT_CLI_CHANGE=1` is set for that
 run, so a later Claude Code update still stops a resume until the choice is
 made and written here (review of ad66fcd). The 20:20 EDT resume ran with the
 flag; no resume since.
+
+## Deviation, 2026-10-21 (before the last 63 runs): probe-confirmed seven-day stop
+
+The coordinator judged the 22:31 EDT stop spurious: the user's `/usage`
+showed 66% weekly, and the 0.98 reading carried a `resetsAt` of Sun 12:00
+where the account's window resets Sat 23:00. A probe from this harness at
+resume time read seven-day 0.67 (`resetsAt` Sat 23:00 EDT). Gate change, for
+the rest of this tier and for Sonnet: a run's seven-day reading at or above
+0.90 triggers a fresh probe (`claude -p "say ok" --model claude-haiku-5-5
+--output-format stream-json --verbose --setting-sources ""`, its newest
+`unifiedWindows.seven_day`). The sweep stops only if the probe also reads at
+or above 0.90, or gives no reading; otherwise both readings are logged to
+`pauses.jsonl` (`kind: seven_day_probe`) and the sweep goes on. The
+five-hour pause is unchanged. Test: `test_a_high_seven_day_reading_stops_only_if_a_fresh_probe_confirms_it`
+(a 0.98 run with a 0.66 probe continues; with a 0.95 probe, or none, it
+stops), seen to fail on the old gate. The resume runs the 63 missing runs
+(rep 3, h16 web and mcp, h17–h36) on `sweep2.lock`, Claude Code 2.1.307 as
+before, so `ACCEPT_CLI_CHANGE` is not set.

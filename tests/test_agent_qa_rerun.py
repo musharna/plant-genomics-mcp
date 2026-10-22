@@ -87,7 +87,7 @@ def test_the_gate_pauses_until_reset_at_085_and_records_it(tmp_path: Path) -> No
         slept.append(s)
         clock["t"] += s
 
-    gate = Gate(log, sleep=sleep, now=lambda: clock["t"])
+    gate = Gate(log, sleep=sleep, now=lambda: clock["t"], probe=_no_probe)
     gate.update(rate_limit(_rl(0.84)), "web h1 rep1")
     gate.wait()
     assert slept == [] and not log.exists()  # below the line: no pause
@@ -100,8 +100,16 @@ def test_the_gate_pauses_until_reset_at_085_and_records_it(tmp_path: Path) -> No
     assert len(log.read_text().splitlines()) == 2  # a rejection pauses too
 
 
+def _no_probe() -> dict:
+    raise AssertionError("the gate probed below the seven-day line")
+
+
+def _probe(seven: float | None):
+    return lambda: None if seven is None else {"seven_day": seven, "five_hour": 0.1}
+
+
 def test_the_gate_stops_at_seven_day_080(tmp_path: Path) -> None:
-    gate = Gate(tmp_path / "p.jsonl", sleep=lambda s: None, now=lambda: 0.0)
+    gate = Gate(tmp_path / "p.jsonl", sleep=lambda s: None, now=lambda: 0.0, probe=_probe(0.85))
     gate.update(rate_limit(_rl(0.1, seven=0.79)), "ok")
     try:
         gate.update(rate_limit(_rl(0.1, seven=0.80)), "web h3 rep2")
@@ -271,7 +279,7 @@ def test_the_win_rule_refuses_an_arm_with_missing_runs() -> None:
 def test_stop_at_raises_the_seven_day_stop(tmp_path: Path) -> None:
     import run
 
-    gate = Gate(tmp_path / "p.jsonl", sleep=lambda s: None, now=lambda: 0.0)
+    gate = Gate(tmp_path / "p.jsonl", sleep=lambda s: None, now=lambda: 0.0, probe=_probe(0.95))
     try:
         run.set_stop_at(0.90)
         gate.update(rate_limit(_rl(0.1, seven=0.85)), "ok at 0.85")
@@ -305,3 +313,27 @@ def test_a_resume_accepts_a_new_claude_code_only_when_asked_and_counts_each_vers
     run.write_versions(tmp_path / "versions.json", now, results)
     v = json.loads((tmp_path / "versions.json").read_text())
     assert v["claude_code_served"] == {"2.1.306": 2, "2.1.307": 1}
+
+
+def test_a_high_seven_day_reading_stops_only_if_a_fresh_probe_confirms_it(tmp_path: Path) -> None:
+    import run
+
+    log = tmp_path / "pauses.jsonl"
+    try:
+        run.set_stop_at(0.90)
+        # 2026-10-21: one run read 0.98 while the account stood near 0.66.
+        spurious = Gate(log, sleep=lambda s: None, now=lambda: 0.0, probe=_probe(0.66))
+        spurious.update(rate_limit(_rl(0.01, seven=0.98)), "bare h16 rep3")  # goes on
+        entry = json.loads(log.read_text().splitlines()[-1])
+        assert entry["kind"] == "seven_day_probe" and entry["run_seven_day"] == 0.98
+        assert entry["probe"]["seven_day"] == 0.66
+        for probe_reads in (0.95, None):  # confirmed, or no reading at all: stop
+            gate = Gate(log, sleep=lambda s: None, now=lambda: 0.0, probe=_probe(probe_reads))
+            try:
+                gate.update(rate_limit(_rl(0.01, seven=0.98)), "web h17 rep3")
+            except UsageStop as exc:
+                assert "web h17 rep3" in str(exc) and f"probe read {probe_reads}" in str(exc)
+            else:
+                raise AssertionError(f"0.98 with a probe reading {probe_reads} did not stop")
+    finally:
+        run.set_stop_at(0.80)
