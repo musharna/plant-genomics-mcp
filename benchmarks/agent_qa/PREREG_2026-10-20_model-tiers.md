@@ -247,5 +247,5 @@ or above 0.90, or gives no reading; otherwise both readings are logged to
 five-hour pause is unchanged. Test: `test_a_high_seven_day_reading_stops_only_if_a_fresh_probe_confirms_it`
 (a 0.98 run with a 0.66 probe continues; with a 0.95 probe, or none, it
 stops), seen to fail on the old gate. The resume runs the 63 missing runs
-(rep 3, h16 web and mcp, h17–h36) on `sweep2.lock`, Claude Code 2.1.307 as
+(rep 3: bare h17–h36, web h16–h36, mcp h15–h36) on `sweep2.lock`, Claude Code 2.1.307 as
 before, so `ACCEPT_CLI_CHANGE` is not set.
