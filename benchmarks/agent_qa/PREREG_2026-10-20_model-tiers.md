@@ -189,3 +189,27 @@ word, with the same command; `run.py` skips finished (arm, question, rep)
 triples. `versions.json` pins Claude Code 2.1.306: if it has updated by then,
 `run.py` refuses to resume, and the choice (run 2.1.306, or accept and record
 the new version) is made and written here before resuming.
+
+## Deviation, 2026-10-21 (before any row after run 51): early resume, CLI version, leak rule
+
+- **Resume now.** The coordinator's live probe at 18:12 EDT read seven-day
+  0.57 (the weekly window rolls; `resetsAt` Sat 10-24 23:00 EDT) and
+  five-hour 0.49, so the Haiku sweep resumes from run 52 on `sweep2.lock`
+  instead of waiting for Sunday. Stop at seven-day ≥ 0.90, unchanged. Sonnet
+  still waits for the coordinator.
+- **Claude Code version.** The first 51 rows ran on 2.1.306; the current CLI is
+  2.1.307. Per the coordinator's decision for all tracks, the resume accepts
+  the current version rather than pinning the old one (`run.py
+  --accept-cli-change`). Every row records its own `claude_code`, and
+  `versions.json` counts rows per version (`claude_code_served`). The arms
+  are interleaved by question, so a version change falls on every arm alike;
+  rep 1 h01–h18 ran on 2.1.306, the rest on the version current when each run
+  started. Every other `versions.json` field must still match, or `run.py`
+  refuses.
+- **Leak rule.** The coordinator's narrowed rule is primary for every row and
+  arm: a leak-scan hit counts only if it is key or answer material (the key
+  file, the benchmark's own files, its transcripts or results); a hit that is
+  only a tool binary path (`which`, `command -v`, PATH) is not a leak. Every
+  hit is classified by hand before the analysis. The as-written rule (any
+  match of `run.LEAK`) is reported as secondary. Here no arm has a shell, and
+  the first 51 rows have 0 hits under either rule.

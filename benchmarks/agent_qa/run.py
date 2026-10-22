@@ -494,9 +494,30 @@ def write_versions(vpath: Path, versions: dict[str, Any], results: Path) -> None
     init-event ``model``), so a requested alias that resolved to another
     model shows."""
     served: Counter[str] = Counter()
+    cli: Counter[str] = Counter()
     if results.exists():
-        served.update(str(json.loads(ln).get("model")) for ln in results.read_text().splitlines())
-    vpath.write_text(json.dumps({**versions, "models_served": dict(served)}, indent=1) + "\n")
+        for ln in results.read_text().splitlines():
+            r = json.loads(ln)
+            served[str(r.get("model"))] += 1
+            cli[str(r.get("claude_code"))] += 1
+    derived = {"models_served": dict(served), "claude_code_served": dict(cli)}
+    vpath.write_text(json.dumps({**versions, **derived}, indent=1) + "\n")
+
+
+# versions.json keys write_versions derives from the rows; a resume never compares them.
+DERIVED = ("models_served", "claude_code_served")
+
+
+def resume_mismatch(
+    stored: dict[str, Any], versions: dict[str, Any], accept_cli_change: bool
+) -> dict[str, tuple[Any, Any]]:
+    """Keys whose stored value differs from this run's. With
+    ``accept_cli_change`` a new Claude Code version is allowed: every row
+    records its own (``claude_code``), and versions.json counts them."""
+    skip = {*DERIVED, *(("claude_code",) if accept_cli_change else ())}
+    keys = (set(stored) | set(versions)) - skip
+    return {k: (stored.get(k), versions.get(k)) for k in sorted(keys)
+            if stored.get(k) != versions.get(k)}  # fmt: skip
 
 
 def main() -> None:
@@ -519,6 +540,12 @@ def main() -> None:
         type=float,
         default=STOP_AT,
         help=f"seven-day utilization that stops the sweep (default {STOP_AT})",
+    )
+    ap.add_argument(
+        "--accept-cli-change",
+        action="store_true",
+        help="resume although Claude Code updated since versions.json was written "
+        "(each row records its own version)",
     )
     ap.add_argument(
         "--mcp-timeout-ms",
@@ -593,13 +620,11 @@ def main() -> None:
         "key_sha256": hashlib.sha256(key_text.encode()).hexdigest(),
     }
     vpath = results.with_name("versions.json")
-    if (
-        vpath.exists()
-        and {k: v for k, v in json.loads(vpath.read_text()).items() if k != "models_served"}
-        != versions
-    ):
-        raise SystemExit(f"{vpath} records other versions than this resume would use: "
-                         f"{vpath.read_text()} vs {versions}")  # fmt: skip
+    if vpath.exists():
+        diff = resume_mismatch(json.loads(vpath.read_text()), versions, a.accept_cli_change)
+        if diff:
+            raise SystemExit(f"{vpath} records other versions than this resume would use "
+                             f"(stored, now): {diff}")  # fmt: skip
     write_versions(vpath, versions, results)
     gate = Gate(results.with_name("pauses.jsonl"))
     lock = threading.Lock()

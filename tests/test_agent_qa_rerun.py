@@ -283,3 +283,25 @@ def test_stop_at_raises_the_seven_day_stop(tmp_path: Path) -> None:
             raise AssertionError("seven_day 0.90 did not stop the sweep at --stop-at 0.90")
     finally:
         run.set_stop_at(0.80)
+
+
+def test_a_resume_accepts_a_new_claude_code_only_when_asked_and_counts_each_version(
+    tmp_path: Path,
+) -> None:
+    import run
+
+    old = {"claude_code": "2.1.306", "model": "m", "models_served": {"m": 51},
+           "claude_code_served": {"2.1.306": 51}}  # fmt: skip
+    now = {"claude_code": "2.1.307", "model": "m"}
+    assert run.resume_mismatch(old, now, False) == {"claude_code": ("2.1.306", "2.1.307")}
+    assert run.resume_mismatch(old, now, True) == {}
+    # Anything else that moved still refuses, flag or not.
+    assert run.resume_mismatch(old, {**now, "model": "x"}, True) == {"model": ("m", "x")}
+    results = tmp_path / "results.jsonl"
+    results.write_text(
+        "".join(json.dumps({"model": "m", "claude_code": v}) + "\n"
+                for v in ("2.1.306", "2.1.306", "2.1.307"))
+    )  # fmt: skip
+    run.write_versions(tmp_path / "versions.json", now, results)
+    v = json.loads((tmp_path / "versions.json").read_text())
+    assert v["claude_code_served"] == {"2.1.306": 2, "2.1.307": 1}
