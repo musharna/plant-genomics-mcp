@@ -213,3 +213,15 @@ the new version) is made and written here before resuming.
   hit is classified by hand before the analysis. The as-written rule (any
   match of `run.LEAK`) is reported as secondary. Here no arm has a shell, and
   the first 51 rows have 0 hits under either rule.
+
+## Deviation, 2026-10-21 22:31 EDT: second usage stop
+
+The resumed sweep (from 20:20 EDT, seven-day 0.58) paused once for the
+five-hour window (0.87 after web h14 rep 3, until 22:21 EDT, recorded in
+`pauses.jsonl`). The first run after the pause read seven-day 0.98 (five-hour
+0.01), and the gate stopped the sweep: 261 of 324 runs in, reps 1 and 2
+complete for every question and arm, rep 3 through h16 (16 bare, 15 web, 14
+mcp). Rows kept; `run.py --audit`: 0 invalid, 0 leak hits in 261 transcripts,
+0 API failures. Claude Code 2.1.306 on 51 rows, 2.1.307 on 210. The tier is
+incomplete and not analysed; it resumes with the same command when the
+coordinator says so.
