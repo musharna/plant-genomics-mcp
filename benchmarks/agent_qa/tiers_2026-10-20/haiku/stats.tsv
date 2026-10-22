@@ -1,0 +1,10 @@
+metric	estimate	lo95	hi95	p	note
+win_rule_WIN	0.611111	0.416667	0.805556	1.04904e-05	right in all 3 runs: mcp 31, web 9 of 36; only mcp 24, only web 2; non-inferior True
+mcp_vs_web_right_per_run_diff	0.462963	0.277778	0.638889	NA	bootstrap over 36 questions, 10000 draws
+mcp_vs_web_cost_median_ratio	0.0659488	0.0599309	0.105666	NA	bootstrap over 36 questions, 10000 draws
+mcp_vs_web_seconds_median_ratio	0.473815	0.39304	0.567164	NA	bootstrap over 36 questions, 10000 draws
+mcp_vs_web_tool_calls_mean_diff	-3.55556	-4.22222	-2.87037	NA	bootstrap over 36 questions, 10000 draws
+mcp_vs_web_sign_test_cost_median	36	NA	NA	2.91038e-11	per-question medians: mcp lower on 36, higher on 0
+mcp_vs_web_sign_test_seconds_median	34	NA	NA	1.07684e-09	per-question medians: mcp lower on 35, higher on 1
+mcp_vs_bare	0.861111	0.75	0.972222	9.31323e-10	bare floor, same model; right in all 3 runs: mcp 31, other 0 of 36; only mcp 31, only other 0
+substitute_mcp_vs_reference_web	-0.138889	-0.25	-0.0277778	0.0625	NON-CONCURRENT: this sweep's mcp against Opus 2026-10-18 web; right in all 3 runs: mcp 31, other 36 of 36; only mcp 0, only other 5

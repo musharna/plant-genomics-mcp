@@ -129,6 +129,45 @@ Tables: [`rerun_2026-10-18/`](rerun_2026-10-18/) (`summary.tsv`, `stats.tsv`,
 [`analyze_rerun.py`](analyze_rerun.py). The sweep cost $8.71, plus $0.37 of
 pilots.
 
+## Haiku 5.5 re-run 2026-10-20
+
+Pre-registered in
+[`PREREG_2026-10-20_model-tiers.md`](PREREG_2026-10-20_model-tiers.md). The
+question is whether the server lifts a weaker model. The 10-18 key and
+scorer were used, with server 1.29.3 from PyPI and all three setups on
+`claude-haiku-5-5`, interleaved, 3 reps. Sonnet 5.5 is the second tier and
+has not run yet. The verdict across tiers (Holm over both) waits for it.
+
+| Setup (Haiku 5.5) | Right of 108 | Questions right in all 3 | Cost / answer, median | Seconds, median | Tool calls, mean |
+|---|---|---|---|---|---|
+| Claude alone | 0 (108 declined) | 0 of 36 | $0.0003 | 5.7 | 0 |
+| Claude + web search | 46 (1 wrong) | 9 of 36 | $0.026 | 40.1 | 7.1 |
+| Claude + plant-genomics-mcp | 96 (12 declined) | 31 of 36 | $0.0017 | 19.0 | 3.6 |
+
+- Primary endpoint: the server was right in all 3 runs on 24 questions where
+  web search was not, and web search on 2 where the server was not. Exact
+  McNemar p = 1.0e-5 (raw); the difference is 0.61 of the questions (95% CI
+  0.42 to 0.81). Holm over the two tiers at most doubles this p.
+- By kind, the server was right in 18 of 18 runs on each of the ortholog,
+  position and interval kinds. Web search was right in 0 of 36 runs on the
+  two ortholog kinds. Web search led on ID mapping (17 of 18 runs against 9
+  of 18).
+- Cost and time: the server's median answer cost 0.066× web search's (95% CI
+  0.060 to 0.106) and took 0.47× the time (0.39 to 0.57).
+- Mechanism: every server run called the server (3.6 calls per run; 0 runs
+  without a call, 1 call refused by the client). The most-used tools were
+  `ensembl_plants_lookup_locus` and `gramene_homologs` (51 runs each).
+- Against Opus with web search on 10-18 (not run at the same time, labelled
+  non-concurrent): Haiku with the server 31, Opus 36 of 36. Opus led on 5
+  questions and Haiku on none (p = 0.0625).
+- Controls: oracle 36 of 36 and shifted 0 before each start; 0 invalid of
+  324; 0 leak hits; 0 API failures. Deviations are in the pre-registration:
+  a server-start timeout raised for a loaded host, two usage stops (the
+  second a spurious reading, now checked by a fresh probe), and Claude Code
+  2.1.306 on the first 51 rows and 2.1.307 on the rest. The sweep cost $3.29.
+
+Tables: [`tiers_2026-10-20/haiku/`](tiers_2026-10-20/haiku/).
+
 ## Controls
 
 - Oracle (positive control). The key's own answers, written as replies, score
