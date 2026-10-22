@@ -6,7 +6,9 @@
 #
 #   flock <sweep lock> env HEAVY_RUN_MEM=6G heavy-run bash benchmarks/agent_qa/tiers_sweep.sh [TIER...]
 #
-# TIER is haiku or sonnet (default: both, Haiku first).
+# TIER is haiku or sonnet (default: both, Haiku first). A resume after Claude Code
+# updated is refused unless ACCEPT_CLI_CHANGE=1 is set for that resume, and each
+# such resume is written into the PREREG deviations first.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 A="$HOME/plant-genomics-mcp-artifacts/agent_qa"
@@ -25,10 +27,11 @@ for tier in "${tiers[@]}"; do
         out="$R/$tier"
         mkdir -p "$out"
         args=(--key "$K" --model "$model" --server plant-genomics-mcp==1.29.3
-                --exclude-newer 2026-10-17T01:00:00Z --mcp-timeout-ms 180000 --stop-at 0.90 --accept-cli-change
+                --exclude-newer 2026-10-17T01:00:00Z --mcp-timeout-ms 180000 --stop-at 0.90
                 --arms "bare,web,mcp" --reps 3 --workers 2
                 --results "$out/results.jsonl" --runs "$out/runs")
-        echo "== $tier start $(date -Is)"
+        if [ "${ACCEPT_CLI_CHANGE:-0}" = 1 ]; then args+=(--accept-cli-change); fi
+        echo "== $tier start $(date -Is) accept_cli_change=${ACCEPT_CLI_CHANGE:-0}"
         uv run python benchmarks/agent_qa/run.py "${args[@]}"
         uv run python benchmarks/agent_qa/run.py --key "$K" --results "$out/results.jsonl" --drop-api-failures
         uv run python benchmarks/agent_qa/run.py "${args[@]}"

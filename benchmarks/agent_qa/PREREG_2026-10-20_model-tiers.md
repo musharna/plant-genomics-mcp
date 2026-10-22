@@ -225,3 +225,9 @@ mcp). Rows kept; `run.py --audit`: 0 invalid, 0 leak hits in 261 transcripts,
 0 API failures. Claude Code 2.1.306 on 51 rows, 2.1.307 on 210. The tier is
 incomplete and not analysed; it resumes with the same command when the
 coordinator says so.
+
+The CLI-version acceptance is set per resume, not baked in: `tiers_sweep.sh`
+passes `--accept-cli-change` only when `ACCEPT_CLI_CHANGE=1` is set for that
+run, so a later Claude Code update still stops a resume until the choice is
+made and written here (review of ad66fcd). The 20:20 EDT resume ran with the
+flag; no resume since.
