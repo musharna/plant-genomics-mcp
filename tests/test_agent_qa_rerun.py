@@ -337,3 +337,25 @@ def test_a_high_seven_day_reading_stops_only_if_a_fresh_probe_confirms_it(tmp_pa
                 raise AssertionError(f"0.98 with a probe reading {probe_reads} did not stop")
     finally:
         run.set_stop_at(0.80)
+
+
+def test_the_spend_gate_stops_before_a_run_and_lets_it_through_under_cap(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """API-billed sweeps (2026-10-23): Gate.wait asks BENCH_SPEND_GATE before every run."""
+    gate_py = tmp_path / "gate.py"
+    gate_py.write_text("import os, sys\nprint('cap reached', file=sys.stderr)\nsys.exit(int(os.environ['GATE_RC']))\n")
+    gate = Gate(tmp_path / "p.jsonl", sleep=lambda s: None, now=lambda: 0.0)
+    monkeypatch.setenv("BENCH_SPEND_GATE", str(gate_py))
+    monkeypatch.setenv("GATE_RC", "3")
+    try:
+        gate.wait()
+    except UsageStop as exc:
+        assert "cap reached" in str(exc)
+    else:
+        raise AssertionError("spend gate exit 3 did not stop the sweep")
+    monkeypatch.setenv("GATE_RC", "0")
+    gate.wait()  # under the cap: no stop
+    monkeypatch.delenv("BENCH_SPEND_GATE")
+    monkeypatch.setenv("GATE_RC", "3")
+    gate.wait()  # unset: subscription sweeps unchanged

@@ -308,6 +308,20 @@ def probe_usage() -> dict[str, Any] | None:
     return rate_limit(proc.stdout)
 
 
+def spend_stop() -> str | None:
+    """Why an API-billed sweep must stop before its next run, or None.
+
+    Set ``BENCH_SPEND_GATE`` to the shared spend meter's script and each run
+    first asks it (``check``, track from ``BENCH_TRACK``); any non-zero exit
+    (spend cap, billing violation, checkpoint) stops the sweep cleanly.
+    """
+    gate = os.environ.get("BENCH_SPEND_GATE")
+    if not gate:
+        return None
+    p = subprocess.run([sys.executable, gate, "check"], capture_output=True, text=True, check=False)
+    return None if p.returncode == 0 else (p.stderr.strip() or f"spend gate exit {p.returncode}")
+
+
 class Gate:
     """Pauses the sweep when the account's five-hour window runs high, and
     stops it when the seven-day window does. Every pause is recorded.
@@ -339,6 +353,9 @@ class Gate:
               "continuing", flush=True)  # fmt: skip
 
     def wait(self) -> None:
+        why = spend_stop()
+        if why:
+            raise UsageStop(why)
         while True:
             with self.lock:
                 left = self.until - self.now()
