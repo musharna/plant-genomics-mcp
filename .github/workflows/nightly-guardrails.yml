@@ -71,13 +71,15 @@ jobs:
         # resume. Only the .meta files are cached: the mutated sources are
         # regenerated, and mutmut-stats.json is left out so the test-to-function
         # map is recollected every night, as before. mutants/.carry-tests is the
-        # fingerprint of the tests those results were made with.
+        # fingerprint of the tests those results were made with;
+        # mutants/.carry-stuck counts the nights each mutant was cut off by the cap.
         if: steps.optout.outputs.skip != '1'
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             mutants/**/*.meta
             mutants/.carry-tests
+            mutants/.carry-stuck
           key: mutmut-${{ env.MUTMUT }}-${{ steps.week.outputs.week }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: mutmut-${{ env.MUTMUT }}-${{ steps.week.outputs.week }}-
       - name: Carry results the code and tests still stand behind
@@ -98,12 +100,12 @@ jobs:
           tests=$(git ls-files -s | awk -F'\t' '$2 ~ /(^|\/)(tests?\/|conftest\.py$)/' | sha256sum | cut -c1-64)
           export TESTS="$tests"
           uv run python - <<'PY'
-          import json, os, pathlib
+          import collections, json, os, pathlib
           from mutmut.__main__ import status_by_exit_code
           fp = pathlib.Path("mutants/.carry-tests")
           same_tests = fp.exists() and fp.read_text().strip() == os.environ["TESTS"]
           keep = {"killed", "caught by type check"} | ({"survived", "timeout"} if same_tests else set())
-          carried, reset = [], []
+          carried, reset, reset_status = [], [], []
           for meta in sorted(pathlib.Path("mutants").rglob("*.meta")):
               d = json.loads(meta.read_text())
               for k, c in d["exit_code_by_key"].items():
@@ -114,16 +116,19 @@ jobs:
                   else:
                       d["exit_code_by_key"][k] = None
                       reset.append(k)
+                      reset_status.append(status_by_exit_code[c])
               meta.write_text(json.dumps(d))
           fp.parent.mkdir(exist_ok=True)
           fp.write_text(os.environ["TESTS"] + "\n")
           pathlib.Path(os.environ["RUNNER_TEMP"], "carried.txt").write_text("".join(k + "\n" for k in carried))
           pathlib.Path(os.environ["RUNNER_TEMP"], "reset.txt").write_text("".join(k + "\n" for k in reset))
+          by_status = collections.Counter(reset_status)
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
               f.write(f"carried={len(carried)}\nreset={len(reset)}\nsame_tests={int(same_tests)}\n")
           print(f"carried {len(carried)} results from earlier runs this week "
                 f"({'tests unchanged: survivors and timeouts too' if same_tests else 'tests changed or first run: kills only'}); "
-                f"{len(reset)} others to recheck")
+                f"{len(reset)} others to recheck"
+                + (f" ({', '.join(f'{n} {s}' for s, n in by_status.most_common())})" if reset else ""))
           PY
       - name: Run mutants (wall-clock capped; results persist incrementally)
         if: steps.optout.outputs.skip != '1'
@@ -133,12 +138,75 @@ jobs:
           PYTHONDONTWRITEBYTECODE: "1"
         id: run
         run: |
+          # Every 20 s, note which mutants are running and for how long: mutmut
+          # titles each child "mutmut: <name>" (setproctitle; off on macOS, where
+          # the note stays empty). The last note names the mutants the cap cut off.
+          inflight="$RUNNER_TEMP/inflight.txt"
+          : > "$inflight"
+          (
+            while sleep 20; do
+              ps -eo etimes=,args= | sed -n 's/^ *\([0-9][0-9]*\) mutmut: \([^ ]*\)$/\2 \1/p' > "$inflight.tmp"
+              mv "$inflight.tmp" "$inflight"
+            done
+          ) &
+          watcher=$!
           set +e
           timeout 90m uv run mutmut run
           rc=$?
           set -e
+          kill "$watcher"
           echo "mutmut exit: $rc (124 = wall-clock cap, fine if mutants were checked)"
           echo "rc=$rc" >> "$GITHUB_OUTPUT"
+      - name: A mutant the cap cuts off two nights running is a timeout
+        # mutmut's own deadline is (estimated test time + 1) x timeout_multiplier
+        # (15) seconds, so a mutant most tests cover gets hours: data-aggregator-mcp's
+        # suite takes ~11 min, and the cap leaves ~67 min after stats. mutmut
+        # never gives such a mutant a result; it restarts every night and the
+        # tail never shrinks (2026-10-21/22: the same 2 mutants, cut off after
+        # 23 and 66 min). Restarted first among the unchecked, a mutant the cap
+        # cuts off again after 30+ min has outrun any test it has: a timeout.
+        if: steps.optout.outputs.skip != '1'
+        id: cutoff
+        env:
+          RC: ${{ steps.run.outputs.rc }}
+        run: |
+          uv run python - <<'PY'
+          import json, os, pathlib
+          from mutmut.__main__ import status_by_exit_code
+          TIMEOUT = 36  # several codes read "timeout"; 36 is mutmut's own
+          assert status_by_exit_code[TIMEOUT] == "timeout", status_by_exit_code[TIMEOUT]
+          stuck_f = pathlib.Path("mutants/.carry-stuck")
+          before = json.loads(stuck_f.read_text()) if stuck_f.exists() else {}
+          inflight = {}
+          if os.environ["RC"] == "124":  # only the cap cuts a mutant off
+              for line in pathlib.Path(os.environ["RUNNER_TEMP"], "inflight.txt").read_text().splitlines():
+                  name, secs = line.split()
+                  inflight[name] = int(secs)
+          now, marked = {}, []
+          for meta in sorted(pathlib.Path("mutants").rglob("*.meta")):
+              d = json.loads(meta.read_text())
+              changed = False
+              for k, c in d["exit_code_by_key"].items():
+                  if c is not None or k not in inflight:
+                      continue
+                  nights = before.get(k, 0) + 1
+                  if nights >= 2 and inflight[k] >= 30 * 60:
+                      d["exit_code_by_key"][k] = TIMEOUT
+                      marked.append(k)
+                      changed = True
+                  else:
+                      now[k] = nights
+              if changed:
+                  meta.write_text(json.dumps(d))
+          stuck_f.parent.mkdir(exist_ok=True)
+          stuck_f.write_text(json.dumps(now, indent=1, sort_keys=True))
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"cutoff={len(now)}\nmarked={len(marked)}\n")
+          for k in marked:
+              print(f"timeout: {k} (cut off by the cap two nights running, {inflight[k] // 60} min tonight)")
+          for k, n in sorted(now.items()):
+              print(f"cut off: {k} after {inflight[k] // 60} min ({n} night{'s' if n > 1 else ''} running)")
+          PY
       - name: Save the results for the next run
         # always(): the gate below goes red on purpose, and a partial run's
         # results are still results (each is saved as its mutant finishes).
@@ -148,6 +216,7 @@ jobs:
           path: |
             mutants/**/*.meta
             mutants/.carry-tests
+            mutants/.carry-stuck
           key: mutmut-${{ env.MUTMUT }}-${{ steps.week.outputs.week }}-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Survivors
         id: survivors
@@ -174,6 +243,8 @@ jobs:
         env:
           RC: ${{ steps.run.outputs.rc }}
           CARRIED: ${{ steps.carry.outputs.carried }}
+          CUTOFF: ${{ steps.cutoff.outputs.cutoff }}
+          MARKED: ${{ steps.cutoff.outputs.marked }}
         run: |
           uv run mutmut results > survivors.txt || true
           uv run mutmut results --all true > all-mutants.txt || true
@@ -212,7 +283,7 @@ jobs:
           {
             echo "count=$n"; echo "unchecked=$unchecked"; echo "aborted=$aborted"; echo "checked=$checked"; echo "new=$new"; echo "first=$first"
           } >> "$GITHUB_OUTPUT"
-          echo "## Mutants: $killed killed, $n survived, $checked checked ($new this run, $first of them first checks; $CARRIED carried from earlier this week), $unchecked unchecked (mutmut exit $RC, aborted=$aborted)" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Mutants: $killed killed, $n survived, $checked checked ($new this run, $first of them first checks; $CARRIED carried from earlier this week; ${MARKED:-0} timeouts the cap cut off twice), $unchecked unchecked, ${CUTOFF:-0} of them cut off by the cap (mutmut exit $RC, aborted=$aborted)" >> "$GITHUB_STEP_SUMMARY"
           head -200 survivors.txt >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: steps.optout.outputs.skip != '1'
@@ -257,6 +328,7 @@ jobs:
           NEW: ${{ steps.survivors.outputs.new }}
           FIRST: ${{ steps.survivors.outputs.first }}
           SAME_TESTS: ${{ steps.carry.outputs.same_tests }}
+          CUTOFF: ${{ steps.cutoff.outputs.cutoff }}
           ABORTED: ${{ steps.survivors.outputs.aborted }}
           UNCHECKED: ${{ steps.survivors.outputs.unchecked }}
           RC: ${{ steps.run.outputs.rc }}
@@ -265,7 +337,12 @@ jobs:
             echo "::error::mutmut checked 0 mutants. The suite is not green inside mutants/: fix [tool.mutmut] also_copy / source_paths in pyproject.toml or the test that assumes the checkout path. See the stats-collection failure above."
             exit 1
           fi
-          if [ "${NEW:-0}" -eq 0 ] && [ "${UNCHECKED:-0}" -gt 0 ]; then
+          # Every unchecked mutant was running when the cap hit: mutmut ran, and
+          # the tail clears itself (cut off again after 30+ min, each counts as
+          # a timeout; the step after the run).
+          all_cut=0
+          if [ "${UNCHECKED:-0}" -gt 0 ] && [ "${CUTOFF:-0}" -eq "${UNCHECKED:-0}" ]; then all_cut=1; fi
+          if [ "${NEW:-0}" -eq 0 ] && [ "${UNCHECKED:-0}" -gt 0 ] && [ "$all_cut" = "0" ]; then
             echo "::error::mutmut checked no mutant this run while $UNCHECKED waited; the $CHECKED checked are carried from earlier runs. The suite is not green inside mutants/ (see above)."
             exit 1
           fi
@@ -273,11 +350,14 @@ jobs:
           # them changed); rechecks under unchanged tests that fill the cap are
           # a stall the tail never recovers from before the week's cache resets.
           if [ "${FIRST:-0}" -eq 0 ] && [ "${UNCHECKED:-0}" -gt 0 ]; then
-            if [ "$SAME_TESTS" = "1" ]; then
-              echo "::error::the cap went on rechecking $NEW results from earlier runs; no unchecked mutant got its first check while $UNCHECKED waited. Find which status is being rechecked (the carry step's log) and carry it."
+            if [ "$all_cut" = "1" ]; then
+              echo "::warning::all $UNCHECKED mutants still unchecked were running when the cap hit (the cut-off step's log names them): mutmut's own deadline for them is longer than the cap. Cut off again after 30+ min, each counts as a timeout."
+            elif [ "$SAME_TESTS" = "1" ]; then
+              echo "::error::no unchecked mutant got its first check while $UNCHECKED waited. The cap went on $NEW rechecks of earlier results (the carry step's log gives their statuses) and ${CUTOFF:-0} mutants still running when it hit (the cut-off step's log names them). Carry a rechecked status that should stand, or find why the rest never start."
               exit 1
+            else
+              echo "::warning::the tests changed, so $NEW results were rechecked and no unchecked mutant got its first check ($UNCHECKED wait for the next run)."
             fi
-            echo "::warning::the tests changed, so $NEW results were rechecked and no unchecked mutant got its first check ($UNCHECKED wait for the next run)."
           fi
           if [ "$ABORTED" = "1" ]; then
             echo "::error::mutmut aborted (exit $RC) with $UNCHECKED mutants unchecked; the survivor count is partial. Read the traceback above the exit line."
