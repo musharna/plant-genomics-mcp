@@ -17,7 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 README = ROOT / "README.md"
 BENCH = ROOT / "benchmarks" / "agent_qa"
-HEADING = "## Does it help?"
+HEADING = "## What the benchmark shows"
 
 
 def _section() -> str:
@@ -59,7 +59,7 @@ def test_summary_states_the_paired_test_and_no_single_run_maximum() -> None:
 
 
 def test_rerun_sentence_matches_the_confirmatory_tables() -> None:
-    """The 2026-10-18 re-run's line in "Does it help?" is pinned to its own
+    """The 2026-10-18 re-run's line in the benchmark section is pinned to its own
     stats.tsv and summary.tsv, so the README cannot keep a verdict, a count or
     a ratio the confirmatory sweep did not produce."""
     section = _section()
