@@ -67,10 +67,10 @@ Per-tool walkthroughs, including the one-call gene dossier
 
 ## What the benchmark shows
 
-Claude was compared with itself using web search. On 36 multi-step gene questions, 3 runs
-each, Haiku 5.5 got 31 right in every run with the server and 9 with web search: a
-pre-registered win (Holm-adjusted McNemar p = 2e-5), at 0.07 times the cost. Sonnet 5.5
-tied (35 and 35; 0.65× the time, 1.49× the cost). With Opus 5.5 (the re-run 2026-10-18)
+Claude with the server was compared with Claude using web search. On 36 multi-step gene
+questions, 3 runs each, Haiku 5.5 got 31 right in every run with the server and 9 with web
+search: a pre-registered win (Holm-adjusted McNemar p = 2.1e-5), at 0.07 times the cost.
+Sonnet 5.5 tied (35 and 35; 0.65× the time, 1.49× the cost). With Opus 5.5 (the re-run 2026-10-18)
 both got all 108 right; the server was faster at the median (0.77×, 95% CI 0.64 to 0.96)
 and dearer (1.72×, 1.46 to 2.24).
 

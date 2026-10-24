@@ -80,3 +80,52 @@ def test_rerun_sentence_matches_the_confirmatory_tables() -> None:
         est, lo = float(r["estimate"]), float(r["lo95"])
         claims = (f"{est:.2f}×, 95% CI {lo:.2f}", f"{est:.2f}×, {lo:.2f}")
         assert any(c in section for c in claims), (metric, claims, section)
+
+
+def _sci(x: float) -> str:
+    """2.098e-05 -> "2.1e-5", as the README writes small p-values."""
+    s = f"{x:.2g}"
+    if "e" not in s:
+        return s
+    mantissa, exponent = s.split("e")
+    return f"{mantissa}e{int(exponent)}"
+
+
+def test_tier_sentences_match_the_tier_tables() -> None:
+    """The Haiku and Sonnet sentences are pinned to tiers_2026-10-20/{haiku,sonnet}/stats.tsv
+    (PR #259 review: a result restated in a second place is fixed in one, LESSONS
+    2026-10-17). Counts, the Holm-adjusted p over the two tiers, the verdict and the
+    cost and time ratios must be the tables', so a re-run or a corrected key cannot
+    leave the front page behind."""
+    section = " ".join(_section().split())  # the README wraps lines anywhere
+    tiers = BENCH / "tiers_2026-10-20"
+    stats = {}
+    for tier in ("haiku", "sonnet"):
+        with (tiers / tier / "stats.tsv").open(encoding="utf-8") as f:
+            stats[tier] = {r["metric"]: r for r in csv.DictReader(f, delimiter="\t")}
+    verdicts = {t: [k for k in s if k.startswith("win_rule_")] for t, s in stats.items()}
+    # Positive control: both tables were read and the section is the real one.
+    assert verdicts == {"haiku": ["win_rule_WIN"], "sonnet": ["win_rule_TIE"]}, verdicts
+    assert "Haiku 5.5" in section and "Sonnet 5.5" in section, section[:200]
+    right = {}
+    for tier, s in stats.items():
+        note = s[verdicts[tier][0]]["note"]
+        mcp = int(note.split("mcp ")[1].split(",")[0])
+        web = int(note.split("web ")[1].split(" ")[0])
+        right[tier] = (mcp, web)
+    p = sorted(float(s[verdicts[t][0]]["p"]) for t, s in stats.items())
+    holm_min = min(1.0, 2 * p[0])
+    assert (
+        f"got {right['haiku'][0]} right in every run with the server and "
+        f"{right['haiku'][1]} with web search: a pre-registered win" in section
+    ), (right, section)
+    assert f"p = {_sci(holm_min)}" in section, (_sci(holm_min), section)
+    cost = float(stats["haiku"]["mcp_vs_web_cost_median_ratio"]["estimate"])
+    assert f"{cost:.2f} times the cost" in section, (cost, section)
+    s = stats["sonnet"]
+    secs = float(s["mcp_vs_web_seconds_median_ratio"]["estimate"])
+    cost = float(s["mcp_vs_web_cost_median_ratio"]["estimate"])
+    assert (
+        f"tied ({right['sonnet'][0]} and {right['sonnet'][1]}; "
+        f"{secs:.2f}× the time, {cost:.2f}× the cost)" in section
+    ), (right, secs, cost, section)
