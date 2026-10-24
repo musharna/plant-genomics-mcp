@@ -353,15 +353,22 @@ class Gate:
               "continuing", flush=True)  # fmt: skip
 
     def wait(self) -> None:
+        """Sleep out any pending pause. The spend gate is asked before the
+        pause, so a stopped sweep does not sleep first, and again after it,
+        so the run starts on what the gate reads when the call fires."""
         why = spend_stop()
         if why:
             raise UsageStop(why)
+        slept = False
         while True:
             with self.lock:
                 left = self.until - self.now()
             if left <= 0:
-                return
+                break
             self.sleep(min(left, 300))
+            slept = True
+        if slept and (why := spend_stop()):
+            raise UsageStop(why)
 
     def update(self, rl: dict[str, Any] | None, after: str) -> None:
         if not rl:

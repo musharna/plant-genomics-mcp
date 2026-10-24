@@ -361,3 +361,40 @@ def test_the_spend_gate_stops_before_a_run_and_lets_it_through_under_cap(
     monkeypatch.delenv("BENCH_SPEND_GATE")
     monkeypatch.setenv("GATE_RC", "3")
     gate.wait()  # unset: subscription sweeps unchanged
+
+
+def test_the_spend_gate_is_asked_again_after_a_pause(tmp_path: Path, monkeypatch) -> None:
+    """A run queued behind a pause starts on what the spend gate reads once the
+    pause clears: the gate passes before the pause and refuses after it, so
+    wait() sleeps the pause out, asks again, and stops."""
+    calls = tmp_path / "calls"
+    gate_py = tmp_path / "gate.py"
+    gate_py.write_text(
+        "import pathlib, sys\n"
+        f"p = pathlib.Path({str(calls)!r})\n"
+        "n = int(p.read_text()) + 1 if p.exists() else 1\n"
+        "p.write_text(str(n))\n"
+        "print('cap reached', file=sys.stderr)\n"
+        "sys.exit(0 if n == 1 else 3)\n"
+    )
+    clock = {"t": 0.0}
+    slept: list[float] = []
+
+    def sleep(s: float) -> None:
+        slept.append(s)
+        clock["t"] += s
+
+    gate = Gate(tmp_path / "p.jsonl", sleep=sleep, now=lambda: clock["t"])
+    gate.until = 400.0
+    monkeypatch.setenv("BENCH_SPEND_GATE", str(gate_py))
+    try:
+        gate.wait()
+    except UsageStop as exc:
+        assert "cap reached" in str(exc)
+    else:
+        raise AssertionError("the gate refused after the pause, but the run went ahead")
+    assert slept == [300, 100]  # the pause was slept out first
+    assert calls.read_text() == "2"  # then the gate was asked again
+    calls.unlink()
+    gate.wait()  # positive control: no pause, gate passes on its one call
+    assert calls.read_text() == "1"
