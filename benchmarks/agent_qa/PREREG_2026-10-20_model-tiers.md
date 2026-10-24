@@ -249,3 +249,26 @@ five-hour pause is unchanged. Test: `test_a_high_seven_day_reading_stops_only_if
 stops), seen to fail on the old gate. The resume runs the 63 missing runs
 (rep 3: bare h17–h36, web h16–h36, mcp h15–h36) on `sweep2.lock`, Claude Code 2.1.307 as
 before, so `ACCEPT_CLI_CHANGE` is not set.
+
+## Amendment, 2026-10-23 ~19:20 EDT: API billing (before any further run)
+
+- **Billing.** The user's decision: every remaining run in this design (both
+  tiers) bills an Anthropic API key, not the Claude subscription. Same model
+  IDs, prompts, arms, reps, harness and controls. Claude Code is 2.1.309 now
+  (recorded per row).
+- **How.** A benchmark-only `claude` wrapper, first on `PATH` for the sweep,
+  loads the key and then `exec`s the real CLI (so the harness's timeout still
+  kills Claude itself). It records each run's cost (Claude Code's
+  `total_cost_usd`; for a killed run, estimated from its token counts) and
+  refuses to start a run once the total reaches $171 of the user's $175 cap
+  (exit 75, no transcript). A run whose `init` event does not show
+  `apiKeySource: ANTHROPIC_API_KEY` stops every later launch.
+- **Gate.** API calls report no subscription windows, so the seven-day stop
+  and the five-hour pause no longer fire. `run.py` instead asks the spend gate
+  (`BENCH_SPEND_GATE`) before every run and, on a refusal, stops cleanly as
+  at the seven-day stop: finished rows stay, nothing new starts. Test added,
+  seen to fail with the check disabled (`mutate-run`).
+- **Set aside by exit code, not outcome.** A run the wrapper refuses (exit
+  75) is a harness failure, not a result: it is set aside and re-run once.
+- **Concurrency.** Up to 4 servers' sweeps run at once (2 before). The
+  workers per sweep are unchanged.
