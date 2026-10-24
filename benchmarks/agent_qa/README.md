@@ -129,14 +129,19 @@ Tables: [`rerun_2026-10-18/`](rerun_2026-10-18/) (`summary.tsv`, `stats.tsv`,
 [`analyze_rerun.py`](analyze_rerun.py). The sweep cost $8.71, plus $0.37 of
 pilots.
 
-## Haiku 5.5 re-run 2026-10-20
+## Haiku and Sonnet re-run 2026-10-20
 
 Pre-registered in
 [`PREREG_2026-10-20_model-tiers.md`](PREREG_2026-10-20_model-tiers.md). The
 question is whether the server lifts a weaker model. The 10-18 key and
-scorer were used, with server 1.29.3 from PyPI and all three setups on
-`claude-haiku-5-5`, interleaved, 3 reps. Sonnet 5.5 is the second tier and
-has not run yet. The verdict across tiers (Holm over both) waits for it.
+scorer were used, with server 1.29.3 from PyPI and all three setups on each
+tier, interleaved, 3 reps.
+
+**Win rule across both tiers: WIN** ([`tiers_verdict.py`](tiers_verdict.py)).
+Holm-adjusted McNemar p: Haiku 2.1e-5 (a lift: 31 against 9 questions right
+in all runs), Sonnet 1.0 (35 against 35: no lift, no loss).
+
+### Haiku 5.5
 
 | Setup (Haiku 5.5) | Right of 108 | Questions right in all 3 | Cost / answer, median | Seconds, median | Tool calls, mean |
 |---|---|---|---|---|---|
@@ -167,6 +172,33 @@ has not run yet. The verdict across tiers (Holm over both) waits for it.
   2.1.306 on the first 51 rows and 2.1.307 on the rest. The sweep cost $3.29.
 
 Tables: [`tiers_2026-10-20/haiku/`](tiers_2026-10-20/haiku/).
+
+### Sonnet 5.5
+
+Run on 2026-10-24 on an API key under a spend gate (the PREREG's amendments),
+Claude Code 2.1.310.
+
+| Setup (Sonnet 5.5) | Right of 108 | Questions right in all 3 | Cost / answer, median | Seconds, median | Tool calls, mean |
+|---|---|---|---|---|---|
+| Claude alone | 0 (108 declined) | 0 of 36 | $0.0038 | 4.6 | 0 |
+| Claude + web search | 107 (1 wrong) | 35 of 36 | $0.010 | 13.7 | 2.7 |
+| Claude + plant-genomics-mcp | 107 (1 wrong) | 35 of 36 | $0.015 | 9.0 | 2.9 |
+
+- Primary endpoint: 1 question only the server got right in all runs, 1
+  only web search; McNemar p = 1, difference 0.00 (95% CI −0.08 to +0.08).
+  Sonnet with web search closes the gap Haiku showed.
+- Cost and time: the server's median answer cost 1.49× web search's (1.23 to
+  1.76; dearer on 30 of 36 questions) and took 0.65× the time (0.58 to 0.77;
+  faster on 28).
+- Mechanism: every server run called the server (2.9 calls per run, 0 runs
+  without a call, 0 refused). Most used: `gramene_homologs` (56 runs) and
+  `ensembl_region_query` (38).
+- Against Opus with web search on 10-18 (non-concurrent): Sonnet with the
+  server 35, Opus 36 of 36 (p = 1).
+- Controls: oracle 36 of 36 and shifted 0 before the start; 0 invalid of 324;
+  0 leak hits; 0 API failures. The sweep cost $5.26.
+
+Tables: [`tiers_2026-10-20/sonnet/`](tiers_2026-10-20/sonnet/).
 
 ## Controls
 
