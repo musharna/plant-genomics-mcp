@@ -344,7 +344,9 @@ def test_the_spend_gate_stops_before_a_run_and_lets_it_through_under_cap(
 ) -> None:
     """API-billed sweeps (2026-10-23): Gate.wait asks BENCH_SPEND_GATE before every run."""
     gate_py = tmp_path / "gate.py"
-    gate_py.write_text("import os, sys\nprint('cap reached', file=sys.stderr)\nsys.exit(int(os.environ['GATE_RC']))\n")
+    gate_py.write_text(
+        "import os, sys\nprint('cap reached', file=sys.stderr)\nsys.exit(int(os.environ['GATE_RC']))\n"
+    )
     gate = Gate(tmp_path / "p.jsonl", sleep=lambda s: None, now=lambda: 0.0)
     monkeypatch.setenv("BENCH_SPEND_GATE", str(gate_py))
     monkeypatch.setenv("GATE_RC", "3")
