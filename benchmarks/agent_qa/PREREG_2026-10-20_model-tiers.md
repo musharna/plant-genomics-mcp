@@ -272,3 +272,19 @@ before, so `ACCEPT_CLI_CHANGE` is not set.
   75) is a harness failure, not a result: it is set aside and re-run once.
 - **Concurrency.** Up to 4 servers' sweeps run at once (2 before). The
   workers per sweep are unchanged.
+- **Harness fault, 20:38-20:52 EDT, and set-aside (recorded before any analysis).**
+  The first API-billed launch hid the key from the agent's tools with
+  `CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1`. That setting also forces Claude
+  Code's permission mode to `default` (checked live: with it, a run asking for
+  `bypassPermissions` starts in `default`; without it, on either billing
+  source, it starts in `bypassPermissions`). The data-aggregator arms ask for
+  `bypassPermissions`, so their tools were denied (91 of 91 Haiku runs had
+  denials; median 7 turns against 21.5 before). The coordinator stopped every
+  sweep at 20:52. Rule, by time window and not by outcome: **every run
+  started under that wrapper, on every server and tier, is set aside and
+  re-run** (`*.scrub_2026-10-23*`, `_scrub/` for data-aggregator), including
+  servers whose arms ask for `default` mode and showed no change. The key now
+  reaches Claude Code through an `apiKeyHelper` flag setting (`--settings`),
+  never the environment; the run's `init` must show `apiKeySource:
+  apiKeyHelper` and the permission mode the harness asked for, or every later
+  launch stops.
