@@ -54,6 +54,7 @@ import sys
 import tempfile
 import threading
 import time
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
@@ -93,9 +94,46 @@ SERVER = "plant-genomics-mcp==1.29.2"
 # resolved the same 33 packages as the sweep's start (19:45 UTC); 1.29.2 itself
 # was uploaded at 17:57 UTC, and a cutoff of 2026-10-15 cannot resolve it.
 EXCLUDE_NEWER = "2026-10-17T00:00:00Z"
+DEFAULT_MODEL, DEFAULT_RUNS = MODEL, RUNS
+
+
+def set_model(model: str) -> None:
+    """--model runs every arm on another model. Its transcripts go to their own
+    agent_qa_runs-<model>/ by default, so they never overwrite the default
+    model's."""
+    global MODEL, RUNS
+    MODEL = model
+    RUNS = (
+        DEFAULT_RUNS
+        if model == DEFAULT_MODEL
+        else DEFAULT_RUNS.with_name(f"{DEFAULT_RUNS.name}-{model}")
+    )
+
+
+def set_server(server: str, exclude_newer: str) -> None:
+    """--server and --exclude-newer pin another release; both go into every mcp
+    row and versions.json."""
+    global SERVER, EXCLUDE_NEWER
+    SERVER, EXCLUDE_NEWER = server, exclude_newer
+
+
 RUN_TIMEOUT_S = 900
 PAUSE_AT = 0.85  # five-hour utilization that pauses the sweep until its reset
 STOP_AT = 0.80  # seven-day utilization that stops it
+
+
+# Claude Code's MCP_TIMEOUT (ms): how long it waits for the server to start. None
+# leaves Claude Code's default. On a loaded host uvx took 17-27 s to start the
+# server and the 2026-10-20 pilot's server failed to connect in 2 of 2 runs.
+MCP_TIMEOUT_MS: int | None = None
+
+
+def set_stop_at(stop_at: float) -> None:
+    """--stop-at: the seven-day utilization that stops the sweep."""
+    global STOP_AT
+    STOP_AT = stop_at
+
+
 # Every arm gets this in place of Claude Code's own system prompt. That prompt
 # describes tools even when --tools "" removes them all, and in the pilot the
 # no-tools arm wrote fake <invoke name="Bash"> calls as text instead of
@@ -257,28 +295,86 @@ class UsageStop(RuntimeError):
     pass
 
 
+PROBE_MODEL = "claude-haiku-5-5"
+
+
+def probe_usage() -> dict[str, Any] | None:
+    """A fresh reading of the account's windows: one tiny ``claude -p`` call,
+    its newest rate_limit_event (None if it wrote none)."""
+    with tempfile.TemporaryDirectory(prefix="agentqa-probe-") as d:
+        cmd = ["claude", "-p", "say ok", "--model", PROBE_MODEL, "--output-format",
+               "stream-json", "--verbose", "--setting-sources", ""]  # fmt: skip
+        proc = subprocess.run(cmd, cwd=d, capture_output=True, text=True, timeout=120)
+    return rate_limit(proc.stdout)
+
+
+def spend_stop() -> str | None:
+    """Why an API-billed sweep must stop before its next run, or None.
+
+    Set ``BENCH_SPEND_GATE`` to the shared spend meter's script and each run
+    first asks it (``check``, track from ``BENCH_TRACK``); any non-zero exit
+    (spend cap, billing violation, checkpoint) stops the sweep cleanly.
+    """
+    gate = os.environ.get("BENCH_SPEND_GATE")
+    if not gate:
+        return None
+    p = subprocess.run([sys.executable, gate, "check"], capture_output=True, text=True, check=False)
+    return None if p.returncode == 0 else (p.stderr.strip() or f"spend gate exit {p.returncode}")
+
+
 class Gate:
     """Pauses the sweep when the account's five-hour window runs high, and
-    stops it when the seven-day window does. Every pause is recorded."""
+    stops it when the seven-day window does. Every pause is recorded.
 
-    def __init__(self, log: Path, sleep=time.sleep, now=time.time) -> None:
-        self.log, self.sleep, self.now = log, sleep, now
+    A run's seven-day reading at or above STOP_AT is checked with a fresh
+    probe (``probe``) before it stops anything: on 2026-10-21 one run read
+    0.98 while the account stood near 0.66. The sweep stops only if the probe
+    reads at or above STOP_AT too, or gives no reading; otherwise the reading
+    is logged and the sweep goes on."""
+
+    def __init__(self, log: Path, sleep=time.sleep, now=time.time, probe=probe_usage) -> None:
+        self.log, self.sleep, self.now, self.probe = log, sleep, now, probe
         self.until = 0.0
         self.lock = threading.Lock()
+        self.probe_lock = threading.Lock()
+
+    def _confirm_stop(self, rl: dict[str, Any], after: str) -> None:
+        with self.probe_lock:
+            fresh = self.probe()
+        seven = (fresh or {}).get("seven_day")
+        entry = {"ts": self.now(), "after": after, "kind": "seven_day_probe",
+                 "run_seven_day": rl.get("seven_day"), "probe": fresh}  # fmt: skip
+        with self.log.open("a") as fh:
+            fh.write(json.dumps(entry) + "\n")
+        if seven is None or seven >= STOP_AT:
+            raise UsageStop(f"seven_day utilization {rl['seven_day']} >= {STOP_AT} after {after}; "
+                            f"probe read {seven}")  # fmt: skip
+        print(f"PROBE: run read seven_day {rl['seven_day']} after {after}, probe {seven}; "
+              "continuing", flush=True)  # fmt: skip
 
     def wait(self) -> None:
+        """Sleep out any pending pause. The spend gate is asked before the
+        pause, so a stopped sweep does not sleep first, and again after it,
+        so the run starts on what the gate reads when the call fires."""
+        why = spend_stop()
+        if why:
+            raise UsageStop(why)
+        slept = False
         while True:
             with self.lock:
                 left = self.until - self.now()
             if left <= 0:
-                return
+                break
             self.sleep(min(left, 300))
+            slept = True
+        if slept and (why := spend_stop()):
+            raise UsageStop(why)
 
     def update(self, rl: dict[str, Any] | None, after: str) -> None:
         if not rl:
             return
         if (rl.get("seven_day") or 0) >= STOP_AT:
-            raise UsageStop(f"seven_day utilization {rl['seven_day']} >= {STOP_AT} after {after}")
+            self._confirm_stop(rl, after)
         hot = rl.get("status") == "rejected" or (rl.get("five_hour") or 0) >= PAUSE_AT
         if not hot:
             return
@@ -338,6 +434,8 @@ def run_one(
         # A TMPDIR of the run's own, so no two runs share scratch files.
         (tmp / "tmp").mkdir()
         env = {**os.environ, "TMPDIR": str(tmp / "tmp")}
+        if MCP_TIMEOUT_MS is not None:
+            env["MCP_TIMEOUT"] = str(MCP_TIMEOUT_MS)
         t0 = time.monotonic()
         try:
             proc = subprocess.run(
@@ -360,6 +458,8 @@ def run_one(
         "exit": rc,
         "seconds": seconds,
         "server": SERVER if arm == "mcp" else None,
+        "exclude_newer": EXCLUDE_NEWER if arm == "mcp" else None,
+        "model_requested": MODEL,
         **_row_fields(arm, rc, t),
         **score(q, t["reply"]),
         "verdict_ncbi": score_ncbi(q, t["reply"]),
@@ -447,6 +547,37 @@ def preflight(key: dict[str, Any], allow_release_drift: bool) -> None:
           f"Ensembl {live}/EG {live_eg}; UniProt {up}")  # fmt: skip
 
 
+def write_versions(vpath: Path, versions: dict[str, Any], results: Path) -> None:
+    """versions.json, plus the models the API actually served (each row's
+    init-event ``model``), so a requested alias that resolved to another
+    model shows."""
+    served: Counter[str] = Counter()
+    cli: Counter[str] = Counter()
+    if results.exists():
+        for ln in results.read_text().splitlines():
+            r = json.loads(ln)
+            served[str(r.get("model"))] += 1
+            cli[str(r.get("claude_code"))] += 1
+    derived = {"models_served": dict(served), "claude_code_served": dict(cli)}
+    vpath.write_text(json.dumps({**versions, **derived}, indent=1) + "\n")
+
+
+# versions.json keys write_versions derives from the rows; a resume never compares them.
+DERIVED = ("models_served", "claude_code_served")
+
+
+def resume_mismatch(
+    stored: dict[str, Any], versions: dict[str, Any], accept_cli_change: bool
+) -> dict[str, tuple[Any, Any]]:
+    """Keys whose stored value differs from this run's. With
+    ``accept_cli_change`` a new Claude Code version is allowed: every row
+    records its own (``claude_code``), and versions.json counts them."""
+    skip = {*DERIVED, *(("claude_code",) if accept_cli_change else ())}
+    keys = (set(stored) | set(versions)) - skip
+    return {k: (stored.get(k), versions.get(k)) for k in sorted(keys)
+            if stored.get(k) != versions.get(k)}  # fmt: skip
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--arms", default="bare,web,mcp")
@@ -459,7 +590,34 @@ def main() -> None:
         action="store_true",
         help="re-score every stored reply against the current questions.json, run nothing",
     )
-    ap.add_argument("--runs", default=str(RUNS), help="where raw transcripts go")
+    ap.add_argument(
+        "--runs", default=None, help=f"where raw transcripts go (default {RUNS}[-<model>])"
+    )
+    ap.add_argument(
+        "--stop-at",
+        type=float,
+        default=STOP_AT,
+        help=f"seven-day utilization that stops the sweep (default {STOP_AT})",
+    )
+    ap.add_argument(
+        "--accept-cli-change",
+        action="store_true",
+        help="resume although Claude Code updated since versions.json was written "
+        "(each row records its own version)",
+    )
+    ap.add_argument(
+        "--mcp-timeout-ms",
+        type=int,
+        default=None,
+        help="MCP_TIMEOUT for claude: ms to wait for the server to start (default: Claude Code's)",
+    )
+    ap.add_argument("--model", default=MODEL, help=f"claude --model (default {MODEL})")
+    ap.add_argument("--server", default=SERVER, help=f"uvx server spec (default {SERVER})")
+    ap.add_argument(
+        "--exclude-newer",
+        default=EXCLUDE_NEWER,
+        help=f"uvx --exclude-newer for the server's environment (default {EXCLUDE_NEWER})",
+    )
     ap.add_argument(
         "--audit",
         action="store_true",
@@ -473,6 +631,12 @@ def main() -> None:
         help="move rows the API ended before an answer aside, so a resume re-runs each once",
     )
     a = ap.parse_args()
+    set_model(a.model)
+    set_stop_at(a.stop_at)
+    global MCP_TIMEOUT_MS
+    MCP_TIMEOUT_MS = a.mcp_timeout_ms
+    set_server(a.server, a.exclude_newer)
+    a.runs = a.runs or str(RUNS)
     key_text = Path(a.key).read_text()
     key = json.loads(key_text)
     questions = key["questions"]
@@ -509,14 +673,17 @@ def main() -> None:
         "model": MODEL,
         "server": SERVER,
         "exclude_newer": EXCLUDE_NEWER,
+        **({"mcp_timeout_ms": MCP_TIMEOUT_MS} if MCP_TIMEOUT_MS is not None else {}),
         "key": str(Path(a.key).resolve()),
         "key_sha256": hashlib.sha256(key_text.encode()).hexdigest(),
     }
     vpath = results.with_name("versions.json")
-    if vpath.exists() and json.loads(vpath.read_text()) != versions:
-        raise SystemExit(f"{vpath} records other versions than this resume would use: "
-                         f"{vpath.read_text()} vs {versions}")  # fmt: skip
-    vpath.write_text(json.dumps(versions, indent=1) + "\n")
+    if vpath.exists():
+        diff = resume_mismatch(json.loads(vpath.read_text()), versions, a.accept_cli_change)
+        if diff:
+            raise SystemExit(f"{vpath} records other versions than this resume would use "
+                             f"(stored, now): {diff}")  # fmt: skip
+    write_versions(vpath, versions, results)
     gate = Gate(results.with_name("pauses.jsonl"))
     lock = threading.Lock()
     pool = ThreadPoolExecutor(max_workers=a.workers)
@@ -538,8 +705,10 @@ def main() -> None:
                 raise UsageStop(r["usage_stop"])
     except UsageStop as exc:
         pool.shutdown(wait=True, cancel_futures=True)
+        write_versions(vpath, versions, results)
         sys.exit(f"STOP: {exc}")
     pool.shutdown(wait=True)
+    write_versions(vpath, versions, results)
     sys.exit(0)
 
 
