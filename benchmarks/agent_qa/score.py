@@ -117,10 +117,122 @@ def score_ncbi(question: dict[str, Any], reply: str) -> str | None:
     return "right" if _location_right(value, truth) else "wrong"
 
 
+# The 2026-10-24 field families (field_2026-10-24/build_field.py) answer a
+# set, so NONE there is an answer (the empty set), not a refusal.
+_DECLINE = {"UNKNOWN", "UNKNOWN."}
+_NONE = re.compile(r"^\W*(none|no (rice or maize )?(genes?|members?))\W*$", re.IGNORECASE)
+_RICE_MAIZE = re.compile(r"\b(Os\d{2}g\d{7}|Zm00001eb\d{6})(?:_[TP]\d{3})?\b", re.IGNORECASE)
+_V4 = re.compile(r"\bZm00001d\d{6}\b", re.IGNORECASE)
+_V5 = re.compile(r"\bZm00001eb\d{6}(?:_[TP]\d{3})?\b", re.IGNORECASE)
+_UNIPROT = re.compile(
+    r"\b(?:[OPQ]\d[A-Z0-9]{3}\d|[A-NR-Z]\d(?:[A-Z][A-Z0-9]{2}\d){1,2})(?:-\d+)?\b"
+)
+
+
+def _rm_gene(token: str) -> str:
+    """A rice or maize gene id with case and a _T/_P transcript or protein
+    suffix removed (Compara names maize leaves by protein, Zm00001eb207450_P003)."""
+    return re.sub(r"_[TP]\d{3}$", "", token.strip().upper())
+
+
+def set_f1(got: set[str], truth: set[str]) -> dict[str, float]:
+    """Precision, recall and F1 of a predicted set. Two empty sets agree
+    (F1 1): a true negative answered NONE is right."""
+    if not got and not truth:
+        return {"precision": 1.0, "recall": 1.0, "f1": 1.0}
+    hit = len(got & truth)
+    p = hit / len(got) if got else 0.0
+    r = hit / len(truth) if truth else 0.0
+    f1 = 2 * p * r / (p + r) if p + r else 0.0
+    return {"precision": round(p, 4), "recall": round(r, 4), "f1": round(f1, 4)}
+
+
+def _score_roster(question: dict[str, Any], value: str) -> dict[str, Any]:
+    """P1: the rice and maize members of a gene tree, by set F1; right only at
+    F1 = 1. NONE is the empty set."""
+    truth = {_rm_gene(g) for g in question["truth"]["members"]}
+    got = {_rm_gene(m.group(0)) for m in _RICE_MAIZE.finditer(value)}
+    if not got and not _NONE.match(value):
+        # Neither ids nor NONE: an attempt the scorer cannot read as a set.
+        return {"verdict": "wrong", "value": value, "wrong_id": False,
+                "precision": 0.0, "recall": 0.0, "f1": 0.0, "n_pred": 0}  # fmt: skip
+    m = set_f1(got, truth)
+    return {"verdict": "right" if m["f1"] == 1.0 else "wrong", "value": value,
+            "wrong_id": False, **m, "n_pred": len(got)}  # fmt: skip
+
+
+def parse_id_batch(value: str) -> dict[str, Any]:
+    """P3 reply items, by v4 id: ``"unknown"``, ``"unmappable"``, or
+    ``(v5 ids, UniProt accessions)``. An item is a ``;``-separated chunk that
+    names exactly one v4 id; a v4 id given two different answers is
+    ``"conflict"``."""
+    items: dict[str, Any] = {}
+    for chunk in value.split(";"):
+        v4 = {m.group(0).upper() for m in _V4.finditer(chunk)}
+        if len(v4) != 1:
+            continue
+        (key,) = v4
+        rest = _V4.sub(" ", chunk)
+        v5 = frozenset(_rm_gene(m.group(0)) for m in _V5.finditer(rest))
+        rest = _V5.sub(" ", rest)
+        if v5:
+            acc = frozenset(_accession(m.group(0)) for m in _UNIPROT.finditer(rest.upper()))
+            ans: Any = (v5, acc)
+        elif re.search(r"\bunmappable\b", rest, re.IGNORECASE):
+            ans = "unmappable"
+        else:
+            ans = "unknown"
+        if key in items and items[key] != ans:
+            ans = "conflict"
+        items[key] = ans
+    return items
+
+
+def _score_id_batch(question: dict[str, Any], value: str) -> dict[str, Any]:
+    """P3, LAB-Bench style: an item is attempted if mapped or called
+    UNMAPPABLE, and declined if UNKNOWN or left out. Accuracy is right/total,
+    precision right/attempted, coverage attempted/total. The question is
+    right only if every item is."""
+    got = parse_id_batch(value)
+    right = attempted = v5_right = 0
+    for item in question["truth"]["items"]:
+        ans = got.get(item["v4"].upper(), "unknown")
+        if ans == "unknown":
+            continue
+        attempted += 1
+        if item["v5"] == []:
+            ok = v5_ok = ans == "unmappable"
+        else:
+            want = ({_rm_gene(g) for g in item["v5"]}, {_accession(a) for a in item["uniprot"]})
+            v5_ok = isinstance(ans, tuple) and set(ans[0]) == want[0]
+            ok = v5_ok and set(ans[1]) == want[1]
+        right += ok
+        v5_right += v5_ok
+    n = len(question["truth"]["items"])
+    return {
+        "verdict": "right" if right == n else "wrong",
+        "value": value,
+        "wrong_id": False,
+        "items_total": n,
+        "items_attempted": attempted,
+        "items_right": right,
+        "items_v5_right": v5_right,
+        "accuracy": round(right / n, 4),
+        "precision": round(right / attempted, 4) if attempted else None,
+        "coverage": round(attempted / n, 4),
+    }
+
+
 def score(question: dict[str, Any], reply: str) -> dict[str, Any]:
     value = extract(reply)
     if value is None:
         return {"verdict": "no_answer", "value": None, "wrong_id": False}
+    if question["category"] in ("family_roster", "id_batch"):
+        if value.upper() in _DECLINE:
+            return {"verdict": "declined", "value": value, "wrong_id": False}
+        if question["category"] == "family_roster":
+            return _score_roster(question, value)
+        return _score_id_batch(question, value)
     if value.upper() in _UNKNOWN:
         return {"verdict": "declined", "value": value, "wrong_id": False}
     truth = question["truth"]

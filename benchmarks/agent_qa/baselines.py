@@ -63,7 +63,21 @@ def answer(q: dict[str, Any]) -> str:
             return str(t["accession"])
         case "ortholog" | "symbol_ortholog" | "position_to_gene" | "id_mapping":
             return str(t["gene"])
+        case "family_roster":
+            return ", ".join(t["members"]) or "NONE"
+        case "id_batch":
+            return id_batch_answer(t["items"])
     raise ValueError(q["category"])
+
+
+def id_batch_answer(items: list[dict[str, Any]]) -> str:
+    """A P3 answer line: each v4 id with its v5 genes and UniProt accessions."""
+    return "; ".join(
+        f"{it['v4']} -> {', '.join(it['v5'])} [{', '.join(it['uniprot']) or 'none'}]"
+        if it["v5"]
+        else f"{it['v4']} -> UNMAPPABLE"
+        for it in items
+    )
 
 
 def reply(value: str) -> str:
@@ -75,12 +89,18 @@ def oracle(questions: list[dict[str, Any]]) -> list[str]:
 
 
 def shifted(questions: list[dict[str, Any]]) -> list[str]:
-    """Each question answered with the next same-kind question's key answer."""
+    """Each question answered with the next same-kind question's key answer
+    that differs from its own. Two NONE questions (the field families' true
+    negatives) share an answer, so the next different one stands in; a
+    question whose kind has no different answer is left out."""
     verdicts = []
     for q in questions:
         same = [p for p in questions if p["category"] == q["category"]]
-        other = same[(same.index(q) + 1) % len(same)]
-        verdicts.append(score(q, reply(answer(other)))["verdict"])
+        i = same.index(q)
+        ring = same[i + 1 :] + same[:i]
+        other = next((p for p in ring if answer(p) != answer(q)), None)
+        if other is not None:
+            verdicts.append(score(q, reply(answer(other)))["verdict"])
     return verdicts
 
 
