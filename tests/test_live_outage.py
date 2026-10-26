@@ -10,7 +10,9 @@ from __future__ import annotations
 
 import asyncio
 import socket
+import subprocess
 import threading
+import time
 from collections.abc import Callable, Iterator
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
@@ -18,7 +20,16 @@ from pathlib import Path
 import pytest
 
 from examples.arf_family.verify_genes import Flag, verify_flags
-from tests._live_outage import BACKENDS, OUTAGE, ProbeBroken, outage, probe
+from tests import _live_outage
+from tests._live_outage import (
+    BACKENDS,
+    OUTAGE,
+    ProbeBroken,
+    deadline_outage,
+    outage,
+    probe,
+    verify_within,
+)
 from tests.test_verify_genes import FAKE_ARF, _row, _write_genes_tsv
 
 PANTHER_URL = BACKENDS["panther_family"][0][1]
@@ -173,3 +184,76 @@ def test_probe_reads_up_and_down_and_refuses_anything_else(local_http):
     # not up (the empty 200 read as up, and the run as a regression).
     assert probe(f"{local_http}/empty-200") == "HTTP 200 non-JSON ''"
     assert probe(f"{local_http}/text-200") == "HTTP 200 non-JSON '<p>busy</p>'"
+
+
+def _hung_fakes(mode: str) -> list[int]:
+    """PIDs of fake servers in `mode` still alive (Linux /proc)."""
+    pids = []
+    for entry in Path("/proc").iterdir():
+        if not entry.name.isdigit():
+            continue
+        try:
+            argv = (entry / "cmdline").read_bytes().split(b"\0")
+        except OSError:
+            continue
+        if any(a.endswith(b"_fake_mcp_server.py") for a in argv) and mode.encode() in argv:
+            pids.append(int(entry.name))
+    return pids
+
+
+@pytest.mark.skipif(not Path("/proc").is_dir(), reason="the reaping check reads Linux /proc")
+@pytest.mark.parametrize("mode", ["hang", "hang-init"])
+def test_a_hung_server_is_cut_off_at_the_deadline_and_reaped(tmp_path, mode):
+    """A backend that hangs kept the live job's one test running until the
+    runner killed it at 30 min, before `outage` could run (2026-10-26). The
+    server is cut off and reaped whether it hangs in a tool call or in the
+    handshake (#263 review)."""
+    genes = _write_genes_tsv(tmp_path, [_row("GOOD_ARF_PB1", "ARF5", "PTHR31384:SF10", "true")])
+    # Positive control: a server that answers returns its flags (none here).
+    assert verify_within(genes, FAKE_ARF, deadline_s=60) == []
+
+    hung = [*FAKE_ARF[:-1], mode]
+    t0 = time.monotonic()
+    assert verify_within(genes, hung, deadline_s=2) is None
+    assert time.monotonic() - t0 < 30
+    assert _hung_fakes(mode) == [], f"the server hung in {mode!r} was left running"
+
+    # The process scan sees a hung server while one is alive.
+    proc = subprocess.Popen(hung, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL)
+    try:
+        assert proc.pid in _hung_fakes(mode)
+    finally:
+        proc.kill()
+        proc.wait()
+
+
+def test_only_the_deadline_reads_as_past_it(monkeypatch, tmp_path):
+    """The client's own per-call TimeoutError is not this deadline: it
+    propagates, so a hung single call is not reported as a slow run."""
+
+    async def client_timeout(*args: object) -> list[Flag]:
+        raise TimeoutError("stdio MCP client timed out after 900.0s")
+
+    monkeypatch.setattr(_live_outage, "verify_flags", client_timeout)
+    with pytest.raises(TimeoutError, match="client timed out after 900"):
+        verify_within(tmp_path / "genes.tsv", FAKE_ARF, deadline_s=60)
+
+
+def test_a_check_past_its_deadline_is_a_skip_only_when_a_backend_is_down():
+    asked, down = _probe_stub({PANTHER_URL})
+    skip, note = deadline_outage(1200, probe=down)
+    assert skip == (
+        "upstream outage: the live check passed its 1200 s deadline; "
+        "down: panther_family (PANTHER geneinfo ReadTimeout)"
+    )
+    assert note == ""
+    assert sorted(asked) == sorted(url for b in BACKENDS.values() for _, url in b)
+
+    # Every backend answering directly: the time went elsewhere, so red.
+    _, up = _probe_stub(set())
+    skip, note = deadline_outage(1200, probe=up)
+    assert skip is None
+    assert note == (
+        "not an outage: the live check passed its 1200 s deadline "
+        "and every backend answers directly"
+    )

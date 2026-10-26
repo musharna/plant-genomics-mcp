@@ -19,12 +19,14 @@ regression: this errs toward red, as the check did before.
 
 from __future__ import annotations
 
+import asyncio
 import re
 from collections.abc import Callable, Iterable
+from pathlib import Path
 
 import httpx
 
-from examples.arf_family.verify_genes import Flag
+from examples.arf_family.verify_genes import Flag, verify_flags
 
 OUTAGE = "UpstreamUnavailableError"
 
@@ -121,3 +123,56 @@ def outage(
     if planted_unchecked:
         skip += "; the planted-row control was not checked"
     return skip, ""
+
+
+# The live-smoke job is killed at 30 min (.github/workflows/test.yml); a full
+# run takes 3-4 min. A backend that hangs rather than erroring costs each row
+# ~93 s (3 attempts at PANTHER's 30 s timeout, 1 s + 2 s backoff), ~3 h for
+# the manifest's 115 rows, so the job was killed before `outage` ran
+# (2026-10-26, run 40293758282, twice). The deadline leaves the rest of the
+# job time for the probes and the client's live test.
+LIVE_DEADLINE_S = 20 * 60.0
+
+
+def verify_within(
+    genes_path: Path, server_cmd: list[str], deadline_s: float = LIVE_DEADLINE_S
+) -> list[Flag] | None:
+    """`verify_flags`, or None when it has not returned by the deadline.
+
+    Only this deadline reads as None: a TimeoutError raised inside (the
+    client's own per-call timeout) propagates. Either way `verify_flags`
+    terminates and reaps the server on the way out."""
+
+    async def bounded() -> list[Flag] | None:
+        try:
+            async with asyncio.timeout(deadline_s) as cm:
+                return await verify_flags(genes_path, server_cmd)
+        except TimeoutError:
+            if cm.expired():
+                return None
+            raise
+
+    return asyncio.run(bounded())
+
+
+def deadline_outage(
+    deadline_s: float, probe: Callable[[str], str | None] = probe
+) -> tuple[str | None, str]:
+    """(skip reason, note) for a live check that passed its deadline: a skip
+    only when a direct probe finds a backend down. If every backend answers,
+    the time went in the server or the host, and the check stays red."""
+    down = []
+    for tool, backends in BACKENDS.items():
+        for name, url in backends:
+            reason = probe(url)
+            if reason is not None:
+                down.append(f"{tool} ({name} {reason})")
+    if down:
+        return (
+            f"upstream outage: the live check passed its {deadline_s:.0f} s deadline; "
+            f"down: {', '.join(down)}"
+        ), ""
+    return None, (
+        f"not an outage: the live check passed its {deadline_s:.0f} s deadline "
+        "and every backend answers directly"
+    )
