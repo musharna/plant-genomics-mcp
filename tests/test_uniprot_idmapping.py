@@ -135,9 +135,11 @@ async def test_an_id_reported_neither_way_is_an_error(httpx_mock: HTTPXMock) -> 
     async with httpx.AsyncClient() as client:
         with pytest.raises(PlantGenomicsError, match="neither mapped nor failed"):
             await idm.map_ids(client, ["Zm00001eb326750", "Zm00001eb999999"])
-        idm._CACHE.clear()
+        # No cache clear: the gap must not have been stored, so the retry asks
+        # UniProt again (a second job) instead of replaying the same error.
         r = await idm.map_ids(client, ["Zm00001eb326750", "Zm00001eb999999"])
     assert [row["status"] for row in r["results"]] == ["mapped", "unmapped"]
+    assert sum(str(q.url) == RUN for q in httpx_mock.get_requests()) == 2
 
 
 async def test_a_job_that_errors_is_not_an_empty_mapping(httpx_mock: HTTPXMock) -> None:
@@ -216,3 +218,22 @@ async def test_live_maize_v5_genes_map_as_the_benchmark_key_says() -> None:
     assert got["Zm00001eb999999"] == set()
     assert r["results"][-1]["status"] == "unmapped"
     assert r["upstream_version"]
+
+
+@live_only
+async def test_live_a_swiss_prot_entry_says_reviewed() -> None:
+    """entry_type and reviewed come from the live row, not from a fixture.
+
+    The unit fixture always carries entryType, so only a live call can show the
+    results query returns it (probed 2026-10-26: it does, with fields=accession).
+    Positive and negative in one call: AT1G01010's Swiss-Prot entry is reviewed,
+    maize Zm00001eb326750's TrEMBL entry is not.
+    """
+    async with httpx.AsyncClient() as client:
+        ara = await idm.map_ids(client, ["AT1G01010"], from_db="Araport")
+        maize = await idm.map_ids(client, ["Zm00001eb326750"])
+    swiss = {a["accession"]: a for a in ara["results"][0]["accessions"]}
+    assert swiss["Q0WV96"]["reviewed"] is True
+    assert swiss["Q0WV96"]["entry_type"] == SWISS
+    trembl = maize["results"][0]["accessions"][0]
+    assert (trembl["reviewed"], trembl["entry_type"]) == (False, TREMBL)

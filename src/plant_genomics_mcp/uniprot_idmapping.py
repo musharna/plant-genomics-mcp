@@ -188,21 +188,8 @@ def _accession(row: Any) -> tuple[str, dict[str, Any]]:
     }
 
 
-async def map_ids(
-    client: httpx.AsyncClient,
-    ids: list[str],
-    from_db: str = "Ensembl_Genomes",
-) -> dict[str, Any]:
-    """Map ``ids`` from ``from_db`` to every UniProtKB entry UniProt's ID mapping returns."""
-    queries = _check(ids, from_db)
-    key = cache.make_key("POST", BASE_URL, "/run", {"from": from_db, "ids": ",".join(queries)})
-    page = _CACHE.get(key)
-    if page is None:
-        job = await _submit(client, queries, from_db)
-        await _wait(client, job)
-        rows, failed, obsolete, release = await _results(client, job)
-        page = {"rows": rows, "failed": failed, "obsolete": obsolete, "release": release}
-        _CACHE.set(key, page)
+def _account(page: dict[str, Any], queries: list[str]) -> list[dict[str, Any]]:
+    """One result per query, or an error if UniProt left any query unaccounted for."""
     by_id: dict[str, list[dict[str, Any]]] = {}
     for row in page["rows"]:
         source, accession = _accession(row)
@@ -225,6 +212,29 @@ async def map_ids(
             f"{SERVICE} answered neither mapped nor failed for {neither[:5]}"
             + (f" and mapped ids never sent {unasked[:5]}" if unasked else "")
         )
+    return results
+
+
+async def map_ids(
+    client: httpx.AsyncClient,
+    ids: list[str],
+    from_db: str = "Ensembl_Genomes",
+) -> dict[str, Any]:
+    """Map ``ids`` from ``from_db`` to every UniProtKB entry UniProt's ID mapping returns."""
+    queries = _check(ids, from_db)
+    key = cache.make_key("POST", BASE_URL, "/run", {"from": from_db, "ids": ",".join(queries)})
+    page = _CACHE.get(key)
+    fresh = page is None
+    if page is None:
+        job = await _submit(client, queries, from_db)
+        await _wait(client, job)
+        rows, failed, obsolete, release = await _results(client, job)
+        page = {"rows": rows, "failed": failed, "obsolete": obsolete, "release": release}
+    results = _account(page, queries)
+    # Stored only once every ID is accounted for: an incomplete answer raised
+    # above is asked for again on the next call, not replayed for the TTL.
+    if fresh:
+        _CACHE.set(key, page)
     return {
         "from_db": from_db,
         "to_db": TO_DB,
