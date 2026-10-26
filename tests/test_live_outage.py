@@ -186,11 +186,8 @@ def test_probe_reads_up_and_down_and_refuses_anything_else(local_http):
     assert probe(f"{local_http}/text-200") == "HTTP 200 non-JSON '<p>busy</p>'"
 
 
-FAKE_HANG = [*FAKE_ARF[:-1], "hang"]
-
-
-def _hung_fakes() -> list[int]:
-    """PIDs of fake servers in `hang` mode still alive (Linux /proc)."""
+def _hung_fakes(mode: str) -> list[int]:
+    """PIDs of fake servers in `mode` still alive (Linux /proc)."""
     pids = []
     for entry in Path("/proc").iterdir():
         if not entry.name.isdigit():
@@ -199,27 +196,32 @@ def _hung_fakes() -> list[int]:
             argv = (entry / "cmdline").read_bytes().split(b"\0")
         except OSError:
             continue
-        if any(a.endswith(b"_fake_mcp_server.py") for a in argv) and b"hang" in argv:
+        if any(a.endswith(b"_fake_mcp_server.py") for a in argv) and mode.encode() in argv:
             pids.append(int(entry.name))
     return pids
 
 
-def test_a_hung_server_is_cut_off_at_the_deadline_and_reaped(tmp_path):
+@pytest.mark.skipif(not Path("/proc").is_dir(), reason="the reaping check reads Linux /proc")
+@pytest.mark.parametrize("mode", ["hang", "hang-init"])
+def test_a_hung_server_is_cut_off_at_the_deadline_and_reaped(tmp_path, mode):
     """A backend that hangs kept the live job's one test running until the
-    runner killed it at 30 min, before `outage` could run (2026-10-26)."""
+    runner killed it at 30 min, before `outage` could run (2026-10-26). The
+    server is cut off and reaped whether it hangs in a tool call or in the
+    handshake (#263 review)."""
     genes = _write_genes_tsv(tmp_path, [_row("GOOD_ARF_PB1", "ARF5", "PTHR31384:SF10", "true")])
     # Positive control: a server that answers returns its flags (none here).
     assert verify_within(genes, FAKE_ARF, deadline_s=60) == []
 
+    hung = [*FAKE_ARF[:-1], mode]
     t0 = time.monotonic()
-    assert verify_within(genes, FAKE_HANG, deadline_s=2) is None
+    assert verify_within(genes, hung, deadline_s=2) is None
     assert time.monotonic() - t0 < 30
-    assert _hung_fakes() == [], "the hung server was left running"
+    assert _hung_fakes(mode) == [], f"the server hung in {mode!r} was left running"
 
     # The process scan sees a hung server while one is alive.
-    proc = subprocess.Popen(FAKE_HANG, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL)
+    proc = subprocess.Popen(hung, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL)
     try:
-        assert proc.pid in _hung_fakes()
+        assert proc.pid in _hung_fakes(mode)
     finally:
         proc.kill()
         proc.wait()

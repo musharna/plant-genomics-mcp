@@ -54,7 +54,9 @@ class McpClient:
                 raise RuntimeError(f"initialize failed: {resp['error']!r}")
             self.server_info = resp.get("result", {}).get("serverInfo")
             await self._send({"jsonrpc": "2.0", "method": "notifications/initialized"})
-        except Exception:
+        except BaseException:
+            # BaseException, not Exception: a deadline that cancels the
+            # handshake raises CancelledError, which must reap the server too.
             self._proc.terminate()
             await self._proc.wait()
             raise
