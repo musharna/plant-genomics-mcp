@@ -1830,3 +1830,93 @@ class SynthesisEnvelope(BaseModel):
         default=None,
         description="Composed cross-source result; None if root step failed",
     )
+
+
+class MaizeTranslationRow(BaseModel):
+    """One queried gene model and what MaizeGDB's table says it translates to."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    query: str = Field(description="The queried gene model, in MaizeGDB's letter case")
+    status: Literal["mapped", "no_counterpart", "not_in_table"] = Field(
+        description=(
+            "mapped: targets lists one or more models; no_counterpart: the table "
+            "lists the model with no counterpart in the other assembly; "
+            "not_in_table: the table does not list it, so this source says nothing"
+        )
+    )
+    targets: list[str] = Field(
+        description="Models in the other assembly, in MaizeGDB's order; [] unless mapped"
+    )
+
+
+class MaizeTranslationSource(BaseModel):
+    """Which file answered: enough to tell one release of the table from another."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    url: str = link_field("The table read", optional=False)
+    last_modified: str | None = Field(description="The file's Last-Modified header")
+    sha256: str = Field(description="sha256 of the file as downloaded")
+    rows: int = Field(description="Source models the table lists")
+    rows_without_counterpart: int = Field(description="Of those, models with no target")
+
+
+class MaizeGeneTranslation(BaseModel):
+    """MaizeGDB's B73 gene-model translation for a batch of IDs."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    direction: Literal["v4_to_v5", "v5_to_v4"]
+    from_assembly: str = Field(description="RefGen_v4 or RefGen_v5")
+    to_assembly: str = Field(description="RefGen_v5 or RefGen_v4")
+    count: int = Field(description="Distinct IDs queried (duplicates collapsed)")
+    mapped: int = Field(description="Results with status mapped")
+    no_counterpart: int = Field(description="Results with status no_counterpart")
+    not_in_table: int = Field(description="Results with status not_in_table")
+    results: list[MaizeTranslationRow]
+    source: MaizeTranslationSource
+    upstream_version: str | None = upstream_version_field(
+        "MaizeGDB", "the table's Last-Modified header (MaizeGDB numbers no release)"
+    )
+
+
+class IdMappingAccession(BaseModel):
+    """One UniProtKB entry an ID maps to."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    accession: str = Field(description="UniProtKB primary accession")
+    entry_type: str | None = Field(
+        description="UniProt's entryType, e.g. 'UniProtKB unreviewed (TrEMBL)'"
+    )
+    reviewed: bool = Field(description="True for a Swiss-Prot (reviewed) entry")
+
+
+class IdMappingRow(BaseModel):
+    """One queried ID and every UniProtKB entry it maps to."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    query: str = Field(description="The queried ID, as sent")
+    status: Literal["mapped", "unmapped"] = Field(
+        description="unmapped: UniProt listed the ID in failedIds (it maps to no entry)"
+    )
+    accessions: list[IdMappingAccession] = Field(description="Every entry, in UniProt's order")
+
+
+class UniProtIdMapping(BaseModel):
+    """UniProt's ID mapping service for a batch of IDs: every entry per ID."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    from_db: str = Field(description="UniProt's name for the source database")
+    to_db: str = Field(description="Always UniProtKB")
+    count: int = Field(description="Distinct IDs queried (duplicates collapsed)")
+    mapped: int = Field(description="Results with status mapped")
+    unmapped: int = Field(description="Results with status unmapped")
+    obsolete_count: int | None = Field(
+        description="UniProt's obsoleteCount for the job: mapped entries now obsolete"
+    )
+    results: list[IdMappingRow]
+    upstream_version: str | None = upstream_version_field("UniProt", "the x-uniprot-release header")

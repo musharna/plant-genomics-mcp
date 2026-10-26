@@ -54,6 +54,7 @@ from plant_genomics_mcp import (
     interpro,
     jaspar,
     kegg,
+    maizegdb,
     onekg,
     organisms,
     orthodb,
@@ -66,6 +67,7 @@ from plant_genomics_mcp import (
     string_db,
     thalemine,
     uniprot,
+    uniprot_idmapping,
 )
 
 CACHE_STATS_URI = "pgmcp://cache/stats"
@@ -144,6 +146,7 @@ def _cache_stats_payload() -> dict[str, dict[str, int]]:
         "gramene": gramene._CACHE.stats(),
         "interpro": interpro._CACHE.stats(),
         "kegg": kegg._CACHE.stats(),
+        "maizegdb": maizegdb._CACHE.stats(),
         "onekg": onekg._CACHE.stats(),
         "orthodb": orthodb._CACHE.stats(),
         "panther": panther._CACHE.stats(),
@@ -156,6 +159,7 @@ def _cache_stats_payload() -> dict[str, dict[str, int]]:
         "string_db": string_db._CACHE.stats(),
         "thalemine": thalemine._CACHE.stats(),
         "uniprot": uniprot._CACHE.stats(),
+        "uniprot_idmapping": uniprot_idmapping._CACHE.stats(),
     }
 
 
@@ -172,8 +176,8 @@ def _cache_stats_payload() -> dict[str, dict[str, int]]:
 #     the resource paper for PMN/PlantCyc is Hawkins 2021.
 #   * thalemine — ThaleMine is the InterMine instance behind Araport, so the
 #     Araport paper is the closest citable resource description.
-# ensembl_plants and ensembl_variation share one citation: two client modules,
-# one provider.
+# ensembl_plants and ensembl_variation share one citation, as do uniprot and
+# uniprot_idmapping: two client modules, one provider each.
 _CITATIONS: dict[str, dict[str, object]] = {
     "atted": {"doi": "10.1093/pcp/pcv165", "first_author": "Aoki", "year": 2015},
     "bar": {"doi": "10.1007/978-1-4939-6658-5_6", "first_author": "Waese", "year": 2016},
@@ -189,6 +193,14 @@ _CITATIONS: dict[str, dict[str, object]] = {
     },
     "phytozome": {"doi": "10.1093/nar/gkr944", "first_author": "Goodstein", "year": 2011},
     "uniprot": {"doi": "10.1093/nar/gkh131", "first_author": "Apweiler", "year": 2004},
+    "uniprot_idmapping": {"doi": "10.1093/nar/gkh131", "first_author": "Apweiler", "year": 2004},
+    # MaizeGDB's pan-genome paper: the gene-model translation tables sit under its
+    # Pan-genes/ download tree (OpenAlex W3195629510; CrossRef Woodhouse 2021).
+    "maizegdb": {
+        "doi": "10.1186/s12870-021-03173-5",
+        "first_author": "Woodhouse",
+        "year": 2021,
+    },
     "europe_pmc": {
         "doi": "10.1093/nar/gku1061",
         "first_author": "Europe PMC Consortium",
@@ -231,10 +243,11 @@ def _backends_status_payload() -> list[dict[str, object]]:
     count in a docstring, a stale external catalog entry, a CITATION.cff that
     fell behind pyproject).
 
-    This list has **24** entries while the README and package docstring say
-    "23 backends". Both are correct and neither is drift: ``ensembl_plants``
+    This list has **26** entries while the README and package docstring say
+    "24 backends". Both are correct and neither is drift: ``ensembl_plants``
     and ``ensembl_variation`` are two client modules addressing one provider
-    (rest.ensembl.org). The prose counts distinct *data providers*; this list
+    (rest.ensembl.org), and ``uniprot`` and ``uniprot_idmapping`` two
+    addressing rest.uniprot.org. The prose counts distinct *data providers*; this list
     enumerates *client modules*, which is what a caller wants when deciding
     where a given tool's data came from.
     """
@@ -383,6 +396,18 @@ def _backends_status_payload() -> list[dict[str, object]]:
         {
             "name": "onekg",
             "base_url": onekg.BASE_URL,
+            "kind": "live",
+            "subscription_gated": False,
+        },
+        {
+            "name": "uniprot_idmapping",
+            "base_url": uniprot_idmapping.BASE_URL,
+            "kind": "live",
+            "subscription_gated": False,
+        },
+        {
+            "name": "maizegdb",
+            "base_url": maizegdb.BASE_URL,
             "kind": "live",
             "subscription_gated": False,
         },

@@ -1,6 +1,6 @@
 """Plant genomics MCP server.
 
-Fifty MCP tools across 23 backends for plant gene-record lookup,
+Fifty-eight MCP tools across 24 backends for plant gene-record lookup,
 biological-context analysis, and cross-source synthesis. Live backends
 include Ensembl Plants, Phytozome BioMart, UniProtKB, Europe PMC, QuickGO,
 Planteome (PO/TO ontology), PlantCyc/PMN (metabolic pathways), g:Profiler
