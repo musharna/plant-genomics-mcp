@@ -28,6 +28,10 @@ Modes:
                ``gramene_homologs``, ``interpro_domains``, ``panther_family``,
                ``ensembl_plants_lookup_locus`` and an empty
                ``orthodb_orthologs``, for `tests/test_enumerate_family.py`.
+  hang       — ``initialize`` succeeds; ``tools/call`` is never answered, as
+               the live server's calls are not while a backend hangs and the
+               client retries, for the live check's deadline
+               (`tests/test_live_outage.py`).
 
 An unrecognised mode string is a hard error (exit 2) at startup — it must
 never silently fall back to ``ok`` behaviour, which would let a typo in a
@@ -39,7 +43,7 @@ from __future__ import annotations
 import json
 import sys
 
-_MODES = {"ok", "init-error", "arf", "chain", "family"}
+_MODES = {"ok", "init-error", "arf", "chain", "family", "hang"}
 
 # `family` mode: a two-chromosome toy genome for
 # `examples/arf_family/enumerate_family.py`'s closure test. Paralog edges
@@ -379,6 +383,8 @@ def main() -> None:
                         "serverInfo": {"name": "fake-mcp-server", "version": "0"},
                     },
                 )
+        elif method == "tools/call" and mode == "hang":
+            continue
         elif method == "tools/call":
             params = req.get("params", {})
             name = params.get("name")

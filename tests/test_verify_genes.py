@@ -7,8 +7,15 @@ from pathlib import Path
 import pytest
 
 from examples.arf_family.mcp_client import SERVER_CMD
-from examples.arf_family.verify_genes import GENES_TSV, ManifestError, verify, verify_flags
-from tests._live_outage import BACKENDS, outage, probe
+from examples.arf_family.verify_genes import GENES_TSV, ManifestError, verify
+from tests._live_outage import (
+    BACKENDS,
+    LIVE_DEADLINE_S,
+    deadline_outage,
+    outage,
+    probe,
+    verify_within,
+)
 
 FAKE_SERVER = Path(__file__).parent / "_fake_mcp_server.py"
 FAKE_ARF = [sys.executable, str(FAKE_SERVER), "arf"]
@@ -296,6 +303,15 @@ def test_fake_server_rejects_an_unknown_mode_string():
     assert "not-a-real-mode" in proc.stderr
 
 
+def _skip_for_outage(reason: str) -> None:
+    """Skip, and write why where the workflow raises it as a CI warning."""
+    report_path = os.environ.get("LIVE_SMOKE_OUTAGE_REPORT")
+    if report_path:
+        with open(report_path, "a") as f:
+            f.write(reason + "\n")
+    pytest.skip(reason)
+
+
 @pytest.mark.skipif(
     os.environ.get("PLANT_GENOMICS_MCP_LIVE") != "1",
     reason="set PLANT_GENOMICS_MCP_LIVE=1 to run (calls InterPro and PANTHER live)",
@@ -314,7 +330,15 @@ def test_verify_genes_over_real_stdio_passes_the_manifest_and_catches_a_planted_
     planted = _row("AT1G23490", "ARF1", "PTHR31384:SF96", "true")
     genes = _write_genes_tsv(tmp_path, [*real_rows, planted])
 
-    flags = run(verify_flags(genes, SERVER_CMD))
+    # A backend that hangs rather than erroring would hold this past the
+    # job's own limit, before `outage` below could run; the deadline turns
+    # that into the same outage-or-red verdict (tests/_live_outage.py).
+    flags = verify_within(genes, SERVER_CMD)
+    if flags is None:
+        skip, note = deadline_outage(LIVE_DEADLINE_S)
+        if skip is None:
+            pytest.fail(note)
+        _skip_for_outage(skip)
     bad = [(f.locus, f.symbol, f.reason) for f in flags]
 
     # The message carries every flagged row's reason, so a live failure says
@@ -325,11 +349,7 @@ def test_verify_genes_over_real_stdio_passes_the_manifest_and_catches_a_planted_
     # too (tests/_live_outage.py). Anything else stays a failure.
     skip, note = outage(flags, "AT1G23490")
     if skip is not None:
-        report_path = os.environ.get("LIVE_SMOKE_OUTAGE_REPORT")
-        if report_path:
-            with open(report_path, "a") as f:
-                f.write(skip + "\n")
-        pytest.skip(skip)
+        _skip_for_outage(skip)
     assert [locus for locus, _, _ in bad] == ["AT1G23490"], f"{report}\n{note}"
     # The planted row must be caught by the discriminator, not by a failed
     # call — a 404 for AT1G23490 alone would otherwise pass as "caught".
