@@ -10,6 +10,8 @@ synthesis tools that compose the live backends:
   - ``get_gene_xrefs``                    — Ensembl Plants xrefs (live)
   - ``phytozome_lookup_locus``            — Phytozome BioMart (live)
   - ``resolve_locus_to_uniprot``          — UniProt KB search (live)
+  - ``uniprot_id_mapping``                — UniProt ID mapping job: a batch of IDs → every UniProtKB entry (live)
+  - ``maize_gene_model_translation``      — MaizeGDB B73 RefGen_v4 ↔ v5 gene-model table (live, pinned by sha256)
   - ``locus_literature``                  — Europe PMC search (live)
   - ``locus_go_annotations``              — QuickGO GO annotations (live, locus→UniProt→QuickGO)
   - ``locus_plant_ontology``              — Planteome PO/TO/PECO annotations (live, per-locus by taxon)
@@ -103,6 +105,7 @@ from plant_genomics_mcp import (
     interpro,
     jaspar,
     kegg,
+    maizegdb,
     onekg,
     organisms,
     orthodb,
@@ -121,6 +124,7 @@ from plant_genomics_mcp import (
     tair,
     thalemine,
     uniprot,
+    uniprot_idmapping,
 )
 from plant_genomics_mcp.errors import InvalidArguments
 from plant_genomics_mcp.models import (
@@ -153,6 +157,7 @@ from plant_genomics_mcp.models import (
     LocusLiterature,
     LocusPlantOntology,
     LocusVariants,
+    MaizeGeneTranslation,
     OrthoDbOrthologs,
     PantherFamily,
     PhytozomeLocus,
@@ -160,6 +165,7 @@ from plant_genomics_mcp.models import (
     StringInteractions,
     SynthesisEnvelope,
     TfBindingMotifs,
+    UniProtIdMapping,
     UniProtLocus,
     UpstreamRelease,
     VepAnnotation,
@@ -518,6 +524,92 @@ TOOLS: list[types.Tool] = [
             "additionalProperties": False,
         },
         output_schema=UniProtLocus.model_json_schema(),
+        annotations=_READ_ONLY,
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="uniprot_id_mapping",
+        title="UniProt: ID Mapping (batch, every entry)",
+        description=(
+            "Map a batch of gene, transcript or protein IDs to EVERY UniProtKB "
+            "entry UniProt's own ID mapping service returns, one job for the "
+            "whole batch. Use it when a question asks for all accessions, or for "
+            "many IDs at once: resolve_locus_to_uniprot returns one entry per "
+            "locus (its best search hit), so a gene with several entries loses "
+            "the rest. from_db names the IDs' source as UniProt does: "
+            "Ensembl_Genomes for plant gene IDs such as maize Zm00001eb, rice "
+            "Os01g, wheat TraesCS (the default), Ensembl_Genomes_Transcript, "
+            "Ensembl_Genomes_Protein, or Araport for Arabidopsis AGIs. Each ID "
+            "comes back mapped (accessions, each with entry_type and reviewed) "
+            "or unmapped (UniProt lists it as failed: it maps to no entry). "
+            f"Up to {uniprot_idmapping.MAX_IDS} IDs per call; duplicates are "
+            "collapsed. upstream_version is the UniProt release. Maize RefGen_v4 "
+            "IDs (Zm00001d) are not in UniProt: translate them first with "
+            "maize_gene_model_translation."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "ids": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "minItems": 1,
+                    "maxItems": uniprot_idmapping.MAX_IDS,
+                    "description": "IDs from from_db, e.g. ['Zm00001eb326750', 'Zm00001eb181120']",
+                },
+                "from_db": {
+                    "type": "string",
+                    "enum": list(uniprot_idmapping.FROM_DBS),
+                    "default": "Ensembl_Genomes",
+                    "description": "UniProt's name for the IDs' source database",
+                },
+            },
+            "required": ["ids"],
+            "additionalProperties": False,
+        },
+        output_schema=UniProtIdMapping.model_json_schema(),
+        annotations=_READ_ONLY,
+        _meta=_EDAM,
+    ),
+    types.Tool(
+        name="maize_gene_model_translation",
+        title="MaizeGDB: B73 v4 ↔ v5 Gene-Model Translation",
+        description=(
+            "Translate maize B73 gene-model IDs between RefGen_v4 (Zm00001d) and "
+            "RefGen_v5 (Zm00001eb) with MaizeGDB's published translation table. "
+            "UniProt and Ensembl Plants know only v5 IDs, so a v4 ID answers "
+            "nothing there until it is translated. direction v4_to_v5 (default) "
+            "or v5_to_v4. Each ID comes back mapped (targets: one, or several "
+            "when the model split or merged), no_counterpart (MaizeGDB lists it "
+            "with no model in the other assembly: report it as unmappable), or "
+            "not_in_table (MaizeGDB does not list it, so this source says "
+            "nothing about it). Gene-model IDs only, no transcript suffix; up to "
+            f"{maizegdb.MAX_IDS} per call. source gives the table's URL (a link "
+            "for the client to open; no tool on this server retrieves it), its "
+            "Last-Modified date and sha256, so an answer can be tied to one "
+            "release of the table."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "ids": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "minItems": 1,
+                    "maxItems": maizegdb.MAX_IDS,
+                    "description": "Gene-model IDs, e.g. ['Zm00001d022051'] for v4_to_v5",
+                },
+                "direction": {
+                    "type": "string",
+                    "enum": list(maizegdb.DIRECTIONS),
+                    "default": "v4_to_v5",
+                    "description": "v4_to_v5 (Zm00001d → Zm00001eb) or v5_to_v4",
+                },
+            },
+            "required": ["ids"],
+            "additionalProperties": False,
+        },
+        output_schema=MaizeGeneTranslation.model_json_schema(),
         annotations=_READ_ONLY,
         _meta=_EDAM,
     ),
@@ -2758,6 +2850,18 @@ async def _dispatch(name: str, args: dict[str, Any]) -> Any:
                     client,
                     args["locus"],
                     organism=args.get("organism", "arabidopsis_thaliana"),
+                )
+            case "uniprot_id_mapping":
+                return await uniprot_idmapping.map_ids(
+                    client,
+                    args["ids"],
+                    from_db=args.get("from_db", "Ensembl_Genomes"),
+                )
+            case "maize_gene_model_translation":
+                return await maizegdb.translate_gene_models(
+                    client,
+                    args["ids"],
+                    direction=args.get("direction", "v4_to_v5"),
                 )
             case "locus_literature":
                 return await europe_pmc.lookup_locus(

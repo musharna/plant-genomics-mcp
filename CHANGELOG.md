@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased
+
+**58 tools / 24 backends** — two new tools, one new backend (MaizeGDB).
+
+- **`maize_gene_model_translation`: maize B73 RefGen_v4 ↔ RefGen_v5 gene IDs.**
+  UniProt and Ensembl Plants know only v5 IDs (Zm00001eb), so a v4 ID
+  (Zm00001d) answered nothing anywhere on the server. The tool reads
+  MaizeGDB's own translation table, both directions, and says per ID whether
+  it is `mapped` (one or more models, since some split or merged),
+  `no_counterpart`, or `not_in_table`. Each answer gives the table's URL,
+  Last-Modified and sha256. A table with one malformed line is refused,
+  never trimmed. In the agent benchmark's field family P3, the server arm
+  declined all 10 questions, writing "There is no tool for MaizeGDB's v4-to-v5
+  translation".
+- **`uniprot_id_mapping`: every UniProtKB entry for a batch of up to 500 IDs.**
+  The tool runs UniProt's own ID mapping job (`Ensembl_Genomes`,
+  `Ensembl_Genomes_Transcript`, `Ensembl_Genomes_Protein` or `Araport`).
+  `resolve_locus_to_uniprot` returns one entry per locus, so a gene with
+  several (maize Zm00001eb181120 has four) lost the rest. IDs UniProt lists as
+  failed come back `unmapped`. An ID it reports neither way is an error.
+  `results/stream` is not used, because it drops `failedIds`.
+
 ## v1.29.3 — 2026-10-16
 
 **56 tools / 23 backends** — no new tool and no code change. A docs release,

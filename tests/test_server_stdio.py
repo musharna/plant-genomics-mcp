@@ -102,6 +102,7 @@ async def test_initialize_and_list_tools(server_params: StdioServerParameters) -
                 "locus_literature",
                 "locus_plant_ontology",
                 "locus_variants",
+                "maize_gene_model_translation",
                 "entry_members",
                 "orthodb_orthologs",
                 "panther_family",
@@ -111,6 +112,7 @@ async def test_initialize_and_list_tools(server_params: StdioServerParameters) -
                 "string_interactions",
                 "tair_locus_info",
                 "tf_binding_motifs",
+                "uniprot_id_mapping",
                 "upstream_release",
                 "vep_annotate",
             }, f"got {names}"

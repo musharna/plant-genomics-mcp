@@ -34,6 +34,7 @@ from plant_genomics_mcp import (
     interpro,
     jaspar,
     kegg,
+    maizegdb,
     onekg,
     orthodb,
     panther,
@@ -45,6 +46,7 @@ from plant_genomics_mcp import (
     string_db,
     thalemine,
     uniprot,
+    uniprot_idmapping,
 )
 from tests import _output_contract as output_contract
 
@@ -64,6 +66,7 @@ def _clear_module_caches() -> None:
         interpro,
         jaspar,
         kegg,
+        maizegdb,
         onekg,
         orthodb,
         panther,
@@ -75,6 +78,7 @@ def _clear_module_caches() -> None:
         string_db,
         thalemine,
         uniprot,
+        uniprot_idmapping,
     ):
         mod._CACHE.clear()
 

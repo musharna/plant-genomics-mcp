@@ -1,6 +1,6 @@
 # plant-genomics-mcp
 
-plant-genomics-mcp is an MCP server that lets AI agents look up plant genes in 23
+plant-genomics-mcp is an MCP server that lets AI agents look up plant genes in 24
 free public databases, from Ensembl Plants and UniProt to KEGG, STRING and
 AlphaFold, with curated coverage of 12 plants.
 
@@ -84,13 +84,13 @@ We wrote the questions; an outside re-run is welcome. [Method](benchmarks/agent_
 
 ## Tools
 
-**56 tools across 23 backends**:
+**58 tools across 24 backends**:
 
 | Area | Tools |
 | --- | --- |
-| Gene records | `ensembl_plants_lookup_locus`, `phytozome_lookup_locus`, `get_gene_xrefs`, `bar_gene_summary`, `tair_locus_info` |
+| Gene records | `ensembl_plants_lookup_locus`, `phytozome_lookup_locus`, `get_gene_xrefs`, `bar_gene_summary`, `tair_locus_info`, `maize_gene_model_translation` |
 | Sequence | `get_sequence`, `blast_sequence` |
-| Protein and structure | `resolve_locus_to_uniprot`, `interpro_domains`, `alphafold_structure`, `experimental_structures` |
+| Protein and structure | `resolve_locus_to_uniprot`, `uniprot_id_mapping`, `interpro_domains`, `alphafold_structure`, `experimental_structures` |
 | Function | `locus_go_annotations`, `locus_plant_ontology`, `locus_gene_rifs`, `go_enrichment`, `locus_literature` |
 | Pathways | `kegg_pathways`, `plantcyc_locus_info` |
 | Interactions and expression | `string_interactions`, `experimental_interactions`, `bar_aiv_interactions`, `atted_coexpression`, `bar_efp_expression` |

@@ -47,6 +47,7 @@ async def test_read_cache_stats_returns_per_backend_rollup() -> None:
         "interpro",
         "jaspar",
         "kegg",
+        "maizegdb",
         "onekg",
         "orthodb",
         "panther",
@@ -58,6 +59,7 @@ async def test_read_cache_stats_returns_per_backend_rollup() -> None:
         "string_db",
         "thalemine",
         "uniprot",
+        "uniprot_idmapping",
     }
     # Each per-backend block carries the canonical TTLCache stats shape.
     for stats in payload.values():
@@ -273,17 +275,19 @@ def test_citation_table_covers_exactly_the_listed_backends() -> None:
     )
 
 
-def test_no_duplicate_doi_except_the_shared_ensembl_pair() -> None:
+def test_no_duplicate_doi_except_the_shared_provider_pairs() -> None:
     """A copy-paste DOI is the quiet way a wrong citation spreads.
 
-    ensembl_plants and ensembl_variation legitimately share one — two client
-    modules, one provider — so the assertion pins that exact exception rather
-    than waving all duplicates through.
+    ensembl_plants and ensembl_variation legitimately share one, as do uniprot
+    and uniprot_idmapping — two client modules, one provider each — so the
+    assertion pins those exact exceptions rather than waving all duplicates
+    through.
     """
     seen: dict[str, list[str]] = {}
     for name, c in resources._CITATIONS.items():
         seen.setdefault(str(c["doi"]), []).append(name)
     dupes = {doi: names for doi, names in seen.items() if len(names) > 1}
-    assert dupes == {"10.1007/978-1-4939-3167-5_6": ["ensembl_plants", "ensembl_variation"]}, (
-        f"unexpected shared DOIs: {dupes}"
-    )
+    assert dupes == {
+        "10.1007/978-1-4939-3167-5_6": ["ensembl_plants", "ensembl_variation"],
+        "10.1093/nar/gkh131": ["uniprot", "uniprot_idmapping"],
+    }, f"unexpected shared DOIs: {dupes}"
