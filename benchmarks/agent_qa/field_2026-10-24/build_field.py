@@ -286,9 +286,12 @@ def nearest_mapped(v4: str, table: dict[str, list[str]]) -> str:
 
 def build_p3(
     rng: random.Random,
+    exclude: frozenset[str] = frozenset(),
 ) -> tuple[list[dict[str, Any]], dict[str, Any], dict[str, Any], tuple[str, str]]:
     table, meta = fetch_maizegdb()
-    pool = sorted(table)
+    # Held-out draws: ids already seen (an earlier key's, the repo's tests')
+    # leave the pool before the shuffle, so the draw is uniform over the rest.
+    pool = sorted(set(table) - exclude)
     rng.shuffle(pool)
     kept: list[dict[str, Any]] = []
     reasons: Counter[str] = Counter()
@@ -361,6 +364,7 @@ def build_p3(
         "kept": len(kept),
         "kept_unmappable": sum(not it["v5"] for it in kept),
         "kept_multi_v5": sum(len(it["v5"]) > 1 for it in kept),
+        "excluded_before_draw": len(set(table) & exclude),
     }
     return questions, draws, meta, (up_release, up_date)
 
@@ -368,22 +372,45 @@ def build_p3(
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True, help="where the key goes; keep it outside the repo")
+    ap.add_argument(
+        "--seed",
+        type=int,
+        default=SEED,
+        help=f"P1 draws Random(seed), P3 Random(seed + 3) (default {SEED})",
+    )
+    ap.add_argument("--families", default="P1,P3", help="families to build (default P1,P3)")
+    ap.add_argument(
+        "--exclude", type=Path, help="file of v4 ids (one per line) kept out of the P3 pool"
+    )
+    ap.add_argument(
+        "--id-prefix", default="", help="appended to the family in question ids, e.g. c -> p3c_01"
+    )
     a = ap.parse_args()
+    families = set(a.families.split(","))
+    exclude = (
+        frozenset(ln.strip() for ln in a.exclude.read_text().splitlines() if ln.strip())
+        if a.exclude
+        else frozenset()
+    )
     signal.signal(signal.SIGALRM, lambda *_: sys.exit("aborting: walltime guard"))
     signal.alarm(3600)
     release = (ensembl("/info/software")["release"], ensembl("/info/eg_version")["version"])
-    p1, p1_draws = build_p1(random.Random(SEED))
-    p3, p3_draws, maizegdb, (up, up_date) = build_p3(random.Random(SEED + 3))
+    p1, p1_draws = build_p1(random.Random(a.seed)) if "P1" in families else ([], [])
+    p3, p3_draws, maizegdb, (up, up_date) = (
+        build_p3(random.Random(a.seed + 3), exclude) if "P3" in families else ([], {}, {}, ("", ""))
+    )
     for i, q in enumerate(p1, 1):
-        q["id"] = f"p1_{i:02d}"
+        q["id"] = f"p1{a.id_prefix}_{i:02d}"
     for i, q in enumerate(p3, 1):
-        q["id"] = f"p3_{i:02d}"
+        q["id"] = f"p3{a.id_prefix}_{i:02d}"
     after = (ensembl("/info/software")["release"], ensembl("/info/eg_version")["version"])
     if after != release:
         raise SystemExit(f"Ensembl moved from {release} to {after} during the build")
     out = {
         "built": datetime.now(UTC).isoformat(timespec="seconds"),
-        "seed": SEED,
+        "seed": a.seed,
+        "families": sorted(families),
+        "excluded_ids": len(exclude),
         "ensembl_release": release[0],
         "ensembl_genomes_release": release[1],
         "uniprot_release": up,
