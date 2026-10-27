@@ -1,6 +1,6 @@
 # plant-genomics-mcp
 
-plant-genomics-mcp is an MCP server that lets AI agents look up plant genes in 23
+plant-genomics-mcp is an MCP server that lets AI agents look up plant genes in 24
 free public databases, from Ensembl Plants and UniProt to KEGG, STRING and
 AlphaFold, with curated coverage of 12 plants.
 
@@ -13,23 +13,6 @@ AlphaFold, with curated coverage of 12 plants.
 <!-- mcp-name: io.github.musharna/plant-genomics-mcp -->
 
 <p align="center"><img src="https://raw.githubusercontent.com/musharna/plant-genomics-mcp/main/examples/assets/cc-answer.png" alt="Claude Code (Opus 5.5) with plant-genomics-mcp 1.29.1 answering a prompt about Arabidopsis NAC001 (AT1G01010): the Ensembl Plants record (Chr 1:3,631-5,899, protein_coding) and UniProtKB entry Q0WV96 (NAC1_ARATH, reviewed, 429 aa). Real output, trimmed" width="780"></p>
-
-## Does it help?
-
-Yes, over Claude alone, which declined most lookups. Against web search it is not
-measurably more accurate, on single lookups or on harder multi-step ones.
-
-<p align="center"><img src="https://raw.githubusercontent.com/musharna/plant-genomics-mcp/main/benchmarks/agent_qa/agent_qa.png" alt="Stacked bar chart of right, wrong and declined answers, 156 per setup. Claude alone: 36 right, 3 wrong, 117 declined. Claude with web search: 151 right, 4 wrong, 1 declined. Claude with plant-genomics-mcp: 156 right. Two no-model baselines: one constant answer per kind of question, 3 of 52 right; chromosome read from the gene ID, 0 of 12 right" width="780"></p>
-
-Claude Opus 5.5, in Claude Code, answered 52 plant gene-lookup questions three
-times each: 151 of 156 right with web search, 156 of 156 with the server,
-not separated (4 questions against 0, McNemar p = 0.125). On 36 harder questions
-(orthologs then coordinates, ID mapping, genes in an interval; re-run 2026-10-18)
-both got all 108 right; the server was faster at the median (0.77×, 95% CI 0.64
-to 0.96) and dearer (1.72×, 1.46 to 2.24). The key comes from the databases the
-server reads, so this tests the lookups, not whether those databases are right.
-
-Method, controls and limitations: [benchmarks/agent_qa](benchmarks/agent_qa/README.md).
 
 ## Install
 
@@ -82,15 +65,32 @@ Per-tool walkthroughs, including the one-call gene dossier
 [`gene_report_AT1G01010.md`](examples/gene_report_AT1G01010.md), are in
 [`examples/`](examples/).
 
+## What the benchmark shows
+
+Claude with the server was compared with Claude using web search. On 36 multi-step gene
+questions, 3 runs each, Haiku 5.5 got 31 right in every run with the server and 9 with web
+search: a pre-registered win (Holm-adjusted McNemar p = 2.1e-5), at 0.07 times the cost.
+Sonnet 5.5 tied (35 and 35; 0.65× the time, 1.49× the cost). With Opus 5.5 (the re-run 2026-10-18)
+both got all 108 right; the server was faster at the median (0.77×, 95% CI 0.64 to 0.96)
+and dearer (1.72×, 1.46 to 2.24).
+
+<p align="center"><img src="https://raw.githubusercontent.com/musharna/plant-genomics-mcp/main/benchmarks/agent_qa/agent_qa.png" alt="Stacked bar chart of right, wrong and declined answers, 156 per setup. Claude alone: 36 right, 3 wrong, 117 declined. Claude with web search: 151 right, 4 wrong, 1 declined. Claude with plant-genomics-mcp: 156 right. Two no-model baselines: one constant answer per kind of question, 3 of 52 right; chromosome read from the gene ID, 0 of 12 right" width="780"></p>
+
+The chart: Opus 5.5 on 52 plant gene-lookup questions, 151 of 156 right with web search and
+156 of 156 with the server, not separated (McNemar p = 0.125). The key comes from the
+databases the server reads, so this tests the lookups, not whether the databases are right.
+We wrote the questions; an outside re-run is welcome. [Method](benchmarks/agent_qa/README.md);
+[Haiku and Sonnet](benchmarks/agent_qa/README.md#haiku-and-sonnet-re-run-2026-10-20).
+
 ## Tools
 
-**56 tools across 23 backends**:
+**58 tools across 24 backends**:
 
 | Area | Tools |
 | --- | --- |
-| Gene records | `ensembl_plants_lookup_locus`, `phytozome_lookup_locus`, `get_gene_xrefs`, `bar_gene_summary`, `tair_locus_info` |
+| Gene records | `ensembl_plants_lookup_locus`, `phytozome_lookup_locus`, `get_gene_xrefs`, `bar_gene_summary`, `tair_locus_info`, `maize_gene_model_translation` |
 | Sequence | `get_sequence`, `blast_sequence` |
-| Protein and structure | `resolve_locus_to_uniprot`, `interpro_domains`, `alphafold_structure`, `experimental_structures` |
+| Protein and structure | `resolve_locus_to_uniprot`, `uniprot_id_mapping`, `interpro_domains`, `alphafold_structure`, `experimental_structures` |
 | Function | `locus_go_annotations`, `locus_plant_ontology`, `locus_gene_rifs`, `go_enrichment`, `locus_literature` |
 | Pathways | `kegg_pathways`, `plantcyc_locus_info` |
 | Interactions and expression | `string_interactions`, `experimental_interactions`, `bar_aiv_interactions`, `atted_coexpression`, `bar_efp_expression` |

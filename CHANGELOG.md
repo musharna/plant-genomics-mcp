@@ -1,5 +1,35 @@
 # Changelog
 
+## v1.30.0 — 2026-10-26
+
+**58 tools / 24 backends** — two new tools, one new backend (MaizeGDB).
+
+- **`maize_gene_model_translation`: maize B73 RefGen_v4 ↔ RefGen_v5 gene IDs.**
+  UniProt and Ensembl Plants know only v5 IDs (Zm00001eb), so a v4 ID
+  (Zm00001d) answered nothing anywhere on the server. The tool reads
+  MaizeGDB's own translation table, both directions, and says per ID whether
+  it is `mapped` (one or more models, since some split or merged),
+  `no_counterpart`, or `not_in_table`. Each answer gives the table's URL,
+  Last-Modified and sha256. A table with one malformed line is refused,
+  never trimmed. In the agent benchmark's field family P3, the server arm
+  declined all 10 questions, writing "There is no tool for MaizeGDB's v4-to-v5
+  translation" (#264).
+- **`uniprot_id_mapping`: every UniProtKB entry for a batch of up to 500 IDs.**
+  The tool runs UniProt's own ID mapping job (`Ensembl_Genomes`,
+  `Ensembl_Genomes_Transcript`, `Ensembl_Genomes_Protein` or `Araport`).
+  `resolve_locus_to_uniprot` returns one entry per locus, so a gene with
+  several (maize Zm00001eb181120 has four) lost the rest. IDs UniProt lists as
+  failed come back `unmapped`. An ID it reports neither way is an error.
+  `results/stream` is not used, because it drops `failedIds` (#264).
+- **The README says what the benchmark compared, on all three model tiers.**
+  On 36 multi-step gene questions, 3 runs each, Haiku 5.5 got 31 right in
+  every run with the server and 9 with web search (pre-registered, Holm-adjusted
+  McNemar p = 2.1e-5) at 0.07 times the cost; Sonnet 5.5 tied (35 and 35);
+  with Opus 5.5 both got all 108 right (#246, #250, #254, #259). The
+  reference tables moved to `docs/reference.md` (#249).
+- **Dependencies:** certifi 2026.10.23 (PYSEC-2026-4320) and
+  opentelemetry-api 1.45.1 (CVE-2026-114603) in the lock (#264).
+
 ## v1.29.3 — 2026-10-16
 
 **56 tools / 23 backends** — no new tool and no code change. A docs release,

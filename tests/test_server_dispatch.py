@@ -38,6 +38,7 @@ from plant_genomics_mcp import (
     interpro,
     jaspar,
     kegg,
+    maizegdb,
     onekg,
     orthodb,
     panther,
@@ -52,6 +53,7 @@ from plant_genomics_mcp import (
     tair,
     thalemine,
     uniprot,
+    uniprot_idmapping,
 )
 
 _DEFAULT_ORG = "arabidopsis_thaliana"
@@ -89,6 +91,23 @@ DISPATCH_SPECS: list[Spec] = [
     ),
     Spec("phytozome_lookup_locus", phytozome, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec("resolve_locus_to_uniprot", uniprot, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
+    # id-list keyed, not locus-keyed → must not forward organism=
+    Spec(
+        "uniprot_id_mapping",
+        uniprot_idmapping,
+        "map_ids",
+        {"ids": ["Zm00001eb326750"]},
+        ["Zm00001eb326750"],
+        None,
+    ),
+    Spec(
+        "maize_gene_model_translation",
+        maizegdb,
+        "translate_gene_models",
+        {"ids": ["Zm00001d022051"]},
+        ["Zm00001d022051"],
+        None,
+    ),
     Spec("locus_literature", europe_pmc, "lookup_locus", {"locus": L}, L, _DEFAULT_ORG),
     Spec(
         "locus_go_annotations",

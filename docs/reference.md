@@ -5,13 +5,13 @@ error model for [plant-genomics-mcp](../README.md).
 
 ## Tools
 
-The 23 backends: Ensembl Plants, Phytozome BioMart, UniProtKB, Europe PMC,
+The 24 backends: Ensembl Plants, Phytozome BioMart, UniProtKB, Europe PMC,
 QuickGO, Planteome, PlantCyc/PMN, g:Profiler, AlphaFold DB, PDBe, InterPro,
 JASPAR, PANTHER, OrthoDB, AraGWAS, 1001 Genomes, NCBI BLAST, Gramene, KEGG,
-STRING-DB, ATTED-II, ThaleMine and BAR. The 56 tools are 29 single-locus + 1
-motif lookup + 1 region query + 1 assembly listing + 1 release report + 1
-variant annotator + 1 gene-set enrichment + 1 BLAST search + 2 member lists +
-13 parallel-batch + 5 cross-source synthesis.
+STRING-DB, ATTED-II, ThaleMine, BAR and MaizeGDB. The 58 tools are
+29 single-locus + 1 motif lookup + 1 region query + 1 assembly listing + 1
+release report + 1 variant annotator + 1 gene-set enrichment + 1 BLAST search +
+2 member lists + 2 ID mappings + 13 parallel-batch + 5 cross-source synthesis.
 
 Most take a locus (e.g. `AT1G01010`) and an optional `organism=`: a slug,
 scientific or common name, or NCBI taxid (the 12-plant coverage matrix is the
@@ -62,6 +62,8 @@ publishes a JSON `outputSchema`.
 | 40  | Homology (live)         | `ensembl_plants_paralogs`               | Paralogues Ensembl Compara records for a locus — `within_species_paralog` and the `other_paralog` ("ancient paralogues") that `gramene_homologs` drops — closest first, with perc_id, taxonomy level and protein id. Not a family list: test membership with `interpro_domains`. `total` + `limit`. |
 | 41  | Region query (live)     | `ensembl_plants_assembly`               | An organism's Ensembl assembly — name, GCA accession, karyotype — and every top-level seq-region with its length: the `region` names `ensembl_region_query` takes, chromosomes first, so a region walk is planned before its first call. `total` + `limit`. |
 | 42  | Provenance (live)       | `upstream_release`                      | The release a backend's own endpoint calls current (Ensembl, STRING, QuickGO, JASPAR, KEGG), for the backends whose answers state none; PDBe, AraGWAS and Europe PMC publish none and say why. A separate request, so read it before and after a run: equal values mean no release changed. |
+| 43  | ID mapping (live)       | `uniprot_id_mapping`                    | UniProt's own ID mapping job for up to 500 gene / transcript / protein IDs (`from_db` Ensembl_Genomes, Ensembl_Genomes_Transcript, Ensembl_Genomes_Protein or Araport): EVERY UniProtKB entry per ID, each with entry type, and `unmapped` for the IDs UniProt lists as failed. Tool 4 returns one entry per locus. |
+| 44  | ID mapping (live)       | `maize_gene_model_translation`          | MaizeGDB's B73 RefGen_v4 ↔ RefGen_v5 gene-model table (Zm00001d ↔ Zm00001eb): `mapped` (one or more targets), `no_counterpart` or `not_in_table` per ID, with the table's URL, Last-Modified and sha256. UniProt and Ensembl Plants know only v5 IDs. |
 
 ## Resources and prompts
 
