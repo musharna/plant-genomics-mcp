@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+- **Field-family benchmark: P3 confirmed on held-out ids.** The task is batch maize B73 v4 →
+  v5 + every UniProt accession, 25 ids per question. On 10 questions drawn
+  from ids never seen while building the tools (seed 20261026, 254 ids
+  excluded), Sonnet 5.5 with 1.30.0 got 10/10 right (250/250 items) and web
+  search 0/10, declining each. The exact sign test gives p = 0.002,
+  pre-registered (`benchmarks/agent_qa/field_2026-10-26_confirm/`). The
+  exploratory re-run on the pilot questions got 9/10; its one miss was a
+  format slip. 1.29.3 had declined all 10. The README states it in one
+  sentence, pinned to the rows by a test. `build_field.py` gains `--seed`,
+  `--families`, `--exclude` and `--id-prefix`; with the default flags it
+  reproduces the pilot draws exactly.
+
 ## v1.30.0 — 2026-10-26
 
 **58 tools / 24 backends** — two new tools, one new backend (MaizeGDB).

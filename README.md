@@ -47,9 +47,8 @@ claude mcp add plant-genomics --scope local -- "$(pwd)/.venv/bin/plant-genomics-
 
 Ask in plain language; the client picks the tools:
 
-> **"Tell me everything about the Arabidopsis gene AT1G01010 — its
-> function, GO terms, KEGG pathways, protein-interaction partners, and
-> recent papers."**
+> **"Tell me everything about the Arabidopsis gene AT1G01010 — its function, GO terms, KEGG
+> pathways, protein-interaction partners, and recent papers."**
 
 For another species, name it or pass `organism=` (e.g. rice `Os01g0100100`,
 `oryza_sativa`). A recorded ortholog run, where Claude checked three sources
@@ -59,20 +58,21 @@ and said which one does not back the rice match:
 
 Prompts and full answers for both screenshots: [`examples/assets/cards/RUN.md`](examples/assets/cards/RUN.md).
 
-A worked 64-call run over 114 genes in three organisms, with the 51 gaps it
-logged (39 since closed), is in [`examples/arf_family/PAGE.md`](examples/arf_family/PAGE.md).
-Per-tool walkthroughs, including the one-call gene dossier
-[`gene_report_AT1G01010.md`](examples/gene_report_AT1G01010.md), are in
+A worked 64-call run over 114 genes in three organisms, with the 51 gaps it logged (39 since closed),
+is in [`examples/arf_family/PAGE.md`](examples/arf_family/PAGE.md). Per-tool walkthroughs, including
+the one-call gene dossier [`gene_report_AT1G01010.md`](examples/gene_report_AT1G01010.md), are in
 [`examples/`](examples/).
 
 ## What the benchmark shows
 
-Claude with the server was compared with Claude using web search. On 36 multi-step gene
-questions, 3 runs each, Haiku 5.5 got 31 right in every run with the server and 9 with web
-search: a pre-registered win (Holm-adjusted McNemar p = 2.1e-5), at 0.07 times the cost.
-Sonnet 5.5 tied (35 and 35; 0.65× the time, 1.49× the cost). With Opus 5.5 (the re-run 2026-10-18)
-both got all 108 right; the server was faster at the median (0.77×, 95% CI 0.64 to 0.96)
-and dearer (1.72×, 1.46 to 2.24).
+Claude with the server was compared with Claude using web search. On 36 multi-step gene questions, 3
+runs each, Haiku 5.5 got 31 right in every run with the server and 9 with web search: a
+pre-registered win (Holm-adjusted McNemar p = 2.1e-5), at 0.07 times the cost. Sonnet 5.5 tied (35
+and 35; 0.65× the time, 1.49× the cost). With Opus 5.5 (the re-run 2026-10-18) both got all 108
+right; the server was faster at the median (0.77×, 95% CI 0.64 to 0.96) and dearer (1.72×, 1.46 to
+2.24). On a harder task, 25 maize v4 gene IDs to v5 genes and every UniProt accession (10 held-out
+questions, Sonnet 5.5), the server got 10 right and web search 0, declining each (sign test p =
+0.002; [results](benchmarks/agent_qa/field_2026-10-26_confirm/RESULTS.md)).
 
 <p align="center"><img src="https://raw.githubusercontent.com/musharna/plant-genomics-mcp/main/benchmarks/agent_qa/agent_qa.png" alt="Stacked bar chart of right, wrong and declined answers, 156 per setup. Claude alone: 36 right, 3 wrong, 117 declined. Claude with web search: 151 right, 4 wrong, 1 declined. Claude with plant-genomics-mcp: 156 right. Two no-model baselines: one constant answer per kind of question, 3 of 52 right; chromosome read from the gene ID, 0 of 12 right" width="780"></p>
 

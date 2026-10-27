@@ -28,7 +28,10 @@ key that records one, UniProt) still serves the release the key was built from.
 build_hard.py froze outside the repository. Each run gets a TMPDIR of its
 own inside its empty working directory. ``versions.json`` beside the results
 records the Claude Code version, the server pin, the dependency cutoff and
-the key's sha256.
+the key's sha256. The 2026-10-24 field families (field_2026-10-24/build_field.py)
+are another ``--key``; a key that records a MaizeGDB table is refused if the
+table has changed. ``--dry-run`` runs the preflight, then prints each arm's
+tools and every rendered prompt, and calls no model.
 
 Usage gate (the runs share the account's limits with its owner): after every
 run, the transcript's last ``rate_limit_event`` is read. A five-hour
@@ -82,6 +85,7 @@ INTENDED_TOOLS = {
 LEAK = re.compile(
     r"questions\.json|build_questions|ncbi_locations|baselines\.jsonl|results\.jsonl"
     r"|summary\.tsv|agent_qa_runs|benchmarks/agent_qa|build_hard|plant-genomics-mcp-artifacts"
+    r"|build_field|field_controls|field_2026-10-24|field-2026-10-24"
     r"|(?:github\.com|githubusercontent\.com)/musharna/plant-genomics-mcp\S*benchmarks",
     re.IGNORECASE,
 )
@@ -543,8 +547,36 @@ def preflight(key: dict[str, Any], allow_release_drift: bool) -> None:
             raise SystemExit(f"UniProt serves {up}, the key was built on "
                              f"{key['uniprot_release']}: rebuild the key or pass "
                              "--allow-release-drift")  # fmt: skip
+    if "maizegdb" in key:
+        sha = maizegdb_sha256(key["maizegdb"]["url"])
+        if sha != key["maizegdb"]["sha256"] and not allow_release_drift:
+            raise SystemExit(f"MaizeGDB's v4->v5 table changed since the key was built "
+                             f"(sha256 {sha[:12]}, key {key['maizegdb']['sha256'][:12]}): rebuild "
+                             "the key or pass --allow-release-drift")  # fmt: skip
     print(f"preflight: oracle {len(questions)}/{len(questions)} right, shifted 0 right; "
           f"Ensembl {live}/EG {live_eg}; UniProt {up}")  # fmt: skip
+
+
+def maizegdb_sha256(url: str) -> str:
+    r = httpx.get(url, timeout=120, follow_redirects=True)
+    r.raise_for_status()
+    return hashlib.sha256(r.content).hexdigest()
+
+
+def dry_run(questions: list[dict[str, Any]], arms: list[str]) -> str:
+    """What a sweep would send, with no model call: each arm's tool flags
+    and each question's rendered prompt."""
+    out = []
+    with tempfile.TemporaryDirectory(prefix="agentqa-dry-") as d:
+        for arm in arms:
+            flags = arm_flags(arm, Path(d))
+            tools = flags[flags.index("--tools") + 1]
+            allowed = flags[flags.index("--allowedTools") + 1] if "--allowedTools" in flags else ""
+            out.append(f"== arm {arm}: --tools {tools!r} --allowedTools {allowed!r} model {MODEL}")
+    for q in questions:
+        prompt = PROMPT.format(question=q["question"], answer_format=q["answer_format"])
+        out.append(f"-- {q['id']} ({q['category']}, {len(prompt)} chars)\n{prompt}")
+    return "\n".join(out)
 
 
 def write_versions(vpath: Path, versions: dict[str, Any], results: Path) -> None:
@@ -630,6 +662,11 @@ def main() -> None:
         action="store_true",
         help="move rows the API ended before an answer aside, so a resume re-runs each once",
     )
+    ap.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="preflight, then print each arm's tools and every rendered prompt; call no model",
+    )
     a = ap.parse_args()
     set_model(a.model)
     set_stop_at(a.stop_at)
@@ -653,6 +690,9 @@ def main() -> None:
     if a.only:
         keep = set(a.only.split(","))
         questions = [q for q in questions if q["id"] in keep]
+    if a.dry_run:
+        print(dry_run(questions, a.arms.split(",")))
+        return
     results = Path(a.results)
     done = set()
     if results.exists():
