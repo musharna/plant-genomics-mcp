@@ -69,3 +69,15 @@ Lane: `lane6_field_pilot.sh pgmcp-confirm`, results in
   items does (10/250 in the pilot).
 - Cost: about $0.5 (mcp) + about $0.1 (web). The LAUNCH_STOP spend gate (160.23)
   is unchanged.
+
+## Addendum: the key, built 2026-10-26 (before any run)
+
+- `questions.json` sha256 `745ce97b29098ed75d56abb9453870614a167fc93baa57c1cb564fbd8e6caa6c`.
+- 10 questions, `p3c_01`–`p3c_10`, 250 distinct ids, 0 in `exclude_v4.txt`
+  (252 of whose ids were in MaizeGDB's table and left the pool).
+- Screened 286. Kept 204 same-v5 and 46 unmappable in both. Discarded 18
+  where the sources name different v5 genes and 18 where MaizeGDB maps but
+  Ensembl has no record.
+- 46 true negatives (18.4%). 5 items split into two or more v5 genes.
+- UniProt 2026_03, MaizeGDB table sha256 7bd5ed26…, Ensembl 116 / EG 63, the
+  same releases as the pilot key.
