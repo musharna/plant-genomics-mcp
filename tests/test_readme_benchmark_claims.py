@@ -12,6 +12,8 @@ separated", and must not quote either setup's single-run maximum time.
 from __future__ import annotations
 
 import csv
+import json
+import math
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -62,7 +64,7 @@ def test_rerun_sentence_matches_the_confirmatory_tables() -> None:
     """The 2026-10-18 re-run's line in the benchmark section is pinned to its own
     stats.tsv and summary.tsv, so the README cannot keep a verdict, a count or
     a ratio the confirmatory sweep did not produce."""
-    section = _section()
+    section = " ".join(_section().split())  # the README wraps lines anywhere
     rerun = BENCH / "rerun_2026-10-18"
     with (rerun / "stats.tsv").open(encoding="utf-8") as f:
         stats = {r["metric"]: r for r in csv.DictReader(f, delimiter="\t")}
@@ -129,3 +131,34 @@ def test_tier_sentences_match_the_tier_tables() -> None:
         f"tied ({right['sonnet'][0]} and {right['sonnet'][1]}; "
         f"{secs:.2f}× the time, {cost:.2f}× the cost)" in section
     ), (right, secs, cost, section)
+
+
+def test_maize_id_sentence_matches_the_confirmatory_rows() -> None:
+    """The held-out P3 sentence is pinned to field_2026-10-26_confirm/results.jsonl:
+    both arms' right counts, the held-out question count, the declining arm and the
+    exact two-sided sign test over discordant questions (PREREG.md's primary test)."""
+    section = " ".join(_section().split())
+    rows = [
+        json.loads(ln)
+        for ln in (BENCH / "field_2026-10-26_confirm" / "results.jsonl").read_text().splitlines()
+    ]
+    by: dict[str, dict[str, bool]] = {}
+    for r in rows:
+        by.setdefault(r["qid"], {})[r["arm"]] = r["verdict"] == "right"
+    # Positive control: the rows are the confirm run's (both arms on every question).
+    assert len(by) == 10 and all(set(v) == {"web", "mcp"} for v in by.values()), by
+    assert "On a harder task, 25 maize v4 gene IDs" in section, section[:200]
+    mcp = sum(v["mcp"] for v in by.values())
+    web = sum(v["web"] for v in by.values())
+    only_mcp = sum(v["mcp"] and not v["web"] for v in by.values())
+    only_web = sum(v["web"] and not v["mcp"] for v in by.values())
+    n = only_mcp + only_web
+    p = min(1.0, 2 * sum(math.comb(n, i) for i in range(min(only_mcp, only_web) + 1)) / 2**n)
+    declined = all(
+        r["reply"].strip().endswith("ANSWER: UNKNOWN") for r in rows if r["arm"] == "web"
+    )
+    assert (
+        f"({len(by)} held-out questions, Sonnet 5.5), the server got {mcp} right and "
+        f"web search {web}" + (", declining each" if declined else "") in section
+    ), (mcp, web, declined, section)
+    assert f"sign test p = {p:.3f}" in section, (p, section)
