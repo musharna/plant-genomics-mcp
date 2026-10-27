@@ -15,6 +15,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -32,7 +33,7 @@ KEY = Path(os.environ.get("FIELD_KEY", str(DEFAULT_KEY)))
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 needs_key = pytest.mark.skipif(not KEY.exists(), reason=f"frozen field key not at {KEY}")
 
-ROSTER = {
+ROSTER: dict[str, Any] = {
     "id": "p1_a", "category": "family_roster",
     "truth": {"gene": "AT5G60450", "members": ["Os02g0164900", "Os06g0702600", "Zm00001eb207450"]},
     "controls": {"orthologs": ["Os06g0702600", "Zm00001eb207450"]},
@@ -68,6 +69,11 @@ def test_a_roster_is_right_only_at_f1_one_and_none_answers_a_true_negative() -> 
     assert _s(NONE_Q, "Os06g0702600")["verdict"] == "wrong"
     assert _s(ROSTER, "UNKNOWN")["verdict"] == "declined"
     assert _s(ROSTER, "see the list above")["verdict"] == "wrong"
+    # A true negative answered with neither ids nor NONE is wrong, not an empty set
+    # that agrees with the empty truth (#266 review: no test could fail on the guard).
+    # Positive control above in the same test: literal NONE on the same question is right.
+    waffle = _s(NONE_Q, "I couldn't verify this")
+    assert waffle["verdict"] == "wrong" and waffle["f1"] == 0.0, waffle
 
 
 def test_a_batch_scores_items_lab_bench_style_and_the_question_needs_all() -> None:
