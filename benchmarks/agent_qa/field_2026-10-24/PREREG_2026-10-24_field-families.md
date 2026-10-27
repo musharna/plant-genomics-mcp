@@ -124,3 +124,56 @@ acceptable result and is reported as one.
   invalid row.
 
 Every result is reported, whatever it is.
+
+## Amendment, 2026-10-26: P3 mcp re-run on 1.30.0 (EXPLORATORY)
+
+Written before the run. User go: "approve" (2026-10-26), on a ~$1 exploratory
+P3 re-run.
+
+**Why exploratory.** The two tools this run tests, `maize_gene_model_translation`
+and `uniprot_id_mapping` (plant-genomics-mcp#264, released in 1.30.0), were
+built after the 1.29.3 arm declined these exact questions. Before release they
+were driven over all 250 of these items with no model in the loop and
+reproduced the key on 250/250. That holds by construction: the key came from
+the same two sources. So this run tests whether an agent finds and uses the
+tools, not whether the tools are right. It cannot confirm a win.
+
+**Setup.** As the 1.29.3 mcp arm, except for the server:
+
+- `--server plant-genomics-mcp==1.30.0 --exclude-newer 2026-10-27T00:05:00Z`.
+  1.30.0 was uploaded at 2026-10-27T00:02:52Z, so the old 2026-10-17 cutoff
+  cannot resolve it. The server's dependencies resolve as of its release.
+- `--mcp-timeout-ms 180000`, `--model claude-sonnet-5-5`, 1 rep, `--workers 2`,
+  `--only p3_01..p3_10`.
+- Own directory, `$A/rerun_1300/`, so the 1.29.3 arm's transcripts and
+  `versions.json` are kept.
+
+Lane: `lane6_field_pilot.sh pgmcp-mcp-1300`.
+
+**Scoring.** Unchanged: the P3 rule above (all 25 items right; item accuracy,
+precision and coverage, and v5-only accuracy), and the validity rule.
+
+**Comparison.** The pilot web arm: 10/10 not right. All 10 answered UNKNOWN
+with no tool call, so all 10 are invalid. The web arm's answer does not
+depend on the server, so it is not re-run. The paired exact two-sided sign
+test runs over the discordant questions. At 10 discordant questions the
+smallest possible p is 0.002, so a result can reach significance; it is still
+reported as exploratory.
+
+**Prediction (before the run).** At least 7 of 10 right. The risks:
+
+1. The agent answers accessions from `resolve_locus_to_uniprot`, which returns
+   one entry per locus. 84 of the 250 items have two or more accessions, so
+   any question holding one of those is wrong that way.
+2. 25 items of output on one ANSWER line.
+3. The 900 s run timeout.
+
+If fewer than 7 are right, the transcripts say which of these it was.
+
+**Cost.** The 1.29.3 arm cost about $0.05 a question while declining. Working
+questions take more, so expect about $1–2. The LAUNCH_STOP spend gate
+(160.23) is unchanged.
+
+**Confirmatory (not run here).** That needs fresh draws: a new seed through
+`build_field.py`, ids disjoint from `p3_01`–`p3_10`, both arms (web and mcp
+1.30.0), and its own amendment written before its run.
