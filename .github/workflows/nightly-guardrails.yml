@@ -54,14 +54,30 @@ jobs:
           read -ra extras <<<"$extras_s"
           uv sync "${extras[@]}" --dev
           if [ -f requirements-dev.txt ]; then uv pip install -r requirements-dev.txt; fi
-          uv pip install "mutmut==$MUTMUT" pytest
+          # pytest 9.2 removed the private Item._nodeid that mutmut 3.7's stats
+          # plugin reads at every test teardown: stats fail and mutmut checks
+          # nothing (figcite, ldraw-mcp 2026-10-28; mutmut 3.8 reads .nodeid).
+          # `uv run` re-syncs to the lock and would put a locked pytest 9.2 back,
+          # so every later step runs this environment as built here.
+          uv pip install "mutmut==$MUTMUT" "pytest<9.2"
+          echo "UV_NO_SYNC=1" >> "$GITHUB_ENV"
       - name: Baseline suite is green (a red baseline makes every mutant "killed")
         if: steps.optout.outputs.skip != '1'
         run: uv run --with pytest pytest -q -x -p no:cacheprovider
       - name: This ISO week (the results cache starts clean each week)
+        # and on a new Python: mutmut keeps a result only while its function's
+        # hash is unchanged, and the hash is of ast.dump(), whose text differs
+        # between Pythons. ubuntu-latest moved to 26.04 on 2026-10-28 (python3
+        # 3.12 -> 3.14): every carried result was dropped mid-week and the cap
+        # re-ran them from scratch (data-aggregator-mcp, phylokit-mcp; the gate
+        # read the unfinished tail as a stall).
         if: steps.optout.outputs.skip != '1'
         id: week
-        run: echo "week=$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "week=$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
+          # assignment, not inline $(...): a failed probe must stop the step, not key on "py"
+          py=$(uv run python -c 'import sys; print("%d.%d" % sys.version_info[:2])')
+          echo "python=$py" >> "$GITHUB_OUTPUT"
       - name: Restore this week's mutant results
         # The 90-minute cap left the same tail unchecked every night, because
         # each night started from nothing (data-aggregator-mcp 2026-10-16/17/19:
@@ -86,8 +102,8 @@ jobs:
             mutants/**/*.meta
             mutants/.carry-tests
             mutants/.carry-stuck
-          key: mutmut-${{ env.MUTMUT }}-${{ steps.week.outputs.week }}-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: mutmut-${{ env.MUTMUT }}-${{ steps.week.outputs.week }}-
+          key: mutmut-${{ env.MUTMUT }}-py${{ steps.week.outputs.python }}-${{ steps.week.outputs.week }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: mutmut-${{ env.MUTMUT }}-py${{ steps.week.outputs.python }}-${{ steps.week.outputs.week }}-
       - name: Carry results the code and tests still stand behind
         # A kill stands until its function changes (mutmut resets it then) or
         # the week ends. A survivor stands until a test that covers its function
@@ -115,8 +131,8 @@ jobs:
           # run that restored nothing checks the whole tree again from scratch.
           if not os.environ["MATCHED"] and datetime.datetime.now(datetime.timezone.utc).isoweekday() != 1:
               print("::warning::no results restored from earlier runs this week: every mutant is checked "
-                    "from scratch tonight. A changed cache path list is a new cache version and misses "
-                    "every entry saved before it; so does an evicted or expired cache.")
+                    "from scratch tonight. A new Python or a changed cache path list is a new cache version "
+                    "and misses every entry saved before it; so does an evicted or expired cache.")
           try:
               base = json.loads(pathlib.Path("mutants/.carry-tests").read_text())
               recheck = set(base["recheck"])
@@ -321,7 +337,9 @@ jobs:
             mutants/**/*.meta
             mutants/.carry-tests
             mutants/.carry-stuck
-          key: mutmut-${{ env.MUTMUT }}-${{ steps.week.outputs.week }}-${{ github.run_id }}-${{ github.run_attempt }}
+          # the restore step's key, resolved: one definition, so a part added to
+          # it (the Python, 2026-10-28) cannot miss the key a restore matches
+          key: ${{ steps.restore.outputs.cache-primary-key }}
       - name: Survivors
         id: survivors
         if: steps.optout.outputs.skip != '1'
