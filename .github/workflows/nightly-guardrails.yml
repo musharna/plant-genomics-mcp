@@ -24,7 +24,7 @@ jobs:
       issues: write
       id-token: write
     env:
-      MUTMUT: "3.7.0" # also the results-cache key: a new mutmut starts clean
+      MUTMUT: "3.8.1" # also the results-cache key: a new mutmut starts clean
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Opt-out with a written reason
@@ -54,18 +54,32 @@ jobs:
           read -ra extras <<<"$extras_s"
           uv sync "${extras[@]}" --dev
           if [ -f requirements-dev.txt ]; then uv pip install -r requirements-dev.txt; fi
+          # mutmut 3.7's stats plugin read pytest's private Item._nodeid, which
+          # pytest 9.2 removed (figcite, ldraw-mcp 2026-10-28: 0 checked); 3.8
+          # reads .nodeid. A pin added here needs UV_NO_SYNC=1 in $GITHUB_ENV:
+          # `uv run` re-syncs to the lock and undoes it.
           uv pip install "mutmut==$MUTMUT" pytest
       - name: Baseline suite is green (a red baseline makes every mutant "killed")
         if: steps.optout.outputs.skip != '1'
         run: uv run --with pytest pytest -q -x -p no:cacheprovider
       - name: This ISO week (the results cache starts clean each week)
+        # and on a new Python: mutmut keeps a result only while its function's
+        # hash is unchanged, and the hash is of ast.dump(), whose text differs
+        # between Pythons. ubuntu-latest moved to 26.04 on 2026-10-28 (python3
+        # 3.12 -> 3.14): every carried result was dropped mid-week and the cap
+        # re-ran them from scratch (data-aggregator-mcp, phylokit-mcp; the gate
+        # read the unfinished tail as a stall).
         if: steps.optout.outputs.skip != '1'
         id: week
-        run: echo "week=$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "week=$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
+          # assignment, not inline $(...): a failed probe must stop the step, not key on "py"
+          py=$(uv run python -c 'import sys; print("%d.%d" % sys.version_info[:2])')
+          echo "python=$py" >> "$GITHUB_OUTPUT"
       - name: Restore this week's mutant results
         # The 90-minute cap left the same tail unchecked every night, because
         # each night started from nothing (data-aggregator-mcp 2026-10-16/17/19:
-        # 489, 520 and 1,298 mutants never checked). mutmut 3.7 keeps a result
+        # 489, 520 and 1,298 mutants never checked). mutmut keeps a result
         # in mutants/<file>.meta and, on regenerating a file, keeps it only if
         # its function's source hash is unchanged, so last night's results can
         # resume. Only the .meta files are cached: the mutated sources are
@@ -86,8 +100,8 @@ jobs:
             mutants/**/*.meta
             mutants/.carry-tests
             mutants/.carry-stuck
-          key: mutmut-${{ env.MUTMUT }}-${{ steps.week.outputs.week }}-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: mutmut-${{ env.MUTMUT }}-${{ steps.week.outputs.week }}-
+          key: mutmut-${{ env.MUTMUT }}-py${{ steps.week.outputs.python }}-${{ steps.week.outputs.week }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: mutmut-${{ env.MUTMUT }}-py${{ steps.week.outputs.python }}-${{ steps.week.outputs.week }}-
       - name: Carry results the code and tests still stand behind
         # A kill stands until its function changes (mutmut resets it then) or
         # the week ends. A survivor stands until a test that covers its function
@@ -115,8 +129,8 @@ jobs:
           # run that restored nothing checks the whole tree again from scratch.
           if not os.environ["MATCHED"] and datetime.datetime.now(datetime.timezone.utc).isoweekday() != 1:
               print("::warning::no results restored from earlier runs this week: every mutant is checked "
-                    "from scratch tonight. A changed cache path list is a new cache version and misses "
-                    "every entry saved before it; so does an evicted or expired cache.")
+                    "from scratch tonight. A new Python or a changed cache path list is a new cache version "
+                    "and misses every entry saved before it; so does an evicted or expired cache.")
           try:
               base = json.loads(pathlib.Path("mutants/.carry-tests").read_text())
               recheck = set(base["recheck"])
@@ -252,8 +266,8 @@ jobs:
           git ls-files -s | awk -F'\t' '$2 ~ /(^|\/)(tests?\/|conftest\.py$)/ { split($1, a, " "); print a[2] "\t" $2 }' > "$RUNNER_TEMP/tests.txt"
           uv run python - <<'PY'
           import json, os, pathlib, re
-          import mutmut
           from mutmut.__main__ import load_stats, mangled_name_from_mutant_name, status_by_exit_code, tests_for_mutant_names
+          from mutmut.state import state
           tmp = os.environ["RUNNER_TEMP"]
           now = dict(line.split("\t", 1)[::-1] for line in pathlib.Path(tmp, "tests.txt").read_text().splitlines())
           fp = pathlib.Path("mutants/.carry-tests")
@@ -264,7 +278,7 @@ jobs:
               old, recheck = None, set()  # unknown: the carry step kept kills only
           changed = sorted(p for p in old.keys() | now.keys() if old.get(p) != now.get(p)) if old is not None else []
           has_stats = load_stats()
-          ran = {t.split("::", 1)[0] for t in mutmut.duration_by_test} if has_stats else set()
+          ran = {t.split("::", 1)[0] for t in state().duration_by_test} if has_stats else set()
           deleted_test = re.compile(r"(^|/)(test_[^/]*|[^/]*_test)\.py$")  # a gone test kills nothing
           unexplained = [p for p in changed if p not in ran and not (p not in now and deleted_test.search(p))]
           every = old is None or (bool(changed) and (not has_stats or bool(unexplained)))
@@ -321,7 +335,9 @@ jobs:
             mutants/**/*.meta
             mutants/.carry-tests
             mutants/.carry-stuck
-          key: mutmut-${{ env.MUTMUT }}-${{ steps.week.outputs.week }}-${{ github.run_id }}-${{ github.run_attempt }}
+          # the restore step's key, resolved: one definition, so a part added to
+          # it (the Python, 2026-10-28) cannot miss the key a restore matches
+          key: ${{ steps.restore.outputs.cache-primary-key }}
       - name: Survivors
         id: survivors
         if: steps.optout.outputs.skip != '1'
