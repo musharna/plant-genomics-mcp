@@ -40,6 +40,7 @@ Exit 0 when no regression, 1 when there is one or the run is unusable.
 
 from __future__ import annotations
 
+import re
 import sys
 from collections import Counter
 from dataclasses import dataclass, field
@@ -76,6 +77,66 @@ class Report:
     failures: list[Failure] = field(default_factory=list)
     skips: Counter[str] = field(default_factory=Counter)  # reason -> tests
     gate: str | None = None  # the PLANT_GENOMICS_MCP_LIVE property; None when absent
+    # failures whose shortened message could not be restored from the element text
+    unreadable: list[str] = field(default_factory=list)
+
+
+class UnreadableMessage(ValueError):
+    """A shortened ``message`` attribute whose full text the report does not hold."""
+
+
+_SHORTENED = re.compile(r"\n\[(\+\d+ more lines?|truncated); full report in element text\]\Z")
+_WRAPPED = re.compile(r'failed on (setup|teardown) with "')
+
+
+def _full_message(attr: str, text: str) -> str:
+    """The failure's whole crash message, as pytest before 9.2 wrote it into ``message``.
+
+    pytest 9.2 keeps ``message`` within 500 characters: whole lines while they
+    fit (a first line longer than that is cut and ends ``...``), then a line
+    ``[+N more lines; full report in element text]`` or ``[truncated; ...]``.
+    A synthesis envelope's failed step sits far past that, so the tag the class
+    rests on was dropped and an upstream outage read as a regression (every
+    night from 2026-10-28, when CI's unpinned install moved to 9.2).
+
+    The element text is the full report: the traceback with its source lines,
+    then the crash message as the last block of lines marked ``E``. Only that
+    block is read, never the source lines, which can name a tag the failure did
+    not raise. It must continue what the attribute kept, or the report is not
+    in the shape this reads and the failure is refused, not guessed at.
+    """
+    found = _SHORTENED.search(attr)
+    if found is None:
+        return attr
+    kept = attr[: found.start()].removesuffix("...")
+    wrapper = _WRAPPED.match(kept)  # an error in setup or teardown: failed on setup with "<msg>"
+    head = kept[wrapper.end() :] if wrapper else kept
+    lines = text.splitlines()
+    marked = [i for i, line in enumerate(lines) if line.startswith("E")]
+    if not marked:
+        raise UnreadableMessage("the element text has no E-marked lines")
+    end = start = marked[-1]
+    while start > 0 and lines[start - 1].startswith("E"):
+        start -= 1
+    block = lines[start : end + 1]
+    first_line = head.split("\n", 1)[0]
+    # pytest marks every line of the block with "E" and the same run of spaces;
+    # that width is the one at which the block's first line reads as the
+    # attribute's first line.
+    width = next(
+        (
+            n
+            for n in range(1, len(block[0]) + 1)
+            if block[0][:n] == "E" + " " * (n - 1) and block[0][n:].startswith(first_line)
+        ),
+        None,
+    )
+    if width is None:
+        raise UnreadableMessage(f"the last E-marked block does not start with {first_line[:80]!r}")
+    message = "\n".join(line[width:] for line in block)
+    if not message.startswith(head):
+        raise UnreadableMessage(f"the last E-marked block does not continue {head[:80]!r}")
+    return f'{wrapper.group(0)}{message}"' if wrapper else message
 
 
 def read_report(path: Path) -> Report:
@@ -90,7 +151,13 @@ def read_report(path: Path) -> Report:
         for kind in ("failure", "error"):
             node = case.find(kind)
             if node is not None:
-                message = node.get("message") or (node.text or "")
+                attr, text = node.get("message") or "", node.text or ""
+                message = attr or text
+                if attr:
+                    try:
+                        message = _full_message(attr, text)
+                    except UnreadableMessage as err:
+                        report.unreadable.append(f"`{test}`: {err}")
                 report.failures.append(Failure(test, kind, message))
         skipped = case.find("skipped")
         if skipped is not None:
@@ -167,6 +234,9 @@ def main(argv: list[str]) -> int:
             )
         if pytest_exit == 1 and not result.failures:
             problems.append("pytest exited 1 but the report lists no failure")
+        problems += [
+            f"cannot restore {u}, so the failure cannot be classed" for u in result.unreadable
+        ]
 
     failures = result.failures
     text = summarize(result)

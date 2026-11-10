@@ -17,7 +17,8 @@ import subprocess
 import sys
 from collections.abc import Sequence
 from pathlib import Path
-from xml.sax.saxutils import quoteattr
+from types import ModuleType
+from xml.sax.saxutils import escape, quoteattr
 
 import httpx
 import pytest
@@ -313,3 +314,108 @@ async def test_a_refusal_is_upstream_side_and_a_bad_request_is_a_regression(
         "`tests.test_live::test_bad`": "| regression",
         "`tests.test_live::test_planteome`": "| upstream",
     }, run.stdout
+
+
+# pytest 9.2's JUnit report for three failures, verbatim from a 9.2.0 run (the
+# long runs of x, y and z written as products; hostname and timestamp dropped).
+# From 9.2 the ``message`` attribute keeps about 500 characters and points to
+# the element text for the rest: the synthesis step's tag and the setup
+# error's tag are both past that cut.
+_X, _Y, _Z = "x" * 300, "y" * 300, "z" * 600
+_STEP = "error='[UpstreamUnavailableError] Ensembl Plants /lookup/id/AT1G01010 exhausted 3 retries'"
+_ENVELOPE = f"Envelope(steps=['{_X}', \"{_STEP}\", '{_Y}'], result=None)"
+_RAISED = f"test_small.UpstreamUnavailableError: {_Z} [UpstreamUnavailableError] Ensembl Plants exhausted 3 retries"
+_PYTEST_92 = f"""<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="2" skipped="0" tests="3" time="0.097"><properties><property name="PLANT_GENOMICS_MCP_LIVE" value="1" /></properties><testcase classname="test_small" name="test_synth" time="0.002"><failure message="assert None is not None&#10;[+2 more lines; full report in element text]">def test_synth():
+&gt;       assert Envelope().result is not None
+E       assert None is not None
+E        +  where None = {escape(_ENVELOPE)}.result
+E        +    where {escape(_ENVELOPE)} = Envelope()
+
+test_small.py:25: AssertionError</failure></testcase><testcase classname="test_small" name="test_setup" time="0.001"><error message="failed on setup with &quot;test_small.UpstreamUnavailableError: {"z" * 441}...&#10;[truncated; full report in element text]">@pytest.fixture
+    def backend():
+&gt;       raise UpstreamUnavailableError("z" * 600 + " [UpstreamUnavailableError] Ensembl Plants exhausted 3 retries")
+E       {_RAISED}
+
+test_small.py:21: UpstreamUnavailableError</error></testcase><testcase classname="test_small" name="test_plain" time="0.001"><failure message="AssertionError: assert '{"x" * 476}...&#10;[+3 more lines; full report in element text]">def test_plain():
+&gt;       assert "x" * 600 == "y" * 600
+E       AssertionError: assert '{"x" * 600}' == '{"y" * 600}'
+E         
+E         - {"y" * 600}
+E         + {"x" * 600}
+
+test_small.py:33: AssertionError</failure></testcase></testsuite></testsuites>"""
+# What pytest 9.0.3 wrote into ``message`` for the same three tests, verbatim.
+_PYTEST_903_MESSAGES = {
+    "test_synth": (
+        "assert None is not None\n"
+        f" +  where None = {_ENVELOPE}.result\n"
+        f" +    where {_ENVELOPE} = Envelope()"
+    ),
+    "test_setup": f'failed on setup with "{_RAISED}"',
+    "test_plain": f"AssertionError: assert '{'x' * 600}' == '{'y' * 600}'\n  \n  - {'y' * 600}\n  + {'x' * 600}",
+}
+
+
+def _load_classifier(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
+    spec = importlib.util.spec_from_file_location("classify_live_failures", SCRIPT)
+    assert spec is not None and spec.loader is not None
+    classifier = importlib.util.module_from_spec(spec)
+    monkeypatch.setitem(sys.modules, spec.name, classifier)  # its dataclasses look it up
+    spec.loader.exec_module(classifier)
+    return classifier
+
+
+def test_a_pytest_92_report_is_read_back_to_the_whole_message(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Whatever pytest CI installs, a 9.2 report reads back to the message
+    9.0.3 wrote: the envelope and the setup error are upstream-side, the long
+    plain assertion stays a regression, and the run passes on that alone."""
+    report = tmp_path / "92.xml"
+    report.write_text(_PYTEST_92, encoding="utf-8")
+    failures = _load_classifier(monkeypatch).read_report(report).failures
+    assert {f.test.split("::")[1]: f.message for f in failures} == _PYTEST_903_MESSAGES
+    classes = {f.test.split("::")[1]: f.cls for f in failures}
+    assert classes == {
+        "test_synth": "upstream",
+        "test_setup": "upstream",
+        "test_plain": "regression",
+    }
+    run = _run(report, 1)
+    assert run.returncode == 1 and "1 regression(s), 2 upstream-side failure(s)" in run.stdout, (
+        run.stdout
+    )
+
+
+def test_only_the_failure_lines_count_and_an_unmatched_block_is_refused(tmp_path: Path) -> None:
+    """The source lines in the element text are not the failure: with the tag
+    only in the ``raise`` line the setup error is a regression. And when the
+    E block does not continue what the attribute kept, the run is unusable
+    rather than classed on a guess. Positive control: the unchanged report
+    is readable and classes the setup error upstream-side."""
+    plain_only = _PYTEST_92.replace(
+        f"E       {_RAISED}", f"E       test_small.UpstreamUnavailableError: {_Z}", 1
+    )
+    assert plain_only != _PYTEST_92
+    report = tmp_path / "src.xml"
+    report.write_text(plain_only, encoding="utf-8")
+    run = _run(report, 1)
+    assert run.returncode == 1 and "2 regression(s), 1 upstream-side failure(s)" in run.stdout, (
+        run.stdout
+    )
+    assert "### Live run unusable" not in run.stdout, run.stdout
+
+    mismatched = _PYTEST_92.replace("E       assert None is not None", "E       assert 1 == 2", 1)
+    assert mismatched != _PYTEST_92
+    report = tmp_path / "bad.xml"
+    report.write_text(mismatched, encoding="utf-8")
+    run = _run(report, 1)
+    assert run.returncode == 1, run.stdout
+    assert "### Live run unusable" in run.stdout and "test_small::test_synth" in run.stdout, (
+        run.stdout
+    )
+
+    good = tmp_path / "good.xml"
+    good.write_text(_PYTEST_92, encoding="utf-8")
+    run = _run(good, 1)
+    assert "### Live run unusable" not in run.stdout, run.stdout
