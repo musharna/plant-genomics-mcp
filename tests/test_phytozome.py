@@ -146,8 +146,12 @@ async def test_a_404_is_the_service_missing_not_the_locus(
     httpx_mock.add_response(url=_BIOMART_URL, method="POST", text=header_only)
     httpx_mock.add_response(url=_BIOMART_URL, method="POST", text=_AT1G01010_TSV)
     async with httpx.AsyncClient() as client:
-        with pytest.raises(UpstreamUnavailableError, match=r"HTTP 404: .*404 Not Found"):
+        with pytest.raises(UpstreamUnavailableError, match=r"HTTP 404: .*404 Not Found") as gone:
             await phytozome.lookup_locus(client, "AT1G01010")
+        # Told apart from a 5xx or a timeout, in what the agent reads and in status
+        # (2026-11-10: it read "exhausted 3 retries", as an outage does).
+        assert gone.value.status == 404, gone.value
+        assert "endpoint is missing" in str(gone.value) and _BIOMART_URL in str(gone.value)
         # Positive controls, same cache: a real miss is still NotFoundError, and
         # once BioMart answers, so does the call.
         with pytest.raises(NotFoundError, match="AT9G99999 not found"):
@@ -155,6 +159,26 @@ async def test_a_404_is_the_service_missing_not_the_locus(
         result = await phytozome.lookup_locus(client, "AT1G01010")
     assert result["gene_name"] == "AT1G01010"
     assert len(httpx_mock.get_requests()) == 3 + 2
+
+
+@pytest.mark.asyncio
+async def test_a_5xx_or_a_timeout_is_not_reported_as_a_missing_endpoint(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The control for the 404 test above: three 503s and three timeouts stay
+    an outage the agent can wait out, with no word of a missing endpoint."""
+    monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
+    for _ in range(3):
+        httpx_mock.add_response(url=_BIOMART_URL, method="POST", status_code=503)
+    for _ in range(3):
+        httpx_mock.add_exception(httpx.ReadTimeout("timed out"), url=_BIOMART_URL)
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(UpstreamUnavailableError, match=r"last HTTP 503") as busy:
+            await phytozome.lookup_locus(client, "AT1G01010")
+        with pytest.raises(UpstreamUnavailableError, match=r"ReadTimeout") as slow:
+            await phytozome.lookup_locus(client, "AT1G01010")
+    assert busy.value.status == 503 and slow.value.status is None
+    assert "missing" not in str(busy.value) and "missing" not in str(slow.value)
 
 
 @pytest.mark.asyncio
@@ -228,15 +252,27 @@ _PROBE_QUERY = """<?xml version="1.0" encoding="UTF-8"?>
 </Query>"""
 
 
+class EndpointMissing(AssertionError):
+    """BioMart's own URL answers 404: moved, retired, or down for maintenance."""
+
+
 def _biomart_down(timeout_s: float = 30.0) -> str | None:
     """None when BioMart answers the probe with its header line and a row; why
-    it is down on a 404, a 5xx or no answer. Anything else fails: the probe is
-    wrong."""
+    it is down on a 5xx or no answer. A 404 at its own URL is not an outage
+    to skip: a move or a retirement reads the same and would skip forever
+    (2026-11-10), so it fails, with no upstream tag, and the nightly is red
+    until someone looks. Anything else fails too: the probe is wrong."""
     try:
         resp = httpx.post(_BIOMART_URL, data={"query": _PROBE_QUERY}, timeout=timeout_s)
     except httpx.TransportError as e:
         return f"{type(e).__name__}: {e}" if str(e) else type(e).__name__
-    if resp.status_code == 404 or resp.status_code >= 500:
+    if resp.status_code == 404:
+        raise EndpointMissing(
+            f"Phytozome BioMart's own URL {_BIOMART_URL} answers HTTP 404 when probed "
+            "directly: the endpoint is missing (moved, retired, or down for maintenance; "
+            "see https://phytozome-next.jgi.doe.gov/). Not skipped as an outage."
+        )
+    if resp.status_code >= 500:
         return f"HTTP {resp.status_code}"
     lines = resp.text.splitlines()
     if resp.status_code == 200 and len(lines) >= 2 and lines[0] == _AT1G01010_TSV.splitlines()[0]:
@@ -275,7 +311,7 @@ async def _lookup_or_skip_outage(
 _MAINTENANCE_PAGE = "<html>\n<body>Phytozome is down for maintenance</body>\n</html>\n"
 
 
-def test_the_probe_reads_biomart_down_only_on_404_5xx_or_no_answer(
+def test_the_probe_reads_biomart_down_only_on_5xx_or_no_answer(
     httpx_mock: HTTPXMock,
 ) -> None:
     httpx_mock.add_response(url=_BIOMART_URL, method="POST", status_code=404, text=_APACHE_404)
@@ -284,7 +320,8 @@ def test_the_probe_reads_biomart_down_only_on_404_5xx_or_no_answer(
     httpx_mock.add_response(url=_BIOMART_URL, method="POST", text="Query ERROR: bad filter")
     httpx_mock.add_response(url=_BIOMART_URL, method="POST", text=_MAINTENANCE_PAGE)
     httpx_mock.add_response(url=_BIOMART_URL, method="POST", text=_AT1G01010_TSV)
-    assert _biomart_down() == "HTTP 404"
+    with pytest.raises(EndpointMissing, match="answers HTTP 404 when probed directly"):
+        _biomart_down()
     assert _biomart_down() == "HTTP 503"
     assert _biomart_down() == "ConnectTimeout: timed out"
     with pytest.raises(AssertionError, match="BioMart probe answered HTTP 200 'Query ERROR"):
@@ -306,7 +343,7 @@ async def test_a_wrong_url_is_a_regression_not_an_outage(
     monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
     moved = "https://phytozome-next.jgi.doe.gov/biomart/martservice-moved"
     monkeypatch.setattr(phytozome, "BASE_URL", moved)
-    for _ in range(9):  # 3 attempts per call: first call, the call after the probe, the skip
+    for _ in range(12):  # 3 attempts per call: first, after the probe, the skip, the 404 probe
         httpx_mock.add_response(url=moved, method="POST", status_code=404, text=_APACHE_404)
     async with httpx.AsyncClient() as client:
         try:
@@ -315,8 +352,11 @@ async def test_a_wrong_url_is_a_regression_not_an_outage(
         except pytest.skip.Exception as skipped:
             pytest.fail(f"a wrong URL was skipped as an outage: {skipped}")
         # Positive control, same 404s: with BioMart down directly too, a skip.
-        with pytest.raises(pytest.skip.Exception, match=r"down when probed directly \(HTTP 404\)"):
-            await _lookup_or_skip_outage(client, "AT1G01010", probe=lambda: "HTTP 404")
+        with pytest.raises(pytest.skip.Exception, match=r"down when probed directly \(HTTP 503\)"):
+            await _lookup_or_skip_outage(client, "AT1G01010", probe=lambda: "HTTP 503")
+        # But BioMart's own URL answering 404 directly is a failure, never a skip.
+        with pytest.raises(EndpointMissing) as missing:
+            await _lookup_or_skip_outage(client, "AT1G01010", probe=_endpoint_missing)
         # And an outage that ends before the probe is an answer, not a regression.
         monkeypatch.setattr(phytozome, "BASE_URL", _BIOMART_URL)
         for _ in range(3):
@@ -330,6 +370,11 @@ async def test_a_wrong_url_is_a_regression_not_an_outage(
     assert first == row
     # The nightly's classifier reads the failure message pytest reports.
     assert _classify(f"AssertionError: {broken.value}", monkeypatch) == "regression"
+    assert _classify(f"EndpointMissing: {missing.value}", monkeypatch) == "regression"
+
+
+def _endpoint_missing() -> str | None:
+    raise EndpointMissing("Phytozome BioMart's own URL answers HTTP 404 when probed directly")
 
 
 def _never_probed() -> str | None:

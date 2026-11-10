@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **Phytozome: a 404 at BioMart's own URL now says the endpoint is missing.**
+  BioMart answers every query, a missing locus included, at one URL, so a
+  404 there means the endpoint itself is gone: moved, retired, or down for
+  maintenance (it answered 404 through JGI's maintenance on 2026-11-09/10).
+  The error read "exhausted 3 retries", the same as a timeout or a 5xx. It
+  is still `[UpstreamUnavailableError]`, now with `status=404` and a message
+  naming the URL. The live tests no longer skip on that 404 as an outage:
+  they fail, so a move cannot read as an outage night after night.
+  Timeouts and 5xx still skip when BioMart is down directly.
+
 - **Field-family benchmark: P3 confirmed on held-out ids.** The task is batch maize B73 v4 →
   v5 + every UniProt accession, 25 ids per question. On 10 questions drawn
   from ids never seen while building the tools (seed 20261026, 254 ids
