@@ -80,6 +80,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import math
 from typing import Any
 
 import httpx
@@ -2658,6 +2659,20 @@ def _exceeds_depth(value: Any) -> bool:
     return False
 
 
+def _non_finite(value: Any) -> bool:
+    """True if ``value`` holds a NaN or infinite float at any depth."""
+    stack: list[Any] = [value]
+    while stack:
+        node = stack.pop()
+        if isinstance(node, float) and not math.isfinite(node):
+            return True
+        if isinstance(node, dict):
+            stack.extend(node.values())
+        elif isinstance(node, list):
+            stack.extend(node)
+    return False
+
+
 def _validate_arguments(name: str, arguments: dict[str, Any]) -> None:
     """Refuse a tool call whose arguments violate the tool's declared schema.
 
@@ -2677,6 +2692,11 @@ def _validate_arguments(name: str, arguments: dict[str, Any]) -> None:
             raise InvalidArguments(
                 f"{name}: {key}: nested deeper than {_MAX_ARGUMENT_DEPTH} levels"
             )
+        # JSON Schema's minimum / maximum are comparisons, all False for NaN, so
+        # a NaN passed every bound (fuzz #261: poll_interval reached
+        # asyncio.sleep). No tool takes a non-finite number.
+        if _non_finite(value):
+            raise InvalidArguments(f"{name}: {key}: not a finite number")
     error = best_match(validator.iter_errors(arguments))
     if error is None:
         return

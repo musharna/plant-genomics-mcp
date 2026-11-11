@@ -449,3 +449,17 @@ def test_the_depth_cap_sits_above_every_argument_a_schema_describes() -> None:
     )
     deepest = max(inner, 1 + inner)
     assert 0 < deepest < server._MAX_ARGUMENT_DEPTH, deepest
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf")])
+@pytest.mark.parametrize("field", ["poll_interval", "max_wait", "expect"])
+def test_a_non_finite_number_is_refused_at_the_boundary(field: str, value: float) -> None:
+    """Fuzz issue 261: JSON Schema's ``minimum`` and ``exclusiveMinimum`` are
+    comparisons, False for NaN, so ``poll_interval: NaN`` passed validation and
+    reached ``asyncio.sleep``. An infinite ``max_wait`` passes them too. No
+    tool takes a non-finite number, so the boundary refuses one in any field.
+    Positive control, same test: the same field finite is accepted."""
+    with pytest.raises(server.InvalidArguments, match=f"blast_sequence: {field}: not a finite"):
+        server._validate_arguments("blast_sequence", {"sequence": "MKV", field: value})
+    finite = {"poll_interval": 60.0, "max_wait": 300.0, "expect": 1e-3}[field]
+    server._validate_arguments("blast_sequence", {"sequence": "MKV", field: finite})

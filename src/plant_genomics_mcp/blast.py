@@ -39,6 +39,7 @@ The final results are fetched with FORMAT_TYPE=Text and parsed for the
 from __future__ import annotations
 
 import asyncio
+import math
 import os
 import re
 from typing import Any
@@ -47,6 +48,7 @@ import httpx
 
 from plant_genomics_mcp import _http, progress
 from plant_genomics_mcp.errors import (
+    InvalidArguments,
     NotFoundError,
     PlantGenomicsError,
     UpstreamUnavailableError,
@@ -351,6 +353,18 @@ async def blast_sequence(
         caller can re-poll later. NotFoundError is for an RID NCBI no longer
         knows (Status=UNKNOWN).
     """
+    # Every comparison with NaN is False: a NaN poll_interval passed max() and
+    # reached asyncio.sleep, a NaN max_wait skipped polling and reported a
+    # false "still WAITING", an infinite one polled forever (fuzz #261).
+    for field, value in (
+        ("expect", expect),
+        ("poll_interval", poll_interval),
+        ("max_wait", max_wait),
+    ):
+        if not math.isfinite(value):
+            raise InvalidArguments(
+                f"blast_sequence: {field} must be a finite number, got {value!r}"
+            )
     program = _supported_program(program)
     db = database or _PROGRAM_DEFAULTS[program]
     interval = max(poll_interval, MIN_POLL_INTERVAL)

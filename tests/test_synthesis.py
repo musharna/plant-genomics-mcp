@@ -2087,3 +2087,28 @@ def test_gene_names_keeps_both_sources_when_they_differ():
     # No Ensembl name → UniProt's first name becomes canonical (existing rule).
     assert _gene_names({}, {"geneNames": ["ARF5", "MP"]})["canonical"] == "ARF5"
     assert _gene_names({}, None) == {"canonical": None, "ensembl": None, "uniprot": []}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("top_n", [float("nan"), float("inf"), 2.5])
+async def test_a_top_n_that_is_not_an_integer_is_refused_before_any_request(
+    httpx_mock, top_n
+) -> None:
+    """Fuzz issue 261: ``_bound_top_n`` compared NaN with ``< 1`` and ``> 50``,
+    both False, so NaN came back and failed later as a TypeError slicing a
+    list. Every public entry that takes ``top_n`` is refused with the bound's
+    own ValueError before any request. Positive control: an integer in range
+    comes back as it is."""
+    from plant_genomics_mcp import synthesis
+
+    async with httpx.AsyncClient() as client:
+        for call in (
+            synthesis.gene_report(client, "AT1G01010", top_n=top_n),
+            synthesis.biological_context_synth(client, "AT1G01010", top_n=top_n),
+            synthesis.find_homologs_synth(client, "MEDQ", top_n=top_n),
+            synthesis.consensus_homologs(client, "AT1G01010", top_n=top_n),
+        ):
+            with pytest.raises(ValueError, match="top_n must be an integer"):
+                await call
+    assert httpx_mock.get_requests() == []
+    assert synthesis._bound_top_n(1) == 1 and synthesis._bound_top_n(synthesis.MAX_TOP_N) == 50

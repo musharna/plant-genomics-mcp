@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **A NaN or infinite number is refused as `[InvalidArguments]`.** JSON
+  Schema's `minimum` and `maximum` are comparisons, and every comparison with
+  NaN is false, so `blast_sequence` with `poll_interval: NaN` passed
+  validation and failed in `asyncio.sleep` with a raw `ValueError`. A NaN
+  `max_wait` reported a false "still WAITING" without polling, and an
+  infinite one polled forever. The server now refuses a non-finite number in
+  any tool argument, `blast.blast_sequence` refuses one in `expect`,
+  `poll_interval` or `max_wait`, and the synthesis tools refuse a `top_n`
+  that is not an integer, all before any request (bot-filed fuzz issue 261).
+
 - **Phytozome: a 404 at BioMart's own URL now says the endpoint is missing.**
   BioMart answers every query, a missing locus included, at one URL, so a
   404 there means the endpoint itself is gone: moved, retired, or down for
