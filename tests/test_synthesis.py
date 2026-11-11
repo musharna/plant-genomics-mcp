@@ -1559,6 +1559,7 @@ async def test_gene_report_all_backends_succeed_returns_dossier(httpx_mock):
         "interpro_domains",
     ]
     assert [s.status for s in env.steps] == ["ok"] * 8
+    assert env.failed_steps == []
     assert env.result is not None
     assert env.result["locus"] == "AT1G01010"
     assert env.result["uniprot_accession"] == "Q0WV96"
@@ -1628,6 +1629,10 @@ async def test_gene_report_ensembl_outage_still_renders_dossier(httpx_mock, monk
         "interpro_domains": "ok",
     }
     assert "[UpstreamUnavailableError]" in env.steps[0].error
+    # A partial report says so at the top, not only in each step's status
+    # (2026-11-10: a failed root came back isError=false, nothing else told).
+    # The all-ok control is test_gene_report_all_backends_succeed_returns_dossier.
+    assert env.failed_steps == [1, 3]
     # steps[] is the audit trail only, on this path too.
     assert [s.result for s in env.steps] == [None] * 8
 
@@ -2112,3 +2117,19 @@ async def test_a_top_n_that_is_not_an_integer_is_refused_before_any_request(
                 await call
     assert httpx_mock.get_requests() == []
     assert synthesis._bound_top_n(1) == 1 and synthesis._bound_top_n(synthesis.MAX_TOP_N) == 50
+
+
+def test_failed_steps_cannot_disagree_with_the_steps() -> None:
+    """``failed_steps`` is derived from the rows; a given value that disagrees
+    is refused, so a hand-built envelope cannot report a partial result whole.
+    Positive control: the derived value round-trips."""
+    rows = [
+        StepRow(step=1, tool="a", status="error", error="[UpstreamUnavailableError] down"),
+        StepRow(step=2, tool="b", status="ok", result={"x": 1}),
+    ]
+    base = {"tool": "t", "input": {}, "started_at": "2026-11-10T00:00:00Z", "elapsed_s": 0.1}
+    env = SynthesisEnvelope(**base, steps=rows, result={"x": 1})
+    assert env.failed_steps == [1]
+    assert SynthesisEnvelope.model_validate(env.model_dump()) == env
+    with pytest.raises(ValidationError, match="disagrees with the steps"):
+        SynthesisEnvelope(**base, steps=rows, result={"x": 1}, failed_steps=[])

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Synthesis envelopes name their failed steps at the top: `failed_steps`.**
+  A `gene_report` whose Ensembl lookup failed came back as a normal result,
+  with the failure visible only in that step's `status`. Every synthesis
+  envelope now carries `failed_steps`, the step numbers whose status is
+  `error`; `[]` means every backend answered. A partial report is still a
+  result, not an error, and each step's `error` still says why.
+
 - **A NaN or infinite number is refused as `[InvalidArguments]`.** JSON
   Schema's `minimum` and `maximum` are comparisons, and every comparison with
   NaN is false, so `blast_sequence` with `poll_interval: NaN` passed

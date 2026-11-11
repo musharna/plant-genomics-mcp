@@ -1830,6 +1830,27 @@ class SynthesisEnvelope(BaseModel):
         default=None,
         description="Composed cross-source result; None if root step failed",
     )
+    failed_steps: list[int] = Field(
+        default_factory=list,
+        description=(
+            'Step numbers whose status is "error". Non-empty means the result is '
+            "partial: the call succeeded, so it is not an error result, but these "
+            "backends failed and their sections are missing; each step's error says why."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def _derive_failed_steps(self) -> SynthesisEnvelope:
+        # A failed step was visible only in its own row's status, so a dossier
+        # whose root lookup failed read as a whole answer (2026-11-10). Derived
+        # here so no orchestrator can forget it; a given value must agree.
+        failed = [s.step for s in self.steps if s.status == "error"]
+        if "failed_steps" in self.model_fields_set and self.failed_steps != failed:
+            raise ValueError(
+                f"failed_steps {self.failed_steps} disagrees with the steps' statuses ({failed})"
+            )
+        self.failed_steps = failed
+        return self
 
 
 class MaizeTranslationRow(BaseModel):
