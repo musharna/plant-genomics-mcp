@@ -44,7 +44,7 @@ def _tracked_top_level() -> set[str]:
         # enclosing checkout instead. The rule is about that checkout's config.
         pytest.skip("not a git checkout (mutmut's mutants/ copy has no .git)")
     env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
-    listed = subprocess.run(  # nosec B603 B607 - fixed argv, no shell
+    listed = subprocess.run(  # nosec B603, B607 - fixed argv, git from PATH, no shell
         ["git", "-C", str(ROOT), "ls-files", "-z"],
         capture_output=True,
         text=True,

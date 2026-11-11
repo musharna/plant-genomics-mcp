@@ -317,7 +317,8 @@ async def test_a_refusal_is_upstream_side_and_a_bad_request_is_a_regression(
 
 
 # pytest 9.2's JUnit report for three failures, verbatim from a 9.2.0 run (the
-# long runs of x, y and z written as products; hostname and timestamp dropped).
+# long runs of x, y and z written as products, as is the one line of trailing
+# spaces, which a whitespace hook would strip; hostname and timestamp dropped).
 # From 9.2 the ``message`` attribute keeps about 500 characters and points to
 # the element text for the rest: the synthesis step's tag and the setup
 # error's tag are both past that cut.
@@ -339,7 +340,7 @@ E       {_RAISED}
 test_small.py:21: UpstreamUnavailableError</error></testcase><testcase classname="test_small" name="test_plain" time="0.001"><failure message="AssertionError: assert '{"x" * 476}...&#10;[+3 more lines; full report in element text]">def test_plain():
 &gt;       assert "x" * 600 == "y" * 600
 E       AssertionError: assert '{"x" * 600}' == '{"y" * 600}'
-E         
+E{" " * 9}
 E         - {"y" * 600}
 E         + {"x" * 600}
 
