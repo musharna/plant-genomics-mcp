@@ -2,6 +2,33 @@
 
 ## Unreleased
 
+- **Synthesis envelopes name their failed steps at the top: `failed_steps`.**
+  A `gene_report` whose Ensembl lookup failed came back as a normal result,
+  with the failure visible only in that step's `status`. Every synthesis
+  envelope now carries `failed_steps`, the step numbers whose status is
+  `error`; `[]` means every backend answered. A partial report is still a
+  result, not an error, and each step's `error` still says why.
+
+- **A NaN or infinite number is refused as `[InvalidArguments]`.** JSON
+  Schema's `minimum` and `maximum` are comparisons, and every comparison with
+  NaN is false, so `blast_sequence` with `poll_interval: NaN` passed
+  validation and failed in `asyncio.sleep` with a raw `ValueError`. A NaN
+  `max_wait` reported a false "still WAITING" without polling, and an
+  infinite one polled forever. The server now refuses a non-finite number in
+  any tool argument, `blast.blast_sequence` refuses one in `expect`,
+  `poll_interval` or `max_wait`, and the synthesis tools refuse a `top_n`
+  that is not an integer, all before any request (bot-filed fuzz issue 261).
+
+- **Phytozome: a 404 at BioMart's own URL now says the endpoint is missing.**
+  BioMart answers every query, a missing locus included, at one URL, so a
+  404 there means the endpoint itself is gone: moved, retired, or down for
+  maintenance (it answered 404 through JGI's maintenance on 2026-11-09/10).
+  The error read "exhausted 3 retries", the same as a timeout or a 5xx. It
+  is still `[UpstreamUnavailableError]`, now with `status=404` and a message
+  naming the URL. The live tests no longer skip on that 404 as an outage:
+  they fail, so a move cannot read as an outage night after night.
+  Timeouts and 5xx still skip when BioMart is down directly.
+
 - **Field-family benchmark: P3 confirmed on held-out ids.** The task is batch maize B73 v4 →
   v5 + every UniProt accession, 25 ids per question. On 10 questions drawn
   from ids never seen while building the tools (seed 20261026, 254 ids

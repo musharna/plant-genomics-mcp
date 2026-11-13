@@ -12,6 +12,7 @@ production-etiquette concern, not a test concern.
 from __future__ import annotations
 
 import asyncio
+import math
 import os
 import re
 from pathlib import Path
@@ -22,7 +23,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import blast, progress
-from plant_genomics_mcp.errors import PlantGenomicsError
+from plant_genomics_mcp.errors import InvalidArguments, PlantGenomicsError
 
 # Capture the unpatched real sleep BEFORE the autouse _no_sleep fixture
 # can replace ``asyncio.sleep`` — the semaphore concurrency test needs
@@ -654,3 +655,26 @@ def test_every_text_a_client_reads_names_the_outage_for_a_slow_search() -> None:
         assert "NotFoundError" not in text, where
     for text in (tool.description or "", params["max_wait"], prompt):
         assert "UpstreamUnavailableError" in text, text
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("field", ["poll_interval", "max_wait", "expect"])
+@pytest.mark.parametrize("value", [math.nan, math.inf, -math.inf])
+async def test_a_non_finite_number_is_refused_before_any_request(
+    httpx_mock: HTTPXMock, field: str, value: float
+) -> None:
+    """Fuzz issue 261: NaN passed every comparison guard (each is False for
+    NaN), so ``poll_interval`` reached ``asyncio.sleep`` as a raw ValueError,
+    a NaN ``max_wait`` reported a false "still WAITING" without polling, and
+    an infinite one polled forever. Refused before NCBI is asked. Positive
+    control, same test: the same field finite runs the whole search."""
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(InvalidArguments, match=f"{field} must be a finite number"):
+            await blast.blast_sequence(client, "MNSAKQ", **{field: value})
+        assert httpx_mock.get_requests() == []
+        httpx_mock.add_response(method="POST", url=blast.BASE_URL, text=_put_response("RID1"))
+        httpx_mock.add_response(method="GET", text=_searchinfo_response("READY"))
+        httpx_mock.add_response(method="GET", text=RESULT_REPORT)
+        finite = {"poll_interval": 60.0, "max_wait": 300.0, "expect": 1e-3}[field]
+        result = await blast.blast_sequence(client, "MNSAKQ", **{field: finite})
+    assert result["rid"] == "RID1" and result["status"] == "READY"

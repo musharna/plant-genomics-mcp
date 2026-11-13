@@ -1112,6 +1112,9 @@ async def test_a_404_is_an_outage_unless_its_body_is_the_upstreams_miss(
             assert str(excinfo.value) == (
                 f"[UpstreamUnavailableError] svc exhausted 3 retries (HTTP 404: {body[:200]})"
             )
+            # The status travels with it, so a caller that knows its route can
+            # tell a missing endpoint from a 5xx or a timeout (Phytozome, 11-10).
+            assert excinfo.value.status == 404
         with pytest.raises(NotFoundError) as miss:
             await _http.request_with_retry(
                 client, "GET", f"{base}/miss", service="svc", not_found_404_pattern=_MISS

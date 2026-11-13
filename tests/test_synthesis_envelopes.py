@@ -35,6 +35,9 @@ _ISO_Z = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 
 def shape(env) -> dict:
     d = env.model_dump()
+    # The top-level signal of a partial result names exactly the error rows.
+    failed = [s["step"] for s in d["steps"] if s["status"] == "error"]
+    assert d.pop("failed_steps") == failed, (failed, d["steps"])
     assert _ISO_Z.match(d["started_at"]), d["started_at"]
     d["started_at"] = "ISO"
     assert isinstance(d["elapsed_s"], float) and 0.0 <= d["elapsed_s"] < 60.0, d["elapsed_s"]

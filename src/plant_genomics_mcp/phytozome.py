@@ -95,7 +95,9 @@ async def _post(client: httpx.AsyncClient, xml_payload: str) -> str:
 
     Retries on 429 / 5xx / 404 with exponential backoff, honoring
     ``Retry-After``. A 404 is never the locus (BioMart answers a miss with 200
-    and its header line alone), so no miss pattern is passed.
+    and its header line alone), so no miss pattern is passed, and one that
+    lasts every retry is raised as the endpoint missing (``status=404``),
+    told apart from a timeout or a 5xx.
     BioMart application-level errors (``Query ERROR:``) are returned as 200
     and surfaced upstream — they are NOT retried here.
     """
@@ -104,15 +106,29 @@ async def _post(client: httpx.AsyncClient, xml_payload: str) -> str:
     if cached is not None:
         return cached
     await progress.notify("Phytozome BioMart: submitting query")
-    resp = await _http.request_with_retry(
-        client,
-        "POST",
-        BASE_URL,
-        service="Phytozome BioMart",
-        data={"query": xml_payload},
-        timeout=DEFAULT_TIMEOUT,
-        max_retries=MAX_RETRIES,
-    )
+    try:
+        resp = await _http.request_with_retry(
+            client,
+            "POST",
+            BASE_URL,
+            service="Phytozome BioMart",
+            data={"query": xml_payload},
+            timeout=DEFAULT_TIMEOUT,
+            max_retries=MAX_RETRIES,
+        )
+    except UpstreamUnavailableError as exc:
+        if exc.status != 404:
+            raise
+        # BioMart answers every query, a miss included, at this one URL, so a
+        # 404 is the endpoint itself missing. It read "exhausted 3 retries",
+        # as a timeout or a 5xx does, through the 2026-11-09/10 maintenance.
+        raise UpstreamUnavailableError(
+            f"Phytozome BioMart's own URL {BASE_URL} answered HTTP 404 (the last of "
+            f"{MAX_RETRIES} tries): the endpoint is missing (moved, retired, or down for "
+            "maintenance; see https://phytozome-next.jgi.doe.gov/), not a timeout or a "
+            f"server error, and not the locus. Last answer: {exc}",
+            status=404,
+        ) from exc
     text = resp.text
     # BioMart returns 200 with a "Query ERROR:" body on filter / dataset
     # mis-configuration. Checked before it is stored: a body stored first was

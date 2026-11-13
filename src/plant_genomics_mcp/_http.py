@@ -499,7 +499,8 @@ async def request_with_retry(
         )
     if last_fault is not None:
         raise UpstreamUnavailableError(
-            f"{service} exhausted {max_retries} retries (HTTP 404: {last_fault})"
+            f"{service} exhausted {max_retries} retries (HTTP 404: {last_fault})",
+            status=last_status,
         )
     if last_html_media is not None:
         # Name the real problem. The pre-fix path let this body reach the

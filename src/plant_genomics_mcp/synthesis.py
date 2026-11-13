@@ -53,6 +53,10 @@ def _now_iso() -> str:
 
 
 def _bound_top_n(top_n: int) -> int:
+    # Checked first: NaN is False on both comparisons below, so it came back
+    # from here and failed later slicing a list (fuzz #261). Only an int slices.
+    if isinstance(top_n, bool) or not isinstance(top_n, int):
+        raise ValueError(f"top_n must be an integer, got {top_n!r}")
     if top_n < 1:
         raise ValueError(f"top_n must be >=1, got {top_n}")
     if top_n > MAX_TOP_N:
