@@ -162,3 +162,40 @@ def test_maize_id_sentence_matches_the_confirmatory_rows() -> None:
         f"web search {web}" + (", declining each" if declined else "") in section
     ), (mcp, web, declined, section)
     assert f"sign test p = {p:.3f}" in section, (p, section)
+
+
+def test_chart_sentence_and_alt_text_match_the_summary_table() -> None:
+    """The chart's sentence ("151 of 156 right with web search and 156 of 156
+    with the server") and the chart's alt text were pinned to nothing: a
+    mutant changing 151 to 141 survived the suite (audit 2026-11-10). Both
+    now come from summary.tsv's per-setup rows."""
+    section = " ".join(_section().split())
+    arms = {r["arm"]: r for r in _rows("summary.tsv") if r["level"] == "arm"}
+    outcomes = ("right", "wrong", "declined", "no_answer")
+    counts = {a: {k: int(arms[a][k]) for k in outcomes} for a in ("bare", "web", "mcp")}
+    totals = {sum(c.values()) for c in counts.values()}
+    questions = len(json.loads((BENCH / "questions.json").read_text())["questions"])
+    # Positive control: the rows were read, every setup answered the same
+    # number of times, and the section is the real one.
+    assert len(totals) == 1 and questions > 0, (totals, questions)
+    (total,) = totals
+    assert total % questions == 0, (total, questions)
+    assert "The chart: Opus 5.5" in section, section[:200]
+    web, mcp = counts["web"], counts["mcp"]
+    assert (
+        f"The chart: Opus 5.5 on {questions} plant gene-lookup questions, "
+        f"{web['right']} of {total} right with web search and "
+        f"{mcp['right']} of {total} with the server" in section
+    ), (web, mcp, total, section)
+    alt = section.split('alt="', 1)[1].split('"', 1)[0]
+    bare = counts["bare"]
+    assert f"{total} per setup" in alt, alt
+    assert (
+        f"Claude alone: {bare['right']} right, {bare['wrong']} wrong, "
+        f"{bare['declined']} declined" in alt
+    ), (bare, alt)
+    assert (
+        f"Claude with web search: {web['right']} right, {web['wrong']} wrong, "
+        f"{web['declined']} declined" in alt
+    ), (web, alt)
+    assert f"Claude with plant-genomics-mcp: {mcp['right']} right" in alt, (mcp, alt)
