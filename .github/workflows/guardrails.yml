@@ -4,7 +4,7 @@ name: guardrails
 #   lint      pre-commit (ruff, shellcheck, house rules)
 #   test      pytest, then pytest again with NO network (empty netns)
 #   wheel     build the wheel, install it in a clean venv outside the repo, import it
-#   security  pip-audit + bandit
+#   security  uv audit (every package in uv.lock, every Python) + bandit
 #   review    Claude code review posted on the PR (needs CLAUDE_CODE_OAUTH_TOKEN)
 # Action SHAs verified to exist on 2026-09-11.
 
@@ -144,7 +144,7 @@ jobs:
           fetch-depth: 0 # deps_changed.sh diffs against the PR base / pre-push sha
       - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
       - name: Did this change touch what gets installed?
-        # pip-audit here answers "did THIS diff bring in a vulnerable package?".
+        # The audit here answers "did THIS diff bring in a vulnerable package?".
         # "Has a CVE been published against what is already on the default
         # branch?" is the nightly audit job's question: it opens an issue, it does
         # not turn an unrelated PR red (anyio, 2026-09-18, held two syncs).
@@ -157,26 +157,29 @@ jobs:
           bash scripts/deps-changed-selftest.sh
           if bash scripts/deps_changed.sh; then echo "audit=1" >> "$GITHUB_OUTPUT"; else
             echo "audit=0" >> "$GITHUB_OUTPUT"
-            echo "::notice::pip-audit skipped: no dependency file changed. The nightly audit job covers newly published CVEs."
+            echo "::notice::dependency audit skipped: no dependency file changed. The nightly audit job covers newly published CVEs."
           fi
-      - name: pip-audit (known-vulnerable dependencies)
+      - name: Dependency audit (every package in uv.lock, every Python it covers)
         if: steps.deps.outputs.audit == '1'
         run: |
-          # Repo-specific system prerequisites (R for rpy2, OpenCV libs, ...) live in
-          # scripts/guardrails-setup.sh so the template stays generic.
-          if [ -x scripts/guardrails-setup.sh ]; then bash scripts/guardrails-setup.sh; fi
-          # assignment, not inline $(...): a helper failure must stop the step
-          extras_s=$(python3 scripts/uv_extras.py)
-          read -ra extras <<<"$extras_s"
-          uv sync "${extras[@]}" --dev
-          if [ -f requirements-dev.txt ]; then uv pip install -r requirements-dev.txt; fi
-          # Audit the resolved dependency set, not the project itself (which may
-          # not be on PyPI; --strict treats an unauditable/editable dist as failure).
-          uv export "${extras[@]}" --dev --no-emit-project --no-hashes -o /tmp/req.txt
-          # requirements-dev.txt is installed above but is not in the export: audit it too.
-          if [ -f requirements-dev.txt ]; then uv pip freeze | grep -v '^-e ' > /tmp/req-env.txt; else : > /tmp/req-env.txt; fi
-          uvx pip-audit -r /tmp/req.txt --strict --desc on
-          if [ -s /tmp/req-env.txt ]; then uvx pip-audit -r /tmp/req-env.txt --desc on; fi
+          # The audit can fail: a pin only another Python selects is found, a clean
+          # lock passes, no network exits 2. `uv export | pip-audit` audited only
+          # this runner's Python (figcite, 2026-11-01: pillow 12.3.0 for 3.10).
+          bash scripts/lock-audit-selftest.sh
+          bash scripts/lock_audit.sh
+          # requirements-dev.txt is not in uv.lock: install it and audit what it brought.
+          if [ -f requirements-dev.txt ]; then
+            # Repo-specific system prerequisites (R for rpy2, OpenCV libs, ...) live in
+            # scripts/guardrails-setup.sh so the template stays generic.
+            if [ -x scripts/guardrails-setup.sh ]; then bash scripts/guardrails-setup.sh; fi
+            # assignment, not inline $(...): a helper failure must stop the step
+            extras_s=$(python3 scripts/uv_extras.py)
+            read -ra extras <<<"$extras_s"
+            uv sync "${extras[@]}" --dev
+            uv pip install -r requirements-dev.txt
+            uv pip freeze | grep -v '^-e ' > /tmp/req-env.txt
+            uvx pip-audit -r /tmp/req-env.txt --desc on
+          fi
       - name: bandit (insecure code patterns, medium+ severity)
         run: uvx bandit -q -r . -ll -x ./tests,./.venv,./mutants
 
@@ -273,28 +276,64 @@ jobs:
           claude_args: |
             --allowed-tools "${{ env.REVIEW_TOOLS }}"
             --max-turns 80
-      - name: Subscription out of usage? Then the API key reviews instead
-        # Only a usage limit falls back. On a limit the action's transcript has
-        # an assistant message with error "rate_limit" ("You've hit your weekly
-        # limit", 2026-10-17); the step's execution_file output is unset when it
-        # fails, so read the file at its fixed path. Any other failure is a real
-        # one and fails here, with the reason.
+      - name: Subscription refused (usage limit, or turned off)? Then the next credential reviews instead
+        # Two refusals fall back, each named in the warning. A usage limit: the
+        # action's transcript has an assistant message with error "rate_limit"
+        # ("You've hit your weekly limit", 2026-10-17). Subscription access
+        # turned off for Claude Code by the organization: the run ends before
+        # any turn ($0) with "Your organization has disabled Claude subscription
+        # access for Claude Code · Use an Anthropic API key instead"
+        # (phylokit-mcp#90, 2026-11-03). That one is matched on its text, so if
+        # the wording changes it fails here with the reason, as before. Anything
+        # else is a real failure (a bad token fails with its 401, 2026-10-18)
+        # and fails here, with the reason. The transcript's shape (message types
+        # and error codes, no text) is printed, so the next new refusal can be
+        # told apart from the log. The step's execution_file output is unset
+        # when it fails, so read the file at its fixed path. The rules are one
+        # function, written to a file here and sourced by the next step, so the
+        # main review and every spare credential are classified by the same code.
         id: fallback
         if: steps.review.outcome == 'failure'
         env:
           F: ${{ runner.temp }}/claude-execution-output.json
+          KEY2: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN_2 }}
+          KEY3: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN_3 }}
           KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
+          cat >"$RUNNER_TEMP/refusal.sh" <<'SH'
+          # refusal TRANSCRIPT: the refusal's name if TRANSCRIPT (a JSON array of
+          # messages) is one another credential can get past; nothing otherwise.
+          refusal() {
+            local why
+            why=$(jq -r '[.[] | select(.type == "result") | .result][0] // ""' "$1" 2>/dev/null) || why=""
+            if jq -e 'any(.[]; .type == "assistant" and .error == "rate_limit")' "$1" >/dev/null 2>&1; then
+              echo "subscription usage limit"
+            elif grep -qF 'disabled Claude subscription access' <<<"$why"; then
+              echo "subscription access turned off by the organization"
+            fi
+          }
+          SH
+          . "$RUNNER_TEMP/refusal.sh"
           why=$(jq -r '[.[] | select(.type == "result") | .result][0] // "no result"' "$F" 2>/dev/null || echo "no transcript at $F")
-          if ! jq -e 'any(.[]; .type == "assistant" and .error == "rate_limit")' "$F" >/dev/null 2>&1; then
-            echo "::error::the review step failed, and not on a usage limit: $why"; exit 1
+          echo "transcript shape: $(jq -c '[.[] | {type, subtype, error} | with_entries(select(.value != null))]' "$F" 2>/dev/null || echo unreadable)"
+          refused=$(refusal "$F")
+          if [ -z "$refused" ]; then
+            echo "::error::the review step failed, and not on a usage limit or a turned-off subscription: $why"; exit 1
           fi
-          if [ -z "$KEY" ]; then
-            echo "::error::subscription usage limit ($why) and no ANTHROPIC_API_KEY secret to fall back on. Add it: gh secret set ANTHROPIC_API_KEY -R ${{ github.repository }}"; exit 1
+          if [ -z "$KEY2$KEY3$KEY" ]; then
+            echo "::error::$refused ($why) and no other credential to fall back on. Add one: run claude setup-token signed in to another subscription, then gh secret set CLAUDE_CODE_OAUTH_TOKEN_2 -R ${{ github.repository }} (or CLAUDE_CODE_OAUTH_TOKEN_3, or ANTHROPIC_API_KEY)"; exit 1
           fi
-          echo "::warning::subscription usage limit ($why): this review runs on the API key"
+          echo "::warning::$refused ($why): this review moves to the next credential"
           echo "run=1" >>"$GITHUB_OUTPUT"
-      - name: Review on the API key (Claude Code itself, not the action)
+      - name: Review on the next credential (other subscriptions first, then the API key)
+        # In order: CLAUDE_CODE_OAUTH_TOKEN_2, CLAUDE_CODE_OAUTH_TOKEN_3 (other
+        # Claude subscriptions, from claude setup-token), then ANTHROPIC_API_KEY.
+        # An unset slot is skipped. A refusal (the same function as the step
+        # above) moves to the next slot; any other failure stops here with its
+        # reason, because the next account would not fix a bad token or a review
+        # that ran out of turns, and rotating past an expired token would hide it.
+        # Each run gets its own credential and no other: the CLI prefers an API
+        # key over an OAuth token when both are set.
         # Not the action: it labels its requests claude-code-github-action, and
         # this account's API credits refuse that label ("Credit balance is too
         # low"; the same key works from the CLI, 2026-10-18). The action already
@@ -307,21 +346,43 @@ jobs:
         # /proc. Sonnet, as on the subscription: an API key defaults to Opus.
         if: steps.fallback.outputs.run == '1'
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SUB2: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN_2 }}
+          SUB3: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN_3 }}
+          APIKEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GH_TOKEN: ${{ github.token }}
         run: |
           claude=$HOME/.local/bin/claude
           [ -x "$claude" ] || { echo "::error::no Claude Code CLI at $claude (the action installs it)"; exit 1; }
-          out=$RUNNER_TEMP/review-api.json
-          rc=0
-          "$claude" -p "$REVIEW_PROMPT$REVIEW_CONTEXT" --model claude-sonnet-5 --max-turns 80 \
-            --allowed-tools "$REVIEW_TOOLS" --setting-sources user --strict-mcp-config \
-            --output-format json >"$out" || rc=$?
-          # The summary only; the transcript stays out of a public log.
-          jq -c '{subtype, is_error, num_turns, total_cost_usd}' "$out" || { echo "::error::no JSON result (exit $rc)"; exit 1; }
-          if [ "$rc" != 0 ] || jq -e '.is_error' "$out" >/dev/null; then
-            echo "::error::the API-key review failed (exit $rc): $(jq -r '.result // ""' "$out" | head -c 200)"; exit 1
-          fi
+          . "$RUNNER_TEMP/refusal.sh"
+          tried=""
+          for slot in CLAUDE_CODE_OAUTH_TOKEN_2 CLAUDE_CODE_OAUTH_TOKEN_3 ANTHROPIC_API_KEY; do
+            case $slot in
+              CLAUDE_CODE_OAUTH_TOKEN_2) cred=$SUB2 var=CLAUDE_CODE_OAUTH_TOKEN ;;
+              CLAUDE_CODE_OAUTH_TOKEN_3) cred=$SUB3 var=CLAUDE_CODE_OAUTH_TOKEN ;;
+              ANTHROPIC_API_KEY) cred=$APIKEY var=ANTHROPIC_API_KEY ;;
+            esac
+            [ -n "$cred" ] || continue
+            out=$RUNNER_TEMP/review-$slot.jsonl
+            rc=0
+            env -u SUB2 -u SUB3 -u APIKEY -u CLAUDE_CODE_OAUTH_TOKEN -u ANTHROPIC_API_KEY "$var=$cred" \
+              "$claude" -p "$REVIEW_PROMPT$REVIEW_CONTEXT" --model claude-sonnet-5 --max-turns 80 \
+              --allowed-tools "$REVIEW_TOOLS" --setting-sources user --strict-mcp-config \
+              --output-format stream-json --verbose >"$out" || rc=$?
+            jq -s . "$out" >"$out.json" 2>/dev/null || { echo "::error::$slot: no JSON transcript (exit $rc)"; exit 1; }
+            # The summary only; the transcript stays out of a public log.
+            echo "$slot: $(jq -c '[.[] | select(.type == "result")][-1] | {subtype, is_error, num_turns, total_cost_usd}' "$out.json")"
+            if [ "$rc" = 0 ] && jq -e '[.[] | select(.type == "result")][-1] | .is_error == false' "$out.json" >/dev/null; then
+              echo "reviewed on $slot"; exit 0
+            fi
+            refused=$(refusal "$out.json")
+            if [ -n "$refused" ]; then
+              echo "::warning::$slot: $refused, so the next credential reviews instead"
+              tried="$tried $slot ($refused)"
+              continue
+            fi
+            echo "::error::the review on $slot failed (exit $rc): $(jq -r '[.[] | select(.type == "result")][-1].result // ""' "$out.json" | head -c 200)"; exit 1
+          done
+          echo "::error::every credential was refused:${tried:- none set}"; exit 1
       - name: Review was actually posted BY THIS RUN (the comment is the deliverable)
         # The action is green whenever the model stops cleanly, posted or not
         # (tmodloader#89, 2026-09-30). Accept only a comment carrying this run
@@ -361,7 +422,14 @@ jobs:
     # review-ack label and re-run only this job (`gh run rerun <id> --failed`),
     # which reads the review the review job already posted instead of paying for
     # a new one. Skipped whenever the review is skipped (sync PRs, Dependabot).
+    # A review job that FAILED is not skipped: without the `if` below GitHub
+    # skips this job when the job it needs fails, and a skipped job "may not
+    # block merging" even as a required check (GitHub's own troubleshooting
+    # page). 20 PRs merged that way with the review red, 2026-10-18 to 11-08:
+    # every credential was refused, so nothing had read the diff. The status
+    # function in the `if` is what makes the job run after a failed need.
     needs: review
+    if: ${{ !cancelled() && needs.review.result != 'skipped' }}
     runs-on: ubuntu-latest
     permissions:
       issues: read
@@ -371,31 +439,42 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
+          REVIEW_RESULT: ${{ needs.review.result }}
         run: |
           # This run's review comment, any attempt: re-running only this job (after adding
           # review-ack) must find the review the review job already posted.
           mark="<!-- guardrails-review $GITHUB_RUN_ID-"
           body=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate \
             | jq -rs --arg m "$mark" '[.[][] | select(.user.login == "claude[bot]" or .user.login == "github-actions[bot]") | select(.body | contains($m))] | last | .body // ""')
-          if [ -z "$body" ]; then
-            # The review job fails when it posted nothing, except on a PR that edits this
-            # workflow (claude-code-action does not run there); its warning says so.
-            echo "no review comment from run $GITHUB_RUN_ID, so there is nothing to gate"; exit 0
-          fi
-          # REVIEW.md's format: the first non-blank line after the marker is the count.
-          count=$(awk 'f && NF {print; exit} /<!-- guardrails-review /{f=1}' <<<"$body")
+          ack="gh label create review-ack --force -R $GITHUB_REPOSITORY && gh pr edit $PR --add-label review-ack -R $GITHUB_REPOSITORY && gh run rerun $GITHUB_RUN_ID --failed -R $GITHUB_REPOSITORY"
           re='^([0-9]+) Important, [0-9]+ Nit, [0-9]+ Pre-existing\.'
-          if [[ "$count" == "Nothing meets the bar."* ]] || { [[ "$count" =~ $re ]] && [ "${BASH_REMATCH[1]}" = 0 ]; }; then
-            echo "review: $count"; exit 0
-          elif [[ "$count" =~ $re ]]; then
-            why="$count An Important finding blocks the merge."
+          if [ "$REVIEW_RESULT" != "success" ]; then
+            # Judged before the comment is read: a review job that did not end green did
+            # not finish its own checks, whatever it managed to post.
+            why="The review job ended '$REVIEW_RESULT', so this PR has not been reviewed (the review job's log says why)."
+            under="the PR says why it merges without a review."
+            fix="Re-run it when a credential can review: gh run rerun $GITHUB_RUN_ID --failed -R $GITHUB_REPOSITORY (re-runs the review, then this job). To merge unreviewed, say why in the PR, then: $ack"
+          elif [ -z "$body" ]; then
+            # A green review job with no comment is the one case it allows: a PR that edits
+            # this workflow (claude-code-action does not run there); its warning says so.
+            echo "no review comment from run $GITHUB_RUN_ID, so there is nothing to gate"; exit 0
           else
-            why="The review's count line is not in REVIEW.md's format, so its findings can't be read: '${count:0:120}'."
+            # REVIEW.md's format: the first non-blank line after the marker is the count.
+            count=$(awk 'f && NF {print; exit} /<!-- guardrails-review /{f=1}' <<<"$body")
+            if [[ "$count" == "Nothing meets the bar."* ]] || { [[ "$count" =~ $re ]] && [ "${BASH_REMATCH[1]}" = 0 ]; }; then
+              echo "review: $count"; exit 0
+            elif [[ "$count" =~ $re ]]; then
+              why="$count An Important finding blocks the merge."
+            else
+              why="The review's count line is not in REVIEW.md's format, so its findings can't be read: '${count:0:120}'."
+            fi
+            under="the PR says why each Important finding is a false alarm or deferred."
+            fix="Fix it and push (the next round reviews the new commits). For a false alarm or a deliberate deferral, say why in the PR, then: $ack (re-runs only this job, not the review)"
           fi
           # captured, not piped: under pipefail `gh | grep -q` can read as no match
           labels=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/labels" --paginate -q '.[].name')
           if grep -qxF review-ack <<<"$labels"; then
-            echo "::warning::$why Passing under the review-ack label: the PR says why each Important finding is a false alarm or deferred."; exit 0
+            echo "::warning::$why Passing under the review-ack label: $under"; exit 0
           fi
-          echo "::error::$why Fix it and push (the next round reviews the new commits). For a false alarm or a deliberate deferral, say why in the PR, then: gh label create review-ack --force -R $GITHUB_REPOSITORY && gh pr edit $PR --add-label review-ack -R $GITHUB_REPOSITORY && gh run rerun $GITHUB_RUN_ID --failed -R $GITHUB_REPOSITORY (re-runs only this job, not the review)"
+          echo "::error::$why $fix"
           exit 1
