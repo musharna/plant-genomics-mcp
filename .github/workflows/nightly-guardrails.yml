@@ -15,6 +15,17 @@ permissions:
   contents: read
   issues: write
 
+# One run at a time, repo-wide. Two overlapping runs (the schedule plus a manual
+# dispatch, or a slow night still going when the next starts) each find no open
+# issue and each create one, and both save the results cache under one key. Not
+# per ref: the issues are repo-wide, so a dispatch from a branch races them too.
+# Queue, never cancel: a cancelled mutation run saves no cache. A third run
+# arriving while one is queued replaces the queued one, which loses nothing.
+# Checked by scripts/nightly-issue-selftest.sh.
+concurrency:
+  group: nightly-guardrails
+  cancel-in-progress: false
+
 jobs:
   mutation:
     runs-on: ubuntu-latest
@@ -24,7 +35,7 @@ jobs:
       issues: write
       id-token: write
     env:
-      MUTMUT: "3.7.0" # also the results-cache key: a new mutmut starts clean
+      MUTMUT: "3.8.1" # also the results-cache key: a new mutmut starts clean
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Opt-out with a written reason
@@ -54,18 +65,32 @@ jobs:
           read -ra extras <<<"$extras_s"
           uv sync "${extras[@]}" --dev
           if [ -f requirements-dev.txt ]; then uv pip install -r requirements-dev.txt; fi
+          # mutmut 3.7's stats plugin read pytest's private Item._nodeid, which
+          # pytest 9.2 removed (figcite, ldraw-mcp 2026-10-28: 0 checked); 3.8
+          # reads .nodeid. A pin added here needs UV_NO_SYNC=1 in $GITHUB_ENV:
+          # `uv run` re-syncs to the lock and undoes it.
           uv pip install "mutmut==$MUTMUT" pytest
       - name: Baseline suite is green (a red baseline makes every mutant "killed")
         if: steps.optout.outputs.skip != '1'
         run: uv run --with pytest pytest -q -x -p no:cacheprovider
       - name: This ISO week (the results cache starts clean each week)
+        # and on a new Python: mutmut keeps a result only while its function's
+        # hash is unchanged, and the hash is of ast.dump(), whose text differs
+        # between Pythons. ubuntu-latest moved to 26.04 on 2026-10-28 (python3
+        # 3.12 -> 3.14): every carried result was dropped mid-week and the cap
+        # re-ran them from scratch (data-aggregator-mcp, phylokit-mcp; the gate
+        # read the unfinished tail as a stall).
         if: steps.optout.outputs.skip != '1'
         id: week
-        run: echo "week=$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "week=$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
+          # assignment, not inline $(...): a failed probe must stop the step, not key on "py"
+          py=$(uv run python -c 'import sys; print("%d.%d" % sys.version_info[:2])')
+          echo "python=$py" >> "$GITHUB_OUTPUT"
       - name: Restore this week's mutant results
         # The 90-minute cap left the same tail unchecked every night, because
         # each night started from nothing (data-aggregator-mcp 2026-10-16/17/19:
-        # 489, 520 and 1,298 mutants never checked). mutmut 3.7 keeps a result
+        # 489, 520 and 1,298 mutants never checked). mutmut keeps a result
         # in mutants/<file>.meta and, on regenerating a file, keeps it only if
         # its function's source hash is unchanged, so last night's results can
         # resume. Only the .meta files are cached: the mutated sources are
@@ -86,8 +111,8 @@ jobs:
             mutants/**/*.meta
             mutants/.carry-tests
             mutants/.carry-stuck
-          key: mutmut-${{ env.MUTMUT }}-${{ steps.week.outputs.week }}-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: mutmut-${{ env.MUTMUT }}-${{ steps.week.outputs.week }}-
+          key: mutmut-${{ env.MUTMUT }}-py${{ steps.week.outputs.python }}-${{ steps.week.outputs.week }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: mutmut-${{ env.MUTMUT }}-py${{ steps.week.outputs.python }}-${{ steps.week.outputs.week }}-
       - name: Carry results the code and tests still stand behind
         # A kill stands until its function changes (mutmut resets it then) or
         # the week ends. A survivor stands until a test that covers its function
@@ -115,8 +140,8 @@ jobs:
           # run that restored nothing checks the whole tree again from scratch.
           if not os.environ["MATCHED"] and datetime.datetime.now(datetime.timezone.utc).isoweekday() != 1:
               print("::warning::no results restored from earlier runs this week: every mutant is checked "
-                    "from scratch tonight. A changed cache path list is a new cache version and misses "
-                    "every entry saved before it; so does an evicted or expired cache.")
+                    "from scratch tonight. A new Python or a changed cache path list is a new cache version "
+                    "and misses every entry saved before it; so does an evicted or expired cache.")
           try:
               base = json.loads(pathlib.Path("mutants/.carry-tests").read_text())
               recheck = set(base["recheck"])
@@ -171,9 +196,27 @@ jobs:
           inflight="$RUNNER_TEMP/inflight.txt"
           : > "$inflight"
           (
+            tick=0
             while sleep 20; do
               ps -eo etimes=,args= | sed -n 's/^ *\([0-9][0-9]*\) mutmut: \([^ ]*\)$/\2 \1/p' > "$inflight.tmp"
               mv "$inflight.tmp" "$inflight"
+              # Each minute, and every 20 s while memory is low, the same note goes
+              # to the log with each mutant's memory and the host's free memory,
+              # swap, OOM kills and disk. A runner that dies mid-run saves no file
+              # and runs no later step, but its log keeps every line written before
+              # ("The runner has received a shutdown signal", plantcv-mcp, two
+              # nights running): the last note says what was running, and how big.
+              tick=$((tick + 1))
+              avail=$(awk '/^MemAvailable:/ {print int($2 / 1024)}' /proc/meminfo 2>/dev/null || true)
+              if [ $((tick % 3)) -eq 0 ] || [ "${avail:-1024}" -lt 1024 ]; then
+                swap=$(awk '/^SwapTotal:/ {t = $2} /^SwapFree:/ {f = $2} END {if (t != "") print int((t - f) / 1024)}' /proc/meminfo 2>/dev/null || true)
+                ooms=$(awk '$1 == "oom_kill" {print $2}' /proc/vmstat 2>/dev/null || true)
+                disk=$(df -Pm . 2>/dev/null | awk 'NR == 2 {print $4}' || true)
+                top=$(ps -eo rss=,comm= 2>/dev/null | sort -rn | awk 'NR == 1 {print $2 ":" int($1 / 1024) "M"}' || true)
+                kids=$(ps -eo etimes=,rss=,args= 2>/dev/null | awk '$3 == "mutmut:" {printf " %s %ss %dM", $4, $1, $2 / 1024}' || true)
+                printf '\n[watch] %s mem_avail=%sM swap_used=%sM oom_kills=%s disk_free=%sM top=%s | running:%s\n' \
+                  "$(date -u +%H:%M:%SZ)" "${avail:-?}" "${swap:-?}" "${ooms:-?}" "${disk:-?}" "${top:-?}" "${kids:- none}"
+              fi
             done
           ) &
           watcher=$!
@@ -252,8 +295,8 @@ jobs:
           git ls-files -s | awk -F'\t' '$2 ~ /(^|\/)(tests?\/|conftest\.py$)/ { split($1, a, " "); print a[2] "\t" $2 }' > "$RUNNER_TEMP/tests.txt"
           uv run python - <<'PY'
           import json, os, pathlib, re
-          import mutmut
           from mutmut.__main__ import load_stats, mangled_name_from_mutant_name, status_by_exit_code, tests_for_mutant_names
+          from mutmut.state import state
           tmp = os.environ["RUNNER_TEMP"]
           now = dict(line.split("\t", 1)[::-1] for line in pathlib.Path(tmp, "tests.txt").read_text().splitlines())
           fp = pathlib.Path("mutants/.carry-tests")
@@ -264,7 +307,7 @@ jobs:
               old, recheck = None, set()  # unknown: the carry step kept kills only
           changed = sorted(p for p in old.keys() | now.keys() if old.get(p) != now.get(p)) if old is not None else []
           has_stats = load_stats()
-          ran = {t.split("::", 1)[0] for t in mutmut.duration_by_test} if has_stats else set()
+          ran = {t.split("::", 1)[0] for t in state().duration_by_test} if has_stats else set()
           deleted_test = re.compile(r"(^|/)(test_[^/]*|[^/]*_test)\.py$")  # a gone test kills nothing
           unexplained = [p for p in changed if p not in ran and not (p not in now and deleted_test.search(p))]
           every = old is None or (bool(changed) and (not has_stats or bool(unexplained)))
@@ -300,9 +343,13 @@ jobs:
               if dirty:
                   meta.write_text(json.dumps(d))
           fp.parent.mkdir(exist_ok=True)
-          fp.write_text(json.dumps({"tests": now, "recheck": sorted(waiting | set(stale))}, indent=1, sort_keys=True))
+          owed = waiting | set(stale)
+          fp.write_text(json.dumps({"tests": now, "recheck": sorted(owed)}, indent=1, sort_keys=True))
+          # stale: reset tonight, after the run (not this run's to check; the gate).
+          # recheck: every one still owed a recheck, including those reset before
+          # tonight's run that the cap left unchecked (the issue).
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-              f.write(f"stale={len(stale)}\n")
+              f.write(f"stale={len(stale)}\nrecheck={len(owed)}\n")
           shown = ", ".join(changed[:10]) + (f" and {len(changed) - 10} more" if len(changed) > 10 else "")
           print(f"test files changed since the carried results: {len(changed)}" + (f" ({shown})" if changed else ""))
           if every and changed:
@@ -321,7 +368,9 @@ jobs:
             mutants/**/*.meta
             mutants/.carry-tests
             mutants/.carry-stuck
-          key: mutmut-${{ env.MUTMUT }}-${{ steps.week.outputs.week }}-${{ github.run_id }}-${{ github.run_attempt }}
+          # the restore step's key, resolved: one definition, so a part added to
+          # it (the Python, 2026-10-28) cannot miss the key a restore matches
+          key: ${{ steps.restore.outputs.cache-primary-key }}
       - name: Survivors
         id: survivors
         if: steps.optout.outputs.skip != '1'
@@ -344,6 +393,14 @@ jobs:
         # can spend its whole cap rechecking and still look busy (phylokit-mcp
         # 2026-10-21: new 99, of them 86 rechecks). `first` counts only mutants
         # that had no result before this run: the unchecked tail shrinking.
+        # A result is not always a verdict. mutmut files every exit code it has
+        # no name for under "suspicious", and a worker the kernel killed (-9,
+        # out of memory) under "segfault"; both count as checked and neither is
+        # a kill or a survivor. plantcv-mcp's memory cap (2026-11-10) exits 35
+        # before any test when the cap is too tight for the runner: every mutant
+        # would then be "checked", none killed, none surviving, and the job
+        # green with nothing to report. `unjudged_new` counts this run's results
+        # that are not a verdict; the gate reads it.
         env:
           RC: ${{ steps.run.outputs.rc }}
           CARRIED: ${{ steps.carry.outputs.carried }}
@@ -364,11 +421,12 @@ jobs:
           carried = set(open(os.path.join(tmp, "carried.txt")).read().split())
           reset = set(open(os.path.join(tmp, "reset.txt")).read().split())
           rows = [l.strip().rsplit(": ", 1) for l in open("all-mutants.txt") if ": " in l]
-          made = [name for name, status in rows if status != "not checked" and name not in carried]
-          print(len(made), sum(1 for name in made if name not in reset))
+          made = [(name, status) for name, status in rows if status != "not checked" and name not in carried]
+          unjudged = ("suspicious", "segfault", "check was interrupted by user")
+          print(len(made), sum(1 for name, _ in made if name not in reset), sum(1 for _, status in made if status in unjudged))
           PY
           )
-          read -r new first <<<"$counts"
+          read -r new first unjudged_new <<<"$counts"
           aborted=0
           if [ "$RC" != "0" ] && [ "$RC" != "124" ]; then aborted=1; fi
           # Diffs for the triage step, dumped HERE: 2026-09-16 ldraw-mcp, the
@@ -386,7 +444,7 @@ jobs:
               print(f"### {n}\n{d.strip()}\n")
           PY
           {
-            echo "count=$n"; echo "unchecked=$unchecked"; echo "aborted=$aborted"; echo "checked=$checked"; echo "new=$new"; echo "first=$first"
+            echo "count=$n"; echo "unchecked=$unchecked"; echo "aborted=$aborted"; echo "checked=$checked"; echo "new=$new"; echo "first=$first"; echo "unjudged_new=$unjudged_new"
           } >> "$GITHUB_OUTPUT"
           echo "## Mutants: $killed killed, $n survived, $checked checked ($new this run, $first of them first checks; $CARRIED carried from earlier this week, ${STALE:-0} of them reset after the run because a test that may cover them changed; ${MARKED:-0} timeouts the cap cut off twice), $unchecked unchecked, ${CUTOFF:-0} of them cut off by the cap (mutmut exit $RC, aborted=$aborted)" >> "$GITHUB_STEP_SUMMARY"
           head -200 survivors.txt >> "$GITHUB_STEP_SUMMARY"
@@ -399,29 +457,78 @@ jobs:
             survivor-diffs.txt
       - name: Upsert tracking issue
         id: upsert
-        if: steps.optout.outputs.skip != '1' && steps.survivors.outputs.count != '0'
+        # Also on 0 survivors while rechecks are owed: those read "not checked"
+        # until a run rechecks them, so a night can count none while hundreds
+        # wait, and a skipped step left last night's count and run link standing
+        # as tonight's. The parentheses: GitHub documents no precedence between
+        # && and ||, so the grouping is written out.
+        if: steps.optout.outputs.skip != '1' && (steps.survivors.outputs.count != '0' || steps.tests.outputs.recheck != '0')
         env:
           GH_TOKEN: ${{ github.token }}
           N: ${{ steps.survivors.outputs.count }}
           UNCHECKED: ${{ steps.survivors.outputs.unchecked }}
           ABORTED: ${{ steps.survivors.outputs.aborted }}
+          RECHECK: ${{ steps.tests.outputs.recheck }}
         run: |
           title="nightly: $N surviving mutants"
           # A partial run is not a survivor count; say so where it is read.
+          # Survivors reset for a recheck read "not checked" until the next run, so
+          # without RECHECK the count drops to near zero the night a shared test file
+          # changes (plantcv-mcp, the night after its conftest change: 27 survivors
+          # shown, 1,867 waiting for a recheck). The cap can leave some of them for
+          # the night after, so RECHECK counts every one still owed, not only those
+          # reset tonight (plantcv-mcp 2026-11-05: 613 still owed, none reset that
+          # night; the title read "6349 unchecked at the wall-clock cap" and 1,863 ->
+          # 1,151 survivors looked like ~700 kills, of which 114 were). The rest of
+          # the unchecked are the cap's backlog.
           if [ "$ABORTED" = "1" ]; then title="$title (PARTIAL: mutmut aborted, $UNCHECKED unchecked)"
+          elif [ "${RECHECK:-0}" != "0" ]; then
+            backlog=$(( ${UNCHECKED:-0} - RECHECK ))
+            title="$title (waiting for a recheck: $RECHECK earlier survivors and timeouts"
+            if [ "$backlog" -gt 0 ]; then title="$title; $backlog more unchecked at the wall-clock cap"; fi
+            title="$title)"
           elif [ "${UNCHECKED:-0}" != "0" ]; then title="$title ($UNCHECKED unchecked at the wall-clock cap)"; fi
-          # shellcheck disable=SC2016  # printf format string is literal by design
-          body="$(printf 'Run: %s/%s/actions/runs/%s\n\nEach survivor is a line of code no test observes.\n\n```\n%s\n```\n' \
-                  "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$(head -150 survivors.txt)")"
+          # A body file of cut lines, never argv: see the dependency-audit issue step.
+          # Survivors only, counted per function, then a sample taken from each
+          # function in turn. `mutmut results` lists every non-killed mutant sorted
+          # by name, so its head was one module's unchecked tail (plantcv-mcp's
+          # first full night: 133 "not checked" lines and 15 of 1,863 survivors).
+          python3 - <<'PY' > /tmp/issue-body.md
+          import collections, itertools, os
+          rows = [l.strip().rsplit(": ", 1) for l in open("survivors.txt") if ": " in l]
+          status = collections.Counter(s for _, s in rows)
+          by = collections.defaultdict(list)
+          for name, s in rows:
+              if s == "survived":
+                  by[name.split("__mutmut_")[0]].append(name)
+          order = sorted(by, key=lambda f: (-len(by[f]), f))
+          n = sum(len(v) for v in by.values())
+          sample = [m for m in itertools.chain.from_iterable(itertools.zip_longest(*(by[f] for f in order))) if m][:150]
+          counts = ", ".join(f"{c} {s}" for s, c in sorted(status.items(), key=lambda x: (x[0] != "survived", -x[1], x[0])))
+          e = os.environ
+          print(f"Run: {e['GITHUB_SERVER_URL']}/{e['GITHUB_REPOSITORY']}/actions/runs/{e['GITHUB_RUN_ID']}\n")
+          print(f"{counts}. Each survivor is a line of code no test observes; the full list, every status, is the run's `mutmut-survivors` artifact.\n")
+          owed = int(e.get("RECHECK") or 0)
+          if owed:
+              print(f"Waiting for a recheck: {owed} of the not checked, earlier survivors and timeouts that a changed test may cover. Until the next runs recheck them, the survivor count above is low.\n")
+          print(f"Survivors by function ({min(len(order), 100)} of {len(order)}):\n```")
+          for f in order[:100]:
+              print(f"{len(by[f]):5d} {f}"[:200])
+          shown = "all" if len(sample) == n else f"first {len(sample)} of"
+          print(f"```\n\nSurvivors, taken from each function in turn ({shown} {n}):\n```")
+          for m in sample:
+              print(m[:200])
+          print("```")
+          PY
           num=$(gh issue list --label mutation --state open --json number -q '.[0].number')
-          if [ -n "$num" ]; then gh issue edit "$num" --title "$title" --body "$body"
+          if [ -n "$num" ]; then gh issue edit "$num" --title "$title" --body-file /tmp/issue-body.md
           else
             gh label create mutation --color 8B0000 --force >/dev/null
             # Take the number from the create call's URL. Re-listing right after
             # a create returned NOTHING (figcite 2026-09-17, index lag): the
             # triage prompt then read "issue #", Haiku spent 37 turns and $0.69
             # with 14 permission denials, posted nowhere, and the step was green.
-            url=$(gh issue create --label mutation --title "$title" --body "$body")
+            url=$(gh issue create --label mutation --title "$title" --body-file /tmp/issue-body.md)
             num=${url##*/}
           fi
           case "$num" in ''|*[!0-9]*) echo "::error::could not determine the tracking issue number (got '$num')"; exit 1;; esac
@@ -438,6 +545,7 @@ jobs:
           UNCHECKED: ${{ steps.survivors.outputs.unchecked }}
           STALE: ${{ steps.tests.outputs.stale }}
           RC: ${{ steps.run.outputs.rc }}
+          UNJUDGED_NEW: ${{ steps.survivors.outputs.unjudged_new }}
         run: |
           # Results reset after the run (a test covering them changed) were not
           # there for this run to check: only the rest waited on it.
@@ -471,6 +579,16 @@ jobs:
           if [ "$ABORTED" = "1" ]; then
             echo "::error::mutmut aborted (exit $RC) with $UNCHECKED mutants unchecked; the survivor count is partial. Read the traceback above the exit line."
             exit 1
+          fi
+          # A run whose every result is "suspicious" or "segfault" judged nothing:
+          # the suite never got to decide (a memory cap too tight for the runner,
+          # workers killed for memory). Some of them among real verdicts is a
+          # warning; the artifact's all-status list names them.
+          if [ "${NEW:-0}" -gt 0 ] && [ "${UNJUDGED_NEW:-0}" -eq "${NEW:-0}" ]; then
+            echo "::error::none of the $NEW results this run made is a verdict: every one is 'suspicious' or 'segfault' (an exit code mutmut has no name for, or a worker killed by a signal). No test judged a mutant. Read the first mutant's output in the run step's log."
+            exit 1
+          elif [ "${UNJUDGED_NEW:-0}" -gt 0 ]; then
+            echo "::warning::$UNJUDGED_NEW of the $NEW results this run made are not verdicts ('suspicious' or 'segfault'): they count as checked and are neither kills nor survivors."
           fi
       - name: Triage day? (the repo's fuzz weekday, or a dispatch)
         id: triage
@@ -588,26 +706,27 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
-      - name: pip-audit the default branch's resolved dependencies
+      - name: Audit every package in uv.lock, for every Python it covers
         id: audit
         run: |
-          if [ -x scripts/guardrails-setup.sh ]; then bash scripts/guardrails-setup.sh; fi
-          # assignment, not inline $(...): a helper failure must stop the step
-          extras_s=$(python3 scripts/uv_extras.py)
-          read -ra extras <<<"$extras_s"
-          uv sync "${extras[@]}" --dev
-          uv export "${extras[@]}" --dev --no-emit-project --no-hashes -o /tmp/req.txt
+          # The audit can fail: a pin only another Python selects is found, a clean
+          # lock passes, no network exits 2. `uv export | pip-audit` audited only
+          # this runner's Python (figcite, 2026-11-01: pillow 12.3.0 for 3.10).
+          bash scripts/lock-audit-selftest.sh
+          # Findings on stdout, uv's `Found ...` summary on stderr: kept apart, so
+          # the issue body does not depend on how the two streams interleave.
           set +e
-          uvx pip-audit -r /tmp/req.txt --strict --desc on > /tmp/audit.txt 2>&1
+          bash scripts/lock_audit.sh > /tmp/audit.txt 2> /tmp/audit-log.txt
           rc=$?
           set -e
+          cat /tmp/audit-log.txt
           tail -40 /tmp/audit.txt
-          # 0 = clean, 1 = vulnerabilities. Anything else is pip-audit failing to
+          # 0 = clean, 1 = vulnerabilities. Anything else is the audit failing to
           # run, which must not read as "clean" or as "vulnerable".
           case "$rc" in
             0) echo "state=clean" >> "$GITHUB_OUTPUT" ;;
-            1) if grep -qE 'vulnerabilit' /tmp/audit.txt; then echo "state=vulnerable" >> "$GITHUB_OUTPUT"; else echo "::error::pip-audit exited 1 without reporting a vulnerability: it did not run"; exit 1; fi ;;
-            *) echo "::error::pip-audit exited $rc: it did not run"; exit 1 ;;
+            1) if grep -qE '^Found .* known vulnerabilit' /tmp/audit-log.txt; then echo "state=vulnerable" >> "$GITHUB_OUTPUT"; else echo "::error::uv audit exited 1 without its 'Found N known vulnerabilities' line: it did not run, or its output format changed"; exit 1; fi ;;
+            *) echo "::error::uv audit exited $rc: it did not run"; exit 1 ;;
           esac
       - name: Open, update or close the dependency-audit issue
         env:
@@ -616,17 +735,34 @@ jobs:
         run: |
           num=$(gh issue list --label dependency-audit --state open --json number -q '.[0].number')
           if [ "$STATE" = clean ]; then
-            if [ -n "$num" ]; then gh issue close "$num" --comment "pip-audit is clean again on $(date -u +%Y-%m-%d) ($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)."; fi
+            if [ -n "$num" ]; then gh issue close "$num" --comment "The lock audit is clean again on $(date -u +%Y-%m-%d) ($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)."; fi
             echo "dependencies clean"; exit 0
           fi
-          # shellcheck disable=SC2016  # printf format string is literal by design
-          body="$(printf 'Run: %s/%s/actions/runs/%s\n\npip-audit found a known vulnerability in a dependency already on the default branch. Bump it in a PR; that PR is audited because it changes a dependency file.\n\n```\n%s\n```\n' \
-                  "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$(grep -vE '^\s*$' /tmp/audit.txt | tail -60)")"
+          # The body goes in a file, never on argv, and every line is cut: one
+          # argument is capped at 128 KB and an issue body at 65,536 characters
+          # (figcite 2026-10-31: pip-audit --desc rows of 28,747 characters,
+          # `gh: Argument list too long`, the issue never written).
+          # At most 300 lines of at most 160 characters (GNU cut -c counts bytes,
+          # others characters; either way <= 160 characters): under 48,500
+          # characters. awk, not grep -v: an empty match must reach the count
+          # below under -e and under -eo pipefail alike.
+          found=$(awk '/^Found .* known vulnerabilit/ { print; exit }' /tmp/audit-log.txt)
+          awk 'NF' /tmp/audit.txt | cut -c1-160 > /tmp/audit-rows.txt
+          total=$(wc -l < /tmp/audit-rows.txt)
+          if [ -z "$found" ] || [ "$total" -eq 0 ]; then echo "::error::uv audit reported a vulnerability but printed no 'Found N known vulnerabilities' line or no findings: its output format changed"; exit 1; fi
+          {
+            # shellcheck disable=SC2016  # printf format string is literal by design
+            printf 'Run: %s/%s/actions/runs/%s\n\n`uv audit` found a known vulnerability in a package in uv.lock, for at least one Python version or platform the lock covers. Bump it in a PR; that PR is audited because it changes a dependency file. Lines are cut at 160 characters; look an ID up at https://osv.dev/vulnerability/<ID>.\n\n```\n%s\n' \
+                   "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "${found:0:160}"
+            head -300 /tmp/audit-rows.txt
+            if [ "$total" -gt 300 ]; then echo "... $((total - 300)) more lines: run 'bash scripts/lock_audit.sh' for the rest"; fi
+            printf '```\n'
+          } > /tmp/issue-body.md
           title="dependency audit: known vulnerabilities on the default branch"
-          if [ -n "$num" ]; then gh issue edit "$num" --title "$title" --body "$body" >/dev/null
+          if [ -n "$num" ]; then gh issue edit "$num" --title "$title" --body-file /tmp/issue-body.md >/dev/null
           else
             gh label create dependency-audit --color B60205 --force >/dev/null
-            gh issue create --label dependency-audit --title "$title" --body "$body" >/dev/null
+            gh issue create --label dependency-audit --title "$title" --body-file /tmp/issue-body.md >/dev/null
           fi
           echo "::error::known-vulnerable dependency on the default branch; see the dependency-audit issue"; exit 1
 

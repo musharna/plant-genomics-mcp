@@ -2,7 +2,7 @@
 # Did this PR or push change what gets installed? Exit 0 = yes (audit it now),
 # exit 1 = no. From ~/repo-template.
 #
-# pip-audit answers two different questions, and until 2026-09-19 one PR step
+# The dependency audit answers two different questions, and until 2026-09-19 one PR step
 # asked both: "did THIS change bring in a vulnerable package?" (a property of the
 # diff; blocks the PR) and "has a CVE been published against what is already on
 # the default branch?" (a property of the calendar; it turned unrelated PRs red:
