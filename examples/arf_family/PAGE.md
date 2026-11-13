@@ -47,6 +47,13 @@ queried).
 Chain [`chain.py`](chain.py), per-call log [`calls.jsonl`](calls.jsonl),
 captured responses [`raw/`](raw).
 
+The `has_pb1_domain` column in [`genes.tsv`](genes.tsv) means that InterPro
+lists IPR033389 or Pfam PF02309 (the AUX/IAA domain) for the protein, which
+is what [`verify_genes.py`](verify_genes.py) checks live. It does not say the
+protein lacks a PB1 fold: 19 rows marked `false`, ARF4, ARF10 and ARF16 among
+them, carry the PB1 profile entry IPR053793 in
+[`family_candidates.tsv`](family_candidates.tsv) without the Pfam hit.
+
 ## Install and first query
 
 Copied from the repository [`README.md`](../../README.md):

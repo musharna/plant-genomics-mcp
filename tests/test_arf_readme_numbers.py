@@ -8,6 +8,7 @@ leave stale numbers in public text.
 
 from __future__ import annotations
 
+import csv
 import json
 import re
 from pathlib import Path
@@ -110,3 +111,49 @@ def test_page_figure_paragraph_range_is_derived_from_the_calls_log():
     off = {**counts, tool: counts[tool] + 1}
     with pytest.raises(AssertionError, match=re.escape(f"`{tool}`")):
         _check_ties(text, off)
+
+
+def _false_rows_with_the_pb1_profile() -> list[str]:
+    """Symbols of the genes.tsv rows marked `false` whose kept candidate row
+    lists the PB1 profile entry IPR053793."""
+    entries: dict[str, set[str]] = {}
+    with (ARF / "family_candidates.tsv").open() as f:
+        for row in csv.DictReader(f, delimiter="\t"):
+            if row["kept"] == "true":
+                entries.setdefault(row["locus"], set()).update(row["interpro_entries"].split(","))
+    with (ARF / "genes.tsv").open() as f:
+        return [
+            row["symbol"]
+            for row in csv.DictReader(f, delimiter="\t")
+            if row["has_pb1_domain"] == "false" and "IPR053793" in entries.get(row["locus"], set())
+        ]
+
+
+def _check_pb1_paragraph(text: str, symbols: list[str]) -> None:
+    para = next(p for p in text.split("\n\n") if "`has_pb1_domain` column" in p).replace(
+        "\n", " "
+    )  # exactly one paragraph defines the column; StopIteration if none does
+    assert f"{len(symbols)} rows marked `false`" in para, para
+    for named in ("ARF4", "ARF10", "ARF16"):
+        assert named in para, (named, para)
+        assert named in symbols, (named, symbols)
+
+
+def test_page_says_what_has_pb1_domain_means_and_counts_the_profile_only_rows():
+    """The column is true only on InterPro's IPR033389 / PF02309. PAGE.md says
+    so, and says how many `false` rows carry the PB1 profile entry all the
+    same; that count is a recount of the two committed tables."""
+    symbols = _false_rows_with_the_pb1_profile()
+    assert len(symbols) > 5, symbols  # counted from real tables, not empty ones
+    # ARF8 has the Pfam hit, so it is `true` and not one of them.
+    assert "ARF8" not in symbols, symbols
+    text = (ARF / "PAGE.md").read_text()
+    _check_pb1_paragraph(text, symbols)
+    assert "IPR033389 or Pfam PF02309" in text.replace("\n", " ")
+
+    # Negative control: the same page with the count off by one must fail,
+    # and the edit must really have landed.
+    stale = text.replace(f"{len(symbols)} rows marked", f"{len(symbols) + 1} rows marked")
+    assert stale != text
+    with pytest.raises(AssertionError, match=re.escape(f"{len(symbols) + 1} rows marked")):
+        _check_pb1_paragraph(stale, symbols)
