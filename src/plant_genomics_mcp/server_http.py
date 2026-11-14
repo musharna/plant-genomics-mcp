@@ -57,7 +57,7 @@ from starlette.responses import JSONResponse
 from starlette.routing import Mount, Route
 from starlette.types import Message, Receive, Scope, Send
 
-from plant_genomics_mcp.server import server
+from plant_genomics_mcp.server import check_startup_env, server
 
 # Minimum length for PLANT_GENOMICS_MCP_HTTP_TOKEN — half a `openssl rand
 # -hex 32` value, also the length of a stringified UUID without dashes.
@@ -128,6 +128,7 @@ def build_app() -> Starlette:
     server lifetime. The lifespan handler runs the manager's task group
     for the duration of the app.
     """
+    check_startup_env()
     stateless = _env_flag("PLANT_GENOMICS_MCP_HTTP_STATELESS", True)
     json_response = _env_flag("PLANT_GENOMICS_MCP_HTTP_JSON", True)
     expected_token = os.environ.get("PLANT_GENOMICS_MCP_HTTP_TOKEN", "")

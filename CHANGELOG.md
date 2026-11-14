@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **`PLANT_GENOMICS_MCP_OMIT_OUTPUT_SCHEMAS=1` leaves output schemas out of
+  `tools/list`.** The list is 228 KB for 58 tools, and 65% of that is output
+  schemas. A client that loads every tool definition before its first call
+  pays for all of it. With the switch set the list is 80 KB. It is off unless
+  set, on both transports, and changes nothing else: the same tools,
+  descriptions and input schemas, and every result still carries
+  `structuredContent`. A value that is neither on nor off stops the server at
+  startup.
+
 ## v1.31.0 — 2026-11-13
 
 **58 tools / 24 backends** — no new tool. One new output field

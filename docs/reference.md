@@ -16,7 +16,8 @@ release report + 1 variant annotator + 1 gene-set enrichment + 1 BLAST search +
 Most take a locus (e.g. `AT1G01010`) and an optional `organism=`: a slug,
 scientific or common name, or NCBI taxid (the 12-plant coverage matrix is the
 `pgmcp://organisms/coverage` resource). Every tool is marked read-only and
-publishes a JSON `outputSchema`.
+publishes a JSON `outputSchema`, unless
+[`PLANT_GENOMICS_MCP_OMIT_OUTPUT_SCHEMAS`](#transports-and-configuration) is set.
 
 | #   | Category                | Tool                                    | What it does                                                                                                                                                                                                                                                                                                                                                          |
 | --- | ----------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -100,17 +101,27 @@ your own token.
 
 The rest, with their defaults:
 
-| Variable                               | Default           | Effect                                                             |
-| -------------------------------------- | ----------------- | ------------------------------------------------------------------ |
-| `PLANT_GENOMICS_MCP_HTTP_HOST`         | `127.0.0.1`       | HTTP bind address.                                                 |
-| `PLANT_GENOMICS_MCP_HTTP_PORT`         | `8765`            | HTTP TCP port.                                                     |
-| `PLANT_GENOMICS_MCP_HTTP_MAX_BODY`     | `2097152` (2 MiB) | Reject POSTs with `Content-Length` larger than this.               |
-| `PLANT_GENOMICS_MCP_HTTP_STATELESS`    | `1`               | `0` keeps per-client session state (SSE-style).                    |
-| `PLANT_GENOMICS_MCP_HTTP_JSON`         | `1`               | `0` switches the response shape to streaming SSE events.           |
-| `PLANT_GENOMICS_MCP_BLAST_CONCURRENCY` | `2`               | Max in-flight BLAST searches per process (NCBI per-IP rate limit). |
-| `PLANT_GENOMICS_MCP_CACHE_TTL`         | `600`             | Per-backend TTL+LRU cache entry lifetime, in seconds. 200-only.    |
-| `PLANT_GENOMICS_MCP_CACHE_SIZE`        | `256`             | Max entries per backend before LRU eviction.                       |
-| `PLANT_GENOMICS_MCP_CACHE_DISABLED`    | unset             | Any non-empty value makes every cache a no-op.                     |
+| Variable                                 | Default           | Effect                                                             |
+| ---------------------------------------- | ----------------- | ------------------------------------------------------------------ |
+| `PLANT_GENOMICS_MCP_HTTP_HOST`           | `127.0.0.1`       | HTTP bind address.                                                 |
+| `PLANT_GENOMICS_MCP_HTTP_PORT`           | `8765`            | HTTP TCP port.                                                     |
+| `PLANT_GENOMICS_MCP_HTTP_MAX_BODY`       | `2097152` (2 MiB) | Reject POSTs with `Content-Length` larger than this.               |
+| `PLANT_GENOMICS_MCP_HTTP_STATELESS`      | `1`               | `0` keeps per-client session state (SSE-style).                    |
+| `PLANT_GENOMICS_MCP_HTTP_JSON`           | `1`               | `0` switches the response shape to streaming SSE events.           |
+| `PLANT_GENOMICS_MCP_BLAST_CONCURRENCY`   | `2`               | Max in-flight BLAST searches per process (NCBI per-IP rate limit). |
+| `PLANT_GENOMICS_MCP_CACHE_TTL`           | `600`             | Per-backend TTL+LRU cache entry lifetime, in seconds. 200-only.    |
+| `PLANT_GENOMICS_MCP_CACHE_SIZE`          | `256`             | Max entries per backend before LRU eviction.                       |
+| `PLANT_GENOMICS_MCP_CACHE_DISABLED`      | unset             | Any non-empty value makes every cache a no-op.                     |
+| `PLANT_GENOMICS_MCP_OMIT_OUTPUT_SCHEMAS` | unset             | `1` leaves `outputSchema` out of `tools/list`. See below.          |
+
+Output schemas are about two thirds of the tool list. A client that loads
+every tool definition before its first call pays for all of them, so
+`PLANT_GENOMICS_MCP_OMIT_OUTPUT_SCHEMAS=1` leaves them out and cuts the list
+by about 65% (228 KB to 80 KB for the 58 tools). Nothing else changes: the same
+tools, descriptions and input schemas are listed, and every result still
+carries `structuredContent`. The client then has no schema to check a result
+against. It reads `1`, `true`, `yes` or `on` as set and `0`, `false`, `no`,
+`off` or empty as unset; any other value stops the server at startup.
 
 The cache is per process; restart the server to clear it. Long calls (BLAST,
 Phytozome BioMart) send MCP progress notifications when the request carries a
