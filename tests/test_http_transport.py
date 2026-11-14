@@ -25,10 +25,12 @@ from starlette.routing import Mount
 from starlette.testclient import TestClient
 
 from plant_genomics_mcp import __version__, server_http
+from plant_genomics_mcp import server as server_module
 
 # 32-char placeholder satisfying the v1.0.1 fail-closed length floor — used
 # wherever a test needs a valid token without caring about the value.
 _VALID_TOKEN = "x" * 32
+_OMIT_ENV = "PLANT_GENOMICS_MCP_OMIT_OUTPUT_SCHEMAS"
 
 
 @pytest.fixture(autouse=True)
@@ -190,6 +192,58 @@ async def test_http_tools_list_via_real_uvicorn() -> None:
             await asyncio.wait_for(serve_task, timeout=5.0)
         except TimeoutError:
             serve_task.cancel()
+
+
+async def test_the_http_transport_lists_without_output_schemas_when_asked(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """``PLANT_GENOMICS_MCP_OMIT_OUTPUT_SCHEMAS`` over real uvicorn, raw JSON.
+
+    The key is absent, not ``null``, and the unset list is the control. The
+    in-process and stdio halves are in tests/test_omit_output_schemas.py.
+    """
+    monkeypatch.delenv(_OMIT_ENV, raising=False)
+    port = _free_port()
+    uv_server = uvicorn.Server(
+        uvicorn.Config(server_http.build_app(), host="127.0.0.1", port=port, log_level="error")
+    )
+    serve_task = asyncio.create_task(uv_server.serve())
+    headers = {
+        "Accept": "application/json, text/event-stream",
+        "Authorization": f"Bearer {_VALID_TOKEN}",
+    }
+
+    async def listed(client: httpx.AsyncClient) -> list[dict[str, Any]]:
+        resp = await client.post(
+            "/mcp/", json={"jsonrpc": "2.0", "id": 2, "method": "tools/list"}, headers=headers
+        )
+        assert resp.status_code == 200, resp.text
+        tools: list[dict[str, Any]] = resp.json()["result"]["tools"]
+        return tools
+
+    try:
+        for _ in range(100):
+            if uv_server.started:
+                break
+            await asyncio.sleep(0.05)
+        assert uv_server.started, "uvicorn never reported started"
+        async with httpx.AsyncClient(base_url=f"http://127.0.0.1:{port}", timeout=10.0) as client:
+            full = await listed(client)
+            monkeypatch.setenv(_OMIT_ENV, "1")
+            compact = await listed(client)
+    finally:
+        uv_server.should_exit = True
+        try:
+            await asyncio.wait_for(serve_task, timeout=5.0)
+        except TimeoutError:
+            serve_task.cancel()
+
+    names = [t.name for t in server_module.TOOLS]
+    assert [t["name"] for t in full] == names
+    assert all(t.get("outputSchema") for t in full)
+    assert [t["name"] for t in compact] == names
+    assert not any("outputSchema" in t for t in compact)
+    assert [t["inputSchema"] for t in compact] == [t["inputSchema"] for t in full]
 
 
 # ---------- bearer auth (Wave B1) ----------

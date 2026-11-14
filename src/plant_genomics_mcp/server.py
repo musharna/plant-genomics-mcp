@@ -81,6 +81,7 @@ from __future__ import annotations
 import asyncio
 import json
 import math
+import os
 from typing import Any
 
 import httpx
@@ -2736,11 +2737,53 @@ def _rename_deprecated_arguments(name: str, arguments: dict[str, Any]) -> dict[s
 # The server object therefore has to be constructed AFTER these are defined.
 
 
+# Output schemas are about two thirds of the bytes in ``tools/list``. A client
+# that loads every definition before its first call pays for all of them, so
+# this switch leaves them out. Off unless set; results are unchanged.
+OMIT_OUTPUT_SCHEMAS_ENV = "PLANT_GENOMICS_MCP_OMIT_OUTPUT_SCHEMAS"
+_SWITCH_ON = ("1", "true", "yes", "on")
+_SWITCH_OFF = ("", "0", "false", "no", "off")
+
+
+def omit_output_schemas() -> bool:
+    """Whether ``tools/list`` leaves out each tool's ``outputSchema``.
+
+    Unset is off. A value that is neither on nor off raises: a typo that read
+    as either would change what every client is told without saying so.
+    """
+    raw = os.environ.get(OMIT_OUTPUT_SCHEMAS_ENV)
+    if raw is None:
+        return False
+    value = raw.strip().lower()
+    if value in _SWITCH_ON:
+        return True
+    if value in _SWITCH_OFF:
+        return False
+    raise ValueError(
+        f"{OMIT_OUTPUT_SCHEMAS_ENV} must be one of {'/'.join(_SWITCH_ON)} or "
+        f"0/false/no/off, got {raw!r}"
+    )
+
+
+def check_startup_env() -> None:
+    """Refuse to start on a switch value that cannot be read (both transports)."""
+    try:
+        omit_output_schemas()
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
+
+
 async def _list_tools(
     ctx: ServerRequestContext,
     params: types.PaginatedRequestParams | None,
 ) -> types.ListToolsResult:
-    return types.ListToolsResult(tools=TOOLS)
+    if not omit_output_schemas():
+        return types.ListToolsResult(tools=TOOLS)
+    # Copies: TOOLS keeps its schemas for the next request and for the tests
+    # that check every result against them.
+    return types.ListToolsResult(
+        tools=[tool.model_copy(update={"output_schema": None}) for tool in TOOLS]
+    )
 
 
 # ---- resources --------------------------------------------------------------
@@ -3315,6 +3358,7 @@ async def _serve() -> None:
 
 
 def main() -> None:
+    check_startup_env()
     asyncio.run(_serve())
 
 
