@@ -14,6 +14,7 @@ import importlib.util
 import os
 import sys
 from collections.abc import Callable
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -253,15 +254,33 @@ _PROBE_QUERY = """<?xml version="1.0" encoding="UTF-8"?>
 
 
 class EndpointMissing(AssertionError):
-    """BioMart's own URL answers 404: moved, retired, or down for maintenance."""
+    """BioMart's own URL answers 404, or still answers an HTML page after
+    _HTML_PAGE_UNTIL: moved, retired, or down for longer than was agreed to wait."""
+
+
+# BioMart's URL has answered the site's front page on a 200 since 2026-11-14
+# (404 for the four days before): every path on the host does. The page
+# carries JGI's notice that Phytozome's services are down for unplanned
+# maintenance since 2026-11-09, with no date for their return. That is an
+# outage, but a retired BioMart would be served the same page, so an HTML page
+# reads as down only through this date. After it the probe fails, as on a 404,
+# and the nightly is red until someone reads the page again and moves the date
+# or retires the tool.
+_HTML_PAGE_UNTIL = date(2026, 12, 15)
+
+
+def _today() -> date:
+    return datetime.now(UTC).date()
 
 
 def _biomart_down(timeout_s: float = 30.0) -> str | None:
     """None when BioMart answers the probe with its header line and a row; why
-    it is down on a 5xx or no answer. A 404 at its own URL is not an outage
-    to skip: a move or a retirement reads the same and would skip forever
-    (2026-11-10), so it fails, with no upstream tag, and the nightly is red
-    until someone looks. Anything else fails too: the probe is wrong."""
+    it is down on a 5xx, no answer, or an HTML page on a 200 through
+    _HTML_PAGE_UNTIL. A 404 at its own URL is not an outage to skip: a move or
+    a retirement reads the same and would skip forever (2026-11-10), so it
+    fails, with no upstream tag, and the nightly is red until someone looks.
+    So does an HTML page after its date. Anything else fails too: the probe
+    is wrong."""
     try:
         resp = httpx.post(_BIOMART_URL, data={"query": _PROBE_QUERY}, timeout=timeout_s)
     except httpx.TransportError as e:
@@ -277,6 +296,18 @@ def _biomart_down(timeout_s: float = 30.0) -> str | None:
     lines = resp.text.splitlines()
     if resp.status_code == 200 and len(lines) >= 2 and lines[0] == _AT1G01010_TSV.splitlines()[0]:
         return None
+    if resp.status_code == 200 and resp.text.lstrip().lower().startswith(
+        ("<!doctype html", "<html")
+    ):
+        page = "HTTP 200 with an HTML page where BioMart's table belongs"
+        if _today() <= _HTML_PAGE_UNTIL:
+            return f"{page}; read as an outage through {_HTML_PAGE_UNTIL}"
+        raise EndpointMissing(
+            f"Phytozome BioMart's own URL {_BIOMART_URL} still answers {page} after "
+            f"{_HTML_PAGE_UNTIL}, the last day that read as an outage: read "
+            "https://phytozome-next.jgi.doe.gov/ and move the date or retire the tool. "
+            "Not skipped as an outage."
+        )
     raise AssertionError(f"BioMart probe answered HTTP {resp.status_code} {resp.text[:120]!r}")
 
 
@@ -310,28 +341,82 @@ async def _lookup_or_skip_outage(
 # A page some proxy or maintenance mode could serve on a 200 in BioMart's place.
 _MAINTENANCE_PAGE = "<html>\n<body>Phytozome is down for maintenance</body>\n</html>\n"
 
+# Cut down from the page BioMart's URL served on 2026-11-15: its first lines,
+# its title and one sentence of its notice, as served.
+_FRONT_PAGE = (
+    '<!DOCTYPE html>\n<html lang="en">\n<head>\n'
+    '  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n'
+    "  <title>Phytozome: the plant genomics resource</title>\n</head>\n<body>\n"
+    '<section class="announcement">\n<p>We do not yet have an estimate for when '
+    "services will be back online.</p>\n</section>\n</body>\n</html>\n"
+)
+_HTML_PAGE_DOWN = (
+    "HTTP 200 with an HTML page where BioMart's table belongs; read as an outage through 2026-12-15"
+)
 
-def test_the_probe_reads_biomart_down_only_on_5xx_or_no_answer(
-    httpx_mock: HTTPXMock,
+
+def test_the_probe_reads_biomart_down_on_5xx_no_answer_or_an_html_page_through_its_date(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    here = sys.modules[__name__]
     httpx_mock.add_response(url=_BIOMART_URL, method="POST", status_code=404, text=_APACHE_404)
     httpx_mock.add_response(url=_BIOMART_URL, method="POST", status_code=503)
     httpx_mock.add_exception(httpx.ConnectTimeout("timed out"), url=_BIOMART_URL)
     httpx_mock.add_response(url=_BIOMART_URL, method="POST", text="Query ERROR: bad filter")
+    httpx_mock.add_response(url=_BIOMART_URL, method="POST", status_code=403, text=_FRONT_PAGE)
+    httpx_mock.add_response(url=_BIOMART_URL, method="POST", text=_FRONT_PAGE)
     httpx_mock.add_response(url=_BIOMART_URL, method="POST", text=_MAINTENANCE_PAGE)
+    httpx_mock.add_response(url=_BIOMART_URL, method="POST", text=_FRONT_PAGE)
     httpx_mock.add_response(url=_BIOMART_URL, method="POST", text=_AT1G01010_TSV)
     with pytest.raises(EndpointMissing, match="answers HTTP 404 when probed directly"):
         _biomart_down()
     assert _biomart_down() == "HTTP 503"
     assert _biomart_down() == "ConnectTimeout: timed out"
+    # A 200 that is neither BioMart's table nor an HTML page: the probe is wrong.
     with pytest.raises(AssertionError, match="BioMart probe answered HTTP 200 'Query ERROR"):
         _biomart_down()
-    # A 200 of two lines or more that is not BioMart's table is not an answer either.
-    with pytest.raises(AssertionError, match="BioMart probe answered HTTP 200 '<html>"):
+    monkeypatch.setattr(here, "_today", lambda: _HTML_PAGE_UNTIL)
+    # Nor is an HTML page on any other status an outage: a refusal is not one.
+    with pytest.raises(AssertionError, match="BioMart probe answered HTTP 403 '<!DOCTYPE html>"):
+        _biomart_down()
+    # An HTML page on a 200 is down through its last day, in either spelling ...
+    assert _biomart_down() == _HTML_PAGE_DOWN
+    assert _biomart_down() == _HTML_PAGE_DOWN
+    # ... and the day after it is a missing endpoint, as a 404 is.
+    monkeypatch.setattr(here, "_today", lambda: _HTML_PAGE_UNTIL + timedelta(days=1))
+    with pytest.raises(EndpointMissing, match="still answers HTTP 200 with an HTML page"):
         _biomart_down()
     # Positive control: the answer the tool reads is BioMart up.
     assert _biomart_down() is None
     assert b"AT1G01010" in httpx_mock.get_requests()[-1].content
+
+
+@pytest.mark.asyncio
+async def test_an_html_page_in_biomarts_place_skips_the_live_test_only_through_its_date(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """What BioMart's URL has served since 2026-11-14: the tool reports an
+    outage, the probe is served the same page, and the live test skips. After
+    _HTML_PAGE_UNTIL the same page fails it, and the nightly reads a regression."""
+    monkeypatch.setattr(_http.asyncio, "sleep", _no_sleep)
+    here = sys.modules[__name__]
+    for _ in range(2 * (3 + 1)):  # twice over: the tool's three attempts, then the probe
+        httpx_mock.add_response(url=_BIOMART_URL, method="POST", text=_FRONT_PAGE)
+    httpx_mock.add_response(url=_BIOMART_URL, method="POST", text=_AT1G01010_TSV)
+    async with httpx.AsyncClient() as client:
+        monkeypatch.setattr(here, "_today", lambda: _HTML_PAGE_UNTIL)
+        with pytest.raises(pytest.skip.Exception) as skipped:
+            await _lookup_or_skip_outage(client, "AT1G01010")
+        monkeypatch.setattr(here, "_today", lambda: _HTML_PAGE_UNTIL + timedelta(days=1))
+        with pytest.raises(EndpointMissing, match="move the date or retire the tool") as late:
+            await _lookup_or_skip_outage(client, "AT1G01010")
+        # Positive control: once BioMart answers, so does the live test's call.
+        row = await _lookup_or_skip_outage(client, "AT1G01010", probe=_never_probed)
+    assert str(skipped.value) == f"Phytozome BioMart down when probed directly ({_HTML_PAGE_DOWN})"
+    assert row["gene_name"] == "AT1G01010"
+    assert len(httpx_mock.get_requests()) == 2 * (3 + 1) + 1
+    # The nightly's classifier reads the failure message pytest reports.
+    assert _classify(f"EndpointMissing: {late.value}", monkeypatch) == "regression"
 
 
 @pytest.mark.asyncio
