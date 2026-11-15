@@ -73,21 +73,26 @@ jobs:
       - name: Baseline suite is green (a red baseline makes every mutant "killed")
         if: steps.optout.outputs.skip != '1'
         run: uv run --with pytest pytest -q -x -p no:cacheprovider
-      - name: This ISO week (the results cache starts clean each week)
-        # and on a new Python: mutmut keeps a result only while its function's
-        # hash is unchanged, and the hash is of ast.dump(), whose text differs
-        # between Pythons. ubuntu-latest moved to 26.04 on 2026-10-28 (python3
-        # 3.12 -> 3.14): every carried result was dropped mid-week and the cap
-        # re-ran them from scratch (data-aggregator-mcp, phylokit-mcp; the gate
-        # read the unfinished tail as a stall).
+      - name: The Python (a new one starts the results cache clean)
+        # mutmut keeps a result only while its function's hash is unchanged, and
+        # the hash is of ast.dump(), whose text differs between Pythons.
+        # ubuntu-latest moved to 26.04 on 2026-10-28 (python3 3.12 -> 3.14):
+        # every carried result was dropped and the cap re-ran them from scratch
+        # (data-aggregator-mcp, phylokit-mcp; the gate read the unfinished tail
+        # as a stall).
+        # The cache was also keyed on the ISO week until 2026-11-14, so every
+        # Monday started from nothing. A tree the cap cannot cover in seven
+        # nights then never finished: phylokit-mcp reached 2,618 of 3,163 by
+        # Saturday, week after week, and ~500 mutants were checked in no week.
+        # What the weekly restart was for (a result nobody has looked at again)
+        # is now decided per result, in the carry step.
         if: steps.optout.outputs.skip != '1'
-        id: week
+        id: py
         run: |
-          echo "week=$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
           # assignment, not inline $(...): a failed probe must stop the step, not key on "py"
           py=$(uv run python -c 'import sys; print("%d.%d" % sys.version_info[:2])')
           echo "python=$py" >> "$GITHUB_OUTPUT"
-      - name: Restore this week's mutant results
+      - name: Restore the mutant results of earlier runs
         # The 90-minute cap left the same tail unchecked every night, because
         # each night started from nothing (data-aggregator-mcp 2026-10-16/17/19:
         # 489, 520 and 1,298 mutants never checked). mutmut keeps a result
@@ -97,12 +102,16 @@ jobs:
         # regenerated, and mutmut-stats.json is left out so the test-to-function
         # map is recollected every night, as before. mutants/.carry-tests holds the
         # git blob id of each test file every result stands under, and the mutants
-        # waiting for a recheck because a test that covers them changed;
+        # waiting for a recheck, the day each result was made and the kills that
+        # stand under tests changed since;
         # mutants/.carry-stuck counts the nights each mutant was cut off by the cap.
-        # The path list is part of the cache version: a list changed mid-week
-        # misses every entry saved under the old one (2026-10-24: adding
-        # .carry-stuck restored nothing in all 7 mutating repos). New state goes
-        # inside a file already listed; the carry step warns on a mid-week miss.
+        # The path list is part of the cache version: a changed list misses
+        # every entry saved under the old one (2026-10-24: adding .carry-stuck
+        # restored nothing in all 7 mutating repos). New state goes inside a
+        # file already listed; the carry step warns when nothing was restored.
+        # The prefix also matches the keys saved while the week was part of it
+        # (mutmut-<version>-py<python>-<year>-W<week>-...), so the first run
+        # after this change resumes from the last weekly cache.
         if: steps.optout.outputs.skip != '1'
         id: restore
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -111,14 +120,22 @@ jobs:
             mutants/**/*.meta
             mutants/.carry-tests
             mutants/.carry-stuck
-          key: mutmut-${{ env.MUTMUT }}-py${{ steps.week.outputs.python }}-${{ steps.week.outputs.week }}-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: mutmut-${{ env.MUTMUT }}-py${{ steps.week.outputs.python }}-${{ steps.week.outputs.week }}-
+          key: mutmut-${{ env.MUTMUT }}-py${{ steps.py.outputs.python }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: mutmut-${{ env.MUTMUT }}-py${{ steps.py.outputs.python }}-
       - name: Carry results the code and tests still stand behind
-        # A kill stands until its function changes (mutmut resets it then) or
-        # the week ends. A survivor stands until a test that covers its function
-        # is added or changed: that test may kill it, and mutmut's hash follows
-        # the source, not the tests. Which tests cover a function is known only
-        # once tonight's run has collected its stats, so survivors carry here and
+        # A result stands until something it rests on changes. Until 2026-11-14
+        # it also ended with the ISO week; see the Python step.
+        # A kill stands until its function changes (mutmut resets it then). The
+        # tests that cover it can change too, and a weaker test may no longer
+        # kill it: the step after the run lists such kills, and this step
+        # rechecks them within the nightly budget below. Not all at once: one
+        # edited test file can cover most of a tree, and rechecking its kills
+        # together would start that night from nothing, which the carry exists
+        # to stop.
+        # A survivor stands until a test that covers its function is added or
+        # changed: that test may kill it, and mutmut's hash follows the source,
+        # not the tests. Which tests cover a function is known only once
+        # tonight's run has collected its stats, so survivors carry here and
         # the step after the run resets the ones a changed test covers; they are
         # rechecked the next night. Survivors are the slowest mutants (no early
         # failure), so rechecking them every night would spend the cap on them
@@ -127,6 +144,15 @@ jobs:
         # reason: each costs the full per-mutant timeout to recheck. Rechecking
         # them every night spent phylokit-mcp's whole cap (2026-10-21: 86
         # timeouts, ~55 s each, 13 first checks, 1,578 left unchecked).
+        # Any result older than 28 days is rechecked, whatever it is: a result
+        # also rests on things nothing here follows (a dependency, a function
+        # it calls, a data file). Results made together come due together.
+        # The nightly budget covers both: listed kills and aged results. At
+        # most a fourteenth of the tree waits on such a recheck at a time:
+        # listed kills first, then the aged, oldest first in each. A result
+        # reset here is listed in .carry-tests with its reason, so one the cap
+        # leaves unchecked is still counted as owed a recheck, and it still
+        # takes its place in the budget: nights the cap cuts short add no more.
         # "No tests" and the rest are rechecked every run.
         if: steps.optout.outputs.skip != '1'
         id: carry
@@ -134,42 +160,75 @@ jobs:
           MATCHED: ${{ steps.restore.outputs.cache-matched-key }}
         run: |
           uv run python - <<'PY'
-          import collections, datetime, json, os, pathlib
+          import collections, datetime, json, math, os, pathlib
           from mutmut.__main__ import status_by_exit_code
-          # The week's first run (Monday, UTC) starts clean by design; any later
-          # run that restored nothing checks the whole tree again from scratch.
-          if not os.environ["MATCHED"] and datetime.datetime.now(datetime.timezone.utc).isoweekday() != 1:
-              print("::warning::no results restored from earlier runs this week: every mutant is checked "
-                    "from scratch tonight. A new Python or a changed cache path list is a new cache version "
-                    "and misses every entry saved before it; so does an evicted or expired cache.")
+          MAX_AGE = 28  # days
+          TEST, AGED, KILL = "covered by a changed test", f"older than {MAX_AGE} days", "killed under tests changed since"
+          today = datetime.datetime.now(datetime.timezone.utc).date()
+          if not os.environ["MATCHED"]:
+              print("::warning::no results restored from an earlier run: every mutant is checked from scratch "
+                    "tonight. Expected on a repo's first run. Otherwise a new mutmut, a new Python or a changed "
+                    "cache path list is a new cache version and misses every entry saved before it; so does an "
+                    "evicted cache (GitHub drops one not read for 7 days).")
+          fp = pathlib.Path("mutants/.carry-tests")
           try:
-              base = json.loads(pathlib.Path("mutants/.carry-tests").read_text())
+              base = json.loads(fp.read_text())
               recheck = set(base["recheck"])
               known = isinstance(base["tests"], dict)
           except (FileNotFoundError, ValueError, TypeError, KeyError):
-              # first run of the week, or a fingerprint from before per-file
-              # tests: what the tests were is unknown, so only kills carry
-              recheck, known = set(), False
-          keep = {"killed", "caught by type check"} | ({"survived", "timeout"} if known else set())
+              # first run, or a fingerprint from before per-file tests: what
+              # the tests were is unknown, so only kills carry
+              base, recheck, known = {}, set(), False
+          made = dict(base.get("made") or {}) if known else {}
+          why = dict(base.get("why") or {}) if known else {}
+          tests_changed = set(base.get("kill_tests_changed") or []) if known else set()
+          def age(k):  # in days; a result saved before dates were kept counts from the run that first dates it
+              try:
+                  return (today - datetime.date.fromisoformat(made[k])).days
+              except (KeyError, ValueError):
+                  return 0
+          kills = {"killed", "caught by type check"}
+          keep = kills | ({"survived", "timeout"} if known else set())
+          metas = {m: json.loads(m.read_text()) for m in sorted(pathlib.Path("mutants").rglob("*.meta"))}
+          standing = {k: status_by_exit_code[c] for d in metas.values() for k, c in d["exit_code_by_key"].items()
+                      if c is not None and status_by_exit_code[c] in keep}
+          total = sum(len(d["exit_code_by_key"]) for d in metas.values())
+          # the nightly budget, less what earlier nights reset under it and the cap left unchecked
+          owed = sum(c is None and k in recheck and why.get(k) in (AGED, KILL)
+                     for d in metas.values() for k, c in d["exit_code_by_key"].items())
+          room = math.ceil(total / 14) - owed
+          oldest = sorted(standing, key=lambda k: (made.get(k, today.isoformat()), k))
+          due = {}
+          for k, reason in ([(k, KILL) for k in oldest if standing[k] in kills and k in tests_changed]
+                            + [(k, AGED) for k in oldest if age(k) >= MAX_AGE]):
+              if len(due) < room:
+                  due.setdefault(k, reason)
           carried, reset, reset_status, hashes = [], [], [], {}
-          for meta in sorted(pathlib.Path("mutants").rglob("*.meta")):
-              d = json.loads(meta.read_text())
+          for meta, d in metas.items():
               hashes[str(meta)] = d.get("hash_by_function_name", {})
               for k, c in d["exit_code_by_key"].items():
                   if c is None:
-                      if k in recheck:  # reset after the last run: a test covering it changed
+                      if k in recheck:  # reset after an earlier run, or before one the cap ended first
                           reset.append(k)
-                          reset_status.append("covered by a changed test")
+                          reset_status.append(why.get(k, TEST))
                       continue
-                  if status_by_exit_code[c] in keep:
+                  if k in due:
+                      reason = due[k]
+                  elif k in standing:
                       carried.append(k)
+                      continue
                   else:
-                      d["exit_code_by_key"][k] = None
-                      reset.append(k)
-                      reset_status.append(status_by_exit_code[c])
+                      reason = status_by_exit_code[c]
+                  d["exit_code_by_key"][k] = None
+                  reset.append(k)
+                  reset_status.append(reason)
               meta.write_text(json.dumps(d))
-          # no recheck is owed to a test change: the gate's stall rule applies
-          same_tests = known and "covered by a changed test" not in reset_status
+          if due:  # still owed a recheck if the cap ends the run before it gets to them
+              base["recheck"] = sorted(recheck | set(due))
+              base["why"] = {**why, **due}
+              fp.write_text(json.dumps(base, indent=1, sort_keys=True))
+          # no recheck is owed (to a test change or to a result's age): the gate's stall rule applies
+          same_tests = known and not ({TEST, AGED, KILL} & set(reset_status))
           pathlib.Path(os.environ["RUNNER_TEMP"], "carried.txt").write_text("".join(k + "\n" for k in carried))
           # the function hashes these results were carried under (the step after the run)
           pathlib.Path(os.environ["RUNNER_TEMP"], "carried-hashes.json").write_text(json.dumps(hashes))
@@ -177,7 +236,7 @@ jobs:
           by_status = collections.Counter(reset_status)
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
               f.write(f"carried={len(carried)}\nreset={len(reset)}\nsame_tests={int(same_tests)}\n")
-          print(f"carried {len(carried)} results from earlier runs this week "
+          print(f"carried {len(carried)} results from earlier runs "
                 f"({'survivors and timeouts too, checked against changed tests after the run' if known else 'first run or tests unknown: kills only'}); "
                 f"{len(reset)} others to recheck"
                 + (f" ({', '.join(f'{n} {s}' for s, n in by_status.most_common())})" if reset else ""))
@@ -289,12 +348,18 @@ jobs:
         # came from (conftest.py, a helper, data) can change any test: then
         # every carried survivor and timeout is reset, as before. A reset one is
         # listed in .carry-tests and rechecked the next night.
+        # A carried kill the same tests cover is not reset: it is listed in
+        # .carry-tests (kill_tests_changed) and the carry step rechecks the
+        # listed within its nightly budget. A deleted test file lists every
+        # carried kill, since tonight's stats no longer say what it covered.
+        # This step also dates each result: today if this run made it, its
+        # earlier date if it stood.
         if: steps.optout.outputs.skip != '1'
         id: tests
         run: |
           git ls-files -s | awk -F'\t' '$2 ~ /(^|\/)(tests?\/|conftest\.py$)/ { split($1, a, " "); print a[2] "\t" $2 }' > "$RUNNER_TEMP/tests.txt"
           uv run python - <<'PY'
-          import json, os, pathlib, re
+          import datetime, json, os, pathlib, re
           from mutmut.__main__ import load_stats, mangled_name_from_mutant_name, status_by_exit_code, tests_for_mutant_names
           from mutmut.state import state
           tmp = os.environ["RUNNER_TEMP"]
@@ -304,16 +369,23 @@ jobs:
               base = json.loads(fp.read_text())
               old, recheck = dict(base["tests"]), set(base["recheck"])
           except (FileNotFoundError, ValueError, TypeError, KeyError):
-              old, recheck = None, set()  # unknown: the carry step kept kills only
+              base, old, recheck = {}, None, set()  # unknown: the carry step kept kills only
+          today = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
+          made_before, why_before = dict(base.get("made") or {}), dict(base.get("why") or {})
+          listed_before = set(base.get("kill_tests_changed") or [])
           changed = sorted(p for p in old.keys() | now.keys() if old.get(p) != now.get(p)) if old is not None else []
           has_stats = load_stats()
           ran = {t.split("::", 1)[0] for t in state().duration_by_test} if has_stats else set()
           deleted_test = re.compile(r"(^|/)(test_[^/]*|[^/]*_test)\.py$")  # a gone test kills nothing
-          unexplained = [p for p in changed if p not in ran and not (p not in now and deleted_test.search(p))]
+          gone = [p for p in changed if p not in now and deleted_test.search(p)]
+          unexplained = [p for p in changed if p not in ran and p not in gone]
           every = old is None or (bool(changed) and (not has_stats or bool(unexplained)))
           carried = set(pathlib.Path(tmp, "carried.txt").read_text().split())
           carried_hashes = json.loads(pathlib.Path(tmp, "carried-hashes.json").read_text())
-          stale, waiting = [], set()
+          stale, waiting, made, listed = [], set(), {}, set()
+          kills = ("killed", "caught by type check")
+          def files(k):  # the test files tonight's stats say cover this mutant: the same lookup mutmut's run makes
+              return {t.split("::", 1)[0] for t in tests_for_mutant_names([k.replace("__init__.", "")])}
           for meta in sorted(pathlib.Path("mutants").rglob("*.meta")):
               d = json.loads(meta.read_text())
               before, after = carried_hashes.get(str(meta), {}), d.get("hash_by_function_name", {})
@@ -323,33 +395,45 @@ jobs:
                       if k in recheck:
                           waiting.add(k)
                       continue
-                  if k not in carried or status_by_exit_code[c] not in ("survived", "timeout"):
-                      continue
+                  status = status_by_exit_code[c]
                   # Its function changed, so mutmut dropped the carried result and
                   # checked it again tonight, under tonight's tests: it stands.
                   func = mangled_name_from_mutant_name(k).rpartition(".")[2]
-                  if before.get(func) != after.get(func):
+                  stood = k in carried and before.get(func) == after.get(func)
+                  made[k] = made_before.get(k, today) if stood else today
+                  if not stood:
+                      continue
+                  if status in kills:
+                      if k in listed_before or every:
+                          listed.add(k)
+                      elif has_stats:
+                          covering = files(k)
+                          if gone or not covering or covering & set(changed):
+                              listed.add(k)
+                      continue
+                  if status not in ("survived", "timeout"):
                       continue
                   if not every:
                       if not has_stats:
                           continue  # no tests changed, so the result stands
-                      # the same lookup mutmut's run makes for this mutant
-                      covering = {t.split("::", 1)[0] for t in tests_for_mutant_names([k.replace("__init__.", "")])}
+                      covering = files(k)
                       if covering and not covering & set(changed):
                           continue
                   d["exit_code_by_key"][k] = None
+                  del made[k]
                   stale.append(k)
                   dirty = True
               if dirty:
                   meta.write_text(json.dumps(d))
           fp.parent.mkdir(exist_ok=True)
           owed = waiting | set(stale)
-          fp.write_text(json.dumps({"tests": now, "recheck": sorted(owed)}, indent=1, sort_keys=True))
+          fp.write_text(json.dumps({"tests": now, "recheck": sorted(owed), "made": made, "kill_tests_changed": sorted(listed),
+                                    "why": {k: why_before[k] for k in owed if k in why_before}}, indent=1, sort_keys=True))
           # stale: reset tonight, after the run (not this run's to check; the gate).
           # recheck: every one still owed a recheck, including those reset before
           # tonight's run that the cap left unchecked (the issue).
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-              f.write(f"stale={len(stale)}\nrecheck={len(owed)}\n")
+              f.write(f"stale={len(stale)}\nrecheck={len(owed)}\nkills_listed={len(listed)}\n")
           shown = ", ".join(changed[:10]) + (f" and {len(changed) - 10} more" if len(changed) > 10 else "")
           print(f"test files changed since the carried results: {len(changed)}" + (f" ({shown})" if changed else ""))
           if every and changed:
@@ -357,6 +441,8 @@ jobs:
               print(f"{why}: every carried survivor and timeout is rechecked")
           print(f"{len(stale)} carried survivors and timeouts reset for a recheck next run"
                 + (f" (e.g. {', '.join(stale[:5])})" if stale else ""))
+          print(f"{len(listed)} carried kills stand under tests changed since they were made "
+                f"({len(listed - listed_before)} listed tonight): rechecked oldest first, within the carry step's nightly budget")
           PY
       - name: Save the results for the next run
         # always(): the gate below goes red on purpose, and a partial run's
@@ -446,7 +532,7 @@ jobs:
           {
             echo "count=$n"; echo "unchecked=$unchecked"; echo "aborted=$aborted"; echo "checked=$checked"; echo "new=$new"; echo "first=$first"; echo "unjudged_new=$unjudged_new"
           } >> "$GITHUB_OUTPUT"
-          echo "## Mutants: $killed killed, $n survived, $checked checked ($new this run, $first of them first checks; $CARRIED carried from earlier this week, ${STALE:-0} of them reset after the run because a test that may cover them changed; ${MARKED:-0} timeouts the cap cut off twice), $unchecked unchecked, ${CUTOFF:-0} of them cut off by the cap (mutmut exit $RC, aborted=$aborted)" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Mutants: $killed killed, $n survived, $checked checked ($new this run, $first of them first checks; $CARRIED carried from earlier runs, ${STALE:-0} of them reset after the run because a test that may cover them changed; ${MARKED:-0} timeouts the cap cut off twice), $unchecked unchecked, ${CUTOFF:-0} of them cut off by the cap (mutmut exit $RC, aborted=$aborted)" >> "$GITHUB_STEP_SUMMARY"
           head -200 survivors.txt >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: steps.optout.outputs.skip != '1'
@@ -484,7 +570,7 @@ jobs:
           if [ "$ABORTED" = "1" ]; then title="$title (PARTIAL: mutmut aborted, $UNCHECKED unchecked)"
           elif [ "${RECHECK:-0}" != "0" ]; then
             backlog=$(( ${UNCHECKED:-0} - RECHECK ))
-            title="$title (waiting for a recheck: $RECHECK earlier survivors and timeouts"
+            title="$title (waiting for a recheck: $RECHECK earlier results"
             if [ "$backlog" -gt 0 ]; then title="$title; $backlog more unchecked at the wall-clock cap"; fi
             title="$title)"
           elif [ "${UNCHECKED:-0}" != "0" ]; then title="$title ($UNCHECKED unchecked at the wall-clock cap)"; fi
@@ -510,7 +596,7 @@ jobs:
           print(f"{counts}. Each survivor is a line of code no test observes; the full list, every status, is the run's `mutmut-survivors` artifact.\n")
           owed = int(e.get("RECHECK") or 0)
           if owed:
-              print(f"Waiting for a recheck: {owed} of the not checked, earlier survivors and timeouts that a changed test may cover. Until the next runs recheck them, the survivor count above is low.\n")
+              print(f"Waiting for a recheck: {owed} of the not checked, earlier results that a changed test may cover or that came due by age. Until the next runs recheck them, the survivor count above is low.\n")
           print(f"Survivors by function ({min(len(order), 100)} of {len(order)}):\n```")
           for f in order[:100]:
               print(f"{len(by[f]):5d} {f}"[:200])
@@ -563,9 +649,9 @@ jobs:
             echo "::error::mutmut checked no mutant this run while $waited waited; the $CHECKED checked are carried from earlier runs. The suite is not green inside mutants/ (see above)."
             exit 1
           fi
-          # Rechecks after a test change are real work (the tests that judged
-          # them changed); rechecks under unchanged tests that fill the cap are
-          # a stall the tail never recovers from before the week's cache resets.
+          # Rechecks that were owed are real work (the tests that judged them
+          # changed, or the result came due by age); rechecks of anything else
+          # that fill the cap are a stall the tail never recovers from.
           if [ "${FIRST:-0}" -eq 0 ] && [ "$waited" -gt 0 ]; then
             if [ "$all_cut" = "1" ]; then
               echo "::warning::all $waited mutants still unchecked were running when the cap hit (the cut-off step's log names them): mutmut's own deadline for them is longer than the cap. Cut off again after 30+ min, each counts as a timeout."
@@ -573,7 +659,7 @@ jobs:
               echo "::error::no unchecked mutant got its first check while $waited waited. The cap went on $NEW rechecks of earlier results (the carry step's log gives their statuses) and ${CUTOFF:-0} mutants still running when it hit (the cut-off step's log names them). Carry a rechecked status that should stand, or find why the rest never start."
               exit 1
             else
-              echo "::warning::earlier results a changed test covers were rechecked ($NEW results this run) and no unchecked mutant got its first check ($waited wait for the next run)."
+              echo "::warning::earlier results owed a recheck (a changed test covers them, or they came due by age; the carry step's log counts each) were rechecked ($NEW results this run) and no unchecked mutant got its first check ($waited wait for the next run)."
             fi
           fi
           if [ "$ABORTED" = "1" ]; then
