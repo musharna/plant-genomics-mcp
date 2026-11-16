@@ -22,6 +22,9 @@
   check failed. `PAGE.md` now says what the column means: InterPro lists one
   of those two entries, not "the protein has no PB1 fold" (#275).
 
+- **Dependencies:** opentelemetry-api 1.45.2 (GHSA-mf5v-w3w3-f6cg) in the
+  lock, which the Docker images install.
+
 ## v1.31.0 — 2026-11-13
 
 **58 tools / 24 backends** — no new tool. One new output field
