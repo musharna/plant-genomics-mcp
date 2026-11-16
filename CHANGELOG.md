@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## v1.32.0 — 2026-11-15
+
+**58 tools / 24 backends** — no new tool. One new setting
+(`PLANT_GENOMICS_MCP_OMIT_OUTPUT_SCHEMAS`) and a corrected example row.
+
 - **`PLANT_GENOMICS_MCP_OMIT_OUTPUT_SCHEMAS=1` leaves output schemas out of
   `tools/list`.** The list is 228 KB for 58 tools, and 65% of that is output
   schemas. A client that loads every tool definition before its first call
@@ -9,7 +14,16 @@
   set, on both transports, and changes nothing else: the same tools,
   descriptions and input schemas, and every result still carries
   `structuredContent`. A value that is neither on nor off stops the server at
-  startup.
+  startup (#276).
+
+- **ARF family example: ARF8 now reads `has_pb1_domain = true`.** InterPro
+  now lists the AUX/IAA domain (IPR033389 / PF02309) for ARF8 (AT5G37020);
+  when the table was built it did not, so the row said false and the live
+  check failed. `PAGE.md` now says what the column means: InterPro lists one
+  of those two entries, not "the protein has no PB1 fold" (#275).
+
+- **Dependencies:** opentelemetry-api 1.45.2 (GHSA-mf5v-w3w3-f6cg) in the
+  lock, which the Docker images install.
 
 ## v1.31.0 — 2026-11-13
 

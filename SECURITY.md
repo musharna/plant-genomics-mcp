@@ -3,11 +3,11 @@
 ## Supported versions
 
 `plant-genomics-mcp` is released from `main` and only the latest published
-version receives security fixes. As of this writing that is **v1.31.0**.
+version receives security fixes. As of this writing that is **v1.32.0**.
 
 | Version                  | Supported          |
 | ------------------------ | ------------------ |
-| Latest release (v1.31.0) | :white_check_mark: |
+| Latest release (v1.32.0) | :white_check_mark: |
 | Older releases           | :x:                |
 
 Fixes ship in a new patch/minor release on PyPI; there are no long-term
