@@ -159,7 +159,7 @@ jobs:
             echo "audit=0" >> "$GITHUB_OUTPUT"
             echo "::notice::dependency audit skipped: no dependency file changed. The nightly audit job covers newly published CVEs."
           fi
-      - name: Dependency audit (every package in uv.lock, every Python it covers)
+      - name: Dependency audit (every package in uv.lock and the requirements files, every Python they cover)
         if: steps.deps.outputs.audit == '1'
         run: |
           # The audit can fail: a pin only another Python selects is found, a clean
@@ -167,6 +167,9 @@ jobs:
           # this runner's Python (figcite, 2026-11-01: pillow 12.3.0 for 3.10).
           bash scripts/lock-audit-selftest.sh
           bash scripts/lock_audit.sh
+          # Requirements files are in no lock: each is resolved and audited on its own.
+          if compgen -G 'requirements*.txt' > /dev/null; then bash scripts/requirements-audit-selftest.sh; fi
+          bash scripts/requirements_audit.sh
           # requirements-dev.txt is not in uv.lock: install it and audit what it brought.
           if [ -f requirements-dev.txt ]; then
             # Repo-specific system prerequisites (R for rpy2, OpenCV libs, ...) live in
