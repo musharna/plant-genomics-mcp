@@ -13,7 +13,7 @@
   streak under "Repeat upstream", separate from regressions. A cancelled
   night, or one whose report has expired, is skipped and neither extends nor
   ends a streak. History that cannot be read makes the run unusable. A real
-  outage lasting 3 nights also turns the run red.
+  outage lasting 3 nights also turns the run red (#283).
 
 ## v1.32.0 — 2026-11-15
 
