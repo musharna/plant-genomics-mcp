@@ -11,11 +11,14 @@ it, a subprocess reading a JUnit file.
 from __future__ import annotations
 
 import importlib.util
+import io
+import json
 import re
 import shlex
 import subprocess
 import sys
-from collections.abc import Sequence
+import zipfile
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from types import ModuleType
 from xml.sax.saxutils import escape, quoteattr
@@ -420,3 +423,226 @@ def test_only_the_failure_lines_count_and_an_unmatched_block_is_refused(tmp_path
     good.write_text(_PYTEST_92, encoding="utf-8")
     run = _run(good, 1)
     assert "### Live run unusable" not in run.stdout, run.stdout
+
+
+# ---------- repeat upstream: the same test upstream several nights running ----------
+# The nightly listed upstream failures and stayed green, so a test that could
+# not pass was listed for six weeks (the live BLAST test ended WAITING on almost
+# every scheduled night). With --history the classifier reads the reports
+# earlier scheduled runs kept and fails the run on a repeat. The GitHub API is
+# faked here at the classifier's one seam (github_get); the workflow's own run
+# on the PR reads the real one.
+
+_API = "https://api.github.com"
+_REPO, _RUN_ID = "owner/repo", 999
+_RUNS_URL = (
+    f"{_API}/repos/{_REPO}/actions/workflows/live-nightly.yml/runs"
+    "?event=schedule&status=completed&per_page=15"
+)
+_HISTORY_ARGS = ["--history", "live-nightly.yml"]
+
+
+def _zip(report: Path) -> bytes:
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as archive:
+        archive.write(report, "live.xml")
+    return buf.getvalue()
+
+
+Night = tuple[str, str, "list[tuple[str, str | None, str]] | bytes | None"]
+
+
+def _fake_api(
+    tmp_path: Path, classifier: ModuleType, nights: Sequence[Night]
+) -> tuple[Callable[[str], bytes], list[str]]:
+    """The GitHub API as the classifier reads it, for scheduled ``nights``
+    newest first: (date, conclusion, report cases | archive bytes | None for
+    no live-junit artifact). Returns the getter and the URLs it was asked for;
+    a URL it does not serve answers 404, as the API would."""
+    pages: dict[str, bytes] = {}
+    runs = []
+    for i, (date, conclusion, report) in enumerate(nights):
+        run_id = 500 - i
+        runs.append({"id": run_id, "created_at": f"{date}T17:00:00Z", "conclusion": conclusion})
+        artifacts = []
+        if report is not None:
+            url = f"https://storage.example/{run_id}.zip"
+            artifacts.append(
+                {
+                    "name": "live-junit",
+                    "expired": False,
+                    "created_at": f"{date}T18:00:00Z",
+                    "archive_download_url": url,
+                }
+            )
+            pages[url] = (
+                report
+                if isinstance(report, bytes)
+                else _zip(_report(tmp_path, report, f"night-{run_id}.xml"))
+            )
+        pages[f"{_API}/repos/{_REPO}/actions/runs/{run_id}/artifacts?name=live-junit"] = json.dumps(
+            {"artifacts": artifacts}
+        ).encode()
+    # The run being judged is in progress, so the API lists it only if asked
+    # for every status; it must not count as its own history either way.
+    runs.append({"id": _RUN_ID, "created_at": "2026-12-31T17:00:00Z", "conclusion": "success"})
+    pages[_RUNS_URL] = json.dumps({"workflow_runs": runs}).encode()
+    asked: list[str] = []
+
+    def get(url: str) -> bytes:
+        asked.append(url)
+        if url not in pages:
+            raise classifier.HistoryUnreadable(f"GET {url}: HTTP 404")
+        return pages[url]
+
+    return get, asked
+
+
+def _classify(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    today: Sequence[tuple[str, str | None, str]],
+    nights: Sequence[Night],
+    name: str,
+) -> tuple[int, str, list[str]]:
+    """Run the classifier in-process as the workflow does, over a fake history."""
+    classifier = _load_classifier(monkeypatch)
+    get, asked = _fake_api(tmp_path, classifier, nights)
+    monkeypatch.setattr(classifier, "github_get", lambda token: get, raising=False)
+    monkeypatch.setenv("GITHUB_TOKEN", "t")
+    monkeypatch.setenv("GITHUB_REPOSITORY", _REPO)
+    monkeypatch.setenv("GITHUB_RUN_ID", str(_RUN_ID))
+    exit_code = int(any(c[1] == "failure" for c in today))
+    code = classifier.main(
+        ["classify", str(_report(tmp_path, today, name)), str(exit_code), *_HISTORY_ARGS]
+    )
+    return code, capsys.readouterr().out, asked
+
+
+_OK = ("test_ok", None, "")
+_BLAST = ("test_blast", "failure", BLAST_TIMEOUT)
+_ENSEMBL = ("test_ensembl", "failure", ENSEMBL_500)
+
+
+def test_a_test_upstream_three_nights_running_fails_the_run_as_a_repeat_not_a_regression(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """BLAST upstream tonight and the two scheduled nights before: the run
+    fails, and the summary names the test and its streak under its own
+    heading, not as a regression. Positive controls, same history: Ensembl,
+    upstream tonight only, passes; a regression still fails as a regression."""
+    history: list[Night] = [
+        ("2026-11-16", "success", [_OK, _BLAST, ("test_ensembl", None, "")]),
+        ("2026-11-15", "failure", [_OK, _BLAST, _ENSEMBL]),
+    ]
+    code, out, _ = _classify(
+        tmp_path, monkeypatch, capsys, [_OK, _BLAST, _ENSEMBL], history, "red.xml"
+    )
+    assert "### Repeat upstream: 1 test(s) labeled upstream on 3 or more nights in a row" in out
+    # 3+: the streak reaches back to the oldest night the history holds.
+    assert "| 3+ | `tests.test_live::test_blast` |" in out
+    assert "`tests.test_live::test_ensembl` |" not in out.split("### Live tests")[0]
+    assert "0 regression(s), 2 upstream-side failure(s)" in out
+    assert "### Live run unusable" not in out
+    assert code == 1
+
+    code, out, _ = _classify(tmp_path, monkeypatch, capsys, [_OK, _ENSEMBL], history, "one.xml")
+    assert code == 0, out
+    assert "Repeat upstream" not in out
+    assert "`tests.test_live::test_ensembl`" in out  # still listed, as before
+
+    regression = ("test_protein", "failure", WRONG_LENGTH)
+    code, out, _ = _classify(tmp_path, monkeypatch, capsys, [_OK, regression], history, "reg.xml")
+    assert code == 1
+    assert "1 regression(s), 0 upstream-side failure(s)" in out
+    assert "Repeat upstream" not in out
+
+
+def test_a_night_with_no_record_neither_extends_nor_breaks_a_streak(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Two cancelled nights (the job's time limit, as 2026-11-17 and -18) and
+    one whose report expired are passed over; the first recorded night the
+    test was not upstream ends the streak, and nothing older is read.
+    Positive control: the same nights with the BLAST test passing on one of
+    them leave a streak of 1 and the run green."""
+
+    def nights(blast_on_16: tuple[str, str | None, str]) -> list[Night]:
+        return [
+            ("2026-11-18", "cancelled", None),
+            ("2026-11-17", "cancelled", None),
+            ("2026-11-16", "success", [_OK, blast_on_16]),
+            ("2026-11-15", "success", None),  # kept no unexpired report
+            ("2026-11-14", "failure", [_OK, _BLAST]),
+            ("2026-11-13", "success", [_OK, ("test_blast", None, "")]),
+            ("2026-11-12", "failure", b"never read: the streak ended on 11-13"),
+        ]
+
+    code, out, asked = _classify(
+        tmp_path, monkeypatch, capsys, [_OK, _BLAST], nights(_BLAST), "gap.xml"
+    )
+    assert "| 3 | `tests.test_live::test_blast` |" in out, out
+    assert "2026-11-18 (run 500: no record, run cancelled)" in out
+    assert "2026-11-15 (run 497: no record, no unexpired live-junit artifact)" in out
+    assert "2026-11-13 (run 495)" in out and "2026-11-12" not in out
+    assert not any("/494" in url for url in asked)
+    assert code == 1
+
+    code, out, _ = _classify(
+        tmp_path, monkeypatch, capsys, [_OK, _BLAST], nights(("test_blast", None, "")), "ok.xml"
+    )
+    assert code == 0, out
+    assert "Repeat upstream" not in out
+
+
+def test_history_that_cannot_be_read_makes_the_run_unusable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """An API refusal, a corrupt archive or a missing token is not "no
+    history": each fails the run as unusable, even one with no failures (the
+    run list is read every night). Positive control: the same runs with
+    history that reads are green."""
+    readable: list[Night] = [("2026-11-16", "success", [_OK, _BLAST])]
+    code, out, _ = _classify(tmp_path, monkeypatch, capsys, [_OK, _BLAST], readable, "g.xml")
+    assert code == 0, out
+    code, out, _ = _classify(tmp_path, monkeypatch, capsys, [_OK], readable, "c.xml")
+    assert code == 0, out
+
+    corrupt: list[Night] = [("2026-11-16", "success", b"not a zip archive")]
+    code, out, _ = _classify(tmp_path, monkeypatch, capsys, [_OK, _BLAST], corrupt, "z.xml")
+    assert code == 1
+    assert "### Live run unusable" in out and "run 500: live-junit unreadable" in out, out
+
+    classifier = _load_classifier(monkeypatch)
+
+    def refused(token: str) -> Callable[[str], bytes]:
+        def get(url: str) -> bytes:
+            raise classifier.HistoryUnreadable(f"GET {url}: HTTP 403: Resource not accessible")
+
+        return get
+
+    monkeypatch.setattr(classifier, "github_get", refused, raising=False)
+    monkeypatch.setenv("GITHUB_TOKEN", "t")
+    clean = _report(tmp_path, [_OK], "clean.xml")
+    code = classifier.main(["classify", str(clean), "0", *_HISTORY_ARGS])
+    out = capsys.readouterr().out
+    assert code == 1
+    assert "cannot read the nightly history: GET" in out and "HTTP 403" in out, out
+
+    monkeypatch.delenv("GITHUB_TOKEN")
+    code = classifier.main(["classify", str(clean), "0", *_HISTORY_ARGS])
+    out = capsys.readouterr().out
+    assert code == 1
+    assert "cannot read the nightly history: GITHUB_TOKEN not set" in out, out
+
+
+def test_the_workflow_reads_history_with_a_token_that_can_read_actions() -> None:
+    """The check runs only if the workflow asks for it, can read the Actions
+    API, and uploads the report under the name the classifier reads back."""
+    workflow = WORKFLOW.read_text(encoding="utf-8")
+    assert re.search(r"(?m)^permissions:\n  contents: read\n  actions: read\b", workflow)
+    assert "GITHUB_TOKEN: ${{ github.token }}" in workflow
+    assert '"$GITHUB_STEP_SUMMARY" --history live-nightly.yml' in workflow
+    assert re.search(r"(?m)^\s+name: live-junit$", workflow)
+    assert WORKFLOW.name == "live-nightly.yml"

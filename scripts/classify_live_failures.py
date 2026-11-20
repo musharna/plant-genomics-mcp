@@ -33,24 +33,60 @@ Skips are listed by reason, so a test that skipped itself (verify_genes does,
 when a direct probe finds its backend down) is in the summary, not missing
 from it.
 
-Usage: ``classify_live_failures.py REPORT.xml PYTEST_EXIT [SUMMARY.md]``;
-the summary (markdown) is appended to, as ``$GITHUB_STEP_SUMMARY`` expects.
-Exit 0 when no regression, 1 when there is one or the run is unusable.
+A test labeled upstream night after night was listed and the run stayed green:
+the live BLAST test ended WAITING in almost every scheduled run for six weeks,
+and verify_genes's stdio test hit the timeout twelve recorded nights running.
+So with ``--history WORKFLOW_FILE`` the run also fails on a *repeat upstream*:
+a test labeled upstream in this run and in each of the scheduled nights before
+it, ``REPEAT_UPSTREAM_NIGHTS`` in a row. The nights are read from the
+``live-junit`` report each scheduled run keeps as an artifact, classed by this
+same code, through the GitHub API with ``$GITHUB_TOKEN`` (``$GITHUB_REPOSITORY``
+and ``$GITHUB_RUN_ID`` name the repo and this run). A scheduled run that kept
+no report (cancelled at the job's time limit, or its artifact expired) is a
+night with no record: it neither extends a streak nor breaks one. History that
+exists but cannot be read (an API error, a corrupt archive or report) makes the
+run unusable, never a silent pass.
+
+Usage: ``classify_live_failures.py REPORT.xml PYTEST_EXIT [SUMMARY.md]
+[--history WORKFLOW_FILE]``; the summary (markdown) is appended to, as
+``$GITHUB_STEP_SUMMARY`` expects. Exit 0 when no regression and no repeat
+upstream, 1 when there is either or the run is unusable.
 """
 
 from __future__ import annotations
 
+import io
+import json
+import os
 import re
 import sys
+import zipfile
 from collections import Counter
+from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import IO
 
-from defusedxml import ElementTree
+import httpx
+from defusedxml import DefusedXmlException, ElementTree
 
 UPSTREAM_TAGS = ("[UpstreamUnavailableError]", "[RateLimitError]")
 TIMEOUT_MARK = "Timeout (>"  # pytest-timeout: "Failed: Timeout (>240.0s) from pytest-timeout."
 LIVE_GATE = "PLANT_GENOMICS_MCP_LIVE"
+
+# A test labeled upstream on this many scheduled nights in a row fails the run.
+# Read over the 42 recorded nights the history held when this was chosen: four
+# tests could not pass (the three BLAST tests, streaks of 25 to 42 nights;
+# verify_genes's stdio test, 12). Leaving those out, the run would have failed
+# on 8 nights at 2 (two-night blips), on 1 at 3 (two Ensembl lookups through a
+# three-night outage) and on none at 4. 3 is the smallest count a two-night
+# blip does not reach.
+REPEAT_UPSTREAM_NIGHTS = 3
+# Scheduled runs read back at most; a streak still alive after them is shown
+# as a lower bound.
+HISTORY_RUNS = 14
+REPORT_ARTIFACT = "live-junit"  # the name live-nightly.yml uploads the report under
+API = "https://api.github.com"
 
 
 @dataclass(frozen=True)
@@ -139,7 +175,7 @@ def _full_message(attr: str, text: str) -> str:
     return f'{wrapper.group(0)}{message}"' if wrapper else message
 
 
-def read_report(path: Path) -> Report:
+def read_report(path: Path | IO[bytes]) -> Report:
     root = ElementTree.parse(path).getroot()
     report = Report()
     for prop in root.iter("property"):
@@ -165,11 +201,174 @@ def read_report(path: Path) -> Report:
     return report
 
 
+class HistoryUnreadable(RuntimeError):
+    """History that exists could not be read: the run cannot be judged on it."""
+
+
+@dataclass(frozen=True)
+class Night:
+    """One earlier scheduled run, as read back."""
+
+    run_id: int
+    date: str
+    upstream: frozenset[str] | None  # tests labeled upstream; None when the run kept no record
+    note: str = ""  # why there is no record
+
+
+Get = Callable[[str], bytes]
+
+
+def github_get(token: str) -> Get:
+    """GET from the GitHub API with the workflow's token; any non-200 raises.
+
+    An artifact's archive URL answers with a redirect to storage on another
+    host; httpx drops the Authorization header when it follows one.
+    """
+    client = httpx.Client(
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+        },
+        follow_redirects=True,
+        timeout=60.0,
+    )
+
+    def get(url: str) -> bytes:
+        try:
+            resp = client.get(url)
+        except httpx.HTTPError as err:
+            raise HistoryUnreadable(f"GET {url}: {err!r}") from err
+        if resp.status_code != 200:
+            raise HistoryUnreadable(f"GET {url}: HTTP {resp.status_code}: {resp.text[:200]}")
+        return resp.content
+
+    return get
+
+
+def _json(get: Get, url: str) -> dict:
+    try:
+        return json.loads(get(url))
+    except ValueError as err:
+        raise HistoryUnreadable(f"GET {url}: not JSON: {err}") from err
+
+
+def _night(get: Get, repo: str, run: dict) -> Night:
+    run_id, date = int(run["id"]), str(run["created_at"])[:10]
+    if run.get("conclusion") not in ("success", "failure"):
+        # The classifier step did not finish (the job hit its time limit, or
+        # the run was cancelled or skipped): pytest wrote no whole report.
+        return Night(run_id, date, None, f"run {run.get('conclusion')}")
+    listing = _json(
+        get, f"{API}/repos/{repo}/actions/runs/{run_id}/artifacts?name={REPORT_ARTIFACT}"
+    )
+    kept = [a for a in listing.get("artifacts", []) if not a.get("expired")]
+    if not kept:
+        return Night(run_id, date, None, f"no unexpired {REPORT_ARTIFACT} artifact")
+    newest = max(kept, key=lambda a: str(a.get("created_at", "")))
+    url = newest["archive_download_url"]
+    try:
+        with zipfile.ZipFile(io.BytesIO(get(url))) as archive:
+            names = archive.namelist()
+            if len(names) != 1:
+                raise HistoryUnreadable(
+                    f"run {run_id}: {REPORT_ARTIFACT} holds {names}, not one report"
+                )
+            report = read_report(io.BytesIO(archive.read(names[0])))
+    except (zipfile.BadZipFile, ElementTree.ParseError, DefusedXmlException) as err:
+        raise HistoryUnreadable(f"run {run_id}: {REPORT_ARTIFACT} unreadable: {err!r}") from err
+    if report.cases == 0:
+        raise HistoryUnreadable(f"run {run_id}: {REPORT_ARTIFACT} holds no test cases")
+    return Night(run_id, date, frozenset(f.test for f in report.failures if f.cls == "upstream"))
+
+
+def scheduled_nights(get: Get, repo: str, workflow: str, current_run: int) -> Iterator[Night]:
+    """The scheduled runs before this one, newest first, each read when asked for.
+
+    The run list is read before the first night is yielded, so a token that
+    cannot read the Actions API fails every run, not only one that needs
+    history.
+    """
+    listing = _json(
+        get,
+        f"{API}/repos/{repo}/actions/workflows/{workflow}/runs"
+        f"?event=schedule&status=completed&per_page={HISTORY_RUNS + 1}",
+    )
+    runs = [r for r in listing.get("workflow_runs", []) if int(r["id"]) != current_run]
+    runs.sort(key=lambda r: str(r["created_at"]), reverse=True)
+
+    def nights() -> Iterator[Night]:
+        for run in runs[:HISTORY_RUNS]:
+            yield _night(get, repo, run)
+
+    return nights()
+
+
+@dataclass
+class Streaks:
+    nights: dict[str, int]  # test -> scheduled nights in a row labeled upstream, this run included
+    open_ended: set[str]  # tests still upstream when the history read ran out
+    read: list[Night]  # the earlier nights read, newest first
+
+
+def upstream_streaks(today: Iterable[str], history: Iterable[Night]) -> Streaks:
+    """How many nights in a row each of today's upstream tests has been upstream.
+
+    A night with no record is passed over; a recorded night on which the test
+    passed, skipped, failed as a regression or did not run ends its streak.
+    Reads the (lazy) history only while some streak is still open.
+    """
+    nights = dict.fromkeys(today, 1)
+    alive = set(nights)
+    read: list[Night] = []
+    nights_left = iter(history)
+    # Asked for only while a streak is open: asking reads the night's report.
+    while alive and (night := next(nights_left, None)) is not None:
+        read.append(night)
+        if night.upstream is None:
+            continue
+        for test in sorted(alive):
+            if test in night.upstream:
+                nights[test] += 1
+            else:
+                alive.discard(test)
+    return Streaks(nights, alive, read)
+
+
 def _cell(text: str, limit: int = 200) -> str:
     line = " ".join(text.split())
     if len(line) > limit:
         line = line[: limit - 1] + "…"
     return line.replace("|", "\\|")
+
+
+def summarize_repeats(streaks: Streaks) -> str:
+    repeats = {t: n for t, n in streaks.nights.items() if n >= REPEAT_UPSTREAM_NIGHTS}
+    out = []
+    if repeats:
+        out += [
+            f"### Repeat upstream: {len(repeats)} test(s) labeled upstream on "
+            f"{REPEAT_UPSTREAM_NIGHTS} or more nights in a row",
+            "",
+            "Not a regression in this run: each test below has been labeled upstream "
+            "on every recorded scheduled night of its streak, this run included. A long "
+            "outage and a test that cannot pass read the same; look at the test. "
+            "A + means the streak reaches back to the oldest night read.",
+            "",
+            "| nights in a row | test |",
+            "|---|---|",
+        ]
+        for test, n in sorted(repeats.items(), key=lambda kv: (-kv[1], kv[0])):
+            shown = f"{n}+" if test in streaks.open_ended else str(n)
+            out.append(f"| {shown} | `{test}` |")
+        out.append("")
+    if streaks.read:
+        nights = ", ".join(
+            f"{n.date} (run {n.run_id}{': no record, ' + n.note if n.upstream is None else ''})"
+            for n in streaks.read
+        )
+        out += [f"Earlier scheduled nights read: {nights}.", ""]
+    return "".join(f"{line}\n" for line in out)
 
 
 def summarize(report: Report) -> str:
@@ -191,8 +390,9 @@ def summarize(report: Report) -> str:
     if upstream:
         out.append(
             "Upstream-side means the tool reported the upstream failing; a regression "
-            "that breaks our own calls reads the same, so a test listed here night "
-            "after night is worth a look."
+            "that breaks our own calls reads the same, so a test listed here on "
+            f"{REPEAT_UPSTREAM_NIGHTS} scheduled nights in a row fails the run (with "
+            "--history)."
         )
         out.append("")
     if report.skips:
@@ -204,9 +404,17 @@ def summarize(report: Report) -> str:
 
 
 def main(argv: list[str]) -> int:
-    if len(argv) not in (3, 4):
+    argv = list(argv)
+    workflow = None
+    if "--history" in argv:
+        at = argv.index("--history")
+        workflow = argv[at + 1] if at + 1 < len(argv) else ""
+        del argv[at : at + 2]
+    if len(argv) not in (3, 4) or workflow == "":
         print(
-            "usage: classify_live_failures.py REPORT.xml PYTEST_EXIT [SUMMARY.md]", file=sys.stderr
+            "usage: classify_live_failures.py REPORT.xml PYTEST_EXIT [SUMMARY.md] "
+            "[--history WORKFLOW_FILE]",
+            file=sys.stderr,
         )
         return 1
     report, pytest_exit = Path(argv[1]), int(argv[2])
@@ -239,7 +447,28 @@ def main(argv: list[str]) -> int:
         ]
 
     failures = result.failures
-    text = summarize(result)
+    upstream_today = {f.test for f in failures if f.cls == "upstream"}
+    streaks = Streaks(dict.fromkeys(upstream_today, 1), set(), [])
+    if workflow is not None:
+        env = {
+            k: os.environ.get(k, "") for k in ("GITHUB_TOKEN", "GITHUB_REPOSITORY", "GITHUB_RUN_ID")
+        }
+        missing = [k for k, v in env.items() if not v]
+        if missing:
+            problems.append(f"cannot read the nightly history: {', '.join(missing)} not set")
+        else:
+            try:
+                history = scheduled_nights(
+                    github_get(env["GITHUB_TOKEN"]),
+                    env["GITHUB_REPOSITORY"],
+                    workflow,
+                    int(env["GITHUB_RUN_ID"]),
+                )
+                streaks = upstream_streaks(upstream_today, history)
+            except HistoryUnreadable as err:
+                problems.append(f"cannot read the nightly history: {err}")
+    repeats = [t for t, n in streaks.nights.items() if n >= REPEAT_UPSTREAM_NIGHTS]
+    text = summarize_repeats(streaks) + summarize(result)
     if problems:
         text = "### Live run unusable\n\n" + "".join(f"- {p}\n" for p in problems) + "\n" + text
     print(text)
@@ -247,7 +476,7 @@ def main(argv: list[str]) -> int:
         with summary.open("a", encoding="utf-8") as fh:
             fh.write(text + "\n")
     regressions = [f for f in failures if f.cls == "regression"]
-    return 1 if problems or regressions else 0
+    return 1 if problems or regressions or repeats else 0
 
 
 if __name__ == "__main__":
