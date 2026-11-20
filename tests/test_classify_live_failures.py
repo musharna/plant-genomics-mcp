@@ -646,3 +646,67 @@ def test_the_workflow_reads_history_with_a_token_that_can_read_actions() -> None
     assert '"$GITHUB_STEP_SUMMARY" --history live-nightly.yml' in workflow
     assert re.search(r"(?m)^\s+name: live-junit$", workflow)
     assert WORKFLOW.name == "live-nightly.yml"
+
+
+def test_a_night_whose_report_was_unusable_is_no_record(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A report without the live gate, or with a failure whose message cannot
+    be restored, made its own night unusable; read back later, its classes are
+    not a record either (a cut message can drop or keep the tag the class rests
+    on). Each such night is passed over and named. Positive control: the same
+    nights with a usable report extend the streak to 3 and fail the run."""
+    cut = ("test_blast", "failure", f"{BLAST_TIMEOUT}\n[truncated; full report in element text]")
+    for label, bad_night in {
+        "gate unset": ("2026-11-16", "success", [_OK, _BLAST]),
+        "message cut": ("2026-11-16", "failure", [_OK, cut]),
+    }.items():
+        history: list[Night] = [bad_night, ("2026-11-15", "failure", [_OK, _BLAST])]
+        if label == "gate unset":
+            report = _report(tmp_path, [_OK, _BLAST], "nogate.xml", gate="")
+            history[0] = ("2026-11-16", "success", _zip(report))
+        code, out, _ = _classify(
+            tmp_path, monkeypatch, capsys, [_OK, _BLAST], history, f"{label}.xml"
+        )
+        assert "2026-11-16 (run 500: no record, report unusable:" in out, (label, out)
+        assert "Repeat upstream" not in out, (label, out)
+        assert code == 0, (label, out)
+
+    usable: list[Night] = [
+        ("2026-11-16", "success", [_OK, _BLAST]),
+        ("2026-11-15", "failure", [_OK, _BLAST]),
+    ]
+    code, out, _ = _classify(tmp_path, monkeypatch, capsys, [_OK, _BLAST], usable, "u.xml")
+    assert "| 3+ | `tests.test_live::test_blast` |" in out, out
+    assert code == 1
+
+
+def test_the_api_client_sends_the_token_to_github_only_and_refuses_a_non_200(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The real client over a mock transport. An artifact's archive URL
+    answers 302 to storage on another host: the archive comes back, and the
+    token went to the API but not to the storage host. Negative cases, same
+    client: a refusal and a transport error are HistoryUnreadable naming the
+    URL, never an empty history."""
+    classifier = _load_classifier(monkeypatch)
+    archive = f"{_API}/repos/{_REPO}/actions/artifacts/7/zip"
+    storage = "https://results.blob.example.net/artifacts/7.zip?sig=abc"
+    httpx_mock.add_response(url=archive, status_code=302, headers={"Location": storage})
+    httpx_mock.add_response(url=storage, content=b"PK archive bytes")
+    get = classifier.github_get("tok")
+    assert get(archive) == b"PK archive bytes"
+    to_api, to_storage = httpx_mock.get_requests()
+    assert to_api.headers["Authorization"] == "Bearer tok"
+    assert to_api.headers["Accept"] == "application/vnd.github+json"
+    assert "Authorization" not in to_storage.headers
+
+    httpx_mock.add_response(url=_RUNS_URL, status_code=403, text="Resource not accessible")
+    with pytest.raises(classifier.HistoryUnreadable, match="HTTP 403: Resource not accessible"):
+        get(_RUNS_URL)
+    listing = f"{_API}/repos/{_REPO}/actions/runs/1/artifacts?name=live-junit"
+    httpx_mock.add_exception(httpx.ConnectTimeout("timed out"), url=listing)
+    with pytest.raises(
+        classifier.HistoryUnreadable, match=r"artifacts\?name=live-junit: ConnectTimeout"
+    ):
+        get(listing)

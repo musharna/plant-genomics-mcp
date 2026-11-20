@@ -42,8 +42,10 @@ it, ``REPEAT_UPSTREAM_NIGHTS`` in a row. The nights are read from the
 ``live-junit`` report each scheduled run keeps as an artifact, classed by this
 same code, through the GitHub API with ``$GITHUB_TOKEN`` (``$GITHUB_REPOSITORY``
 and ``$GITHUB_RUN_ID`` name the repo and this run). A scheduled run that kept
-no report (cancelled at the job's time limit, or its artifact expired) is a
-night with no record: it neither extends a streak nor breaks one. History that
+no report (cancelled at the job's time limit, or its artifact expired), or
+whose report failed the checks that made that night's run unusable, is a night
+with no record: it neither extends a streak nor breaks one, and the summary
+lists it. History that
 exists but cannot be read (an API error, a corrupt archive or report) makes the
 run unusable, never a silent pass.
 
@@ -224,19 +226,16 @@ def github_get(token: str) -> Get:
     An artifact's archive URL answers with a redirect to storage on another
     host; httpx drops the Authorization header when it follows one.
     """
-    client = httpx.Client(
-        headers={
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/vnd.github+json",
-            "X-GitHub-Api-Version": "2022-11-28",
-        },
-        follow_redirects=True,
-        timeout=60.0,
-    )
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
 
     def get(url: str) -> bytes:
         try:
-            resp = client.get(url)
+            with httpx.Client(headers=headers, follow_redirects=True, timeout=60.0) as client:
+                resp = client.get(url)
         except httpx.HTTPError as err:
             raise HistoryUnreadable(f"GET {url}: {err!r}") from err
         if resp.status_code != 200:
@@ -279,6 +278,16 @@ def _night(get: Get, repo: str, run: dict) -> Night:
         raise HistoryUnreadable(f"run {run_id}: {REPORT_ARTIFACT} unreadable: {err!r}") from err
     if report.cases == 0:
         raise HistoryUnreadable(f"run {run_id}: {REPORT_ARTIFACT} holds no test cases")
+    unusable = []
+    if report.gate != "1":
+        unusable.append(f"{LIVE_GATE} was {report.gate!r}")
+    if report.unreadable:
+        unusable.append(f"{len(report.unreadable)} failure(s) could not be classed")
+    if unusable:
+        # main() failed that night as unusable when it ran, on these same
+        # checks: its classes are not a record. Failing every later night on
+        # it too would keep the check red for as long as the night is read.
+        return Night(run_id, date, None, "report unusable: " + "; ".join(unusable))
     return Night(run_id, date, frozenset(f.test for f in report.failures if f.cls == "upstream"))
 
 
