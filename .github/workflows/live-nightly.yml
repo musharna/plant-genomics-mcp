@@ -6,7 +6,10 @@ name: live-nightly
 # answering 404, 2026-09-29). A full pass took 25 min that night and 12 of
 # its 16 failures were upstream-side, so the run is classed rather than
 # gated: scripts/classify_live_failures.py fails it only on a regression and
-# lists upstream-side failures in the job summary. Not a required check.
+# lists upstream-side failures in the job summary. Listing alone hid a test that
+# could not pass for weeks, so it also fails on a repeat upstream: the same test
+# labeled upstream on several scheduled nights in a row, read from the reports
+# earlier scheduled runs kept (the live-junit artifact). Not a required check.
 
 on:
   schedule:
@@ -20,6 +23,7 @@ on:
 
 permissions:
   contents: read
+  actions: read # the classifier reads earlier scheduled runs and their live-junit artifacts
 
 concurrency:
   group: live-nightly-${{ github.ref }}
@@ -61,7 +65,10 @@ jobs:
       - name: Classify failures
         env:
           PYTEST_EXIT: ${{ steps.pytest.outputs.exit }}
-        run: python scripts/classify_live_failures.py "$RUNNER_TEMP/live.xml" "$PYTEST_EXIT" "$GITHUB_STEP_SUMMARY"
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python scripts/classify_live_failures.py "$RUNNER_TEMP/live.xml" "$PYTEST_EXIT" \
+            "$GITHUB_STEP_SUMMARY" --history live-nightly.yml
       - name: Keep the report
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

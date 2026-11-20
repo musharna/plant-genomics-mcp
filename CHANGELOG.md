@@ -15,6 +15,19 @@
   at once), and no sleep follows the last poll. The still-WAITING error now
   includes NCBI's estimate along with the RID (#282).
 
+- **The nightly live run now fails when a test is labeled upstream several
+  nights in a row.** Upstream failures were listed in the job summary and
+  the run stayed green, so a test that could not pass stayed hidden: the live
+  BLAST test ended still WAITING on almost every scheduled night for six
+  weeks. The classifier now reads the reports kept by earlier scheduled runs
+  (the `live-junit` artifact, through the Actions API with the workflow's
+  token). It fails the run when a test was labeled upstream on 3 scheduled
+  nights in a row, this run included, and lists each such test with its
+  streak under "Repeat upstream", separate from regressions. A cancelled
+  night, or one whose report has expired, is skipped and neither extends nor
+  ends a streak. History that cannot be read makes the run unusable. A real
+  outage lasting 3 nights also turns the run red (#283).
+
 ## v1.32.0 — 2026-11-15
 
 **58 tools / 24 backends** — no new tool. One new setting
