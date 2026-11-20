@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- **`blast_sequence` keeps polling when NCBI's estimate is longer than
+  `max_wait`.** The first poll waited for NCBI's estimate (RTOE), capped at
+  `max_wait`. NCBI has given estimates of hours (27,439 s on one test
+  submission), so the tool slept its whole budget, polled once, slept one more
+  interval and raised: a 600 s call took 660 s and asked NCBI once. Now, when
+  the estimate is longer than the budget, polling starts at NCBI's
+  once-a-minute floor and continues until `max_wait`. An estimate can be wrong
+  in both directions, so a search can still come back READY. An estimate within
+  the budget is waited out as before. The first poll is never sooner than 10 s
+  after the submission, NCBI's limit on contact frequency (an RTOE of 0 polled
+  at once), and no sleep follows the last poll. The still-WAITING error now
+  includes NCBI's estimate along with the RID (#282).
+
 ## v1.32.0 — 2026-11-15
 
 **58 tools / 24 backends** — no new tool. One new setting
