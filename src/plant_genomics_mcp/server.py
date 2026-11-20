@@ -683,7 +683,9 @@ TOOLS: list[types.Tool] = [
             "[...], cellular_component: [...]}) deduped on goId so the "
             "high-level term set is one read away; by_aspect_deduped_on "
             "names that key in the payload. truncated is true when "
-            "numberOfHits exceeds returned — raise limit (max 100)."
+            "numberOfHits exceeds returned — raise limit (max 100). "
+            "taxon_name_included is false when QuickGO could not supply "
+            "taxonName for this answer (taxonId is still given)."
         ),
         input_schema={
             "type": "object",

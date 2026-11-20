@@ -123,7 +123,11 @@ async def test_europe_pmc_503_then_200_emits_retry_notification(httpx_mock: HTTP
 
 @pytest.mark.asyncio
 async def test_quickgo_500_then_200_emits_retry_notification(httpx_mock: HTTPXMock) -> None:
-    url = "https://www.ebi.ac.uk/QuickGO/services/annotation/search?geneProductId=Q0WV96&limit=50&includeFields=goName%2CtaxonName"
+    # The search that asks for taxonName gets one try (quickgo._WITH_TAXON_NAME_TRIES),
+    # so the retry that is announced is the search without it.
+    base = "https://www.ebi.ac.uk/QuickGO/services/annotation/search?geneProductId=Q0WV96&limit=50"
+    httpx_mock.add_response(url=f"{base}&includeFields=goName%2CtaxonName", status_code=500)
+    url = f"{base}&includeFields=goName"
     httpx_mock.add_response(url=url, status_code=500, headers={"Retry-After": "0"})
     httpx_mock.add_response(url=url, json={"numberOfHits": 0, "results": []})
     reporter, log = _recording_reporter()

@@ -157,7 +157,7 @@ async def test_quickgo_resumes_at_its_own_page(monkeypatch: pytest.MonkeyPatch) 
     sent: list[dict[str, Any]] = []
 
     async def fake(
-        client: Any, path: str, params: dict[str, Any] | None = None, *, shape: Any
+        client: Any, path: str, params: dict[str, Any] | None = None, *, shape: Any, tries: int = 0
     ) -> dict[str, Any]:
         sent.append(dict(params or {}))
         page = int((params or {}).get("page", 1))
