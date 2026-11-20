@@ -13,7 +13,7 @@
   the budget is waited out as before. The first poll is never sooner than 10 s
   after the submission, NCBI's limit on contact frequency (an RTOE of 0 polled
   at once), and no sleep follows the last poll. The still-WAITING error now
-  includes NCBI's estimate along with the RID.
+  includes NCBI's estimate along with the RID (#282).
 
 ## v1.32.0 — 2026-11-15
 
