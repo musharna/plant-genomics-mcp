@@ -14,7 +14,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from plant_genomics_mcp import quickgo
-from plant_genomics_mcp.errors import UpstreamUnavailableError
+from plant_genomics_mcp.errors import RateLimitError, UpstreamUnavailableError
 
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="set PLANT_GENOMICS_MCP_LIVE=1 to run")
@@ -392,3 +392,44 @@ async def test_quickgo_down_with_and_without_the_name_is_raised_not_degraded(
         answered = await quickgo.lookup_by_uniprot(client, "P93024")
     assert answered["taxon_name_included"] is False
     assert len(httpx_mock.get_requests()) == 1 + quickgo.MAX_RETRIES + 2
+
+
+@pytest.mark.asyncio
+async def test_a_rate_limited_taxon_name_search_is_answered_and_a_lasting_limit_is_raised(
+    httpx_mock: HTTPXMock,
+) -> None:
+    """The search with taxonName gets one try, so a 429 on it is not retried
+    there, and the retry helper raises a 429 as RateLimitError, not
+    UpstreamUnavailableError: caught by neither, one refused request failed the
+    call. The search without the name keeps its retries, so the call is
+    answered, and a limit that outlasts those retries is still raised as a
+    rate limit for the caller to back off on."""
+    nameless = _ann("GO:0006355", "biological_process", taxonName=None)
+    httpx_mock.add_response(url=_SEARCH_URL, status_code=429)
+    httpx_mock.add_response(
+        url=_SEARCH_URL_NO_TAXON_NAME, status_code=429, headers={"Retry-After": "0"}
+    )
+    httpx_mock.add_response(
+        url=_SEARCH_URL_NO_TAXON_NAME, json={"numberOfHits": 1, "results": [nameless]}
+    )
+    other = "https://www.ebi.ac.uk/QuickGO/services/annotation/search?geneProductId=P93024&limit=50"
+    httpx_mock.add_response(url=f"{other}&includeFields=goName%2CtaxonName", status_code=429)
+    for _ in range(quickgo.MAX_RETRIES):
+        httpx_mock.add_response(
+            url=f"{other}&includeFields=goName", status_code=429, headers={"Retry-After": "0"}
+        )
+    async with httpx.AsyncClient() as client:
+        answered = await quickgo.lookup_by_uniprot(client, "Q0WV96")
+        with pytest.raises(RateLimitError, match=r"exhausted 3 retries \(HTTP 429\)"):
+            await quickgo.lookup_by_uniprot(client, "P93024")
+
+    assert answered["taxon_name_included"] is False
+    assert "HTTP 429" in answered["taxon_name_missing_because"]
+    assert [a["goId"] for a in answered["annotations"]] == ["GO:0006355"]
+    assert [str(r.url) for r in httpx_mock.get_requests()] == [
+        _SEARCH_URL,
+        _SEARCH_URL_NO_TAXON_NAME,
+        _SEARCH_URL_NO_TAXON_NAME,
+        f"{other}&includeFields=goName%2CtaxonName",
+        *[f"{other}&includeFields=goName"] * quickgo.MAX_RETRIES,
+    ]

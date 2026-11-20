@@ -22,7 +22,7 @@ from typing import Any, TypeVar
 import httpx
 
 from plant_genomics_mcp import _http, cache
-from plant_genomics_mcp.errors import UpstreamUnavailableError
+from plant_genomics_mcp.errors import RateLimitError, UpstreamUnavailableError
 
 BASE_URL = "https://www.ebi.ac.uk/QuickGO/services"
 DEFAULT_TIMEOUT = 30.0
@@ -174,10 +174,12 @@ async def lookup_by_uniprot(
             shape=_search_shape,
             tries=_WITH_TAXON_NAME_TRIES,
         )
-    except UpstreamUnavailableError as with_name:
+    except (UpstreamUnavailableError, RateLimitError) as with_name:
         # Only an answer to the search without the name shows the name was
         # the part that failed; if this fails too, QuickGO is down and its
-        # error is the one raised.
+        # error is the one raised. A 429 is caught as well: one try means it
+        # was not retried above, and this search keeps its retries and waits
+        # as QuickGO asks.
         raw = await _get(
             client,
             "/annotation/search",
