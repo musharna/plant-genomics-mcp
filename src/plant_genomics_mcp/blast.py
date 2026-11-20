@@ -66,6 +66,9 @@ TOOL_ID = "plant-genomics-mcp"
 # RID. The orchestrator clamps any caller-supplied interval up to this.
 MIN_POLL_INTERVAL = 60.0
 DEFAULT_POLL_INTERVAL = 60.0
+# NCBI also asks for no more than one contact every 10 seconds, so the first
+# poll waits at least this long after the Put even when RTOE is 0 or absent.
+MIN_CONTACT_INTERVAL = 10.0
 DEFAULT_MAX_WAIT = 600.0  # 10 minutes — typical BLAST nr search
 
 # Process-level cap on concurrent BLAST submissions. NCBI etiquette is "no
@@ -343,15 +346,18 @@ async def blast_sequence(
 
     Emits a progress notification on submit, on each WAITING poll, and on
     READY transition. Honors NCBI's per-RID 60s poll floor — any caller
-    interval below ``MIN_POLL_INTERVAL`` is clamped up.
+    interval below ``MIN_POLL_INTERVAL`` is clamped up. The first poll comes
+    after NCBI's estimate (RTOE) when that fits in ``max_wait``, otherwise
+    after one interval, and never sooner than ``MIN_CONTACT_INTERVAL``; no
+    sleep follows the last poll the budget allows.
 
     Raises:
       PlantGenomicsError on unknown program.
       UpstreamUnavailableError on HTTP failure or BLAST Status=FAILED.
       UpstreamUnavailableError if the search is still WAITING after max_wait:
-        NCBI has it queued, so nothing is missing; the RID is included so the
-        caller can re-poll later. NotFoundError is for an RID NCBI no longer
-        knows (Status=UNKNOWN).
+        NCBI has it queued, so nothing is missing; the RID and NCBI's RTOE are
+        included so the caller can re-poll later. NotFoundError is for an RID
+        NCBI no longer knows (Status=UNKNOWN).
     """
     # Every comparison with NaN is False: a NaN poll_interval passed max() and
     # reached asyncio.sleep, a NaN max_wait skipped polling and reported a
@@ -385,15 +391,21 @@ async def blast_sequence(
             expect=expect,
             megablast=megablast,
         )
-        # NCBI's RTOE is usually a few seconds to a few minutes; wait that
-        # long before the first poll to avoid hitting the server while the
-        # search is still being queued. Capped to max_wait.
-        initial_wait = max(0.0, min(float(rtoe), max_wait))
-        if initial_wait > 0:
-            await asyncio.sleep(initial_wait)
-        elapsed = initial_wait
-        status = "WAITING"
-        while elapsed <= max_wait:
+        # The first poll waits for NCBI's estimate (RTOE) when the budget holds
+        # it. When it does not, waiting it out capped at max_wait made the first
+        # poll the last: an estimate of hours slept the whole budget, polled
+        # once and raised. The estimate can be pessimistic, so the polls then
+        # start at the per-RID floor and spend the whole budget.
+        first_poll = float(rtoe) if rtoe <= max_wait else min(interval, max_wait)
+        first_poll = max(first_poll, MIN_CONTACT_INTERVAL)
+        if rtoe > max_wait:
+            await progress.notify(
+                f"BLAST RID={rid}: NCBI estimates RTOE={rtoe}s, longer than "
+                f"max_wait={max_wait:.0f}s; polling every {interval:.0f}s until max_wait"
+            )
+        await asyncio.sleep(first_poll)
+        elapsed = first_poll
+        while True:
             status = await poll_status(client, rid)
             if status == "READY":
                 await progress.notify(f"BLAST RID={rid} READY after {elapsed:.0f}s")
@@ -406,16 +418,20 @@ async def blast_sequence(
                 raise NotFoundError(
                     f"BLAST RID={rid} reported Status=UNKNOWN — RID expired or never existed"
                 )
+            # A sleep the next poll cannot follow inside the budget only delays
+            # the error.
+            if elapsed + interval > max_wait:
+                # Still queued, not missing: NotFoundError told a caller the
+                # search did not exist. RTOE tells the caller how long to give
+                # a re-poll.
+                raise UpstreamUnavailableError(
+                    f"BLAST RID={rid} still {status} after max_wait={max_wait:.0f}s "
+                    f"(last poll at {elapsed:.0f}s; NCBI estimated RTOE={rtoe}s) — "
+                    "re-poll later via fetch_result()"
+                )
             await progress.notify(f"BLAST RID={rid} {status} ({elapsed:.0f}s/{max_wait:.0f}s)")
             await asyncio.sleep(interval)
             elapsed += interval
-        else:
-            # Still queued, not missing: NotFoundError told a caller the search
-            # did not exist (live 2026-09-30: an RID WAITING past 720 s).
-            raise UpstreamUnavailableError(
-                f"BLAST RID={rid} still {status} after max_wait={max_wait:.0f}s — "
-                "re-poll later via fetch_result()"
-            )
         report = await fetch_result(client, rid)
     hits = _parse_hit_table(report)
     truncated = len(report.encode("utf-8")) > RAW_REPORT_CAP_BYTES

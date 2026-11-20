@@ -1779,6 +1779,29 @@ import os  # noqa: E402 — for PLANT_GENOMICS_MCP_LIVE gate (live-test section)
 LIVE = os.environ.get("PLANT_GENOMICS_MCP_LIVE") == "1"
 live_only = pytest.mark.skipif(not LIVE, reason="requires PLANT_GENOMICS_MCP_LIVE=1")
 
+# The nightly caps each test at 240 s and the synthesis tools search with
+# blast_sequence's default max_wait (600 s), so a search NCBI queues for hours
+# ran into the cap every night. The live tests give BLAST a budget that ends
+# inside the cap; a search not READY by then is read as the error a caller gets.
+SYNTH_LIVE_BLAST_MAX_WAIT = 150.0
+_BLAST_STILL_WAITING = re.compile(
+    r"^\[UpstreamUnavailableError\] BLAST RID=[A-Z0-9]+ still WAITING after .*RTOE=\d+s"
+)
+
+
+@pytest.fixture
+def _blast_budget(monkeypatch: pytest.MonkeyPatch) -> None:
+    from plant_genomics_mcp import blast
+
+    search = blast.blast_sequence
+
+    async def _budgeted(*args, **kwargs):
+        # A budget the synthesis tool chose itself is not this fixture's to replace.
+        assert "max_wait" not in kwargs, kwargs
+        return await search(*args, **kwargs, max_wait=SYNTH_LIVE_BLAST_MAX_WAIT)
+
+    monkeypatch.setattr(blast, "blast_sequence", _budgeted)
+
 
 @live_only
 @pytest.mark.asyncio
@@ -1798,6 +1821,7 @@ async def test_analyze_locus_synth_live_at1g01010():
 
 @live_only
 @pytest.mark.asyncio
+@pytest.mark.usefixtures("_blast_budget")
 async def test_find_homologs_synth_live_at1g01010_seq():
     # AT1G01010 (Q0WV96) N-terminal — short enough for fast BLAST
     sequence = (
@@ -1808,7 +1832,16 @@ async def test_find_homologs_synth_live_at1g01010_seq():
 
     async with httpx.AsyncClient(timeout=900.0) as client:
         env = await find_homologs_synth(client, sequence, program="blastp", top_n=5)
-    assert env.steps[0].status == "ok", f"BLAST failed: {env.steps[0].error}"
+    blast_step = env.steps[0]
+    if blast_step.status == "error" and _BLAST_STILL_WAITING.match(blast_step.error or ""):
+        # The envelope a caller reads when NCBI has not finished: the BLAST step
+        # names the RID, the lookup that needs its hits is skipped, and the
+        # failure is at the top.
+        assert env.steps[1].status == "skipped", env.steps[1]
+        assert env.failed_steps == [1]
+        assert env.result is None
+        pytest.skip(f"UniProt lookup of BLAST hits not checked: {blast_step.error}")
+    assert blast_step.status == "ok", f"BLAST failed: {blast_step.error}"
     # At least one self-hit with a UniProt record populated
     populated = [h for h in env.result["ranked_hits"] if h["uniprot_record"]]
     assert populated, "no ranked hit had a UniProt record"
@@ -1830,6 +1863,7 @@ async def test_biological_context_synth_live_at1g01010():
 
 @live_only
 @pytest.mark.asyncio
+@pytest.mark.usefixtures("_blast_budget")
 async def test_consensus_homologs_live_at1g01010():
     from plant_genomics_mcp.synthesis import consensus_homologs
 
@@ -1843,6 +1877,10 @@ async def test_consensus_homologs_live_at1g01010():
     # by (species, gene) — this is the dedup validation.
     if env.steps[2].status == "ok" and env.steps[3].status == "ok":
         assert two_source, "both backends succeeded but no 2-source consensus pick"
+    blast_step = env.steps[3]
+    if blast_step.status == "error" and _BLAST_STILL_WAITING.match(blast_step.error or ""):
+        assert 4 in env.failed_steps
+        pytest.skip(f"cross-source dedup with BLAST not checked: {blast_step.error}")
 
 
 @live_only
