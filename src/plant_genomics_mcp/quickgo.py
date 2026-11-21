@@ -7,7 +7,10 @@ query the ``/annotation/search`` endpoint with a UniProt accession as
 to a UniProt accession via ``plant_genomics_mcp.uniprot.lookup_locus``.
 
 We request the documented ``goName`` and ``taxonName`` includeFields so
-the wire payload carries human-readable labels alongside the GO IDs.
+the wire payload carries human-readable labels alongside the GO IDs. When
+QuickGO fails the search that asks for ``taxonName`` but answers the same
+search without it, the answer is returned with the name left out and the
+payload says so (see ``_WITH_TAXON_NAME_TRIES``).
 Endpoint docs: https://www.ebi.ac.uk/QuickGO/api/index.html.
 """
 
@@ -19,12 +22,20 @@ from typing import Any, TypeVar
 import httpx
 
 from plant_genomics_mcp import _http, cache
+from plant_genomics_mcp.errors import RateLimitError, UpstreamUnavailableError
 
 BASE_URL = "https://www.ebi.ac.uk/QuickGO/services"
 DEFAULT_TIMEOUT = 30.0
 MAX_RETRIES = 3
 DEFAULT_LIMIT = 50
 MAX_LIMIT = 100  # QuickGO documents a 100/page upper bound on /search
+# QuickGO can fail every search that asks for taxonName while answering the
+# same search without it: a 500 "Failed to fetch REST response due to:
+# TimeoutException" after 16-20 s with the field, a 200 in under a second
+# without (4 of 4 and 2 of 2, plant and human accessions alike). So the search
+# with the name gets one try before the search without it is sent; three
+# tries would spend most of a minute first, longer than a caller waits.
+_WITH_TAXON_NAME_TRIES = 1
 
 # Per-module response cache. See plant_genomics_mcp.cache for env knobs.
 _CACHE = cache.TTLCache()
@@ -73,6 +84,7 @@ async def _get(
     params: dict[str, Any] | None = None,
     *,
     shape: Callable[[object], _T],
+    tries: int = MAX_RETRIES,
 ) -> _T:
     """GET a QuickGO endpoint with retry on 429/5xx."""
     return await _http.cached_get(
@@ -83,7 +95,7 @@ async def _get(
         params=params,
         headers={"Accept": "application/json"},
         timeout=DEFAULT_TIMEOUT,
-        max_retries=MAX_RETRIES,
+        max_retries=tries,
         shape=shape,
     )
 
@@ -132,6 +144,12 @@ async def lookup_by_uniprot(
     ``cursor`` is a ``next_cursor`` from the previous page (#123); it resumes
     at QuickGO's own 1-based ``page``. ``by_aspect`` rolls up THIS page.
 
+    ``taxon_name_included`` is false when QuickGO failed the search that
+    asks for ``taxonName`` and answered the one without it: every
+    ``taxonName`` is then null because it could not be had, ``taxonId`` is
+    still there, and ``taxon_name_missing_because`` quotes the failure. If
+    the search without it fails too, that failure is raised.
+
     ``limit`` is clamped to [1, MAX_LIMIT]. Returns a dict with raw
     ``annotations[]`` plus a ``by_aspect`` rollup keyed on GO aspect
     (molecular_function / biological_process / cellular_component).
@@ -139,6 +157,7 @@ async def lookup_by_uniprot(
     limit = max(1, min(limit, MAX_LIMIT))
     query = {"accession": accession, "limit": limit}
     page = int(_http.decode_cursor("locus_go_annotations", query, cursor).get("page", 1))
+
     params: dict[str, Any] = {
         "geneProductId": accession,
         "limit": limit,
@@ -146,7 +165,31 @@ async def lookup_by_uniprot(
     }
     if page > 1:
         params["page"] = page
-    raw = await _get(client, "/annotation/search", params=params, shape=_search_shape)
+    taxon_name_missing_because: str | None = None
+    try:
+        raw = await _get(
+            client,
+            "/annotation/search",
+            params=params,
+            shape=_search_shape,
+            tries=_WITH_TAXON_NAME_TRIES,
+        )
+    except (UpstreamUnavailableError, RateLimitError) as with_name:
+        # Only an answer to the search without the name shows the name was
+        # the part that failed; if this fails too, QuickGO is down and its
+        # error is the one raised. A 429 is caught as well: one try means it
+        # was not retried above, and this search keeps its retries and waits
+        # as QuickGO asks.
+        raw = await _get(
+            client,
+            "/annotation/search",
+            params={**params, "includeFields": "goName"},
+            shape=_search_shape,
+        )
+        taxon_name_missing_because = (
+            f"QuickGO failed the search that asks for taxonName ({with_name}) "
+            "and answered the same search without it"
+        )
     results = raw["results"]
     annotations = [_normalize(r) for r in results if isinstance(r, dict)]
     if not include_with_from:
@@ -169,6 +212,9 @@ async def lookup_by_uniprot(
         "by_aspect_deduped_on": "goId",
         # A null withFrom must not read as "no partner": say whether it was asked.
         "with_from_included": include_with_from,
+        # Nor a null taxonName as "QuickGO names no taxon": say when it could not be had.
+        "taxon_name_included": taxon_name_missing_because is None,
+        "taxon_name_missing_because": taxon_name_missing_because,
         # Issue #121: uniform key; null because this backend states no release on
         # the answering response (headers probed live 2026-09-22).
         "upstream_version": None,

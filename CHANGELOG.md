@@ -28,6 +28,17 @@
   ends a streak. History that cannot be read makes the run unusable. A real
   outage lasting 3 nights also turns the run red (#283).
 
+- **`locus_go_annotations` answers when QuickGO cannot supply `taxonName`.**
+  QuickGO has been failing every annotation search that asks for the
+  `taxonName` field (a 500 after 16-20 s) while answering the same search
+  without it in under a second. The client always asked for the field, so the
+  tool failed for every caller. The search with the name now gets one try. If
+  it fails, the same search is sent without the name and the answer is
+  returned with two new payload fields: `taxon_name_included` is false and
+  `taxon_name_missing_because` quotes the failure. `taxonId` is still on every
+  row. If the search without the name fails too, that error is raised as
+  before. While the outage lasts each call still waits out the one failed try.
+
 ## v1.32.0 — 2026-11-15
 
 **58 tools / 24 backends** — no new tool. One new setting

@@ -402,6 +402,19 @@ class LocusGoAnnotations(BaseModel):
             "because the annotation has no partner or source cross-ref."
         ),
     )
+    taxon_name_included: bool = Field(
+        default=True,
+        description=(
+            "False when QuickGO failed the search that asks for taxonName and "
+            "answered the same search without it: every taxonName is then null "
+            "because it could not be had, not because the annotation has no "
+            "taxon. taxonId is still given."
+        ),
+    )
+    taxon_name_missing_because: str | None = Field(
+        default=None,
+        description="QuickGO's failure, quoted, when taxon_name_included is false; else null",
+    )
     upstream_version: str | None = upstream_version_field(
         "QuickGO", None, current_release="quickgo"
     )
