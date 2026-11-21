@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## v1.32.1 — 2026-11-21
+
+**58 tools / 24 backends** — no new tool. A patch release: two fixes, and a
+nightly check that now fails on a test that cannot pass.
+
 - **`blast_sequence` keeps polling when NCBI's estimate is longer than
   `max_wait`.** The first poll waited for NCBI's estimate (RTOE), capped at
   `max_wait`. NCBI has given estimates of hours (27,439 s on one test
@@ -37,7 +42,8 @@
   returned with two new payload fields: `taxon_name_included` is false and
   `taxon_name_missing_because` quotes the failure. `taxonId` is still on every
   row. If the search without the name fails too, that error is raised as
-  before. While the outage lasts each call still waits out the one failed try.
+  before. While the outage lasts each call still waits out the one failed try
+  (#284).
 
 ## v1.32.0 — 2026-11-15
 
